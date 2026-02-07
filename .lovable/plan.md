@@ -1,147 +1,81 @@
 
+# Plano: Correcao de Erros + Tour + Indexes
 
-# Plano: Login com Recuperacao de Conta + RLS + Auditoria do Banco
+## Problema 1: Erros no Admin (Observabilidade) e CRM
 
-## Resumo do Diagnostico
-
-Apos analise detalhada do banco de dados:
-
-- **24 perfis importados, 0 usuarios no auth.users** -- todos os perfis sao orfaos (importados do projeto antigo sem auth)
-- **maicoln90@hotmail.com** existe na tabela `profiles` mas NAO existe no `auth.users`, por isso o login falha
-- **47 tabelas sem RLS** -- qualquer pessoa com a URL do Supabase pode ler/escrever dados
-- **Nenhuma foreign key** entre tabelas (dados nao tem integridade referencial forcada)
-- Dados consistentes: quiz_questions, quiz_results e quiz_responses todos referenciam quizzes validos
-
----
-
-## Parte 1: Fluxo de Login para Usuarios Importados
-
-### Problema
-O usuario tenta logar com email/senha, mas como nao existe entrada no `auth.users`, recebe "Email ou senha incorretos". O usuario nao sabe que precisa se recadastrar.
+### Causa raiz
+- **Nenhuma foreign key existe no banco** (confirmado: 0 FKs). Sem FKs, o Supabase client nao consegue fazer joins automaticos como `quizzes!inner(...)` ou `quiz_results(result_text)`.
+- O **CRM** crasha porque a query faz `quiz_results(result_text)` sem FK entre `quiz_responses.result_id` e `quiz_results.id`.
+- O **AdminDashboard** chama `supabase.functions.invoke('list-all-users')` que **nao existe** como Edge Function.
+- A aba **Observabilidade** chama `supabase.functions.invoke('system-health-check')` que tambem **nao existe**.
 
 ### Solucao
-Quando o login falhar com "Invalid login credentials":
+1. **Criar foreign keys** para todas as relacoes usadas em joins do Supabase client:
+   - `quiz_responses.quiz_id -> quizzes.id`
+   - `quiz_responses.result_id -> quiz_results.id`
+   - `quiz_questions.quiz_id -> quizzes.id`
+   - `quiz_results.quiz_id -> quizzes.id`
+   - `quiz_form_config.quiz_id -> quizzes.id`
+   - `custom_form_fields.quiz_id -> quizzes.id`
+   - `quiz_translations.quiz_id -> quizzes.id`
+   - `quiz_tag_relations.quiz_id -> quizzes.id`
+   - `quiz_tag_relations.tag_id -> quiz_tags.id`
+   - `quiz_analytics.quiz_id -> quizzes.id`
+   - `quiz_step_analytics.quiz_id -> quizzes.id`
+   - `quiz_variants.quiz_id -> quizzes.id`
+   - `ticket_messages.ticket_id -> support_tickets.id`
+   - `integration_logs.integration_id -> user_integrations.id`
+   - `webhook_logs.webhook_id -> user_webhooks.id`
+   - `quiz_question_translations.question_id -> quiz_questions.id`
 
-1. Verificar no banco se existe um perfil com aquele email (via consulta publica ou edge function)
-2. Se existir perfil orfao, abrir um modal especial dizendo: "Encontramos sua conta! Defina uma nova senha para continuar"
-3. O modal coleta nova senha + confirmacao
-4. Chamar `supabase.auth.signUp()` com o email e nova senha
-5. Apos signup, o merge automatico (ja implementado) vincula os dados antigos ao novo auth user
+2. **Criar Edge Function `list-all-users`**: Usa Admin API do Supabase para listar todos os usuarios (auth.users + profiles + subscriptions + roles). Requer autenticacao e role admin/master_admin.
 
-### Mudancas no Login.tsx
-- Adicionar estado `showMigrateModal` e `migrateEmail`
-- No `handleLogin`, ao detectar erro de credenciais, chamar edge function `check-imported-user` para verificar se email existe em profiles
-- Se existir, abrir modal de migracao ao inves do toast de erro
-- Modal permite criar senha nova e chama `signUp`
-
-### Nova Edge Function: `check-imported-user`
-- Recebe email no body
-- Usa service role para verificar se existe perfil com esse email SEM entrada correspondente no auth.users
-- Retorna `{ exists: true/false }` (sem expor dados senssiveis)
-- Rate limiting para evitar enumeracao de emails
-
----
-
-## Parte 2: RLS (Row Level Security) em Todas as Tabelas
-
-### Migracacao SQL que habilita RLS e cria politicas para todas as 47 tabelas
-
-Categorias de politicas:
-
-**Tabelas do usuario (user_id = auth.uid()):**
-- `profiles` -- SELECT/UPDATE proprio perfil (id = auth.uid())
-- `quizzes` -- CRUD pelo dono
-- `quiz_questions` -- CRUD via join com quizzes
-- `quiz_results` -- CRUD via join com quizzes
-- `quiz_form_config` -- CRUD via join com quizzes
-- `custom_form_fields` -- CRUD via join com quizzes
-- `quiz_translations` -- CRUD via join com quizzes
-- `quiz_question_translations` -- CRUD via join com quizzes
-- `quiz_variants` -- CRUD via join com quizzes
-- `quiz_analytics` -- SELECT via join com quizzes
-- `quiz_step_analytics` -- SELECT via join com quizzes
-- `quiz_responses` -- SELECT via join com quizzes
-- `quiz_tags` -- CRUD pelo dono
-- `quiz_tag_relations` -- CRUD via join com quizzes
-- `user_subscriptions` -- SELECT proprio
-- `user_roles` -- SELECT proprio
-- `user_webhooks` -- CRUD proprio
-- `user_integrations` -- CRUD proprio
-- `notification_preferences` -- CRUD proprio
-- `support_tickets` -- CRUD proprio
-- `ticket_messages` -- CRUD via join com tickets
-- `ai_quiz_generations` -- SELECT proprio
-- `bunny_videos` -- CRUD proprio
-- `validation_requests` -- CRUD proprio
-- `audit_logs` -- INSERT proprio, SELECT para admins
-- `user_onboarding` -- CRUD proprio
-- `video_analytics` -- SELECT proprio
-- `video_usage` -- SELECT proprio
-- `scheduled_deletions` -- SELECT proprio
-- `integration_logs` -- SELECT proprio
-- `webhook_logs` -- SELECT proprio
-
-**Tabelas publicas (leitura para todos):**
-- `subscription_plans` -- SELECT para todos (catalogo de planos)
-- `quiz_templates` -- SELECT para todos (templates publicos)
-- `landing_content` -- SELECT para todos
-- `landing_ab_tests` -- SELECT para todos
-
-**Tabelas publicas (escrita anonima controlada):**
-- `quiz_responses` -- INSERT anonimo (respondentes de quiz)
-- `quiz_step_analytics` -- INSERT anonimo
-- `ab_test_sessions` -- INSERT anonimo
-- `landing_ab_sessions` -- INSERT/UPDATE anonimo
-- `cookie_consents` -- INSERT anonimo
-- `rate_limit_tracker` -- INSERT/UPDATE anonimo
-
-**Tabelas admin-only:**
-- `master_admin_emails` -- SELECT/INSERT/DELETE para master_admin
-- `recovery_settings` -- CRUD para admin
-- `recovery_templates` -- CRUD para admin
-- `recovery_campaigns` -- CRUD para admin
-- `recovery_contacts` -- CRUD para admin
-- `recovery_blacklist` -- CRUD para admin
-- `system_health_metrics` -- INSERT/SELECT para admin
-- `system_settings` -- CRUD para admin
-
-Usa a funcao `has_role()` ja existente para verificar roles de admin.
+3. **Criar Edge Function `system-health-check`**: Coleta metricas de saude do sistema e salva em `system_health_metrics`. Retorna relatorio consolidado.
 
 ---
 
-## Parte 3: Integridade do Banco de Dados
+## Problema 2: Tour do Dashboard reinicia sempre
 
-### Problemas encontrados
-1. **24 perfis orfaos** (sem auth.users correspondente) -- esperado, serao resolvidos pelo merge na Parte 1
-2. **Sem foreign keys** -- os dados estao consistentes mas sem protecao de integridade referencial
+### Causa raiz
+No `DashboardTour.tsx`, o `onDestroyStarted` so marca como concluido se `!driverObj.hasNextStep()` (usuario completou todos os passos). Se o usuario fecha/pula, apenas `onSkip` eh chamado (que nao faz nada). Resultado: `dashboard_tour_completed` fica `false` para sempre.
 
-### Acoes
-- Adicionar foreign keys criticas:
-  - `quizzes.user_id -> auth.users(id) ON DELETE CASCADE`
-  - `quiz_questions.quiz_id -> quizzes(id) ON DELETE CASCADE`
-  - `quiz_results.quiz_id -> quizzes(id) ON DELETE CASCADE`
-  - `quiz_form_config.quiz_id -> quizzes(id) ON DELETE CASCADE`
-  - `quiz_responses.quiz_id -> quizzes(id) ON DELETE CASCADE`
-  - `user_subscriptions.user_id -> auth.users(id) ON DELETE CASCADE`
-  - `user_roles.user_id -> auth.users(id) ON DELETE CASCADE`
-  - E demais tabelas com user_id/quiz_id
+Confirmado no banco: `dashboard_tour_completed: false` para o usuario `maicoln90@hotmail.com`.
 
-**NOTA**: As foreign keys para `auth.users` NAO podem ser adicionadas agora porque existem 24 perfis orfaos. Primeiro os usuarios precisam migrar (Parte 1), depois podemos adicionar as FKs. As FKs entre tabelas publicas (quiz_id etc) podem ser adicionadas imediatamente.
+### Solucao
+- Modificar `DashboardTour.tsx`: **sempre** marcar `dashboard_tour_completed = true` no `onDestroyStarted`, independente se completou ou pulou.
+- Aplicar a mesma correcao em `IntegrationsTour.tsx` (mesmo padrao de bug).
+- Os outros tours (Analytics, CRM, Settings) precisam da mesma verificacao.
 
 ---
 
-## Detalhes Tecnicos
+## Problema 3: Indexes para performance
 
-### Arquivos a criar/modificar:
-1. `supabase/functions/check-imported-user/index.ts` -- nova edge function
-2. `src/pages/Login.tsx` -- adicionar modal de migracao
-3. `supabase/config.toml` -- registrar nova funcao
-4. Nova migracao SQL -- RLS + politicas para todas as tabelas
-5. Nova migracao SQL -- foreign keys entre tabelas (quiz_id refs)
+### Analise
+A maioria das tabelas ja tem indexes adequados. Tabelas que precisam de indexes adicionais:
 
-### Ordem de execucao:
-1. Migracao RLS (prioridade maxima -- seguranca)
-2. Edge function check-imported-user
-3. Modal de migracao no Login.tsx
-4. Migracao de foreign keys (somente quiz_id, nao user_id por enquanto)
+| Tabela | Index faltante | Justificativa |
+|--------|---------------|---------------|
+| `profiles` | `email` | Busca por email no merge e login |
+| `bunny_videos` | `user_id` | Filtro por usuario |
+| `custom_form_fields` | `quiz_id` | Filtro por quiz |
+| `quiz_results` | `quiz_id` | Join com quiz_responses |
+| `validation_requests` | `user_id` | Filtro por usuario |
+| `quiz_responses` | `result_id` | Join com quiz_results |
+| `quiz_variants` | `quiz_id` | Filtro por quiz |
 
+---
+
+## Arquivos a criar/modificar
+
+1. **Nova migracao SQL**: Foreign keys + indexes
+2. `src/components/onboarding/DashboardTour.tsx`: Marcar como completo ao fechar
+3. `src/components/onboarding/IntegrationsTour.tsx`: Mesma correcao
+4. `supabase/functions/list-all-users/index.ts`: Nova edge function
+5. `supabase/functions/system-health-check/index.ts`: Nova edge function
+6. `supabase/config.toml`: Registrar novas funcoes
+
+## Ordem de execucao
+1. Migracao SQL (FKs + indexes) -- resolve CRM e queries com joins
+2. Edge functions (list-all-users + system-health-check) -- resolve Admin
+3. Fix dos tours -- resolve onboarding
+4. Regenerar types.ts -- refletir novas FKs
