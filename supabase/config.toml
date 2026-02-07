@@ -2,3 +2,6 @@ project_id = "kmmdzwoidakmbekqvkmq"
 
 [functions.merge-user-data]
 verify_jwt = false
+
+[functions.check-imported-user]
+verify_jwt = false
