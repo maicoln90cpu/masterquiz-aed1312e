@@ -51,7 +51,15 @@ export type Database = {
           variant_id?: string | null
           visitor_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_ab_test_sessions_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ai_quiz_generations: {
         Row: {
@@ -255,7 +263,15 @@ export type Database = {
           quiz_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_custom_form_fields_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       integration_logs: {
         Row: {
@@ -596,7 +612,15 @@ export type Database = {
           quiz_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_form_config_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_question_translations: {
         Row: {
@@ -626,7 +650,15 @@ export type Database = {
           question_text?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_question_translations_question_id"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_questions: {
         Row: {
@@ -674,7 +706,15 @@ export type Database = {
           quiz_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_questions_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_responses: {
         Row: {
@@ -809,7 +849,15 @@ export type Database = {
           variable_mapping?: Json | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_results_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_step_analytics: {
         Row: {
@@ -839,7 +887,15 @@ export type Database = {
           session_id?: string
           step_number?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_step_analytics_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_tag_relations: {
         Row: {
@@ -860,7 +916,22 @@ export type Database = {
           quiz_id?: string
           tag_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_tag_relations_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_quiz_tag_relations_tag_id"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_tags: {
         Row: {
@@ -962,7 +1033,15 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_translations_quiz_id"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_variants: {
         Row: {
@@ -998,7 +1077,15 @@ export type Database = {
           variant_letter?: string
           variant_name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_quiz_variants_parent_quiz_id"
+            columns: ["parent_quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quizzes: {
         Row: {
@@ -1693,7 +1780,15 @@ export type Database = {
           ticket_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_ticket_messages_ticket_id"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_integrations: {
         Row: {

@@ -28,6 +28,12 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showMigrateModal, setShowMigrateModal] = useState(false);
+  const [migrateEmail, setMigrateEmail] = useState('');
+  const [migratePassword, setMigratePassword] = useState('');
+  const [migrateConfirmPassword, setMigrateConfirmPassword] = useState('');
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [showMigratePassword, setShowMigratePassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [formData, setFormData] = useState({
@@ -91,6 +97,20 @@ const Login = () => {
       logAuthAction("auth:login_failed", email, { reason: error.message });
       
       if (error.message.includes('Invalid login credentials')) {
+        // Check if this is an imported user (orphan profile)
+        try {
+          const { data } = await supabase.functions.invoke('check-imported-user', {
+            body: { email },
+          });
+          if (data?.exists) {
+            setMigrateEmail(email);
+            setShowMigrateModal(true);
+            setIsLoading(false);
+            return;
+          }
+        } catch (checkErr) {
+          console.error('[CHECK-IMPORTED] Error:', checkErr);
+        }
         toast.error(t('login.invalidCredentials'));
       } else {
         toast.error(t('login.loginError'));
@@ -184,6 +204,39 @@ const Login = () => {
     }
     
     setIsResetting(false);
+  };
+
+  const handleMigrateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (migratePassword.length < 6) {
+      toast.error(t('login.passwordMinLength'));
+      return;
+    }
+    if (migratePassword !== migrateConfirmPassword) {
+      toast.error(t('login.passwordMismatch'));
+      return;
+    }
+    setIsMigrating(true);
+    
+    const { error } = await supabase.auth.signUp({
+      email: migrateEmail,
+      password: migratePassword,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      }
+    });
+    
+    if (error) {
+      toast.error(error.message);
+      setIsMigrating(false);
+      return;
+    }
+    
+    logAuthAction("auth:signup", migrateEmail);
+    toast.success(t('login.accountMigrated', 'Conta recuperada com sucesso! Seus dados foram restaurados.'));
+    setShowMigrateModal(false);
+    navigate('/dashboard');
+    setIsMigrating(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -466,6 +519,81 @@ const Login = () => {
                   </>
                 ) : (
                   t('login.sendResetLink', 'Enviar Link')
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Account Migration Modal */}
+      <Dialog open={showMigrateModal} onOpenChange={setShowMigrateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('login.migrateTitle', 'Encontramos sua conta!')}</DialogTitle>
+            <DialogDescription>
+              {t('login.migrateDesc', 'Seu email já possui dados cadastrados. Defina uma nova senha para recuperar sua conta e todos os seus dados serão restaurados automaticamente.')}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleMigrateAccount} className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t('login.emailLabel')}</Label>
+              <Input value={migrateEmail} disabled className="bg-muted" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="migrate-password">{t('login.newPassword', 'Nova Senha')}</Label>
+              <div className="relative">
+                <Input
+                  id="migrate-password"
+                  type={showMigratePassword ? 'text' : 'password'}
+                  placeholder={t('login.passwordPlaceholder')}
+                  value={migratePassword}
+                  onChange={(e) => setMigratePassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowMigratePassword(!showMigratePassword)}
+                >
+                  {showMigratePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="migrate-confirm">{t('login.confirmPasswordLabel')}</Label>
+              <Input
+                id="migrate-confirm"
+                type="password"
+                placeholder={t('login.confirmPasswordPlaceholder')}
+                value={migrateConfirmPassword}
+                onChange={(e) => setMigrateConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              {migrateConfirmPassword && migratePassword !== migrateConfirmPassword && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <XCircle className="h-3 w-3" />
+                  {t('login.passwordsDoNotMatch', 'As senhas não coincidem')}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setShowMigrateModal(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={isMigrating}>
+                {isMigrating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('login.migrating', 'Recuperando...')}
+                  </>
+                ) : (
+                  t('login.migrateButton', 'Recuperar Conta')
                 )}
               </Button>
             </div>
