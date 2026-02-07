@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Generated files
+src/integrations/supabase/types.ts
+
+# Package files
+package-lock.json
+bun.lockb
+
+# Other
+.git/
+coverage/
+*.min.js
+*.min.css

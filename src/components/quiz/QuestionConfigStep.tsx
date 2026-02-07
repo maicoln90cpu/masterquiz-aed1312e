@@ -1,0 +1,476 @@
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronLeft, ChevronRight, Edit, Eye } from "lucide-react";
+import { BlockEditor } from "./blocks/BlockEditor";
+import { QuizBlockPreview } from "./QuizBlockPreview";
+import { AISuggestionsSidebar } from "./AISuggestionsSidebar";
+import { ConditionBuilder, type QuestionConditions } from "./ConditionBuilder";
+import type { QuizBlock } from "@/types/blocks";
+import { createBlock, migrateQuestionToBlocks } from "@/types/blocks";
+
+interface QuestionConfigStepProps {
+  questions: any[];
+  questionCount: number;
+  isPublic: boolean;
+  onPublicChange: (value: boolean) => void;
+  quizTitle: string;
+  quizDescription: string;
+  quizId?: string;
+  onQuestionsUpdate: (questions: any[]) => void;
+  initialQuestionIndex?: number;
+}
+
+interface QuestionWithConditions {
+  id: string;
+  blocks: QuizBlock[];
+  conditions?: QuestionConditions | null;
+}
+
+export const QuestionConfigStep = ({ 
+  questions,
+  questionCount, 
+  isPublic, 
+  onPublicChange,
+  quizTitle,
+  quizDescription,
+  quizId,
+  onQuestionsUpdate,
+  initialQuestionIndex = 0
+}: QuestionConfigStepProps) => {
+  const { t } = useTranslation();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(initialQuestionIndex);
+  const [allQuestions, setAllQuestions] = useState<QuestionWithConditions[]>([]);
+  const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // ✅ Ref para evitar loop infinito de sincronização
+  const questionsHashRef = useRef<string>('');
+  const isInitializedRef = useRef(false);
+
+  // Preparar lista de perguntas anteriores para o ConditionBuilder
+  // ✅ Proteção contra blocks undefined com optional chaining
+  const availableQuestionsForConditions = useMemo(() => allQuestions
+    .slice(0, currentQuestionIndex)
+    .map((q, idx) => {
+      const questionBlock = q.blocks?.find(b => b.type === 'question');
+      return {
+        id: q.id,
+        text: questionBlock && 'questionText' in questionBlock 
+          ? questionBlock.questionText 
+          : `Pergunta ${idx + 1}`,
+        options: questionBlock && 'options' in questionBlock 
+          ? (questionBlock.options as string[]) 
+          : []
+      };
+    }), [allQuestions, currentQuestionIndex]);
+
+  // Handler para atualizar condições da pergunta atual - estabilizado
+  // ✅ Proteção contra índice inválido
+  const handleConditionsChange = useCallback((conditions: QuestionConditions | null) => {
+    setAllQuestions(prev => {
+      // ✅ Verificar se o índice é válido antes de atualizar
+      if (!prev[currentQuestionIndex]) {
+        console.warn('[handleConditionsChange] Índice inválido:', currentQuestionIndex, 'total:', prev.length);
+        return prev;
+      }
+      
+      const updatedQuestions = [...prev];
+      updatedQuestions[currentQuestionIndex] = {
+        ...updatedQuestions[currentQuestionIndex],
+        conditions
+      };
+      // Notificar parent de forma assíncrona para evitar loop
+      setTimeout(() => onQuestionsUpdate(updatedQuestions), 0);
+      return updatedQuestions;
+    });
+    
+    // Salvar com debounce
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => saveCurrentQuestion(false), 2000);
+  }, [currentQuestionIndex, onQuestionsUpdate]);
+
+  // ✅ Sync with parent questions - SEMPRE sincronizar com questions do pai
+  // ❌ REMOVIDO: branch que criava perguntas localmente (causava dessincronização)
+  useEffect(() => {
+    const newHash = JSON.stringify(questions?.map(q => ({ id: q.id, blocksCount: q.blocks?.length || 0 })) || []);
+    
+    // Só atualiza se houver mudança real nos IDs das questions
+    if (questions && questions.length > 0 && newHash !== questionsHashRef.current) {
+      questionsHashRef.current = newHash;
+      
+      // ✅ Garantir que todas as questões tenham blocks válidos
+      const validatedQuestions = questions.map((q, idx) => ({
+        ...q,
+        id: q.id || `temp-${Date.now()}-${idx}`,
+        blocks: q.blocks && Array.isArray(q.blocks) && q.blocks.length > 0
+          ? q.blocks
+          : [createBlock('question', 0)]
+      }));
+      
+      setAllQuestions(validatedQuestions);
+      isInitializedRef.current = true;
+    } else if (!questions?.length && quizId && !isInitializedRef.current) {
+      loadQuestions();
+    }
+    // ❌ REMOVIDO: else branch que criava perguntas com id 'q1', 'q2' 
+    // Isso causava dessincronização com CreateQuiz.tsx
+  }, [questions, quizId, questionCount]);
+
+  // Sync current question index
+  useEffect(() => {
+    setCurrentQuestionIndex(initialQuestionIndex);
+  }, [initialQuestionIndex]);
+
+  const loadQuestions = async () => {
+    if (!quizId) return;
+    
+    const { data, error } = await supabase
+      .from('quiz_questions')
+      .select('*')
+      .eq('quiz_id', quizId)
+      .order('order_number');
+
+    if (error) {
+      console.error('Error loading questions:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const loadedQuestions = data.map(q => {
+        // If blocks exist and are not empty, use them
+        if (q.blocks && Array.isArray(q.blocks) && q.blocks.length > 0) {
+          return {
+            id: q.id,
+            blocks: JSON.parse(JSON.stringify(q.blocks)) as QuizBlock[],
+            conditions: q.conditions ? (q.conditions as unknown as QuestionConditions) : null
+          };
+        }
+        
+        // Otherwise migrate from old format
+        const migratedBlocks = migrateQuestionToBlocks(
+          q.question_text,
+          q.answer_format,
+          q.options as any,
+          q.media_url || undefined,
+          q.media_type || undefined
+        );
+        
+        return {
+          id: q.id,
+          blocks: migratedBlocks,
+          conditions: q.conditions ? (q.conditions as unknown as QuestionConditions) : null
+        };
+      });
+      setAllQuestions(loadedQuestions);
+    }
+  };
+
+  const saveCurrentQuestion = async (showToast: boolean = true) => {
+    if (!quizId) return;
+    
+    const currentQuestion = allQuestions[currentQuestionIndex];
+    if (!currentQuestion) return;
+
+    logger.quiz('Salvando pergunta:', {
+      quizId,
+      questionIndex: currentQuestionIndex,
+      questionId: currentQuestion.id,
+      blocksCount: currentQuestion.blocks.length
+    });
+
+    // Extract the first question block for backward compatibility (OPTIONAL)
+    const questionBlock = currentQuestion.blocks.find(b => b.type === 'question');
+    
+    // ✅ Usar texto padrão se questionBlock não existir (evita erro de question_text null)
+    const questionText = questionBlock && questionBlock.type === 'question' 
+      ? questionBlock.questionText 
+      : '📊 Slide informativo';
+    const answerFormat = questionBlock && questionBlock.type === 'question'
+      ? questionBlock.answerFormat
+      : 'single_choice';
+    const options = questionBlock && questionBlock.type === 'question'
+      ? (questionBlock.options || [])
+      : [];
+
+    // Extract first media block for backward compatibility
+    const mediaBlock = currentQuestion.blocks.find(b => 
+      b.type === 'image' || b.type === 'video'
+    );
+
+    const dataToUpsert: any = {
+      quiz_id: quizId,
+      question_text: questionText,
+      answer_format: answerFormat,
+      options: options,
+      media_type: mediaBlock?.type === 'image' ? 'image' : mediaBlock?.type === 'video' ? 'video' : null,
+      media_url: mediaBlock?.type === 'image' || mediaBlock?.type === 'video' ? mediaBlock.url : null,
+      order_number: currentQuestionIndex,
+      blocks: currentQuestion.blocks, // ✅ SEMPRE salva o array blocks completo
+      conditions: currentQuestion.conditions || null // ✅ Salva condições da lógica condicional
+    };
+
+    // ✅ Se o ID for temporário ou começar com 'q', buscar pergunta existente pelo order_number
+    if (currentQuestion.id.startsWith('q') || currentQuestion.id.startsWith('temp-')) {
+      const { data: existingQuestion } = await supabase
+        .from('quiz_questions')
+        .select('id')
+        .eq('quiz_id', quizId)
+        .eq('order_number', currentQuestionIndex)
+        .maybeSingle();
+      
+      if (existingQuestion) {
+        // UPDATE da pergunta existente
+        dataToUpsert.id = existingQuestion.id;
+      }
+      // Se não existir, deixar INSERT gerar novo UUID (remover id do payload)
+    } else {
+      // ID válido (UUID), incluir no upsert
+      dataToUpsert.id = currentQuestion.id;
+    }
+
+    logger.quiz('Payload para upsert:', {
+      questionId: currentQuestion.id,
+      orderNumber: currentQuestionIndex,
+      willUseExistingId: !!dataToUpsert.id
+    });
+
+    const { error, data } = await supabase
+      .from('quiz_questions')
+      .upsert([dataToUpsert])
+      .select();
+    
+    if (error) {
+      logger.error('Erro ao salvar pergunta:', error.message);
+      toast.error(`${t('createQuiz.questionConfig.errorSaving')}: ${error.message}`);
+      return;
+    }
+
+    logger.quiz('Pergunta salva com sucesso');
+
+    // ✅ Toast apenas se showToast for true
+    if (showToast) {
+      toast.success('Alterações salvas', { duration: 2000 });
+    }
+  };
+
+  // ✅ Estabilizado para evitar re-criação e loop
+  // ✅ Proteção contra índice inválido
+  const updateCurrentQuestionBlocks = useCallback((blocks: QuizBlock[]) => {
+    setAllQuestions(prev => {
+      // ✅ Verificar se o índice é válido antes de atualizar
+      if (!prev[currentQuestionIndex]) {
+        console.warn('[updateCurrentQuestionBlocks] Índice inválido:', currentQuestionIndex, 'total:', prev.length);
+        return prev;
+      }
+      
+      const updatedQuestions = [...prev];
+      updatedQuestions[currentQuestionIndex] = {
+        ...updatedQuestions[currentQuestionIndex],
+        blocks
+      };
+      // Notificar parent de forma assíncrona para evitar loop
+      setTimeout(() => onQuestionsUpdate(updatedQuestions), 0);
+      return updatedQuestions;
+    });
+    
+    // ✅ Debounce correto - cancela timeout anterior
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => saveCurrentQuestion(false), 2000);
+  }, [currentQuestionIndex, onQuestionsUpdate]);
+
+  const handleAddBlockFromSuggestion = (block: QuizBlock, position: 'before' | 'after') => {
+    const currentBlocks = currentQuestion?.blocks || [];
+    const questionBlockIndex = currentBlocks.findIndex(b => b.type === 'question');
+    
+    let updatedBlocks: QuizBlock[];
+    if (position === 'before' && questionBlockIndex !== -1) {
+      // Insert before question block
+      updatedBlocks = [
+        ...currentBlocks.slice(0, questionBlockIndex),
+        block,
+        ...currentBlocks.slice(questionBlockIndex)
+      ];
+    } else {
+      // Insert after question block (or at end if no question block)
+      const insertIndex = questionBlockIndex !== -1 ? questionBlockIndex + 1 : currentBlocks.length;
+      updatedBlocks = [
+        ...currentBlocks.slice(0, insertIndex),
+        block,
+        ...currentBlocks.slice(insertIndex)
+      ];
+    }
+
+    // Reorder blocks
+    updatedBlocks = updatedBlocks.map((b, idx) => ({ ...b, order: idx }));
+    updateCurrentQuestionBlocks(updatedBlocks);
+  };
+
+  const goToPreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const goToNextQuestion = () => {
+    if (currentQuestionIndex < allQuestions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const currentQuestion = allQuestions[currentQuestionIndex];
+
+  // Extract AI suggestions from question block
+  const questionBlock = currentQuestion?.blocks?.find(b => b.type === 'question');
+  const aiSuggestions = questionBlock && 'aiSuggestions' in questionBlock ? questionBlock.aiSuggestions : null;
+
+  // ✅ Guard: Se não houver questões ainda, mostrar loading
+  if (allQuestions.length === 0 || !currentQuestion) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">{t('createQuiz.questionConfig.title')}</CardTitle>
+            <CardDescription>{t('createQuiz.questionConfig.description')}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center space-y-3">
+              <div className="h-8 w-8 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <p className="text-muted-foreground text-sm">Carregando perguntas...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">{t('createQuiz.questionConfig.title')}</CardTitle>
+          <CardDescription>{t('createQuiz.questionConfig.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Quiz Visibility */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-0.5">
+              <Label className="text-base font-semibold">
+                {t('createQuiz.questionConfig.visibility')}
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {isPublic 
+                  ? t('createQuiz.questionConfig.publicDesc')
+                  : t('createQuiz.questionConfig.privateDesc')
+                }
+              </p>
+            </div>
+            <Switch
+              checked={isPublic}
+              onCheckedChange={onPublicChange}
+            />
+          </div>
+
+          {/* Question Navigation */}
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={goToPreviousQuestion}
+              disabled={currentQuestionIndex === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Anterior
+            </Button>
+
+            <div className="text-center">
+              <div className="text-lg font-semibold">
+                Pergunta {currentQuestionIndex + 1} de {allQuestions.length}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {Math.round(((currentQuestionIndex + 1) / allQuestions.length) * 100)}% concluído
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={goToNextQuestion}
+              disabled={currentQuestionIndex === allQuestions.length - 1}
+            >
+              Próxima
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+
+          {/* Block Editor with Preview and AI Suggestions */}
+          <Tabs value={previewTab} onValueChange={(v) => setPreviewTab(v as "edit" | "preview")}>
+            <div className="flex justify-center mb-4">
+              <TabsList>
+                <TabsTrigger value="edit" className="gap-2">
+                  <Edit className="h-4 w-4" />
+                  Editar Blocos
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="gap-2">
+                  <Eye className="h-4 w-4" />
+                  Preview em Tempo Real
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="edit" className="mt-0">
+              <div className="flex flex-col w-full">
+                <div className="w-full">
+                  <BlockEditor
+                    blocks={currentQuestion.blocks}
+                    onChange={updateCurrentQuestionBlocks}
+                    totalQuestions={allQuestions.length}
+                    currentQuestionIndex={currentQuestionIndex}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="preview" className="mt-0">
+              <div className="w-full space-y-4">
+                <Card className="bg-muted/30">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Como os participantes verão:</CardTitle>
+                    <CardDescription className="text-xs">
+                      Preview em tempo real da pergunta {currentQuestionIndex + 1}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+                <div className="quiz-preview-scaled">
+                  <QuizBlockPreview blocks={currentQuestion.blocks} />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Condition Builder - Lógica Condicional */}
+          <ConditionBuilder
+            conditions={currentQuestion.conditions || null}
+            onChange={handleConditionsChange}
+            availableQuestions={availableQuestionsForConditions}
+            currentQuestionIndex={currentQuestionIndex}
+          />
+
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

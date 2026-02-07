@@ -1,0 +1,332 @@
+/* ============================================
+   QUIZ TEMPLATES - Variáveis CSS Dinâmicas
+   ============================================ */
+
+/* TEMPLATE: Moderno - Clean, Minimalista */
+.quiz-template-moderno {
+  --template-primary: 219 78% 55%; /* Azul vibrante #3b82f6 */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 0 0% 100%; /* Branco puro */
+  --template-card: 0 0% 100%; /* Branco puro */
+  --template-card-foreground: 222 47% 11%; /* Texto escuro #1f2937 */
+  --template-border: 214 32% 91%; /* Bordas suaves */
+  --template-accent: 213 94% 68%; /* Azul claro #60a5fa */
+  --template-muted: 210 40% 96%; /* Cinza muito claro */
+  --template-muted-foreground: 215 16% 47%; /* Cinza médio */
+  font-family: 'Poppins', sans-serif;
+}
+
+.quiz-template-moderno .card {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  border: 1px solid hsl(var(--template-border));
+  transition: all 0.3s ease;
+}
+
+.quiz-template-moderno .card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.quiz-template-moderno .btn-primary {
+  background: linear-gradient(135deg, hsl(var(--template-primary)), hsl(var(--template-accent)));
+}
+
+/* TEMPLATE: Colorido - Vibrante, Jovem */
+.quiz-template-colorido {
+  --template-primary: 4 90% 58%; /* Vermelho coral #ff6b6b */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 45 100% 93%; /* Amarelo claro #fef3c7 */
+  --template-card: 0 0% 100%; /* Branco */
+  --template-card-foreground: 217 19% 27%; /* Cinza escuro #374151 */
+  --template-border: 43 100% 85%; /* Amarelo suave */
+  --template-accent: 142 52% 57%; /* Verde vibrante #66bb6a */
+  --template-muted: 48 100% 96%; /* Amarelo muito claro */
+  --template-muted-foreground: 217 10% 40%; /* Cinza */
+}
+
+.quiz-template-colorido {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+}
+
+.quiz-template-colorido .card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+  border: 2px solid hsl(var(--template-border));
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.quiz-template-colorido .btn-primary {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 50%, #66bb6a 100%);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* TEMPLATE: Profissional - Corporativo, Sóbrio */
+.quiz-template-profissional {
+  --template-primary: 0 0% 20%; /* Cinza muito escuro #333333 */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 0 0% 98%; /* Cinza muito claro #fafafa */
+  --template-card: 0 0% 100%; /* Branco */
+  --template-card-foreground: 0 0% 15%; /* Preto suave #262626 */
+  --template-border: 0 0% 85%; /* Cinza claro */
+  --template-accent: 0 0% 40%; /* Cinza médio #666666 */
+  --template-muted: 0 0% 96%; /* Cinza claríssimo */
+  --template-muted-foreground: 0 0% 45%; /* Cinza texto */
+}
+
+.quiz-template-profissional .card {
+  border: 1px solid hsl(var(--template-border));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.quiz-template-profissional h1,
+.quiz-template-profissional h2,
+.quiz-template-profissional h3 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.quiz-template-profissional .btn-primary {
+  background: hsl(var(--template-primary));
+  border: 1px solid hsl(var(--template-primary));
+}
+
+.quiz-template-profissional .btn-primary:hover {
+  background: hsl(0 0% 10%);
+}
+
+/* TEMPLATE: Criativo - Ousado, Artístico */
+.quiz-template-criativo {
+  --template-primary: 280 100% 70%; /* Roxo vibrante #b366ff */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 300 100% 98%; /* Rosa muito claro #fff0ff */
+  --template-card: 0 0% 100%; /* Branco */
+  --template-card-foreground: 280 40% 20%; /* Roxo escuro */
+  --template-border: 280 60% 85%; /* Roxo claro */
+  --template-accent: 330 100% 71%; /* Rosa vibrante #ff66b2 */
+  --template-muted: 280 100% 96%; /* Roxo claríssimo */
+  --template-muted-foreground: 280 20% 45%; /* Roxo médio */
+}
+
+.quiz-template-criativo {
+  background: linear-gradient(135deg, #fff0ff 0%, #ffe6ff 50%, #ffd6ff 100%);
+}
+
+.quiz-template-criativo .card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 240, 255, 0.95));
+  border: 2px solid hsl(var(--template-border));
+  box-shadow: 0 10px 25px -5px rgb(179 102 255 / 0.2), 0 8px 10px -6px rgb(179 102 255 / 0.1);
+  border-radius: 1rem;
+}
+
+.quiz-template-criativo h1,
+.quiz-template-criativo h2,
+.quiz-template-criativo h3 {
+  background: linear-gradient(135deg, #b366ff, #ff66b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.quiz-template-criativo .btn-primary {
+  background: linear-gradient(135deg, #b366ff 0%, #ff66b2 100%);
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(179, 102, 255, 0.4);
+  border-radius: 9999px;
+}
+
+.quiz-template-criativo .btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(179, 102, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   Aplicar cores dos templates ao tema
+   ============================================ */
+
+/* TEMPLATE: Elegante - Sofisticado, Dourado */
+.quiz-template-elegante {
+  --template-primary: 43 74% 49%; /* Dourado #d4af37 */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 40 40% 97%; /* Creme #f9f7f4 */
+  --template-card: 0 0% 100%; /* Branco */
+  --template-card-foreground: 30 10% 20%; /* Marrom escuro #3a352f */
+  --template-border: 40 30% 88%; /* Bege claro */
+  --template-accent: 43 60% 60%; /* Dourado claro */
+  --template-muted: 40 20% 94%; /* Creme muito claro */
+  --template-muted-foreground: 30 8% 45%; /* Marrom médio */
+  font-family: 'Playfair Display', serif;
+}
+
+.quiz-template-elegante {
+  background: linear-gradient(135deg, #f9f7f4 0%, #f5f2ed 50%, #f0ebe4 100%);
+}
+
+.quiz-template-elegante .card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid hsl(var(--template-border));
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+  transition: all 0.4s ease;
+}
+
+.quiz-template-elegante .card:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 12px 24px rgba(212, 175, 55, 0.25);
+}
+
+.quiz-template-elegante .btn-primary {
+  background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+}
+
+/* TEMPLATE: Vibrante - Energético, Laranja */
+.quiz-template-vibrante {
+  --template-primary: 14 100% 57%; /* Laranja vibrante #ff5722 */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 24 100% 96%; /* Laranja muito claro #fff4f0 */
+  --template-card: 0 0% 100%; /* Branco */
+  --template-card-foreground: 14 40% 20%; /* Laranja escuro #3d1f14 */
+  --template-border: 24 100% 88%; /* Laranja claro */
+  --template-accent: 38 100% 50%; /* Amarelo-laranja #ffab00 */
+  --template-muted: 24 100% 94%; /* Laranja claríssimo */
+  --template-muted-foreground: 14 30% 45%; /* Laranja médio */
+}
+
+.quiz-template-vibrante {
+  background: linear-gradient(135deg, #fff4f0 0%, #ffe8df 50%, #ffd6c7 100%);
+}
+
+.quiz-template-vibrante .card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 244, 240, 0.95));
+  border: 2px solid hsl(var(--template-border));
+  box-shadow: 0 4px 8px -1px rgba(255, 87, 34, 0.2);
+}
+
+.quiz-template-vibrante .btn-primary {
+  background: linear-gradient(135deg, #ff5722 0%, #ff9800 50%, #ffab00 100%);
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(255, 87, 34, 0.4);
+}
+
+/* TEMPLATE: Minimalista - Ultra Clean, Preto/Branco */
+.quiz-template-minimalista {
+  --template-primary: 0 0% 10%; /* Preto suave #1a1a1a */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 0 0% 100%; /* Branco puro */
+  --template-card: 0 0% 100%; /* Branco puro */
+  --template-card-foreground: 0 0% 10%; /* Preto suave */
+  --template-border: 0 0% 93%; /* Cinza claríssimo */
+  --template-accent: 0 0% 30%; /* Cinza escuro */
+  --template-muted: 0 0% 98%; /* Cinza muito claro */
+  --template-muted-foreground: 0 0% 50%; /* Cinza médio */
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.quiz-template-minimalista .card {
+  border: 1px solid hsl(var(--template-border));
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.quiz-template-minimalista .card:hover {
+  border-color: hsl(0 0% 10%);
+}
+
+.quiz-template-minimalista h1,
+.quiz-template-minimalista h2,
+.quiz-template-minimalista h3 {
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+
+.quiz-template-minimalista .btn-primary {
+  background: hsl(var(--template-primary));
+  border: 1px solid hsl(var(--template-primary));
+  border-radius: 0;
+}
+
+/* TEMPLATE: Escuro - Dark Mode, Neon */
+.quiz-template-escuro {
+  --template-primary: 250 100% 65%; /* Azul neon #6666ff */
+  --template-primary-foreground: 0 0% 100%; /* Branco */
+  --template-background: 240 10% 10%; /* Cinza escuro #1a1a20 */
+  --template-card: 240 10% 15%; /* Cinza card #25252e */
+  --template-card-foreground: 0 0% 95%; /* Branco suave #f2f2f2 */
+  --template-border: 240 10% 25%; /* Cinza borda #3a3a47 */
+  --template-accent: 280 100% 70%; /* Roxo neon #b366ff */
+  --template-muted: 240 10% 20%; /* Cinza muted #2e2e3a */
+  --template-muted-foreground: 0 0% 65%; /* Cinza texto #a6a6a6 */
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.quiz-template-escuro {
+  background: linear-gradient(135deg, #1a1a20 0%, #1f1f28 50%, #25252e 100%);
+}
+
+.quiz-template-escuro .card {
+  background: hsl(var(--template-card));
+  border: 1px solid hsl(var(--template-border));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.quiz-template-escuro .card:hover {
+  border-color: rgba(102, 102, 255, 0.4);
+  box-shadow: 0 12px 32px rgba(102, 102, 255, 0.3);
+}
+
+.quiz-template-escuro .btn-primary {
+  background: linear-gradient(135deg, #6666ff 0%, #b366ff 100%);
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(102, 102, 255, 0.4);
+}
+
+.quiz-template-escuro .btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(102, 102, 255, 0.6);
+}
+
+/* ============================================
+   Aplicar cores dos templates ao tema
+   ============================================ */
+
+.quiz-template-moderno,
+.quiz-template-colorido,
+.quiz-template-profissional,
+.quiz-template-criativo,
+.quiz-template-elegante,
+.quiz-template-vibrante,
+.quiz-template-minimalista,
+.quiz-template-escuro {
+  --primary: var(--template-primary);
+  --primary-foreground: var(--template-primary-foreground);
+  --background: var(--template-background);
+  --card: var(--template-card);
+  --card-foreground: var(--template-card-foreground);
+  --border: var(--template-border);
+  --accent: var(--template-accent);
+  --muted: var(--template-muted);
+  --muted-foreground: var(--template-muted-foreground);
+}
+
+/* ============================================
+   Animações e transições suaves
+   ============================================ */
+
+.quiz-template-colorido .card,
+.quiz-template-criativo .card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quiz-template-colorido .card:hover,
+.quiz-template-criativo .card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.15);
+}
+
+.quiz-template-moderno button,
+.quiz-template-colorido button,
+.quiz-template-profissional button,
+.quiz-template-criativo button {
+  transition: all 0.2s ease-in-out;
+}

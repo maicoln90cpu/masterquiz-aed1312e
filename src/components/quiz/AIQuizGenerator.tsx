@@ -1,0 +1,940 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Sparkles, ArrowLeft, FileText, Upload, ChevronDown, Settings2 } from "lucide-react";
+import { useAIGenerationLimits } from "@/hooks/useAIGenerationLimits";
+import { useResourceLimits } from "@/hooks/useResourceLimits";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+interface AIQuizGeneratorProps {
+  onBack: () => void;
+}
+
+interface GeneratedQuestion {
+  question_text: string;
+  answer_format: 'single_choice' | 'multiple_choice' | 'yes_no';
+  options: string[];
+  aiSuggestions?: {
+    mediaType: 'image' | 'video' | null;
+    mediaReason: string;
+    additionalBlocks: Array<{
+      type: 'separator' | 'button' | 'text';
+      reason: string;
+      position: 'before' | 'after';
+    }>;
+  };
+}
+
+interface GeneratedQuizData {
+  title: string;
+  description: string;
+  questions: GeneratedQuestion[];
+}
+
+// Tipos para as novas variáveis
+interface FormAdvancedSettings {
+  quizIntent: string;
+  companyName: string;
+  industry: string;
+  tone: string;
+  leadTemperature: string;
+  resultProfiles: string;
+  ctaText: string;
+}
+
+interface PdfAdvancedSettings {
+  focusTopics: string;
+  quizIntent: string;
+  difficultyLevel: string;
+  targetAudiencePdf: string;
+}
+
+export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { allowed, used, limit, isLoading: limitsLoading } = useAIGenerationLimits();
+  const { limits: resourceLimits, isLoading: resourceLimitsLoading } = useResourceLimits();
+  
+  // Dynamic max questions based on user's plan
+  const maxQuestions = resourceLimits?.questionsPerQuizLimit || 10;
+  
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [uploadMode, setUploadMode] = useState<"form" | "pdf">("form");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfContent, setPdfContent] = useState<string>("");
+  const [isParsingPdf, setIsParsingPdf] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Adjust numberOfQuestions if it exceeds plan limit
+  useEffect(() => {
+    if (resourceLimits && formData.numberOfQuestions > resourceLimits.questionsPerQuizLimit) {
+      setFormData(prev => ({
+        ...prev,
+        numberOfQuestions: Math.min(prev.numberOfQuestions, resourceLimits.questionsPerQuizLimit)
+      }));
+    }
+  }, [resourceLimits?.questionsPerQuizLimit]);
+  
+  // Campos básicos
+  const [formData, setFormData] = useState({
+    productName: "",
+    problemSolved: "",
+    targetAudience: "",
+    desiredAction: "",
+    numberOfQuestions: 5,
+  });
+
+  // Campos avançados - Modo Formulário
+  const [formAdvanced, setFormAdvanced] = useState<FormAdvancedSettings>({
+    quizIntent: "",
+    companyName: "",
+    industry: "",
+    tone: "",
+    leadTemperature: "",
+    resultProfiles: "",
+    ctaText: "",
+  });
+
+  // Campos avançados - Modo PDF
+  const [pdfAdvanced, setPdfAdvanced] = useState<PdfAdvancedSettings>({
+    focusTopics: "",
+    quizIntent: "",
+    difficultyLevel: "",
+    targetAudiencePdf: "",
+  });
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error(t('components.aiGenerator.pdfOnly'));
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) { // 20MB limit
+      toast.error(t('components.aiGenerator.pdfTooLarge', { size: 20 }));
+      return;
+    }
+
+    setPdfFile(file);
+    setIsParsingPdf(true);
+
+    try {
+      toast.info(t('components.aiGenerator.extractingPdf'));
+      
+      // Upload file to virtual filesystem
+      const virtualPath = `user-uploads://${file.name}`;
+      
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // In a real implementation, we would:
+      // 1. Upload the file to a temporary location
+      // 2. Call document--parse_document via backend API
+      // 3. Get structured content back
+      
+      // For now, we'll read the file as ArrayBuffer and extract basic text
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Call backend to parse PDF using document--parse_document
+      const { data: parseResult, error: parseError } = await supabase.functions.invoke('parse-pdf-document', {
+        body: {
+          fileName: file.name,
+          fileData: Array.from(new Uint8Array(arrayBuffer)),
+        }
+      });
+
+      if (parseError) {
+        console.error('Error parsing PDF:', parseError);
+        toast.error(t('components.aiGenerator.pdfProcessError'));
+        setPdfFile(null);
+        setIsParsingPdf(false);
+        return;
+      }
+
+      // Extract meaningful content from parsed result
+      let extractedContent = '';
+      
+      if (parseResult.markdown) {
+        extractedContent = parseResult.markdown;
+      } else if (parseResult.text) {
+        extractedContent = parseResult.text;
+      } else {
+        extractedContent = JSON.stringify(parseResult);
+      }
+
+      // Add metadata about images and tables if present
+      if (parseResult.images && parseResult.images.length > 0) {
+        extractedContent += `\n\n[Documento contém ${parseResult.images.length} imagem(ns)]`;
+      }
+      
+      if (parseResult.tables && parseResult.tables.length > 0) {
+        extractedContent += `\n\n[Documento contém ${parseResult.tables.length} tabela(s)]`;
+      }
+
+      // ✅ LOG DETALHADO PARA DEBUG
+      console.log(`[AIQuizGenerator] PDF content extracted successfully`);
+      console.log(`[AIQuizGenerator] Content length: ${extractedContent.length} chars`);
+      console.log(`[AIQuizGenerator] Content preview (first 500 chars):`, extractedContent.substring(0, 500));
+      
+      // Verificar qualidade do conteúdo
+      if (extractedContent.length < 200) {
+        console.warn(`[AIQuizGenerator] ⚠️ Content seems too short - may be metadata only`);
+        toast.warning(t('components.aiGenerator.contentShort'));
+      }
+      
+      if (extractedContent.includes('%PDF-') || extractedContent.includes('endobj')) {
+        console.error(`[AIQuizGenerator] ❌ Content contains raw PDF markers - extraction failed`);
+        toast.error(t('components.aiGenerator.extractionFailed'));
+      }
+
+      setPdfContent(extractedContent);
+      toast.success(t('components.aiGenerator.pdfProcessed', { 
+        pages: parseResult.pages || 'Multiple', 
+        chars: extractedContent.length 
+      }));
+      
+    } catch (error) {
+      console.error('Error parsing PDF:', error);
+      toast.error(t('components.aiGenerator.pdfProcessError'));
+      setPdfFile(null);
+    } finally {
+      setIsParsingPdf(false);
+    }
+  };
+
+  const handleGenerateQuiz = async () => {
+    // Validação baseada no modo
+    if (uploadMode === "form") {
+      if (!formData.productName || !formData.problemSolved || !formData.targetAudience) {
+        toast.error(t('components.aiGenerator.fillRequired'));
+        return;
+      }
+    } else {
+      if (!pdfFile || !pdfContent) {
+        toast.error(t('components.aiGenerator.uploadPdfFirst'));
+        return;
+      }
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // Preparar payload baseado no modo com novas variáveis
+      const requestBody = uploadMode === "form" 
+        ? {
+            ...formData,
+            // Novas variáveis avançadas
+            quizIntent: formAdvanced.quizIntent || undefined,
+            companyName: formAdvanced.companyName || undefined,
+            industry: formAdvanced.industry || undefined,
+            tone: formAdvanced.tone || undefined,
+            leadTemperature: formAdvanced.leadTemperature || undefined,
+            resultProfiles: formAdvanced.resultProfiles || undefined,
+            ctaText: formAdvanced.ctaText || undefined,
+          }
+        : {
+            pdfContent: pdfContent,
+            pdfFileName: pdfFile?.name,
+            numberOfQuestions: formData.numberOfQuestions,
+            mode: "pdf",
+            // Novas variáveis avançadas para PDF
+            focusTopics: pdfAdvanced.focusTopics || undefined,
+            quizIntent: pdfAdvanced.quizIntent || undefined,
+            difficultyLevel: pdfAdvanced.difficultyLevel || undefined,
+            targetAudiencePdf: pdfAdvanced.targetAudiencePdf || undefined,
+          };
+
+      // Chamar edge function para gerar quiz com Gemini
+      const { data, error } = await supabase.functions.invoke('generate-quiz-ai', {
+        body: requestBody
+      });
+
+      if (error) {
+        console.error('AI generation error:', error);
+        
+        if (error.message?.includes('429')) {
+          toast.error(t('components.aiGenerator.limitReached', { used: '', limit: '' }));
+          return;
+        }
+        
+        if (error.message?.includes('403')) {
+          toast.error(t('components.aiGenerator.aiNotAvailable'));
+          return;
+        }
+
+        if (error.message?.includes('Rate limit')) {
+          toast.error(t('components.aiGenerator.rateLimitExceeded'));
+          return;
+        }
+
+        throw error;
+      }
+
+      // ✅ Verificar se a resposta contém erro de limite (status 429 retorna como data)
+      if (data?.error) {
+        console.error('AI generation data error:', data);
+        
+        if (data.error === 'Monthly AI generation limit reached') {
+          toast.error(t('components.aiGenerator.limitReached', { used: data.used, limit: data.limit }), {
+            description: t('components.aiGenerator.limitDesc'),
+            duration: 8000,
+          });
+          return;
+        }
+
+        if (data.error === 'AI generation not available in your plan') {
+          toast.error(t('components.aiGenerator.aiNotAvailable'), {
+            description: t('components.aiGenerator.upgradeToUnlock'),
+          });
+          return;
+        }
+
+        throw new Error(data.error);
+      }
+
+      // ✅ NORMALIZAÇÃO CRÍTICA: Garantir formato correto do JSON da IA
+      const rawData = data;
+      console.log('[AIQuizGenerator] Raw AI response:', JSON.stringify(rawData, null, 2));
+      
+      const quizData: GeneratedQuizData = {
+        title: rawData.title || 'Quiz Gerado por IA',
+        description: rawData.description || '',
+        questions: (rawData.questions || []).map((q: any, idx: number) => {
+          // Normalizar answer_format (fallback para single_choice)
+          let answerFormat: 'single_choice' | 'multiple_choice' | 'yes_no' = 'single_choice';
+          if (q.answer_format === 'multiple_choice') answerFormat = 'multiple_choice';
+          else if (q.answer_format === 'yes_no') answerFormat = 'yes_no';
+          
+          // Normalizar options (converter objetos para strings se necessário)
+          let normalizedOptions: string[] = [];
+          if (Array.isArray(q.options)) {
+            normalizedOptions = q.options.map((opt: any) => {
+              if (typeof opt === 'string') return opt;
+              if (opt && typeof opt === 'object' && opt.text) return opt.text;
+              return String(opt);
+            }).filter((opt: string) => opt && opt.trim() !== '');
+          }
+          
+          // Fallback para opções se vazio
+          if (normalizedOptions.length < 2) {
+            if (answerFormat === 'yes_no') {
+              normalizedOptions = ['Sim', 'Não'];
+            } else {
+              normalizedOptions = ['Opção 1', 'Opção 2', 'Opção 3', 'Opção 4'];
+              console.warn(`[AIQuizGenerator] Pergunta ${idx + 1} sem opções válidas, usando fallback`);
+            }
+          }
+          
+          console.log(`[AIQuizGenerator] Pergunta ${idx + 1}: format=${answerFormat}, options=${normalizedOptions.length}`);
+          
+          return {
+            question_text: q.question_text || `Pergunta ${idx + 1}`,
+            answer_format: answerFormat,
+            options: normalizedOptions,
+            aiSuggestions: q.aiSuggestions || null,
+          };
+        }),
+      };
+      
+      console.log('[AIQuizGenerator] Normalized quiz data:', JSON.stringify(quizData, null, 2));
+
+      // Buscar user_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+
+      // Criar quiz no banco
+      const { data: quiz, error: quizError } = await supabase
+        .from('quizzes')
+        .insert({
+          user_id: user.id,
+          title: quizData.title,
+          description: quizData.description,
+          question_count: quizData.questions.length,
+          template: 'moderno',
+          status: 'draft',
+        })
+        .select()
+        .single();
+
+      if (quizError) throw quizError;
+
+      // ✅ VALIDAÇÃO CRÍTICA: Garantir opções mínimas e blocos válidos
+      const questionsData = quizData.questions.map((q, index) => {
+        // Validar e normalizar opções baseado no tipo de pergunta
+        let validatedOptions = q.options || [];
+        
+        if (q.answer_format === 'yes_no') {
+          // yes_no SEMPRE deve ter exatamente ["Sim", "Não"]
+          if (validatedOptions.length !== 2 || !validatedOptions.includes('Sim') || !validatedOptions.includes('Não')) {
+            console.warn(`[AI Validation] Pergunta ${index + 1} (yes_no) sem opções corretas. Corrigindo...`);
+            validatedOptions = ['Sim', 'Não'];
+          }
+        } else if (q.answer_format === 'single_choice' || q.answer_format === 'multiple_choice') {
+          // single_choice/multiple_choice devem ter pelo menos 2 opções
+          if (validatedOptions.length < 2) {
+            console.error(`[AI Validation] Pergunta ${index + 1} (${q.answer_format}) tem menos de 2 opções:`, validatedOptions);
+            toast.error(`Erro: Pergunta "${q.question_text.substring(0, 50)}..." não tem opções válidas`);
+            throw new Error(`Pergunta ${index + 1} não tem opções suficientes`);
+          }
+        }
+
+        // Log de validação bem-sucedida
+        console.log(`[AI Validation] ✅ Pergunta ${index + 1}: ${q.answer_format}, ${validatedOptions.length} opções`);
+
+        // 🆕 FASE 4: Garantir que TODAS as perguntas tenham sugestões de IA
+        const defaultSuggestions = {
+          suggestedMedia: ['image', 'video'],
+          additionalBlocks: ['text', 'image', 'video', 'button', 'separator']
+        };
+
+        const aiSuggestions = q.aiSuggestions || defaultSuggestions;
+
+        // Criar bloco com opções validadas e sugestões
+        const blocks = [
+          {
+            id: `block-question-${index}`,
+            type: 'question',
+            order: 0,
+            questionText: q.question_text,
+            answerFormat: q.answer_format,
+            options: validatedOptions,
+            aiSuggestions: aiSuggestions,
+          }
+        ];
+
+        console.log(`[AI Suggestions] Pergunta ${index + 1}: ${q.aiSuggestions ? 'IA' : 'fallback'} suggestions`);
+
+        return {
+          quiz_id: quiz.id,
+          order_number: index,
+          question_text: q.question_text,
+          answer_format: q.answer_format,
+          options: validatedOptions,
+          blocks: blocks,
+          media_type: null,
+          media_url: null,
+        };
+      });
+
+      const { error: questionsError } = await supabase
+        .from('quiz_questions')
+        .insert(questionsData);
+
+      if (questionsError) throw questionsError;
+
+      // Criar configuração de formulário padrão
+      await supabase.from('quiz_form_config').insert({
+        quiz_id: quiz.id,
+        collection_timing: 'after',
+        collect_name: true,
+        collect_email: true,
+        collect_whatsapp: false,
+      });
+
+      // Invalidar queries para atualizar dashboard imediatamente
+      queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      
+      toast.success(t('components.aiGenerator.quizCreated'));
+      navigate('/dashboard');
+
+    } catch (error) {
+      console.error('Error generating quiz:', error);
+      toast.error(t('components.aiGenerator.errorGenerating'));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (limitsLoading || resourceLimitsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <CardTitle className="text-2xl">{t('createQuiz.aiGeneration.title')}</CardTitle>
+          </div>
+          <CardDescription>
+            {t('components.aiGenerator.notAvailableTitle')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertDescription>
+              {t('components.aiGenerator.notAvailableDesc')}
+            </AlertDescription>
+          </Alert>
+          <div className="flex gap-2">
+            <Button onClick={onBack} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('common.back')}
+            </Button>
+            <Button onClick={() => navigate('/pricing')}>
+              {t('components.aiGenerator.seePlans')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <CardTitle className="text-2xl">Criar Quiz com IA</CardTitle>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+        <CardDescription>
+          Use IA para criar um quiz completo: responda perguntas sobre seu produto ou envie um PDF
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Usage Info */}
+        <Card className="bg-muted/30 border-primary/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Gerações de IA usadas este mês</p>
+                <p className="text-2xl font-bold text-primary">{used} / {limit === 0 ? "∞" : limit}</p>
+              </div>
+              <Sparkles className="h-8 w-8 text-primary opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mode Tabs */}
+        <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as "form" | "pdf")}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="form" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Formulário Guiado
+            </TabsTrigger>
+            <TabsTrigger value="pdf" className="gap-2">
+              <Upload className="h-4 w-4" />
+              Upload de PDF
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Form Mode */}
+          <TabsContent value="form" className="space-y-4 mt-4">
+            <div className="space-y-4">
+              {/* Campos Básicos Obrigatórios */}
+              <div className="space-y-2">
+                <Label htmlFor="productName">Nome do Produto/Serviço *</Label>
+                <Input
+                  id="productName"
+                  placeholder="Ex: Consultoria de Marketing Digital"
+                  value={formData.productName}
+                  onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="problemSolved">Que Problema Resolve? *</Label>
+                <Textarea
+                  id="problemSolved"
+                  placeholder="Ex: Ajuda empresas a aumentar vendas online através de estratégias digitais"
+                  value={formData.problemSolved}
+                  onChange={(e) => setFormData({ ...formData, problemSolved: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="targetAudience">Público-Alvo *</Label>
+                <Textarea
+                  id="targetAudience"
+                  placeholder="Ex: Pequenas e médias empresas que querem crescer online"
+                  value={formData.targetAudience}
+                  onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="desiredAction">Ação Desejada (opcional)</Label>
+                <Input
+                  id="desiredAction"
+                  placeholder="Ex: Agendar consultoria gratuita"
+                  value={formData.desiredAction}
+                  onChange={(e) => setFormData({ ...formData, desiredAction: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="numberOfQuestions">{t('components.aiGenerator.numberOfQuestions')}</Label>
+                <Input
+                  id="numberOfQuestions"
+                  type="number"
+                  min="3"
+                  max={maxQuestions}
+                  value={formData.numberOfQuestions}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 5;
+                    const clamped = Math.min(Math.max(value, 3), maxQuestions);
+                    setFormData({ ...formData, numberOfQuestions: clamped });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('components.aiGenerator.questionRange', { min: 3, max: maxQuestions })}
+                </p>
+              </div>
+
+              {/* Configurações Avançadas - Form Mode */}
+              <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between" type="button">
+                    <div className="flex items-center gap-2">
+                      <Settings2 className="h-4 w-4" />
+                      Configurações Avançadas
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-4">
+                  <div className="p-4 border rounded-lg bg-muted/20 space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      🎯 Configure opções avançadas para um quiz mais personalizado e eficaz
+                    </p>
+
+                    {/* Quiz Intent */}
+                    <div className="space-y-2">
+                      <Label htmlFor="quizIntent">Objetivo do Quiz</Label>
+                      <Select 
+                        value={formAdvanced.quizIntent} 
+                        onValueChange={(v) => setFormAdvanced({ ...formAdvanced, quizIntent: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o objetivo principal" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="discover_problem">Revelar um Problema</SelectItem>
+                          <SelectItem value="amplify_urgency">Amplificar Urgência</SelectItem>
+                          <SelectItem value="compare_solutions">Comparar Soluções</SelectItem>
+                          <SelectItem value="validate_need">Validar Necessidade</SelectItem>
+                          <SelectItem value="overcome_objections">Quebrar Objeções</SelectItem>
+                          <SelectItem value="drive_to_checkout">Conduzir ao Checkout</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Company Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="companyName">Nome da Empresa</Label>
+                      <Input
+                        id="companyName"
+                        placeholder="Ex: Acme Corp"
+                        value={formAdvanced.companyName}
+                        onChange={(e) => setFormAdvanced({ ...formAdvanced, companyName: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">Personaliza o tom do quiz com a identidade da marca</p>
+                    </div>
+
+                    {/* Industry */}
+                    <div className="space-y-2">
+                      <Label htmlFor="industry">Setor/Indústria</Label>
+                      <Select 
+                        value={formAdvanced.industry} 
+                        onValueChange={(v) => setFormAdvanced({ ...formAdvanced, industry: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o setor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="saas">SaaS / Software</SelectItem>
+                          <SelectItem value="ecommerce">E-commerce</SelectItem>
+                          <SelectItem value="education">Educação / Cursos</SelectItem>
+                          <SelectItem value="health">Saúde / Bem-estar</SelectItem>
+                          <SelectItem value="finance">Finanças / Investimentos</SelectItem>
+                          <SelectItem value="real_estate">Imobiliário</SelectItem>
+                          <SelectItem value="marketing">Marketing / Agências</SelectItem>
+                          <SelectItem value="consulting">Consultoria</SelectItem>
+                          <SelectItem value="food">Alimentação</SelectItem>
+                          <SelectItem value="fashion">Moda / Vestuário</SelectItem>
+                          <SelectItem value="tech">Tecnologia</SelectItem>
+                          <SelectItem value="services">Serviços Gerais</SelectItem>
+                          <SelectItem value="other">Outro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Tone */}
+                    <div className="space-y-2">
+                      <Label htmlFor="tone">Tom de Voz</Label>
+                      <Select 
+                        value={formAdvanced.tone} 
+                        onValueChange={(v) => setFormAdvanced({ ...formAdvanced, tone: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tom" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="professional">Profissional</SelectItem>
+                          <SelectItem value="casual">Casual / Amigável</SelectItem>
+                          <SelectItem value="technical">Técnico</SelectItem>
+                          <SelectItem value="playful">Divertido / Descontraído</SelectItem>
+                          <SelectItem value="persuasive">Persuasivo</SelectItem>
+                          <SelectItem value="empathetic">Empático / Acolhedor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Lead Temperature */}
+                    <div className="space-y-2">
+                      <Label htmlFor="leadTemperature">Temperatura do Lead</Label>
+                      <Select 
+                        value={formAdvanced.leadTemperature} 
+                        onValueChange={(v) => setFormAdvanced({ ...formAdvanced, leadTemperature: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Em que estágio está o lead?" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cold">Frio - Descoberta</SelectItem>
+                          <SelectItem value="warm">Morno - Consideração</SelectItem>
+                          <SelectItem value="hot">Quente - Decisão</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Influencia a profundidade das perguntas</p>
+                    </div>
+
+                    {/* Result Profiles */}
+                    <div className="space-y-2">
+                      <Label htmlFor="resultProfiles">Perfis de Resultado</Label>
+                      <Textarea
+                        id="resultProfiles"
+                        placeholder="Ex: Iniciante, Intermediário, Avançado&#10;ou&#10;Perfil A (precisa do produto X), Perfil B (precisa do produto Y)"
+                        value={formAdvanced.resultProfiles}
+                        onChange={(e) => setFormAdvanced({ ...formAdvanced, resultProfiles: e.target.value })}
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground">Liste os perfis de resultado separados por vírgula ou linha</p>
+                    </div>
+
+                    {/* CTA Text */}
+                    <div className="space-y-2">
+                      <Label htmlFor="ctaText">Texto do CTA Final</Label>
+                      <Input
+                        id="ctaText"
+                        placeholder="Ex: Quero minha consultoria gratuita!"
+                        value={formAdvanced.ctaText}
+                        onChange={(e) => setFormAdvanced({ ...formAdvanced, ctaText: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">Call-to-action que aparecerá no resultado</p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </TabsContent>
+
+          {/* PDF Upload Mode */}
+          <TabsContent value="pdf" className="space-y-4 mt-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="pdfUpload">Upload de PDF *</Label>
+                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                  <Input
+                    id="pdfUpload"
+                    type="file"
+                    accept=".pdf"
+                    onChange={handlePdfUpload}
+                    disabled={isParsingPdf}
+                    className="hidden"
+                  />
+                  <label htmlFor="pdfUpload" className="cursor-pointer">
+                    {isParsingPdf ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Processando PDF...</p>
+                      </div>
+                    ) : pdfFile ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className="h-8 w-8 text-primary" />
+                        <p className="text-sm font-medium">{pdfFile.name}</p>
+                        <p className="text-xs text-muted-foreground">Clique para trocar o arquivo</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-sm font-medium">Clique para enviar PDF</p>
+                        <p className="text-xs text-muted-foreground">Máximo 20MB, primeiras 50 páginas</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  📄 A IA extrairá o conteúdo do PDF e criará um quiz baseado nas informações do documento
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pdfNumberOfQuestions">{t('components.aiGenerator.numberOfQuestions')}</Label>
+                <Input
+                  id="pdfNumberOfQuestions"
+                  type="number"
+                  min="3"
+                  max={maxQuestions}
+                  value={formData.numberOfQuestions}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 5;
+                    const clamped = Math.min(Math.max(value, 3), maxQuestions);
+                    setFormData({ ...formData, numberOfQuestions: clamped });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('components.aiGenerator.questionRange', { min: 3, max: maxQuestions })}
+                </p>
+              </div>
+
+              {/* Configurações Avançadas - PDF Mode */}
+              <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between" type="button">
+                    <div className="flex items-center gap-2">
+                      <Settings2 className="h-4 w-4" />
+                      Configurações Avançadas
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-4">
+                  <div className="p-4 border rounded-lg bg-muted/20 space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      🎯 Configure opções avançadas para personalizar a geração baseada no PDF
+                    </p>
+
+                    {/* Focus Topics */}
+                    <div className="space-y-2">
+                      <Label htmlFor="focusTopics">Tópicos a Focar</Label>
+                      <Textarea
+                        id="focusTopics"
+                        placeholder="Ex: Cap. 3 sobre vendas, seção de benefícios, FAQ"
+                        value={pdfAdvanced.focusTopics}
+                        onChange={(e) => setPdfAdvanced({ ...pdfAdvanced, focusTopics: e.target.value })}
+                        rows={2}
+                      />
+                      <p className="text-xs text-muted-foreground">Especifique partes do PDF para a IA focar</p>
+                    </div>
+
+                    {/* Quiz Intent */}
+                    <div className="space-y-2">
+                      <Label htmlFor="pdfQuizIntent">Objetivo do Quiz</Label>
+                      <Select 
+                        value={pdfAdvanced.quizIntent} 
+                        onValueChange={(v) => setPdfAdvanced({ ...pdfAdvanced, quizIntent: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o objetivo principal" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="discover_problem">Revelar um Problema</SelectItem>
+                          <SelectItem value="amplify_urgency">Amplificar Urgência</SelectItem>
+                          <SelectItem value="compare_solutions">Comparar Soluções</SelectItem>
+                          <SelectItem value="validate_need">Validar Necessidade</SelectItem>
+                          <SelectItem value="overcome_objections">Quebrar Objeções</SelectItem>
+                          <SelectItem value="drive_to_checkout">Conduzir ao Checkout</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Difficulty Level */}
+                    <div className="space-y-2">
+                      <Label htmlFor="difficultyLevel">Nível de Dificuldade</Label>
+                      <Select 
+                        value={pdfAdvanced.difficultyLevel} 
+                        onValueChange={(v) => setPdfAdvanced({ ...pdfAdvanced, difficultyLevel: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o nível" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="easy">Fácil - Conceitos básicos</SelectItem>
+                          <SelectItem value="medium">Médio - Aplicação prática</SelectItem>
+                          <SelectItem value="hard">Difícil - Análise profunda</SelectItem>
+                          <SelectItem value="mixed">Misto - Variado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Target Audience PDF */}
+                    <div className="space-y-2">
+                      <Label htmlFor="targetAudiencePdf">Público-Alvo</Label>
+                      <Input
+                        id="targetAudiencePdf"
+                        placeholder="Ex: Alunos do curso de marketing"
+                        value={pdfAdvanced.targetAudiencePdf}
+                        onChange={(e) => setPdfAdvanced({ ...pdfAdvanced, targetAudiencePdf: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">Quem responderá este quiz?</p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Generate Button */}
+        <Button 
+          onClick={handleGenerateQuiz} 
+          disabled={isGenerating || (uploadMode === "pdf" && !pdfFile)}
+          className="w-full"
+          size="lg"
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              Gerando Quiz com IA...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-5 w-5 mr-2" />
+              Gerar Quiz com IA
+            </>
+          )}
+        </Button>
+
+        {/* Info Card */}
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">
+              💡 A IA criará todas as perguntas e fornecerá sugestões estratégicas de onde adicionar 
+              imagens, vídeos, separadores e outros elementos para maximizar a conversão.
+            </p>
+          </CardContent>
+        </Card>
+      </CardContent>
+    </Card>
+  );
+};

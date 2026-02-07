@@ -1,0 +1,132 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+interface FunnelStep {
+  stepNumber: number;
+  label: string;
+  count: number;
+  questionId?: string;
+}
+
+interface UseFunnelDataOptions {
+  quizId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export function useFunnelData(options: UseFunnelDataOptions = {}) {
+  const { quizId, startDate, endDate } = options;
+
+  return useQuery({
+    queryKey: ['funnel-data', quizId, startDate, endDate],
+    queryFn: async (): Promise<FunnelStep[]> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Buscar quiz_step_analytics agregado
+      let query = supabase
+        .from('quiz_step_analytics')
+        .select(`
+          step_number,
+          quiz_id,
+          question_id,
+          quizzes!inner(user_id, title),
+          quiz_questions(question_text)
+        `)
+        .eq('quizzes.user_id', user.id);
+
+      if (quizId) {
+        query = query.eq('quiz_id', quizId);
+      }
+
+      if (startDate) {
+        query = query.gte('date', startDate);
+      }
+
+      if (endDate) {
+        query = query.lte('date', endDate);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching funnel data:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Agregar por step_number contando sessões únicas
+      const stepMap = new Map<number, {
+        count: number;
+        questionId?: string;
+        questionText?: string;
+        sessions: Set<string>;
+      }>();
+
+      // Buscar sessões distintas para cada step
+      const { data: rawData, error: rawError } = await supabase
+        .from('quiz_step_analytics')
+        .select('step_number, session_id, question_id')
+        .in('quiz_id', quizId 
+          ? [quizId] 
+          : data.map(d => d.quiz_id).filter((v, i, a) => a.indexOf(v) === i)
+        );
+
+      if (rawError) {
+        console.error('Error fetching raw funnel data:', rawError);
+        throw rawError;
+      }
+
+      rawData?.forEach(row => {
+        if (!stepMap.has(row.step_number)) {
+          stepMap.set(row.step_number, {
+            count: 0,
+            questionId: row.question_id || undefined,
+            sessions: new Set()
+          });
+        }
+        const step = stepMap.get(row.step_number)!;
+        step.sessions.add(row.session_id);
+        step.count = step.sessions.size;
+      });
+
+      // Buscar nomes das perguntas
+      const questionIds = Array.from(stepMap.values())
+        .map(s => s.questionId)
+        .filter(Boolean) as string[];
+
+      const questionNames = new Map<string, string>();
+      if (questionIds.length > 0) {
+        const { data: questions } = await supabase
+          .from('quiz_questions')
+          .select('id, question_text')
+          .in('id', questionIds);
+        
+        questions?.forEach(q => {
+          questionNames.set(q.id, q.question_text);
+        });
+      }
+
+      // Converter para array ordenado
+      const funnelSteps: FunnelStep[] = Array.from(stepMap.entries())
+        .sort(([a], [b]) => a - b)
+        .map(([stepNumber, data]) => ({
+          stepNumber,
+          label: stepNumber === 0 
+            ? 'Início do Quiz'
+            : data.questionId && questionNames.has(data.questionId)
+              ? `Pergunta ${stepNumber}: ${questionNames.get(data.questionId)?.substring(0, 30)}...`
+              : `Etapa ${stepNumber}`,
+          count: data.count,
+          questionId: data.questionId
+        }));
+
+      return funnelSteps;
+    },
+    enabled: true,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+  });
+}

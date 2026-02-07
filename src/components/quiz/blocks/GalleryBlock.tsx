@@ -1,0 +1,115 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageUploader } from "@/components/ImageUploader";
+import { GripVertical, Images, Plus, Trash2 } from "lucide-react";
+import type { GalleryBlock as GalleryBlockType } from "@/types/blocks";
+
+interface GalleryBlockProps {
+  block: GalleryBlockType;
+  onChange: (block: GalleryBlockType) => void;
+}
+
+export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
+  const updateBlock = (updates: Partial<GalleryBlockType>) => {
+    onChange({ ...block, ...updates });
+  };
+
+  const addImage = () => {
+    const images = [...block.images, { url: '', alt: '', caption: '' }];
+    updateBlock({ images });
+  };
+
+  const updateImage = (index: number, updates: Partial<GalleryBlockType['images'][0]>) => {
+    const images = [...block.images];
+    images[index] = { ...images[index], ...updates };
+    updateBlock({ images });
+  };
+
+  const removeImage = (index: number) => {
+    const images = block.images.filter((_, i) => i !== index);
+    updateBlock({ images });
+  };
+
+  return (
+    <Card className="border-2 border-muted">
+      <CardContent className="pt-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <GripVertical className="h-4 w-4" />
+            <Images className="h-4 w-4" />
+            <span>Galeria de Imagens</span>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={addImage} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Imagem
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={`layout-${block.id}`}>Layout</Label>
+          <Select value={block.layout} onValueChange={(value: any) => updateBlock({ layout: value })}>
+            <SelectTrigger id={`layout-${block.id}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="grid">Grade (Grid)</SelectItem>
+              <SelectItem value="carousel">Carrossel</SelectItem>
+              <SelectItem value="masonry">Mosaico (Masonry)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {block.images.length === 0 ? (
+          <div className="text-center py-8 border-2 border-dashed rounded-lg">
+            <Images className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">Nenhuma imagem adicionada</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Clique em "Adicionar Imagem" para começar
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {block.images.map((image, index) => (
+              <Card key={index} className="bg-muted/20">
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Imagem {index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeImage(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <ImageUploader
+                    value={image.url}
+                    onChange={(url) => updateImage(index, { url })}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input
+                      placeholder="Texto alternativo..."
+                      value={image.alt || ''}
+                      onChange={(e) => updateImage(index, { alt: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Legenda..."
+                      value={image.caption || ''}
+                      onChange={(e) => updateImage(index, { caption: e.target.value })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
