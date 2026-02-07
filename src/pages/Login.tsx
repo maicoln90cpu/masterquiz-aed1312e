@@ -218,24 +218,43 @@ const Login = () => {
     }
     setIsMigrating(true);
     
-    const { error } = await supabase.auth.signUp({
-      email: migrateEmail,
-      password: migratePassword,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+    try {
+      // Use server-side migration (creates auth user with auto-confirm + merges data)
+      const { data, error: fnError } = await supabase.functions.invoke('migrate-imported-user', {
+        body: { email: migrateEmail, password: migratePassword },
+      });
+      
+      if (fnError || data?.error) {
+        const msg = data?.error || fnError?.message || 'Erro ao migrar conta';
+        if (data?.already_exists) {
+          // Account exists and was confirmed, just sign in
+        } else {
+          toast.error(msg);
+          setIsMigrating(false);
+          return;
+        }
       }
-    });
-    
-    if (error) {
-      toast.error(error.message);
-      setIsMigrating(false);
-      return;
+      
+      // Now sign in with the new credentials
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: migrateEmail,
+        password: migratePassword,
+      });
+      
+      if (signInError) {
+        toast.error(signInError.message);
+        setIsMigrating(false);
+        return;
+      }
+      
+      logAuthAction("auth:signup", migrateEmail);
+      toast.success(t('login.accountMigrated', 'Conta recuperada com sucesso! Seus dados foram restaurados.'));
+      setShowMigrateModal(false);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('[MIGRATE] Error:', err);
+      toast.error('Erro inesperado ao migrar conta');
     }
-    
-    logAuthAction("auth:signup", migrateEmail);
-    toast.success(t('login.accountMigrated', 'Conta recuperada com sucesso! Seus dados foram restaurados.'));
-    setShowMigrateModal(false);
-    navigate('/dashboard');
     setIsMigrating(false);
   };
 
