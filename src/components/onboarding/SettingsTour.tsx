@@ -25,8 +25,8 @@ export const SettingsTour = ({ onComplete, onSkip }: SettingsTourProps) => {
       animate: true,
       allowClose: true,
       onDestroyStarted: () => {
+        updateOnboardingStep('settings_tour_completed', true);
         if (!driverObj.hasNextStep()) {
-          updateOnboardingStep('settings_tour_completed', true);
           onComplete?.();
         } else {
           onSkip?.();

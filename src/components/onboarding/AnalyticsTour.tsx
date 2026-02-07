@@ -25,8 +25,8 @@ export const AnalyticsTour = ({ onComplete, onSkip }: AnalyticsTourProps) => {
       animate: true,
       allowClose: true,
       onDestroyStarted: () => {
+        updateOnboardingStep('analytics_tour_completed', true);
         if (!driverObj.hasNextStep()) {
-          updateOnboardingStep('analytics_tour_completed', true);
           onComplete?.();
         } else {
           onSkip?.();

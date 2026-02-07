@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.migrate-imported-user]
 verify_jwt = false
+
+[functions.list-all-users]
+verify_jwt = false
+
+[functions.system-health-check]
+verify_jwt = false

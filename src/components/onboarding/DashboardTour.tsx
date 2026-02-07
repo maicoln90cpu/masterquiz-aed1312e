@@ -26,8 +26,9 @@ export const DashboardTour = ({ onComplete, onSkip }: DashboardTourProps) => {
       animate: true,
       allowClose: true,
       onDestroyStarted: () => {
+        // Always mark as completed (whether finished or skipped)
+        updateOnboardingStep('dashboard_tour_completed', true);
         if (!driverObj.hasNextStep()) {
-          updateOnboardingStep('dashboard_tour_completed', true);
           onComplete?.();
         } else {
           onSkip?.();

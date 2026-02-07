@@ -316,7 +316,15 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_integration_logs_integration_id"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "user_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       landing_ab_sessions: {
         Row: {
@@ -2142,7 +2150,15 @@ export type Database = {
           token?: string | null
           webhook_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_webhook_logs_webhook_id"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "user_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

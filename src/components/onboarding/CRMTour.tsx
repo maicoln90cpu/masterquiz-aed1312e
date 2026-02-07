@@ -25,8 +25,8 @@ export const CRMTour = ({ onComplete, onSkip }: CRMTourProps) => {
       animate: true,
       allowClose: true,
       onDestroyStarted: () => {
+        updateOnboardingStep('crm_tour_completed', true);
         if (!driverObj.hasNextStep()) {
-          updateOnboardingStep('crm_tour_completed', true);
           onComplete?.();
         } else {
           onSkip?.();
