@@ -29,16 +29,16 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+    if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const newUserId = claimsData.claims.sub as string;
-    const userEmail = claimsData.claims.email as string;
+    const newUserId = user.id;
+    const userEmail = user.email;
 
     if (!userEmail) {
       return new Response(JSON.stringify({ merged: false, reason: 'no_email' }), {
@@ -89,6 +89,11 @@ Deno.serve(async (req) => {
       'bunny_videos',
       'audit_logs',
       'validation_requests',
+      'user_onboarding',
+      'video_analytics',
+      'video_usage',
+      'scheduled_deletions',
+      'integration_logs',
     ];
 
     for (const table of tablesToUpdate) {
@@ -124,34 +129,49 @@ Deno.serve(async (req) => {
       tablesUpdated.push('user_roles');
     }
 
-    // Merge old profile fields into new profile (fill empty fields)
+    // Check if new profile exists; if not, rename old profile
     const { data: newProfile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', newUserId)
       .single();
 
-    if (newProfile) {
+    if (!newProfile) {
+      // No new profile exists — rename old profile to new user ID
+      // We need raw SQL for this since we're updating the PK
+      // Instead, delete old and insert new
+      const { error: updateIdError } = await supabase.rpc('exec_sql', {
+        sql: `UPDATE profiles SET id = '${newUserId}' WHERE id = '${oldUserId}'`
+      });
+      
+      if (updateIdError) {
+        // Fallback: insert new profile with old data, delete old
+        console.log('[MERGE] Cannot update profile ID directly, using insert+delete');
+        const profileData = { ...oldProfile, id: newUserId };
+        delete profileData.created_at;
+        delete profileData.updated_at;
+        
+        await supabase.from('profiles').insert(profileData);
+        await supabase.from('profiles').delete().eq('id', oldUserId);
+      }
+      tablesUpdated.push('profiles (renamed)');
+    } else {
+      // Merge old profile fields into new profile (fill empty fields)
       const mergeFields: Record<string, unknown> = {};
       if (!newProfile.full_name && oldProfile.full_name) mergeFields.full_name = oldProfile.full_name;
       if (!newProfile.whatsapp && oldProfile.whatsapp) mergeFields.whatsapp = oldProfile.whatsapp;
       if (!newProfile.company_slug && oldProfile.company_slug) mergeFields.company_slug = oldProfile.company_slug;
       if (!newProfile.facebook_pixel_id && oldProfile.facebook_pixel_id) mergeFields.facebook_pixel_id = oldProfile.facebook_pixel_id;
       if (!newProfile.gtm_container_id && oldProfile.gtm_container_id) mergeFields.gtm_container_id = oldProfile.gtm_container_id;
+      if (!newProfile.email && oldProfile.email) mergeFields.email = oldProfile.email;
 
       if (Object.keys(mergeFields).length > 0) {
         await supabase.from('profiles').update(mergeFields).eq('id', newUserId);
       }
-    }
 
-    // Delete orphan old profile
-    const { error: deleteError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', oldUserId);
-
-    if (deleteError) {
-      console.error('[MERGE] Error deleting old profile:', deleteError.message);
+      // Delete orphan old profile
+      await supabase.from('profiles').delete().eq('id', oldUserId);
+      tablesUpdated.push('profiles (merged)');
     }
 
     console.log(`[MERGE] Complete. Tables updated: ${tablesUpdated.join(', ')}`);
