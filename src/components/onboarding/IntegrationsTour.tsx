@@ -25,8 +25,8 @@ export const IntegrationsTour = ({ onComplete, onSkip }: IntegrationsTourProps) 
       animate: true,
       allowClose: true,
       onDestroyStarted: () => {
+        updateOnboardingStep('integrations_tour_completed', true);
         if (!driverObj.hasNextStep()) {
-          updateOnboardingStep('integrations_tour_completed', true);
           onComplete?.();
         } else {
           onSkip?.();
