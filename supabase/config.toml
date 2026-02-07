@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.check-imported-user]
 verify_jwt = false
+
+[functions.migrate-imported-user]
+verify_jwt = false
