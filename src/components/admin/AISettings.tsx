@@ -176,46 +176,40 @@ const SettingsTab = ({ settings, setSettings, saveSettings, saving }: any) => (
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="gpt-4o">
+                <div className="flex flex-col">
+                  <span className="font-semibold">GPT-4o ⭐</span>
+                  <span className="text-xs text-muted-foreground">OpenAI - Recomendado (melhor custo/benefício)</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="gpt-4o-mini">
+                <div className="flex flex-col">
+                  <span className="font-semibold">GPT-4o Mini</span>
+                  <span className="text-xs text-muted-foreground">OpenAI - Rápido e econômico</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="gpt-4-turbo">
+                <div className="flex flex-col">
+                  <span className="font-semibold">GPT-4 Turbo</span>
+                  <span className="text-xs text-muted-foreground">OpenAI - Contexto estendido (128k tokens)</span>
+                </div>
+              </SelectItem>
               <SelectItem value="google/gemini-2.5-flash">
                 <div className="flex flex-col">
                   <span className="font-semibold">Gemini 2.5 Flash</span>
-                  <span className="text-xs text-muted-foreground">Rápido e balanceado - Recomendado</span>
+                  <span className="text-xs text-muted-foreground">Google - Rápido e balanceado</span>
                 </div>
               </SelectItem>
               <SelectItem value="google/gemini-2.5-flash-lite">
                 <div className="flex flex-col">
                   <span className="font-semibold">Gemini 2.5 Flash Lite</span>
-                  <span className="text-xs text-muted-foreground">Mais rápido, ideal para alto volume</span>
+                  <span className="text-xs text-muted-foreground">Google - Mais rápido, ideal para alto volume</span>
                 </div>
               </SelectItem>
               <SelectItem value="google/gemini-2.5-pro">
                 <div className="flex flex-col">
                   <span className="font-semibold">Gemini 2.5 Pro</span>
-                  <span className="text-xs text-muted-foreground">Máxima qualidade, mais lento</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="google/gemini-3-pro-preview">
-                <div className="flex flex-col">
-                  <span className="font-semibold">Gemini 3 Pro Preview</span>
-                  <span className="text-xs text-muted-foreground">Próxima geração (beta)</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="openai/gpt-5">
-                <div className="flex flex-col">
-                  <span className="font-semibold">GPT-5</span>
-                  <span className="text-xs text-muted-foreground">OpenAI - Alta qualidade</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="openai/gpt-5-mini">
-                <div className="flex flex-col">
-                  <span className="font-semibold">GPT-5 Mini</span>
-                  <span className="text-xs text-muted-foreground">OpenAI - Custo/benefício</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="openai/gpt-5-nano">
-                <div className="flex flex-col">
-                  <span className="font-semibold">GPT-5 Nano</span>
-                  <span className="text-xs text-muted-foreground">OpenAI - Máxima velocidade</span>
+                  <span className="text-xs text-muted-foreground">Google - Máxima qualidade, mais lento</span>
                 </div>
               </SelectItem>
             </SelectContent>
