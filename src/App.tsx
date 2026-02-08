@@ -112,6 +112,12 @@ const Integrations = lazyWithRetry(() => import("./pages/Integrations"), "Integr
 const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"), "PrivacyPolicy");
 const MyQuizzes = lazyWithRetry(() => import("./pages/MyQuizzes"), "MyQuizzes");
 
+// ✅ GTM GLOBAL: Wrapper que carrega tracking em TODAS as rotas (públicas e autenticadas)
+const GlobalTrackingWrapper = ({ children }: { children: ReactNode }) => {
+  useGlobalTracking();
+  return <>{children}</>;
+};
+
 // ✅ FASE 5: RequireAuth usa AuthContext centralizado
 const RequireAuth = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
@@ -120,9 +126,6 @@ const RequireAuth = ({ children }: { children: ReactNode }) => {
   
   // ✅ ITEM 4: Limpar cache ao fazer logout
   useInvalidateOnLogout();
-  
-  // ✅ GTM GLOBAL: Carregar tracking global em todas as páginas
-  useGlobalTracking();
   
   if (loading) {
     return (
@@ -222,6 +225,7 @@ const App = () => (
               <Toaster />
               <Sonner />
             <BrowserRouter>
+              <GlobalTrackingWrapper>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
@@ -340,6 +344,7 @@ const App = () => (
                 } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </GlobalTrackingWrapper>
               <CookieConsentBanner />
             </BrowserRouter>
           </WebVitalsProvider>

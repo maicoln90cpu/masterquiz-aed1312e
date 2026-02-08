@@ -14,3 +14,99 @@ verify_jwt = false
 
 [functions.system-health-check]
 verify_jwt = false
+
+[functions.anonymize-ips]
+verify_jwt = false
+
+[functions.bunny-chunked-complete]
+verify_jwt = false
+
+[functions.bunny-chunked-init]
+verify_jwt = false
+
+[functions.bunny-confirm-upload]
+verify_jwt = false
+
+[functions.bunny-delete-video]
+verify_jwt = false
+
+[functions.bunny-generate-thumbnail]
+verify_jwt = false
+
+[functions.bunny-tus-confirm]
+verify_jwt = false
+
+[functions.bunny-tus-create]
+verify_jwt = false
+
+[functions.bunny-upload-video]
+verify_jwt = false
+
+[functions.bunny-upload-video-multipart]
+verify_jwt = false
+
+[functions.check-inactive-users]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.delete-user-complete]
+verify_jwt = false
+
+[functions.evolution-connect]
+verify_jwt = false
+
+[functions.evolution-webhook]
+verify_jwt = false
+
+[functions.export-schema-sql]
+verify_jwt = false
+
+[functions.export-table-data]
+verify_jwt = false
+
+[functions.export-user-data]
+verify_jwt = false
+
+[functions.generate-pdf-report]
+verify_jwt = false
+
+[functions.generate-quiz-ai]
+verify_jwt = false
+
+[functions.kiwify-webhook]
+verify_jwt = false
+
+[functions.process-recovery-queue]
+verify_jwt = false
+
+[functions.rate-limiter]
+verify_jwt = false
+
+[functions.save-quiz-draft]
+verify_jwt = false
+
+[functions.send-test-message]
+verify_jwt = false
+
+[functions.send-welcome-message]
+verify_jwt = false
+
+[functions.send-whatsapp-recovery]
+verify_jwt = false
+
+[functions.sync-integration]
+verify_jwt = false
+
+[functions.track-quiz-analytics]
+verify_jwt = false
+
+[functions.track-quiz-step]
+verify_jwt = false
+
+[functions.track-video-analytics]
+verify_jwt = false
