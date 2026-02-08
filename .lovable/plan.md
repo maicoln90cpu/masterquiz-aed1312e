@@ -1,81 +1,83 @@
 
-# Plano: Correcao de Erros + Tour + Indexes
+# Plano: Fix Tour Persistente + Observabilidade + GTM
 
-## Problema 1: Erros no Admin (Observabilidade) e CRM
-
-### Causa raiz
-- **Nenhuma foreign key existe no banco** (confirmado: 0 FKs). Sem FKs, o Supabase client nao consegue fazer joins automaticos como `quizzes!inner(...)` ou `quiz_results(result_text)`.
-- O **CRM** crasha porque a query faz `quiz_results(result_text)` sem FK entre `quiz_responses.result_id` e `quiz_results.id`.
-- O **AdminDashboard** chama `supabase.functions.invoke('list-all-users')` que **nao existe** como Edge Function.
-- A aba **Observabilidade** chama `supabase.functions.invoke('system-health-check')` que tambem **nao existe**.
-
-### Solucao
-1. **Criar foreign keys** para todas as relacoes usadas em joins do Supabase client:
-   - `quiz_responses.quiz_id -> quizzes.id`
-   - `quiz_responses.result_id -> quiz_results.id`
-   - `quiz_questions.quiz_id -> quizzes.id`
-   - `quiz_results.quiz_id -> quizzes.id`
-   - `quiz_form_config.quiz_id -> quizzes.id`
-   - `custom_form_fields.quiz_id -> quizzes.id`
-   - `quiz_translations.quiz_id -> quizzes.id`
-   - `quiz_tag_relations.quiz_id -> quizzes.id`
-   - `quiz_tag_relations.tag_id -> quiz_tags.id`
-   - `quiz_analytics.quiz_id -> quizzes.id`
-   - `quiz_step_analytics.quiz_id -> quizzes.id`
-   - `quiz_variants.quiz_id -> quizzes.id`
-   - `ticket_messages.ticket_id -> support_tickets.id`
-   - `integration_logs.integration_id -> user_integrations.id`
-   - `webhook_logs.webhook_id -> user_webhooks.id`
-   - `quiz_question_translations.question_id -> quiz_questions.id`
-
-2. **Criar Edge Function `list-all-users`**: Usa Admin API do Supabase para listar todos os usuarios (auth.users + profiles + subscriptions + roles). Requer autenticacao e role admin/master_admin.
-
-3. **Criar Edge Function `system-health-check`**: Coleta metricas de saude do sistema e salva em `system_health_metrics`. Retorna relatorio consolidado.
-
----
-
-## Problema 2: Tour do Dashboard reinicia sempre
+## Problema 1: Tour do Dashboard continua aparecendo
 
 ### Causa raiz
-No `DashboardTour.tsx`, o `onDestroyStarted` so marca como concluido se `!driverObj.hasNextStep()` (usuario completou todos os passos). Se o usuario fecha/pula, apenas `onSkip` eh chamado (que nao faz nada). Resultado: `dashboard_tour_completed` fica `false` para sempre.
+O `useOnboarding` hook cria uma **nova instancia** cada vez que eh usado. O `DashboardTour` chama `useOnboarding()` internamente, e o `Dashboard.tsx` tambem chama `useOnboarding()`. Sao **duas instancias separadas** com estados independentes.
 
-Confirmado no banco: `dashboard_tour_completed: false` para o usuario `maicoln90@hotmail.com`.
+Quando o tour chama `updateOnboardingStep('dashboard_tour_completed', true)`:
+- O state local do hook **dentro do DashboardTour** eh atualizado
+- MAS o state do hook no **Dashboard.tsx** (que controla `shouldShowDashboardTour`) NAO eh atualizado
+- Na proxima navegacao, o Dashboard recarrega, faz query ao banco, e `dashboard_tour_completed` pode ainda estar `false` se o update falhou (race condition no destroy)
+
+Confirmado no banco: `dashboard_tour_completed: false` para o usuario.
+
+Alem disso, o `updateOnboardingStep` usa `status` no closure - se `status.id` nao estiver setado quando o tour tenta atualizar, ele tenta INSERT ao inves de UPDATE, e pode falhar por conflito.
 
 ### Solucao
-- Modificar `DashboardTour.tsx`: **sempre** marcar `dashboard_tour_completed = true` no `onDestroyStarted`, independente se completou ou pulou.
-- Aplicar a mesma correcao em `IntegrationsTour.tsx` (mesmo padrao de bug).
-- Os outros tours (Analytics, CRM, Settings) precisam da mesma verificacao.
+1. **Remover `useOnboarding()` de dentro do `DashboardTour`** -- receber `updateOnboardingStep` como prop do Dashboard (mesma instancia)
+2. **Adicionar fallback com localStorage** -- ao marcar tour como completo, salvar tambem no `localStorage` para evitar re-exibicao mesmo se o banco falhar
+3. **Verificar localStorage no `shouldShowDashboardTour`** -- checar localStorage como segunda barreira
+4. Aplicar mesma logica aos outros tours que usam instancias separadas do hook
 
 ---
 
-## Problema 3: Indexes para performance
+## Problema 2: Observabilidade com erro
 
-### Analise
-A maioria das tabelas ja tem indexes adequados. Tabelas que precisam de indexes adicionais:
+### Causa raiz
+Ambas as Edge Functions (`system-health-check` e `list-all-users`) usam `anonClient.auth.getClaims()` que **NAO EXISTE** na API do Supabase JS v2. Este metodo nao faz parte da biblioteca, causando erro silencioso que retorna 401.
 
-| Tabela | Index faltante | Justificativa |
-|--------|---------------|---------------|
-| `profiles` | `email` | Busca por email no merge e login |
-| `bunny_videos` | `user_id` | Filtro por usuario |
-| `custom_form_fields` | `quiz_id` | Filtro por quiz |
-| `quiz_results` | `quiz_id` | Join com quiz_responses |
-| `validation_requests` | `user_id` | Filtro por usuario |
-| `quiz_responses` | `result_id` | Join com quiz_results |
-| `quiz_variants` | `quiz_id` | Filtro por quiz |
+Confirmado: chamada retornou `401 Unauthorized` mesmo com token valido.
+
+### Solucao
+Substituir `getClaims()` por `anonClient.auth.getUser()` em ambas as Edge Functions:
+
+```typescript
+// ANTES (nao funciona):
+const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+const userId = claimsData.claims.sub;
+
+// DEPOIS (correto):
+const { data: { user }, error: userError } = await anonClient.auth.getUser();
+const userId = user.id;
+```
+
+Tambem remover a chamada RPC `get_user_quiz_stats` no `list-all-users` que provavelmente nao existe, substituindo por queries diretas.
 
 ---
 
-## Arquivos a criar/modificar
+## Problema 3: GTM nao funciona
 
-1. **Nova migracao SQL**: Foreign keys + indexes
-2. `src/components/onboarding/DashboardTour.tsx`: Marcar como completo ao fechar
-3. `src/components/onboarding/IntegrationsTour.tsx`: Mesma correcao
-4. `supabase/functions/list-all-users/index.ts`: Nova edge function
-5. `supabase/functions/system-health-check/index.ts`: Nova edge function
-6. `supabase/config.toml`: Registrar novas funcoes
+### Causa raiz
+O GTM ID `GTM-MDK55T4H` esta no banco e passa na validacao regex. O `useGlobalTracking` eh chamado no `App.tsx` (global). O problema eh o **cookie consent**:
+
+- `checkConsent('analytics')` verifica `localStorage` para `mq_cookie_consent`
+- Se o usuario nunca aceitou cookies, `checkConsent` retorna `false` e o GTM nao eh injetado
+- O banner de cookies pode nao estar aparecendo ou o usuario pode ter rejeitado
+
+O segundo problema: `useGlobalTracking` tambem eh chamado **redundantemente** em 7+ paginas individuais (Index, Login, FAQ, etc), criando multiplas instancias e potenciais conflitos.
+
+### Solucao
+1. **Adicionar log de debug** quando consent bloqueia GTM
+2. **Remover chamadas duplicadas** de `useGlobalTracking` nas paginas individuais (ja eh chamado no App.tsx)
+3. **Verificar se o `CookieConsentBanner` esta montado** e aparecendo corretamente
+4. Se `require_cookie_consent` estiver `true` no banco, garantir que o banner apareca e ao aceitar, o GTM seja carregado
+
+---
+
+## Arquivos a modificar
+
+1. `supabase/functions/system-health-check/index.ts` -- substituir `getClaims` por `getUser`
+2. `supabase/functions/list-all-users/index.ts` -- substituir `getClaims` por `getUser`, remover RPC inexistente
+3. `src/components/onboarding/DashboardTour.tsx` -- receber `updateOnboardingStep` como prop, adicionar fallback localStorage
+4. `src/hooks/useOnboarding.ts` -- verificar localStorage como barreira extra para `shouldShowDashboardTour`
+5. `src/pages/Dashboard.tsx` -- passar `updateOnboardingStep` como prop para DashboardTour
+6. Remover `useGlobalTracking()` duplicado de: `Index.tsx`, `Login.tsx`, `FAQ.tsx`, `Pricing.tsx`, `KiwifySuccess.tsx`, `KiwifyCancel.tsx`, `PrivacyPolicy.tsx` (ja esta no App.tsx)
 
 ## Ordem de execucao
-1. Migracao SQL (FKs + indexes) -- resolve CRM e queries com joins
-2. Edge functions (list-all-users + system-health-check) -- resolve Admin
-3. Fix dos tours -- resolve onboarding
-4. Regenerar types.ts -- refletir novas FKs
+1. Fix Edge Functions (resolve Observabilidade)
+2. Fix Tour (resolve loop do onboarding)
+3. Fix GTM (remove duplicatas, verifica consent)
+4. Deploy Edge Functions
+5. Testar todos os fluxos
