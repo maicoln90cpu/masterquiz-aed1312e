@@ -1,83 +1,156 @@
 
-# Plano: Fix Tour Persistente + Observabilidade + GTM
 
-## Problema 1: Tour do Dashboard continua aparecendo
+# Plano: Migrar 31 Edge Functions + Fix GTM Global + Triggers auth.users
 
-### Causa raiz
-O `useOnboarding` hook cria uma **nova instancia** cada vez que eh usado. O `DashboardTour` chama `useOnboarding()` internamente, e o `Dashboard.tsx` tambem chama `useOnboarding()`. Sao **duas instancias separadas** com estados independentes.
+## Status Atual
 
-Quando o tour chama `updateOnboardingStep('dashboard_tour_completed', true)`:
-- O state local do hook **dentro do DashboardTour** eh atualizado
-- MAS o state do hook no **Dashboard.tsx** (que controla `shouldShowDashboardTour`) NAO eh atualizado
-- Na proxima navegacao, o Dashboard recarrega, faz query ao banco, e `dashboard_tour_completed` pode ainda estar `false` se o update falhou (race condition no destroy)
+Voce ja me enviou **tudo que eu preciso**. Os 2 arquivos que voce subiu contem:
+- **36 funcoes completas** (codigo fonte inteiro)
+- **4 arquivos _shared** (auth.ts, cors.ts, logger.ts, validation.ts)
+- **config.toml** do sistema antigo
+- **SQL dos triggers faltantes** (auth.users)
 
-Confirmado no banco: `dashboard_tour_completed: false` para o usuario.
-
-Alem disso, o `updateOnboardingStep` usa `status` no closure - se `status.id` nao estiver setado quando o tour tenta atualizar, ele tenta INSERT ao inves de UPDATE, e pode falhar por conflito.
-
-### Solucao
-1. **Remover `useOnboarding()` de dentro do `DashboardTour`** -- receber `updateOnboardingStep` como prop do Dashboard (mesma instancia)
-2. **Adicionar fallback com localStorage** -- ao marcar tour como completo, salvar tambem no `localStorage` para evitar re-exibicao mesmo se o banco falhar
-3. **Verificar localStorage no `shouldShowDashboardTour`** -- checar localStorage como segunda barreira
-4. Aplicar mesma logica aos outros tours que usam instancias separadas do hook
+**NAO precisa exportar mais nada do sistema antigo.** Tenho todo o codigo.
 
 ---
 
-## Problema 2: Observabilidade com erro
+## O que sera feito
 
-### Causa raiz
-Ambas as Edge Functions (`system-health-check` e `list-all-users`) usam `anonClient.auth.getClaims()` que **NAO EXISTE** na API do Supabase JS v2. Este metodo nao faz parte da biblioteca, causando erro silencioso que retorna 401.
+### Parte 1: Triggers faltantes no auth.users (SQL Migration)
 
-Confirmado: chamada retornou `401 Unauthorized` mesmo com token valido.
+Criar 2 triggers que estao faltando:
+- `on_auth_user_created_role` -> `handle_new_user_role()` (atribui role automatica)
+- `on_auth_user_created_subscription` -> `handle_new_user_subscription()` (cria subscription free)
 
-### Solucao
-Substituir `getClaims()` por `anonClient.auth.getUser()` em ambas as Edge Functions:
+Sem eles, novos usuarios ficam sem role e sem subscription.
+
+### Parte 2: Fix GTM Global
+
+**Problema**: `useGlobalTracking()` esta dentro do `RequireAuth` (linha 125 do App.tsx), que so executa em rotas autenticadas. Paginas publicas (/, /login, /faq, /precos, quiz publico) nao carregam GTM.
+
+**Solucao**: Criar um componente `GlobalTrackingProvider` que envolva TODAS as rotas (dentro do BrowserRouter, fora do RequireAuth). Remover o `useGlobalTracking()` do `RequireAuth`.
+
+### Parte 3: Criar 31 Edge Functions faltantes
+
+Todas as funcoes serao criadas com o codigo do sistema antigo, com a seguinte correcao aplicada automaticamente:
+- **Substituir `getClaims()` por `getUser()`** onde necessario (auth.ts shared e funcoes que usam getClaims diretamente como export-table-data)
+- **Manter toda a logica de negocio identica**
+
+**IMPORTANTE sobre _shared**: Supabase externo NAO suporta pasta `_shared`. Cada funcao tera o codigo inline (sem imports de `../_shared/`). Os helpers de cors, logger e validation serao incluidos diretamente no index.ts de cada funcao que os usa.
+
+#### Lista completa das 31 funcoes a criar:
+
+| # | Funcao | Secrets necessarios |
+|---|--------|-------------------|
+| 1 | anonymize-ips | - |
+| 2 | bunny-chunked-complete | BUNNY_* |
+| 3 | bunny-chunked-init | BUNNY_* |
+| 4 | bunny-confirm-upload | BUNNY_* |
+| 5 | bunny-delete-video | BUNNY_* |
+| 6 | bunny-generate-thumbnail | BUNNY_CDN_HOSTNAME |
+| 7 | bunny-tus-confirm | - |
+| 8 | bunny-tus-create | BUNNY_* |
+| 9 | bunny-upload-video | BUNNY_* |
+| 10 | bunny-upload-video-multipart | BUNNY_* |
+| 11 | check-inactive-users | - |
+| 12 | create-checkout | STRIPE_SECRET_KEY |
+| 13 | delete-user | - |
+| 14 | delete-user-complete | - |
+| 15 | evolution-connect | EVOLUTION_* |
+| 16 | evolution-webhook | - |
+| 17 | export-schema-sql | - |
+| 18 | export-table-data | - |
+| 19 | export-user-data | - |
+| 20 | generate-pdf-report | - |
+| 21 | generate-quiz-ai | OPENAI_API_KEY |
+| 22 | kiwify-webhook | - |
+| 23 | process-recovery-queue | EVOLUTION_* |
+| 24 | rate-limiter | - |
+| 25 | save-quiz-draft | - |
+| 26 | send-test-message | EVOLUTION_* |
+| 27 | send-welcome-message | EVOLUTION_* |
+| 28 | send-whatsapp-recovery | EVOLUTION_* |
+| 29 | sync-integration | - |
+| 30 | track-quiz-analytics | - |
+| 31 | track-quiz-step | - |
+| -- | track-video-analytics | - |
+
+### Parte 4: Atualizar config.toml
+
+Registrar todas as 31+ funcoes com `verify_jwt = false` (conforme config original).
+
+---
+
+## Secrets faltantes (voce precisa fornecer)
+
+Essas funcoes so vao funcionar DEPOIS que voce adicionar os secrets. Irei pedir cada um na hora:
+
+1. **EVOLUTION_API_URL** - URL da Evolution API
+2. **EVOLUTION_API_KEY** - Chave da Evolution API
+3. **BUNNY_API_KEY** - API key do Bunny.net
+4. **BUNNY_STORAGE_ZONE_NAME** - Nome da storage zone
+5. **BUNNY_STORAGE_ZONE_PASSWORD** - Senha da storage zone
+6. **BUNNY_CDN_HOSTNAME** - Hostname do CDN (ex: masterquiz.b-cdn.net)
+7. **OPENAI_API_KEY** - Chave da OpenAI para geracao de quiz
+8. **STRIPE_SECRET_KEY** - Chave secreta do Stripe
+
+---
+
+## Ordem de execucao
+
+Devido ao limite de alteracoes por mensagem, sera feito em lotes:
+
+**Lote 1** (esta mensagem apos aprovacao):
+- SQL Migration: triggers auth.users
+- Fix GTM: mover useGlobalTracking para wrapper global
+- Criar funcoes 1-10 (anonymize-ips ate bunny-upload-video)
+- Atualizar config.toml
+
+**Lote 2** (proxima mensagem):
+- Criar funcoes 11-20 (bunny-upload-video-multipart ate kiwify-webhook)
+
+**Lote 3** (terceira mensagem):
+- Criar funcoes 21-32 (process-recovery-queue ate trigger-user-webhook + track-video-analytics)
+- Pedir secrets faltantes
+- Deploy final
+
+---
+
+## Detalhes tecnicos
+
+### Correcao getClaims -> getUser
+
+O codigo antigo usa `getClaims()` que nao existe no Supabase JS v2. Toda ocorrencia sera substituida por:
 
 ```typescript
 // ANTES (nao funciona):
-const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-const userId = claimsData.claims.sub;
+const { data, error } = await supabase.auth.getClaims(token);
+const userId = data.claims.sub;
 
 // DEPOIS (correto):
-const { data: { user }, error: userError } = await anonClient.auth.getUser();
+const { data: { user }, error } = await supabase.auth.getUser(token);
 const userId = user.id;
 ```
 
-Tambem remover a chamada RPC `get_user_quiz_stats` no `list-all-users` que provavelmente nao existe, substituindo por queries diretas.
+### Inline dos _shared
 
----
+Como Supabase externo nao suporta `_shared/`, cada funcao tera os helpers necessarios colados diretamente no topo do arquivo. Por exemplo, funcoes que usam `corsHeaders` terao a definicao inline.
 
-## Problema 3: GTM nao funciona
+### GTM Fix
 
-### Causa raiz
-O GTM ID `GTM-MDK55T4H` esta no banco e passa na validacao regex. O `useGlobalTracking` eh chamado no `App.tsx` (global). O problema eh o **cookie consent**:
+```typescript
+// Novo componente no App.tsx
+const GlobalTrackingWrapper = ({ children }: { children: ReactNode }) => {
+  useGlobalTracking();
+  return <>{children}</>;
+};
 
-- `checkConsent('analytics')` verifica `localStorage` para `mq_cookie_consent`
-- Se o usuario nunca aceitou cookies, `checkConsent` retorna `false` e o GTM nao eh injetado
-- O banner de cookies pode nao estar aparecendo ou o usuario pode ter rejeitado
+// Usado dentro do BrowserRouter, envolvendo Routes
+<BrowserRouter>
+  <GlobalTrackingWrapper>
+    <Routes>...</Routes>
+  </GlobalTrackingWrapper>
+  <CookieConsentBanner />
+</BrowserRouter>
+```
 
-O segundo problema: `useGlobalTracking` tambem eh chamado **redundantemente** em 7+ paginas individuais (Index, Login, FAQ, etc), criando multiplas instancias e potenciais conflitos.
-
-### Solucao
-1. **Adicionar log de debug** quando consent bloqueia GTM
-2. **Remover chamadas duplicadas** de `useGlobalTracking` nas paginas individuais (ja eh chamado no App.tsx)
-3. **Verificar se o `CookieConsentBanner` esta montado** e aparecendo corretamente
-4. Se `require_cookie_consent` estiver `true` no banco, garantir que o banner apareca e ao aceitar, o GTM seja carregado
-
----
-
-## Arquivos a modificar
-
-1. `supabase/functions/system-health-check/index.ts` -- substituir `getClaims` por `getUser`
-2. `supabase/functions/list-all-users/index.ts` -- substituir `getClaims` por `getUser`, remover RPC inexistente
-3. `src/components/onboarding/DashboardTour.tsx` -- receber `updateOnboardingStep` como prop, adicionar fallback localStorage
-4. `src/hooks/useOnboarding.ts` -- verificar localStorage como barreira extra para `shouldShowDashboardTour`
-5. `src/pages/Dashboard.tsx` -- passar `updateOnboardingStep` como prop para DashboardTour
-6. Remover `useGlobalTracking()` duplicado de: `Index.tsx`, `Login.tsx`, `FAQ.tsx`, `Pricing.tsx`, `KiwifySuccess.tsx`, `KiwifyCancel.tsx`, `PrivacyPolicy.tsx` (ja esta no App.tsx)
-
-## Ordem de execucao
-1. Fix Edge Functions (resolve Observabilidade)
-2. Fix Tour (resolve loop do onboarding)
-3. Fix GTM (remove duplicatas, verifica consent)
-4. Deploy Edge Functions
-5. Testar todos os fluxos
