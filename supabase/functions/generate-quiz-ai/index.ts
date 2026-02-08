@@ -29,17 +29,12 @@ interface QuizGenerationRequest {
 }
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
-  'google/gemini-2.5-flash': { input: 0.075, output: 0.30 },
-  'google/gemini-2.5-flash-lite': { input: 0.025, output: 0.10 },
-  'google/gemini-2.5-pro': { input: 1.25, output: 5.00 },
-  'google/gemini-3-pro-preview': { input: 1.50, output: 6.00 },
-  'google/gemini-3-flash-preview': { input: 0.10, output: 0.40 },
-  'openai/gpt-5': { input: 5.00, output: 15.00 },
-  'openai/gpt-5-mini': { input: 0.15, output: 0.60 },
-  'openai/gpt-5-nano': { input: 0.075, output: 0.30 },
   'gpt-4o': { input: 2.50, output: 10.00 },
   'gpt-4o-mini': { input: 0.15, output: 0.60 },
   'gpt-4-turbo': { input: 10.00, output: 30.00 },
+  'google/gemini-2.5-flash': { input: 0.075, output: 0.30 },
+  'google/gemini-2.5-flash-lite': { input: 0.025, output: 0.10 },
+  'google/gemini-2.5-pro': { input: 1.25, output: 5.00 },
 };
 
 function calculateCost(model: string, promptTokens: number, completionTokens: number): number {
@@ -47,13 +42,8 @@ function calculateCost(model: string, promptTokens: number, completionTokens: nu
   return (promptTokens / 1_000_000) * costs.input + (completionTokens / 1_000_000) * costs.output;
 }
 
-function convertToOpenAIModel(model: string): string {
-  const mapping: Record<string, string> = {
-    'openai/gpt-5': 'gpt-4o',
-    'openai/gpt-5-mini': 'gpt-4o-mini',
-    'openai/gpt-5-nano': 'gpt-4o-mini',
-  };
-  return mapping[model] || 'gpt-4o';
+function isDirectOpenAIModel(model: string): boolean {
+  return model.startsWith('gpt-');
 }
 
 function replaceVariables(template: string, data: QuizGenerationRequest): string {
@@ -164,7 +154,7 @@ Deno.serve(async (req) => {
     const userPromptTemplate = isPdfMode ? aiPromptPdf : aiPromptForm;
     const userPrompt = replaceVariables(userPromptTemplate, requestData);
 
-    const isOpenAIModel = aiModel.startsWith('openai/');
+    const isOpenAIModel = isDirectOpenAIModel(aiModel);
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -173,12 +163,11 @@ Deno.serve(async (req) => {
     const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }];
 
     if (isOpenAIModel && OPENAI_API_KEY) {
-      const openaiModel = convertToOpenAIModel(aiModel);
-      modelUsed = openaiModel;
+      modelUsed = aiModel;
       aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: openaiModel, messages, temperature: 0.7 }),
+        body: JSON.stringify({ model: aiModel, messages, temperature: 0.7 }),
       });
     } else {
       if (!LOVABLE_API_KEY) {
