@@ -26,6 +26,8 @@ interface QuizGenerationRequest {
   focusTopics?: string;
   difficultyLevel?: string;
   targetAudiencePdf?: string;
+  resultProfiles?: string;
+  ctaText?: string;
 }
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
@@ -62,7 +64,9 @@ function replaceVariables(template: string, data: QuizGenerationRequest): string
     .replace(/{leadTemperature}/g, data.leadTemperature || 'morno')
     .replace(/{focusTopics}/g, data.focusTopics || '')
     .replace(/{difficultyLevel}/g, data.difficultyLevel || 'médio')
-    .replace(/{targetAudiencePdf}/g, data.targetAudiencePdf || '');
+    .replace(/{targetAudiencePdf}/g, data.targetAudiencePdf || '')
+    .replace(/{resultProfiles}/g, data.resultProfiles || '')
+    .replace(/{ctaText}/g, data.ctaText || '');
 }
 
 Deno.serve(async (req) => {
@@ -123,11 +127,57 @@ Deno.serve(async (req) => {
 
     const aiModel = aiSettings?.find(s => s.setting_key === 'ai_model')?.setting_value || 'google/gemini-2.5-flash';
 
-    const defaultSystemPromptForm = `Você é um especialista em criar funis de auto-convencimento através de perguntas estratégicas.\n\nSEU OBJETIVO: Criar quizzes onde as perguntas conduzem o lead a reconhecer seus próprios problemas, entender as consequências de não agir, e concluir por conta própria que precisa de uma solução.\n\nRetorne APENAS JSON válido no formato especificado.`;
-    const defaultSystemPromptPdf = `Você é um especialista em criar funis de auto-convencimento a partir de documentos.\n\nRetorne APENAS JSON válido no formato especificado.`;
+    const defaultSystemPromptForm = `Você é um especialista em criar funis de auto-convencimento através de perguntas estratégicas.
 
-    const defaultPromptForm = `Crie um quiz de auto-convencimento para:\nPRODUTO/SERVIÇO: {productName}\nPROBLEMA QUE RESOLVE: {problemSolved}\nPÚBLICO-ALVO: {targetAudience}\nAÇÃO DESEJADA: {desiredAction}\nQUANTIDADE DE PERGUNTAS: {numberOfQuestions}\nIntenção: {quizIntent}\nTom: {tone}\nRetorne JSON com: title, description, questions (com question_text, answer_format, options).`;
-    const defaultPromptPdf = `Analise o documento "{pdfFileName}" e crie um quiz baseado no conteúdo.\nCONTEÚDO:\n{pdfContent}\nQuantidade: {numberOfQuestions}\nRetorne JSON com: title, description, questions.`;
+SEU OBJETIVO: Criar quizzes onde as perguntas conduzem o lead a reconhecer seus próprios problemas, entender as consequências de não agir, e concluir por conta própria que precisa de uma solução.
+
+REGRAS:
+1. As perguntas devem seguir uma sequência lógica de conscientização → dor → consequência → solução
+2. Cada opção de resposta deve ter um peso (score) para classificar o lead
+3. Os resultados devem ser personalizados com base nas respostas
+4. Use linguagem empática e consultiva, nunca agressiva
+5. Retorne APENAS JSON válido no formato especificado`;
+
+    const defaultSystemPromptPdf = `Você é um especialista em criar funis de auto-convencimento e qualificação de leads a partir de documentos.
+
+SEU OBJETIVO: Analisar o conteúdo do documento e criar um quiz estratégico que conduza o respondente a reconhecer problemas, entender consequências e se convencer da necessidade de agir.
+
+REGRAS:
+1. Extraia os pontos-chave do documento para criar perguntas relevantes
+2. As perguntas devem seguir a lógica de conscientização → dor → solução
+3. Cada opção deve ter um peso (score) para qualificação do lead
+4. Adapte a linguagem ao tom e público-alvo especificados
+5. Retorne APENAS JSON válido no formato especificado`;
+
+    const defaultPromptForm = `Crie um quiz de auto-convencimento para:
+PRODUTO/SERVIÇO: {productName}
+PROBLEMA QUE RESOLVE: {problemSolved}
+PÚBLICO-ALVO: {targetAudience}
+AÇÃO DESEJADA (CTA): {desiredAction}
+QUANTIDADE DE PERGUNTAS: {numberOfQuestions}
+Intenção do quiz: {quizIntent}
+Empresa: {companyName}
+Segmento: {industry}
+Tom de comunicação: {tone}
+Temperatura do lead: {leadTemperature}
+Texto do botão CTA: {ctaText}
+Perfis de resultado desejados: {resultProfiles}
+
+Retorne JSON com: title, description, questions (com question_text, answer_format, options com text e score), e results (com result_text, min_score, max_score, button_text, redirect_url).`;
+
+    const defaultPromptPdf = `Analise o documento "{pdfFileName}" e crie um quiz estratégico de qualificação/auto-convencimento baseado no conteúdo.
+
+CONTEÚDO DO DOCUMENTO:
+{pdfContent}
+
+CONFIGURAÇÕES:
+Quantidade de perguntas: {numberOfQuestions}
+Intenção do quiz: {quizIntent}
+Tópicos de foco: {focusTopics}
+Nível de dificuldade: {difficultyLevel}
+Público-alvo: {targetAudiencePdf}
+
+Retorne JSON com: title, description, questions (com question_text, answer_format, options com text e score), e results (com result_text, min_score, max_score).`;
 
     const aiSystemPromptForm = aiSettings?.find(s => s.setting_key === 'ai_system_prompt_form')?.setting_value || defaultSystemPromptForm;
     const aiSystemPromptPdf = aiSettings?.find(s => s.setting_key === 'ai_system_prompt_pdf')?.setting_value || defaultSystemPromptPdf;

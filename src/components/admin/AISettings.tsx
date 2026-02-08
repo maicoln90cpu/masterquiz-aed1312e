@@ -278,6 +278,8 @@ const SettingsTab = ({ settings, setSettings, saveSettings, saving }: any) => (
                 <Badge variant="outline" className="font-mono text-xs text-primary">{'{industry}'}</Badge>
                 <Badge variant="outline" className="font-mono text-xs text-primary">{'{tone}'}</Badge>
                 <Badge variant="outline" className="font-mono text-xs text-primary">{'{leadTemperature}'}</Badge>
+                <Badge variant="outline" className="font-mono text-xs text-primary">{'{resultProfiles}'}</Badge>
+                <Badge variant="outline" className="font-mono text-xs text-primary">{'{ctaText}'}</Badge>
               </div>
             </AlertDescription>
           </Alert>
@@ -325,7 +327,7 @@ const SettingsTab = ({ settings, setSettings, saveSettings, saving }: any) => (
             value={settings.ai_system_prompt_pdf}
             onChange={(e) => setSettings({ ...settings, ai_system_prompt_pdf: e.target.value })}
             rows={10}
-            placeholder="Você é um especialista em criar quizzes educacionais baseados em documentos..."
+            placeholder="Você é um especialista em criar funis de auto-convencimento e qualificação de leads a partir de documentos..."
             className="font-mono text-xs"
           />
         </div>
