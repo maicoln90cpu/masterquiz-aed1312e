@@ -9,13 +9,10 @@ import { QuickStart } from "@/components/kiwify/QuickStart";
 import { PlatformFeatures } from "@/components/kiwify/PlatformFeatures";
 import { NewUserFAQ } from "@/components/kiwify/NewUserFAQ";
 import { SupportContacts } from "@/components/kiwify/SupportContacts";
-import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 import { useTranslation } from "react-i18next";
 
 export default function KiwifySuccess() {
   const { t } = useTranslation();
-  // Global tracking (GTM/Pixel do master admin)
-  useGlobalTracking();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);

@@ -169,7 +169,7 @@ export const useOnboarding = () => {
   }, [userId, status.id]);
 
   const shouldShowWelcome = !loading && !status.welcome_completed;
-  const shouldShowDashboardTour = !loading && status.welcome_completed && !status.dashboard_tour_completed;
+  const shouldShowDashboardTour = !loading && status.welcome_completed && !status.dashboard_tour_completed && localStorage.getItem('mq_dashboard_tour_completed') !== 'true';
 
   return {
     status,

@@ -2,17 +2,25 @@ import { useEffect, useCallback, useRef } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { useTranslation } from 'react-i18next';
-import { useOnboarding } from '@/hooks/useOnboarding';
+
+const TOUR_COMPLETED_KEY = 'mq_dashboard_tour_completed';
 
 interface DashboardTourProps {
   onComplete?: () => void;
   onSkip?: () => void;
+  updateOnboardingStep: (step: string, completed?: boolean) => Promise<void>;
 }
 
-export const DashboardTour = ({ onComplete, onSkip }: DashboardTourProps) => {
+export const DashboardTour = ({ onComplete, onSkip, updateOnboardingStep }: DashboardTourProps) => {
   const { t } = useTranslation();
-  const { updateOnboardingStep, status } = useOnboarding();
   const tourStartedRef = useRef(false);
+
+  const markCompleted = useCallback(() => {
+    // Save to localStorage immediately as fallback
+    localStorage.setItem(TOUR_COMPLETED_KEY, 'true');
+    // Then persist to database
+    updateOnboardingStep('dashboard_tour_completed', true);
+  }, [updateOnboardingStep]);
 
   const startTour = useCallback(() => {
     const driverObj = driver({
@@ -27,7 +35,7 @@ export const DashboardTour = ({ onComplete, onSkip }: DashboardTourProps) => {
       allowClose: true,
       onDestroyStarted: () => {
         // Always mark as completed (whether finished or skipped)
-        updateOnboardingStep('dashboard_tour_completed', true);
+        markCompleted();
         if (!driverObj.hasNextStep()) {
           onComplete?.();
         } else {
@@ -82,15 +90,14 @@ export const DashboardTour = ({ onComplete, onSkip }: DashboardTourProps) => {
     });
 
     driverObj.drive();
-  }, [t, updateOnboardingStep, onComplete, onSkip]);
+  }, [t, markCompleted, onComplete, onSkip]);
 
   useEffect(() => {
-    // Small delay to ensure DOM elements are rendered
+    // Check localStorage first as immediate barrier
+    if (localStorage.getItem(TOUR_COMPLETED_KEY) === 'true') return;
+
     const timer = setTimeout(() => {
-      // Só inicia se:
-      // 1. Tour não foi completado no banco
-      // 2. Tour não foi iniciado nesta sessão
-      if (!status.dashboard_tour_completed && !tourStartedRef.current) {
+      if (!tourStartedRef.current) {
         tourStartedRef.current = true;
         startTour();
       }
@@ -98,7 +105,7 @@ export const DashboardTour = ({ onComplete, onSkip }: DashboardTourProps) => {
 
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status.dashboard_tour_completed]);
+  }, []);
 
   return null;
 };
