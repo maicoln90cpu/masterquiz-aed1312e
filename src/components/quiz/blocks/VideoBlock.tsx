@@ -82,7 +82,7 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
             {isBunny && (
               <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
                 <Cloud className="h-3 w-3 mr-1" />
-                Bunny CDN
+                CDN
               </Badge>
             )}
             <Tooltip>
@@ -155,7 +155,7 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
                     <SelectItem value="youtube">YouTube</SelectItem>
                     <SelectItem value="vimeo">Vimeo</SelectItem>
                     <SelectItem value="direct">Arquivo Direto (MP4, WebM)</SelectItem>
-                    <SelectItem value="bunny_stream">Bunny Stream</SelectItem>
+                    <SelectItem value="bunny_stream">Stream CDN</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -180,7 +180,7 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
                         <Progress value={usagePercentage} className="h-2" />
                         <p className="text-xs text-muted-foreground">
                           {remainingMb.toFixed(2)}MB disponíveis
-                          {isBunny && " • CDN Global ativo"}
+                          {isBunny && " • CDN ativo"}
                         </p>
                       </AlertDescription>
                     </Alert>

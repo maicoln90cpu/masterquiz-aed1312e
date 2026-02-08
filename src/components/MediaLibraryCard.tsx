@@ -106,7 +106,7 @@ export const MediaLibraryCard = ({ file, onDelete }: MediaLibraryCardProps) => {
             <div className="absolute top-2 right-2">
               <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 dark:text-orange-300 text-xs">
                 <Cloud className="h-3 w-3 mr-1" />
-                Bunny CDN
+                CDN
               </Badge>
             </div>
             {formattedDuration && (
@@ -138,7 +138,7 @@ export const MediaLibraryCard = ({ file, onDelete }: MediaLibraryCardProps) => {
               <div className="absolute top-2 right-2">
                 <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 dark:text-orange-300 text-xs">
                   <Cloud className="h-3 w-3 mr-1" />
-                  Bunny CDN
+                  CDN
                 </Badge>
               </div>
               {formattedDuration && (
@@ -281,7 +281,7 @@ export const MediaLibraryCard = ({ file, onDelete }: MediaLibraryCardProps) => {
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir "{file.name}"? 
-              {isBunnyVideo && " O vídeo será removido do Bunny CDN e o espaço será liberado."}
+              {isBunnyVideo && " O vídeo será removido do servidor e o espaço será liberado."}
               {" "}Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>

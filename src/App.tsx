@@ -118,7 +118,7 @@ const GlobalTrackingLayout = () => {
   return <Outlet />;
 };
 
-// ✅ FASE 5: RequireAuth usa AuthContext centralizado
+// ✅ FASE 5: RequireAuth usa AuthContext centralizado (side effects via useEffect)
 const RequireAuth = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -126,19 +126,20 @@ const RequireAuth = ({ children }: { children: ReactNode }) => {
   
   // ✅ ITEM 4: Limpar cache ao fazer logout
   useInvalidateOnLogout();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      toast.error(t('nav.needLogin'));
+      navigate('/login');
+    }
+  }, [loading, user, navigate, t]);
   
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
-  }
-  
-  if (!user) {
-    toast.error(t('nav.needLogin'));
-    navigate('/login');
-    return null;
   }
   
   return <>{children}</>;

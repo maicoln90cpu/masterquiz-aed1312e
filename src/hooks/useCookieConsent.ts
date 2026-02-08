@@ -48,7 +48,7 @@ export const useCookieConsent = (): UseCookieConsentReturn => {
           .from('system_settings')
           .select('setting_value')
           .eq('setting_key', 'require_cookie_consent')
-          .single();
+          .maybeSingle();
         
         const required = data?.setting_value !== 'false';
         setRequireConsent(required);
