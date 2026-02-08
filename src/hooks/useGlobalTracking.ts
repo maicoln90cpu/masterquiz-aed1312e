@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const CONSENT_STORAGE_KEY = 'mq_cookie_consent';
@@ -13,7 +13,6 @@ interface GlobalTrackingSettings {
 const normalizeGTM = (id: string | null): string | null => {
   if (!id) return null;
   const normalized = id.trim().toUpperCase();
-  // Validate format: GTM-XXXXXXX (7-10 alphanumeric chars)
   const GTM_REGEX = /^GTM-[A-Z0-9]{7,10}$/;
   return GTM_REGEX.test(normalized) ? normalized : null;
 };
@@ -22,7 +21,6 @@ const normalizeGTM = (id: string | null): string | null => {
 const normalizePixel = (id: string | null): string | null => {
   if (!id) return null;
   const normalized = id.trim();
-  // Validate format: 15-16 digits only
   const PIXEL_REGEX = /^[0-9]{15,16}$/;
   return PIXEL_REGEX.test(normalized) ? normalized : null;
 };
@@ -34,20 +32,50 @@ export const useGlobalTracking = () => {
     require_cookie_consent: true,
   });
   const [loaded, setLoaded] = useState(false);
+  // ✅ Consent reactivity: incrementa quando localStorage muda
+  const [consentVersion, setConsentVersion] = useState(0);
 
   useEffect(() => {
     loadGlobalSettings();
   }, []);
 
+  // ✅ FIX: Detectar mudança de consentimento via storage event + polling
+  useEffect(() => {
+    // Listener para storage events (cross-tab)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === CONSENT_STORAGE_KEY) {
+        setConsentVersion(v => v + 1);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // Polling curto para detectar aceite na mesma tab (storage event não dispara na mesma tab)
+    let pollCount = 0;
+    const maxPolls = 15; // 30 segundos (a cada 2s)
+    const pollInterval = setInterval(() => {
+      pollCount++;
+      const consent = localStorage.getItem(CONSENT_STORAGE_KEY);
+      if (consent) {
+        setConsentVersion(v => v + 1);
+        clearInterval(pollInterval);
+      }
+      if (pollCount >= maxPolls) {
+        clearInterval(pollInterval);
+      }
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(pollInterval);
+    };
+  }, []);
+
   const loadGlobalSettings = async () => {
-    console.log('🔍 [GTM] Starting to load global tracking settings...');
     try {
       const { data, error } = await supabase
         .from('system_settings')
         .select('setting_key, setting_value')
         .in('setting_key', ['gtm_container_id', 'facebook_pixel_id', 'require_cookie_consent']);
-
-      console.log('🔍 [GTM] Query response:', { data, error });
 
       if (error) throw error;
 
@@ -55,22 +83,12 @@ export const useGlobalTracking = () => {
       const pixelSetting = data?.find(s => s.setting_key === 'facebook_pixel_id');
       const consentSetting = data?.find(s => s.setting_key === 'require_cookie_consent');
 
-      console.log('🔍 [GTM] Raw GTM setting:', gtmSetting?.setting_value);
-      console.log('🔍 [GTM] Raw Pixel setting:', pixelSetting?.setting_value);
-      console.log('🔍 [GTM] Raw Consent setting:', consentSetting?.setting_value);
-
       const normalizedGTM = normalizeGTM(gtmSetting?.setting_value || null);
       const normalizedPixel = normalizePixel(pixelSetting?.setting_value || null);
-      const requireConsent = consentSetting?.setting_value !== 'false'; // default true
+      const requireConsent = consentSetting?.setting_value !== 'false';
 
-      console.log('🔍 [GTM] Normalized GTM ID:', normalizedGTM);
-      console.log('🔍 [GTM] Normalized Pixel ID:', normalizedPixel);
-      console.log('🔍 [GTM] Require consent:', requireConsent);
-
-      // Debug: Check regex validation
       if (gtmSetting?.setting_value && !normalizedGTM) {
         console.warn('⚠️ [GTM] GTM ID failed regex validation! Raw:', gtmSetting.setting_value);
-        console.warn('⚠️ [GTM] Expected format: GTM-XXXXXXX (7-10 alphanumeric chars)');
       }
 
       setSettings({
@@ -80,55 +98,38 @@ export const useGlobalTracking = () => {
       });
 
       setLoaded(true);
-      console.log('✅ [GTM] Global tracking settings loaded successfully');
+      console.log('✅ [GTM] Global tracking settings loaded');
     } catch (error) {
       console.error('❌ [GTM] Error loading global tracking settings:', error);
       setLoaded(true);
     }
   };
 
-  // Check if consent is given (or not required)
-  const checkConsent = (type: 'analytics' | 'marketing'): boolean => {
-    // If consent not required, always return true
-    if (!settings.require_cookie_consent) {
-      console.log(`🚀 [GTM] Consent not required (admin config) - ${type} allowed`);
-      return true;
-    }
+  // Check consent (reactive via consentVersion)
+  const checkConsent = useCallback((type: 'analytics' | 'marketing'): boolean => {
+    if (!settings.require_cookie_consent) return true;
 
-    // Check localStorage for user consent
     const consentStr = localStorage.getItem(CONSENT_STORAGE_KEY);
-    if (!consentStr) {
-      console.log(`⏸️ [GTM] Waiting for user consent (${type})`);
-      return false;
-    }
+    if (!consentStr) return false;
 
     try {
       const consent = JSON.parse(consentStr);
-      if (!consent[type]) {
-        console.log(`⏸️ [GTM] User did not consent to ${type}`);
-        return false;
-      }
-      return true;
+      return !!consent[type];
     } catch {
       return false;
     }
-  };
+  }, [settings.require_cookie_consent]);
 
-  // Inject GTM script globally (once) - ONLY if user consented to analytics (or consent not required)
+  // ✅ Inject GTM script globally
   useEffect(() => {
     if (!loaded || !settings.gtm_container_id) return;
-
-    // Check consent
     if (!checkConsent('analytics')) return;
 
-    // Check if already injected
     const gtmExists = document.getElementById('global-gtm-script');
     if (gtmExists) return;
 
-    // Initialize dataLayer
     (window as any).dataLayer = (window as any).dataLayer || [];
 
-    // Inject GTM script
     const gtmScript = document.createElement('script');
     gtmScript.id = 'global-gtm-script';
     gtmScript.textContent = `
@@ -140,7 +141,6 @@ export const useGlobalTracking = () => {
     `;
     document.head.appendChild(gtmScript);
 
-    // GTM noscript
     const gtmNoscript = document.createElement('noscript');
     gtmNoscript.id = 'global-gtm-noscript';
     gtmNoscript.innerHTML = `<iframe src="https://www.googletagmanager.com/ns.html?id=${settings.gtm_container_id}"
@@ -150,22 +150,17 @@ export const useGlobalTracking = () => {
     console.log('✅ Global GTM loaded:', settings.gtm_container_id);
 
     return () => {
-      // Cleanup on unmount (optional, usually we don't unmount App)
       const script = document.getElementById('global-gtm-script');
       const noscript = document.getElementById('global-gtm-noscript');
       if (script) script.remove();
       if (noscript) noscript.remove();
     };
-  }, [loaded, settings.gtm_container_id, settings.require_cookie_consent]);
+  }, [loaded, settings.gtm_container_id, checkConsent, consentVersion]);
 
-  // Inject Facebook Pixel globally (once) - ONLY if user consented to marketing (or consent not required)
+  // ✅ Inject Facebook Pixel globally
   useEffect(() => {
     if (!loaded || !settings.facebook_pixel_id) return;
-
-    // Check consent
     if (!checkConsent('marketing')) return;
-
-    // Check if already injected
     if ((window as any).fbq) return;
 
     const fbScript = document.createElement('script');
@@ -184,7 +179,6 @@ export const useGlobalTracking = () => {
     `;
     document.head.appendChild(fbScript);
 
-    // Noscript fallback
     const fbNoscript = document.createElement('noscript');
     fbNoscript.id = 'global-fb-pixel-noscript';
     const fbImg = document.createElement('img');
@@ -203,7 +197,7 @@ export const useGlobalTracking = () => {
       if (script) script.remove();
       if (noscript) noscript.remove();
     };
-  }, [loaded, settings.facebook_pixel_id, settings.require_cookie_consent]);
+  }, [loaded, settings.facebook_pixel_id, checkConsent, consentVersion]);
 
   return { settings, loaded };
 };

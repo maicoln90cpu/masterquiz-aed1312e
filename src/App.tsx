@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./styles/onboarding.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { ReactNode, lazy, Suspense, useEffect } from "react";
@@ -112,10 +112,10 @@ const Integrations = lazyWithRetry(() => import("./pages/Integrations"), "Integr
 const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"), "PrivacyPolicy");
 const MyQuizzes = lazyWithRetry(() => import("./pages/MyQuizzes"), "MyQuizzes");
 
-// ✅ GTM GLOBAL: Wrapper que carrega tracking em TODAS as rotas (públicas e autenticadas)
-const GlobalTrackingWrapper = ({ children }: { children: ReactNode }) => {
+// ✅ GTM GLOBAL: Layout route que carrega tracking apenas nas rotas do site (NÃO quiz público/preview)
+const GlobalTrackingLayout = () => {
   useGlobalTracking();
-  return <>{children}</>;
+  return <Outlet />;
 };
 
 // ✅ FASE 5: RequireAuth usa AuthContext centralizado
@@ -225,99 +225,121 @@ const App = () => (
               <Toaster />
               <Sonner />
             <BrowserRouter>
-              <GlobalTrackingWrapper>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/kiwify/success" element={<LazyRoute Component={KiwifySuccess} />} />
-                <Route path="/kiwify/cancel" element={<LazyRoute Component={KiwifyCancel} />} />
-                <Route path="/faq" element={<LazyRoute Component={FAQ} />} />
-                <Route path="/precos" element={<LazyRoute Component={Pricing} />} />
-                <Route path="/privacy-policy" element={<LazyRoute Component={PrivacyPolicy} />} />
-                <Route path="/dashboard" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={Dashboard} />
+                {/* ✅ ROTAS COM GTM GLOBAL (todas as páginas do site) */}
+                <Route element={<GlobalTrackingLayout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/kiwify/success" element={<LazyRoute Component={KiwifySuccess} />} />
+                  <Route path="/kiwify/cancel" element={<LazyRoute Component={KiwifyCancel} />} />
+                  <Route path="/faq" element={<LazyRoute Component={FAQ} />} />
+                  <Route path="/precos" element={<LazyRoute Component={Pricing} />} />
+                  <Route path="/privacy-policy" element={<LazyRoute Component={PrivacyPolicy} />} />
+                  <Route path="/dashboard" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={Dashboard} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/meus-quizzes" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={MyQuizzes} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/settings" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={Settings} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/create-quiz" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={CreateQuiz} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/crm" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={CRM} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/responses" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={Responses} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/analytics" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={Analytics} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/webhook-logs" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={WebhookLogs} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/webhook-settings" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={WebhookSettings} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/maisfy-generator" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={MaisfyGenerator} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/media-library" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={MediaLibrary} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/integrations" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={Integrations} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="/masteradm" element={
+                    <ProtectedRoute requiredRole="master_admin">
+                      <LazyRoute Component={AdminDashboard} />
                     </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/meus-quizzes" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={MyQuizzes} />
+                  } />
+                  <Route path="/masteradm/template-editor/:templateId" element={
+                    <ProtectedRoute requiredRole="master_admin">
+                      <LazyRoute Component={AdminTemplateEditor} />
                     </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/settings" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={Settings} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/create-quiz" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={CreateQuiz} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/crm" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={CRM} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/responses" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={Responses} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/analytics" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={Analytics} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/webhook-logs" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={WebhookLogs} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/webhook-settings" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={WebhookSettings} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/maisfy-generator" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={MaisfyGenerator} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/media-library" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={MediaLibrary} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="/integrations" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={Integrations} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
+                  } />
+                  <Route path="/checkout" element={
+                    <RequireAuth>
+                      <ProtectedRoute requiredRole="admin">
+                        <LazyRoute Component={Checkout} />
+                      </ProtectedRoute>
+                    </RequireAuth>
+                  } />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+
+                {/* ✅ ROTAS SEM GTM GLOBAL (apenas GTM do criador via useQuizTracking) */}
                 <Route path="/preview/:quizId" element={
                   <RequireAuth>
                     <LazyRoute Component={PreviewQuiz} />
@@ -325,26 +347,7 @@ const App = () => (
                 } />
                 <Route path="/:company/:slug" element={<LazyRoute Component={QuizView} />} />
                 <Route path="/quiz/:slug" element={<LazyRoute Component={QuizView} />} />
-                <Route path="/masteradm" element={
-                  <ProtectedRoute requiredRole="master_admin">
-                    <LazyRoute Component={AdminDashboard} />
-                  </ProtectedRoute>
-                } />
-                <Route path="/masteradm/template-editor/:templateId" element={
-                  <ProtectedRoute requiredRole="master_admin">
-                    <LazyRoute Component={AdminTemplateEditor} />
-                  </ProtectedRoute>
-                } />
-                <Route path="/checkout" element={
-                  <RequireAuth>
-                    <ProtectedRoute requiredRole="admin">
-                      <LazyRoute Component={Checkout} />
-                    </ProtectedRoute>
-                  </RequireAuth>
-                } />
-                <Route path="*" element={<NotFound />} />
               </Routes>
-              </GlobalTrackingWrapper>
               <CookieConsentBanner />
             </BrowserRouter>
           </WebVitalsProvider>
