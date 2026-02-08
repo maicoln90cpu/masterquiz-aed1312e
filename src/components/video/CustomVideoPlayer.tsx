@@ -540,7 +540,7 @@ export const CustomVideoPlayer = ({
     <div
       ref={containerRef}
       className={cn(
-        'relative group bg-black rounded-lg overflow-hidden focus:outline-none',
+        'relative group bg-muted rounded-lg overflow-hidden focus:outline-none',
         aspectRatioClass,
         className
       )}

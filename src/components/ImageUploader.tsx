@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Upload, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ export const ImageUploader = ({
   disableWebPConversion = false 
 }: ImageUploaderProps) => {
   const { t } = useTranslation();
+  const inputId = useId();
   const [uploading, setUploading] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -160,14 +161,14 @@ export const ImageUploader = ({
         >
           <input
             type="file"
-            id="image-upload"
+            id={inputId}
             className="hidden"
             accept="image/*"
             onChange={handleChange}
             disabled={uploading}
           />
           <label
-            htmlFor="image-upload"
+            htmlFor={inputId}
             className="cursor-pointer flex flex-col items-center gap-2"
           >
             {uploading ? (

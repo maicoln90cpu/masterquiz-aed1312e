@@ -159,7 +159,7 @@ export const BunnyVideoUploader = ({
             <div className="absolute top-2 left-2 z-10">
               <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
                 <Cloud className="h-3 w-3 mr-1" />
-                Bunny CDN
+                CDN
               </Badge>
             </div>
             
@@ -312,7 +312,7 @@ export const BunnyVideoUploader = ({
               <div className="flex items-center justify-center gap-1 mt-3">
                 <Badge variant="outline" className="text-xs">
                   <Cloud className="h-3 w-3 mr-1" />
-                  Powered by Bunny CDN
+                  CDN Global
                 </Badge>
               </div>
             </>
