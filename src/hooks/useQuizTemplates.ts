@@ -25,7 +25,12 @@ const convertDBTemplateToQuizTemplate = (dbTemplate: DBTemplate): QuizTemplate =
     description: dbTemplate.description || '',
     category: dbTemplate.category as QuizTemplate['category'],
     icon: dbTemplate.icon || '📝',
-    preview: dbTemplate.preview_config as unknown as QuizTemplate['preview'],
+    preview: (dbTemplate.preview_config as unknown as QuizTemplate['preview']) || {
+      title: '',
+      description: '',
+      questionCount: 5,
+      template: 'moderno'
+    },
     config: dbTemplate.full_config as unknown as QuizTemplate['config']
   };
 };

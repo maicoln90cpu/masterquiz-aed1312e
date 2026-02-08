@@ -144,8 +144,8 @@ export const QuizTemplateSelector = ({ onSelectTemplate, onCreateFromScratch, on
                     {template.description}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>📝 {template.preview.questionCount}</span>
-                    <span>🎨 {template.preview.template}</span>
+                    <span>📝 {template.preview?.questionCount ?? 5}</span>
+                    <span>🎨 {template.preview?.template ?? 'moderno'}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -194,8 +194,8 @@ export const QuizTemplateSelector = ({ onSelectTemplate, onCreateFromScratch, on
                   </p>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-4 text-muted-foreground">
-                      <span>📝 {template.preview.questionCount}</span>
-                      <span>🎨 {template.preview.template}</span>
+                      <span>📝 {template.preview?.questionCount ?? 5}</span>
+                      <span>🎨 {template.preview?.template ?? 'moderno'}</span>
                     </div>
                     <span className="text-primary font-medium text-sm">
                       Upgrade →
