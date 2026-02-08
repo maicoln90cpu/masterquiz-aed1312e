@@ -5,12 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { sanitizeRichContent } from '@/lib/sanitize';
-import { useGlobalTracking } from '@/hooks/useGlobalTracking';
 
 const PrivacyPolicy = () => {
-  // Global tracking (GTM/Pixel do master admin)
-  useGlobalTracking();
-  
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [content, setContent] = useState<string>('');
@@ -27,7 +23,6 @@ const PrivacyPolicy = () => {
 
         if (error) throw error;
         
-        // Substituir [DATA] pela data atual formatada
         const contentWithDate = data?.setting_value?.replace(
           '[DATA]', 
           new Date().toLocaleDateString('pt-BR', { 
@@ -59,7 +54,6 @@ const PrivacyPolicy = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button 
@@ -78,7 +72,6 @@ const PrivacyPolicy = () => {
         </div>
       </header>
 
-      {/* Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <article 
           className="prose prose-slate dark:prose-invert max-w-none
@@ -94,7 +87,6 @@ const PrivacyPolicy = () => {
         />
       </main>
 
-      {/* Footer */}
       <footer className="border-t mt-12 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>

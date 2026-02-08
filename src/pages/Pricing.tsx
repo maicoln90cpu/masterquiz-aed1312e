@@ -8,11 +8,8 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { usePricingPlans } from "@/hooks/usePricingPlans";
 import { PricingCard } from "@/components/landing/PricingCard";
-import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 
 export default function Pricing() {
-  // Global tracking (GTM/Pixel do master admin)
-  useGlobalTracking();
   
   const navigate = useNavigate();
   const { t } = useTranslation();

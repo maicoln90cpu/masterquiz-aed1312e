@@ -13,14 +13,11 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { logAuthAction } from "@/lib/auditLogger";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { fetchIPWithCache } from "@/lib/ipCache";
-import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 import { Eye, EyeOff, ArrowLeft, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 const Login = () => {
-  // Global tracking (GTM/Pixel do master admin)
-  useGlobalTracking();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { checkRateLimit } = useRateLimit();

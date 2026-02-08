@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useGlobalTracking } from "@/hooks/useGlobalTracking";
+
 import { useTranslation } from "react-i18next";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection } from "@/components/landing/HeroSection";
@@ -62,8 +62,6 @@ const DeferredSection = ({ children, className, id, fallbackHeight = "400px" }: 
 const Index = () => {
   const { t } = useTranslation();
   const { plans: dynamicPlans, isLoading: plansLoading } = useLandingPlans();
-  
-  useGlobalTracking();
 
   useEffect(() => {
     document.title = "MasterQuizz - Transforme Tráfego em Leads Qualificados";

@@ -46,7 +46,7 @@ const Dashboard = () => {
   const { isMasterAdmin } = useUserRole();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { quizLimit, responseLimit } = useSubscriptionLimits();
-  const { shouldShowDashboardTour } = useOnboarding();
+  const { shouldShowDashboardTour, updateOnboardingStep } = useOnboarding();
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<Pick<Profile, 'full_name' | 'company_slug'> | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -130,7 +130,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <Onboarding open={showOnboarding} onClose={handleCloseOnboarding} />
-      {shouldShowDashboardTour && <DashboardTour />}
+      {shouldShowDashboardTour && <DashboardTour updateOnboardingStep={updateOnboardingStep} />}
       
       <div className="container mx-auto px-4 py-8">
         {/* Header */}

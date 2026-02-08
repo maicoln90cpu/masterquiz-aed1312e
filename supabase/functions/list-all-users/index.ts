@@ -24,22 +24,19 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Validate caller is admin
+    // Validate caller using getUser (works with signing-keys)
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await anonClient.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     // Check admin role
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -68,12 +65,13 @@ Deno.serve(async (req) => {
     const authUsers = authData?.users || [];
     const userIds = authUsers.map((u) => u.id);
 
-    // Fetch profiles, subscriptions, and roles in parallel
-    const [profilesRes, subsRes, rolesRes, statsRes] = await Promise.all([
+    // Fetch profiles, subscriptions, roles, and stats in parallel (direct queries instead of RPC)
+    const [profilesRes, subsRes, rolesRes, quizCountRes, leadCountRes] = await Promise.all([
       adminClient.from("profiles").select("*").in("id", userIds),
       adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
       adminClient.from("user_roles").select("*").in("user_id", userIds),
-      adminClient.rpc("get_user_quiz_stats", { user_ids: userIds }),
+      adminClient.from("quizzes").select("user_id, id").in("user_id", userIds),
+      adminClient.from("quiz_responses").select("quiz_id, id, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
     ]);
 
     const profilesMap = new Map(
@@ -87,9 +85,21 @@ Deno.serve(async (req) => {
       if (!rolesMap.has(r.user_id)) rolesMap.set(r.user_id, []);
       rolesMap.get(r.user_id)!.push(r.role);
     }
-    const statsMap = new Map(
-      (statsRes.data || []).map((s: { user_id: string; quiz_count: number; lead_count: number }) => [s.user_id, s])
-    );
+
+    // Build quiz count map
+    const quizCountMap = new Map<string, number>();
+    for (const q of quizCountRes.data || []) {
+      quizCountMap.set(q.user_id, (quizCountMap.get(q.user_id) || 0) + 1);
+    }
+
+    // Build lead count map
+    const leadCountMap = new Map<string, number>();
+    for (const r of leadCountRes.data || []) {
+      const ownerUserId = (r as any).quizzes?.user_id;
+      if (ownerUserId) {
+        leadCountMap.set(ownerUserId, (leadCountMap.get(ownerUserId) || 0) + 1);
+      }
+    }
 
     const users = authUsers.map((u) => ({
       id: u.id,
@@ -99,7 +109,10 @@ Deno.serve(async (req) => {
       profile: profilesMap.get(u.id) || null,
       subscription: subsMap.get(u.id) || null,
       roles: rolesMap.get(u.id) || [],
-      stats: statsMap.get(u.id) || { quiz_count: 0, lead_count: 0 },
+      stats: {
+        quiz_count: quizCountMap.get(u.id) || 0,
+        lead_count: leadCountMap.get(u.id) || 0,
+      },
     }));
 
     return new Response(JSON.stringify({ users }), {

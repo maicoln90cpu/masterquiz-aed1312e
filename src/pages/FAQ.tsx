@@ -26,7 +26,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { useGlobalTracking } from '@/hooks/useGlobalTracking';
 import logo from '@/assets/logo.png';
 
 // Imagens reais do sistema
@@ -41,8 +40,6 @@ import multilingualReal from '@/assets/multilingual-real.jpeg';
 
 const FAQ = () => {
   const { t } = useTranslation();
-  // Global tracking (GTM/Pixel do master admin)
-  useGlobalTracking();
   
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');

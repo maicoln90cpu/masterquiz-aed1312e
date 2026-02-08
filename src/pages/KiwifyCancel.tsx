@@ -2,14 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { XCircle, ArrowLeft, HelpCircle, RefreshCw } from "lucide-react";
-import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 import { useTranslation } from "react-i18next";
 
 export default function KiwifyCancel() {
   const { t } = useTranslation();
-  // Global tracking (GTM/Pixel do master admin)
-  useGlobalTracking();
-  
   const navigate = useNavigate();
 
   return (
