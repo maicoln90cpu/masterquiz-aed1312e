@@ -1,80 +1,106 @@
 
-# Plano: Fix Corte de Imagens + Erro no Template Enxoval
 
-## Problema 1: Imagens cortadas no bloco de imagem
+# Plano: Corrigir Template Enxoval para seguir o padrao do Emagrecimento
 
-**Causa raiz**: No `ImageUploader.tsx` (linha 137), a imagem de preview tem `className="w-full h-48 object-cover"`. O `h-48` fixa a altura em 192px e o `object-cover` corta a imagem para caber nessa area. Isso faz com que imagens verticais ou mais altas percam partes importantes (topo e base).
+## Diagnostico
 
-**Correcao**: Trocar `h-48 object-cover` por `max-h-64 object-contain` para que a imagem inteira seja visivel sem corte, mantendo proporcoes originais.
+Comparando os dois templates no banco, o Enxoval tem **3 problemas estruturais criticos** que o Emagrecimento nao tem:
 
-### Arquivo: `src/components/ImageUploader.tsx`
-- Linha 137: mudar de `"w-full h-48 object-cover rounded-lg border"` para `"w-full max-h-64 object-contain rounded-lg border bg-muted/20"`
-- O `object-contain` garante que a imagem inteira aparece
-- O `max-h-64` limita a altura maxima para nao ocupar espaco excessivo
-- O `bg-muted/20` adiciona um fundo sutil nas areas vazias
+### Problema 1: Nomes de campos diferentes (camelCase vs snake_case)
+
+| Campo | Emagrecimento (correto) | Enxoval (errado) |
+|---|---|---|
+| Texto da pergunta | `question_text` | `questionText` |
+| Formato da resposta | `answer_format` | `answerFormat` |
+| Ordem | `order_number` | `orderNumber` |
+| ID da pergunta | `emag-q-mirror1` | (sem id) |
+
+O hook `useQuizTemplateSelection` (linha 83) usa `q.question_text` e `q.answer_format`. Como o Enxoval usa camelCase, esses campos retornam `undefined` -- por isso as perguntas aparecem vazias.
+
+### Problema 2: Perguntas sem bloco `question` dentro dos `blocks`
+
+No Emagrecimento, cada pergunta tem um bloco `{ type: "question", questionText, options, ... }` dentro do array `blocks`. No Enxoval, o array `blocks` contem apenas blocos visuais (image, slider, separator, etc) mas **nenhum bloco question**. Perguntas sem blocos ficam com `blocks: []`, o que faz o editor nao renderizar a pergunta.
+
+### Problema 3: SocialProof com formato errado
+
+O `SocialProofBlock` no codigo espera:
+```
+{ type: "socialProof", notifications: [{name, action, time}], interval: 5, style, position }
+```
+
+O Enxoval armazenou:
+```
+{ type: "socialProof", text: "...", author: "...", rating: 5, style: "toast" }
+```
+
+Faltam `notifications` e `interval`, causando o erro `Cannot read properties of undefined (reading 'length')` na linha 22 do `SocialProofBlock.tsx`.
 
 ---
 
-## Problema 2: Erro "Objects are not valid as a React child" ao entrar no template Enxoval
+## Correcao
 
-**Causa raiz**: Os templates inseridos no banco armazenam as opcoes como objetos `{text: "...", score: 0}`, mas os componentes do editor e preview esperam strings simples no array `options`.
+### 1. SQL Migration: Reescrever o `full_config` do template Enxoval
 
-O erro ocorre em multiplos locais que tentam renderizar `option` diretamente como texto:
-- `QuizBlockPreview.tsx` linhas 344, 358, 372, 386, 396, 409 - renderiza `{option}` no JSX
-- `QuestionBlock.tsx` linha 195 - usa `value={option}` no Input
-- `QuestionConfigStep.tsx` linha 70 - cast `options as string[]`
+Atualizar o JSON inteiro com:
 
-**Correcao**: Criar uma funcao utilitaria `normalizeOption` que extrai o texto de uma opcao, seja ela string ou objeto `{text, score}`. Aplicar nos pontos de renderizacao.
+- **Campos em snake_case**: `question_text`, `answer_format`, `order_number`
+- **IDs unicos** para cada pergunta (ex: `enx-q1`, `enx-q2`, etc)
+- **Bloco `question`** dentro do array `blocks` de cada pergunta (com `questionText`, `options` como strings, `autoAdvance`, `required`)
+- **SocialProof corrigido** com `notifications[]` e `interval` (mesmo formato do Emagrecimento)
+- **Opcoes como strings simples** (nao objetos `{text, score}`) para compatibilidade com o editor
 
-### Abordagem (mais segura e menos invasiva):
+### 2. Defesa no SocialProofBlock.tsx
 
-**A) Normalizar opcoes no momento de carregar o template** (em `useQuizTemplateSelection.ts`):
-
-No `handleSelectTemplate`, ao processar as questions (linha 85), normalizar as opcoes para que objetos `{text, score}` virem strings separadas em `options[]` e `scores[]`:
+Adicionar fallback para evitar crash quando `notifications` estiver undefined:
 
 ```typescript
-// Antes
-options: Array.isArray(q.options) ? q.options : [],
-
-// Depois  
-options: Array.isArray(q.options) 
-  ? q.options.map((opt: any) => typeof opt === 'object' && opt?.text ? opt.text : String(opt))
-  : [],
+const notifications = block.notifications || [];
+// Usar notifications.length com guard
 ```
 
-E extrair scores na mesma transformacao.
+E no useEffect, nao criar interval se nao houver notifications.
 
-**B) Adicionar protecao nos componentes de renderizacao** (defesa em profundidade):
+### 3. Defesa no useQuizTemplateSelection.ts
 
-Criar helper em `src/types/blocks.ts`:
+Aceitar ambos os formatos de campo (camelCase e snake_case) para robustez:
+
 ```typescript
-export const normalizeOption = (option: unknown): string => {
-  if (typeof option === 'string') return option;
-  if (option && typeof option === 'object' && 'text' in option) return String((option as any).text);
-  return String(option);
-};
+question_text: q.question_text || q.questionText || '',
+answer_format: q.answer_format || q.answerFormat || 'single_choice',
 ```
 
-Aplicar em:
-- `QuizBlockPreview.tsx`: onde renderiza `{option}` como child ou value
-- `QuestionBlock.tsx`: no `value={option}` do Input (linha 195)
-- `QuestionConfigStep.tsx`: no cast de options (linha 70)
+---
+
+## Estrutura correta do template (exemplo de 1 pergunta)
+
+Baseado no padrao do Emagrecimento que funciona:
+
+```json
+{
+  "id": "enx-q4",
+  "question_text": "Quanto voce imagina gastar no enxoval completo?",
+  "answer_format": "single_choice",
+  "options": ["Menos de R$ 1.000", "R$ 1.000 a R$ 3.000", "R$ 3.000 a R$ 5.000", "Mais de R$ 5.000"],
+  "order_number": 3,
+  "blocks": [
+    { "id": "enx-b4-img", "type": "image", "url": "/templates/enxoval-bebe/quarto-bebe.jpg", "alt": "Quarto de bebe", "width": "100%", "order": 0 },
+    { "id": "enx-b4-slider", "type": "slider", "min": 500, "max": 10000, "step": 100, "defaultValue": 3000, "unit": "R$", "label": "Orcamento estimado", "showValue": true, "required": true, "order": 1 },
+    { "id": "enx-b4-q", "type": "question", "questionText": "Quanto voce imagina gastar no enxoval completo?", "answerFormat": "single_choice", "options": ["Menos de R$ 1.000", "R$ 1.000 a R$ 3.000", "R$ 3.000 a R$ 5.000", "Mais de R$ 5.000"], "required": true, "autoAdvance": true, "order": 2 }
+  ]
+}
+```
 
 ---
 
 ## Resumo de Alteracoes
 
-| Arquivo | Alteracao |
+| Arquivo | Acao |
 |---|---|
-| `src/components/ImageUploader.tsx` | Trocar `h-48 object-cover` por `max-h-64 object-contain` |
-| `src/types/blocks.ts` | Adicionar funcao `normalizeOption` |
-| `src/hooks/useQuizTemplateSelection.ts` | Normalizar options ao carregar template (converter `{text,score}` para strings + scores separados) |
-| `src/components/quiz/QuizBlockPreview.tsx` | Usar `normalizeOption` ao renderizar opcoes |
-| `src/components/quiz/blocks/QuestionBlock.tsx` | Usar `normalizeOption` ao exibir value das opcoes |
-| `src/components/quiz/QuestionConfigStep.tsx` | Usar `normalizeOption` no cast de options |
+| SQL Migration | UPDATE `quiz_templates` SET `full_config` com JSON corrigido (15 perguntas, snake_case, blocos question, socialProof correto) |
+| `src/components/quiz/blocks/SocialProofBlock.tsx` | Guard contra `notifications` undefined |
+| `src/hooks/useQuizTemplateSelection.ts` | Aceitar camelCase + snake_case nos campos |
 
 ## Ordem de Execucao
-1. Adicionar `normalizeOption` em `src/types/blocks.ts`
-2. Corrigir `useQuizTemplateSelection.ts` para normalizar ao carregar
-3. Aplicar protecao defensiva nos 3 componentes de renderizacao
-4. Corrigir `ImageUploader.tsx` para nao cortar imagens
+1. Corrigir `SocialProofBlock.tsx` (guard defensivo)
+2. Corrigir `useQuizTemplateSelection.ts` (aceitar ambos formatos)
+3. SQL Migration: reescrever full_config do Enxoval com estrutura correta
