@@ -80,8 +80,8 @@ export function useQuizTemplateSelection({
       const templateQuestions = template.config.questions || [];
       const processedQuestions: EditorQuestion[] = templateQuestions.map((q: any, index: number) => ({
         id: q.id || `temp-${Date.now()}-${index}`,
-        question_text: q.question_text || '',
-        answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
+        question_text: q.question_text || q.questionText || '',
+        answer_format: (q.answer_format || q.answerFormat || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
         options: Array.isArray(q.options)
           ? q.options.map((opt: any) => typeof opt === 'object' && opt?.text ? String(opt.text) : String(opt))
           : [],

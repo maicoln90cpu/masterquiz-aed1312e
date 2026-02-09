@@ -16,39 +16,58 @@ interface SocialProofBlockProps {
 
 export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const notifications = block.notifications || [];
+  const interval = block.interval || 5;
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % block.notifications.length);
-    }, block.interval * 1000);
-    return () => clearInterval(interval);
-  }, [block.notifications.length, block.interval]);
+    if (notifications.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % notifications.length);
+    }, interval * 1000);
+    return () => clearInterval(timer);
+  }, [notifications.length, interval]);
 
   const addNotification = () => {
     onChange({
       ...block,
       notifications: [
-        ...block.notifications,
+        ...notifications,
         { name: 'Nome do Cliente', action: 'acabou de comprar', time: 'agora' }
       ]
     });
   };
 
-  const updateNotification = (index: number, field: keyof (typeof block.notifications)[0], value: string) => {
-    const newNotifications = [...block.notifications];
+  const updateNotification = (index: number, field: keyof (typeof notifications)[0], value: string) => {
+    const newNotifications = [...notifications];
     newNotifications[index] = { ...newNotifications[index], [field]: value };
     onChange({ ...block, notifications: newNotifications });
   };
 
   const removeNotification = (index: number) => {
-    if (block.notifications.length <= 1) return;
+    if (notifications.length <= 1) return;
     onChange({
       ...block,
-      notifications: block.notifications.filter((_, i) => i !== index)
+      notifications: notifications.filter((_, i) => i !== index)
     });
   };
 
-  const currentNotification = block.notifications[currentIndex];
+  const currentNotification = notifications[currentIndex];
+
+  if (notifications.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-4 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-primary">
+            <span>🔔 Bloco Social Proof Animado</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Nenhuma notificação configurada.</p>
+          <Button variant="outline" size="sm" onClick={addNotification}>
+            <Plus className="h-4 w-4 mr-1" /> Adicionar notificação
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -100,7 +119,7 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
               type="number"
               min={1}
               value={block.interval}
-              onChange={(e) => onChange({ ...block, interval: Number(e.target.value) || 5 })}
+              onChange={(e) => onChange({ ...block, interval: Number(e.target.value) || interval })}
             />
           </div>
           <div className="flex items-center gap-2 pt-0 sm:pt-6">
@@ -121,7 +140,7 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
             </Button>
           </div>
 
-          {block.notifications.map((notification, index) => (
+          {notifications.map((notification, index) => (
             <div key={index} className="p-3 border rounded-lg space-y-2 bg-muted/30">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Notificação {index + 1}</span>
@@ -129,7 +148,7 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
                   variant="ghost"
                   size="sm"
                   onClick={() => removeNotification(index)}
-                  disabled={block.notifications.length <= 1}
+                  disabled={notifications.length <= 1}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -157,7 +176,7 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
 
         {/* Preview */}
         <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-          <p className="text-sm font-medium text-muted-foreground">Preview (rotaciona a cada {block.interval}s):</p>
+          <p className="text-sm font-medium text-muted-foreground">Preview (rotaciona a cada {interval}s):</p>
           
           <div className="relative min-h-[80px] flex items-center justify-center">
             <div
