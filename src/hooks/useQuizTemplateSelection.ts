@@ -82,7 +82,12 @@ export function useQuizTemplateSelection({
         id: q.id || `temp-${Date.now()}-${index}`,
         question_text: q.question_text || '',
         answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
-        options: Array.isArray(q.options) ? q.options : [],
+        options: Array.isArray(q.options)
+          ? q.options.map((opt: any) => typeof opt === 'object' && opt?.text ? String(opt.text) : String(opt))
+          : [],
+        scores: Array.isArray(q.options)
+          ? q.options.map((opt: any) => typeof opt === 'object' && typeof opt?.score === 'number' ? opt.score : 0)
+          : [],
         order_number: index,
         custom_label: q.custom_label || '',
         blocks: Array.isArray(q.blocks) ? (q.blocks as EditorQuestion['blocks']) : [createBlock('question', 0)]

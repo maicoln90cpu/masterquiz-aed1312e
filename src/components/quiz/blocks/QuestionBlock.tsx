@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Trash2, GripVertical, HelpCircle } from "lucide-react";
 import type { QuestionBlock as QuestionBlockType } from "@/types/blocks";
+import { normalizeOption } from "@/types/blocks";
 import { RichTextEditor } from "./RichTextEditor";
 import { EmojiPicker } from "./EmojiPicker";
 
@@ -191,7 +192,7 @@ export const QuestionBlock = ({ block, onChange }: QuestionBlockProps) => {
                   />
                   <Input
                     placeholder={`Opção ${index + 1}`}
-                    value={option}
+                    value={normalizeOption(option)}
                     onChange={(e) => updateOption(index, e.target.value)}
                     className="flex-1 min-w-0"
                   />

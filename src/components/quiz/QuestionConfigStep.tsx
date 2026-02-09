@@ -14,7 +14,7 @@ import { QuizBlockPreview } from "./QuizBlockPreview";
 import { AISuggestionsSidebar } from "./AISuggestionsSidebar";
 import { ConditionBuilder, type QuestionConditions } from "./ConditionBuilder";
 import type { QuizBlock } from "@/types/blocks";
-import { createBlock, migrateQuestionToBlocks } from "@/types/blocks";
+import { createBlock, migrateQuestionToBlocks, normalizeOption } from "@/types/blocks";
 
 interface QuestionConfigStepProps {
   questions: any[];
@@ -67,7 +67,7 @@ export const QuestionConfigStep = ({
           ? questionBlock.questionText 
           : `Pergunta ${idx + 1}`,
         options: questionBlock && 'options' in questionBlock 
-          ? (questionBlock.options as string[]) 
+          ? ((questionBlock.options || []) as unknown[]).map(normalizeOption)
           : []
       };
     }), [allQuestions, currentQuestionIndex]);

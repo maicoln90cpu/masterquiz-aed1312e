@@ -134,7 +134,7 @@ export const ImageUploader = ({
           <img
             src={value}
             alt="Upload preview"
-            className="w-full h-48 object-cover rounded-lg border"
+            className="w-full max-h-64 object-contain rounded-lg border bg-muted/20"
           />
           <Button
             type="button"
