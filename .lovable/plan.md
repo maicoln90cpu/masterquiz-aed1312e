@@ -1,126 +1,80 @@
 
+# Plano: Fix Corte de Imagens + Erro no Template Enxoval
 
-# Plano: Imagens do Template + Fix Upload + Novo Template Enxoval
+## Problema 1: Imagens cortadas no bloco de imagem
 
-## 1) Trocar imagens das perguntas do template Emagrecimento
+**Causa raiz**: No `ImageUploader.tsx` (linha 137), a imagem de preview tem `className="w-full h-48 object-cover"`. O `h-48` fixa a altura em 192px e o `object-cover` corta a imagem para caber nessa area. Isso faz com que imagens verticais ou mais altas percam partes importantes (topo e base).
 
-### Pergunta 9 (indice 11 no array - Q12 atual)
-- Substituir a URL Unsplash `photo-1556740758-90de374c12ad` pela imagem enviada `questao9.jpg` (mulher com calca folgada mostrando emagrecimento)
-- Copiar `user-uploads://questao9.jpg` para `src/assets/templates/emagrecimento/questao9.jpg`
-- Atualizar via SQL o `full_config->'questions'->11->'blocks'->0->>'url'`
+**Correcao**: Trocar `h-48 object-cover` por `max-h-64 object-contain` para que a imagem inteira seja visivel sem corte, mantendo proporcoes originais.
 
-### Pergunta 1 do template original (indice 3 no array - Q4 atual, "Ha quanto tempo voce tenta perder peso?")
-- Substituir a URL Unsplash `photo-1611077544695-41be4c0c1384` pela imagem enviada `questao1.jpg` (mulher frustrada sentada ao lado da balanca)
-- Copiar `user-uploads://questao1.jpg` para `src/assets/templates/emagrecimento/questao1.jpg`
-- Atualizar via SQL o `full_config->'questions'->3->'blocks'->0->>'url'`
-
-**Nota**: As imagens do template sao referenciadas por URL no JSON do banco. Como sao assets locais, precisam ser importaveis. A abordagem sera usar os caminhos relativos que o Vite resolve em build, mas como o template e armazenado no banco (JSON), usaremos as URLs dos assets ja existentes no projeto (padrao `/src/assets/templates/emagrecimento/`). Porem, como o JSON do banco nao resolve imports ES6, a melhor abordagem e manter URLs externas ou referenciar via caminho publico. Vou usar o caminho que ja funciona no projeto.
+### Arquivo: `src/components/ImageUploader.tsx`
+- Linha 137: mudar de `"w-full h-48 object-cover rounded-lg border"` para `"w-full max-h-64 object-contain rounded-lg border bg-muted/20"`
+- O `object-contain` garante que a imagem inteira aparece
+- O `max-h-64` limita a altura maxima para nao ocupar espaco excessivo
+- O `bg-muted/20` adiciona um fundo sutil nas areas vazias
 
 ---
 
-## 2) Fix erro de upload de imagens (bucket `quiz-media` nao existe)
+## Problema 2: Erro "Objects are not valid as a React child" ao entrar no template Enxoval
 
-O erro "Erro ao enviar imagem" ocorre porque **nao existe nenhum storage bucket** no Supabase. O `ImageUploader` tenta fazer upload para o bucket `quiz-media` que nao foi criado.
+**Causa raiz**: Os templates inseridos no banco armazenam as opcoes como objetos `{text: "...", score: 0}`, mas os componentes do editor e preview esperam strings simples no array `options`.
 
-### Correcao via SQL Migration:
-```sql
--- Criar bucket quiz-media (publico para exibicao)
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('quiz-media', 'quiz-media', true);
+O erro ocorre em multiplos locais que tentam renderizar `option` diretamente como texto:
+- `QuizBlockPreview.tsx` linhas 344, 358, 372, 386, 396, 409 - renderiza `{option}` no JSX
+- `QuestionBlock.tsx` linha 195 - usa `value={option}` no Input
+- `QuestionConfigStep.tsx` linha 70 - cast `options as string[]`
 
--- Politica: usuarios autenticados podem fazer upload
-CREATE POLICY "Users upload quiz media"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'quiz-media');
+**Correcao**: Criar uma funcao utilitaria `normalizeOption` que extrai o texto de uma opcao, seja ela string ou objeto `{text, score}`. Aplicar nos pontos de renderizacao.
 
--- Politica: qualquer pessoa pode ver (publico)
-CREATE POLICY "Public read quiz media"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'quiz-media');
+### Abordagem (mais segura e menos invasiva):
 
--- Politica: usuarios podem deletar seus proprios uploads
-CREATE POLICY "Users delete own quiz media"
-ON storage.objects FOR DELETE
-TO authenticated
-USING (bucket_id = 'quiz-media' AND (auth.uid())::text = (storage.foldername(name))[1]);
+**A) Normalizar opcoes no momento de carregar o template** (em `useQuizTemplateSelection.ts`):
+
+No `handleSelectTemplate`, ao processar as questions (linha 85), normalizar as opcoes para que objetos `{text, score}` virem strings separadas em `options[]` e `scores[]`:
+
+```typescript
+// Antes
+options: Array.isArray(q.options) ? q.options : [],
+
+// Depois  
+options: Array.isArray(q.options) 
+  ? q.options.map((opt: any) => typeof opt === 'object' && opt?.text ? opt.text : String(opt))
+  : [],
 ```
 
----
+E extrair scores na mesma transformacao.
 
-## 3) Novo Template: Enxoval de Bebe Economico
+**B) Adicionar protecao nos componentes de renderizacao** (defesa em profundidade):
 
-Template com 15 perguntas seguindo o funil de auto-convencimento, para maes que querem economizar no enxoval.
+Criar helper em `src/types/blocks.ts`:
+```typescript
+export const normalizeOption = (option: unknown): string => {
+  if (typeof option === 'string') return option;
+  if (option && typeof option === 'object' && 'text' in option) return String((option as any).text);
+  return String(option);
+};
+```
 
-### Estrutura do Funil (15 perguntas):
-
-| # | Pergunta | Blocos | Fase |
-|---|---|---|---|
-| 1 | Qual a sua faixa etaria? | Question | Espelhamento |
-| 2 | Voce esta gravida ou ja e mae? | Question | Espelhamento |
-| 3 | Como esta sua situacao financeira atual? | Question | Espelhamento |
-| 4 | Quanto voce imagina gastar no enxoval completo? | Imagem IA (quarto de bebe) + Slider (R$500 - R$10.000) + Question | Dor |
-| 5 | O que mais te preocupa sobre o enxoval? | Separador + Prova Social + Question | Dor |
-| 6 | Voce ja se sentiu pressionada a comprar itens caros? | Imagem IA (mae preocupada com contas) + Question | Amplificacao |
-| 7 | Quantos itens do enxoval voce realmente precisa? | Comparacao (Lista Marketing vs Lista Real) + Question | Consequencia |
-| 8 | Voce sabia que 40% dos itens de enxoval nunca sao usados? | Galeria IA (itens desperdicados, bebe feliz com pouco, organizacao inteligente) + Question | Consequencia |
-| 9 | Qual seu maior medo como mae? | Imagem IA (mae abraçando bebe) + Question | Contraste |
-| 10 | Analisando seu perfil de mae economica... | Loading + Progresso + Question | Transicao |
-| 11 | Voce conhece o Guia do Enxoval Inteligente? | Imagem IA (guia/produto) + Texto persuasivo + Question | Solucao |
-| 12 | O que voce mais valoriza em um guia de enxoval? | Comparacao (Comprar tudo vs Comprar certo) + Question | Contraste |
-| 13 | Quanto voce ja gastou com compras desnecessarias? | Slider (R$0 - R$3.000) + Texto impactante + Question | Justificar investimento |
-| 14 | Voce esta pronta para economizar de verdade? | Botao motivacional + Prova Social + Question | Compromisso |
-| 15 | Oferta especial: ultimas vagas com desconto! | Countdown (10 min) + Imagem IA (mae feliz com bebe) + Texto urgencia + Question | Urgencia/CTA |
-
-### Blocos distribuidos:
-- **Imagem IA**: Perguntas 4, 6, 9, 11, 15 (5 imagens)
-- **Galeria IA**: Pergunta 8 (3 imagens)
-- **Separador**: Pergunta 5
-- **Slider**: Perguntas 4, 13
-- **Comparacao**: Perguntas 7, 12
-- **Loading**: Pergunta 10
-- **Progresso**: Pergunta 10
-- **Prova Social**: Perguntas 5, 14
-- **Botao**: Pergunta 14
-- **Countdown**: Pergunta 15
-
-### Imagens IA a gerar (8 imagens ultrarrealistas):
-1. Quarto de bebe decorado e organizado
-2. Mae preocupada olhando contas/orcamento
-3. Itens de bebe desperdicados/sem uso
-4. Bebe feliz com poucos brinquedos essenciais
-5. Organizacao inteligente de enxoval
-6. Mae abraçando bebe recem-nascido
-7. Guia/livro de enxoval inteligente
-8. Mae feliz com bebe em quarto organizado
-
-### Resultado com CTA:
-- Texto personalizado: "Parabens! Voce esta pronta para montar o enxoval perfeito gastando ate 60% menos!"
-- Botao: "Quero Economizar Agora" -> checkout URL configuravel
-- Coleta de leads: nome, email, WhatsApp
-
-### Implementacao:
-- Gerar 8 imagens via IA (modelo `google/gemini-2.5-flash-image`)
-- Salvar em `src/assets/templates/enxoval-bebe/`
-- INSERT no banco `quiz_templates` com full_config completo
+Aplicar em:
+- `QuizBlockPreview.tsx`: onde renderiza `{option}` como child ou value
+- `QuestionBlock.tsx`: no `value={option}` do Input (linha 195)
+- `QuestionConfigStep.tsx`: no cast de options (linha 70)
 
 ---
 
 ## Resumo de Alteracoes
 
-| Recurso | Acao |
+| Arquivo | Alteracao |
 |---|---|
-| Storage | Criar bucket `quiz-media` com RLS (fix upload) |
-| SQL | UPDATE template emagrecimento - trocar 2 imagens |
-| Assets | Copiar questao1.jpg e questao9.jpg para assets |
-| Imagens IA | Gerar 8 imagens para template enxoval |
-| Assets | Salvar imagens em `src/assets/templates/enxoval-bebe/` |
-| SQL | INSERT novo template "Enxoval de Bebe Inteligente" |
+| `src/components/ImageUploader.tsx` | Trocar `h-48 object-cover` por `max-h-64 object-contain` |
+| `src/types/blocks.ts` | Adicionar funcao `normalizeOption` |
+| `src/hooks/useQuizTemplateSelection.ts` | Normalizar options ao carregar template (converter `{text,score}` para strings + scores separados) |
+| `src/components/quiz/QuizBlockPreview.tsx` | Usar `normalizeOption` ao renderizar opcoes |
+| `src/components/quiz/blocks/QuestionBlock.tsx` | Usar `normalizeOption` ao exibir value das opcoes |
+| `src/components/quiz/QuestionConfigStep.tsx` | Usar `normalizeOption` no cast de options |
 
 ## Ordem de Execucao
-1. Criar bucket `quiz-media` (fix upload)
-2. Copiar imagens do usuario e atualizar template emagrecimento
-3. Gerar imagens IA para template enxoval
-4. Inserir novo template no banco
-
+1. Adicionar `normalizeOption` em `src/types/blocks.ts`
+2. Corrigir `useQuizTemplateSelection.ts` para normalizar ao carregar
+3. Aplicar protecao defensiva nos 3 componentes de renderizacao
+4. Corrigir `ImageUploader.tsx` para nao cortar imagens
