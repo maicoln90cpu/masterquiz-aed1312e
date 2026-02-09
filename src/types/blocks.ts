@@ -602,3 +602,10 @@ export const migrateQuestionToBlocks = (
 
   return blocks;
 };
+
+/** Normaliza uma opção que pode ser string ou objeto {text, score} para string */
+export const normalizeOption = (option: unknown): string => {
+  if (typeof option === 'string') return option;
+  if (option && typeof option === 'object' && 'text' in option) return String((option as any).text);
+  return String(option ?? '');
+};

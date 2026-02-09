@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Check, Play, Pause, ChevronDown, X, User } from "lucide-react";
 import type { QuizBlock, VideoBlock } from "@/types/blocks";
+import { normalizeOption } from "@/types/blocks";
 import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { CustomVideoPlayer } from "@/components/video/CustomVideoPlayer";
 import { sanitizeHtml, sanitizeSimpleText } from "@/lib/sanitize";
@@ -341,7 +342,8 @@ export const QuizBlockPreview = ({
                 onValueChange={isInteractive ? (v) => handleOptionClick(v, false) : undefined}
                 className="space-y-2"
               >
-                {(block.options || ['Sim', 'Não']).map((option, idx) => {
+                {(block.options || ['Sim', 'Não']).map((rawOption, idx) => {
+                  const option = normalizeOption(rawOption);
                   const isSelected = selectedArray.includes(option);
                   return (
                     <div 
@@ -369,7 +371,8 @@ export const QuizBlockPreview = ({
                 onValueChange={isInteractive ? (v) => handleOptionClick(v, false) : undefined}
                 className="space-y-2"
               >
-                {block.options.map((option, idx) => {
+                {block.options.map((rawOption, idx) => {
+                  const option = normalizeOption(rawOption);
                   const isSelected = selectedArray.includes(option);
                   return (
                     <div 
@@ -393,7 +396,8 @@ export const QuizBlockPreview = ({
 
             {block.answerFormat === "multiple_choice" && block.options && (
               <div className="space-y-2">
-                {block.options.map((option, idx) => {
+                {block.options.map((rawOption, idx) => {
+                  const option = normalizeOption(rawOption);
                   const isSelected = selectedArray.includes(option);
                   return (
                     <div 
