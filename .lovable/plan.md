@@ -1,92 +1,126 @@
 
 
-# Plano: Correcoes no Template Emagrecimento + Atualizacao dos Prompts IA
+# Plano: Imagens do Template + Fix Upload + Novo Template Enxoval
 
-## Item 1: Fix Pergunta 9 + Adicionar 3 Perguntas de Espelhamento
+## 1) Trocar imagens das perguntas do template Emagrecimento
 
-### 1a) Diagnostico da Pergunta 9
+### Pergunta 9 (indice 11 no array - Q12 atual)
+- Substituir a URL Unsplash `photo-1556740758-90de374c12ad` pela imagem enviada `questao9.jpg` (mulher com calca folgada mostrando emagrecimento)
+- Copiar `user-uploads://questao9.jpg` para `src/assets/templates/emagrecimento/questao9.jpg`
+- Atualizar via SQL o `full_config->'questions'->11->'blocks'->0->>'url'`
 
-A pergunta 9 (indice 8) tem blocos validos (image + text + question), mas o campo `options` no bloco question esta como array simples de strings sem `scores`. Alem disso, a URL da imagem pode estar retornando 404 no Unsplash. A correcao inclui:
-- Garantir que todos os blocos tenham IDs unicos e formatos corretos
-- Trocar imagem por URL Unsplash mais confiavel
-- Adicionar `scores` nos blocos question para consistencia
+### Pergunta 1 do template original (indice 3 no array - Q4 atual, "Ha quanto tempo voce tenta perder peso?")
+- Substituir a URL Unsplash `photo-1611077544695-41be4c0c1384` pela imagem enviada `questao1.jpg` (mulher frustrada sentada ao lado da balanca)
+- Copiar `user-uploads://questao1.jpg` para `src/assets/templates/emagrecimento/questao1.jpg`
+- Atualizar via SQL o `full_config->'questions'->3->'blocks'->0->>'url'`
 
-### 1b) 3 Novas Perguntas Iniciais de Espelhamento
-
-Inserir 3 perguntas ANTES das atuais (reordenar `order_number` de todas):
-
-| Nova # | Pergunta | Tipo | Objetivo |
-|---|---|---|---|
-| 1 | Qual a sua faixa etaria? | single_choice | Personalizacao - o lead sente que o quiz e feito para ele |
-| 2 | Qual o seu sexo biologico? | single_choice | Personalizacao - segmentacao de comunicacao |
-| 3 | Como voce descreveria sua rotina hoje? | single_choice | Espelhamento - o lead se ve na situacao descrita |
-
-Apos inserir, as 14 perguntas originais passam a ser perguntas 4-17 (total: 17 perguntas).
-
-### Implementacao tecnica
-
-SQL Migration que faz `UPDATE` no `full_config` do template existente:
-1. Recompor o JSON `questions` com as 3 novas perguntas no inicio
-2. Ajustar `order_number` de 0 a 16
-3. Atualizar `preview_config.questionCount` para 17
-4. Corrigir blocos da pergunta 9 original (agora sera pergunta 12)
+**Nota**: As imagens do template sao referenciadas por URL no JSON do banco. Como sao assets locais, precisam ser importaveis. A abordagem sera usar os caminhos relativos que o Vite resolve em build, mas como o template e armazenado no banco (JSON), usaremos as URLs dos assets ja existentes no projeto (padrao `/src/assets/templates/emagrecimento/`). Porem, como o JSON do banco nao resolve imports ES6, a melhor abordagem e manter URLs externas ou referenciar via caminho publico. Vou usar o caminho que ja funciona no projeto.
 
 ---
 
-## Item 2: Atualizar Prompts do Sistema (Form + PDF)
+## 2) Fix erro de upload de imagens (bucket `quiz-media` nao existe)
 
-### Prompts atuais (no banco `system_settings`)
+O erro "Erro ao enviar imagem" ocorre porque **nao existe nenhum storage bucket** no Supabase. O `ImageUploader` tenta fazer upload para o bucket `quiz-media` que nao foi criado.
 
-Os prompts ja mencionam a estrutura de auto-convencimento mas NAO incluem a instrucao obrigatoria de comecar com perguntas de espelhamento.
+### Correcao via SQL Migration:
+```sql
+-- Criar bucket quiz-media (publico para exibicao)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('quiz-media', 'quiz-media', true);
 
-### Alteracoes nos 4 prompts:
+-- Politica: usuarios autenticados podem fazer upload
+CREATE POLICY "Users upload quiz media"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'quiz-media');
 
-**2a) `ai_system_prompt_form`** - Adicionar regra explicita:
+-- Politica: qualquer pessoa pode ver (publico)
+CREATE POLICY "Public read quiz media"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'quiz-media');
 
-```
-REGRA CRITICA - PERGUNTAS INICIAIS DE ESPELHAMENTO:
-As primeiras 2-3 perguntas do quiz DEVEM SEMPRE ser perguntas de espelhamento/identificacao pessoal.
-Exemplos: idade, sexo, rotina, momento de vida, objetivo principal.
-Essas perguntas fazem o lead sentir que o quiz foi feito ESPECIFICAMENTE para ele.
-Nunca comece com perguntas sobre o produto ou problema diretamente.
-
-ESTRUTURA OBRIGATORIA (em ordem):
-1. Espelhamento (2-3 perguntas) - O lead se reconhece: idade, perfil, rotina
-2. Amplificacao da dor - O problema ganha peso e clareza  
-3. Consequencia - O custo de nao agir fica evidente
-4. Contraste - Estado atual vs estado desejado
-5. Conclusao guiada - A solucao passa a fazer sentido
-```
-
-**2b) `ai_system_prompt_pdf`** - Mesma adicao da regra de espelhamento
-
-**2c) `ai_prompt_form`** - Adicionar instrucao no prompt do usuario:
-
-```
-IMPORTANTE: As primeiras 2-3 perguntas devem ser de ESPELHAMENTO 
-(ex: faixa etaria, sexo, como descreveria sua rotina) para que o 
-respondente sinta que o quiz e personalizado para ele.
-Depois siga o funil: dor -> consequencia -> contraste -> solucao -> CTA.
+-- Politica: usuarios podem deletar seus proprios uploads
+CREATE POLICY "Users delete own quiz media"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'quiz-media' AND (auth.uid())::text = (storage.foldername(name))[1]);
 ```
 
-**2d) `ai_prompt_pdf`** - Mesma adicao
+---
 
-### Tambem atualizar os defaults na Edge Function
+## 3) Novo Template: Enxoval de Bebe Economico
 
-Atualizar os prompts default em `supabase/functions/generate-quiz-ai/index.ts` (linhas 130-180) para incluir as mesmas instrucoes de espelhamento. Isso garante que mesmo sem configuracao no banco, o comportamento padrao ja inclui espelhamento.
+Template com 15 perguntas seguindo o funil de auto-convencimento, para maes que querem economizar no enxoval.
+
+### Estrutura do Funil (15 perguntas):
+
+| # | Pergunta | Blocos | Fase |
+|---|---|---|---|
+| 1 | Qual a sua faixa etaria? | Question | Espelhamento |
+| 2 | Voce esta gravida ou ja e mae? | Question | Espelhamento |
+| 3 | Como esta sua situacao financeira atual? | Question | Espelhamento |
+| 4 | Quanto voce imagina gastar no enxoval completo? | Imagem IA (quarto de bebe) + Slider (R$500 - R$10.000) + Question | Dor |
+| 5 | O que mais te preocupa sobre o enxoval? | Separador + Prova Social + Question | Dor |
+| 6 | Voce ja se sentiu pressionada a comprar itens caros? | Imagem IA (mae preocupada com contas) + Question | Amplificacao |
+| 7 | Quantos itens do enxoval voce realmente precisa? | Comparacao (Lista Marketing vs Lista Real) + Question | Consequencia |
+| 8 | Voce sabia que 40% dos itens de enxoval nunca sao usados? | Galeria IA (itens desperdicados, bebe feliz com pouco, organizacao inteligente) + Question | Consequencia |
+| 9 | Qual seu maior medo como mae? | Imagem IA (mae abraçando bebe) + Question | Contraste |
+| 10 | Analisando seu perfil de mae economica... | Loading + Progresso + Question | Transicao |
+| 11 | Voce conhece o Guia do Enxoval Inteligente? | Imagem IA (guia/produto) + Texto persuasivo + Question | Solucao |
+| 12 | O que voce mais valoriza em um guia de enxoval? | Comparacao (Comprar tudo vs Comprar certo) + Question | Contraste |
+| 13 | Quanto voce ja gastou com compras desnecessarias? | Slider (R$0 - R$3.000) + Texto impactante + Question | Justificar investimento |
+| 14 | Voce esta pronta para economizar de verdade? | Botao motivacional + Prova Social + Question | Compromisso |
+| 15 | Oferta especial: ultimas vagas com desconto! | Countdown (10 min) + Imagem IA (mae feliz com bebe) + Texto urgencia + Question | Urgencia/CTA |
+
+### Blocos distribuidos:
+- **Imagem IA**: Perguntas 4, 6, 9, 11, 15 (5 imagens)
+- **Galeria IA**: Pergunta 8 (3 imagens)
+- **Separador**: Pergunta 5
+- **Slider**: Perguntas 4, 13
+- **Comparacao**: Perguntas 7, 12
+- **Loading**: Pergunta 10
+- **Progresso**: Pergunta 10
+- **Prova Social**: Perguntas 5, 14
+- **Botao**: Pergunta 14
+- **Countdown**: Pergunta 15
+
+### Imagens IA a gerar (8 imagens ultrarrealistas):
+1. Quarto de bebe decorado e organizado
+2. Mae preocupada olhando contas/orcamento
+3. Itens de bebe desperdicados/sem uso
+4. Bebe feliz com poucos brinquedos essenciais
+5. Organizacao inteligente de enxoval
+6. Mae abraçando bebe recem-nascido
+7. Guia/livro de enxoval inteligente
+8. Mae feliz com bebe em quarto organizado
+
+### Resultado com CTA:
+- Texto personalizado: "Parabens! Voce esta pronta para montar o enxoval perfeito gastando ate 60% menos!"
+- Botao: "Quero Economizar Agora" -> checkout URL configuravel
+- Coleta de leads: nome, email, WhatsApp
+
+### Implementacao:
+- Gerar 8 imagens via IA (modelo `google/gemini-2.5-flash-image`)
+- Salvar em `src/assets/templates/enxoval-bebe/`
+- INSERT no banco `quiz_templates` com full_config completo
 
 ---
 
 ## Resumo de Alteracoes
 
-| Recurso | Alteracao |
+| Recurso | Acao |
 |---|---|
-| SQL Migration | UPDATE `quiz_templates` - adicionar 3 perguntas, fix Q9, reordenar |
-| SQL Migration | UPDATE `system_settings` - 4 prompts com regra de espelhamento |
-| Edge Function | Atualizar defaults dos prompts em `generate-quiz-ai/index.ts` |
+| Storage | Criar bucket `quiz-media` com RLS (fix upload) |
+| SQL | UPDATE template emagrecimento - trocar 2 imagens |
+| Assets | Copiar questao1.jpg e questao9.jpg para assets |
+| Imagens IA | Gerar 8 imagens para template enxoval |
+| Assets | Salvar imagens em `src/assets/templates/enxoval-bebe/` |
+| SQL | INSERT novo template "Enxoval de Bebe Inteligente" |
 
 ## Ordem de Execucao
-1. SQL Migration: atualizar template de emagrecimento (3 perguntas + fix Q9)
-2. SQL Migration: atualizar os 4 prompts no `system_settings`
-3. Codigo: atualizar defaults na edge function `generate-quiz-ai`
+1. Criar bucket `quiz-media` (fix upload)
+2. Copiar imagens do usuario e atualizar template emagrecimento
+3. Gerar imagens IA para template enxoval
+4. Inserir novo template no banco
 
