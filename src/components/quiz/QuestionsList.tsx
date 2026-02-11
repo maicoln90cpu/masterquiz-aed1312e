@@ -292,7 +292,7 @@ export const QuestionsList = memo(({
                       </button>
                     </div>
                     
-                    <div className="absolute top-1.5 right-1 flex gap-0.5 z-30 bg-card/90 rounded-md p-0.5 backdrop-blur-sm min-w-fit shrink-0">
+                    <div className="absolute top-1.5 right-1 flex gap-0.5 z-30 bg-card border border-border rounded-md p-0.5 shadow-sm min-w-fit shrink-0">
                       <Button
                         size="sm"
                         variant="ghost"
