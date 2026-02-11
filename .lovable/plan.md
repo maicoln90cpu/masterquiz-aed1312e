@@ -1,106 +1,67 @@
 
 
-# Plano: Corrigir Template Enxoval para seguir o padrao do Emagrecimento
+# Plano: Fix GTM para visitantes nao logados + Botao Renomear visivel
 
-## Diagnostico
+## Problema 1: GTM nao carrega para visitantes anonimos
 
-Comparando os dois templates no banco, o Enxoval tem **3 problemas estruturais criticos** que o Emagrecimento nao tem:
+### Causa raiz
+A tabela `system_settings` tem RLS habilitado com **apenas uma politica**: `Admins manage system settings` que exige `has_role(auth.uid(), 'admin')` ou `master_admin`. Nao existe politica de SELECT publica.
 
-### Problema 1: Nomes de campos diferentes (camelCase vs snake_case)
+Quando o `useGlobalTracking` hook executa `supabase.from('system_settings').select(...)` sem usuario logado, o Supabase retorna **zero linhas** (RLS bloqueia). O hook recebe `gtm_container_id: null` e nunca injeta o script.
 
-| Campo | Emagrecimento (correto) | Enxoval (errado) |
-|---|---|---|
-| Texto da pergunta | `question_text` | `questionText` |
-| Formato da resposta | `answer_format` | `answerFormat` |
-| Ordem | `order_number` | `orderNumber` |
-| ID da pergunta | `emag-q-mirror1` | (sem id) |
+Para usuarios logados com role admin/master_admin, a politica permite leitura e o GTM carrega normalmente.
 
-O hook `useQuizTemplateSelection` (linha 83) usa `q.question_text` e `q.answer_format`. Como o Enxoval usa camelCase, esses campos retornam `undefined` -- por isso as perguntas aparecem vazias.
+### Correcao
+Adicionar uma politica RLS de SELECT publica na tabela `system_settings` **apenas para as chaves de tracking** (gtm_container_id, facebook_pixel_id, require_cookie_consent). Isso evita expor configuracoes sensiveis.
 
-### Problema 2: Perguntas sem bloco `question` dentro dos `blocks`
-
-No Emagrecimento, cada pergunta tem um bloco `{ type: "question", questionText, options, ... }` dentro do array `blocks`. No Enxoval, o array `blocks` contem apenas blocos visuais (image, slider, separator, etc) mas **nenhum bloco question**. Perguntas sem blocos ficam com `blocks: []`, o que faz o editor nao renderizar a pergunta.
-
-### Problema 3: SocialProof com formato errado
-
-O `SocialProofBlock` no codigo espera:
-```
-{ type: "socialProof", notifications: [{name, action, time}], interval: 5, style, position }
+**SQL Migration:**
+```sql
+CREATE POLICY "Anyone can read tracking settings"
+  ON public.system_settings
+  FOR SELECT
+  USING (setting_key IN ('gtm_container_id', 'facebook_pixel_id', 'require_cookie_consent'));
 ```
 
-O Enxoval armazenou:
-```
-{ type: "socialProof", text: "...", author: "...", rating: 5, style: "toast" }
-```
-
-Faltam `notifications` e `interval`, causando o erro `Cannot read properties of undefined (reading 'length')` na linha 22 do `SocialProofBlock.tsx`.
+Isso permite que visitantes anonimos leiam apenas as 3 chaves de tracking, mantendo todas as outras configuracoes protegidas.
 
 ---
 
-## Correcao
+## Problema 2: Botao Renomear Pergunta invisivel
 
-### 1. SQL Migration: Reescrever o `full_config` do template Enxoval
+### Causa raiz
+O botao de renomear (Edit3 icon) e o botao de deletar (Trash2 icon) estao dentro de um container `absolute` com `bg-card/90 backdrop-blur-sm` (linha 295). O problema e que:
 
-Atualizar o JSON inteiro com:
+1. O container usa `bg-card/90` que em alguns temas pode ter transparencia excessiva, fazendo os icones se perderem visualmente
+2. Os botoes tem `variant="ghost"` que nao tem fundo/borda, e o icone Edit3 usa `text-primary` que pode se confundir com o fundo quando a pergunta esta selecionada (`bg-primary/10`)
+3. Os botoes so aparecem com visibilidade total — nao ha `opacity-0 group-hover:opacity-100` entao deveriam estar sempre visiveis, mas o contraste visual e baixo
 
-- **Campos em snake_case**: `question_text`, `answer_format`, `order_number`
-- **IDs unicos** para cada pergunta (ex: `enx-q1`, `enx-q2`, etc)
-- **Bloco `question`** dentro do array `blocks` de cada pergunta (com `questionText`, `options` como strings, `autoAdvance`, `required`)
-- **SocialProof corrigido** com `notifications[]` e `interval` (mesmo formato do Emagrecimento)
-- **Opcoes como strings simples** (nao objetos `{text, score}`) para compatibilidade com o editor
+### Correcao
+Tornar os botoes mais visiveis com:
+- Adicionar `border border-border` no container dos botoes para dar destaque visual
+- Aumentar opacidade do fundo para `bg-card` (sem transparencia)
+- Adicionar `shadow-sm` para separar visualmente do conteudo
 
-### 2. Defesa no SocialProofBlock.tsx
+**Arquivo:** `src/components/quiz/QuestionsList.tsx`, linha 295
 
-Adicionar fallback para evitar crash quando `notifications` estiver undefined:
-
-```typescript
-const notifications = block.notifications || [];
-// Usar notifications.length com guard
+De:
+```
+className="absolute top-1.5 right-1 flex gap-0.5 z-30 bg-card/90 rounded-md p-0.5 backdrop-blur-sm min-w-fit shrink-0"
 ```
 
-E no useEffect, nao criar interval se nao houver notifications.
-
-### 3. Defesa no useQuizTemplateSelection.ts
-
-Aceitar ambos os formatos de campo (camelCase e snake_case) para robustez:
-
-```typescript
-question_text: q.question_text || q.questionText || '',
-answer_format: q.answer_format || q.answerFormat || 'single_choice',
+Para:
 ```
-
----
-
-## Estrutura correta do template (exemplo de 1 pergunta)
-
-Baseado no padrao do Emagrecimento que funciona:
-
-```json
-{
-  "id": "enx-q4",
-  "question_text": "Quanto voce imagina gastar no enxoval completo?",
-  "answer_format": "single_choice",
-  "options": ["Menos de R$ 1.000", "R$ 1.000 a R$ 3.000", "R$ 3.000 a R$ 5.000", "Mais de R$ 5.000"],
-  "order_number": 3,
-  "blocks": [
-    { "id": "enx-b4-img", "type": "image", "url": "/templates/enxoval-bebe/quarto-bebe.jpg", "alt": "Quarto de bebe", "width": "100%", "order": 0 },
-    { "id": "enx-b4-slider", "type": "slider", "min": 500, "max": 10000, "step": 100, "defaultValue": 3000, "unit": "R$", "label": "Orcamento estimado", "showValue": true, "required": true, "order": 1 },
-    { "id": "enx-b4-q", "type": "question", "questionText": "Quanto voce imagina gastar no enxoval completo?", "answerFormat": "single_choice", "options": ["Menos de R$ 1.000", "R$ 1.000 a R$ 3.000", "R$ 3.000 a R$ 5.000", "Mais de R$ 5.000"], "required": true, "autoAdvance": true, "order": 2 }
-  ]
-}
+className="absolute top-1.5 right-1 flex gap-0.5 z-30 bg-card border border-border rounded-md p-0.5 shadow-sm min-w-fit shrink-0"
 ```
 
 ---
 
 ## Resumo de Alteracoes
 
-| Arquivo | Acao |
+| Arquivo / Recurso | Alteracao |
 |---|---|
-| SQL Migration | UPDATE `quiz_templates` SET `full_config` com JSON corrigido (15 perguntas, snake_case, blocos question, socialProof correto) |
-| `src/components/quiz/blocks/SocialProofBlock.tsx` | Guard contra `notifications` undefined |
-| `src/hooks/useQuizTemplateSelection.ts` | Aceitar camelCase + snake_case nos campos |
+| SQL Migration | Adicionar politica RLS publica para leitura de chaves de tracking em `system_settings` |
+| `src/components/quiz/QuestionsList.tsx` (linha 295) | Aumentar visibilidade dos botoes de acao (fundo solido + borda + sombra) |
 
 ## Ordem de Execucao
-1. Corrigir `SocialProofBlock.tsx` (guard defensivo)
-2. Corrigir `useQuizTemplateSelection.ts` (aceitar ambos formatos)
-3. SQL Migration: reescrever full_config do Enxoval com estrutura correta
+1. SQL Migration (RLS policy)
+2. Corrigir estilo dos botoes no QuestionsList
