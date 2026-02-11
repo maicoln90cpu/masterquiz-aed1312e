@@ -11,19 +11,19 @@ import { useLandingABTest } from "@/hooks/useLandingABTest";
 
 // Fallback content for instant render (no loading state) - PARADIGMA AUTO-CONVENCIMENTO
 const FALLBACK_CONTENT = {
-  hero_badge: "Funis de Auto-Convencimento",
-  hero_headline_main: "Transforme Visitantes em Compradores Antes do Checkout",
-  hero_headline_sub: "Com Perguntas que Convencem",
-  hero_subheadline: "Crie funis onde perguntas estratégicas revelam dores ocultas, criam consciência e conduzem seu lead a decidir sozinho que precisa da sua solução.",
-  hero_bullet_1: "Faça seu lead reconhecer que precisa de você",
-  hero_bullet_2: "Perguntas que revelam dores e criam urgência",
-  hero_bullet_3: "Leads que chegam ao CTA já convencidos",
-  hero_bullet_4: "Analytics de consciência em tempo real",
-  hero_bullet_5: "IA que gera funis de auto-convencimento",
-  hero_cta_primary: "Começar Grátis",
-  hero_cta_secondary: "Ver Demonstração",
-  hero_trust_1: "Dados protegidos",
-  hero_trust_2: "Sem cartão de crédito",
+  hero_badge: "Quizzes que qualificam leads",
+  hero_headline_main: "Transforme cliques em decisões antes do checkout",
+  hero_headline_sub: "Com quizzes que qualificam",
+  hero_subheadline: "Crie quizzes que fazem o lead perceber o problema, se qualificar sozinho e chegar pronto para comprar — sem empurrar oferta.",
+  hero_bullet_1: "Crie um quiz estratégico sem código",
+  hero_bullet_2: "Faça o lead se autoqualificar enquanto responde",
+  hero_bullet_3: "Direcione cada perfil para a oferta certa",
+  hero_bullet_4: "Veja quem está pronto para comprar (e quem não está)",
+  hero_bullet_5: "Templates prontos para começar em minutos",
+  hero_cta_primary: "Criar quiz grátis",
+  hero_cta_secondary: "Ver como funciona",
+  hero_trust_1: "Sem cartão de crédito",
+  hero_trust_2: "Leva menos de 10 minutos",
   hero_trust_3: "Cancele quando quiser",
 };
 

@@ -1,0 +1,14 @@
+UPDATE landing_content SET value_pt = 'Quizzes que qualificam leads' WHERE key = 'hero_badge';
+UPDATE landing_content SET value_pt = 'Transforme cliques em decisões antes do checkout' WHERE key = 'hero_headline_main';
+UPDATE landing_content SET value_pt = 'Com quizzes que qualificam' WHERE key = 'hero_headline_sub';
+UPDATE landing_content SET value_pt = 'Crie quizzes que fazem o lead perceber o problema, se qualificar sozinho e chegar pronto para comprar — sem empurrar oferta.' WHERE key = 'hero_subheadline';
+UPDATE landing_content SET value_pt = 'Crie um quiz estratégico sem código' WHERE key = 'hero_bullet_1';
+UPDATE landing_content SET value_pt = 'Faça o lead se autoqualificar enquanto responde' WHERE key = 'hero_bullet_2';
+UPDATE landing_content SET value_pt = 'Direcione cada perfil para a oferta certa' WHERE key = 'hero_bullet_3';
+UPDATE landing_content SET value_pt = 'Veja quem está pronto para comprar (e quem não está)' WHERE key = 'hero_bullet_4';
+UPDATE landing_content SET value_pt = 'Templates prontos para começar em minutos' WHERE key = 'hero_bullet_5';
+UPDATE landing_content SET value_pt = 'Criar quiz grátis' WHERE key = 'hero_cta_primary';
+UPDATE landing_content SET value_pt = 'Ver como funciona' WHERE key = 'hero_cta_secondary';
+UPDATE landing_content SET value_pt = 'Sem cartão de crédito' WHERE key = 'hero_trust_1';
+UPDATE landing_content SET value_pt = 'Leva menos de 10 minutos' WHERE key = 'hero_trust_2';
+UPDATE landing_content SET value_pt = 'Cancele quando quiser' WHERE key = 'hero_trust_3';

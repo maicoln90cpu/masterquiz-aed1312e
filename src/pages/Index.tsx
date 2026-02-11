@@ -64,7 +64,7 @@ const Index = () => {
   const { plans: dynamicPlans, isLoading: plansLoading } = useLandingPlans();
 
   useEffect(() => {
-    document.title = "MasterQuizz - Transforme Tráfego em Leads Qualificados";
+    document.title = "MasterQuizz - Quizzes que qualificam leads antes do checkout";
   }, []);
 
   const personas = [
@@ -268,6 +268,7 @@ const Index = () => {
                   <li>• {t('landing.problem.step5')}</li>
                 </ul>
                 <p className="font-bold text-foreground pt-4">{t('landing.problem.conclusion')}</p>
+                <p className="text-primary font-semibold pt-2">{t('landing.problem.action')}</p>
               </div>
 
               <FlowDiagramWrapper />
@@ -291,25 +292,15 @@ const Index = () => {
                   {t('landing.solution.how_it_works')}
                 </h3>
                 
-                <div className="space-y-4 text-lg">
-                  <p>{t('landing.solution.step1')}</p>
-                  
-                  <div className="pl-6 space-y-2">
-                    <p className="font-semibold">{t('landing.solution.discover_title')}</p>
-                    <ul className="space-y-1 ml-4">
-                      <li>• {t('landing.solution.discover1')}</li>
-                      <li>• {t('landing.solution.discover2')}</li>
-                      <li>• {t('landing.solution.discover3')}</li>
-                      <li>• {t('landing.solution.discover4')}</li>
-                    </ul>
-                  </div>
-
-                  <p className="font-semibold">{t('landing.solution.automation_title')}</p>
-                  <ul className="space-y-1 ml-4">
-                    <li>• {t('landing.solution.automation1')}</li>
-                    <li>• {t('landing.solution.automation2')}</li>
-                    <li>• {t('landing.solution.automation3')}</li>
-                  </ul>
+                <div className="space-y-5 text-lg">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-start gap-4">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                        {i}
+                      </span>
+                      <p className="pt-0.5">{t(`landing.solution.step${i}`)}</p>
+                    </div>
+                  ))}
 
                   <p className="font-bold text-primary pt-4">{t('landing.solution.result')}</p>
                 </div>
@@ -350,26 +341,20 @@ const Index = () => {
                 <Layers className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-2xl font-bold mb-4">{t('landing.pillars.allinone.title')}</h3>
                 <p className="text-muted-foreground mb-4">{t('landing.pillars.allinone.description')}</p>
-                <div className="space-y-4">
-                  <div>
-                    <p className="font-semibold mb-2">{t('landing.pillars.allinone.before')}</p>
-                    <ul className="space-y-1 text-sm text-muted-foreground">
-                      <li>• {t('landing.pillars.allinone.before1')}</li>
-                      <li>• {t('landing.pillars.allinone.before2')}</li>
-                      <li>• {t('landing.pillars.allinone.before3')}</li>
-                      <li>• {t('landing.pillars.allinone.before4')}</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="font-semibold mb-2 text-primary">{t('landing.pillars.allinone.after')}</p>
-                    <ul className="space-y-1 text-sm">
-                      <li>✓ {t('landing.pillars.allinone.after1')}</li>
-                      <li>✓ {t('landing.pillars.allinone.after2')}</li>
-                      <li>✓ {t('landing.pillars.allinone.after3')}</li>
-                      <li>✓ {t('landing.pillars.allinone.after4')}</li>
-                    </ul>
-                  </div>
-                </div>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span>{t('landing.pillars.allinone.item1')}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span>{t('landing.pillars.allinone.item2')}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span>{t('landing.pillars.allinone.item3')}</span>
+                  </li>
+                </ul>
               </div>
 
               <div className="bg-card rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow landing-animate landing-stagger-3">
