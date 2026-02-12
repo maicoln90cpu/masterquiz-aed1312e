@@ -60,7 +60,10 @@ Deno.serve(async (req) => {
       .replace(/{support_link}/g, 'https://masterquiz.lovable.app/faq');
 
     const phone = contact.phone_number.replace(/\D/g, '');
-    const formattedPhone = phone.startsWith('55') ? phone : `55${phone}`;
+    // Só adiciona 55 se parece número brasileiro (10-11 dígitos sem DDI)
+    const formattedPhone = (phone.length === 10 || phone.length === 11) 
+      ? `55${phone}` 
+      : phone;
 
     const res = await fetch(`${normalizedUrl}/message/sendText/${settings.instance_name || 'masterquizz'}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
