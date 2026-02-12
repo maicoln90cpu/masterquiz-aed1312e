@@ -15,7 +15,10 @@ function normalizeApiUrl(url: string): string {
 function normalizePhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, '');
   if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
-  if (!cleaned.startsWith('55') && cleaned.length <= 11) cleaned = '55' + cleaned;
+  // Só adiciona 55 se parece número brasileiro (10-11 dígitos sem DDI)
+  if (cleaned.length === 10 || cleaned.length === 11) {
+    cleaned = '55' + cleaned;
+  }
   return cleaned;
 }
 
