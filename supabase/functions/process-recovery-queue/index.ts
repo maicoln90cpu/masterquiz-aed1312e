@@ -23,15 +23,22 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
-    const currentTime = now.toTimeString().slice(0, 5);
-    const startTime = settings.allowed_hours_start?.slice(0, 5) || '09:00';
-    const endTime = settings.allowed_hours_end?.slice(0, 5) || '18:00';
-    if (currentTime < startTime || currentTime > endTime) {
-      return new Response(JSON.stringify({ message: 'Fora do horário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const currentHour = brasilTime.getHours();
+    const currentMinute = brasilTime.getMinutes();
+    const currentTimeMinutes = currentHour * 60 + currentMinute;
+
+    const startRaw = settings.allowed_hours_start?.slice(0, 5) || '09:00';
+    const endRaw = settings.allowed_hours_end?.slice(0, 5) || '18:00';
+    const [startH, startM] = startRaw.split(':').map(Number);
+    const [endH, endM] = endRaw.split(':').map(Number);
+
+    if (currentTimeMinutes < startH * 60 + startM || currentTimeMinutes > endH * 60 + endM) {
+      return new Response(JSON.stringify({ message: 'Fora do horário', processed: 0, debug: { brasilTime: brasilTime.toISOString(), currentTimeMinutes, start: startH * 60 + startM, end: endH * 60 + endM } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    const { count: sentToday } = await supabase.from('recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', todayStart.toISOString());
+    const todayBrasil = new Date(brasilTime); todayBrasil.setHours(0, 0, 0, 0);
+    const { count: sentToday } = await supabase.from('recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', todayBrasil.toISOString());
     const dailyLimit = settings.daily_message_limit || 50;
     if ((sentToday || 0) >= dailyLimit) return new Response(JSON.stringify({ message: 'Limite diário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
