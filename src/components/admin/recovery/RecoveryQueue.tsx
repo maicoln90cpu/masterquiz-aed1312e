@@ -78,7 +78,6 @@ export function RecoveryQueue() {
           retry_count,
           error_message,
           created_at,
-          profiles:user_id (full_name),
           recovery_templates:template_id (name)
         `)
         .in('status', ['pending', 'queued', 'failed'])
@@ -88,7 +87,27 @@ export function RecoveryQueue() {
 
       if (error) throw error;
 
-      setQueue(data || []);
+      // Buscar nomes dos perfis separadamente (join direto falha sem FK formal)
+      const userIds = [...new Set((data || []).map(d => d.user_id))];
+      let profilesMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
+        if (profiles) {
+          profilesMap = Object.fromEntries(
+            profiles.map(p => [p.id, p.full_name || ''])
+          );
+        }
+      }
+
+      const enrichedData = (data || []).map(item => ({
+        ...item,
+        profiles: { full_name: profilesMap[item.user_id] || null },
+      }));
+
+      setQueue(enrichedData as any);
       setSelectedIds(new Set()); // Reset selection on reload
 
       // Calculate stats
