@@ -65,13 +65,14 @@ Deno.serve(async (req) => {
     const authUsers = authData?.users || [];
     const userIds = authUsers.map((u) => u.id);
 
-    // Fetch profiles, subscriptions, roles, and stats in parallel (direct queries instead of RPC)
-    const [profilesRes, subsRes, rolesRes, quizCountRes, leadCountRes] = await Promise.all([
+    // Fetch profiles, subscriptions, roles, stats, and historical quiz count in parallel
+    const [profilesRes, subsRes, rolesRes, quizCountRes, leadCountRes, auditDeletedRes] = await Promise.all([
       adminClient.from("profiles").select("*").in("id", userIds),
       adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
       adminClient.from("user_roles").select("*").in("user_id", userIds),
       adminClient.from("quizzes").select("user_id, id").in("user_id", userIds),
       adminClient.from("quiz_responses").select("quiz_id, id, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
+      adminClient.from("audit_logs").select("user_id, resource_id").eq("action", "quiz:deleted").in("user_id", userIds),
     ]);
 
     const profilesMap = new Map(
@@ -101,6 +102,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Build deleted quiz count map from audit_logs
+    const deletedQuizCountMap = new Map<string, number>();
+    for (const a of auditDeletedRes.data || []) {
+      if (a.user_id) {
+        deletedQuizCountMap.set(a.user_id, (deletedQuizCountMap.get(a.user_id) || 0) + 1);
+      }
+    }
+
     const users = authUsers.map((u) => ({
       id: u.id,
       email: u.email,
@@ -111,6 +120,7 @@ Deno.serve(async (req) => {
       roles: rolesMap.get(u.id) || [],
       stats: {
         quiz_count: quizCountMap.get(u.id) || 0,
+        quiz_count_historical: (quizCountMap.get(u.id) || 0) + (deletedQuizCountMap.get(u.id) || 0),
         lead_count: leadCountMap.get(u.id) || 0,
       },
     }));
