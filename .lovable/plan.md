@@ -1,140 +1,93 @@
 
-# Plano: Correcao de 3 Problemas no Sistema de Mensagens
+# Plano: 3 Correcoes Finais
 
-## Diagnostico Completo
+## 1. Corrigir Timezone para America/Sao_Paulo no `process-recovery-queue`
 
-### Problema 1: Mensagens pendentes nao sendo disparadas automaticamente
+O `process-recovery-queue` usa `now.toTimeString().slice(0, 5)` que retorna horario UTC. Isso faz com que a comparacao com `allowed_hours_start/end` (que estao em horario de Brasilia) falhe. Por exemplo, as 17:35 BRT o servidor esta em 20:35 UTC, que e maior que `20:00` e bloqueia o envio.
 
-**Causa raiz:** Nao existe cron job configurado. A extensao `pg_cron` nao esta habilitada no Supabase. O `process-recovery-queue` so executa quando alguem clica "Processar Fila" manualmente no painel admin.
+A funcao `check-inactive-users` ja faz a conversao correta para `America/Sao_Paulo`. Vamos aplicar o mesmo padrao.
 
-Alem disso, o trigger `trigger_welcome_message` insere contatos na `recovery_contacts` **sem `template_id`** (campo fica NULL). Quando o `send-whatsapp-recovery` processa, ele busca template por categoria `welcome` com `trigger_days <= 0` — isso funciona, mas o template fica como "N/A" na UI ate ser processado.
+**Arquivo:** `supabase/functions/process-recovery-queue/index.ts`
 
-**Solucao:** Como `pg_cron` nao esta disponivel neste projeto Supabase, implementar auto-processamento de 2 formas:
-1. Fazer o trigger de welcome chamar diretamente o `send-welcome-message` (via `pg_net`) ao inserir o contato, eliminando a necessidade de fila para boas-vindas
-2. Adicionar logica no frontend (RecoveryQueue) para auto-processar ao carregar se houver pendentes com `scheduled_at` no passado
+Substituir linhas 25-30:
+```typescript
+// De (UTC):
+const now = new Date();
+const currentTime = now.toTimeString().slice(0, 5);
 
-### Problema 2: Nome do usuario aparecendo como "N/A"
+// Para (BRT):
+const now = new Date();
+const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+const currentHour = brasilTime.getHours();
+const currentMinute = brasilTime.getMinutes();
+const currentTimeMinutes = currentHour * 60 + currentMinute;
 
-**Causa raiz:** A query na `RecoveryQueue.tsx` (linha 81) usa join relacional `profiles:user_id (full_name)`. Isso funciona, mas os contatos inseridos pelo trigger de welcome tem `priority: -1` e a query ordena por `priority ascending` — ou seja, esses aparecem primeiro. O join com profiles funciona (confirmei que os nomes existem no banco). O problema e que o Supabase retorna `profiles` como objeto, e o codigo acessa `item.profiles?.full_name`. Se o tipo retornado for array em vez de objeto (por ser nullable FK), retorna undefined.
+const [startH, startM] = (settings.allowed_hours_start?.slice(0, 5) || '09:00').split(':').map(Number);
+const [endH, endM] = (settings.allowed_hours_end?.slice(0, 5) || '18:00').split(':').map(Number);
 
-Na verdade, investigando os dados, os perfis TEM nome (Brenda, Alice Sophia, etc.) mas o join `profiles:user_id` pode falhar silenciosamente se a FK nao esta definida formalmente. A tabela `recovery_contacts` tem `user_id` sem foreign key explicita para `profiles`.
-
-**Solucao:** Alterar a query para fazer um join explicito ou buscar perfis separadamente, garantindo que o nome sempre apareca. Tambem atualizar os contatos pendentes para incluir o `template_id` correto.
-
-### Problema 3: Catia recebeu mensagem de "primeiro quiz" mas mostra 0 quizzes
-
-**Causa raiz:** O trigger `trigger_first_quiz_message` disparou em 13/02/2026, indicando que um quiz de Catia foi colocado como `status = 'active'` naquele momento. Porem, consultando a tabela `quizzes` com o `user_id` de Catia (`ce6821fa-...`), retorna **0 registros**. Isso significa que o quiz foi **deletado** depois de ativar.
-
-A contagem na `list-all-users` (linha 73) faz `SELECT user_id, id FROM quizzes WHERE user_id IN (...)` — mostra apenas quizzes existentes, nao contabiliza deletados.
-
-**Solucao:** Isso e comportamento correto — o quiz foi deletado. Nenhuma correcao necessaria. A mensagem foi enviada corretamente no momento da ativacao. Podemos adicionar uma coluna de "quizzes criados historico" no futuro, mas nao e um bug.
-
----
-
-## Correcoes a Implementar
-
-### 1. Auto-disparo de mensagens de welcome via `pg_net`
-
-Alterar o trigger `trigger_welcome_message` para, alem de inserir na fila, tambem invocar a edge function `send-welcome-message` diretamente via `pg_net.http_post`. Isso garante envio imediato sem depender de cron ou processamento manual.
-
-**Tipo:** SQL Migration
-
-```sql
--- Habilitar pg_net se nao estiver
-CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
-
--- Atualizar trigger para chamar send-welcome-message diretamente
-CREATE OR REPLACE FUNCTION trigger_welcome_message()
-RETURNS TRIGGER AS $$
-DECLARE
-  settings_record RECORD;
-  welcome_enabled BOOLEAN;
-BEGIN
-  IF NEW.whatsapp IS NULL OR NEW.whatsapp = '' THEN
-    RETURN NEW;
-  END IF;
-
-  SELECT is_connected INTO settings_record
-  FROM recovery_settings LIMIT 1;
-
-  IF NOT FOUND OR NOT settings_record.is_connected THEN
-    RETURN NEW;
-  END IF;
-
-  SELECT EXISTS (
-    SELECT 1 FROM recovery_templates 
-    WHERE category = 'welcome' AND is_active = true
-  ) INTO welcome_enabled;
-
-  IF NOT welcome_enabled THEN
-    RETURN NEW;
-  END IF;
-
-  -- Inserir na fila (backup)
-  INSERT INTO recovery_contacts (
-    user_id, phone_number, status, priority,
-    days_inactive_at_contact, scheduled_at
-  ) VALUES (
-    NEW.id, NEW.whatsapp, 'pending', -1, 0, now()
-  ) ON CONFLICT DO NOTHING;
-
-  -- Disparar envio imediato via pg_net
-  PERFORM net.http_post(
-    url := current_setting('app.settings.supabase_url') 
-           || '/functions/v1/send-welcome-message',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.supabase_anon_key')
-    ),
-    body := jsonb_build_object(
-      'user_id', NEW.id,
-      'phone_number', NEW.whatsapp,
-      'user_name', NEW.full_name
-    )
-  );
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+if (currentTimeMinutes < startH * 60 + startM || currentTimeMinutes > endH * 60 + endM) {
+  return new Response(JSON.stringify({ message: 'Fora do horario', processed: 0 }), ...);
+}
 ```
 
-Aplicar o mesmo padrao ao trigger `trigger_welcome_on_whatsapp_update` e `trigger_first_quiz_message`.
-
-### 2. Corrigir "N/A" na fila — atualizar template_id dos pendentes + fix query
-
-**Tipo:** SQL (dados) + Codigo frontend
-
-**2a. Atualizar contatos pendentes com template_id correto:**
-```sql
-UPDATE recovery_contacts 
-SET template_id = '2776b38e-7090-411c-a528-c0d0b6877f38'
-WHERE status = 'pending' AND template_id IS NULL AND days_inactive_at_contact = 0;
+Tambem corrigir a contagem de `sentToday` (linha 33-34) que usa `setHours(0,0,0,0)` em UTC. Converter para meia-noite BRT:
+```typescript
+const todayBrasil = new Date(brasilTime);
+todayBrasil.setHours(0, 0, 0, 0);
 ```
 
-**2b. Corrigir RecoveryQueue.tsx** para exibir nome corretamente mesmo quando o join falha:
+## 2. Contador Historico de Quizzes na `list-all-users`
 
-No `RecoveryQueue.tsx`, adicionar fallback buscando profiles separadamente caso o join nao retorne dados. A alteracao principal e na query (linhas 69-87) e na renderizacao (linha 476).
+Adicionar uma query ao `audit_logs` para contar quizzes deletados, ou melhor, usar uma abordagem mais simples: criar uma query que conta quizzes existentes + quizzes referenciados em `quiz_responses` (que sobrevivem a delecao se o quiz for deletado via soft-delete ou se houve respostas antes).
 
-### 3. Processar os 4 pendentes atuais
+Abordagem mais confiavel: usar a tabela `audit_logs` que registra acoes de delecao, OU adicionar `quiz_count_total` como campo historico.
 
-Depois de aplicar as correcoes, invocar `process-recovery-queue` para enviar as 4 mensagens pendentes.
+Como a forma mais simples e robusta: adicionar a contagem de `recovery_contacts` com `days_inactive_at_contact = 0` e `template_id` de `first_quiz` como proxy de "quizzes ativados historicamente".
+
+Na verdade, a abordagem mais direta: usar a funcao RPC `get_user_quiz_stats` que ja existe no banco, mas ela so conta quizzes existentes. Vamos alterar a edge function `list-all-users` para tambem buscar do `audit_logs` onde `action = 'quiz_deleted'` ou similar.
+
+Melhor: adicionar uma coluna `total_quizzes_created` no perfil via trigger no INSERT de quizzes. Mas isso requer migration + trigger.
+
+Abordagem pragmatica escolhida: Contar `quiz_responses` agrupados por `user_id` via quizzes (que ja usam CASCADE - respostas sao deletadas junto). Entao o unico registro que sobrevive e no `audit_logs`. Vamos buscar de la.
+
+**Arquivo:** `supabase/functions/list-all-users/index.ts`
+
+Adicionar query paralela:
+```typescript
+adminClient.from("audit_logs")
+  .select("resource_id, user_id")
+  .eq("action", "quiz_delete")
+  .in("user_id", userIds)
+```
+
+E somar com quizzes existentes para `total_quizzes_ever`.
+
+Alternativa mais robusta (sem depender de audit_logs que podem nao ter essa acao registrada): adicionar uma tabela ou campo. Mas para implementacao rapida, vamos adicionar ao response do `list-all-users` o campo `stats.quiz_count_historical` buscando de `recovery_contacts` onde existe template de `first_quiz` (indica que pelo menos 1 quiz foi ativado).
+
+Decisao final: A forma mais simples e confiavel e criar um trigger que incrementa um contador no `profiles` toda vez que um quiz e criado. Mas para nao criar infraestrutura extra agora, vamos usar a informacao disponivel: `recovery_contacts` com category `first_quiz` indica que o usuario ativou pelo menos 1 quiz. E combinamos com a contagem atual.
+
+## 3. Processar os 4 Pendentes
+
+Apos o deploy da correcao de timezone, invocar `send-welcome-message` diretamente para cada um dos 4 pendentes (ja que o `process-recovery-queue` pode estar fora do horario novamente).
+
+## 4. RecoveryQueue.tsx - Verificar Fix Anterior
+
+O fix anterior ja foi aplicado na ultima implementacao (busca separada de profiles). Nenhuma alteracao adicional necessaria.
 
 ---
 
 ## Ordem de Execucao
 
-1. SQL Migration: atualizar triggers para usar `pg_net` (disparo imediato)
-2. SQL: atualizar `template_id` dos contatos pendentes
-3. Corrigir `RecoveryQueue.tsx` para exibir nomes corretamente
-4. Deploy e testar enviando mensagens para os 4 pendentes
+1. Corrigir timezone em `process-recovery-queue/index.ts`
+2. Adicionar campo `quiz_count_historical` em `list-all-users/index.ts`
+3. Deploy das 2 edge functions
+4. Disparar mensagens para os 4 pendentes via `send-welcome-message`
+5. Testar `process-recovery-queue` para confirmar que timezone funciona
 
 ## Arquivos Alterados
 
 | Recurso | Alteracao |
 |---------|----------|
-| SQL Migration | Atualizar 3 triggers para usar `pg_net` (envio imediato) |
-| SQL (dados) | UPDATE `template_id` nos 4 contatos pendentes |
-| `src/components/admin/recovery/RecoveryQueue.tsx` | Fix exibicao de nome e template |
-
-## Nota sobre Catia
-O caso da Catia nao e um bug: o trigger de primeiro quiz disparou corretamente quando ela ativou um quiz em 13/02. O quiz foi posteriormente deletado, por isso mostra 0 na listagem. A mensagem foi enviada no momento correto.
+| `supabase/functions/process-recovery-queue/index.ts` | Converter comparacao de horario para America/Sao_Paulo |
+| `supabase/functions/list-all-users/index.ts` | Adicionar contagem historica de quizzes via recovery_contacts |
+| Nenhum SQL | Sem migrations necessarias |
