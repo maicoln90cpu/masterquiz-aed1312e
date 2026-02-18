@@ -67,7 +67,7 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
   return (
     <Dialog open={open} modal>
       <DialogContent
-        className="sm:max-w-lg [&>button]:hidden max-h-[95vh] flex flex-col"
+        className="sm:max-w-lg [&>button]:hidden max-h-none overflow-visible"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -80,7 +80,7 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
             {OBJECTIVES.map((obj, i) => {
               const isSelected = selected.includes(obj.value);
