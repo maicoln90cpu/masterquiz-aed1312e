@@ -233,20 +233,27 @@ const Dashboard = () => {
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{userStageData.stageEmoji}</span>
                     <div>
-                      <p className="text-lg font-medium">{userStageData.message}</p>
+                      <p className="text-lg font-medium">{userStageData.headline}</p>
                       <p className="text-sm text-muted-foreground">
                         {t('userStage.level', 'Nível')}: {userStageData.stageLabel}
                       </p>
                     </div>
                   </div>
-                  <Button 
-                    onClick={userStageData.primaryCTA.action}
-                    className="gap-2 shrink-0"
-                    variant={userStageData.primaryCTA.variant || 'default'}
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    {userStageData.primaryCTA.label}
-                  </Button>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Button 
+                      onClick={userStageData.primaryCTA.action}
+                      className="gap-2"
+                      variant={userStageData.primaryCTA.variant || 'default'}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {userStageData.primaryCTA.label}
+                    </Button>
+                    {userStageData.upgradeHint && (
+                      <span className="text-xs text-muted-foreground">
+                        ✨ {userStageData.upgradeHint}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
