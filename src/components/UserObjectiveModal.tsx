@@ -67,7 +67,7 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
   return (
     <Dialog open={open} modal>
       <DialogContent
-        className="sm:max-w-lg [&>button]:hidden max-h-none overflow-visible"
+        className="sm:max-w-lg [&>button]:hidden !max-h-none !overflow-y-visible"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
