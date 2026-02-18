@@ -800,10 +800,10 @@ export default function AdminDashboard() {
                           : 'Nunca'}
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-medium">{user.quiz_count || 0}</span>
+                        <span className="font-medium">{user.stats?.quiz_count || 0}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-medium">{user.lead_count || 0}</span>
+                        <span className="font-medium">{user.stats?.lead_count || 0}</span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -864,8 +864,8 @@ export default function AdminDashboard() {
                         <p className="font-medium truncate">{user.profile?.full_name || 'Sem nome'}</p>
                         <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                         <div className="flex items-center gap-3 mt-2 text-sm">
-                          <span><FileText className="h-3 w-3 inline mr-1" />{user.quiz_count || 0}</span>
-                          <span><Users className="h-3 w-3 inline mr-1" />{user.lead_count || 0}</span>
+                          <span><FileText className="h-3 w-3 inline mr-1" />{user.stats?.quiz_count || 0}</span>
+                          <span><Users className="h-3 w-3 inline mr-1" />{user.stats?.lead_count || 0}</span>
                         </div>
                         <div className="flex gap-1 mt-2">
                           {user.roles?.slice(0, 2).map((role: string) => (
