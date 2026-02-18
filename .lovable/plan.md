@@ -1,68 +1,57 @@
 
+# Refazer Completa da Pagina Observabilidade
 
-# PQL Analytics: Tabelas de Progressao por Intencao e Impacto do Lead de Teste
+## Problema
 
-## Resumo
-
-Criar um novo componente de analytics PQL no painel Admin Master, dentro da aba **Visao Geral > Relatorios**, contendo duas tabelas:
-
-1. **Progressao por Intencao** -- mostra, para cada intencao (`user_objectives`), quantos usuarios estao em cada estagio e a taxa de conversao Trial (free) para Paid
-2. **Impacto do Lead de Teste** -- mostra se usuarios que geraram leads (tem `quiz_responses`) convertem mais para plano pago
-
-## Dados disponiveis (sem nova tabela)
-
-Todos os dados necessarios ja existem:
-- `profiles.user_stage` -- estagio atual (explorador/construtor/operador)
-- `profiles.user_objectives` -- array de intencoes
-- `user_subscriptions.plan_type` -- free/paid/partner/premium
-- `quiz_responses` -- existencia de leads vinculados ao usuario via `quizzes.user_id`
-
-## Detalhes tecnicos
-
-### 1. Novo componente: `src/components/admin/PQLAnalytics.tsx`
-
-Componente lazy-loaded que faz uma unica query via Edge Function (para acessar todos os profiles) e computa as duas tabelas client-side.
-
-**Tabela 1 -- Progressao por Intencao:**
-
-```text
-| Intencao              | Total | Explorador | Construtor | Operador | % Expl->Constr | % Constr->Oper | Free | Paid | % Trial->Paid |
-|-----------------------|-------|------------|------------|----------|----------------|----------------|------|------|---------------|
-| lead_capture_launch   |   12  |     8      |     3      |    1     |     33%        |     25%        |  10  |   2  |    17%        |
-| vsl_conversion        |    5  |     3      |     1      |    1     |     40%        |     50%        |   4  |   1  |    20%        |
-| ...                   |       |            |            |          |                |                |      |      |               |
-| (sem intencao)        |   39  |    38      |     0      |    1     |      0%        |      -         |  39  |   0  |     0%        |
+O erro `Cannot convert undefined or null to object` ocorre em `ModuleHealthCard` na linha 85:
+```
+Object.entries(module.details)  // details pode ser null/undefined vindo do banco
 ```
 
-**Tabela 2 -- Impacto do Lead de Teste:**
+A tabela `system_health_metrics` pode retornar `details` como `null`, e nenhum componente da cadeia faz guarda contra isso.
 
-```text
-| Gerou Lead de Teste? | Total | Free | Paid | % Trial -> Paid |
-|----------------------|-------|------|------|-----------------|
-| Sim                  |    5  |   3  |   2  |      40%        |
-| Nao                  |   36  |  36  |   0  |       0%        |
-```
+## Solucao
 
-### 2. Edge Function: `list-all-users`
+Reescrever os 3 componentes da aba Observabilidade com tratamento defensivo em todos os pontos de acesso a dados, mantendo a mesma funcionalidade visual.
 
-A funcao `list-all-users` ja retorna `profile` e `subscription` por usuario. Porem **nao retorna `user_objectives`**. Precisamos adicionar `user_objectives` ao select do profile nessa funcao.
-
-### 3. Integracao no AdminDashboard
-
-- Adicionar lazy import do `PQLAnalytics`
-- Inserir como sub-aba "PQL Analytics" dentro da aba **Visao Geral**, ao lado de "Dashboard" e "Relatorios"
-
-### Arquivos modificados
+## Arquivos modificados
 
 | Arquivo | Alteracao |
 |---------|----------|
-| `src/components/admin/PQLAnalytics.tsx` | **Novo** -- componente com as duas tabelas |
-| `supabase/functions/list-all-users/index.ts` | Adicionar `user_objectives` ao select do profile |
-| `src/pages/AdminDashboard.tsx` | Adicionar sub-aba "PQL Analytics" na aba Visao Geral |
+| `src/components/admin/ModuleHealthCard.tsx` | Reescrever com guarda contra `details` nulo |
+| `src/components/admin/SystemHealthDashboard.tsx` | Reescrever com guarda contra `modules` vazio e dados parciais |
+| `src/components/admin/HealthReport.tsx` | Reescrever com guarda contra historico vazio e modules nulos |
+| `src/hooks/useSystemHealth.ts` | Adicionar defaults/fallbacks para `details` e `status` |
 
-### Arquivos NAO tocados
+## Detalhes tecnicos
 
-- `src/hooks/useUserStage.ts` (nao muda)
-- Nenhuma migration de banco (dados ja existem)
-- Nenhuma tabela nova
+### 1. `useSystemHealth.ts` -- Normalizar dados na origem
 
+Adicionar fallback ao mapear metricas do banco:
+- `details`: fallback para `{}` se nulo
+- `status`: fallback para `'warning'` se valor invalido
+- `score`: fallback para `0` se nulo
+
+### 2. `ModuleHealthCard.tsx` -- Reescrever com defesas
+
+- Linha critica: `Object.entries(module.details || {})` resolve o crash
+- Adicionar early return se `module` for nulo
+- Usar optional chaining em todo acesso a propriedades aninhadas
+
+### 3. `SystemHealthDashboard.tsx` -- Simplificar e proteger
+
+- Guardar `healthReport.modules` com fallback para array vazio
+- Proteger rendering do chart contra `historicalData` vazio
+- Manter layout identico (gauge + stats + modules grid + recomendacoes + chart)
+
+### 4. `HealthReport.tsx` -- Proteger comparacoes
+
+- Guardar acessos a `historicalData[i]` com optional chaining
+- Proteger `maintenanceSchedule` contra modules vazios
+
+## Arquivos NAO tocados
+
+- `src/components/admin/HealthScoreGauge.tsx` (funciona corretamente, recebe apenas primitivos)
+- `src/pages/AdminDashboard.tsx` (apenas importa e renderiza os componentes)
+- Nenhuma migration de banco
+- Nenhuma edge function
