@@ -43,6 +43,7 @@ const HealthReport = lazy(() => import("@/components/admin/HealthReport").then(m
 const LandingContentEditor = lazy(() => import("@/components/admin/LandingContentEditor").then(m => ({ default: m.LandingContentEditor })));
 const LandingABTestDashboard = lazy(() => import("@/components/admin/LandingABTestDashboard").then(m => ({ default: m.LandingABTestDashboard })));
 const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m => ({ default: m.CustomerRecovery })));
+const PQLAnalytics = lazy(() => import("@/components/admin/PQLAnalytics").then(m => ({ default: m.PQLAnalytics })));
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -1232,6 +1233,7 @@ export default function AdminDashboard() {
               tabs={[
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, color: 'blue' },
                 { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'green' },
+                { id: 'pql', label: 'PQL Analytics', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
               ]}
               defaultTab="dashboard"
             >
@@ -1239,6 +1241,11 @@ export default function AdminDashboard() {
                 <>
                   {activeTab === 'dashboard' && renderOverviewContent()}
                   {activeTab === 'reports' && renderReportsContent()}
+                  {activeTab === 'pql' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <PQLAnalytics />
+                    </Suspense>
+                  )}
                 </>
               )}
             </AdminSubTabs>
