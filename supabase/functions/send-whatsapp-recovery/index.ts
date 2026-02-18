@@ -73,12 +73,15 @@ Deno.serve(async (req) => {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
       body: JSON.stringify({ number: formattedPhone, text: msg }),
     });
-    const data = await res.json();
+
+    let data: any = {};
+    try { data = await res.json(); } catch { data = { rawStatus: res.status, rawStatusText: res.statusText }; }
 
     if (!res.ok) {
+      const errorDetail = data?.message || data?.error || data?.response?.message || JSON.stringify(data).substring(0, 200);
       const retry = (contact.retry_count || 0) + 1;
-      await supabase.from('recovery_contacts').update({ status: retry >= 3 ? 'failed' : 'pending', retry_count: retry, error_message: data.message }).eq('id', contact.id);
-      throw new Error(data.message);
+      await supabase.from('recovery_contacts').update({ status: retry >= 3 ? 'failed' : 'pending', retry_count: retry, error_message: `HTTP ${res.status}: ${errorDetail}` }).eq('id', contact.id);
+      throw new Error(`HTTP ${res.status}: ${errorDetail}`);
     }
 
     await supabase.from('recovery_contacts').update({ status: 'sent', sent_at: new Date().toISOString(), message_sent: msg, template_id: template.id, evolution_message_id: data.key?.id }).eq('id', contact.id);

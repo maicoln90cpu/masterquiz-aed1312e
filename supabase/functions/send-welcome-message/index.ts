@@ -65,13 +65,14 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ number: normalizedPhone, text: message }),
     });
 
-    if (!sendRes.ok) {
-      // Atualizar registro existente (do trigger) ou inserir novo
-      await supabase.from('recovery_contacts').update({ status: 'failed', error_message: `HTTP ${sendRes.status}` }).eq('user_id', user_id).eq('phone_number', normalizedPhone).eq('status', 'pending');
-      return new Response(JSON.stringify({ error: 'Erro ao enviar' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    let sendData: any = {};
+    try { sendData = await sendRes.json(); } catch { sendData = { rawStatus: sendRes.status }; }
 
-    const sendData = await sendRes.json();
+    if (!sendRes.ok) {
+      const errorDetail = sendData?.message || sendData?.error || sendData?.response?.message || JSON.stringify(sendData).substring(0, 200);
+      await supabase.from('recovery_contacts').update({ status: 'failed', error_message: `HTTP ${sendRes.status}: ${errorDetail}` }).eq('user_id', user_id).eq('phone_number', normalizedPhone).eq('status', 'pending');
+      return new Response(JSON.stringify({ error: `Erro ao enviar: ${errorDetail}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     // Atualizar registro existente (do trigger) em vez de inserir duplicata
     await supabase.from('recovery_contacts').update({ status: 'sent', sent_at: new Date().toISOString(), message_sent: message, template_id: template.id, evolution_message_id: sendData?.key?.id }).eq('user_id', user_id).eq('phone_number', normalizedPhone).eq('status', 'pending');
     await supabase.from('recovery_templates').update({ usage_count: (template.usage_count || 0) + 1, updated_at: new Date().toISOString() }).eq('id', template.id);
