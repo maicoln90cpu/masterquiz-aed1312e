@@ -59,11 +59,15 @@ Deno.serve(async (req) => {
       .replace(/{login_link}/g, 'https://masterquiz.lovable.app/login')
       .replace(/{support_link}/g, 'https://masterquiz.lovable.app/faq');
 
-    const phone = contact.phone_number.replace(/\D/g, '');
-    // Só adiciona 55 se parece número brasileiro (10-11 dígitos sem DDI)
-    const formattedPhone = (phone.length === 10 || phone.length === 11) 
-      ? `55${phone}` 
-      : phone;
+    let phone = contact.phone_number.replace(/\D/g, '');
+    if (phone.startsWith('0')) phone = phone.substring(1);
+    // Se já começa com 55 e tem 12-13 dígitos, já tem DDI
+    let formattedPhone = phone;
+    if (phone.startsWith('55') && (phone.length === 12 || phone.length === 13)) {
+      formattedPhone = phone;
+    } else if (phone.length === 10 || phone.length === 11) {
+      formattedPhone = `55${phone}`;
+    }
 
     const res = await fetch(`${normalizedUrl}/message/sendText/${settings.instance_name || 'masterquizz'}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
