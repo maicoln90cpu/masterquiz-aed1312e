@@ -1,93 +1,147 @@
 
-# Plano: 3 Correcoes Finais
+# Plano: Correcao de 3 Problemas (Welcome, N/A, Limites)
 
-## 1. Corrigir Timezone para America/Sao_Paulo no `process-recovery-queue`
+## Diagnostico
 
-O `process-recovery-queue` usa `now.toTimeString().slice(0, 5)` que retorna horario UTC. Isso faz com que a comparacao com `allowed_hours_start/end` (que estao em horario de Brasilia) falhe. Por exemplo, as 17:35 BRT o servidor esta em 20:35 UTC, que e maior que `20:00` e bloqueia o envio.
+### Problema 1: Erro HTTP 400 ao enviar mensagens de boas-vindas
 
-A funcao `check-inactive-users` ja faz a conversao correta para `America/Sao_Paulo`. Vamos aplicar o mesmo padrao.
+**Causa raiz (dupla):**
 
-**Arquivo:** `supabase/functions/process-recovery-queue/index.ts`
+a) **Normalizacao de telefone duplica o codigo de pais.** O numero `55219886753` (11 digitos, ja com DDI 55) e tratado como numero sem DDI pela funcao `normalizePhoneNumber`, que adiciona `55` novamente, resultando em `5555219886753` — numero invalido rejeitado pela Evolution API com HTTP 400.
 
-Substituir linhas 25-30:
+b) **Registros duplicados na fila.** O trigger `trigger_welcome_message` insere na `recovery_contacts` SEM `template_id`, e depois a funcao `send-welcome-message` (chamada via `pg_net`) insere OUTRO registro COM `template_id`. Isso gera duplicatas (um "pending" sem template e um "sent" ou "failed" com template).
+
+### Problema 2: Nome do usuario aparecendo como "N/A"
+
+**Causa raiz:** A politica RLS da tabela `profiles` so permite que o role `authenticated` veja **seu proprio perfil** (`id = auth.uid()`). A politica "Service can manage profiles" aplica-se exclusivamente ao role `service_role`. Quando o admin busca perfis de outros usuarios pelo frontend (que usa o client autenticado), a query retorna vazio para todos exceto o proprio admin.
+
+### Problema 3: Novos usuarios criados com quiz_limit = 3
+
+**Causa raiz:** A funcao trigger `handle_new_user_subscription()` esta com valores hardcoded:
+```sql
+VALUES (NEW.id, 'free', 'active', 3, 100)
+```
+O plano "Gratuito" na tabela `subscription_plans` define `quiz_limit = 1`, mas o trigger ignora essa tabela e usa o valor antigo `3`.
+
+---
+
+## Correcoes
+
+### 1. Corrigir `normalizePhoneNumber` nas Edge Functions
+
+Melhorar a logica para detectar quando o numero ja comeca com `55` (DDI Brasil):
+
 ```typescript
-// De (UTC):
-const now = new Date();
-const currentTime = now.toTimeString().slice(0, 5);
-
-// Para (BRT):
-const now = new Date();
-const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-const currentHour = brasilTime.getHours();
-const currentMinute = brasilTime.getMinutes();
-const currentTimeMinutes = currentHour * 60 + currentMinute;
-
-const [startH, startM] = (settings.allowed_hours_start?.slice(0, 5) || '09:00').split(':').map(Number);
-const [endH, endM] = (settings.allowed_hours_end?.slice(0, 5) || '18:00').split(':').map(Number);
-
-if (currentTimeMinutes < startH * 60 + startM || currentTimeMinutes > endH * 60 + endM) {
-  return new Response(JSON.stringify({ message: 'Fora do horario', processed: 0 }), ...);
+function normalizePhoneNumber(phone: string): string {
+  let cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+  // Se ja comeca com 55 e tem 12-13 digitos, ja tem DDI
+  if (cleaned.startsWith('55') && (cleaned.length === 12 || cleaned.length === 13)) {
+    return cleaned;
+  }
+  // Numero brasileiro sem DDI (10-11 digitos)
+  if (cleaned.length === 10 || cleaned.length === 11) {
+    cleaned = '55' + cleaned;
+  }
+  return cleaned;
 }
 ```
 
-Tambem corrigir a contagem de `sentToday` (linha 33-34) que usa `setHours(0,0,0,0)` em UTC. Converter para meia-noite BRT:
-```typescript
-const todayBrasil = new Date(brasilTime);
-todayBrasil.setHours(0, 0, 0, 0);
+**Arquivos:** `supabase/functions/send-welcome-message/index.ts` e `supabase/functions/send-whatsapp-recovery/index.ts`
+
+### 2. Corrigir triggers para evitar duplicatas e incluir template_id
+
+Atualizar os 3 triggers (`trigger_welcome_message`, `trigger_welcome_on_whatsapp_update`, `trigger_first_quiz_message`) para:
+- Buscar o `template_id` correto antes de inserir
+- Usar `ON CONFLICT (user_id, phone_number)` ou verificar existencia antes de inserir
+- Evitar que o `send-welcome-message` insira duplicata (ja que o trigger ja inseriu)
+
+**Tipo:** SQL Migration
+
+### 3. Adicionar politica RLS para admins verem perfis
+
+```sql
+CREATE POLICY "Admins can view all profiles"
+  ON public.profiles FOR SELECT
+  USING (
+    has_role(auth.uid(), 'admin'::app_role) 
+    OR has_role(auth.uid(), 'master_admin'::app_role)
+  );
 ```
 
-## 2. Contador Historico de Quizzes na `list-all-users`
+**Tipo:** SQL Migration
 
-Adicionar uma query ao `audit_logs` para contar quizzes deletados, ou melhor, usar uma abordagem mais simples: criar uma query que conta quizzes existentes + quizzes referenciados em `quiz_responses` (que sobrevivem a delecao se o quiz for deletado via soft-delete ou se houve respostas antes).
+### 4. Corrigir `handle_new_user_subscription` para ler da tabela de planos
 
-Abordagem mais confiavel: usar a tabela `audit_logs` que registra acoes de delecao, OU adicionar `quiz_count_total` como campo historico.
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  plan_record RECORD;
+BEGIN
+  SELECT quiz_limit, response_limit 
+  INTO plan_record
+  FROM subscription_plans 
+  WHERE plan_type = 'free' 
+  LIMIT 1;
 
-Como a forma mais simples e robusta: adicionar a contagem de `recovery_contacts` com `days_inactive_at_contact = 0` e `template_id` de `first_quiz` como proxy de "quizzes ativados historicamente".
-
-Na verdade, a abordagem mais direta: usar a funcao RPC `get_user_quiz_stats` que ja existe no banco, mas ela so conta quizzes existentes. Vamos alterar a edge function `list-all-users` para tambem buscar do `audit_logs` onde `action = 'quiz_deleted'` ou similar.
-
-Melhor: adicionar uma coluna `total_quizzes_created` no perfil via trigger no INSERT de quizzes. Mas isso requer migration + trigger.
-
-Abordagem pragmatica escolhida: Contar `quiz_responses` agrupados por `user_id` via quizzes (que ja usam CASCADE - respostas sao deletadas junto). Entao o unico registro que sobrevive e no `audit_logs`. Vamos buscar de la.
-
-**Arquivo:** `supabase/functions/list-all-users/index.ts`
-
-Adicionar query paralela:
-```typescript
-adminClient.from("audit_logs")
-  .select("resource_id, user_id")
-  .eq("action", "quiz_delete")
-  .in("user_id", userIds)
+  INSERT INTO public.user_subscriptions (
+    user_id, plan_type, status, quiz_limit, response_limit
+  ) VALUES (
+    NEW.id, 'free', 'active', 
+    COALESCE(plan_record.quiz_limit, 1), 
+    COALESCE(plan_record.response_limit, 100)
+  );
+  RETURN NEW;
+END;
+$function$;
 ```
 
-E somar com quizzes existentes para `total_quizzes_ever`.
+**Tipo:** SQL Migration
 
-Alternativa mais robusta (sem depender de audit_logs que podem nao ter essa acao registrada): adicionar uma tabela ou campo. Mas para implementacao rapida, vamos adicionar ao response do `list-all-users` o campo `stats.quiz_count_historical` buscando de `recovery_contacts` onde existe template de `first_quiz` (indica que pelo menos 1 quiz foi ativado).
+### 5. Corrigir subscricoes existentes com limites errados
 
-Decisao final: A forma mais simples e confiavel e criar um trigger que incrementa um contador no `profiles` toda vez que um quiz e criado. Mas para nao criar infraestrutura extra agora, vamos usar a informacao disponivel: `recovery_contacts` com category `first_quiz` indica que o usuario ativou pelo menos 1 quiz. E combinamos com a contagem atual.
+```sql
+UPDATE user_subscriptions us
+SET quiz_limit = sp.quiz_limit,
+    response_limit = sp.response_limit
+FROM subscription_plans sp
+WHERE us.plan_type = sp.plan_type
+  AND us.plan_type = 'free'
+  AND us.quiz_limit != sp.quiz_limit;
+```
 
-## 3. Processar os 4 Pendentes
+**Tipo:** SQL Migration (junto com item 4)
 
-Apos o deploy da correcao de timezone, invocar `send-welcome-message` diretamente para cada um dos 4 pendentes (ja que o `process-recovery-queue` pode estar fora do horario novamente).
+### 6. Limpar registros duplicados/orfaos na fila
 
-## 4. RecoveryQueue.tsx - Verificar Fix Anterior
+Cancelar os registros pendentes sem template_id (criados pelos triggers antigos) que ja tem um correspondente "sent" ou "failed" com template_id.
 
-O fix anterior ja foi aplicado na ultima implementacao (busca separada de profiles). Nenhuma alteracao adicional necessaria.
+**Tipo:** SQL Migration
 
 ---
 
 ## Ordem de Execucao
 
-1. Corrigir timezone em `process-recovery-queue/index.ts`
-2. Adicionar campo `quiz_count_historical` em `list-all-users/index.ts`
-3. Deploy das 2 edge functions
-4. Disparar mensagens para os 4 pendentes via `send-welcome-message`
-5. Testar `process-recovery-queue` para confirmar que timezone funciona
+1. SQL Migration: RLS profiles para admins (corrige N/A)
+2. SQL Migration: Corrigir `handle_new_user_subscription` + atualizar subscricoes existentes
+3. SQL Migration: Atualizar triggers para incluir template_id e evitar duplicatas
+4. SQL Migration: Limpar registros orfaos na fila
+5. Edge Functions: Corrigir `normalizePhoneNumber` em ambas as funcoes
+6. Deploy e testar
 
 ## Arquivos Alterados
 
 | Recurso | Alteracao |
 |---------|----------|
-| `supabase/functions/process-recovery-queue/index.ts` | Converter comparacao de horario para America/Sao_Paulo |
-| `supabase/functions/list-all-users/index.ts` | Adicionar contagem historica de quizzes via recovery_contacts |
-| Nenhum SQL | Sem migrations necessarias |
+| SQL Migration | RLS policy "Admins can view all profiles" |
+| SQL Migration | `handle_new_user_subscription()` le da tabela `subscription_plans` |
+| SQL Migration | UPDATE `user_subscriptions` existentes para limites corretos |
+| SQL Migration | Atualizar 3 triggers com `template_id` |
+| SQL Migration | Limpar duplicatas na `recovery_contacts` |
+| `supabase/functions/send-welcome-message/index.ts` | Fix `normalizePhoneNumber` |
+| `supabase/functions/send-whatsapp-recovery/index.ts` | Fix `normalizePhoneNumber` |
