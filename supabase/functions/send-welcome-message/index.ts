@@ -15,7 +15,11 @@ function normalizeApiUrl(url: string): string {
 function normalizePhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, '');
   if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
-  // Só adiciona 55 se parece número brasileiro (10-11 dígitos sem DDI)
+  // Se já começa com 55 e tem 12-13 dígitos, já tem DDI
+  if (cleaned.startsWith('55') && (cleaned.length === 12 || cleaned.length === 13)) {
+    return cleaned;
+  }
+  // Número brasileiro sem DDI (10-11 dígitos)
   if (cleaned.length === 10 || cleaned.length === 11) {
     cleaned = '55' + cleaned;
   }
@@ -62,12 +66,14 @@ Deno.serve(async (req) => {
     });
 
     if (!sendRes.ok) {
-      await supabase.from('recovery_contacts').insert({ user_id, phone_number: normalizedPhone, template_id: template.id, message_sent: message, status: 'failed', error_message: `HTTP ${sendRes.status}`, days_inactive_at_contact: 0 });
+      // Atualizar registro existente (do trigger) ou inserir novo
+      await supabase.from('recovery_contacts').update({ status: 'failed', error_message: `HTTP ${sendRes.status}` }).eq('user_id', user_id).eq('phone_number', normalizedPhone).eq('status', 'pending');
       return new Response(JSON.stringify({ error: 'Erro ao enviar' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const sendData = await sendRes.json();
-    await supabase.from('recovery_contacts').insert({ user_id, phone_number: normalizedPhone, template_id: template.id, message_sent: message, status: 'sent', sent_at: new Date().toISOString(), evolution_message_id: sendData?.key?.id, days_inactive_at_contact: 0 });
+    // Atualizar registro existente (do trigger) em vez de inserir duplicata
+    await supabase.from('recovery_contacts').update({ status: 'sent', sent_at: new Date().toISOString(), message_sent: message, template_id: template.id, evolution_message_id: sendData?.key?.id }).eq('user_id', user_id).eq('phone_number', normalizedPhone).eq('status', 'pending');
     await supabase.from('recovery_templates').update({ usage_count: (template.usage_count || 0) + 1, updated_at: new Date().toISOString() }).eq('id', template.id);
 
     return new Response(JSON.stringify({ success: true, message_id: sendData?.key?.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
