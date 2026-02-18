@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN user_objectives text[] DEFAULT NULL;
