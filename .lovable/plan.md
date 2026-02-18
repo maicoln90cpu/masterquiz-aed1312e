@@ -1,56 +1,84 @@
 
-# Plano: Corrigir Evento first_quiz_created
+# Plano: Modal de Objetivo do Usuario (Pos-Cadastro)
 
-## Problema Identificado
+## Conceito
 
-O evento GTM `first_quiz_created` e atualizado corretamente na maioria dos casos, mas ha dois gaps:
+Um modal leve e elegante que aparece no Dashboard perguntando "Qual seu principal objetivo com o MasterQuizz?". O usuario seleciona uma ou mais opcoes (checkbox) e confirma. O dado e salvo na tabela `profiles` em uma nova coluna `user_objectives`.
 
-1. **`onboarding_status.first_quiz_created` nunca e setado para `true`** — o milestone de onboarding "Criar primeiro quiz" nunca aparece como completo na UI.
+## Regras de Exibicao
 
-2. **Re-disparo do evento GTM** — se o usuario deletou todos os quizzes e publica um novo, a contagem retorna 0 e o evento dispara novamente (deveria ser unico por conta).
+- **Novos usuarios**: aparece automaticamente apos o primeiro login (conta recem-criada)
+- **Usuarios existentes**: aparece se `user_objectives` estiver NULL/vazio no perfil
+- **Uma vez respondido**: nunca mais aparece
+- **Nao pode ser ignorado**: sem botao de fechar / clicar fora nao fecha (modal bloqueante)
 
-## Correcao
+## Opcoes de Objetivo
 
-### Arquivo: `src/hooks/useQuizPersistence.ts`
+| Opcao | Valor interno |
+|-------|--------------|
+| Captar leads para lancamento | `lead_capture_launch` |
+| Melhorar conversao da VSL | `vsl_conversion` |
+| Rodar trafego pago | `paid_traffic` |
+| Validar oferta | `offer_validation` |
+| Uso educacional | `educational` |
+| Outro | `other` (com campo de texto opcional) |
 
-Dentro do bloco `if (isFirstQuiz)` (linha 349), adicionar atualizacao do `onboarding_status`:
+O usuario pode selecionar **multiplas opcoes** (checkbox), com minimo de 1 para habilitar o botao "Continuar".
 
-```typescript
-if (isFirstQuiz) {
-  // ... evento GTM existente ...
-  // ... user_stage existente ...
+## Alteracoes
 
-  // Marcar milestone de onboarding
-  await supabase
-    .from('onboarding_status')
-    .update({ first_quiz_created: true })
-    .eq('id', user.id);
-}
+### 1. SQL Migration
+
+Adicionar coluna `user_objectives` na tabela `profiles`:
+
+```sql
+ALTER TABLE public.profiles
+ADD COLUMN user_objectives text[] DEFAULT NULL;
 ```
 
-Para proteger contra re-disparo, usar `user_stage` como check mais robusto (em vez de contar quizzes ativos):
+Tipo `text[]` (array de strings) — leve, sem necessidade de tabela extra, facil de consultar.
 
-```typescript
-// Antes de inserir o quiz, verificar user_stage
-const { data: profile } = await supabase
-  .from('profiles')
-  .select('user_stage')
-  .eq('id', user.id)
-  .single();
+### 2. Novo Componente: `src/components/UserObjectiveModal.tsx`
 
-const isFirstQuiz = profile?.user_stage === 'explorador';
-```
+- Modal com `DialogContent` do shadcn (sem close button, `onInteractOutside` preventDefault)
+- Lista de checkboxes estilizados (cards clicaveis com icone + label)
+- Opcao "Outro" revela input de texto
+- Botao "Continuar" desabilitado ate selecionar pelo menos 1
+- Ao confirmar: `UPDATE profiles SET user_objectives = [...] WHERE id = user.id`
+- Animacao sutil com Framer Motion nos cards
+- i18n para PT/EN/ES
 
-Isso e mais confiavel porque `user_stage` nunca volta para `explorador` apos ser promovido.
+### 3. Dashboard: Integrar o Modal
 
-## Resumo das Alteracoes
+No `src/pages/Dashboard.tsx`:
+- Buscar `user_objectives` junto com o perfil existente
+- Se `user_objectives` for NULL ou array vazio, mostrar o modal
+- Apos salvar, fechar modal e liberar o dashboard
 
-| Arquivo | Alteracao |
-|---------|----------|
-| `src/hooks/useQuizPersistence.ts` | Usar `user_stage` para detectar primeiro quiz; atualizar `onboarding_status.first_quiz_created = true` |
+### 4. Icones sugeridos por opcao (Lucide)
 
-## Impacto
+| Opcao | Icone |
+|-------|-------|
+| Captar leads para lancamento | `Rocket` |
+| Melhorar conversao da VSL | `TrendingUp` |
+| Rodar trafego pago | `Megaphone` |
+| Validar oferta | `FlaskConical` |
+| Uso educacional | `GraduationCap` |
+| Outro | `MoreHorizontal` |
 
-- O milestone de onboarding sera marcado corretamente
-- O evento GTM nao disparara mais de uma vez por conta
-- Sem migrations necessarias
+## Arquivos Alterados
+
+| Recurso | Tipo |
+|---------|------|
+| SQL Migration | ADD COLUMN `user_objectives text[]` em `profiles` |
+| `src/components/UserObjectiveModal.tsx` | Novo componente |
+| `src/pages/Dashboard.tsx` | Buscar `user_objectives`, renderizar modal |
+| `src/i18n/config.ts` | Strings PT/EN/ES para o modal |
+
+## UX
+
+- Design: cards com borda sutil, hover com destaque primary, checkbox integrado
+- Titulo: "Nos conte seu objetivo" com subtitulo "Isso nos ajuda a personalizar sua experiencia"
+- Animacao: cards aparecem com stagger (framer-motion)
+- O modal bloqueia interacao com o dashboard ate responder (overlay escuro)
+- Responsivo: stack vertical em mobile
