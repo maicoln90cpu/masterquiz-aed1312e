@@ -310,14 +310,14 @@ export function useQuizPersistence({
         
         logQuizAction("quiz:updated", quiz.id, { title: quiz.title });
       } else {
-        // Verificar se é o primeiro quiz do usuário (antes de inserir)
-        const { count: existingQuizCount } = await supabase
-          .from('quizzes')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('status', 'active');
+        // Verificar user_stage para detectar primeiro quiz (mais robusto que contar quizzes)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_stage')
+          .eq('id', user.id)
+          .single();
 
-        const isFirstQuiz = existingQuizCount === 0;
+        const isFirstQuiz = profile?.user_stage === 'explorador';
 
         const { data, error } = await supabase
           .from('quizzes')
@@ -368,6 +368,15 @@ export function useQuizPersistence({
             .eq('user_stage', 'explorador');
           
           console.log('🎯 [PQL] User stage upgraded to construtor');
+
+          // Marcar milestone de onboarding (tabela fora do schema tipado)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any)
+            .from('onboarding_status')
+            .update({ first_quiz_created: true })
+            .eq('id', user.id);
+          
+          console.log('🎯 [Onboarding] first_quiz_created milestone marked');
         }
       }
 
