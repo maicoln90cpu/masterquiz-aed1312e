@@ -508,6 +508,7 @@ export type Database = {
           id: string
           stage_updated_at: string | null
           updated_at: string
+          user_objectives: string[] | null
           user_stage: string | null
           whatsapp: string | null
         }
@@ -524,6 +525,7 @@ export type Database = {
           id: string
           stage_updated_at?: string | null
           updated_at?: string
+          user_objectives?: string[] | null
           user_stage?: string | null
           whatsapp?: string | null
         }
@@ -540,6 +542,7 @@ export type Database = {
           id?: string
           stage_updated_at?: string | null
           updated_at?: string
+          user_objectives?: string[] | null
           user_stage?: string | null
           whatsapp?: string | null
         }

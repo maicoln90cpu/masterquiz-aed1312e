@@ -24,6 +24,7 @@ import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { ResourceMonitoringPanel } from "@/components/ResourceMonitoringPanel";
 import { useUserStage } from "@/hooks/useUserStage";
 import type { Profile } from "@/types/quiz";
+import { UserObjectiveModal } from "@/components/UserObjectiveModal";
 
 // Lazy load components
 const ChartsBundle = lazy(() => import("@/components/lazy/ChartsBundle").then(m => ({ default: m.ChartsBundle })));
@@ -50,6 +51,8 @@ const Dashboard = () => {
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<Pick<Profile, 'full_name' | 'company_slug'> | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [showObjectiveModal, setShowObjectiveModal] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   
   // PQL User Stage
   const userStageData = useUserStage();
@@ -80,14 +83,21 @@ const Dashboard = () => {
        }
         
         // Load user profile
-        const { data: profile } = await supabase
+        const { data: profile } = await (supabase as any)
           .from('profiles')
-          .select('full_name, company_slug')
+          .select('full_name, company_slug, user_objectives')
           .eq('id', user.id)
           .maybeSingle();
-        
+         
         setUserName(profile?.full_name || user.email?.split('@')[0] || t('dashboard.user'));
         setUserProfile(profile);
+        setCurrentUserId(user.id);
+        
+        // Show objective modal if user_objectives is null or empty
+        const objectives = profile?.user_objectives;
+        if (!objectives || (Array.isArray(objectives) && objectives.length === 0)) {
+          setShowObjectiveModal(true);
+        }
         
         // Check if first time user (show onboarding)
         if ((stats?.totalQuizzes ?? 0) === 0 && !localStorage.getItem(`onboarding_completed_${user.id}`)) {
@@ -130,6 +140,13 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <Onboarding open={showOnboarding} onClose={handleCloseOnboarding} />
+      {showObjectiveModal && currentUserId && (
+        <UserObjectiveModal
+          open={showObjectiveModal}
+          userId={currentUserId}
+          onComplete={() => setShowObjectiveModal(false)}
+        />
+      )}
       {shouldShowDashboardTour && <DashboardTour updateOnboardingStep={updateOnboardingStep} />}
       
       <div className="container mx-auto px-4 py-8">

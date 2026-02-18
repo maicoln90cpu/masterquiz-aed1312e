@@ -2944,6 +2944,20 @@ const pt = {
     },
     stepOf: "{{current}} de {{total}}",
   },
+  userObjectives: {
+    title: "Nos conte seu objetivo",
+    subtitle: "Isso nos ajuda a personalizar sua experiência",
+    continue: "Continuar",
+    otherPlaceholder: "Descreva seu objetivo...",
+    options: {
+      leadCapture: "Captar leads para lançamento",
+      vslConversion: "Melhorar conversão da VSL",
+      paidTraffic: "Rodar tráfego pago",
+      offerValidation: "Validar oferta",
+      educational: "Uso educacional",
+      other: "Outro",
+    },
+  },
 };
 
 const en = {
@@ -5514,6 +5528,20 @@ const en = {
       seeResult: "See result",
     },
     stepOf: "{{current}} of {{total}}",
+  },
+  userObjectives: {
+    title: "Tell us your goal",
+    subtitle: "This helps us personalize your experience",
+    continue: "Continue",
+    otherPlaceholder: "Describe your goal...",
+    options: {
+      leadCapture: "Capture leads for launch",
+      vslConversion: "Improve VSL conversion",
+      paidTraffic: "Run paid traffic",
+      offerValidation: "Validate offer",
+      educational: "Educational use",
+      other: "Other",
+    },
   },
 };
 
@@ -8294,6 +8322,20 @@ const es = {
       seeResult: "Ver resultado",
     },
     stepOf: "{{current}} de {{total}}",
+  },
+  userObjectives: {
+    title: "Cuéntanos tu objetivo",
+    subtitle: "Esto nos ayuda a personalizar tu experiencia",
+    continue: "Continuar",
+    otherPlaceholder: "Describe tu objetivo...",
+    options: {
+      leadCapture: "Captar leads para lanzamiento",
+      vslConversion: "Mejorar conversión de VSL",
+      paidTraffic: "Ejecutar tráfico pago",
+      offerValidation: "Validar oferta",
+      educational: "Uso educacional",
+      other: "Otro",
+    },
   },
 };
 
