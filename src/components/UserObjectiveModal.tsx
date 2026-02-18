@@ -67,7 +67,7 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
   return (
     <Dialog open={open} modal>
       <DialogContent
-        className="sm:max-w-lg [&>button]:hidden"
+        className="sm:max-w-lg [&>button]:hidden max-h-[95vh] flex flex-col"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -80,46 +80,48 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          {OBJECTIVES.map((obj, i) => {
-            const isSelected = selected.includes(obj.value);
-            return (
-              <motion.button
-                key={obj.value}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                type="button"
-                onClick={() => toggleObjective(obj.value)}
-                className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                  isSelected
-                    ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-                    : "border-border hover:border-primary/40 hover:bg-muted/50"
-                }`}
-              >
-                <span className={isSelected ? "text-primary" : "text-muted-foreground"}>
-                  {obj.icon}
-                </span>
-                <span className="text-sm font-medium">{t(obj.labelKey)}</span>
-              </motion.button>
-            );
-          })}
-        </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            {OBJECTIVES.map((obj, i) => {
+              const isSelected = selected.includes(obj.value);
+              return (
+                <motion.button
+                  key={obj.value}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  type="button"
+                  onClick={() => toggleObjective(obj.value)}
+                  className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                      : "border-border hover:border-primary/40 hover:bg-muted/50"
+                  }`}
+                >
+                  <span className={isSelected ? "text-primary" : "text-muted-foreground"}>
+                    {obj.icon}
+                  </span>
+                  <span className="text-sm font-medium">{t(obj.labelKey)}</span>
+                </motion.button>
+              );
+            })}
+          </div>
 
-        {selected.includes("other") && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="mt-2"
-          >
-            <Input
-              placeholder={t("userObjectives.otherPlaceholder")}
-              value={otherText}
-              onChange={(e) => setOtherText(e.target.value)}
-              maxLength={100}
-            />
-          </motion.div>
-        )}
+          {selected.includes("other") && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-2"
+            >
+              <Input
+                placeholder={t("userObjectives.otherPlaceholder")}
+                value={otherText}
+                onChange={(e) => setOtherText(e.target.value)}
+                maxLength={100}
+              />
+            </motion.div>
+          )}
+        </div>
 
         <Button
           className="w-full mt-4"
