@@ -113,19 +113,19 @@ export const SystemHealthDashboard = () => {
               <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 rounded-lg bg-muted/50">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {healthReport.modules.filter(m => m.status === 'healthy').length}
+                    {(healthReport.modules || []).filter(m => m?.status === 'healthy').length}
                   </div>
                   <div className="text-sm text-muted-foreground">Saudáveis</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-muted/50">
                   <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {healthReport.modules.filter(m => m.status === 'warning').length}
+                    {(healthReport.modules || []).filter(m => m?.status === 'warning').length}
                   </div>
                   <div className="text-sm text-muted-foreground">Atenção</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-muted/50">
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {healthReport.modules.filter(m => m.status === 'critical').length}
+                    {(healthReport.modules || []).filter(m => m?.status === 'critical').length}
                   </div>
                   <div className="text-sm text-muted-foreground">Críticos</div>
                 </div>
@@ -167,8 +167,8 @@ export const SystemHealthDashboard = () => {
         <>
           {/* Module Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {healthReport.modules.map((module) => (
-              <ModuleHealthCard key={module.module} module={module} />
+            {(healthReport.modules || []).map((module) => (
+              module ? <ModuleHealthCard key={module.module} module={module} /> : null
             ))}
           </div>
 

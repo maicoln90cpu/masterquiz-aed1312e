@@ -97,10 +97,11 @@ export const HealthReport = () => {
       for (let i = 1; i < historicalData.length; i++) {
         const prev = historicalData[i - 1];
         const curr = historicalData[i];
+        if (!prev || !curr) continue;
         
         ['ui', 'security', 'performance', 'database', 'integrations'].forEach(module => {
-          const prevScore = prev[module as keyof HistoricalMetric] as number;
-          const currScore = curr[module as keyof HistoricalMetric] as number;
+          const prevScore = (prev[module as keyof HistoricalMetric] as number) ?? 0;
+          const currScore = (curr[module as keyof HistoricalMetric] as number) ?? 0;
           
           if (prevScore >= 60 && currScore < 60) {
             incidents.push({
@@ -120,7 +121,8 @@ export const HealthReport = () => {
 
   // Generate maintenance schedule from current scores
   const moduleScores: Record<string, ModuleScore> = {};
-  healthReport.modules.forEach(mod => {
+  (healthReport.modules || []).forEach(mod => {
+    if (!mod) return;
     moduleScores[mod.module] = {
       score: mod.score,
       status: mod.status,
