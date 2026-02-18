@@ -62,13 +62,15 @@ export const useSystemHealth = () => {
       if (latestMetrics && latestMetrics.length > 0) {
         // Group by module and get latest for each
         const moduleMap = new Map<string, ModuleHealth>();
+        const validStatuses: HealthStatus[] = ['healthy', 'warning', 'critical'];
         for (const metric of latestMetrics) {
           if (!moduleMap.has(metric.module)) {
+            const rawStatus = metric.status as string;
             moduleMap.set(metric.module, {
               module: metric.module,
-              status: metric.status as HealthStatus,
-              score: metric.score,
-              details: metric.details as Record<string, unknown>
+              status: validStatuses.includes(rawStatus as HealthStatus) ? (rawStatus as HealthStatus) : 'warning',
+              score: metric.score ?? 0,
+              details: (metric.details as Record<string, unknown>) ?? {}
             });
           }
         }

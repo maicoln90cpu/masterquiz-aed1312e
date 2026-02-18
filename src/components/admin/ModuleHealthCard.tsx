@@ -59,8 +59,9 @@ const statusConfig: Record<HealthStatus, {
 };
 
 export const ModuleHealthCard = ({ module }: ModuleHealthCardProps) => {
+  if (!module) return null;
   const Icon = moduleIcons[module.module] || Monitor;
-  const config = statusConfig[module.status];
+  const config = statusConfig[module.status] || statusConfig.warning;
   const StatusIcon = config.icon;
   const moduleName = moduleNames[module.module] || module.module;
 
@@ -82,7 +83,7 @@ export const ModuleHealthCard = ({ module }: ModuleHealthCardProps) => {
   };
 
   // Get key details to display (max 4)
-  const keyDetails = Object.entries(module.details)
+  const keyDetails = Object.entries(module.details || {})
     .filter(([key]) => !key.includes('Error') && !key.includes('note'))
     .slice(0, 4);
 
