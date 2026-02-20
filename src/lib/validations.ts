@@ -158,18 +158,10 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
 });
 
-export const signupSchema = loginSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Senhas não conferem",
-  path: ["confirmPassword"],
-});
+export const signupSchema = loginSchema;
 
 export const passwordSchema = z.string()
-  .min(8, "Senha deve ter no mínimo 8 caracteres")
-  .regex(/[A-Z]/, "Senha deve conter ao menos uma letra maiúscula")
-  .regex(/[a-z]/, "Senha deve conter ao menos uma letra minúscula")
-  .regex(/[0-9]/, "Senha deve conter ao menos um número");
+  .min(6, "Senha deve ter no mínimo 6 caracteres");
 
 // =====================
 // Type Exports

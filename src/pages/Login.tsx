@@ -13,8 +13,7 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { logAuthAction } from "@/lib/auditLogger";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { fetchIPWithCache } from "@/lib/ipCache";
-import { Eye, EyeOff, ArrowLeft, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Eye, EyeOff, ArrowLeft, Loader2, XCircle } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 const Login = () => {
@@ -23,7 +22,7 @@ const Login = () => {
   const { checkRateLimit } = useRateLimit();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   const [showResetModal, setShowResetModal] = useState(false);
   const [showMigrateModal, setShowMigrateModal] = useState(false);
   const [migrateEmail, setMigrateEmail] = useState('');
@@ -36,27 +35,10 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
     name: '',
     whatsapp: ''
   });
 
-  // Password strength calculation
-  const passwordStrength = useMemo(() => {
-    const password = formData.password;
-    if (!password) return { score: 0, label: '', color: '' };
-    
-    let score = 0;
-    if (password.length >= 6) score += 20;
-    if (password.length >= 8) score += 20;
-    if (/[A-Z]/.test(password)) score += 20;
-    if (/[0-9]/.test(password)) score += 20;
-    if (/[^A-Za-z0-9]/.test(password)) score += 20;
-
-    if (score <= 20) return { score, label: t('login.passwordWeak', 'Fraca'), color: 'bg-destructive' };
-    if (score <= 60) return { score, label: t('login.passwordMedium', 'Média'), color: 'bg-yellow-500' };
-    return { score, label: t('login.passwordStrong', 'Forte'), color: 'bg-green-500' };
-  }, [formData.password, t]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -126,13 +108,7 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    const { email, password, confirmPassword, name, whatsapp } = formData;
-    
-    if (password !== confirmPassword) {
-      toast.error(t('login.passwordMismatch'));
-      setIsLoading(false);
-      return;
-    }
+    const { email, password, name, whatsapp } = formData;
     
     if (password.length < 6) {
       toast.error(t('login.passwordMinLength'));
@@ -438,51 +414,7 @@ const Login = () => {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
-                    {formData.password && (
-                      <div className="space-y-1">
-                        <Progress value={passwordStrength.score} className="h-2" />
-                        <div className="flex items-center gap-2 text-xs">
-                          {passwordStrength.score <= 20 && <XCircle className="h-3 w-3 text-destructive" />}
-                          {passwordStrength.score > 20 && passwordStrength.score <= 60 && <AlertCircle className="h-3 w-3 text-yellow-500" />}
-                          {passwordStrength.score > 60 && <CheckCircle2 className="h-3 w-3 text-green-500" />}
-                          <span className={passwordStrength.score <= 20 ? 'text-destructive' : passwordStrength.score <= 60 ? 'text-yellow-500' : 'text-green-500'}>
-                            {t('login.passwordStrength', 'Força da senha')}: {passwordStrength.label}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="register-confirm-password">{t('login.confirmPasswordLabel')}</Label>
-                    <div className="relative">
-                      <Input
-                        id="register-confirm-password"
-                        name="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder={t('login.confirmPasswordPlaceholder')}
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        required
-                        aria-label={t('login.confirmPasswordLabel')}
-                        className="pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        aria-label={showConfirmPassword ? t('login.hidePassword') : t('login.showPassword')}
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                    {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                      <p className="text-xs text-destructive flex items-center gap-1">
-                        <XCircle className="h-3 w-3" />
-                        {t('login.passwordsDoNotMatch', 'As senhas não coincidem')}
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">{t('login.passwordHint', 'Mínimo 6 caracteres')}</p>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? (
