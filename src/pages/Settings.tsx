@@ -181,7 +181,12 @@ const Settings = () => {
       facebook_pixel_id: normalizedPixel,
     });
     if (error) {
-      toast.error(t("settings.errorSaving"));
+      const err = error as any;
+      if (err?.code === '23505' && err?.message?.includes('company_slug')) {
+        toast.error(t("settings.slugUnavailable", "Este slug já está em uso por outro usuário"));
+      } else {
+        toast.error(t("settings.errorSaving"));
+      }
     } else {
       // Atualizar estado local com dados salvos
       if (data) {
