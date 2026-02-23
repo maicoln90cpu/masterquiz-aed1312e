@@ -29,6 +29,7 @@ interface UserRow {
     plan_type: string;
   } | null;
   stats: {
+    quiz_count: number;
     lead_count: number;
   };
 }
@@ -36,6 +37,7 @@ interface UserRow {
 interface IntentRow {
   intent: string;
   total: number;
+  quizzes: number;
   explorador: number;
   construtor: number;
   operador: number;
@@ -82,6 +84,7 @@ export function PQLAnalytics() {
     // ── Tabela 1: Progressão por Intenção ──
     const intentMap = new Map<string, {
       total: number;
+      quizzes: number;
       stages: Record<UserStage, number>;
       free: number;
       paid: number;
@@ -91,6 +94,7 @@ export function PQLAnalytics() {
       if (!intentMap.has(key)) {
         intentMap.set(key, {
           total: 0,
+          quizzes: 0,
           stages: { explorador: 0, construtor: 0, operador: 0 },
           free: 0,
           paid: 0,
@@ -115,6 +119,7 @@ export function PQLAnalytics() {
         objectives && objectives.length > 0 ? objectives[0] : "none";
       const bucket = ensureIntent(intentKey);
       bucket.total++;
+      bucket.quizzes += u.stats?.quiz_count || 0;
       if (stage in bucket.stages) bucket.stages[stage]++;
       if (isPaid) bucket.paid++;
       else bucket.free++;
@@ -136,6 +141,7 @@ export function PQLAnalytics() {
       .map(([intent, d]) => ({
         intent,
         total: d.total,
+        quizzes: d.quizzes,
         explorador: d.stages.explorador,
         construtor: d.stages.construtor,
         operador: d.stages.operador,
@@ -192,6 +198,7 @@ export function PQLAnalytics() {
               <TableRow>
                 <TableHead>Intenção</TableHead>
                 <TableHead className="text-center">Total</TableHead>
+                <TableHead className="text-center">Quizzes</TableHead>
                 <TableHead className="text-center">🧊 Expl.</TableHead>
                 <TableHead className="text-center">🔥 Constr.</TableHead>
                 <TableHead className="text-center">🚀 Oper.</TableHead>
@@ -211,6 +218,7 @@ export function PQLAnalytics() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center font-medium">{row.total}</TableCell>
+                  <TableCell className="text-center">{row.quizzes}</TableCell>
                   <TableCell className="text-center">{row.explorador}</TableCell>
                   <TableCell className="text-center">{row.construtor}</TableCell>
                   <TableCell className="text-center">{row.operador}</TableCell>
@@ -225,7 +233,7 @@ export function PQLAnalytics() {
               ))}
               {intentTable.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                     Nenhum dado disponível
                   </TableCell>
                 </TableRow>
