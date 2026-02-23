@@ -30,6 +30,8 @@ interface UserRow {
   } | null;
   stats: {
     quiz_count: number;
+    published_count: number;
+    quizzes_with_leads: number;
     lead_count: number;
   };
 }
@@ -38,6 +40,8 @@ interface IntentRow {
   intent: string;
   total: number;
   quizzes: number;
+  published: number;
+  withLeads: number;
   explorador: number;
   construtor: number;
   operador: number;
@@ -85,6 +89,8 @@ export function PQLAnalytics() {
     const intentMap = new Map<string, {
       total: number;
       quizzes: number;
+      published: number;
+      withLeads: number;
       stages: Record<UserStage, number>;
       free: number;
       paid: number;
@@ -95,6 +101,8 @@ export function PQLAnalytics() {
         intentMap.set(key, {
           total: 0,
           quizzes: 0,
+          published: 0,
+          withLeads: 0,
           stages: { explorador: 0, construtor: 0, operador: 0 },
           free: 0,
           paid: 0,
@@ -120,6 +128,8 @@ export function PQLAnalytics() {
       const bucket = ensureIntent(intentKey);
       bucket.total++;
       bucket.quizzes += u.stats?.quiz_count || 0;
+      bucket.published += u.stats?.published_count || 0;
+      bucket.withLeads += u.stats?.quizzes_with_leads || 0;
       if (stage in bucket.stages) bucket.stages[stage]++;
       if (isPaid) bucket.paid++;
       else bucket.free++;
@@ -142,6 +152,8 @@ export function PQLAnalytics() {
         intent,
         total: d.total,
         quizzes: d.quizzes,
+        published: d.published,
+        withLeads: d.withLeads,
         explorador: d.stages.explorador,
         construtor: d.stages.construtor,
         operador: d.stages.operador,
@@ -199,6 +211,8 @@ export function PQLAnalytics() {
                 <TableHead>Intenção</TableHead>
                 <TableHead className="text-center">Total</TableHead>
                 <TableHead className="text-center">Quizzes</TableHead>
+                <TableHead className="text-center">Publicados</TableHead>
+                <TableHead className="text-center">Com Leads</TableHead>
                 <TableHead className="text-center">🧊 Expl.</TableHead>
                 <TableHead className="text-center">🔥 Constr.</TableHead>
                 <TableHead className="text-center">🚀 Oper.</TableHead>
@@ -219,6 +233,8 @@ export function PQLAnalytics() {
                   </TableCell>
                   <TableCell className="text-center font-medium">{row.total}</TableCell>
                   <TableCell className="text-center">{row.quizzes}</TableCell>
+                  <TableCell className="text-center">{row.published}</TableCell>
+                  <TableCell className="text-center">{row.withLeads}</TableCell>
                   <TableCell className="text-center">{row.explorador}</TableCell>
                   <TableCell className="text-center">{row.construtor}</TableCell>
                   <TableCell className="text-center">{row.operador}</TableCell>
@@ -233,7 +249,7 @@ export function PQLAnalytics() {
               ))}
               {intentTable.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
                     Nenhum dado disponível
                   </TableCell>
                 </TableRow>
