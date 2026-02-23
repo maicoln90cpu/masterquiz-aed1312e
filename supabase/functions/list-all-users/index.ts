@@ -66,13 +66,14 @@ Deno.serve(async (req) => {
     const userIds = authUsers.map((u) => u.id);
 
     // Fetch profiles, subscriptions, roles, stats, and historical quiz count in parallel
-    const [profilesRes, subsRes, rolesRes, quizCountRes, leadCountRes, auditDeletedRes] = await Promise.all([
+    const [profilesRes, subsRes, rolesRes, quizCountRes, leadCountRes, auditDeletedRes, responsesPerQuizRes] = await Promise.all([
       adminClient.from("profiles").select("*").in("id", userIds),
       adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
       adminClient.from("user_roles").select("*").in("user_id", userIds),
-      adminClient.from("quizzes").select("user_id, id").in("user_id", userIds),
+      adminClient.from("quizzes").select("user_id, id, is_public, status").in("user_id", userIds),
       adminClient.from("quiz_responses").select("quiz_id, id, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
       adminClient.from("audit_logs").select("user_id, resource_id").eq("action", "quiz:deleted").in("user_id", userIds),
+      adminClient.from("quiz_responses").select("quiz_id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
     ]);
 
     const profilesMap = new Map(
@@ -87,10 +88,14 @@ Deno.serve(async (req) => {
       rolesMap.get(r.user_id)!.push(r.role);
     }
 
-    // Build quiz count map
+    // Build quiz count map and published count map
     const quizCountMap = new Map<string, number>();
+    const publishedCountMap = new Map<string, number>();
     for (const q of quizCountRes.data || []) {
       quizCountMap.set(q.user_id, (quizCountMap.get(q.user_id) || 0) + 1);
+      if (q.is_public && q.status === "active") {
+        publishedCountMap.set(q.user_id, (publishedCountMap.get(q.user_id) || 0) + 1);
+      }
     }
 
     // Build lead count map
@@ -99,6 +104,20 @@ Deno.serve(async (req) => {
       const ownerUserId = (r as any).quizzes?.user_id;
       if (ownerUserId) {
         leadCountMap.set(ownerUserId, (leadCountMap.get(ownerUserId) || 0) + 1);
+      }
+    }
+
+    // Build quizzes with real leads map (exclude test leads)
+    const quizzesWithLeadsMap = new Map<string, Set<string>>();
+    for (const r of responsesPerQuizRes.data || []) {
+      const ownerUserId = (r as any).quizzes?.user_id;
+      const answers = (r as any).answers;
+      const isTestLead = answers && typeof answers === "object" && answers._is_test_lead === true;
+      if (ownerUserId && !isTestLead) {
+        if (!quizzesWithLeadsMap.has(ownerUserId)) {
+          quizzesWithLeadsMap.set(ownerUserId, new Set());
+        }
+        quizzesWithLeadsMap.get(ownerUserId)!.add(r.quiz_id);
       }
     }
 
@@ -121,6 +140,8 @@ Deno.serve(async (req) => {
       stats: {
         quiz_count: quizCountMap.get(u.id) || 0,
         quiz_count_historical: (quizCountMap.get(u.id) || 0) + (deletedQuizCountMap.get(u.id) || 0),
+        published_count: publishedCountMap.get(u.id) || 0,
+        quizzes_with_leads: quizzesWithLeadsMap.get(u.id)?.size || 0,
         lead_count: leadCountMap.get(u.id) || 0,
       },
     }));
