@@ -32,6 +32,29 @@ export const PreviewResultScreen = ({
       </div>
 
       <div className="space-y-4">
+        {result.video_url && (
+          <div className="w-full rounded-lg overflow-hidden max-w-md mx-auto">
+            {result.video_url.includes('youtube.com') || result.video_url.includes('youtu.be') ? (
+              <div className="aspect-video">
+                <iframe
+                  src={result.video_url.replace('watch?v=', 'embed/')}
+                  className="w-full h-full rounded-lg"
+                  allowFullScreen
+                />
+              </div>
+            ) : result.video_url.includes('vimeo.com') ? (
+              <div className="aspect-video">
+                <iframe
+                  src={result.video_url.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                  className="w-full h-full rounded-lg"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <video src={result.video_url} controls playsInline preload="metadata" className="w-full rounded-lg" />
+            )}
+          </div>
+        )}
         {result.image_url && (
           <img 
             src={result.image_url} 

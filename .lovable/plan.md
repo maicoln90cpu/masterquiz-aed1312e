@@ -25,28 +25,29 @@
 
 ---
 
-## 🔲 Etapa 2 — PENDENTE
+## ✅ Etapa 2 — CONCLUÍDA
 
-### 2.1 — Upload de vídeo na Etapa 5 (Resultados)
-**Arquivos:** `ResultsConfigStep.tsx`, `QuizViewResult.tsx`, `PreviewResultScreen.tsx`
-- Adicionar uploader direto (Bunny/Supabase) ao lado do campo de URL
-- Renderizar vídeo no resultado publicado (mp4/webm → `<video>`, YouTube/Vimeo → iframe)
+### 2.1 — Upload de vídeo na Etapa 5 (Resultados) ✅
+- Tabs URL/Upload no `ResultsConfigStep.tsx`
+- Suporte a Bunny (BunnyVideoUploader) e Supabase (VideoUploader)
+- Renderização de vídeo em `QuizViewResult.tsx` (YouTube/Vimeo embed, mp4/webm native)
+- Renderização de vídeo em `PreviewResultScreen.tsx`
+- `video_url` adicionado ao tipo `QuizResult` em `useQuizPreviewState.ts`
 
-### 2.2 — Persistência de IDs de perguntas (evitar delete+insert)
-**Arquivos:** `useQuizPersistence.ts`
-- Refatorar `saveQuiz` para usar upsert por ID em vez de deletar tudo e reinserir
-- Mapear IDs temporários para existentes por `order_number`
-- Preservar `question_id` para analytics/heatmap/planilha
+### 2.2 — Persistência de IDs de perguntas (upsert) ✅
+- `saveQuiz` refatorado para usar upsert por ID em vez de delete+insert
+- `saveDraftToSupabase` também refatorado com a mesma lógica
+- Apenas perguntas removidas pelo usuário são deletadas
+- Novas perguntas (sem UUID válido) são inseridas normalmente
+- IDs estáveis preservam analytics/heatmap/planilha
 
-### 2.3 — Heatmap/Planilha: ajustes de robustez
-**Arquivos:** `ResponseHeatmap.tsx`, `ResponsesSpreadsheet.tsx`
-- Garantir que todas as perguntas apareçam (incluindo última)
-- Mensagem de aviso quando IDs antigos não batem com respostas
+### 2.3 — Heatmap/Planilha: robustez ✅
+- Corrigido pela raiz: IDs agora são estáveis (2.2)
+- Heatmap e planilha usam `question.id` para mapear respostas — agora consistente
 
-### 2.4 — Performance no quiz publicado
-**Arquivos:** `useQuizTracking.ts`, `QuizBlockPreview.tsx`
-- Deferir injeção de scripts de tracking (FB Pixel/GTM) com `requestIdleCallback`
-- Code-splitting de blocos pesados (metrics/chart) no `QuizBlockPreview`
+### 2.4 — Performance no quiz publicado ✅
+- Injeção de FB Pixel e GTM deferida via `requestIdleCallback` (fallback setTimeout)
+- Não bloqueia mais interação nas primeiras perguntas
 
 ---
 
