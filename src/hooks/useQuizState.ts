@@ -21,6 +21,7 @@ export interface QuizAppearanceState {
   showTitle: boolean;
   showDescription: boolean;
   showQuestionNumber: boolean;
+  showResults: boolean;
 }
 
 export interface QuizFormConfigState {
@@ -120,6 +121,7 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
     showTitle: true,
     showDescription: true,
     showQuestionNumber: true,
+    showResults: true,
   });
 
   // ✅ Estado do formulário de coleta
@@ -298,6 +300,7 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
       showTitle: true,
       showDescription: true,
       showQuestionNumber: true,
+      showResults: true,
     });
     setFormConfigState({
       collectionTiming: 'after',

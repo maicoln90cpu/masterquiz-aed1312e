@@ -24,6 +24,7 @@ interface QuizViewQuestionProps {
   isLastQuestion: boolean;
   showFormAfter: boolean;
   onSubmit: () => void;
+  showResults?: boolean;
 }
 
 export function QuizViewQuestion({
@@ -38,7 +39,8 @@ export function QuizViewQuestion({
   onPrev,
   isLastQuestion,
   showFormAfter,
-  onSubmit
+  onSubmit,
+  showResults = true
 }: QuizViewQuestionProps) {
   const { t } = useTranslation();
 
@@ -136,22 +138,34 @@ export function QuizViewQuestion({
       
       {renderQuestionBlocks()}
       
-      <div className="flex gap-2">
-        {currentStep > 0 && (
+      {/* Hide navigation buttons on last question when show_results=false (auto-submit mode) */}
+      {!(isLastQuestion && !showResults) && (
+        <div className="flex gap-2">
+          {currentStep > 0 && (
+            <Button variant="outline" onClick={onPrev}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('quizView.previous')}
+            </Button>
+          )}
+          <Button
+            onClick={handleNextClick}
+            disabled={isNextDisabled()}
+            className="flex-1 btn-primary"
+          >
+            {isLastQuestion ? t('quizView.finish') : t('quizView.next')}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      {/* Show only back button on last question when show_results=false */}
+      {isLastQuestion && !showResults && currentStep > 0 && (
+        <div className="flex gap-2">
           <Button variant="outline" onClick={onPrev}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('quizView.previous')}
           </Button>
-        )}
-        <Button
-          onClick={handleNextClick}
-          disabled={isNextDisabled()}
-          className="flex-1 btn-primary"
-        >
-          {isLastQuestion ? t('quizView.finish') : t('quizView.next')}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

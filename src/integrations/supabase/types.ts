@@ -1115,6 +1115,7 @@ export type Database = {
           show_description: boolean | null
           show_logo: boolean | null
           show_question_number: boolean | null
+          show_results: boolean | null
           show_title: boolean | null
           slug: string | null
           status: Database["public"]["Enums"]["quiz_status"]
@@ -1136,6 +1137,7 @@ export type Database = {
           show_description?: boolean | null
           show_logo?: boolean | null
           show_question_number?: boolean | null
+          show_results?: boolean | null
           show_title?: boolean | null
           slug?: string | null
           status?: Database["public"]["Enums"]["quiz_status"]
@@ -1157,6 +1159,7 @@ export type Database = {
           show_description?: boolean | null
           show_logo?: boolean | null
           show_question_number?: boolean | null
+          show_results?: boolean | null
           show_title?: boolean | null
           slug?: string | null
           status?: Database["public"]["Enums"]["quiz_status"]

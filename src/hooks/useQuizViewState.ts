@@ -188,6 +188,9 @@ export function useQuizViewState({
     }
   };
 
+  // Track if auto-submit has been triggered to prevent duplicates
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
+
   const handleAnswer = (questionId: string, value: any) => {
     const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
@@ -220,6 +223,26 @@ export function useQuizViewState({
     });
     
     setTotalScore(score);
+
+    // Auto-submit when show_results=false on last question (single/yes_no only)
+    const quizShowResults = (quiz as any)?.show_results !== false;
+    if (!quizShowResults && !autoSubmitted) {
+      const isLastVisible = currentStep === visibleQuestions.length - 1;
+      const currentQ = visibleQuestions[currentStep];
+      if (isLastVisible && currentQ?.id === questionId) {
+        const questionBlock = currentQ.blocks?.find((b: any) => b.type === 'question') as any;
+        const answerFormat = questionBlock?.answerFormat || currentQ.answer_format;
+        // For single_choice/yes_no, auto-submit immediately after selecting
+        // For multiple_choice/short_text, user needs to confirm (keep button visible)
+        if (answerFormat === 'single_choice' || answerFormat === 'yes_no') {
+          setAutoSubmitted(true);
+          // Small delay so user sees their selection
+          setTimeout(() => {
+            submitQuizSilent(newAnswers, score);
+          }, 600);
+        }
+      }
+    }
   };
 
   const nextStep = async () => {
@@ -251,8 +274,10 @@ export function useQuizViewState({
     setCurrentStep(Math.max(0, currentStep - 1));
   };
 
-  const submitQuiz = async () => {
+  const submitQuiz = async (overrideAnswers?: Record<string, any>, overrideScore?: number) => {
     if (!quiz) return;
+    
+    const finalAnswers = overrideAnswers || answers;
     
     try {
       const ipAddress = await fetchIPWithCache(3000) || 'unknown';
@@ -262,7 +287,19 @@ export function useQuizViewState({
         return;
       }
 
-      // Validate form data
+      // Track final step (P10 fix)
+      if (!previewMode && quiz.id) {
+        const lastQ = visibleQuestions[visibleQuestions.length - 1];
+        supabase.functions.invoke('track-quiz-step', {
+          body: { 
+            quizId: quiz.id, 
+            sessionId,
+            stepNumber: visibleQuestions.length,
+            questionId: lastQ?.id || null
+          }
+        }).catch(err => console.warn('Final step tracking failed:', err));
+      }
+
       // Check response limit for quiz owner
       const { data: ownerSub } = await supabase
         .from('user_subscriptions')
@@ -306,31 +343,33 @@ export function useQuizViewState({
       }
 
       // Calculate score
-      let calculatedScore = 0;
-      Object.entries(answers).forEach(([questionId, selectedAnswer]) => {
-        const question = questions.find(q => q.id === questionId);
-        if (!question || !question.blocks) return;
-        
-        const questionBlock = question.blocks.find((b: any) => b.type === 'question') as any;
-        if (!questionBlock) return;
-        
-        const options = questionBlock.options || [];
-        const scores = questionBlock.scores || [];
-        
-        if (questionBlock.answerFormat === 'multiple_choice' && Array.isArray(selectedAnswer)) {
-          selectedAnswer.forEach((selected: string) => {
-            const optionIndex = options.indexOf(selected);
+      let calculatedScore = overrideScore ?? 0;
+      if (overrideScore === undefined) {
+        Object.entries(finalAnswers).forEach(([questionId, selectedAnswer]) => {
+          const question = questions.find(q => q.id === questionId);
+          if (!question || !question.blocks) return;
+          
+          const questionBlock = question.blocks.find((b: any) => b.type === 'question') as any;
+          if (!questionBlock) return;
+          
+          const options = questionBlock.options || [];
+          const scores = questionBlock.scores || [];
+          
+          if (questionBlock.answerFormat === 'multiple_choice' && Array.isArray(selectedAnswer)) {
+            selectedAnswer.forEach((selected: string) => {
+              const optionIndex = options.indexOf(selected);
+              if (optionIndex !== -1 && scores[optionIndex] !== undefined) {
+                calculatedScore += scores[optionIndex];
+              }
+            });
+          } else if (selectedAnswer) {
+            const optionIndex = options.indexOf(selectedAnswer);
             if (optionIndex !== -1 && scores[optionIndex] !== undefined) {
               calculatedScore += scores[optionIndex];
             }
-          });
-        } else if (selectedAnswer) {
-          const optionIndex = options.indexOf(selectedAnswer);
-          if (optionIndex !== -1 && scores[optionIndex] !== undefined) {
-            calculatedScore += scores[optionIndex];
           }
-        }
-      });
+        });
+      }
 
       // Check for calculator result
       const calculatorResultConfig = results.find(r => (r as any).result_type === 'calculator');
@@ -340,7 +379,7 @@ export function useQuizViewState({
         const calcResult = calculateQuizResult(
           (calculatorResultConfig as any).formula || '',
           ((calculatorResultConfig as any).variable_mapping as Record<string, string>) || {},
-          answers,
+          finalAnswers,
           questions as any,
           (calculatorResultConfig as any).display_format || 'number',
           (calculatorResultConfig as any).decimal_places ?? 2,
@@ -374,7 +413,7 @@ export function useQuizViewState({
         .from('quiz_responses')
         .insert({
           quiz_id: quiz.id,
-          answers,
+          answers: finalAnswers,
           respondent_name: formData.name || null,
           respondent_email: formData.email || null,
           respondent_whatsapp: formData.whatsapp || null,
@@ -407,11 +446,17 @@ export function useQuizViewState({
 
       setFinalResult(result || null);
       setShowResult(true);
-      toast.success(t('quizView.submitSuccess'));
+      
+      // Show different toast based on show_results mode
+      const quizShowResults = (quiz as any)?.show_results !== false;
+      if (quizShowResults) {
+        toast.success(t('quizView.submitSuccess'));
+      } else {
+        toast.success(t('quizView.responseSaved', 'Resposta salva! Obrigado por participar.'), { duration: 3000 });
+      }
     } catch (error: any) {
       console.error('Error submitting quiz:', error);
       
-      // Mostrar mensagem mais específica baseada no tipo de erro
       if (error?.code === '42501') {
         toast.error(t('quizView.quizNotActive', 'Este quiz não está mais ativo'));
       } else if (error?.message?.includes('rate')) {
@@ -420,6 +465,11 @@ export function useQuizViewState({
         toast.error(t('quizView.submitError'));
       }
     }
+  };
+
+  // Silent version used by auto-submit (no-results mode)
+  const submitQuizSilent = (overrideAnswers: Record<string, any>, overrideScore: number) => {
+    submitQuiz(overrideAnswers, overrideScore);
   };
 
   return {

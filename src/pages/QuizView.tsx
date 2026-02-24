@@ -45,8 +45,9 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
   const showFormBefore = state.formConfig?.collection_timing === 'before' && state.currentStep === 0;
   const showFormAfter = state.formConfig?.collection_timing === 'after' && state.currentStep === state.visibleQuestions.length;
 
-  // Show result screen
-  if (state.showResult && state.finalResult) {
+  // Show result screen (only if show_results is enabled)
+  const quizShowResults = (state.quiz as any)?.show_results !== false;
+  if (state.showResult && state.finalResult && quizShowResults) {
     return (
       <QuizViewResult 
         quiz={state.quiz}
@@ -93,6 +94,7 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
                 isLastQuestion={state.currentStep === state.questions.length - 1}
                 showFormAfter={state.formConfig?.collection_timing === 'after'}
                 onSubmit={state.submitQuiz}
+                showResults={quizShowResults}
               />
             ) : null}
           </CardContent>

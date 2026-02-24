@@ -586,10 +586,12 @@ const CreateQuiz = () => {
                     showTitle={showTitle}
                     showDescription={showDescription}
                     showQuestionNumber={showQuestionNumber}
+                    showResults={appearanceState.showResults}
                     onShowLogoChange={(v) => updateAppearance({ showLogo: v })}
                     onShowTitleChange={(v) => updateAppearance({ showTitle: v })}
                     onShowDescriptionChange={(v) => updateAppearance({ showDescription: v })}
                     onShowQuestionNumberChange={(v) => updateAppearance({ showQuestionNumber: v })}
+                    onShowResultsChange={(v) => updateAppearance({ showResults: v })}
                   />
                 )}
 
