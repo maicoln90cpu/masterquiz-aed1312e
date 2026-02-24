@@ -201,7 +201,7 @@ export default function AdminDashboard() {
       const { count } = await supabase
         .from('support_tickets')
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'open' as any);
+        .eq('has_unread_admin', true as any);
       setOpenTicketsCount(count || 0);
     };
     loadOpenTickets();

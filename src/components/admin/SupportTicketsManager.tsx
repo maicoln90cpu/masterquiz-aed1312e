@@ -115,6 +115,12 @@ export const SupportTicketsManager = () => {
       .order('created_at', { ascending: true });
 
     setMessages((data || []) as any);
+
+    // Mark ticket as read by admin
+    await supabase
+      .from('support_tickets')
+      .update({ has_unread_admin: false } as any)
+      .eq('id', ticketId);
   };
 
   const handleReply = async () => {

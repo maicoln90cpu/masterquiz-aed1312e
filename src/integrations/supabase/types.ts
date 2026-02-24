@@ -1676,6 +1676,7 @@ export type Database = {
           category: Database["public"]["Enums"]["ticket_category"]
           closed_at: string | null
           created_at: string
+          has_unread_admin: boolean
           id: string
           priority: Database["public"]["Enums"]["ticket_priority"]
           resolved_at: string | null
@@ -1689,6 +1690,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["ticket_category"]
           closed_at?: string | null
           created_at?: string
+          has_unread_admin?: boolean
           id?: string
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
@@ -1702,6 +1704,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["ticket_category"]
           closed_at?: string | null
           created_at?: string
+          has_unread_admin?: boolean
           id?: string
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
