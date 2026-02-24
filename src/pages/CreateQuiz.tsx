@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Save, Copy, ExternalLink, Menu, Blocks, Loader2, RotateCcw, Play, PanelRightClose, PanelRight, Eye, ListChecks } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Copy, ExternalLink, Menu, Blocks, Loader2, RotateCcw, Play, PanelRightClose, PanelRight, Eye, ListChecks, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -610,24 +611,48 @@ const CreateQuiz = () => {
                 )}
 
                 {step === 4 && (
-                  <VisitorFormConfigStep 
-                    collectionTiming={collectionTiming as 'before' | 'after' | 'none'}
-                    onCollectionTimingChange={(v) => updateFormConfig({ collectionTiming: v })}
-                    collectName={collectName}
-                    onCollectNameChange={(v) => updateFormConfig({ collectName: v })}
-                    collectEmail={collectEmail}
-                    onCollectEmailChange={(v) => updateFormConfig({ collectEmail: v })}
-                    collectWhatsapp={collectWhatsapp}
-                    onCollectWhatsappChange={(v) => updateFormConfig({ collectWhatsapp: v })}
-                  />
+                  <>
+                    {!appearanceState.showResults && (
+                      <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <AlertDescription className="text-sm">
+                          <strong>Coleta de dados desativada:</strong> Na etapa 2 (Aparência), você optou por não exibir a tela de resultados. 
+                          Como o formulário de coleta é exibido junto ao resultado, ele também não será mostrado ao respondente. 
+                          As configurações abaixo só terão efeito se você reativar a exibição de resultados.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <VisitorFormConfigStep 
+                      collectionTiming={collectionTiming as 'before' | 'after' | 'none'}
+                      onCollectionTimingChange={(v) => updateFormConfig({ collectionTiming: v })}
+                      collectName={collectName}
+                      onCollectNameChange={(v) => updateFormConfig({ collectName: v })}
+                      collectEmail={collectEmail}
+                      onCollectEmailChange={(v) => updateFormConfig({ collectEmail: v })}
+                      collectWhatsapp={collectWhatsapp}
+                      onCollectWhatsappChange={(v) => updateFormConfig({ collectWhatsapp: v })}
+                    />
+                  </>
                 )}
 
                 {step === 5 && (
-                  <ResultsConfigStep 
-                    quizId={quizId || undefined}
-                    deliveryTiming={deliveryTiming}
-                    onDeliveryTimingChange={(v) => updateFormConfig({ deliveryTiming: v })}
-                  />
+                  <>
+                    {!appearanceState.showResults && (
+                      <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <AlertDescription className="text-sm">
+                          <strong>Resultados desativados:</strong> Na etapa 2 (Aparência), você optou por não exibir a tela de resultados. 
+                          As configurações de resultado abaixo não serão exibidas ao respondente. 
+                          Para usar estas configurações, reative "Exibir tela de resultados" na etapa 2.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <ResultsConfigStep 
+                      quizId={quizId || undefined}
+                      deliveryTiming={deliveryTiming}
+                      onDeliveryTimingChange={(v) => updateFormConfig({ deliveryTiming: v })}
+                    />
+                  </>
                 )}
 
                 {/* Navigation */}
