@@ -253,7 +253,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   }, []);
 
   // Marcar como salvo manualmente (após publicação, por exemplo)
-  const markAsSaved = useCallback(() => {
+  const markAsSaved = useCallback((currentData?: AutoSaveData) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -262,6 +262,10 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     setHasUnsavedChanges(false);
     setStatus('saved');
     setLastSavedAt(new Date());
+    // Atualizar snapshot para evitar que scheduleAutoSave marque como unsaved
+    if (currentData) {
+      lastSavedSnapshotRef.current = JSON.stringify(currentData);
+    }
   }, []);
 
   return {

@@ -449,7 +449,19 @@ export function useQuizPersistence({
 
       toast.success(t('createQuiz.congratsQuizLive'));
       
-      markAsSaved();
+      markAsSaved({
+        quizId: quiz.id,
+        ...appearanceState,
+        questionCount: editorState.questionCount,
+        isPublic: editorState.isPublic,
+        questions,
+        formConfig: {
+          collectionTiming: formConfigState.collectionTiming,
+          collectName: formConfigState.collectName,
+          collectEmail: formConfigState.collectEmail,
+          collectWhatsapp: formConfigState.collectWhatsapp
+        }
+      });
       localStorage.removeItem(getStorageKey(user.id, 'draft_state'));
       updateUI({ shareDialogOpen: true, isSaving: false });
       
@@ -534,7 +546,19 @@ export function useQuizPersistence({
         if (questionsError) throw questionsError;
       }
 
-      markAsSaved();
+      markAsSaved({
+        quizId,
+        ...appearanceState,
+        questionCount: editorState.questionCount,
+        isPublic: editorState.isPublic,
+        questions,
+        formConfig: {
+          collectionTiming: formConfigState.collectionTiming,
+          collectName: formConfigState.collectName,
+          collectEmail: formConfigState.collectEmail,
+          collectWhatsapp: formConfigState.collectWhatsapp
+        }
+      });
       toast.success("Salvo com sucesso!");
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Erro desconhecido';
