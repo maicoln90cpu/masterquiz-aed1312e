@@ -48,10 +48,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check size
+    // Check size (~20MB after base64 encoding ≈ 28MB in base64)
     if (fileBase64.length > 28 * 1024 * 1024) {
       return new Response(
-        JSON.stringify({ error: "File too large. Maximum 20MB." }),
+        JSON.stringify({ error: "FILE_TOO_LARGE", details: "Maximum 20MB." }),
         {
           status: 413,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -63,54 +63,103 @@ Deno.serve(async (req) => {
       `[parse-pdf-document] Processing: ${fileName}, base64 length: ${fileBase64.length}`
     );
 
-    // Decode base64 to Uint8Array
-    const binaryString = atob(fileBase64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    // Step 1: Decode base64 to Uint8Array
+    let bytes: Uint8Array;
+    try {
+      const binaryString = atob(fileBase64);
+      bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      console.log(`[parse-pdf-document] ✅ Base64 decoded: ${bytes.length} bytes`);
+    } catch (decodeErr) {
+      console.error("[parse-pdf-document] ❌ Base64 decode failed:", decodeErr);
+      return new Response(
+        JSON.stringify({ error: "INVALID_BASE64", details: "Failed to decode base64 data." }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    // Use pdfjs legacy build + disableWorker for Deno Edge runtime
-    const pdfjsLib = await import("https://esm.sh/pdfjs-dist@4.0.379/legacy/build/pdf.mjs");
+    // Step 2: Validate PDF signature
+    const header = new TextDecoder().decode(bytes.slice(0, 5));
+    if (!header.startsWith("%PDF")) {
+      console.error(`[parse-pdf-document] ❌ Invalid PDF signature: "${header}"`);
+      return new Response(
+        JSON.stringify({ error: "INVALID_PDF", details: "File does not appear to be a valid PDF." }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    console.log("[parse-pdf-document] ✅ PDF signature valid");
 
-    const loadingTask = pdfjsLib.getDocument({
-      data: bytes,
-      disableWorker: true,
-      isEvalSupported: false,
-      useWorkerFetch: false,
-    });
-    const pdf = await loadingTask.promise;
-    const numPages = pdf.numPages;
+    // Step 3: Use unpdf — serverless-compatible PDF parser (no workers needed)
+    const { getDocumentProxy, extractText } = await import("https://esm.sh/unpdf@0.12.1");
 
-    console.log(`[parse-pdf-document] PDF loaded: ${numPages} pages`);
+    let pdf: any;
+    try {
+      pdf = await getDocumentProxy(bytes);
+      console.log(`[parse-pdf-document] ✅ PDF loaded: ${pdf.numPages} pages`);
+    } catch (loadErr: any) {
+      const errMsg = String(loadErr?.message || loadErr);
+      console.error("[parse-pdf-document] ❌ PDF load failed:", errMsg);
 
-    // Extract text from each page
-    const pageTexts: string[] = [];
-    for (let i = 1; i <= Math.min(numPages, 50); i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(" ");
-      pageTexts.push(pageText);
+      if (errMsg.includes("password") || errMsg.includes("encrypted")) {
+        return new Response(
+          JSON.stringify({ error: "PDF_PROTECTED", details: "PDF is password-protected." }),
+          {
+            status: 422,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ error: "PDF_LOAD_FAILED", details: errMsg }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    const text = pageTexts.join("\n\n");
+    const numPages = Math.min(pdf.numPages, 50);
 
+    // Step 4: Extract text using unpdf
+    const { totalPages, text } = await extractText(pdf, { mergePages: true });
     console.log(
-      `[parse-pdf-document] Extracted ${text.length} chars from ${numPages} pages`
+      `[parse-pdf-document] ✅ Extracted ${text.length} chars from ${totalPages} pages`
     );
 
-    // Build markdown
-    const markdown = pageTexts
-      .map((pt, i) => `## Página ${i + 1}\n\n${pt}`)
-      .join("\n\n");
+    // Step 5: Check text density
+    if (text.trim().length < 50) {
+      console.warn("[parse-pdf-document] ⚠️ Very low text density");
+      return new Response(
+        JSON.stringify({
+          error: "LOW_TEXT_DENSITY",
+          details: "PDF contains very little extractable text. It may be a scanned/image-based document.",
+          text: text.trim(),
+          pages: numPages,
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Build markdown (split by double newlines as page approximation)
+    const markdown = `## Conteúdo extraído (${numPages} páginas)\n\n${text}`;
 
     return new Response(
       JSON.stringify({
         text,
         pages: numPages,
-        markdown: markdown || text,
+        markdown,
       }),
       {
         status: 200,
@@ -121,7 +170,7 @@ Deno.serve(async (req) => {
     console.error("[parse-pdf-document] Error:", error);
     return new Response(
       JSON.stringify({
-        error: "Failed to parse PDF",
+        error: "PARSE_FAILED",
         details: error instanceof Error ? error.message : String(error),
       }),
       {
