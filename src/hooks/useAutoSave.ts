@@ -57,6 +57,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingDataRef = useRef<AutoSaveData | null>(null);
   const isSavingRef = useRef(false);
+  const lastSavedSnapshotRef = useRef<string>('');
 
   // Verificar se está online
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -89,6 +90,13 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   // Função que efetivamente salva no Supabase
   const performSave = useCallback(async (data: AutoSaveData): Promise<boolean> => {
     if (!data.quizId || isSavingRef.current) return false;
+
+    // ✅ Dedup: skip save if payload hasn't changed
+    const snapshot = JSON.stringify(data);
+    if (snapshot === lastSavedSnapshotRef.current) {
+      console.log('[AutoSave] ⏭️ Payload não mudou, pulando save');
+      return true;
+    }
 
     try {
       isSavingRef.current = true;
@@ -169,6 +177,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
       setLastSavedAt(new Date());
       setHasUnsavedChanges(false);
       pendingDataRef.current = null;
+      lastSavedSnapshotRef.current = snapshot;
       onSaveComplete?.();
 
       if (showToast) {
