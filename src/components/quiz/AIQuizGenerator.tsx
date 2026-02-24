@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, ArrowLeft, FileText, Upload, ChevronDown, Settings2 } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeft, FileText, Upload, ChevronDown, Settings2, GraduationCap } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAIGenerationLimits } from "@/hooks/useAIGenerationLimits";
 import { useResourceLimits } from "@/hooks/useResourceLimits";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -60,6 +61,15 @@ interface PdfAdvancedSettings {
   targetAudiencePdf: string;
 }
 
+interface EducationalSettings {
+  subject: string;
+  topic: string;
+  educationLevel: string;
+  educationalGoal: string;
+  difficultyLevel: string;
+  includeExplanations: boolean;
+}
+
 export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -71,10 +81,19 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
   const maxQuestions = resourceLimits?.questionsPerQuizLimit || 10;
   
   const [isGenerating, setIsGenerating] = useState(false);
-  const [uploadMode, setUploadMode] = useState<"form" | "pdf">("form");
+  const [uploadMode, setUploadMode] = useState<"form" | "pdf" | "educational">("form");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfContent, setPdfContent] = useState<string>("");
   const [isParsingPdf, setIsParsingPdf] = useState(false);
+  const [pdfProposal, setPdfProposal] = useState<'infoprodutor' | 'gestor_trafego' | 'educational'>('infoprodutor');
+  const [educationalSettings, setEducationalSettings] = useState<EducationalSettings>({
+    subject: '',
+    topic: '',
+    educationLevel: 'medio',
+    educationalGoal: 'fixacao',
+    difficultyLevel: 'medium',
+    includeExplanations: false,
+  });
   const [showAdvanced, setShowAdvanced] = useState(false);
   
   // Adjust numberOfQuestions if it exceeds plan limit
@@ -224,6 +243,11 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
         toast.error(t('components.aiGenerator.fillRequired'));
         return;
       }
+    } else if (uploadMode === "educational") {
+      if (!educationalSettings.subject || !educationalSettings.topic) {
+        toast.error('Preencha a Disciplina e o Conteúdo/Tema');
+        return;
+      }
     } else {
       if (!pdfFile || !pdfContent) {
         toast.error(t('components.aiGenerator.uploadPdfFirst'));
@@ -235,29 +259,42 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
 
     try {
       // Preparar payload baseado no modo com novas variáveis
-      const requestBody = uploadMode === "form" 
-        ? {
-            ...formData,
-            // Novas variáveis avançadas
-            quizIntent: formAdvanced.quizIntent || undefined,
-            companyName: formAdvanced.companyName || undefined,
-            industry: formAdvanced.industry || undefined,
-            tone: formAdvanced.tone || undefined,
-            leadTemperature: formAdvanced.leadTemperature || undefined,
-            resultProfiles: formAdvanced.resultProfiles || undefined,
-            ctaText: formAdvanced.ctaText || undefined,
-          }
-        : {
-            pdfContent: pdfContent,
-            pdfFileName: pdfFile?.name,
-            numberOfQuestions: formData.numberOfQuestions,
-            mode: "pdf",
-            // Novas variáveis avançadas para PDF
-            focusTopics: pdfAdvanced.focusTopics || undefined,
-            quizIntent: pdfAdvanced.quizIntent || undefined,
-            difficultyLevel: pdfAdvanced.difficultyLevel || undefined,
-            targetAudiencePdf: pdfAdvanced.targetAudiencePdf || undefined,
-          };
+      let requestBody: Record<string, any>;
+      if (uploadMode === "form") {
+        requestBody = {
+          ...formData,
+          quizIntent: formAdvanced.quizIntent || undefined,
+          companyName: formAdvanced.companyName || undefined,
+          industry: formAdvanced.industry || undefined,
+          tone: formAdvanced.tone || undefined,
+          leadTemperature: formAdvanced.leadTemperature || undefined,
+          resultProfiles: formAdvanced.resultProfiles || undefined,
+          ctaText: formAdvanced.ctaText || undefined,
+        };
+      } else if (uploadMode === "educational") {
+        requestBody = {
+          mode: 'educational',
+          numberOfQuestions: formData.numberOfQuestions,
+          subject: educationalSettings.subject,
+          topic: educationalSettings.topic,
+          educationLevel: educationalSettings.educationLevel,
+          educationalGoal: educationalSettings.educationalGoal,
+          difficultyLevel: educationalSettings.difficultyLevel,
+          includeExplanations: educationalSettings.includeExplanations,
+        };
+      } else {
+        requestBody = {
+          pdfContent: pdfContent,
+          pdfFileName: pdfFile?.name,
+          numberOfQuestions: formData.numberOfQuestions,
+          mode: "pdf",
+          pdfProposal: pdfProposal,
+          focusTopics: pdfAdvanced.focusTopics || undefined,
+          quizIntent: pdfAdvanced.quizIntent || undefined,
+          difficultyLevel: pdfAdvanced.difficultyLevel || undefined,
+          targetAudiencePdf: pdfAdvanced.targetAudiencePdf || undefined,
+        };
+      }
 
       // Chamar edge function para gerar quiz com Gemini
       const { data, error } = await supabase.functions.invoke('generate-quiz-ai', {
@@ -533,8 +570,8 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
         </Card>
 
         {/* Mode Tabs */}
-        <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as "form" | "pdf")}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as "form" | "pdf" | "educational")}>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="form" className="gap-2">
               <FileText className="h-4 w-4" />
               Formulário Guiado
@@ -542,6 +579,10 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
             <TabsTrigger value="pdf" className="gap-2">
               <Upload className="h-4 w-4" />
               Upload de PDF
+            </TabsTrigger>
+            <TabsTrigger value="educational" className="gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Uso Educacional
             </TabsTrigger>
           </TabsList>
 
@@ -758,9 +799,152 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
             </div>
           </TabsContent>
 
+          {/* Educational Mode */}
+          <TabsContent value="educational" className="space-y-4 mt-4">
+            <div className="space-y-4">
+              <Alert className="border-primary/30 bg-primary/5">
+                <GraduationCap className="h-4 w-4" />
+                <AlertDescription>
+                  🎓 Crie quizzes educacionais para fixação de conteúdo, avaliação de conhecimento e preparação para provas. Foco 100% pedagógico.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="eduSubject">Disciplina/Matéria *</Label>
+                <Input
+                  id="eduSubject"
+                  placeholder="Ex: Matemática, História do Brasil, Biologia"
+                  value={educationalSettings.subject}
+                  onChange={(e) => setEducationalSettings({ ...educationalSettings, subject: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eduTopic">Conteúdo/Tema *</Label>
+                <Textarea
+                  id="eduTopic"
+                  placeholder="Ex: Equações de 2º grau, Revolução Francesa, Fotossíntese"
+                  value={educationalSettings.topic}
+                  onChange={(e) => setEducationalSettings({ ...educationalSettings, topic: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nível de Ensino</Label>
+                  <Select
+                    value={educationalSettings.educationLevel}
+                    onValueChange={(v) => setEducationalSettings({ ...educationalSettings, educationLevel: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fundamental">Fundamental</SelectItem>
+                      <SelectItem value="medio">Médio</SelectItem>
+                      <SelectItem value="superior">Superior</SelectItem>
+                      <SelectItem value="pos_graduacao">Pós-graduação</SelectItem>
+                      <SelectItem value="livre">Livre / Autodidata</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Objetivo Educacional</Label>
+                  <Select
+                    value={educationalSettings.educationalGoal}
+                    onValueChange={(v) => setEducationalSettings({ ...educationalSettings, educationalGoal: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o objetivo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="revisao">Revisão de conteúdo</SelectItem>
+                      <SelectItem value="diagnostica">Avaliação diagnóstica</SelectItem>
+                      <SelectItem value="fixacao">Fixação de conceitos</SelectItem>
+                      <SelectItem value="prova">Preparação para prova</SelectItem>
+                      <SelectItem value="autoestudo">Autoestudo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nível de Dificuldade</Label>
+                  <Select
+                    value={educationalSettings.difficultyLevel}
+                    onValueChange={(v) => setEducationalSettings({ ...educationalSettings, difficultyLevel: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a dificuldade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Fácil</SelectItem>
+                      <SelectItem value="medium">Médio</SelectItem>
+                      <SelectItem value="hard">Difícil</SelectItem>
+                      <SelectItem value="mixed">Misto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="eduNumberOfQuestions">{t('components.aiGenerator.numberOfQuestions')}</Label>
+                  <Input
+                    id="eduNumberOfQuestions"
+                    type="number"
+                    min="3"
+                    max={maxQuestions}
+                    value={formData.numberOfQuestions}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 5;
+                      const clamped = Math.min(Math.max(value, 3), maxQuestions);
+                      setFormData({ ...formData, numberOfQuestions: clamped });
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('components.aiGenerator.questionRange', { min: 3, max: maxQuestions })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/20">
+                <Checkbox
+                  id="includeExplanations"
+                  checked={educationalSettings.includeExplanations}
+                  onCheckedChange={(checked) => setEducationalSettings({ ...educationalSettings, includeExplanations: !!checked })}
+                />
+                <Label htmlFor="includeExplanations" className="text-sm cursor-pointer">
+                  Incluir explicação para cada alternativa (gabarito comentado)
+                </Label>
+              </div>
+            </div>
+          </TabsContent>
+
           {/* PDF Upload Mode */}
           <TabsContent value="pdf" className="space-y-4 mt-4">
             <div className="space-y-4">
+              {/* Proposta do Quiz - Select antes do upload */}
+              <div className="space-y-2">
+                <Label>Proposta do Quiz</Label>
+                <Select
+                  value={pdfProposal}
+                  onValueChange={(v) => setPdfProposal(v as 'infoprodutor' | 'gestor_trafego' | 'educational')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a proposta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="infoprodutor">Infoprodutor — Funil de vendas e qualificação</SelectItem>
+                    <SelectItem value="gestor_trafego">Gestor de Tráfego — Segmentação e conversão</SelectItem>
+                    <SelectItem value="educational">Uso Educacional — Fixação e avaliação de conhecimento</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Define como a IA interpretará o conteúdo do PDF para criar as perguntas
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="pdfUpload">Upload de PDF *</Label>
                 <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
@@ -908,7 +1092,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
         {/* Generate Button */}
         <Button 
           onClick={handleGenerateQuiz} 
-          disabled={isGenerating || (uploadMode === "pdf" && !pdfFile)}
+          disabled={isGenerating || (uploadMode === "pdf" && !pdfFile) || (uploadMode === "educational" && (!educationalSettings.subject || !educationalSettings.topic))}
           className="w-full"
           size="lg"
         >

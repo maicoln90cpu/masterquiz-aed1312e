@@ -15,7 +15,7 @@ interface QuizGenerationRequest {
   targetAudience?: string;
   desiredAction?: string;
   numberOfQuestions: number;
-  mode?: 'form' | 'pdf';
+  mode?: 'form' | 'pdf' | 'educational';
   pdfContent?: string;
   pdfFileName?: string;
   quizIntent?: string;
@@ -28,6 +28,14 @@ interface QuizGenerationRequest {
   targetAudiencePdf?: string;
   resultProfiles?: string;
   ctaText?: string;
+  // Educational fields
+  subject?: string;
+  topic?: string;
+  educationLevel?: string;
+  educationalGoal?: string;
+  includeExplanations?: boolean;
+  // PDF proposal
+  pdfProposal?: 'infoprodutor' | 'gestor_trafego' | 'educational';
 }
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
@@ -66,7 +74,13 @@ function replaceVariables(template: string, data: QuizGenerationRequest): string
     .replace(/{difficultyLevel}/g, data.difficultyLevel || 'médio')
     .replace(/{targetAudiencePdf}/g, data.targetAudiencePdf || '')
     .replace(/{resultProfiles}/g, data.resultProfiles || '')
-    .replace(/{ctaText}/g, data.ctaText || '');
+    .replace(/{ctaText}/g, data.ctaText || '')
+    .replace(/{subject}/g, data.subject || '')
+    .replace(/{topic}/g, data.topic || '')
+    .replace(/{educationLevel}/g, data.educationLevel || '')
+    .replace(/{educationalGoal}/g, data.educationalGoal || '')
+    .replace(/{includeExplanations}/g, data.includeExplanations ? 'Sim, incluir explicação detalhada para cada alternativa' : 'Não')
+    .replace(/{pdfProposal}/g, data.pdfProposal || 'infoprodutor');
 }
 
 Deno.serve(async (req) => {
@@ -215,10 +229,67 @@ IMPORTANTE: As primeiras 2-3 perguntas devem ser de ESPELHAMENTO (ex: faixa etá
 
 Retorne JSON com: title, description, questions (com question_text, answer_format, options com text e score), e results (com result_text, min_score, max_score).`;
 
+    const defaultSystemPromptEducational = `Você é um professor especialista em criar quizzes educacionais para fixação e avaliação de conhecimento.
+
+SEU OBJETIVO: Criar quizzes que testem o conhecimento do aluno sobre o tema, ajudem na fixação de conceitos e identifiquem lacunas de aprendizado.
+
+ESTRUTURA DAS PERGUNTAS:
+1. Perguntas conceituais - Definições e conceitos fundamentais
+2. Perguntas de aplicação - Uso prático do conhecimento
+3. Perguntas de análise - Interpretação e raciocínio
+4. Perguntas de síntese - Conexão entre conceitos
+
+REGRAS:
+- Perguntas claras, objetivas e sem ambiguidade
+- Alternativas plausíveis (evitar opções absurdas)
+- Distribuir dificuldade conforme nível solicitado
+- Se solicitado, incluir explicação para cada alternativa
+- NÃO usar funil de vendas ou auto-convencimento
+- Foco 100% pedagógico
+
+REGRAS DE FORMATO:
+1. Retorne APENAS JSON válido no formato especificado
+2. O campo "answer_format" deve ser EXATAMENTE: "single_choice", "multiple_choice" ou "yes_no"
+3. O campo "options" deve ser um ARRAY SIMPLES de STRINGS
+4. NÃO use objetos no array options, apenas strings`;
+
+    const defaultPromptEducational = `Crie um quiz educacional sobre:
+DISCIPLINA: {subject}
+CONTEÚDO/TEMA: {topic}
+NÍVEL DE ENSINO: {educationLevel}
+OBJETIVO: {educationalGoal}
+DIFICULDADE: {difficultyLevel}
+QUANTIDADE DE PERGUNTAS: {numberOfQuestions}
+INCLUIR EXPLICAÇÕES: {includeExplanations}
+
+Retorne JSON com: title, description, questions (com question_text, answer_format, options como array de strings).
+As perguntas devem testar conhecimento real sobre o tema, com alternativas plausíveis e bem formuladas.`;
+
+    const defaultSystemPromptPdfTraffic = `Você é um especialista em criar quizzes de segmentação e qualificação de audiência para gestores de tráfego pago.
+
+SEU OBJETIVO: Criar quizzes que segmentem a audiência, identifiquem o nível de consciência do lead e direcionem para ofertas relevantes baseadas no perfil.
+
+ESTRUTURA OBRIGATÓRIA:
+1. Segmentação demográfica (2 perguntas) - Perfil básico do respondente
+2. Identificação de dor/necessidade - Qual problema mais incomoda
+3. Nível de consciência - Quanto já sabe sobre soluções
+4. Intenção de compra - Prontidão para agir
+5. Qualificação final - Perfil ideal para a oferta
+
+REGRAS:
+- Linguagem direta e objetiva
+- Foco em segmentação para campanhas de tráfego
+- Opções que permitam classificar o lead em segmentos claros
+- Retorne APENAS JSON válido
+- O campo "options" deve ser um ARRAY SIMPLES de STRINGS`;
+
     const aiSystemPromptForm = aiSettings?.find(s => s.setting_key === 'ai_system_prompt_form')?.setting_value || defaultSystemPromptForm;
     const aiSystemPromptPdf = aiSettings?.find(s => s.setting_key === 'ai_system_prompt_pdf')?.setting_value || defaultSystemPromptPdf;
     const aiPromptForm = aiSettings?.find(s => s.setting_key === 'ai_prompt_form')?.setting_value || defaultPromptForm;
     const aiPromptPdf = aiSettings?.find(s => s.setting_key === 'ai_prompt_pdf')?.setting_value || defaultPromptPdf;
+    const aiSystemPromptEducational = aiSettings?.find(s => s.setting_key === 'ai_system_prompt_educational')?.setting_value || defaultSystemPromptEducational;
+    const aiPromptEducational = aiSettings?.find(s => s.setting_key === 'ai_prompt_educational')?.setting_value || defaultPromptEducational;
+
 
     // Check monthly limit
     if (!isMasterAdmin && plan && plan.ai_generations_per_month > 0) {
@@ -235,9 +306,42 @@ Retorne JSON com: title, description, questions (com question_text, answer_forma
     const requestData: QuizGenerationRequest = await req.json();
     requestData.numberOfQuestions = Math.min(Math.max(requestData.numberOfQuestions || 5, 3), isMasterAdmin ? 999 : maxQuestionsAllowed);
 
+    const isEducationalMode = requestData.mode === 'educational';
     const isPdfMode = requestData.mode === 'pdf' && requestData.pdfContent;
-    const systemPrompt = isPdfMode ? aiSystemPromptPdf : aiSystemPromptForm;
-    const userPromptTemplate = isPdfMode ? aiPromptPdf : aiPromptForm;
+    const isPdfEducational = isPdfMode && requestData.pdfProposal === 'educational';
+    const isPdfTraffic = isPdfMode && requestData.pdfProposal === 'gestor_trafego';
+
+    let systemPrompt: string;
+    let userPromptTemplate: string;
+
+    if (isEducationalMode) {
+      systemPrompt = aiSystemPromptEducational;
+      userPromptTemplate = aiPromptEducational;
+    } else if (isPdfEducational) {
+      systemPrompt = aiSystemPromptEducational;
+      userPromptTemplate = `Analise o documento "{pdfFileName}" e crie um quiz EDUCACIONAL baseado no conteúdo para fixação e avaliação de conhecimento.
+
+CONTEÚDO DO DOCUMENTO:
+{pdfContent}
+
+CONFIGURAÇÕES:
+Quantidade de perguntas: {numberOfQuestions}
+Nível de dificuldade: {difficultyLevel}
+Público-alvo: {targetAudiencePdf}
+
+Retorne JSON com: title, description, questions (com question_text, answer_format, options como array de strings).
+Foco 100% pedagógico. NÃO usar funil de vendas.`;
+    } else if (isPdfTraffic) {
+      systemPrompt = defaultSystemPromptPdfTraffic;
+      userPromptTemplate = aiPromptPdf;
+    } else if (isPdfMode) {
+      systemPrompt = aiSystemPromptPdf;
+      userPromptTemplate = aiPromptPdf;
+    } else {
+      systemPrompt = aiSystemPromptForm;
+      userPromptTemplate = aiPromptForm;
+    }
+
     const userPrompt = replaceVariables(userPromptTemplate, requestData);
 
     const isOpenAIModel = isDirectOpenAIModel(aiModel);
