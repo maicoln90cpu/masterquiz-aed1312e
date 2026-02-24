@@ -70,13 +70,15 @@ Deno.serve(async (req) => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    // Use pdfjs-dist which works in Deno (no fs dependency)
-    const pdfjsLib = await import("https://esm.sh/pdfjs-dist@4.0.379/build/pdf.mjs");
+    // Use pdfjs legacy build + disableWorker for Deno Edge runtime
+    const pdfjsLib = await import("https://esm.sh/pdfjs-dist@4.0.379/legacy/build/pdf.mjs");
 
-    // Disable worker (not available in Deno edge runtime)
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "";
-
-    const loadingTask = pdfjsLib.getDocument({ data: bytes });
+    const loadingTask = pdfjsLib.getDocument({
+      data: bytes,
+      disableWorker: true,
+      isEvalSupported: false,
+      useWorkerFetch: false,
+    });
     const pdf = await loadingTask.promise;
     const numPages = pdf.numPages;
 
