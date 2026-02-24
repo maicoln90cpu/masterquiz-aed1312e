@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check size (base64 is ~33% larger than binary, so 20MB binary ≈ 27MB base64)
+    // Check size
     if (fileBase64.length > 28 * 1024 * 1024) {
       return new Response(
         JSON.stringify({ error: "File too large. Maximum 20MB." }),
@@ -70,29 +70,44 @@ Deno.serve(async (req) => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    // Extract text from PDF using pdf-parse
-    const pdfParse = (await import("https://esm.sh/pdf-parse@1.1.1")).default;
+    // Use pdfjs-dist which works in Deno (no fs dependency)
+    const pdfjsLib = await import("https://esm.sh/pdfjs-dist@4.0.379/build/pdf.mjs");
 
-    const result = await pdfParse(bytes);
+    // Disable worker (not available in Deno edge runtime)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "";
 
-    const text = result.text || "";
-    const pageCount = result.numpages || 0;
+    const loadingTask = pdfjsLib.getDocument({ data: bytes });
+    const pdf = await loadingTask.promise;
+    const numPages = pdf.numPages;
+
+    console.log(`[parse-pdf-document] PDF loaded: ${numPages} pages`);
+
+    // Extract text from each page
+    const pageTexts: string[] = [];
+    for (let i = 1; i <= Math.min(numPages, 50); i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(" ");
+      pageTexts.push(pageText);
+    }
+
+    const text = pageTexts.join("\n\n");
 
     console.log(
-      `[parse-pdf-document] Extracted ${text.length} chars from ${pageCount} pages`
+      `[parse-pdf-document] Extracted ${text.length} chars from ${numPages} pages`
     );
 
-    // Build markdown-like output
-    const markdown = text
-      .split(/\n{3,}/)
-      .map((section: string) => section.trim())
-      .filter((s: string) => s.length > 0)
+    // Build markdown
+    const markdown = pageTexts
+      .map((pt, i) => `## Página ${i + 1}\n\n${pt}`)
       .join("\n\n");
 
     return new Response(
       JSON.stringify({
         text,
-        pages: pageCount,
+        pages: numPages,
         markdown: markdown || text,
       }),
       {
