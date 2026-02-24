@@ -27,10 +27,12 @@ interface AppearanceConfigStepProps {
   showTitle?: boolean;
   showDescription?: boolean;
   showQuestionNumber?: boolean;
+  showResults?: boolean;
   onShowLogoChange?: (value: boolean) => void;
   onShowTitleChange?: (value: boolean) => void;
   onShowDescriptionChange?: (value: boolean) => void;
   onShowQuestionNumberChange?: (value: boolean) => void;
+  onShowResultsChange?: (value: boolean) => void;
 }
 
 const getTemplates = (t: any) => [
@@ -98,10 +100,12 @@ export const AppearanceConfigStep = ({
   showTitle = true,
   showDescription = true,
   showQuestionNumber = true,
+  showResults = true,
   onShowLogoChange,
   onShowTitleChange,
   onShowDescriptionChange,
-  onShowQuestionNumberChange
+  onShowQuestionNumberChange,
+  onShowResultsChange
 }: AppearanceConfigStepProps) => {
   const { t } = useTranslation();
   const { allowedTemplates, isLoading } = usePlanFeatures();
@@ -200,6 +204,22 @@ export const AppearanceConfigStep = ({
                     id="show-question-number"
                     checked={showQuestionNumber}
                     onCheckedChange={onShowQuestionNumberChange}
+                  />
+                </div>
+
+                <Separator className="my-2" />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="show-results">Exibir tela de resultados</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Se desativado, o quiz encerra na última pergunta e salva automaticamente (ideal para páginas de vendas)
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-results"
+                    checked={showResults}
+                    onCheckedChange={onShowResultsChange}
                   />
                 </div>
               </div>

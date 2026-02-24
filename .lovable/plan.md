@@ -1,54 +1,55 @@
 
 
-# Plano: Formatos de resposta variados e inteligentes na geração por IA
+# Plano: Melhorias no Quiz (Etapas 1 e 2)
 
-## Problema
+## ✅ Etapa 1 — CONCLUÍDA
 
-Os prompts do sistema em `generate-quiz-ai/index.ts` dizem apenas:
-> "O campo answer_format deve ser EXATAMENTE: single_choice, multiple_choice ou yes_no"
+### 1.1 — Migration `show_results` ✅
+- Adicionada coluna `show_results boolean DEFAULT true` na tabela `quizzes`
 
-Mas **não explicam quando usar cada formato**. A IA interpreta isso como "escolha qualquer um" e acaba sempre usando `multiple_choice`, gerando perguntas como "Qual sua faixa etária?" com múltipla escolha (onde a pessoa poderia marcar várias idades, o que não faz sentido).
+### 1.2 — UI toggle na Etapa 2 (Aparência) ✅
+- Switch "Exibir tela de resultados" em `AppearanceConfigStep.tsx`
+- Estado `showResults` adicionado em `QuizAppearanceState` (`useQuizState.ts`)
+- Persistência load/save em `useQuizPersistence.ts`
+- Props passados via `CreateQuiz.tsx`
 
-## Solução
+### 1.3 — Fluxo publicado sem resultados ✅
+- `QuizViewQuestion.tsx`: botão "Finalizar" oculto quando `show_results=false`
+- `useQuizViewState.ts`: auto-submit silencioso ao responder última pergunta (single_choice/yes_no)
+- `QuizView.tsx`: pula tela de resultado quando `show_results=false`
+- Toast discreto "Resposta salva! Obrigado por participar."
 
-Adicionar instruções explícitas em **todos os prompts do sistema** sobre a escolha inteligente de formato, com exemplos claros.
+### 1.4 — Fix tracking P10 ✅
+- `submitQuiz()` agora registra `track-quiz-step` para o último step antes de salvar a resposta
+- Resolve o problema de 0% na retenção da última pergunta
 
-## Detalhes técnicos
+---
 
-### Arquivo: `supabase/functions/generate-quiz-ai/index.ts`
+## 🔲 Etapa 2 — PENDENTE
 
-Adicionar o seguinte bloco de regras em cada system prompt (form, PDF, educational, traffic):
+### 2.1 — Upload de vídeo na Etapa 5 (Resultados)
+**Arquivos:** `ResultsConfigStep.tsx`, `QuizViewResult.tsx`, `PreviewResultScreen.tsx`
+- Adicionar uploader direto (Bunny/Supabase) ao lado do campo de URL
+- Renderizar vídeo no resultado publicado (mp4/webm → `<video>`, YouTube/Vimeo → iframe)
 
-```text
-REGRAS PARA ESCOLHA DO FORMATO DE RESPOSTA:
-- "single_choice": Quando a pergunta tem UMA ÚNICA resposta correta ou o respondente deve escolher APENAS UMA opção.
-  Exemplos: faixa etária, sexo, renda, frequência ("Quantas vezes por semana..."), estado atual ("Como você se sente...")
-- "multiple_choice": APENAS quando faz sentido o respondente marcar MAIS DE UMA opção simultaneamente.
-  Exemplos: "Quais dessas dificuldades você enfrenta?" (pode ter várias), "Quais dessas ferramentas você usa?"
-- "yes_no": Para perguntas de confirmação binária simples.
-  Exemplos: "Você já tentou resolver isso antes?", "Você tem acompanhamento profissional?"
+### 2.2 — Persistência de IDs de perguntas (evitar delete+insert)
+**Arquivos:** `useQuizPersistence.ts`
+- Refatorar `saveQuiz` para usar upsert por ID em vez de deletar tudo e reinserir
+- Mapear IDs temporários para existentes por `order_number`
+- Preservar `question_id` para analytics/heatmap/planilha
 
-IMPORTANTE: A MAIORIA das perguntas deve ser "single_choice". Use "multiple_choice" SOMENTE quando listar itens onde múltiplas respostas simultâneas fazem sentido real. Use "yes_no" para perguntas diretas de sim/não. Varie os formatos para criar uma experiência dinâmica.
-```
+### 2.3 — Heatmap/Planilha: ajustes de robustez
+**Arquivos:** `ResponseHeatmap.tsx`, `ResponsesSpreadsheet.tsx`
+- Garantir que todas as perguntas apareçam (incluindo última)
+- Mensagem de aviso quando IDs antigos não batem com respostas
 
-### Prompts afetados (4 blocos no total):
-1. `defaultSystemPromptForm` (linha 145) -- prompt principal de formulário
-2. `defaultSystemPromptPdf` (linha 175) -- prompt de PDF infoprodutor
-3. `defaultSystemPromptEducational` (linha 233) -- prompt educacional
-4. `defaultSystemPromptPdfTraffic` (linha 269) -- prompt de gestor de tráfego
+### 2.4 — Performance no quiz publicado
+**Arquivos:** `useQuizTracking.ts`, `QuizBlockPreview.tsx`
+- Deferir injeção de scripts de tracking (FB Pixel/GTM) com `requestIdleCallback`
+- Code-splitting de blocos pesados (metrics/chart) no `QuizBlockPreview`
 
-Cada um receberá as regras de formato adaptadas ao seu contexto.
+---
 
-### Nenhuma mudança no frontend
-O frontend (`AIQuizGenerator.tsx`) já normaliza corretamente os 3 formatos (linhas 393-396). O problema está exclusivamente nos prompts do backend.
-
-## Arquivos a alterar
-
-| Arquivo | Acao |
-|---------|------|
-| `supabase/functions/generate-quiz-ai/index.ts` | Editar -- adicionar regras de formato nos 4 system prompts |
-
-## Arquivos NAO tocados
+## Arquivos NÃO tocados
+- `parse-pdf-document/index.ts`
 - `AIQuizGenerator.tsx` (normalização já funciona)
-- `parse-pdf-document/index.ts` (sem relação)
-- Nenhum outro arquivo afetado

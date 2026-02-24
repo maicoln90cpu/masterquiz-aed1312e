@@ -196,6 +196,7 @@ export function useQuizPersistence({
         showTitle: quiz.show_title ?? true,
         showDescription: quiz.show_description ?? true,
         showQuestionNumber: quiz.show_question_number ?? true,
+        showResults: (quiz as any).show_results ?? true,
       });
 
       if (formConfig) {
@@ -297,10 +298,11 @@ export function useQuizPersistence({
             show_title: showTitle,
             show_description: showDescription,
             show_question_number: showQuestionNumber,
+            show_results: appearanceState.showResults,
             question_count: questionCount,
             is_public: true,
             status: 'active'
-          })
+          } as any)
           .eq('id', currentQuizId)
           .select()
           .single();
@@ -331,10 +333,11 @@ export function useQuizPersistence({
             show_title: showTitle,
             show_description: showDescription,
             show_question_number: showQuestionNumber,
+            show_results: appearanceState.showResults,
             question_count: questionCount,
             is_public: true,
             status: 'active'
-          })
+          } as any)
           .select()
           .single();
         
