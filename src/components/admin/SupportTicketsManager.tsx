@@ -6,9 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { MessageSquare, Loader2 } from "lucide-react";
+import { MessageSquare, Loader2, User, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface TicketUser {
+  full_name: string | null;
+  email: string | null;
+  whatsapp: string | null;
+}
 
 interface Ticket {
   id: string;
@@ -18,10 +24,7 @@ interface Ticket {
   status: string;
   created_at: string;
   user_id: string;
-  user?: {
-    full_name: string | null;
-    email?: string;
-  };
+  user?: TicketUser;
 }
 
 interface Message {
@@ -29,9 +32,6 @@ interface Message {
   message: string;
   sender_id: string;
   created_at: string;
-  sender?: {
-    full_name: string | null;
-  };
 }
 
 export const SupportTicketsManager = () => {
@@ -49,7 +49,6 @@ export const SupportTicketsManager = () => {
 
   useEffect(() => {
     if (selectedTicket) {
-      // Realtime para novas mensagens
       const channel = supabase
         .channel('ticket-messages')
         .on(
@@ -79,7 +78,31 @@ export const SupportTicketsManager = () => {
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setTickets(data as any);
+      // Buscar dados dos usuários em paralelo
+      const userIds = [...new Set((data as any[]).map((t: any) => t.user_id).filter(Boolean))];
+      
+      let profilesMap = new Map<string, TicketUser>();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, whatsapp')
+          .in('id', userIds);
+        
+        profiles?.forEach((p) => {
+          profilesMap.set(p.id, {
+            full_name: p.full_name,
+            email: p.email,
+            whatsapp: p.whatsapp,
+          });
+        });
+      }
+
+      const ticketsWithUsers = (data as any[]).map((t: any) => ({
+        ...t,
+        user: profilesMap.get(t.user_id) || null,
+      }));
+
+      setTickets(ticketsWithUsers);
     }
     setLoading(false);
   };
@@ -114,7 +137,6 @@ export const SupportTicketsManager = () => {
 
       if (error) throw error;
 
-      // Atualizar status para "in_progress" se ainda estiver "open"
       if (selectedTicket.status === 'open') {
         await supabase
           .from('support_tickets')
@@ -224,12 +246,18 @@ export const SupportTicketsManager = () => {
                   }}
                 >
                   <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-1">
                       <div className="flex-1">
                         <h4 className="font-semibold text-sm">{ticket.title}</h4>
                       </div>
                       {getStatusBadge(ticket.status)}
                     </div>
+                    {ticket.user?.full_name && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                        <User className="h-3 w-3" />
+                        {ticket.user.full_name}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(ticket.created_at), 'dd/MM/yyyy HH:mm')}
                     </p>
@@ -251,6 +279,29 @@ export const SupportTicketsManager = () => {
                     <p className="text-sm text-muted-foreground mt-1">
                       Categoria: {selectedTicket.category} | Prioridade: {selectedTicket.priority}
                     </p>
+                    {/* Dados do usuário */}
+                    {selectedTicket.user && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
+                        {selectedTicket.user.full_name && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-3.5 w-3.5" />
+                            {selectedTicket.user.full_name}
+                          </span>
+                        )}
+                        {selectedTicket.user.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3.5 w-3.5" />
+                            {selectedTicket.user.email}
+                          </span>
+                        )}
+                        {selectedTicket.user.whatsapp && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3.5 w-3.5" />
+                            {selectedTicket.user.whatsapp}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <Select
                     value={selectedTicket.status}
@@ -270,7 +321,6 @@ export const SupportTicketsManager = () => {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {/* Mensagens */}
                 <div className="space-y-4 max-h-[400px] overflow-y-auto">
                   {messages.map((msg) => (
                     <div
@@ -294,7 +344,6 @@ export const SupportTicketsManager = () => {
                   ))}
                 </div>
 
-                {/* Campo de resposta */}
                 <div className="space-y-2">
                   <Textarea
                     placeholder="Digite sua resposta..."
@@ -322,3 +371,5 @@ export const SupportTicketsManager = () => {
     </div>
   );
 };
+
+export default SupportTicketsManager;
