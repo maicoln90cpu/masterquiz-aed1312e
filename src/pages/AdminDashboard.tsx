@@ -816,7 +816,7 @@ export default function AdminDashboard() {
           <>
             {/* Desktop: Tabela condensada */}
             <div className="hidden lg:block overflow-x-auto">
-              <Table className="table-fixed">
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
@@ -827,9 +827,7 @@ export default function AdminDashboard() {
                     <TableHead className="text-center">Logins</TableHead>
                     <TableHead className="text-center">Quizzes</TableHead>
                     <TableHead className="text-center">Leads</TableHead>
-                    <TableHead>Roles</TableHead>
                     <TableHead>Plano</TableHead>
-                    <TableHead>Limites</TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -839,10 +837,8 @@ export default function AdminDashboard() {
                       <TableCell className="font-medium">
                         {user.profile?.full_name || '-'}
                       </TableCell>
-                      <TableCell className="max-w-[180px]">
-                        <span className="block truncate text-xs" title={user.email || ''}>
-                          {user.email || '-'}
-                        </span>
+                      <TableCell className="text-sm">
+                        {user.email || '-'}
                       </TableCell>
                       <TableCell className="text-sm">
                         {user.profile?.whatsapp || '-'}
@@ -877,15 +873,6 @@ export default function AdminDashboard() {
                         <span className="font-medium">{user.stats?.lead_count || 0}</span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles?.map((role: string) => (
-                            <Badge key={role} variant="outline" className="text-xs">
-                              {role}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
                         <Select 
                           value={user.subscription?.plan_type || 'free'}
                           onValueChange={(value) => updatePlan(user.id, value as 'free' | 'paid' | 'partner' | 'premium')}
@@ -900,9 +887,6 @@ export default function AdminDashboard() {
                             <SelectItem value="premium">{t('admin.premium')}</SelectItem>
                           </SelectContent>
                         </Select>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {user.subscription?.quiz_limit || 0}q / {user.subscription?.response_limit || 0}r
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
