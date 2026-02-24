@@ -506,6 +506,7 @@ export type Database = {
           full_name: string | null
           gtm_container_id: string | null
           id: string
+          login_count: number | null
           stage_updated_at: string | null
           updated_at: string
           user_objectives: string[] | null
@@ -523,6 +524,7 @@ export type Database = {
           full_name?: string | null
           gtm_container_id?: string | null
           id: string
+          login_count?: number | null
           stage_updated_at?: string | null
           updated_at?: string
           user_objectives?: string[] | null
@@ -540,6 +542,7 @@ export type Database = {
           full_name?: string | null
           gtm_container_id?: string | null
           id?: string
+          login_count?: number | null
           stage_updated_at?: string | null
           updated_at?: string
           user_objectives?: string[] | null
@@ -2199,6 +2202,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_login_count: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       answer_format:

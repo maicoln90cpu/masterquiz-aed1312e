@@ -57,6 +57,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         if (event === 'SIGNED_IN' && session?.access_token) {
           setTimeout(() => attemptMerge(session.access_token), 0);
+          // Incrementar login_count no profile
+          if (session.user?.id) {
+            (supabase.rpc as Function)('increment_login_count', { p_user_id: session.user.id })
+              .then(() => console.log('[Auth] login_count incremented'))
+              .catch((err: unknown) => console.error('[Auth] Failed to increment login_count:', err));
+          }
         }
       }
     );

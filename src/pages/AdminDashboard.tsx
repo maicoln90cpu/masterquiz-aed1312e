@@ -11,8 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useQueryPerformance } from "@/hooks/useQueryPerformance";
@@ -92,6 +93,11 @@ export default function AdminDashboard() {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<{id: string, email: string} | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<{id: string, email: string, whatsapp: string} | null>(null);
+  const [editEmail, setEditEmail] = useState('');
+  const [editWhatsapp, setEditWhatsapp] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // ✅ Componente de Skeleton para carregamento
   const UserCardSkeleton = () => (
@@ -519,6 +525,32 @@ export default function AdminDashboard() {
     setDeleteDialogOpen(true);
   };
 
+  const openEditUser = (user: any) => {
+    setEditingUser({ id: user.id, email: user.email || '', whatsapp: user.profile?.whatsapp || '' });
+    setEditEmail(user.email || '');
+    setEditWhatsapp(user.profile?.whatsapp || '');
+    setEditDialogOpen(true);
+  };
+
+  const saveEditUser = async () => {
+    if (!editingUser) return;
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase.functions.invoke('update-user-profile', {
+        body: { user_id: editingUser.id, email: editEmail, whatsapp: editWhatsapp }
+      });
+      if (error) throw error;
+      toast.success('Usuário atualizado com sucesso!');
+      setEditDialogOpen(false);
+      refetchUsers();
+    } catch (err: any) {
+      console.error('Error updating user:', err);
+      toast.error('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'));
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const deleteUser = async () => {
     if (!userToDelete) return;
     
@@ -543,7 +575,7 @@ export default function AdminDashboard() {
       toast.success(`Usuário ${userToDelete.email} excluído com sucesso!${methodLabel}`);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
-      await loadData();
+      refetchUsers();
     } catch (error: any) {
       console.error('Error deleting user:', error);
       const errorMsg = error.message || 'Erro desconhecido ao excluir usuário';
@@ -790,13 +822,15 @@ export default function AdminDashboard() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>WhatsApp</TableHead>
+                    <TableHead>Cadastro</TableHead>
                     <TableHead>Último Login</TableHead>
+                    <TableHead className="text-center">Logins</TableHead>
                     <TableHead className="text-center">Quizzes</TableHead>
                     <TableHead className="text-center">Leads</TableHead>
                     <TableHead>Roles</TableHead>
                     <TableHead>Plano</TableHead>
                     <TableHead>Limites</TableHead>
-                    <TableHead className="w-[80px]">Ações</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -812,6 +846,15 @@ export default function AdminDashboard() {
                         {user.profile?.whatsapp || '-'}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
+                        {user.created_at 
+                          ? new Date(user.created_at).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: '2-digit'
+                            })
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
                         {user.last_sign_in_at 
                           ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR', {
                               day: '2-digit',
@@ -821,6 +864,9 @@ export default function AdminDashboard() {
                               minute: '2-digit'
                             })
                           : 'Nunca'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-sm">{user.profile?.login_count || 0}</span>
                       </TableCell>
                       <TableCell className="text-center">
                         <span className="font-medium">{user.stats?.quiz_count || 0}</span>
@@ -857,14 +903,24 @@ export default function AdminDashboard() {
                         {user.subscription?.quiz_limit || 0}q / {user.subscription?.response_limit || 0}r
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => confirmDeleteUser(user.id, user.email)}
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => openEditUser(user)}
+                            className="h-8 w-8"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => confirmDeleteUser(user.id, user.email)}
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1429,6 +1485,44 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogDescription>Altere o email e/ou WhatsApp do usuário.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-whatsapp">WhatsApp</Label>
+              <Input
+                id="edit-whatsapp"
+                type="text"
+                value={editWhatsapp}
+                onChange={(e) => setEditWhatsapp(e.target.value)}
+                placeholder="5511999999999"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={saveEditUser} disabled={isSavingEdit}>
+              {isSavingEdit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

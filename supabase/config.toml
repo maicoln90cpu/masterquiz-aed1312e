@@ -108,3 +108,6 @@ verify_jwt = false
 
 [functions.track-video-analytics]
 verify_jwt = false
+
+[functions.update-user-profile]
+verify_jwt = false
