@@ -68,6 +68,7 @@ interface EducationalSettings {
   educationalGoal: string;
   difficultyLevel: string;
   includeExplanations: boolean;
+  explanationMode: 'per_question' | 'end_of_quiz';
 }
 
 export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
@@ -93,6 +94,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
     educationalGoal: 'fixacao',
     difficultyLevel: 'medium',
     includeExplanations: false,
+    explanationMode: 'per_question',
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
   
@@ -281,6 +283,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
           educationalGoal: educationalSettings.educationalGoal,
           difficultyLevel: educationalSettings.difficultyLevel,
           includeExplanations: educationalSettings.includeExplanations,
+          explanationMode: educationalSettings.includeExplanations ? educationalSettings.explanationMode : undefined,
         };
       } else {
         requestBody = {
@@ -442,6 +445,12 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
         const aiSuggestions = q.aiSuggestions || defaultSuggestions;
 
         // Criar bloco com opções validadas e sugestões
+        // Preservar explanation e correct_answer da IA (modo educacional)
+        const rawQuestion = (rawData.questions || [])[index];
+        const explanation = rawQuestion?.explanation || undefined;
+        const correctAnswer = rawQuestion?.correct_answer || undefined;
+        const explanationMode = requestBody.explanationMode || undefined;
+
         const blocks = [
           {
             id: `block-question-${index}`,
@@ -451,6 +460,9 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
             answerFormat: q.answer_format,
             options: validatedOptions,
             aiSuggestions: aiSuggestions,
+            ...(explanation && { explanation }),
+            ...(correctAnswer && { correct_answer: correctAnswer }),
+            ...(explanationMode && { explanationMode }),
           }
         ];
 
@@ -909,15 +921,40 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/20">
-                <Checkbox
-                  id="includeExplanations"
-                  checked={educationalSettings.includeExplanations}
-                  onCheckedChange={(checked) => setEducationalSettings({ ...educationalSettings, includeExplanations: !!checked })}
-                />
-                <Label htmlFor="includeExplanations" className="text-sm cursor-pointer">
-                  Incluir explicação para cada alternativa (gabarito comentado)
-                </Label>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/20">
+                  <Checkbox
+                    id="includeExplanations"
+                    checked={educationalSettings.includeExplanations}
+                    onCheckedChange={(checked) => setEducationalSettings({ ...educationalSettings, includeExplanations: !!checked })}
+                  />
+                  <Label htmlFor="includeExplanations" className="text-sm cursor-pointer">
+                    Incluir explicação para cada alternativa (gabarito comentado)
+                  </Label>
+                </div>
+
+                {educationalSettings.includeExplanations && (
+                  <div className="space-y-2 pl-6">
+                    <Label>Quando exibir o gabarito?</Label>
+                    <Select
+                      value={educationalSettings.explanationMode}
+                      onValueChange={(v) => setEducationalSettings({ ...educationalSettings, explanationMode: v as 'per_question' | 'end_of_quiz' })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="per_question">Mostrar a cada pergunta</SelectItem>
+                        <SelectItem value="end_of_quiz">Mostrar tudo ao final do quiz</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {educationalSettings.explanationMode === 'per_question'
+                        ? '💡 O aluno verá a explicação logo após responder cada questão'
+                        : '📋 O aluno verá todas as explicações e seu desempenho ao final do quiz'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>

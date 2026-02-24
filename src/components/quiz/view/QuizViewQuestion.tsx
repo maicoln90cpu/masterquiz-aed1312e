@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Lightbulb, CheckCircle2, XCircle } from "lucide-react";
 import { QuizBlockPreview } from "@/components/quiz/QuizBlockPreview";
 import { sanitizeSimpleText } from "@/lib/sanitize";
 import type { QuizBlock } from "@/types/blocks";
@@ -164,11 +165,16 @@ interface QuestionBlockRendererProps {
 }
 
 function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: QuestionBlockRendererProps) {
+  const [answered, setAnswered] = useState(false);
   // Cast to any for question block properties
   const questionBlock = block as any;
   const answerFormat = questionBlock.answerFormat;
   const options = questionBlock.options || [];
   const emojis = questionBlock.emojis || [];
+  const explanation = questionBlock.explanation;
+  const correctAnswer = questionBlock.correct_answer;
+  const explanationMode = questionBlock.explanationMode;
+  const showInlineExplanation = explanation && explanationMode !== 'end_of_quiz' && answered;
 
   return (
     <div className="space-y-4">
@@ -194,8 +200,10 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: Questio
         <Input 
           placeholder="Digite sua resposta..." 
           value={answers[questionId] || ''}
-          onChange={(e) => onAnswer(questionId, e.target.value)}
+          onChange={(e) => { if (!answered) onAnswer(questionId, e.target.value); }}
+          onBlur={() => { if (answers[questionId] && explanation && explanationMode !== 'end_of_quiz') setAnswered(true); }}
           className="w-full"
+          disabled={answered}
         />
       ) : answerFormat === 'multiple_choice' ? (
         <MultipleChoiceOptions
@@ -203,7 +211,15 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: Questio
           emojis={emojis}
           questionId={questionId}
           answers={answers}
-          onAnswer={onAnswer}
+          onAnswer={(qId, val) => {
+            if (!answered) {
+              onAnswer(qId, val);
+              if (explanation && explanationMode !== 'end_of_quiz' && Array.isArray(val) && val.length > 0) {
+                setAnswered(true);
+              }
+            }
+          }}
+          disabled={answered}
         />
       ) : (
         <SingleChoiceOptions
@@ -211,8 +227,32 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: Questio
           emojis={emojis}
           questionId={questionId}
           answers={answers}
-          onAnswer={onAnswer}
+          onAnswer={(qId, val) => {
+            if (!answered) {
+              onAnswer(qId, val);
+              if (explanation && explanationMode !== 'end_of_quiz') {
+                setAnswered(true);
+              }
+            }
+          }}
+          disabled={answered}
         />
+      )}
+
+      {showInlineExplanation && (
+        <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-2">
+          <div className="flex items-center gap-2 text-primary font-semibold">
+            <Lightbulb className="h-5 w-5" />
+            <span>Gabarito Comentado</span>
+          </div>
+          {correctAnswer && (
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <span className="font-medium">Resposta correta:</span> {correctAnswer}
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{explanation}</p>
+        </div>
       )}
     </div>
   );
@@ -224,9 +264,10 @@ interface OptionsProps {
   questionId: string;
   answers: Record<string, any>;
   onAnswer: (questionId: string, value: any) => void;
+  disabled?: boolean;
 }
 
-function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer }: OptionsProps) {
+function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled }: OptionsProps) {
   const currentAnswers = Array.isArray(answers[questionId]) ? answers[questionId] : [];
 
   return (
@@ -272,7 +313,7 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer 
   );
 }
 
-function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer }: OptionsProps) {
+function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled }: OptionsProps) {
   return (
     <RadioGroup
       value={answers[questionId]}
@@ -292,7 +333,7 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer }:
                 ? 'border-primary bg-primary/10' 
                 : 'border-muted-foreground/20 hover:border-primary/50'
             }`}
-            onClick={() => onAnswer(questionId, optionText)}
+            onClick={() => { if (!disabled) onAnswer(questionId, optionText); }}
           >
             <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl">
               {emoji || String.fromCharCode(65 + idx)}
