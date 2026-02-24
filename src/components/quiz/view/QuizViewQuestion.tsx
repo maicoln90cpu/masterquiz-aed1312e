@@ -211,6 +211,8 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: Questio
           emojis={emojis}
           questionId={questionId}
           answers={answers}
+          correctAnswer={correctAnswer}
+          answered={answered}
           onAnswer={(qId, val) => {
             if (!answered) {
               onAnswer(qId, val);
@@ -227,6 +229,8 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: Questio
           emojis={emojis}
           questionId={questionId}
           answers={answers}
+          correctAnswer={correctAnswer}
+          answered={answered}
           onAnswer={(qId, val) => {
             if (!answered) {
               onAnswer(qId, val);
@@ -265,10 +269,27 @@ interface OptionsProps {
   answers: Record<string, any>;
   onAnswer: (questionId: string, value: any) => void;
   disabled?: boolean;
+  correctAnswer?: string;
+  answered?: boolean;
 }
 
-function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled }: OptionsProps) {
+function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
   const currentAnswers = Array.isArray(answers[questionId]) ? answers[questionId] : [];
+
+  const getOptionStyle = (optionText: string) => {
+    if (!answered || !correctAnswer) {
+      const isSelected = currentAnswers.includes(optionText);
+      return isSelected 
+        ? 'border-primary bg-primary/10' 
+        : 'border-muted-foreground/20 hover:border-primary/50';
+    }
+    const isSelected = currentAnswers.includes(optionText);
+    const isCorrect = optionText === correctAnswer;
+    if (isSelected && isCorrect) return 'border-green-500 bg-green-50 dark:bg-green-950/30';
+    if (isSelected && !isCorrect) return 'border-red-500 bg-red-50 dark:bg-red-950/30';
+    if (!isSelected && isCorrect) return 'border-green-500 bg-green-50 dark:bg-green-950/30';
+    return 'border-muted-foreground/20 opacity-60';
+  };
 
   return (
     <div className="space-y-2">
@@ -276,15 +297,12 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
         const optionText = typeof option === 'string' ? option : option.text || option.value || `Opção ${idx + 1}`;
         const emoji = emojis[idx];
         const isSelected = currentAnswers.includes(optionText);
+        const isCorrect = answered && correctAnswer && optionText === correctAnswer;
         
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              isSelected 
-                ? 'border-primary bg-primary/10' 
-                : 'border-muted-foreground/20 hover:border-primary/50'
-            }`}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${getOptionStyle(optionText)}`}
             onClick={() => {
               const newValue = isSelected 
                 ? currentAnswers.filter((v: string) => v !== optionText)
@@ -292,7 +310,11 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
               onAnswer(questionId, newValue);
             }}
           >
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl">
+            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+              answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
+              answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
+              'bg-primary/10'
+            }`}>
               {emoji || String.fromCharCode(65 + idx)}
             </div>
             <Checkbox 
@@ -303,9 +325,9 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
             <Label htmlFor={`checkbox-${idx}`} className="flex-1 cursor-pointer text-base">
               {optionText}
             </Label>
-            {isSelected && (
-              <Check className="h-5 w-5 text-primary" />
-            )}
+            {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+            {answered && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-red-500" />}
+            {!answered && isSelected && <Check className="h-5 w-5 text-primary" />}
           </div>
         );
       })}
@@ -313,7 +335,21 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
   );
 }
 
-function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled }: OptionsProps) {
+function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
+  const getOptionStyle = (optionText: string) => {
+    const isSelected = answers[questionId] === optionText;
+    if (!answered || !correctAnswer) {
+      return isSelected 
+        ? 'border-primary bg-primary/10' 
+        : 'border-muted-foreground/20 hover:border-primary/50';
+    }
+    const isCorrect = optionText === correctAnswer;
+    if (isSelected && isCorrect) return 'border-green-500 bg-green-50 dark:bg-green-950/30';
+    if (isSelected && !isCorrect) return 'border-red-500 bg-red-50 dark:bg-red-950/30';
+    if (!isSelected && isCorrect) return 'border-green-500 bg-green-50 dark:bg-green-950/30';
+    return 'border-muted-foreground/20 opacity-60';
+  };
+
   return (
     <RadioGroup
       value={answers[questionId]}
@@ -324,27 +360,28 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, d
         const optionText = typeof option === 'string' ? option : option.text || option.value || `Opção ${idx + 1}`;
         const emoji = emojis[idx];
         const isSelected = answers[questionId] === optionText;
+        const isCorrect = answered && correctAnswer && optionText === correctAnswer;
         
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              isSelected 
-                ? 'border-primary bg-primary/10' 
-                : 'border-muted-foreground/20 hover:border-primary/50'
-            }`}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${getOptionStyle(optionText)}`}
             onClick={() => { if (!disabled) onAnswer(questionId, optionText); }}
           >
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl">
+            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+              answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
+              answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
+              'bg-primary/10'
+            }`}>
               {emoji || String.fromCharCode(65 + idx)}
             </div>
             <RadioGroupItem value={optionText} id={`option-${idx}`} className="sr-only" />
             <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer text-base">
               {optionText}
             </Label>
-            {isSelected && (
-              <Check className="h-5 w-5 text-primary" />
-            )}
+            {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+            {answered && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-red-500" />}
+            {!answered && isSelected && <Check className="h-5 w-5 text-primary" />}
           </div>
         );
       })}
