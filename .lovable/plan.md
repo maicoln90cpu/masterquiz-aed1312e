@@ -1,77 +1,43 @@
 
 
-# Plano: Modo de exibicao do gabarito comentado (por pergunta ou ao final)
+# Plano: Corrigir itens 2, 3 e 4 pendentes
 
-## Resumo
-
-Quando o criador marcar "Incluir explicacao para cada alternativa", aparecera um segundo controle perguntando **quando** exibir o gabarito:
-- **A cada pergunta** — mostra explicacao e resposta correta logo apos o usuario responder aquela questao
-- **Ao final do quiz** — acumula todas as respostas e exibe um resumo completo com gabarito na tela de resultado
+Os tres itens NAO foram aplicados na ultima implementacao. Segue o que precisa ser feito:
 
 ---
 
-## Alteracoes detalhadas
+## Item 2 — Cache stale apos publicar quiz
 
-### 1. Frontend: `src/components/quiz/AIQuizGenerator.tsx`
+**Problema:** Apos publicar o quiz e clicar no botao do dialog de compartilhamento, a pagina de destino mostra "Rascunho" porque o cache do TanStack Query nao foi invalidado.
 
-- Adicionar campo `explanationMode: 'per_question' | 'end_of_quiz'` ao state `EducationalSettings` (default: `per_question`)
-- Quando `includeExplanations` estiver marcado, exibir um Select logo abaixo com as opcoes:
-  - "Mostrar a cada pergunta" (per_question)
-  - "Mostrar tudo ao final do quiz" (end_of_quiz)
-- Enviar `explanationMode` no payload para a Edge Function
-- Na normalizacao das questoes geradas, salvar `explanationMode` no bloco question (JSONB)
-
-### 2. Backend: `supabase/functions/generate-quiz-ai/index.ts`
-
-- Adicionar `explanationMode` ao `replaceVariables` e ao payload salvo em `ai_quiz_generations`
-- Nenhuma mudanca no prompt em si — o prompt ja pede `explanation` e `correct_answer` quando `includeExplanations` e true. O `explanationMode` e apenas um flag de exibicao no frontend
-
-### 3. Exibicao por pergunta: `src/components/quiz/view/QuizViewQuestion.tsx`
-
-- No `QuestionBlockRenderer`, verificar se o bloco tem `explanation` e `explanationMode !== 'end_of_quiz'`
-- Manter a logica atual: apos o usuario selecionar uma resposta, exibir um card com a explicacao (lampada + texto + indicacao de resposta correta)
-- Adicionar state local `answered` para controlar se ja respondeu (impedir trocar resposta apos ver gabarito)
-
-### 4. Exibicao ao final: `src/components/quiz/view/QuizViewResult.tsx`
-
-- Receber as `questions` e `answers` como props (vindos do `QuizView.tsx`)
-- Verificar se alguma questao tem `explanationMode === 'end_of_quiz'` e `explanation`
-- Se sim, renderizar uma secao "Gabarito Comentado" abaixo do resultado principal com:
-  - Lista de todas as questoes
-  - Para cada: texto da pergunta, resposta do usuario, resposta correta, explicacao
-  - Indicacao visual de acerto (verde) ou erro (vermelho)
-
-### 5. Passagem de dados: `src/pages/QuizView.tsx`
-
-- Passar `questions` e `answers` como props para `QuizViewResult` (atualmente so passa `quiz`, `finalResult` e `calculatorResult`)
+**Correcao em `src/pages/CreateQuiz.tsx` (linha ~899-901):**
+- Antes de navegar, chamar `queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] })`
+- Importar `useQueryClient` do TanStack Query e inicializar no componente
 
 ---
 
-## Detalhes tecnicos
+## Item 3 — Input de numero de perguntas faz clamp imediato
 
-**Novo state no AIQuizGenerator:**
-```text
-explanationMode: 'per_question' | 'end_of_quiz'
-```
+**Problema:** Os 3 inputs de numero (form linha 655-658, educational linha 912-915, pdf linha 1030-1033) fazem `Math.min(Math.max(value, 3), max)` no onChange, impedindo digitar "1" para depois completar "10".
 
-**Campo salvo no bloco JSONB de cada questao:**
-```text
-{
-  type: 'question',
-  questionText: '...',
-  explanation: '...',
-  correct_answer: '...',
-  explanationMode: 'per_question' | 'end_of_quiz'
-}
-```
+**Correcao nos 3 inputs em `src/components/quiz/AIQuizGenerator.tsx`:**
+- Remover o clamp do onChange — aceitar qualquer valor digitado
+- Adicionar onBlur para clampar entre 3 e max
+- No botao de gerar (linha 1132), adicionar `formData.numberOfQuestions < 3` na condicao de disabled
 
-**Logica de exibicao no QuizViewQuestion (per_question):**
-- Se `explanationMode` nao existe ou e `per_question`, e `explanation` existe, e usuario ja respondeu: mostra card de explicacao
-- Desabilitar troca de resposta apos revelar gabarito
+---
 
-**Logica de exibicao no QuizViewResult (end_of_quiz):**
-- Se qualquer questao tem `explanationMode === 'end_of_quiz'` e `explanation`: renderizar secao de gabarito
-- Mostrar score (X de Y acertos) e lista detalhada
+## Item 4 — Navegar para /meus-quizzes e renomear botao
+
+**Problema:** Dois locais ainda navegam para `/dashboard` em vez de `/meus-quizzes`, e o texto do botao ainda diz "Ir para Dashboard".
+
+**Correcoes:**
+- `src/components/quiz/AIQuizGenerator.tsx` linha 503: trocar `navigate('/dashboard')` por `navigate('/meus-quizzes')`
+- `src/pages/CreateQuiz.tsx` linha 901: trocar `navigate('/dashboard')` por `navigate('/meus-quizzes')`
+- `src/i18n/config.ts`: alterar `createQuiz.goToDashboard` nas 3 linguas:
+  - PT: "Ver meus Quizzes"
+  - EN: "View my Quizzes"
+  - ES: "Ver mis Quizzes"
 
 ---
 
@@ -79,13 +45,7 @@ explanationMode: 'per_question' | 'end_of_quiz'
 
 | Arquivo | Alteracao |
 |---------|----------|
-| `src/components/quiz/AIQuizGenerator.tsx` | Novo campo `explanationMode` condicional ao checkbox |
-| `supabase/functions/generate-quiz-ai/index.ts` | Passar `explanationMode` no replaceVariables e salvar |
-| `src/components/quiz/view/QuizViewQuestion.tsx` | Exibir gabarito inline quando mode = per_question |
-| `src/components/quiz/view/QuizViewResult.tsx` | Exibir secao de gabarito completo quando mode = end_of_quiz |
-| `src/pages/QuizView.tsx` | Passar questions + answers para QuizViewResult |
+| `src/pages/CreateQuiz.tsx` | Invalidar cache antes de navegar + mudar destino para /meus-quizzes |
+| `src/components/quiz/AIQuizGenerator.tsx` | Remover clamp imediato dos 3 inputs + disabled no botao + navigate /meus-quizzes |
+| `src/i18n/config.ts` | Renomear "Ir para Dashboard" para "Ver meus Quizzes" (PT/EN/ES) |
 
-## Arquivos NAO tocados
-- Formulario guiado — zero alteracoes
-- Schema do banco — explanation e explanationMode ficam no JSONB dos blocos
-- Hooks, rotas, templates — zero alteracoes
