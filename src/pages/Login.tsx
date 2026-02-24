@@ -14,7 +14,7 @@ import { logAuthAction } from "@/lib/auditLogger";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { fetchIPWithCache } from "@/lib/ipCache";
 import { Eye, EyeOff, ArrowLeft, Loader2, XCircle } from "lucide-react";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, isValidPhoneForCountry } from "@/components/ui/phone-input";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -114,6 +114,37 @@ const Login = () => {
       toast.error(t('login.passwordMinLength'));
       setIsLoading(false);
       return;
+    }
+
+    // Validar WhatsApp se preenchido
+    if (whatsapp) {
+      const cleanNumber = whatsapp.replace(/\D/g, '');
+      // Tentar detectar país pelo DDI para validar tamanho mínimo
+      const countries = [
+        { ddi: '598', code: 'UY', min: 8 },
+        { ddi: '351', code: 'PT', min: 9 },
+        { ddi: '55', code: 'BR', min: 10 },
+        { ddi: '54', code: 'AR', min: 10 },
+        { ddi: '57', code: 'CO', min: 10 },
+        { ddi: '56', code: 'CL', min: 9 },
+        { ddi: '52', code: 'MX', min: 10 },
+        { ddi: '51', code: 'PE', min: 9 },
+        { ddi: '34', code: 'ES', min: 9 },
+        { ddi: '1', code: 'US', min: 10 },
+      ];
+      const sorted = [...countries].sort((a, b) => b.ddi.length - a.ddi.length);
+      let localLen = cleanNumber.length;
+      for (const c of sorted) {
+        if (cleanNumber.startsWith(c.ddi)) {
+          localLen = cleanNumber.length - c.ddi.length;
+          if (localLen < c.min) {
+            toast.error(`Número de telefone incompleto. Digite o DDD + número completo.`);
+            setIsLoading(false);
+            return;
+          }
+          break;
+        }
+      }
     }
     
     const ipAddress = await getIpAddress();

@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const { t } = useTranslation();
   const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
   const [loading, setLoading] = useState(true);
+  const [openTicketsCount, setOpenTicketsCount] = useState(0);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalQuizzes: 0,
@@ -193,6 +194,27 @@ export default function AdminDashboard() {
       setAdministrators(allUsersData);
     }
   }, [allUsersData]);
+
+  // Load open tickets count + realtime
+  useEffect(() => {
+    const loadOpenTickets = async () => {
+      const { count } = await supabase
+        .from('support_tickets')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'open' as any);
+      setOpenTicketsCount(count || 0);
+    };
+    loadOpenTickets();
+
+    const channel = supabase
+      .channel('open-tickets-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
+        loadOpenTickets();
+      })
+      .subscribe();
+
+    return () => { channel.unsubscribe(); };
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -1214,9 +1236,14 @@ export default function AdminDashboard() {
               <Shield className="h-4 w-4" />
               <span className="hidden sm:inline">Segurança</span>
             </TabsTrigger>
-            <TabsTrigger value="system" className="gap-2">
+            <TabsTrigger value="system" className="gap-2 relative">
               <Cog className="h-4 w-4" />
               <span className="hidden sm:inline">Sistema</span>
+              {openTicketsCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                  {openTicketsCount}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="observability" className="gap-2">
               <Activity className="h-4 w-4" />
@@ -1341,7 +1368,7 @@ export default function AdminDashboard() {
                 { id: 'ab-testing', label: 'A/B Testing', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
                 { id: 'storage', label: 'Armazenamento', icon: <Package className="h-4 w-4" />, color: 'purple' },
                 { id: 'performance', label: 'Bundle Size', icon: <BarChart3 className="h-4 w-4" />, color: 'green' },
-                { id: 'support', label: 'Suporte', icon: <MessageSquare className="h-4 w-4" />, color: 'cyan' },
+                { id: 'support', label: 'Suporte', icon: <MessageSquare className="h-4 w-4" />, color: 'cyan', badge: openTicketsCount },
               ]}
               defaultTab="settings"
             >

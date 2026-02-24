@@ -6,7 +6,8 @@ interface SubTab {
   id: string;
   label: string;
   icon?: React.ReactNode;
-  color?: string; // Cor personalizada para a sub-aba ativa
+  color?: string;
+  badge?: number;
 }
 
 interface AdminSubTabsProps {
@@ -15,7 +16,6 @@ interface AdminSubTabsProps {
   children: (activeTab: string) => React.ReactNode;
 }
 
-// Mapeamento de cores semânticas para classes Tailwind
 const colorClasses: Record<string, string> = {
   blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
   green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
@@ -25,6 +25,7 @@ const colorClasses: Record<string, string> = {
   purple: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
   cyan: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30",
   pink: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/30",
+  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
 };
 
 export function AdminSubTabs({ tabs, defaultTab, children }: AdminSubTabsProps) {
@@ -44,7 +45,6 @@ export function AdminSubTabs({ tabs, defaultTab, children }: AdminSubTabsProps) 
 
   return (
     <div className="space-y-4">
-      {/* Sub-navigation */}
       <div className="flex flex-wrap gap-2 p-1.5 bg-muted/50 rounded-lg">
         {tabs.map((tab) => (
           <Button
@@ -52,18 +52,22 @@ export function AdminSubTabs({ tabs, defaultTab, children }: AdminSubTabsProps) 
             variant="ghost"
             size="sm"
             className={cn(
-              "flex items-center gap-2 transition-all",
+              "flex items-center gap-2 transition-all relative",
               getActiveClasses(tab, activeTab === tab.id)
             )}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.icon}
             {tab.label}
+            {tab.badge != null && tab.badge > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                {tab.badge}
+              </span>
+            )}
           </Button>
         ))}
       </div>
 
-      {/* Content */}
       <div className="mt-4">
         {children(activeTab)}
       </div>
