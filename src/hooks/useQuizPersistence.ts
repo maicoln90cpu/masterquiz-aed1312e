@@ -466,18 +466,82 @@ export function useQuizPersistence({
     t, navigate, checkRateLimit, updateUI, updateEditor, markAsSaved, getStorageKey
   ]);
 
-  // ✅ Salvar rascunho manualmente
+  // ✅ Salvar rascunho manualmente (save direto, não depende do auto-save)
   const saveDraftToSupabase = useCallback(async () => {
     if (!quizId) {
       toast.info("Publique o quiz primeiro para habilitar o salvamento automático");
       return;
     }
 
-    const success = await saveAutoSaveNow();
-    if (success) {
-      toast.success("Rascunho salvo com sucesso!");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      // Atualizar metadados do quiz (mantém status atual)
+      const { error: quizError } = await supabase
+        .from('quizzes')
+        .update({
+          title: appearanceState.title || 'Novo Quiz',
+          description: appearanceState.description,
+          template: appearanceState.template,
+          logo_url: appearanceState.logoUrl,
+          show_logo: appearanceState.showLogo,
+          show_title: appearanceState.showTitle,
+          show_description: appearanceState.showDescription,
+          show_question_number: appearanceState.showQuestionNumber,
+          question_count: editorState.questionCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', quizId)
+        .eq('user_id', user.id);
+
+      if (quizError) throw quizError;
+
+      // Atualizar form config
+      await supabase
+        .from('quiz_form_config')
+        .upsert({
+          quiz_id: quizId,
+          collection_timing: formConfigState.collectionTiming as 'before' | 'after' | 'none',
+          collect_name: formConfigState.collectName,
+          collect_email: formConfigState.collectEmail,
+          collect_whatsapp: formConfigState.collectWhatsapp
+        }, { onConflict: 'quiz_id' });
+
+      // Salvar perguntas
+      if (questions.length > 0) {
+        await supabase.from('quiz_questions').delete().eq('quiz_id', quizId);
+
+        const questionsToInsert = questions.map((q, index) => ({
+          quiz_id: quizId,
+          question_text: q.question_text || '📊 Slide informativo',
+          answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
+          options: q.options || [],
+          order_number: index,
+          media_type: q.media_type || null,
+          media_url: q.media_url || null,
+          blocks: Array.isArray(q.blocks) ? q.blocks : [],
+          custom_label: q.custom_label || null
+        }));
+
+        const { error: questionsError } = await supabase
+          .from('quiz_questions')
+          .insert(questionsToInsert);
+
+        if (questionsError) throw questionsError;
+      }
+
+      markAsSaved();
+      toast.success("Salvo com sucesso!");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('[SaveDraft] ❌ Erro:', msg);
+      toast.error("Erro ao salvar: " + msg);
     }
-  }, [quizId, saveAutoSaveNow]);
+  }, [quizId, appearanceState, formConfigState, editorState.questionCount, questions, markAsSaved]);
 
   // ✅ Limpar localStorage
   const clearLocalStorage = useCallback(async () => {

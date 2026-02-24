@@ -495,7 +495,7 @@ const CreateQuiz = () => {
                           size="sm"
                           className="gap-1.5 bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-800 hover:to-blue-950 text-white shadow-md"
                           onClick={saveDraftToSupabase}
-                          disabled={isSavingDraft || !quizId || !hasUnsavedChanges}
+                          disabled={isSavingDraft || !quizId}
                         >
                           <Save className={`h-3.5 w-3.5 ${isSavingDraft ? 'animate-spin' : ''}`} />
                           <span className="hidden xs:inline text-xs font-medium">
