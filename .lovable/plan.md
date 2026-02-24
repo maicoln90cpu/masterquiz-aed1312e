@@ -1,56 +1,82 @@
 
 
-# Plano: Melhorias no Quiz (Etapas 1 e 2)
+# Correcao de variacoes de blocos nao aplicadas no quiz publicado
 
-## ✅ Etapa 1 — CONCLUÍDA
+## Problema principal encontrado
 
-### 1.1 — Migration `show_results` ✅
-- Adicionada coluna `show_results boolean DEFAULT true` na tabela `quizzes`
+### 1) Imagem: tamanho de exibicao ignorado (BUG CONFIRMADO)
 
-### 1.2 — UI toggle na Etapa 2 (Aparência) ✅
-- Switch "Exibir tela de resultados" em `AppearanceConfigStep.tsx`
-- Estado `showResults` adicionado em `QuizAppearanceState` (`useQuizState.ts`)
-- Persistência load/save em `useQuizPersistence.ts`
-- Props passados via `CreateQuiz.tsx`
+**Causa raiz**: No arquivo `QuizBlockPreview.tsx` (linha 481), existe um `style={{ maxWidth: '100%' }}` inline que **sobrescreve** todas as classes CSS de tamanho (`max-w-xs`, `max-w-md`, `max-w-2xl`).
 
-### 1.3 — Fluxo publicado sem resultados ✅
-- `QuizViewQuestion.tsx`: botão "Finalizar" oculto quando `show_results=false`
-- `useQuizViewState.ts`: auto-submit silencioso ao responder última pergunta (single_choice/yes_no)
-- `QuizView.tsx`: pula tela de resultado quando `show_results=false`
-- Toast discreto "Resposta salva! Obrigado por participar."
+```text
+Classe CSS aplicada:    max-w-xs  -> max-width: 20rem (320px)
+Inline style aplicado:  maxWidth: '100%'  -> max-width: 100%
 
-### 1.4 — Fix tracking P10 ✅
-- `submitQuiz()` agora registra `track-quiz-step` para o último step antes de salvar a resposta
-- Resolve o problema de 0% na retenção da última pergunta
+CSS inline SEMPRE vence -> imagem fica 100% em todos os tamanhos
+```
+
+**Correcao**: Remover o `style={{ maxWidth: '100%' }}` da linha 481. As classes Tailwind ja fazem o trabalho corretamente. Para o caso `full`, a classe `w-full` ja garante largura total.
 
 ---
 
-## ✅ Etapa 2 — CONCLUÍDA
+### 2) Separador: espessura (thickness) nao funciona (BUG CONFIRMADO)
 
-### 2.1 — Upload de vídeo na Etapa 5 (Resultados) ✅
-- Tabs URL/Upload no `ResultsConfigStep.tsx`
-- Suporte a Bunny (BunnyVideoUploader) e Supabase (VideoUploader)
-- Renderização de vídeo em `QuizViewResult.tsx` (YouTube/Vimeo embed, mp4/webm native)
-- Renderização de vídeo em `PreviewResultScreen.tsx`
-- `video_url` adicionado ao tipo `QuizResult` em `useQuizPreviewState.ts`
+O componente `Separator` do shadcn/radix usa `height: 1px` + `background-color` para desenhar a linha. Porem, o codigo aplica classes de **borda** (`border-t`, `border-t-2`, `border-t-4`) que nao tem efeito visual porque o Separator nao usa bordas.
 
-### 2.2 — Persistência de IDs de perguntas (upsert) ✅
-- `saveQuiz` refatorado para usar upsert por ID em vez de delete+insert
-- `saveDraftToSupabase` também refatorado com a mesma lógica
-- Apenas perguntas removidas pelo usuário são deletadas
-- Novas perguntas (sem UUID válido) são inseridas normalmente
-- IDs estáveis preservam analytics/heatmap/planilha
+Alem disso, os estilos `dots`/`dashes` usam `border-dotted`/`border-dashed` que tambem nao funcionam pelo mesmo motivo.
 
-### 2.3 — Heatmap/Planilha: robustez ✅
-- Corrigido pela raiz: IDs agora são estáveis (2.2)
-- Heatmap e planilha usam `question.id` para mapear respostas — agora consistente
-
-### 2.4 — Performance no quiz publicado ✅
-- Injeção de FB Pixel e GTM deferida via `requestIdleCallback` (fallback setTimeout)
-- Não bloqueia mais interação nas primeiras perguntas
+**Correcao**: Substituir o `<Separator>` por uma `<div>` estilizada com as propriedades corretas:
+- Espessura via `height` (1px / 2px / 4px)
+- Estilo via `border-style` com `border-top` em vez de `background`
+- Cor via `borderColor` ou `backgroundColor`
 
 ---
 
-## Arquivos NÃO tocados
-- `parse-pdf-document/index.ts`
-- `AIQuizGenerator.tsx` (normalização já funciona)
+### 3) Varredura completa dos demais blocos
+
+Apos analisar todos os 20+ tipos de blocos no `QuizBlockPreview.tsx`, os resultados:
+
+| Bloco | Status | Problema |
+|-------|--------|----------|
+| **image** | BUG | `style={{ maxWidth: '100%' }}` sobrescreve classe de tamanho |
+| **separator** | BUG | Usa classes de border em componente que nao usa border |
+| **text** | OK | `fontSize` e `alignment` aplicados corretamente |
+| **video** | OK | `size` aplicado sem inline style conflitante |
+| **audio** | OK | Sem variacoes de tamanho |
+| **button** | OK | `variant` e `size` passados corretamente ao componente `Button` |
+| **gallery** | OK | `layout` (grid/carousel/masonry) aplicado corretamente |
+| **price** | OK | `highlighted` aplica borda primaria corretamente |
+| **metrics** | OK | `chartType` renderiza corretamente (bar/pie/line/donut) |
+| **loading** | OK | `spinnerType` renderiza 4 variantes corretamente |
+| **progress** | OK | `style` (bar/steps/circle/percentage) funciona, `height` funciona |
+| **countdown** | OK | `style` (default/minimal/bold/card) funciona, cores aplicadas |
+| **testimonial** | OK | `style` e `rating` renderizam corretamente |
+| **slider** | OK | `min/max/step/unit` aplicados |
+| **textInput** | OK | `multiline/placeholder` funciona |
+| **nps** | OK | Labels renderizados |
+| **accordion** | OK | `allowMultiple` e `style` aplicados |
+| **comparison** | OK | `showIcons` e estilos left/right funcionam |
+| **socialProof** | OK | Animacao e `style` aplicados |
+| **embed** | OK | Sem variacoes de tamanho |
+
+**Apenas 2 bugs encontrados**: imagem e separador.
+
+---
+
+## Detalhes tecnicos da correcao
+
+### Arquivo: `src/components/quiz/QuizBlockPreview.tsx`
+
+**Correcao 1 - Imagem (linhas 466-489)**
+- Remover `style={{ maxWidth: '100%' }}` da tag `<img>`
+- As classes Tailwind `max-w-xs` / `max-w-md` / `max-w-2xl` / `w-full` passam a funcionar corretamente
+
+**Correcao 2 - Separador (linhas 443-463)**
+- Substituir `<Separator>` por `<div>` com estilos adequados:
+  - `style='line'`: borda solida
+  - `style='dots'`: borda pontilhada
+  - `style='dashes'`: borda tracejada
+  - `style='space'`: sem borda visivel (apenas espacamento)
+  - Espessura via `borderTopWidth`: thin=1px, medium=2px, thick=4px
+  - Cor via `borderColor`
+
