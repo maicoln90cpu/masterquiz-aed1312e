@@ -92,6 +92,12 @@ export const UserTicketsList = () => {
 
       if (error) throw error;
 
+      // Mark ticket as having unread message for admin
+      await supabase
+        .from('support_tickets')
+        .update({ has_unread_admin: true } as any)
+        .eq('id', selectedTicket.id);
+
       toast.success(t('components.ticket.replySuccess'));
       setReply('');
       loadMessages(selectedTicket.id);
