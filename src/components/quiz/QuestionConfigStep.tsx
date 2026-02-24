@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,7 @@ export const QuestionConfigStep = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(initialQuestionIndex);
   const [allQuestions, setAllQuestions] = useState<QuestionWithConditions[]>([]);
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // ✅ REMOVIDO: saveTimeoutRef - persistência centralizada em useAutoSave/useQuizPersistence
   
   // ✅ Ref para evitar loop infinito de sincronização
   const questionsHashRef = useRef<string>('');
@@ -91,12 +90,7 @@ export const QuestionConfigStep = ({
       setTimeout(() => onQuestionsUpdate(updatedQuestions), 0);
       return updatedQuestions;
     });
-    
-    // Salvar com debounce
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = setTimeout(() => saveCurrentQuestion(false), 2000);
+    // ✅ Persistência centralizada - sem save direto aqui
   }, [currentQuestionIndex, onQuestionsUpdate]);
 
   // ✅ Sync with parent questions - SEMPRE sincronizar com questions do pai
@@ -175,93 +169,8 @@ export const QuestionConfigStep = ({
     }
   };
 
-  const saveCurrentQuestion = async (showToast: boolean = true) => {
-    if (!quizId) return;
-    
-    const currentQuestion = allQuestions[currentQuestionIndex];
-    if (!currentQuestion) return;
-
-    logger.quiz('Salvando pergunta:', {
-      quizId,
-      questionIndex: currentQuestionIndex,
-      questionId: currentQuestion.id,
-      blocksCount: currentQuestion.blocks.length
-    });
-
-    // Extract the first question block for backward compatibility (OPTIONAL)
-    const questionBlock = currentQuestion.blocks.find(b => b.type === 'question');
-    
-    // ✅ Usar texto padrão se questionBlock não existir (evita erro de question_text null)
-    const questionText = questionBlock && questionBlock.type === 'question' 
-      ? questionBlock.questionText 
-      : '📊 Slide informativo';
-    const answerFormat = questionBlock && questionBlock.type === 'question'
-      ? questionBlock.answerFormat
-      : 'single_choice';
-    const options = questionBlock && questionBlock.type === 'question'
-      ? (questionBlock.options || [])
-      : [];
-
-    // Extract first media block for backward compatibility
-    const mediaBlock = currentQuestion.blocks.find(b => 
-      b.type === 'image' || b.type === 'video'
-    );
-
-    const dataToUpsert: any = {
-      quiz_id: quizId,
-      question_text: questionText,
-      answer_format: answerFormat,
-      options: options,
-      media_type: mediaBlock?.type === 'image' ? 'image' : mediaBlock?.type === 'video' ? 'video' : null,
-      media_url: mediaBlock?.type === 'image' || mediaBlock?.type === 'video' ? mediaBlock.url : null,
-      order_number: currentQuestionIndex,
-      blocks: currentQuestion.blocks, // ✅ SEMPRE salva o array blocks completo
-      conditions: currentQuestion.conditions || null // ✅ Salva condições da lógica condicional
-    };
-
-    // ✅ Se o ID for temporário ou começar com 'q', buscar pergunta existente pelo order_number
-    if (currentQuestion.id.startsWith('q') || currentQuestion.id.startsWith('temp-')) {
-      const { data: existingQuestion } = await supabase
-        .from('quiz_questions')
-        .select('id')
-        .eq('quiz_id', quizId)
-        .eq('order_number', currentQuestionIndex)
-        .maybeSingle();
-      
-      if (existingQuestion) {
-        // UPDATE da pergunta existente
-        dataToUpsert.id = existingQuestion.id;
-      }
-      // Se não existir, deixar INSERT gerar novo UUID (remover id do payload)
-    } else {
-      // ID válido (UUID), incluir no upsert
-      dataToUpsert.id = currentQuestion.id;
-    }
-
-    logger.quiz('Payload para upsert:', {
-      questionId: currentQuestion.id,
-      orderNumber: currentQuestionIndex,
-      willUseExistingId: !!dataToUpsert.id
-    });
-
-    const { error, data } = await supabase
-      .from('quiz_questions')
-      .upsert([dataToUpsert])
-      .select();
-    
-    if (error) {
-      logger.error('Erro ao salvar pergunta:', error.message);
-      toast.error(`${t('createQuiz.questionConfig.errorSaving')}: ${error.message}`);
-      return;
-    }
-
-    logger.quiz('Pergunta salva com sucesso');
-
-    // ✅ Toast apenas se showToast for true
-    if (showToast) {
-      toast.success('Alterações salvas', { duration: 2000 });
-    }
-  };
+  // ✅ REMOVIDO: saveCurrentQuestion() - persistência centralizada em useAutoSave/useQuizPersistence
+  // O estado local é propagado ao parent via onQuestionsUpdate, e o auto-save global persiste no DB.
 
   // ✅ Estabilizado para evitar re-criação e loop
   // ✅ Proteção contra índice inválido
@@ -282,12 +191,7 @@ export const QuestionConfigStep = ({
       setTimeout(() => onQuestionsUpdate(updatedQuestions), 0);
       return updatedQuestions;
     });
-    
-    // ✅ Debounce correto - cancela timeout anterior
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = setTimeout(() => saveCurrentQuestion(false), 2000);
+    // ✅ Persistência centralizada - sem save direto aqui
   }, [currentQuestionIndex, onQuestionsUpdate]);
 
   const handleAddBlockFromSuggestion = (block: QuizBlock, position: 'before' | 'after') => {
