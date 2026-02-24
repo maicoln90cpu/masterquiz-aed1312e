@@ -72,6 +72,38 @@ export function QuizViewResult({ quiz, finalResult, calculatorResult, questions,
               </div>
             )}
             
+            {finalResult.video_url && (
+              <div className="w-full rounded-lg overflow-hidden">
+                {finalResult.video_url.includes('youtube.com') || finalResult.video_url.includes('youtu.be') ? (
+                  <div className="aspect-video">
+                    <iframe
+                      src={finalResult.video_url.replace('watch?v=', 'embed/')}
+                      className="w-full h-full rounded-lg"
+                      allowFullScreen
+                      allow="autoplay"
+                    />
+                  </div>
+                ) : finalResult.video_url.includes('vimeo.com') ? (
+                  <div className="aspect-video">
+                    <iframe
+                      src={finalResult.video_url.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                      className="w-full h-full rounded-lg"
+                      allowFullScreen
+                      allow="autoplay"
+                    />
+                  </div>
+                ) : (
+                  <video
+                    src={finalResult.video_url}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full rounded-lg"
+                  />
+                )}
+              </div>
+            )}
+
             {finalResult.image_url && (
               <img src={finalResult.image_url} alt="Result" className="w-full rounded-lg" />
             )}

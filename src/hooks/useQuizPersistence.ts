@@ -400,34 +400,71 @@ export function useQuizPersistence({
 
       if (formError) throw formError;
 
-      // Save questions
+      // Save questions using upsert to preserve IDs
       if (questions.length > 0) {
-        if (currentQuizId) {
-          const { error: deleteError } = await supabase
-            .from('quiz_questions')
-            .delete()
-            .eq('quiz_id', quiz.id);
-
-          if (deleteError) throw deleteError;
-        }
-
-        const questionsToInsert = questions.map((q, index) => ({
-          quiz_id: quiz.id,
-          question_text: q.question_text || '📊 Slide informativo',
-          answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
-          options: q.options || [],
-          order_number: index,
-          media_type: q.media_type || null,
-          media_url: q.media_url || null,
-          blocks: Array.isArray(q.blocks) ? q.blocks : [],
-          custom_label: q.custom_label || null
-        }));
-
-        const { error: questionsError } = await supabase
+        const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        
+        // Fetch existing question IDs for this quiz
+        const { data: existingQuestions } = await supabase
           .from('quiz_questions')
-          .insert(questionsToInsert);
-
-        if (questionsError) throw questionsError;
+          .select('id')
+          .eq('quiz_id', quiz.id);
+        
+        const existingIds = new Set((existingQuestions || []).map(q => q.id));
+        
+        // Separate questions into existing (upsert) and new (insert)
+        const questionsToUpsert = questions
+          .filter(q => isUUID(q.id) && existingIds.has(q.id))
+          .map((q, _idx) => ({
+            id: q.id,
+            quiz_id: quiz.id,
+            question_text: q.question_text || '📊 Slide informativo',
+            answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
+            options: q.options || [],
+            order_number: questions.indexOf(q),
+            media_type: q.media_type || null,
+            media_url: q.media_url || null,
+            blocks: Array.isArray(q.blocks) ? q.blocks : [],
+            custom_label: q.custom_label || null
+          }));
+        
+        const questionsToInsert = questions
+          .filter(q => !isUUID(q.id) || !existingIds.has(q.id))
+          .map((q) => ({
+            quiz_id: quiz.id,
+            question_text: q.question_text || '📊 Slide informativo',
+            answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
+            options: q.options || [],
+            order_number: questions.indexOf(q),
+            media_type: q.media_type || null,
+            media_url: q.media_url || null,
+            blocks: Array.isArray(q.blocks) ? q.blocks : [],
+            custom_label: q.custom_label || null
+          }));
+        
+        // Delete questions that were removed by the user
+        const currentIds = questions.filter(q => isUUID(q.id)).map(q => q.id);
+        const idsToDelete = [...existingIds].filter(id => !currentIds.includes(id));
+        
+        if (idsToDelete.length > 0) {
+          await supabase.from('quiz_questions').delete().in('id', idsToDelete);
+        }
+        
+        // Upsert existing questions (preserves IDs)
+        if (questionsToUpsert.length > 0) {
+          const { error: upsertError } = await supabase
+            .from('quiz_questions')
+            .upsert(questionsToUpsert, { onConflict: 'id' });
+          if (upsertError) throw upsertError;
+        }
+        
+        // Insert new questions
+        if (questionsToInsert.length > 0) {
+          const { error: insertError } = await supabase
+            .from('quiz_questions')
+            .insert(questionsToInsert);
+          if (insertError) throw insertError;
+        }
       }
 
       // Create default result if doesn't exist
@@ -526,27 +563,62 @@ export function useQuizPersistence({
           collect_whatsapp: formConfigState.collectWhatsapp
         }, { onConflict: 'quiz_id' });
 
-      // Salvar perguntas
+      // Salvar perguntas (upsert para preservar IDs)
       if (questions.length > 0) {
-        await supabase.from('quiz_questions').delete().eq('quiz_id', quizId);
-
-        const questionsToInsert = questions.map((q, index) => ({
-          quiz_id: quizId,
-          question_text: q.question_text || '📊 Slide informativo',
-          answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
-          options: q.options || [],
-          order_number: index,
-          media_type: q.media_type || null,
-          media_url: q.media_url || null,
-          blocks: Array.isArray(q.blocks) ? q.blocks : [],
-          custom_label: q.custom_label || null
-        }));
-
-        const { error: questionsError } = await supabase
+        const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        
+        const { data: existingQ } = await supabase
           .from('quiz_questions')
-          .insert(questionsToInsert);
-
-        if (questionsError) throw questionsError;
+          .select('id')
+          .eq('quiz_id', quizId);
+        
+        const existingIds = new Set((existingQ || []).map(q => q.id));
+        
+        const toUpsert = questions
+          .filter(q => isUUID(q.id) && existingIds.has(q.id))
+          .map((q) => ({
+            id: q.id,
+            quiz_id: quizId,
+            question_text: q.question_text || '📊 Slide informativo',
+            answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
+            options: q.options || [],
+            order_number: questions.indexOf(q),
+            media_type: q.media_type || null,
+            media_url: q.media_url || null,
+            blocks: Array.isArray(q.blocks) ? q.blocks : [],
+            custom_label: q.custom_label || null
+          }));
+        
+        const toInsert = questions
+          .filter(q => !isUUID(q.id) || !existingIds.has(q.id))
+          .map((q) => ({
+            quiz_id: quizId,
+            question_text: q.question_text || '📊 Slide informativo',
+            answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
+            options: q.options || [],
+            order_number: questions.indexOf(q),
+            media_type: q.media_type || null,
+            media_url: q.media_url || null,
+            blocks: Array.isArray(q.blocks) ? q.blocks : [],
+            custom_label: q.custom_label || null
+          }));
+        
+        const currentIds = questions.filter(q => isUUID(q.id)).map(q => q.id);
+        const idsToDelete = [...existingIds].filter(id => !currentIds.includes(id));
+        
+        if (idsToDelete.length > 0) {
+          await supabase.from('quiz_questions').delete().in('id', idsToDelete);
+        }
+        
+        if (toUpsert.length > 0) {
+          const { error: uE } = await supabase.from('quiz_questions').upsert(toUpsert, { onConflict: 'id' });
+          if (uE) throw uE;
+        }
+        
+        if (toInsert.length > 0) {
+          const { error: iE } = await supabase.from('quiz_questions').insert(toInsert);
+          if (iE) throw iE;
+        }
       }
 
       markAsSaved({

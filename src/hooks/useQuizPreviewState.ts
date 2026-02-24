@@ -15,6 +15,7 @@ export interface QuizResult {
   button_text?: string;
   redirect_url?: string;
   image_url?: string;
+  video_url?: string;
 }
 
 export interface FormConfig {

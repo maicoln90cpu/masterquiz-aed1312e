@@ -16,7 +16,17 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
     let pixelInjected = false;
     let gtmInjected = false;
 
-    // ✅ BLOCO 1: Facebook Pixel (independente do GTM)
+    // Defer tracking script injection to not block interactivity
+    const scheduleIdle = (fn: () => void) => {
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(fn, { timeout: 3000 });
+      } else {
+        setTimeout(fn, 1500);
+      }
+    };
+
+    // ✅ BLOCO 1: Facebook Pixel (independente do GTM) — deferred
+    const injectPixel = () => {
     if (quizOwnerProfile.facebook_pixel_id) {
       const FB_PIXEL_REGEX = /^[0-9]{15,16}$/;
       if (FB_PIXEL_REGEX.test(quizOwnerProfile.facebook_pixel_id)) {
@@ -69,8 +79,10 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
         console.error('Invalid Facebook Pixel ID format');
       }
     }
+    }; // end injectPixel
 
-    // ✅ BLOCO 2: GTM do Criador (independente do Pixel)
+    // ✅ BLOCO 2: GTM do Criador (independente do Pixel) — deferred
+    const injectGTM = () => {
     const normalizedGTM = quizOwnerProfile.gtm_container_id?.trim().toUpperCase();
     if (normalizedGTM) {
       const GTM_REGEX = /^GTM-[A-Z0-9]{7,10}$/;
@@ -113,6 +125,11 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
         console.error('Invalid GTM Container ID format:', normalizedGTM);
       }
     }
+    }; // end injectGTM
+
+    // Schedule both injections during idle time
+    scheduleIdle(injectPixel);
+    scheduleIdle(injectGTM);
 
     // Cleanup: remover apenas o que foi injetado neste hook
     return () => {

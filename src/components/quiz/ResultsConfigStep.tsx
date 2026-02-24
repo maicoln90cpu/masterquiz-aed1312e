@@ -9,10 +9,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Calculator, FileText, Save, Loader2, CheckCircle2 } from "lucide-react";
 import { ImageUploader } from "@/components/ImageUploader";
+import { VideoUploader } from "@/components/VideoUploader";
+import { BunnyVideoUploader } from "@/components/BunnyVideoUploader";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CalculatorEditor } from "./CalculatorEditor";
 import { CalculatorWizard } from "./CalculatorWizard";
+import { useVideoProvider } from "@/hooks/useVideoProvider";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -360,9 +363,11 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
     toast.success(t('createQuiz.results.resultRemoved'));
   };
 
-  const validateVideoUrl = (url: string) => {
-    if (!url) return true;
-    return url.includes('youtube.com') || url.includes('youtu.be');
+  const { provider: videoProvider, isBunny } = useVideoProvider();
+
+  const isVideoUrl = (url: string) => {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.endsWith('.mp4') || url.endsWith('.webm') || url.includes('b-cdn.net');
   };
 
   return (
@@ -584,21 +589,49 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="video-url">{t('createQuiz.results.video')}</Label>
-                <Input
-                  id="video-url"
-                  placeholder={t('createQuiz.results.placeholderVideo')}
-                  value={currentResult.videoUrl}
-                  onChange={(e) => {
-                    const url = e.target.value;
-                    if (url && !validateVideoUrl(url)) {
-                      toast.error('Por favor, insira uma URL válida do YouTube');
-                      return;
-                    }
-                    updateResult({ videoUrl: url });
-                  }}
-                />
+              <div className="space-y-3">
+                <Label>{t('createQuiz.results.video')}</Label>
+                <Tabs defaultValue={currentResult.videoUrl && !currentResult.videoUrl.includes('youtube.com') && !currentResult.videoUrl.includes('youtu.be') && !currentResult.videoUrl.includes('vimeo.com') ? 'upload' : 'url'} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 h-9">
+                    <TabsTrigger value="url" className="text-xs">URL (YouTube/Vimeo)</TabsTrigger>
+                    <TabsTrigger value="upload" className="text-xs">Upload direto</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="url" className="mt-2">
+                    <Input
+                      id="video-url"
+                      placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..."
+                      value={currentResult.videoUrl}
+                      onChange={(e) => updateResult({ videoUrl: e.target.value })}
+                    />
+                  </TabsContent>
+                  <TabsContent value="upload" className="mt-2">
+                    {isBunny ? (
+                      <BunnyVideoUploader
+                        quizId={quizId || undefined}
+                        onChange={(url, _videoId) => {
+                          updateResult({ videoUrl: url });
+                          toast.success('Vídeo enviado com sucesso!');
+                        }}
+                      />
+                    ) : (
+                      <VideoUploader
+                        onChange={(url) => {
+                          updateResult({ videoUrl: url });
+                          toast.success('Vídeo enviado com sucesso!');
+                        }}
+                      />
+                    )}
+                    {currentResult.videoUrl && isVideoUrl(currentResult.videoUrl) && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span className="truncate">{currentResult.videoUrl}</span>
+                        <Button variant="ghost" size="sm" className="h-6 px-1" onClick={() => updateResult({ videoUrl: '' })}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
               </div>
 
               <div className="space-y-2">
