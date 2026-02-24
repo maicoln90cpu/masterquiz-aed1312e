@@ -168,20 +168,33 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
       // 2. Call document--parse_document via backend API
       // 3. Get structured content back
       
-      // For now, we'll read the file as ArrayBuffer and extract basic text
+      // Convert file to base64 for efficient transfer
       const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < uint8Array.length; i++) {
+        binary += String.fromCharCode(uint8Array[i]);
+      }
+      const fileBase64 = btoa(binary);
       
-      // Call backend to parse PDF using document--parse_document
+      // Call backend Edge Function to parse PDF
       const { data: parseResult, error: parseError } = await supabase.functions.invoke('parse-pdf-document', {
         body: {
           fileName: file.name,
-          fileData: Array.from(new Uint8Array(arrayBuffer)),
+          fileBase64,
         }
       });
 
       if (parseError) {
         console.error('Error parsing PDF:', parseError);
-        toast.error(t('components.aiGenerator.pdfProcessError'));
+        const errorMsg = parseError.message || '';
+        if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+          toast.error('Serviço de parsing de PDF indisponível. Tente novamente mais tarde.');
+        } else if (errorMsg.includes('413')) {
+          toast.error('Arquivo PDF muito grande. Máximo 20MB.');
+        } else {
+          toast.error(t('components.aiGenerator.pdfProcessError'));
+        }
         setPdfFile(null);
         setIsParsingPdf(false);
         return;
