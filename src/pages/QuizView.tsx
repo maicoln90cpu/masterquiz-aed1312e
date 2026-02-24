@@ -52,6 +52,8 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
         quiz={state.quiz}
         finalResult={state.finalResult}
         calculatorResult={state.calculatorResult}
+        questions={state.questions}
+        answers={state.answers}
       />
     );
   }
