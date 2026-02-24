@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
@@ -441,25 +441,17 @@ export const QuizBlockPreview = ({
         );
 
       case "separator":
-        return (
-          <Separator
+        return block.style === "space" ? (
+          <div key={block.id} className="my-6 h-8" />
+        ) : (
+          <div
             key={block.id}
-            className={`my-6 ${
-              block.style === "dots"
-                ? "border-dotted"
-                : block.style === "dashes"
-                ? "border-dashed"
-                : block.style === "space"
-                ? "border-transparent"
-                : ""
-            } ${
-              block.thickness === "thin"
-                ? "border-t"
-                : block.thickness === "thick"
-                ? "border-t-4"
-                : "border-t-2"
-            }`}
-            style={{ borderColor: block.color }}
+            className="my-6 w-full"
+            style={{
+              borderTopWidth: block.thickness === "thin" ? "1px" : block.thickness === "thick" ? "4px" : "2px",
+              borderTopStyle: block.style === "dots" ? "dotted" : block.style === "dashes" ? "dashed" : "solid",
+              borderTopColor: block.color || "hsl(var(--border))",
+            }}
           />
         );
 
@@ -478,7 +470,7 @@ export const QuizBlockPreview = ({
                   ? "w-full"
                   : "max-w-md"
               }`}
-              style={{ maxWidth: '100%' }}
+              loading="lazy"
             />
             {block.caption && (
               <p className="text-sm text-center text-muted-foreground">
