@@ -109,5 +109,8 @@ verify_jwt = false
 [functions.track-video-analytics]
 verify_jwt = false
 
+[functions.parse-pdf-document]
+verify_jwt = false
+
 [functions.update-user-profile]
 verify_jwt = false
