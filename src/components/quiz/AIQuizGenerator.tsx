@@ -59,6 +59,8 @@ interface PdfAdvancedSettings {
   quizIntent: string;
   difficultyLevel: string;
   targetAudiencePdf: string;
+  tone: string;
+  leadTemperature: string;
 }
 
 interface EducationalSettings {
@@ -134,6 +136,8 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
     quizIntent: "",
     difficultyLevel: "",
     targetAudiencePdf: "",
+    tone: "",
+    leadTemperature: "",
   });
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,6 +335,8 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
           quizIntent: pdfAdvanced.quizIntent || undefined,
           difficultyLevel: pdfAdvanced.difficultyLevel || undefined,
           targetAudiencePdf: pdfAdvanced.targetAudiencePdf || undefined,
+          tone: pdfAdvanced.tone || undefined,
+          leadTemperature: pdfAdvanced.leadTemperature || undefined,
         };
       }
 
@@ -718,9 +724,10 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                       🎯 Configure opções avançadas para um quiz mais personalizado e eficaz
                     </p>
 
-                    {/* Quiz Intent */}
+                    {/* Quiz Intent (F) */}
                     <div className="space-y-2">
                       <Label htmlFor="quizIntent">Objetivo do Quiz</Label>
+                      <p className="text-xs text-muted-foreground">Define o arco persuasivo do funil de perguntas</p>
                       <Select 
                         value={formAdvanced.quizIntent} 
                         onValueChange={(v) => setFormAdvanced({ ...formAdvanced, quizIntent: v })}
@@ -729,12 +736,24 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                           <SelectValue placeholder="Selecione o objetivo principal" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="discover_problem">Revelar um Problema</SelectItem>
-                          <SelectItem value="amplify_urgency">Amplificar Urgência</SelectItem>
-                          <SelectItem value="compare_solutions">Comparar Soluções</SelectItem>
-                          <SelectItem value="validate_need">Validar Necessidade</SelectItem>
-                          <SelectItem value="overcome_objections">Quebrar Objeções</SelectItem>
-                          <SelectItem value="drive_to_checkout">Conduzir ao Checkout</SelectItem>
+                          <SelectItem value="discover_problem">
+                            <div><span className="font-medium">Revelar um Problema</span><span className="text-xs text-muted-foreground ml-1">— Faz o lead perceber uma dor que talvez não reconheça</span></div>
+                          </SelectItem>
+                          <SelectItem value="amplify_urgency">
+                            <div><span className="font-medium">Amplificar Urgência</span><span className="text-xs text-muted-foreground ml-1">— Mostra o custo de não agir agora</span></div>
+                          </SelectItem>
+                          <SelectItem value="compare_solutions">
+                            <div><span className="font-medium">Comparar Soluções</span><span className="text-xs text-muted-foreground ml-1">— Apresenta alternativas e critérios de escolha</span></div>
+                          </SelectItem>
+                          <SelectItem value="validate_need">
+                            <div><span className="font-medium">Validar Necessidade</span><span className="text-xs text-muted-foreground ml-1">— Confirma o cenário e a gravidade do problema</span></div>
+                          </SelectItem>
+                          <SelectItem value="overcome_objections">
+                            <div><span className="font-medium">Quebrar Objeções</span><span className="text-xs text-muted-foreground ml-1">— Antecipa barreiras e crenças limitantes</span></div>
+                          </SelectItem>
+                          <SelectItem value="drive_to_checkout">
+                            <div><span className="font-medium">Conduzir ao Checkout</span><span className="text-xs text-muted-foreground ml-1">— Foca em decisão, prontidão e próximo passo</span></div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -790,17 +809,17 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                           <SelectValue placeholder="Selecione o tom" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="professional">Profissional</SelectItem>
-                          <SelectItem value="casual">Casual / Amigável</SelectItem>
-                          <SelectItem value="technical">Técnico</SelectItem>
-                          <SelectItem value="playful">Divertido / Descontraído</SelectItem>
-                          <SelectItem value="persuasive">Persuasivo</SelectItem>
-                          <SelectItem value="empathetic">Empático / Acolhedor</SelectItem>
+                          <SelectItem value="professional">Profissional — Sério e corporativo</SelectItem>
+                          <SelectItem value="casual">Casual — Amigável e próximo</SelectItem>
+                          <SelectItem value="technical">Técnico — Denso em termos da área</SelectItem>
+                          <SelectItem value="playful">Divertido — Leve e descontraído</SelectItem>
+                          <SelectItem value="persuasive">Persuasivo — Direto e convincente</SelectItem>
+                          <SelectItem value="empathetic">Empático — Acolhedor e compreensivo</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {/* Lead Temperature */}
+                    {/* Lead Temperature (G) */}
                     <div className="space-y-2">
                       <Label htmlFor="leadTemperature">Temperatura do Lead</Label>
                       <Select 
@@ -811,12 +830,12 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                           <SelectValue placeholder="Em que estágio está o lead?" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="cold">Frio - Descoberta</SelectItem>
-                          <SelectItem value="warm">Morno - Consideração</SelectItem>
-                          <SelectItem value="hot">Quente - Decisão</SelectItem>
+                          <SelectItem value="cold">Frio — Ainda não sabe que tem um problema (foco em educação)</SelectItem>
+                          <SelectItem value="warm">Morno — Sabe do problema, mas não decidiu (foco em comparação)</SelectItem>
+                          <SelectItem value="hot">Quente — Quer resolver agora (foco em decisão e ação)</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">Influencia a profundidade das perguntas</p>
+                      <p className="text-xs text-muted-foreground">Define a profundidade e pressão do funil de perguntas</p>
                     </div>
 
                     {/* Result Profiles */}
@@ -1014,9 +1033,9 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                     <SelectValue placeholder="Selecione a proposta" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="infoprodutor">Infoprodutor — Funil de vendas e qualificação</SelectItem>
-                    <SelectItem value="gestor_trafego">Gestor de Tráfego — Segmentação e conversão</SelectItem>
-                    <SelectItem value="educational">Uso Educacional — Fixação e avaliação de conhecimento</SelectItem>
+                    <SelectItem value="infoprodutor">Infoprodutor — Ideal para vender cursos, e-books e mentorias. Conduz o lead a perceber que precisa do seu produto.</SelectItem>
+                    <SelectItem value="gestor_trafego">Gestor de Tráfego — Segmenta sua audiência por perfil e intenção de compra. Ideal para campanhas pagas.</SelectItem>
+                    <SelectItem value="educational">Uso Educacional — Para professores e formadores. Foco em fixação de conteúdo e avaliação.</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
@@ -1112,9 +1131,10 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                       <p className="text-xs text-muted-foreground">Especifique partes do PDF para a IA focar</p>
                     </div>
 
-                    {/* Quiz Intent */}
+                    {/* Quiz Intent (D) */}
                     <div className="space-y-2">
                       <Label htmlFor="pdfQuizIntent">Objetivo do Quiz</Label>
+                      <p className="text-xs text-muted-foreground">Define como a IA conduzirá as perguntas baseadas no conteúdo do seu documento</p>
                       <Select 
                         value={pdfAdvanced.quizIntent} 
                         onValueChange={(v) => setPdfAdvanced({ ...pdfAdvanced, quizIntent: v })}
@@ -1123,34 +1143,103 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                           <SelectValue placeholder="Selecione o objetivo principal" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="discover_problem">Revelar um Problema</SelectItem>
-                          <SelectItem value="amplify_urgency">Amplificar Urgência</SelectItem>
-                          <SelectItem value="compare_solutions">Comparar Soluções</SelectItem>
-                          <SelectItem value="validate_need">Validar Necessidade</SelectItem>
-                          <SelectItem value="overcome_objections">Quebrar Objeções</SelectItem>
-                          <SelectItem value="drive_to_checkout">Conduzir ao Checkout</SelectItem>
+                          <SelectItem value="discover_problem">
+                            <div><span className="font-medium">Revelar um Problema</span><span className="text-xs text-muted-foreground ml-1">— Faz o lead perceber uma dor</span></div>
+                          </SelectItem>
+                          <SelectItem value="amplify_urgency">
+                            <div><span className="font-medium">Amplificar Urgência</span><span className="text-xs text-muted-foreground ml-1">— Mostra o custo de não agir</span></div>
+                          </SelectItem>
+                          <SelectItem value="compare_solutions">
+                            <div><span className="font-medium">Comparar Soluções</span><span className="text-xs text-muted-foreground ml-1">— Alternativas e critérios</span></div>
+                          </SelectItem>
+                          <SelectItem value="validate_need">
+                            <div><span className="font-medium">Validar Necessidade</span><span className="text-xs text-muted-foreground ml-1">— Confirma cenário e gravidade</span></div>
+                          </SelectItem>
+                          <SelectItem value="overcome_objections">
+                            <div><span className="font-medium">Quebrar Objeções</span><span className="text-xs text-muted-foreground ml-1">— Antecipa barreiras</span></div>
+                          </SelectItem>
+                          <SelectItem value="drive_to_checkout">
+                            <div><span className="font-medium">Conduzir ao Checkout</span><span className="text-xs text-muted-foreground ml-1">— Decisão e próximo passo</span></div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {/* Difficulty Level */}
+                    {/* Difficulty Level / Profundidade (A) */}
                     <div className="space-y-2">
-                      <Label htmlFor="difficultyLevel">Nível de Dificuldade</Label>
+                      <Label htmlFor="difficultyLevel">
+                        {pdfProposal === 'educational' ? 'Nível de Dificuldade' : 'Profundidade das Perguntas'}
+                      </Label>
                       <Select 
                         value={pdfAdvanced.difficultyLevel} 
                         onValueChange={(v) => setPdfAdvanced({ ...pdfAdvanced, difficultyLevel: v })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione o nível" />
+                          <SelectValue placeholder={pdfProposal === 'educational' ? 'Selecione o nível' : 'Selecione a profundidade'} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="easy">Fácil - Conceitos básicos</SelectItem>
-                          <SelectItem value="medium">Médio - Aplicação prática</SelectItem>
-                          <SelectItem value="hard">Difícil - Análise profunda</SelectItem>
-                          <SelectItem value="mixed">Misto - Variado</SelectItem>
+                          {pdfProposal === 'educational' ? (
+                            <>
+                              <SelectItem value="easy">Fácil — Conceitos básicos</SelectItem>
+                              <SelectItem value="medium">Médio — Aplicação prática</SelectItem>
+                              <SelectItem value="hard">Difícil — Análise profunda</SelectItem>
+                              <SelectItem value="mixed">Misto — Variado</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="easy">Simples e direto — Perguntas rápidas e objetivas</SelectItem>
+                              <SelectItem value="medium">Equilibrado — Profundidade moderada</SelectItem>
+                              <SelectItem value="hard">Detalhado e analítico — Raciocínio mais elaborado</SelectItem>
+                              <SelectItem value="mixed">Variado — Mistura de níveis</SelectItem>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Tone (B/E) - novo campo PDF */}
+                    {pdfProposal !== 'educational' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="pdfTone">Tom de Voz</Label>
+                        <Select 
+                          value={pdfAdvanced.tone} 
+                          onValueChange={(v) => setPdfAdvanced({ ...pdfAdvanced, tone: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tom" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="professional">Profissional — Sério e corporativo</SelectItem>
+                            <SelectItem value="casual">Casual — Amigável e próximo</SelectItem>
+                            <SelectItem value="technical">Técnico — Denso em termos da área</SelectItem>
+                            <SelectItem value="playful">Divertido — Leve e descontraído</SelectItem>
+                            <SelectItem value="persuasive">Persuasivo — Direto e convincente</SelectItem>
+                            <SelectItem value="empathetic">Empático — Acolhedor e compreensivo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {/* Lead Temperature (B) - novo campo PDF */}
+                    {pdfProposal !== 'educational' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="pdfLeadTemperature">Temperatura do Lead</Label>
+                        <Select 
+                          value={pdfAdvanced.leadTemperature} 
+                          onValueChange={(v) => setPdfAdvanced({ ...pdfAdvanced, leadTemperature: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Em que estágio está o lead?" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cold">Frio — Ainda não sabe que tem um problema</SelectItem>
+                            <SelectItem value="warm">Morno — Sabe do problema, mas não decidiu</SelectItem>
+                            <SelectItem value="hot">Quente — Quer resolver agora</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">Define a profundidade e pressão do funil</p>
+                      </div>
+                    )}
 
                     {/* Target Audience PDF */}
                     <div className="space-y-2">
@@ -1161,7 +1250,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                         value={pdfAdvanced.targetAudiencePdf}
                         onChange={(e) => setPdfAdvanced({ ...pdfAdvanced, targetAudiencePdf: e.target.value })}
                       />
-                      <p className="text-xs text-muted-foreground">Quem responderá este quiz?</p>
+                      <p className="text-xs text-muted-foreground">Adapta linguagem, exemplos e dores ao perfil do respondente</p>
                     </div>
                   </div>
                 </CollapsibleContent>

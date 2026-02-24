@@ -166,8 +166,11 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
           return;
         }
 
+        // Criar mapeamento de IDs atuais para detectar respostas com IDs antigos
+        const currentQuestionIds = new Set(questions.map(q => q.id));
+
         // Processar respostas para cada pergunta
-        const processedData: QuestionHeatmapData[] = questions.map(question => {
+        const processedData: QuestionHeatmapData[] = questions.map((question, qIndex) => {
           const options = parseOptions(question.options, question.answer_format);
           const responseCounts: Record<string, number> = {};
           
@@ -180,7 +183,23 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
           let totalForQuestion = 0;
           responses.forEach(response => {
             const answers = response.answers as Record<string, string | string[]>;
-            const answer = answers[question.id];
+            
+            // Tentar buscar resposta pelo ID atual da pergunta
+            let answer = answers[question.id];
+            
+            // Fallback por posição: se o ID não bate, verificar se as chaves são IDs antigos
+            if (!answer) {
+              const answerKeys = Object.keys(answers);
+              const hasAnyCurrentId = answerKeys.some(k => currentQuestionIds.has(k));
+              
+              // Se nenhuma chave corresponde aos IDs atuais, mapear por posição
+              if (!hasAnyCurrentId && answerKeys.length > 0) {
+                const sortedKeys = answerKeys; // preservar ordem original
+                if (qIndex < sortedKeys.length) {
+                  answer = answers[sortedKeys[qIndex]];
+                }
+              }
+            }
             
             if (answer) {
               totalForQuestion++;
@@ -191,7 +210,6 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
                   if (responseCounts[a] !== undefined) {
                     responseCounts[a]++;
                   } else {
-                    // Resposta não esperada, adicionar
                     responseCounts[a] = 1;
                   }
                 });
