@@ -6,6 +6,8 @@ import { Calculator, CheckCircle2, XCircle, Lightbulb, ClipboardList } from "luc
 import type { Quiz, QuizResult, QuizQuestion } from "@/types/quiz";
 import type { CalculatorResultType } from "@/hooks/useQuizViewState";
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
+
 interface QuizViewResultProps {
   quiz: Quiz;
   finalResult: QuizResult;
@@ -124,7 +126,7 @@ export function QuizViewResult({ quiz, finalResult, calculatorResult, questions,
                       ) : (
                         <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                       )}
-                      <p className="font-semibold text-sm">{idx + 1}. {questionBlock?.questionText || q.question_text}</p>
+                      <p className="font-semibold text-sm">{idx + 1}. {stripHtml(questionBlock?.questionText || q.question_text)}</p>
                     </div>
                     <div className="ml-7 space-y-1 text-sm">
                       <p><span className="text-muted-foreground">Sua resposta:</span> <span className={isCorrect ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>{Array.isArray(userAnswer) ? userAnswer.join(', ') : userAnswer || '—'}</span></p>

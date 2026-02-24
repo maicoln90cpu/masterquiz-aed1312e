@@ -281,7 +281,7 @@ export const UnifiedQuizPreview = ({
   // INLINE MODE (sidebar preview)
   if (mode === 'inline') {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
         {/* Device Mode Selector */}
         {showDeviceFrame && (
           <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/50">
