@@ -1,43 +1,76 @@
 
+# Plano: Botao "Ver" inteligente + Feedback visual verde/vermelho no gabarito
 
-# Plano: Corrigir itens 2, 3 e 4 pendentes
+## Resumo
 
-Os tres itens NAO foram aplicados na ultima implementacao. Segue o que precisa ser feito:
-
----
-
-## Item 2 — Cache stale apos publicar quiz
-
-**Problema:** Apos publicar o quiz e clicar no botao do dialog de compartilhamento, a pagina de destino mostra "Rascunho" porque o cache do TanStack Query nao foi invalidado.
-
-**Correcao em `src/pages/CreateQuiz.tsx` (linha ~899-901):**
-- Antes de navegar, chamar `queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] })`
-- Importar `useQueryClient` do TanStack Query e inicializar no componente
+1. O botao "Ver" na lista de quizzes deve abrir o link publico diretamente quando o quiz esta publicado, e mostrar o dialog de preview apenas quando esta em rascunho.
+2. Nas perguntas individuais com gabarito (modo `per_question`), apos o usuario responder, a opcao selecionada deve ficar verde se acertou ou vermelha se errou, e a resposta correta deve ficar destacada em verde.
 
 ---
 
-## Item 3 — Input de numero de perguntas faz clamp imediato
+## Alteracoes detalhadas
 
-**Problema:** Os 3 inputs de numero (form linha 655-658, educational linha 912-915, pdf linha 1030-1033) fazem `Math.min(Math.max(value, 3), max)` no onChange, impedindo digitar "1" para depois completar "10".
+### 1. Botao "Ver" — abrir link publico vs preview
 
-**Correcao nos 3 inputs em `src/components/quiz/AIQuizGenerator.tsx`:**
-- Remover o clamp do onChange — aceitar qualquer valor digitado
-- Adicionar onBlur para clampar entre 3 e max
-- No botao de gerar (linha 1132), adicionar `formData.numberOfQuestions < 3` na condicao de disabled
+**Arquivo: `src/pages/MyQuizzes.tsx`**
 
----
+Alterar `handlePreview` para verificar o status do quiz:
+- Se `quiz.status === 'active'`: abrir o link publico (`/:company_slug/:slug`) em nova aba diretamente, sem dialog
+- Se `quiz.status !== 'active'` (rascunho): manter comportamento atual — abrir `PreviewLinkDialog`
 
-## Item 4 — Navegar para /meus-quizzes e renomear botao
+A funcao precisa receber o quiz inteiro (ou id + status + slug) em vez de apenas o id. Ajustar para buscar o quiz na lista `quizzes` pelo id e verificar o status.
 
-**Problema:** Dois locais ainda navegam para `/dashboard` em vez de `/meus-quizzes`, e o texto do botao ainda diz "Ir para Dashboard".
+```text
+const handlePreview = (id: string) => {
+  const quiz = quizzes.find(q => q.id === id);
+  if (quiz?.status === 'active' && quiz.slug) {
+    // Abrir link publico
+    const publicUrl = userProfile?.company_slug
+      ? `/${userProfile.company_slug}/${quiz.slug}`
+      : `/quiz/${quiz.slug}`;
+    window.open(publicUrl, '_blank');
+  } else {
+    // Rascunho — mostrar dialog de preview
+    setSelectedQuizId(id);
+    setPreviewDialogOpen(true);
+  }
+};
+```
 
-**Correcoes:**
-- `src/components/quiz/AIQuizGenerator.tsx` linha 503: trocar `navigate('/dashboard')` por `navigate('/meus-quizzes')`
-- `src/pages/CreateQuiz.tsx` linha 901: trocar `navigate('/dashboard')` por `navigate('/meus-quizzes')`
-- `src/i18n/config.ts`: alterar `createQuiz.goToDashboard` nas 3 linguas:
-  - PT: "Ver meus Quizzes"
-  - EN: "View my Quizzes"
-  - ES: "Ver mis Quizzes"
+**Arquivo: `src/components/quiz/QuizCard.tsx`** — nenhuma alteracao necessaria. O `onPreview(quiz.id)` ja passa o id.
+
+### 2. Feedback visual verde/vermelho nas opcoes
+
+**Arquivo: `src/components/quiz/view/QuizViewQuestion.tsx`**
+
+Passar `correctAnswer` e `answered` como props para `SingleChoiceOptions` e `MultipleChoiceOptions`.
+
+**SingleChoiceOptions** — apos `answered === true`:
+- Opcao selecionada pelo usuario E correta: borda verde + fundo verde claro
+- Opcao selecionada pelo usuario E incorreta: borda vermelha + fundo vermelho claro
+- Opcao NAO selecionada mas e a correta: borda verde + fundo verde claro (para mostrar qual era a certa)
+- Demais opcoes: estilo neutro (cinza)
+
+**MultipleChoiceOptions** — mesma logica adaptada para multipla escolha.
+
+**Logica de estilo (pseudo-codigo):**
+```text
+se answered:
+  se isSelected E isCorrectOption -> border-green-500 bg-green-50
+  se isSelected E !isCorrectOption -> border-red-500 bg-red-50
+  se !isSelected E isCorrectOption -> border-green-500 bg-green-50 (destaque sutil)
+  senao -> border-muted (cinza, desabilitado)
+senao (ainda nao respondeu):
+  manter estilo atual (azul no hover/selecao)
+```
+
+**Props adicionais em OptionsProps:**
+```text
+correctAnswer?: string;
+answered?: boolean;
+```
+
+O `QuestionBlockRenderer` ja tem `correctAnswer` e `answered` — basta passa-los para os sub-componentes.
 
 ---
 
@@ -45,7 +78,11 @@ Os tres itens NAO foram aplicados na ultima implementacao. Segue o que precisa s
 
 | Arquivo | Alteracao |
 |---------|----------|
-| `src/pages/CreateQuiz.tsx` | Invalidar cache antes de navegar + mudar destino para /meus-quizzes |
-| `src/components/quiz/AIQuizGenerator.tsx` | Remover clamp imediato dos 3 inputs + disabled no botao + navigate /meus-quizzes |
-| `src/i18n/config.ts` | Renomear "Ir para Dashboard" para "Ver meus Quizzes" (PT/EN/ES) |
+| `src/pages/MyQuizzes.tsx` | `handlePreview` verifica status: publico abre link, rascunho abre dialog |
+| `src/components/quiz/view/QuizViewQuestion.tsx` | Passar correctAnswer+answered para opcoes; logica de cor verde/vermelho |
 
+## Arquivos NAO tocados
+- PreviewLinkDialog.tsx — nenhuma alteracao
+- QuizCard.tsx — nenhuma alteracao
+- QuizViewResult.tsx — nenhuma alteracao
+- Edge Functions, schema, hooks — zero alteracoes
