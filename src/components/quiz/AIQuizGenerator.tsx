@@ -186,7 +186,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
       });
 
       if (parseError) {
-        console.error('Error parsing PDF:', parseError);
+        console.error('[AIQuizGenerator] Parse PDF error:', parseError);
         const errorMsg = parseError.message || '';
         if (errorMsg.includes('404') || errorMsg.includes('not found')) {
           toast.error('Serviço de parsing de PDF indisponível. Tente novamente mais tarde.');
@@ -194,6 +194,28 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
           toast.error('Arquivo PDF muito grande. Máximo 20MB.');
         } else {
           toast.error(t('components.aiGenerator.pdfProcessError'));
+        }
+        setPdfFile(null);
+        setIsParsingPdf(false);
+        return;
+      }
+
+      // Check for semantic error responses (status 4xx returned as data)
+      if (parseResult?.error) {
+        console.error('[AIQuizGenerator] Parse PDF semantic error:', parseResult);
+        const errCode = parseResult.error;
+        if (errCode === 'INVALID_PDF') {
+          toast.error('Arquivo inválido. Envie um PDF válido.');
+        } else if (errCode === 'PDF_PROTECTED') {
+          toast.error('O PDF está protegido por senha. Remova a senha e tente novamente.');
+        } else if (errCode === 'LOW_TEXT_DENSITY') {
+          toast.error('O PDF contém pouco texto extraível. Pode ser um documento escaneado/baseado em imagens.');
+        } else if (errCode === 'INVALID_BASE64') {
+          toast.error('Erro ao processar o arquivo. Tente novamente.');
+        } else if (errCode === 'FILE_TOO_LARGE') {
+          toast.error('Arquivo PDF muito grande. Máximo 20MB.');
+        } else {
+          toast.error(`Erro ao processar PDF: ${parseResult.details || errCode}`);
         }
         setPdfFile(null);
         setIsParsingPdf(false);
