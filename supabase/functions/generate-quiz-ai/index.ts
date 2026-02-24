@@ -166,6 +166,16 @@ TIPOS DE PERGUNTAS A PRIORIZAR:
 - "O que você já tentou e não funcionou?"
 - "Se nada mudar, o que tende a acontecer?"
 
+REGRAS PARA ESCOLHA DO FORMATO DE RESPOSTA:
+- "single_choice": Quando a pergunta tem UMA ÚNICA resposta correta ou o respondente deve escolher APENAS UMA opção.
+  Exemplos: faixa etária, sexo, renda, frequência ("Quantas vezes por semana..."), estado atual ("Como você se sente...")
+- "multiple_choice": APENAS quando faz sentido o respondente marcar MAIS DE UMA opção simultaneamente.
+  Exemplos: "Quais dessas dificuldades você enfrenta?" (pode ter várias), "Quais dessas ferramentas você usa?"
+- "yes_no": Para perguntas de confirmação binária simples.
+  Exemplos: "Você já tentou resolver isso antes?", "Você tem acompanhamento profissional?"
+
+IMPORTANTE: A MAIORIA das perguntas deve ser "single_choice". Use "multiple_choice" SOMENTE quando listar itens onde múltiplas respostas simultâneas fazem sentido real. Use "yes_no" para perguntas diretas de sim/não. Varie os formatos para criar uma experiência dinâmica.
+
 REGRAS DE FORMATO:
 1. Retorne APENAS JSON válido no formato especificado
 2. O campo "answer_format" deve ser EXATAMENTE: "single_choice", "multiple_choice" ou "yes_no"
@@ -189,12 +199,24 @@ ESTRUTURA OBRIGATÓRIA DAS PERGUNTAS (em ordem):
 4. Contraste - Estado atual vs estado desejado
 5. Conclusão guiada - A solução passa a fazer sentido
 
+REGRAS PARA ESCOLHA DO FORMATO DE RESPOSTA:
+- "single_choice": Quando a pergunta tem UMA ÚNICA resposta correta ou o respondente deve escolher APENAS UMA opção.
+  Exemplos: faixa etária, sexo, renda, frequência, estado atual
+- "multiple_choice": APENAS quando faz sentido o respondente marcar MAIS DE UMA opção simultaneamente.
+  Exemplos: "Quais dessas dificuldades você enfrenta?", "Quais ferramentas você usa?"
+- "yes_no": Para perguntas de confirmação binária simples.
+  Exemplos: "Você já tentou resolver isso antes?", "Você tem acompanhamento profissional?"
+
+IMPORTANTE: A MAIORIA das perguntas deve ser "single_choice". Use "multiple_choice" SOMENTE quando múltiplas respostas simultâneas fazem sentido real. Use "yes_no" para perguntas diretas de sim/não.
+
 REGRAS:
 1. Extraia os pontos-chave do documento para criar perguntas relevantes
 2. As perguntas devem seguir a lógica de espelhamento → dor → consequência → contraste → solução
 3. Cada opção deve ter um peso (score) para qualificação do lead
 4. Adapte a linguagem ao tom e público-alvo especificados
-5. Retorne APENAS JSON válido no formato especificado`;
+5. Retorne APENAS JSON válido no formato especificado
+6. O campo "answer_format" deve ser EXATAMENTE: "single_choice", "multiple_choice" ou "yes_no"
+7. O campo "options" deve ser um ARRAY SIMPLES de STRINGS`;
 
     const defaultPromptForm = `Crie um quiz de auto-convencimento para:
 PRODUTO/SERVIÇO: {productName}
@@ -240,6 +262,16 @@ ESTRUTURA DAS PERGUNTAS:
 3. Perguntas de análise - Interpretação e raciocínio
 4. Perguntas de síntese - Conexão entre conceitos
 
+REGRAS PARA ESCOLHA DO FORMATO DE RESPOSTA:
+- "single_choice": Quando a pergunta tem UMA ÚNICA resposta correta ou o aluno deve escolher APENAS UMA alternativa.
+  Exemplos: definições, conceitos com resposta única, cálculos com resultado único
+- "multiple_choice": APENAS quando a pergunta tem MAIS DE UMA alternativa correta ou pede múltiplas seleções.
+  Exemplos: "Quais das seguintes são características de...", "Selecione todos que se aplicam"
+- "yes_no": Para afirmações de verdadeiro/falso ou confirmações diretas.
+  Exemplos: "Esta afirmação está correta?", "O conceito X se aplica ao cenário Y?"
+
+IMPORTANTE: A MAIORIA das perguntas educacionais deve ser "single_choice". Use "multiple_choice" SOMENTE quando houver múltiplas respostas corretas. Use "yes_no" para verificações rápidas de conceito. Varie os formatos.
+
 REGRAS:
 - Perguntas claras, objetivas e sem ambiguidade
 - Alternativas plausíveis (evitar opções absurdas)
@@ -277,11 +309,22 @@ ESTRUTURA OBRIGATÓRIA:
 4. Intenção de compra - Prontidão para agir
 5. Qualificação final - Perfil ideal para a oferta
 
+REGRAS PARA ESCOLHA DO FORMATO DE RESPOSTA:
+- "single_choice": Quando o respondente deve escolher APENAS UMA opção (perfil, faixa, nível).
+  Exemplos: faixa etária, orçamento mensal, canal de aquisição principal
+- "multiple_choice": APENAS quando múltiplas respostas simultâneas fazem sentido.
+  Exemplos: "Quais canais de tráfego você utiliza?", "Quais objetivos você busca?"
+- "yes_no": Para perguntas diretas de qualificação binária.
+  Exemplos: "Você já investiu em tráfego pago?", "Possui equipe de vendas?"
+
+IMPORTANTE: A MAIORIA deve ser "single_choice". Use "multiple_choice" SOMENTE para listas onde múltiplas respostas são reais. Varie os formatos.
+
 REGRAS:
 - Linguagem direta e objetiva
 - Foco em segmentação para campanhas de tráfego
 - Opções que permitam classificar o lead em segmentos claros
 - Retorne APENAS JSON válido
+- O campo "answer_format" deve ser EXATAMENTE: "single_choice", "multiple_choice" ou "yes_no"
 - O campo "options" deve ser um ARRAY SIMPLES de STRINGS`;
 
     const aiSystemPromptForm = aiSettings?.find(s => s.setting_key === 'ai_system_prompt_form')?.setting_value || defaultSystemPromptForm;
