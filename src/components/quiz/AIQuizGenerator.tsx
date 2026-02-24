@@ -500,7 +500,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       
       toast.success(t('components.aiGenerator.quizCreated'));
-      navigate('/dashboard');
+      navigate('/meus-quizzes');
 
     } catch (error) {
       console.error('Error generating quiz:', error);
@@ -653,8 +653,11 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                   max={maxQuestions}
                   value={formData.numberOfQuestions}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value) || 5;
-                    const clamped = Math.min(Math.max(value, 3), maxQuestions);
+                    const value = parseInt(e.target.value) || 0;
+                    setFormData({ ...formData, numberOfQuestions: value });
+                  }}
+                  onBlur={() => {
+                    const clamped = Math.min(Math.max(formData.numberOfQuestions, 3), maxQuestions);
                     setFormData({ ...formData, numberOfQuestions: clamped });
                   }}
                 />
@@ -910,8 +913,11 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                     max={maxQuestions}
                     value={formData.numberOfQuestions}
                     onChange={(e) => {
-                      const value = parseInt(e.target.value) || 5;
-                      const clamped = Math.min(Math.max(value, 3), maxQuestions);
+                      const value = parseInt(e.target.value) || 0;
+                      setFormData({ ...formData, numberOfQuestions: value });
+                    }}
+                    onBlur={() => {
+                      const clamped = Math.min(Math.max(formData.numberOfQuestions, 3), maxQuestions);
                       setFormData({ ...formData, numberOfQuestions: clamped });
                     }}
                   />
@@ -1028,8 +1034,11 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
                   max={maxQuestions}
                   value={formData.numberOfQuestions}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value) || 5;
-                    const clamped = Math.min(Math.max(value, 3), maxQuestions);
+                    const value = parseInt(e.target.value) || 0;
+                    setFormData({ ...formData, numberOfQuestions: value });
+                  }}
+                  onBlur={() => {
+                    const clamped = Math.min(Math.max(formData.numberOfQuestions, 3), maxQuestions);
                     setFormData({ ...formData, numberOfQuestions: clamped });
                   }}
                 />
@@ -1129,7 +1138,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
         {/* Generate Button */}
         <Button 
           onClick={handleGenerateQuiz} 
-          disabled={isGenerating || (uploadMode === "pdf" && !pdfFile) || (uploadMode === "educational" && (!educationalSettings.subject || !educationalSettings.topic))}
+          disabled={isGenerating || formData.numberOfQuestions < 3 || (uploadMode === "pdf" && !pdfFile) || (uploadMode === "educational" && (!educationalSettings.subject || !educationalSettings.topic))}
           className="w-full"
           size="lg"
         >
