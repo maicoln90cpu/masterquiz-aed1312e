@@ -689,7 +689,7 @@ const CreateQuiz = () => {
 
         {/* Inline Preview (Desktop XL) */}
         {showInlinePreview && (
-          <aside className="hidden xl:flex w-[380px] border-l bg-muted/20 flex-col fixed top-20 right-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
+          <aside className="hidden xl:flex w-[380px] border-l bg-muted/20 flex-col fixed top-20 right-0 h-[calc(100vh-5rem)] overflow-hidden z-30">
             <div className="p-4 border-b bg-card/50">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-sm">

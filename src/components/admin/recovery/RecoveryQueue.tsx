@@ -503,9 +503,18 @@ export function RecoveryQueue() {
                         {item.status}
                       </Badge>
                       {item.error_message && (
-                        <p className="text-xs text-red-500 mt-1 max-w-[200px] truncate" title={item.error_message}>
-                          {item.error_message}
-                        </p>
+                        <div className="mt-1 max-w-[250px]">
+                          <p className="text-xs text-red-500 truncate" title={item.error_message}>
+                            {item.error_message}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {item.error_message.includes('400') && '⚠️ Número possivelmente sem WhatsApp ativo ou formato inválido'}
+                            {item.error_message.includes('401') && '🔑 Chave da API inválida — verifique as credenciais'}
+                            {item.error_message.includes('404') && '❌ Instância não encontrada na Evolution API'}
+                            {item.error_message.includes('429') && '⏳ Limite de envios atingido, tente mais tarde'}
+                            {item.error_message.includes('500') && '🔧 Erro interno no servidor da Evolution API'}
+                          </p>
+                        </div>
                       )}
                     </TableCell>
                     <TableCell>{item.priority}</TableCell>

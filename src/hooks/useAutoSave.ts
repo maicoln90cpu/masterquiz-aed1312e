@@ -204,6 +204,12 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const scheduleAutoSave = useCallback((data: AutoSaveData) => {
     if (!enabled || !data.quizId) return;
 
+    // ✅ Dedup: se o payload não mudou desde o último save, manter status atual
+    const snapshot = JSON.stringify(data);
+    if (snapshot === lastSavedSnapshotRef.current) {
+      return; // nada mudou, manter status 'saved'
+    }
+
     // Armazenar dados pendentes
     pendingDataRef.current = data;
     setHasUnsavedChanges(true);

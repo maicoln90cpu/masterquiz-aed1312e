@@ -816,7 +816,7 @@ export default function AdminDashboard() {
           <>
             {/* Desktop: Tabela condensada */}
             <div className="hidden lg:block overflow-x-auto">
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
@@ -839,8 +839,10 @@ export default function AdminDashboard() {
                       <TableCell className="font-medium">
                         {user.profile?.full_name || '-'}
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {user.email || '-'}
+                      <TableCell className="max-w-[180px]">
+                        <span className="block truncate text-xs" title={user.email || ''}>
+                          {user.email || '-'}
+                        </span>
                       </TableCell>
                       <TableCell className="text-sm">
                         {user.profile?.whatsapp || '-'}
