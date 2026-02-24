@@ -175,8 +175,16 @@ const MyQuizzes = () => {
   };
 
   const handlePreview = (id: string) => {
-    setSelectedQuizId(id);
-    setPreviewDialogOpen(true);
+    const quiz = quizzes.find(q => q.id === id);
+    if (quiz?.status === 'active' && quiz.slug) {
+      const publicUrl = userProfile?.company_slug
+        ? `${window.location.origin}/${userProfile.company_slug}/${quiz.slug}`
+        : `${window.location.origin}/quiz/${quiz.slug}`;
+      window.open(publicUrl, '_blank');
+    } else {
+      setSelectedQuizId(id);
+      setPreviewDialogOpen(true);
+    }
   };
 
   // Loading skeleton
