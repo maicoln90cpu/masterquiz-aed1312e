@@ -136,26 +136,31 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
           });
       }
 
-      // Salvar perguntas se existirem
+      // Salvar perguntas se existirem (DELETE + INSERT para evitar constraint violation)
       if (data.questions && data.questions.length > 0) {
-        const questionsToSave = data.questions.map((q, idx) => ({
-          id: q.id?.startsWith('temp-') ? undefined : q.id,
+        const { error: deleteError } = await supabase
+          .from('quiz_questions')
+          .delete()
+          .eq('quiz_id', data.quizId);
+
+        if (deleteError) throw deleteError;
+
+        const questionsToInsert = data.questions.map((q, idx) => ({
           quiz_id: data.quizId,
           question_text: q.question_text || '',
-          order_number: idx + 1,
+          order_number: idx,
           answer_format: (q.answer_format || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
           options: q.options || [],
           media_url: q.media_url || null,
+          media_type: q.media_type || null,
           blocks: Array.isArray(q.blocks) ? q.blocks : [],
-          conditions: q.conditions || null
+          conditions: q.conditions || null,
+          custom_label: q.custom_label || null
         }));
 
         const { error: questionsError } = await supabase
           .from('quiz_questions')
-          .upsert(questionsToSave, {
-            onConflict: 'id',
-            ignoreDuplicates: false
-          });
+          .insert(questionsToInsert);
 
         if (questionsError) throw questionsError;
       }
