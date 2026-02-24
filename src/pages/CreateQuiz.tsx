@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +46,7 @@ import { useProfile } from "@/hooks/useProfile";
 const CreateQuiz = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const { getQuestionsPerQuizLimit } = useSubscriptionLimits();
   const { profile } = useProfile();
@@ -898,7 +900,9 @@ const CreateQuiz = () => {
                   <Button
                     onClick={() => {
                       updateUI({ shareDialogOpen: false });
-                      navigate('/dashboard');
+                      queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+                      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                      navigate('/meus-quizzes');
                     }}
                     className="w-full"
                   >
