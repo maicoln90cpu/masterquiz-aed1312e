@@ -14,11 +14,11 @@ interface QuizTemplateSelectorProps {
   onCreateWithAI?: () => void;
 }
 
-const categoryLabels = {
+const categoryLabels: Record<string, string> = {
   lead_qualification: 'Qualificação de Leads',
   product_discovery: 'Descoberta de Produto',
   customer_satisfaction: 'Satisfação do Cliente',
-  engagement: 'Engajamento'
+  engagement: 'Engajamento',
 };
 
 export const QuizTemplateSelector = ({ onSelectTemplate, onCreateFromScratch, onCreateWithAI }: QuizTemplateSelectorProps) => {

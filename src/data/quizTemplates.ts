@@ -13,6 +13,10 @@ export {
   paidTrafficTemplate,
   offerValidationTemplate,
   educationalTemplate,
+  healthWellnessTemplate,
+  incomeOpportunityTemplate,
+  diagnosticExamTemplate,
+  courseOnboardingTemplate,
   allBaseTemplates,
 } from './templates/index';
 
