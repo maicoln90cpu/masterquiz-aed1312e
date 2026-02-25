@@ -1,119 +1,114 @@
 
+# Plano: 6 Correcoes do Fluxo de Primeiro Acesso
 
-# Plano: Ordens Unicas, Premium Rico e Classificacao Correta
+## Diagnostico Detalhado
 
-## Diagnostico dos 3 Problemas
+### Bug 1: Link do quiz sem slug na celebracao
+**Causa raiz**: Em `CreateQuiz.tsx` linha 199-210, `handlePublish` chama `saveQuiz()` que retorna `true/false`. Dentro de `saveQuiz` (em `useQuizPersistence.ts` linha 386), o slug e atualizado via `updateEditor({ quizSlug: quiz.slug })` — porem isso e React state assíncrono. Quando `handlePublish` le `editorState.quizSlug` na linha 203, o state ainda nao foi atualizado, entao `slug = ''`, gerando URL como `https://masterquiz.com.br/quiz/` (sem slug) → 404.
 
-### Problema 1: Ordens duplicadas
-No hook `useAllQuizTemplates` (linha 159), hardcoded templates recebem `display_order: i` onde `i` e o indice no array filtrado. Isso gera:
-- Base templates: ordens 0-8
-- Premium templates: continuam no mesmo loop, ordens 9-13
-- DB templates: usam `display_order` do banco (1, 2, 3, 4...)
+**Correcao**: 
+- `useQuizPersistence.ts`: Alterar `saveQuiz` para retornar `{ success: true, slug: quiz.slug }` em vez de `true`.
+- `CreateQuiz.tsx`: Alterar `handlePublish` para ler o slug do retorno: `const result = await saveQuiz(); if (result?.slug) { buildUrl(result.slug); }`.
 
-Resultado: Pre-VSL (hardcoded, ordem 1) colide com "Seu Potencial de Renda Extra" (DB, ordem 1).
+### Bug 2: Toggle de quiz publico — padronizar
+**Estado atual**: Em `QuestionConfigStep.tsx` linhas 270-287, o toggle "Visibilidade do Quiz" esta presente e funciona. O `editorState.isPublic` e inicializado como `true` em `useQuizState.ts` linha 108. O template express em `Start.tsx` linha 105 cria o quiz com `is_public: false`. Quando o usuario chega no express mode, o toggle pode estar inconsistente.
 
-**Correcao**: Atribuir ordens fixas e unicas no `useAllQuizTemplates`: base 1-9, premium 10-14, DB templates comecam em 15+.
+**Correcao**: Garantir que no express mode o toggle comece como `true` (quiz publico por padrao), pois o usuario esta publicando. No `Start.tsx` linha 105, mudar `is_public: false` para `is_public: true`. E no express mode do `CreateQuiz.tsx`, remover o toggle de visibilidade (o quiz express sempre sera publico).
 
-### Problema 2: Premium templates pobres em blocos
-Os 5 templates premium atualmente tem apenas:
-- 1 `imageBlock` na pergunta 1
-- 1 `comparisonBlock` na pergunta 9
-- 1 `socialProofBlock` na pergunta 10
-- 1 `countdownBlock` na pergunta 12
-- 2-3 `progressBlock` espalhados
-- 12 perguntas cada
+### Bug 3: Botoes Proxima/Anterior pouco visiveis
+**Estado atual**: Em `QuestionConfigStep.tsx` linhas 290-321, os botoes usam `variant="outline" size="sm"` — discretos demais. O usuario pode nao notar.
 
-Precisam ser enriquecidos com:
-- 4 imagens espalhadas (perguntas 1, 4, 7, 10)
-- 1+ socialProof (perguntas 5, 10)
-- 1 countdown (pergunta final)
-- 1-2 testimonial (perguntas 6, 11)
-- progress em mais perguntas
-- comparison ja existe
-- Expandir para 14-16 perguntas com mais blocos de valor
+**Correcao**: Tornar os botoes mais destacados:
+- "Proxima": usar `variant="default"` (preenchido com cor primaria), tamanho `default`
+- "Anterior": manter `variant="outline"` mas tamanho `default`
+- Adicionar texto mais visivel e iconografia maior
 
-### Problema 3: Classificacao premium
-O codigo ja esta correto: apenas 5 IDs no array `premiumQuizTemplates` sao premium. Os outros 9 base sao free. A confusao do usuario e sobre as 12 categorias no `categoryLabels` vs os 5 premium. Solucao: manter exatamente 5 premium, confirmar que os demais 9 base + DB sao free. Nada a mudar na logica, apenas validar visualmente.
+### Bug 4: "Ver como divulgar" → "Divulgar meu Quiz"
+**Estado atual**: Em `ExpressCelebration.tsx` linhas 131-149, o botao "Ver como divulgar" redireciona para `/integrations` — pagina tecnica demais para primeiro acesso. O usuario precisa de compartilhamento social simples.
 
----
+**Correcao**: 
+- Trocar texto para "Divulgar meu Quiz"
+- Em vez de navegar para `/integrations`, abrir um mini-painel inline com botoes de compartilhamento: WhatsApp, copiar link (ja existe), redes sociais (Facebook, Twitter/X, LinkedIn) usando URLs de share nativas (`https://wa.me/?text=...`, `https://www.facebook.com/sharer/...` etc).
+- Remover o texto "Proximo passo: Envie trafego para comecar a capturar leads" pois e prematuro.
 
-## Plano de Implementacao
+### Bug 5: Templates de primeiro acesso com 12 perguntas → reduzir para 6-8
+**Estado atual**: Todos os 9 templates base em `src/data/templates/` tem `questionCount: 12` e 12 perguntas cada. Para primeiro acesso via `/start`, isso e muito. O usuario quer publicar rapido.
 
-### Arquivo 1: `src/hooks/useQuizTemplates.ts`
-**Linhas 148-172** — Corrigir atribuicao de `display_order` no `useAllQuizTemplates`:
-- Base templates (hardcodedTemplates): ordens 1-9
-- Premium templates (hardcodedPremiumTemplates): ordens 10-14
-- DB templates: ordens 15+ (offset pelo total de hardcoded)
+**Correcao**: Como os templates sao usados tanto no `/start` (express) quanto no editor completo, nao devemos reduzir os templates em si. Em vez disso, no `Start.tsx`, ao criar o quiz, limitar as perguntas inseridas para no maximo 8 (pegar as primeiras 8 do template). Isso mantem os templates completos para uso normal mas encurta o express.
 
-Isso garante que nenhum template tenha ordem duplicada na tabela admin.
+Alterar `Start.tsx` linhas 118-126:
+```
+const maxExpressQuestions = 8;
+const limitedQuestions = template.config.questions.slice(0, maxExpressQuestions);
+const questionsToInsert = limitedQuestions.map(...)
+```
+E atualizar `question_count` na linha 103 para `limitedQuestions.length`.
 
-### Arquivo 2: `src/data/premiumQuizTemplates.ts` (reescrita completa dos 5 templates)
-Enriquecer CADA um dos 5 premium templates com:
+### Bug 6: Sidebar de perguntas no express mode
+**Estado atual**: Em `CreateQuiz.tsx` linhas 396 e 412, a sidebar e explicitamente escondida com `{!isExpressMode && (...)}`. O usuario nao tem como navegar visualmente pelas perguntas.
 
-**Template 1 — Executivo Corporativo** (expandir de 12 para 15 perguntas):
-- Q1: imageBlock (sala de reuniao corporativa) + textBlock + questionBlock
-- Q3: progressBlock
-- Q4: textBlock (dado impactante) + imageBlock (graficos) + questionBlock
-- Q5: testimonialBlock (CEO case)
-- Q6: sliderBlock (satisfacao) + questionBlock
-- Q7: imageBlock (equipe trabalhando)
-- Q8: progressBlock
-- Q9: comparisonBlock
-- Q10: socialProofBlock
-- Q11: imageBlock (resultados)
-- Q12: testimonialBlock
-- Q13-15: novas perguntas sobre implementacao, ROI, timeline
-- Q15: countdownBlock
-
-**Template 2 — Luxo & Premium** (expandir de 12 para 16 perguntas):
-- 4 imagens luxury (joias, lifestyle, viagem, interior design)
-- testimonialBlock (clientes VIP)
-- socialProofBlock com compras recentes
-- countdownBlock com escassez
-- novas perguntas sobre lifestyle, viagem, investimento
-
-**Template 3 — Tech Futurista** (expandir de 12 para 15 perguntas):
-- 4 imagens tech (codigo, servidor, dashboard, equipe dev)
-- testimonialBlock (CTO/startup)
-- socialProofBlock com projetos lancados
-- sliderBlock (orcamento/prioridade)
-- novas perguntas sobre CI/CD, seguranca, monitoring
-
-**Template 4 — Saude & Medicina** (expandir de 12 para 16 perguntas):
-- 4 imagens saude (consulta, exercicio, alimentacao, wellness)
-- testimonialBlock (paciente)
-- socialProofBlock com agendamentos
-- sliderBlock (nivel de dor/estresse)
-- novas perguntas sobre suplementacao, saude mental, acompanhamento
-
-**Template 5 — Fitness & Energia** (expandir de 12 para 16 perguntas):
-- 4 imagens fitness (treino, corrida, yoga, resultado)
-- testimonialBlock (aluno transformado)
-- socialProofBlock com matriculas
-- sliderBlock (peso atual/meta)
-- novas perguntas sobre nutricao, suplementos, metas de peso
-
-Cada template tera no minimo:
-- 4 imageBlock
-- 2 socialProofBlock
-- 2 testimonialBlock
-- 2 progressBlock
-- 1 comparisonBlock
-- 1 countdownBlock
-- 1 sliderBlock
-- 14-16 perguntas
-
-### Arquivo 3: Nenhuma mudanca em QuizTemplateSelector
-A classificacao premium ja funciona corretamente com `premiumIds` baseado no array `premiumQuizTemplates`. Os 9 base sao free, os 5 premium sao premium. Isso esta correto.
+**Correcao**: Mostrar a sidebar no express mode. Remover a condicao `!isExpressMode` das linhas 396 e 412, e ajustar o margin-left do editor (linha 513) para tambem aplicar no express mode.
 
 ---
 
-## Resumo de Impacto
+## Arquivos a Alterar
 
-| Arquivo | Tipo de mudanca |
-|---------|----------------|
-| `useQuizTemplates.ts` | Corrigir display_order unico |
-| `premiumQuizTemplates.ts` | Reescrever 5 templates com blocos ricos (14-16 perguntas cada) |
+| Arquivo | Mudanca |
+|---------|---------|
+| `src/hooks/useQuizPersistence.ts` | `saveQuiz` retorna `{ success, slug }` em vez de `boolean` |
+| `src/pages/CreateQuiz.tsx` | `handlePublish` usa slug do retorno; mostra sidebar no express; ajusta margins |
+| `src/components/quiz/QuestionConfigStep.tsx` | Botoes Proxima/Anterior mais destacados |
+| `src/components/quiz/ExpressCelebration.tsx` | "Divulgar meu Quiz" com share social inline |
+| `src/pages/Start.tsx` | Limitar perguntas a 8 no express; `is_public: true` |
 
-Total de mudancas: 2 arquivos. Nenhum risco para templates base ou DB.
+## Detalhamento Tecnico
 
+### useQuizPersistence.ts
+Linha 508: `return true` → `return { success: true, slug: quiz.slug }`
+Linha 514: `return false` → `return { success: false, slug: '' }`
+Tipo de retorno: `Promise<{ success: boolean; slug: string }>`
+
+### CreateQuiz.tsx — handlePublish
+```typescript
+const handlePublish = useCallback(async () => {
+  const result = await saveQuiz();
+  if (result?.success && isExpressMode) {
+    const slug = result.slug;
+    const url = profile?.company_slug
+      ? `${window.location.origin}/${profile.company_slug}/${slug}`
+      : `${window.location.origin}/quiz/${slug}`;
+    setPublishedQuizUrl(url);
+    setShowCelebration(true);
+  }
+}, [saveQuiz, isExpressMode, profile?.company_slug]);
+```
+
+### CreateQuiz.tsx — Sidebar no express
+Remover `!isExpressMode &&` das linhas 396 e 412. Manter a paleta de blocos escondida (linha 440).
+
+### QuestionConfigStep.tsx — Botoes destacados
+```tsx
+<Button variant="outline" size="default" ...>
+  <ChevronLeft className="h-5 w-5 mr-2" /> Anterior
+</Button>
+<Button variant="default" size="default" ...>
+  Proxima <ChevronRight className="h-5 w-5 ml-2" />
+</Button>
+```
+
+### ExpressCelebration.tsx — Share social
+Substituir o bloco "Proximo passo" por painel de compartilhamento:
+- Botao WhatsApp: `https://wa.me/?text=Faca+meu+quiz:+${encodeURIComponent(quizUrl)}`
+- Botao Facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(quizUrl)}`
+- Botao Twitter/X: `https://twitter.com/intent/tweet?url=${encodeURIComponent(quizUrl)}&text=...`
+- Botao LinkedIn: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(quizUrl)}`
+- Texto: "Compartilhe seu quiz nas redes sociais"
+
+### Start.tsx — Limitar perguntas
+```typescript
+const maxExpressQuestions = 8;
+const limitedQuestions = template.config.questions.slice(0, maxExpressQuestions);
+// question_count: limitedQuestions.length
+// questionsToInsert = limitedQuestions.map(...)
+```
+E `is_public: true` na insercao do quiz.
