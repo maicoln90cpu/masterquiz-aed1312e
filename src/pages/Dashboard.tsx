@@ -88,13 +88,19 @@ const Dashboard = () => {
         // Load user profile
         const { data: profile } = await (supabase as any)
           .from('profiles')
-          .select('full_name, company_slug, user_objectives')
+          .select('full_name, company_slug, user_objectives, user_stage')
           .eq('id', user.id)
           .maybeSingle();
          
         setUserName(profile?.full_name || user.email?.split('@')[0] || t('dashboard.user'));
         setUserProfile(profile);
         setCurrentUserId(user.id);
+
+        // Redirect explorador sem quiz publicado para /start
+        if (profile?.user_stage === 'explorador' && (stats?.activeQuizzes ?? 0) === 0) {
+          navigate('/start', { replace: true });
+          return;
+        }
         
         // Show objective modal if user_objectives is null or empty
         // BUT skip if user already completed /start flow
@@ -114,7 +120,7 @@ const Dashboard = () => {
     };
     
     loadUserData();
-  }, [navigate, t, stats?.totalQuizzes]);
+  }, [navigate, t, stats?.totalQuizzes, stats?.activeQuizzes]);
 
   const handleLogout = async () => {
     try {
