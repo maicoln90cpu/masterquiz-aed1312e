@@ -1,109 +1,83 @@
 
 
-# Plano: Correcao de Erros Supabase, Layout Sidebar e Renderizacao de Templates
+# Plano: Ajuste Horizontal dos Cards, Quebra de Texto e Edição por Duplo Clique
 
-## Item 1: Erros e Avisos no Supabase
+## Problema 1: Cards ocupam espaço horizontal demais
+A sidebar tem `w-64 xl:w-72` (256px / 288px). Os cards dentro dela expandem horizontalmente com metadados (ícones de tipo, contador de blocos, indicador de completude) + texto + botões de ação, causando overflow que invade a coluna de edição de blocos adjacente.
 
-### Diagnostico dos erros no screenshot:
+**Correção**: Reduzir a sidebar para `w-56 xl:w-64` (224px / 256px). Simplificar os metadados dos cards — remover a linha de ícones de tipo/blocos e manter apenas o número, texto e botões. Isso libera ~32px horizontais.
 
-| Erro | Causa | Status |
-|------|-------|--------|
-| **400 GET /validation_requests** (repetido ~15x) | Query do AdminDashboard executa para todos os usuarios, mas RLS so permite admin. Usuarios normais recebem 400. | **Ativo — precisa corrigir** |
-| **400 GET /quiz_step_analytics** (4x) | RLS so tem policy de SELECT para "Users view own" e INSERT para anon. Se a query usa filtros incompativeis, retorna 400. | **Verificar query no codigo** |
-| **400 POST /auth/v1/token** (2x) | Tentativa de login com credenciais invalidas. Comportamento normal de auth, nao e bug. | **OK — ignorar** |
-| **23505 user_roles_user_id_role_key** | Tentativa de inserir role duplicada para usuario. | **Ativo — precisa upsert** |
-| **23505 user_subscriptions_user_id_key** | Tentativa de inserir subscription duplicada. | **Ativo — precisa upsert** |
-| **409 POST /user_roles** | Conflito por unique constraint (mesmo que acima). | **Ativo** |
-| **409 PATCH /user_subscriptions** | Conflito por unique constraint. | **Ativo** |
-| **403 GET /auth/v1/user** (2x) | Token expirado ou invalido. Comportamento normal de sessao. | **OK — ignorar** |
-| **406 GET /scheduled_deletions** | Accept header incompativel (provavelmente `.single()` sem resultado). | **Ativo — usar `.maybeSingle()`** |
+Arquivo: `src/pages/CreateQuiz.tsx` — alterar `w-64 xl:w-72` para `w-56 xl:w-64` e ajustar `ml-64 xl:ml-72` correspondente.
 
-### Correcoes necessarias:
+## Problema 2: Texto longo empurra ícones
+Quando o texto da pergunta é grande, ele empurra os botões de editar/excluir para fora do viewport.
 
-**1a. validation_requests — proteger query com check de role**
-Em `AdminDashboard.tsx` (linha 251-258), a query a `validation_requests` e executada como parte do `fetchDashboardData` que deve ser protegido por role check. Se o componente ja verifica admin, o problema pode ser que a query executa antes da verificacao. Solucao: adicionar guard `if (!isAdmin)` antes da query ou mover para dentro do bloco admin-only.
+**Correção**: No `QuestionsList.tsx`, o texto da pergunta já usa `truncate` (linha 246), mas o container pai `button` com `flex-1 min-w-0` pode não estar restringindo corretamente. A solução é:
+- Adicionar `overflow-hidden` ao container do card
+- Garantir que o texto use `break-all` ou `truncate` com `max-w` calculado
+- Remover a linha inteira de metadados (tipo, blocos, completude) para economizar espaço — mover indicador de completude para o badge numérico
 
-**1b. user_roles e user_subscriptions — usar upsert**
-Procurar onde esses inserts acontecem e trocar `.insert()` por `.upsert()` com `onConflict`.
+## Problema 3: Texto alinhado à esquerda
+O texto já está em `text-left` no container, mas o `truncate` com `mt-0.5` pode dar impressão de desalinhamento. Garantir `text-left` explícito no div do texto.
 
-**1c. scheduled_deletions — usar maybeSingle()**
-Em `Settings.tsx` linha 76, verificar se usa `.single()` e trocar por `.maybeSingle()`.
-
-**1d. quiz_step_analytics — verificar queries**
-Verificar se ha queries SELECT com filtros que falham para usuarios normais.
-
-### Arquivos:
-- `src/pages/AdminDashboard.tsx` — guard na query de validation_requests
-- `src/pages/Settings.tsx` — `.maybeSingle()` em scheduled_deletions
-- Buscar e corrigir inserts de `user_roles` e `user_subscriptions` para usar upsert
+## Problema 4: Duplo clique para editar
+Substituir o botão de Edit3 por duplo clique (`onDoubleClick`) no texto da pergunta. Ao dar double-click, entrar no modo de edição inline (que já existe). Remover o botão de editar separado para economizar espaço horizontal.
 
 ---
 
-## Item 2: Sidebar Express Mode — Layout Cortado
+## Implementação Detalhada
 
-### Diagnostico:
-A sidebar usa `fixed top-20 left-0 w-64 xl:w-72`. No express mode, o `ExpressProgressBar` (~52px) renderiza ANTES do header sticky, adicionando altura extra. Porem `top-20` (80px) nao contabiliza essa barra extra, fazendo a sidebar iniciar atras/sobre a progress bar.
+### `src/pages/CreateQuiz.tsx`
+- Linha 396: `w-64 xl:w-72` → `w-56 xl:w-64`
+- Linha 513 (margin-left do editor): `ml-64 xl:ml-72` → `ml-56 xl:ml-64`
+- Qualquer outra referência a essas larguras no mesmo arquivo
 
-Alem disso, dentro do `QuestionsList`, os botoes de acao (editar/excluir) estao em `absolute top-1.5 right-1` com `min-w-fit`, mas o container pai tem `pr-20` que pode nao ser suficiente quando ha thumbnail de imagem. O resultado e que botoes ficam cortados na lateral.
+### `src/components/quiz/QuestionsList.tsx`
+Redesenhar cada card para layout ultra-compacto:
 
-### Correcoes:
-
-**2a. Ajustar top da sidebar no express mode**
-Passar prop `isExpressMode` e ajustar `top` da sidebar para `top-[8.5rem]` (~136px = progress bar + header) quando express, ou melhor, usar classe condicional.
-
-**2b. Melhorar layout dos botoes no QuestionsList**
-- Reduzir `pr-20` para `pr-16` ou usar flex layout em vez de absolute positioning para os botoes
-- Garantir que botoes nao saiam do container com `overflow-hidden` no item
-
-### Arquivos:
-- `src/pages/CreateQuiz.tsx` — classe condicional na sidebar para express mode
-- `src/components/quiz/QuestionsList.tsx` — ajustar layout dos botoes de acao
-
----
-
-## Item 3: Renderizacao de Perguntas de Template na Sidebar
-
-### Diagnostico (bug principal):
-Em `QuestionsList.tsx` linha 142:
-```typescript
-const questionText = questionBlock?.content || q.question_text || '';
+```
+[1] Qual é o objetivo pr... [🗑]
 ```
 
-O campo esta buscando `questionBlock.content`, mas o tipo `QuestionBlock` usa `questionText` (nao `content`). O helper `questionBlock()` em `helpers.ts` gera `{ questionText: text }`. Entao para perguntas vindas de template, `content` e `undefined`, e o fallback `q.question_text` funciona — MAS so se o template definiu `question_text` no nivel da pergunta.
+Mudanças:
+1. **Remover linha de metadados** (linhas 203-214) — ícone de tipo, indicador de completude, contador de blocos. Mover indicador de completude (bolinha verde) para dentro do badge numérico.
+2. **Remover botão Edit3** (linhas 263-275) — substituir por `onDoubleClick` no texto
+3. **Texto com truncate rigoroso** — `truncate` já existe, mas adicionar `max-w-[calc(100%-2rem)]` para garantir espaço para o botão de delete
+4. **Adicionar `onDoubleClick`** no div do texto (linha 246): ao dar duplo clique, entrar em modo edição (setar `editingIndex` e `editingLabel`)
+5. **Alinhar texto à esquerda**: garantir `text-left` no container de texto
 
-Olhando os templates (ex: `lead-capture.ts` linha 25): `question_text: 'Qual o tamanho da sua operação hoje?'` esta presente. Entao o texto deveria aparecer. Porem, quando o template e processado por `handleSelectTemplate` (linha 83), o `question_text` e extraido corretamente.
-
-O problema real pode ser que `questionBlock?.content` e `undefined` (correto, campo nao existe), e `q.question_text` existe mas esta sendo truncado demais (`max-w-[140px]` na linha 279). Combinado com `pr-20` e thumbnail de imagem, o texto visivel e minimo.
-
-**Verificacao adicional**: No screenshot image-112 (edicao normal com template), as perguntas mostram texto correto ("Espelhamento", "Há quanto tempo v...", etc.) porque tem `custom_label`. Mas no image-113 (quiz do zero), mostra "Pergunta vazia" porque nao tem texto nem label.
-
-O bug de renderizacao que o usuario reporta no image-112 e visual (layout), nao de dados. O texto aparece mas os itens estao apertados/cortados.
-
-### Correcoes:
-
-**3a. Corrigir leitura do texto da pergunta**
-Trocar `questionBlock?.content` por `questionBlock?.questionText` para alinhar com o tipo `QuestionBlock`.
-
-**3b. Aumentar espaco para texto**
-Aumentar `max-w-[140px]` para `max-w-[160px]` ou usar `flex-1 min-w-0 truncate` sem max-width fixo.
-
-**3c. Reduzir padding direito**
-Mudar `pr-20` para `pr-14` e ajustar posicao dos botoes.
-
-### Arquivo:
-- `src/components/quiz/QuestionsList.tsx`
+Layout final de cada card:
+```tsx
+<div className="w-full p-1.5 rounded-md border overflow-hidden">
+  <div className="flex items-center gap-1.5">
+    {/* Badge número + completude */}
+    <div className="flex-shrink-0 w-5 h-5 rounded-full ...">
+      {index + 1}
+      {isComplete && <span className="absolute ...green dot" />}
+    </div>
+    
+    {/* Texto — duplo clique para editar */}
+    <div 
+      className="flex-1 min-w-0 text-xs text-left truncate"
+      onDoubleClick={() => { setEditingIndex(index); setEditingLabel(...); }}
+    >
+      {isEditing ? <Input .../> : displayText}
+    </div>
+    
+    {/* Apenas botão delete */}
+    <Button className="flex-shrink-0 h-5 w-5 p-0" onClick={delete}>
+      <Trash2 className="h-3 w-3" />
+    </Button>
+  </div>
+</div>
+```
 
 ---
 
-## Resumo de Impacto
+## Resumo
 
-| Arquivo | Mudanca |
+| Arquivo | Mudança |
 |---------|---------|
-| `src/components/quiz/QuestionsList.tsx` | Fix `content` → `questionText`; ajustar layout; reduzir pr |
-| `src/pages/CreateQuiz.tsx` | Classe condicional top sidebar para express |
-| `src/pages/AdminDashboard.tsx` | Guard na query validation_requests |
-| `src/pages/Settings.tsx` | `.maybeSingle()` em scheduled_deletions |
-| Buscar inserts user_roles/user_subscriptions | Trocar por upsert |
-
-Nenhum risco para fluxos existentes. Todas as mudancas sao defensivas e de layout.
+| `src/pages/CreateQuiz.tsx` | Sidebar `w-56 xl:w-64`, margin correspondente |
+| `src/components/quiz/QuestionsList.tsx` | Cards compactos: remover metadados, remover botão edit, adicionar onDoubleClick, truncate rigoroso, text-left |
 
