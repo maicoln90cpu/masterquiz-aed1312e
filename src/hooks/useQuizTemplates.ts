@@ -145,8 +145,8 @@ export const useAllQuizTemplates = () => {
     const dbIds = new Set((dbTemplates || []).map(t => t.id));
     const premiumIds = new Set(hardcodedPremiumTemplates.map(t => t.id));
 
-    // Templates hardcoded que NÃO estão no banco
-    const hardcodedOnly: AdminTemplate[] = allHardcoded
+    // Templates base hardcoded (ordens 1-9)
+    const baseOnly: AdminTemplate[] = hardcodedTemplates
       .filter(t => !dbIds.has(t.id))
       .map((t, i) => ({
         id: t.id,
@@ -155,21 +155,41 @@ export const useAllQuizTemplates = () => {
         category: t.category,
         icon: t.icon || '📝',
         is_active: true,
-        is_premium: premiumIds.has(t.id),
-        display_order: i,
+        is_premium: false,
+        display_order: i + 1,
         preview_config: t.preview as unknown as TemplatePreviewConfig,
         full_config: t.config as unknown as TemplateFullConfig,
         source: 'hardcoded' as const,
         question_count: t.config?.questions?.length || 0,
       }));
 
-    // Templates do banco
-    const fromDB: AdminTemplate[] = (dbTemplates || []).map(dt => ({
+    // Templates premium hardcoded (ordens 10-14)
+    const premiumOnly: AdminTemplate[] = hardcodedPremiumTemplates
+      .filter(t => !dbIds.has(t.id))
+      .map((t, i) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description || null,
+        category: t.category,
+        icon: t.icon || '📝',
+        is_active: true,
+        is_premium: true,
+        display_order: hardcodedTemplates.length + i + 1,
+        preview_config: t.preview as unknown as TemplatePreviewConfig,
+        full_config: t.config as unknown as TemplateFullConfig,
+        source: 'hardcoded' as const,
+        question_count: t.config?.questions?.length || 0,
+      }));
+
+    // Templates do banco (ordens 15+)
+    const totalHardcoded = hardcodedTemplates.length + hardcodedPremiumTemplates.length;
+    const fromDB: AdminTemplate[] = (dbTemplates || []).map((dt, i) => ({
       ...dt,
+      display_order: dt.display_order ?? (totalHardcoded + i + 1),
       source: 'database' as const,
     }));
 
-    return [...hardcodedOnly, ...fromDB];
+    return [...baseOnly, ...premiumOnly, ...fromDB];
   })();
 
   return {
