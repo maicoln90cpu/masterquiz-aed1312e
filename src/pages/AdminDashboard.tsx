@@ -253,12 +253,17 @@ export default function AdminDashboard() {
           return result;
         }),
         measureQuery('validation-requests', async () => {
-          const result = await supabase
-            .from('validation_requests')
-            .select(`*, quizzes (title)`)
-            .eq('status', 'pending')
-            .order('requested_at', { ascending: false });
-          return result;
+          try {
+            const result = await supabase
+              .from('validation_requests')
+              .select(`*, quizzes (title)`)
+              .eq('status', 'pending')
+              .order('requested_at', { ascending: false });
+            return result;
+          } catch (e) {
+            console.warn('validation_requests query failed (expected for non-admin):', e);
+            return { data: [], error: null, count: null };
+          }
         }),
         measureQuery('quiz-respondents', async () => {
           const result = await supabase
