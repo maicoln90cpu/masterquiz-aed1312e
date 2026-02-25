@@ -2,8 +2,8 @@
 
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
-**Versão:** 2.25  
-**Última atualização:** 04 de Fevereiro de 2025  
+**Versão:** 2.27  
+**Última atualização:** 25 de Fevereiro de 2026  
 **Owner:** Product Team
 
 ---
@@ -558,12 +558,14 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 
 ### Documentação Relacionada
 
-- [README.md](./README.md) - Setup e stack técnica
+- [README.md](./README.md) - Setup, stack e arquitetura
 - [ROADMAP.md](./ROADMAP.md) - Planejamento estratégico
 - [PENDENCIAS.md](./PENDENCIAS.md) - Changelog e pendências
-- [src/__tests__/README.md](./src/__tests__/README.md) - Guia de testes
+- [STYLE_GUIDE.md](./STYLE_GUIDE.md) - Padrões de código
+- [CHECKLIST.md](./CHECKLIST.md) - Checklist de validação MVP
+- [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) - Arquitetura técnica
 
 ---
 
 **Documento mantido por:** Product Team  
-**Próxima revisão:** Abril 2025
+**Próxima revisão:** Abril 2026
