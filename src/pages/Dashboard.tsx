@@ -1,8 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Plus, MessageSquare, Webhook, Settings, Loader2, HelpCircle, FileQuestion, ArrowRight, Sparkles } from "lucide-react";
+import { BarChart3, Plus, MessageSquare, Webhook, Settings, Loader2, HelpCircle, FileQuestion, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { useDashboardStats, useChartData } from "@/hooks/useDashboardData";
@@ -53,6 +53,9 @@ const Dashboard = () => {
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [showObjectiveModal, setShowObjectiveModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  // Detectar se veio do fast-path /start
+  const cameFromStart = useMemo(() => localStorage.getItem('mq_start_completed') === 'true', []);
   
   // PQL User Stage
   const userStageData = useUserStage();
@@ -141,15 +144,20 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <Onboarding open={showOnboarding} onClose={handleCloseOnboarding} />
-      {showObjectiveModal && currentUserId && (
-        <UserObjectiveModal
-          open={showObjectiveModal}
-          userId={currentUserId}
-          onComplete={() => setShowObjectiveModal(false)}
-        />
+      {/* Legacy onboarding — skip entirely if user came from /start fast-path */}
+      {!cameFromStart && (
+        <>
+          <Onboarding open={showOnboarding} onClose={handleCloseOnboarding} />
+          {showObjectiveModal && currentUserId && (
+            <UserObjectiveModal
+              open={showObjectiveModal}
+              userId={currentUserId}
+              onComplete={() => setShowObjectiveModal(false)}
+            />
+          )}
+          {shouldShowDashboardTour && <DashboardTour updateOnboardingStep={updateOnboardingStep} />}
+        </>
       )}
-      {shouldShowDashboardTour && <DashboardTour updateOnboardingStep={updateOnboardingStep} />}
       
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -212,10 +220,37 @@ const Dashboard = () => {
           type="response" 
         />
 
-        {/* Onboarding Progress Card */}
-        <div className="mb-6">
-          <OnboardingProgress collapsible />
-        </div>
+        {/* Fast-path welcome card — only for users from /start who just published */}
+        {cameFromStart && (stats?.activeQuizzes ?? 0) > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="border-green-500/30 bg-gradient-to-r from-green-500/5 to-emerald-500/10">
+              <CardContent className="py-5">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {t('dashboard.fastPathWelcome', '🎉 Seu quiz está publicado! Agora explore seu painel.')}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {t('dashboard.fastPathHint', 'Acompanhe respostas, gerencie leads no CRM e analise métricas em tempo real.')}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Onboarding Progress Card — hide for fast-path users */}
+        {!cameFromStart && (
+          <div className="mb-6">
+            <OnboardingProgress collapsible />
+          </div>
+        )}
 
         {/* Resource Monitoring Panel */}
         <div className="mb-6">
