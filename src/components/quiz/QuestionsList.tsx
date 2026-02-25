@@ -180,50 +180,19 @@ export const QuestionsList = memo(({
                   <div
                     key={index}
                     className={cn(
-                      "w-full text-left p-3 rounded-md transition-all relative group border",
+                      "w-full text-left p-2 rounded-md transition-all border overflow-hidden",
                       currentStep === 3 && currentQuestionIndex === index
                         ? "bg-primary/10 border-primary shadow-sm"
                         : "bg-card border-border hover:border-primary/30"
                     )}
                   >
-                    <div className="flex items-start gap-2 pr-[4.5rem]">
-                      {/* Thumbnail de Mídia */}
-                      {firstMediaBlock && (
-                        <div className="flex-shrink-0 w-12 h-12 rounded-md overflow-hidden bg-muted border border-border">
-                          {firstMediaBlock.type === 'image' && firstMediaBlock.url && (
-                            <img 
-                              src={firstMediaBlock.url} 
-                              alt="Preview" 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          )}
-                          {firstMediaBlock.type === 'video' && (
-                            <div className="w-full h-full flex items-center justify-center bg-muted">
-                              <Video className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
-                          {firstMediaBlock.type === 'audio' && (
-                            <div className="w-full h-full flex items-center justify-center bg-muted">
-                              <Music className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => onQuestionClick(index)}
-                        onDoubleClick={(e) => {
-                          e.stopPropagation();
-                          setEditingLabel(customLabel || cleanText || '');
-                          setEditingIndex(index);
-                        }}
-                        className="flex-1 flex items-start gap-2 min-w-0"
+                        className="flex-1 flex items-center gap-1.5 min-w-0"
                       >
                         <div className={cn(
-                          "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold",
+                          "flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold",
                           currentStep === 3 && currentQuestionIndex === index
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-muted-foreground"
@@ -231,17 +200,15 @@ export const QuestionsList = memo(({
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5 flex-wrap">
-                            <span className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-0.5">
                               {getQuestionTypeIcon()}
-                              {t('createQuiz.questionNumber', { number: index + 1 })}
                             </span>
                             {isComplete && (
-                              <span className="inline-flex h-2 w-2 rounded-full bg-green-500" title="Pergunta completa" />
+                              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-green-500" title="Completa" />
                             )}
-                            {/* Contador de blocos */}
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-[10px] font-medium">
-                              <Blocks className="h-2.5 w-2.5" />
+                            <span className="inline-flex items-center gap-0.5 px-1 rounded bg-muted font-medium">
+                              <Blocks className="h-2 w-2" />
                               {blockCount}
                             </span>
                           </div>
@@ -269,14 +236,14 @@ export const QuestionsList = memo(({
                               }}
                               onClick={(e) => e.stopPropagation()}
                               autoFocus
-                              className="h-7 text-sm"
+                              className="h-6 text-xs mt-0.5"
                               placeholder={cleanText || t('createQuiz.emptyQuestion')}
                             />
                           ) : (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="text-sm font-medium truncate">
+                                  <div className="text-xs font-medium truncate mt-0.5">
                                     {displayText}
                                   </div>
                                 </TooltipTrigger>
@@ -290,32 +257,33 @@ export const QuestionsList = memo(({
                           )}
                         </div>
                       </button>
-                    </div>
-                    
-                    <div className="absolute top-1.5 right-1 flex gap-0.5 z-30 bg-card border border-border rounded-md p-0.5 shadow-sm min-w-fit shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingLabel(customLabel || questionText || '');
-                          setEditingIndex(index);
-                        }}
-                        className="h-7 w-7 p-0 hover:bg-primary/10 flex-shrink-0"
-                        title={t('createQuiz.renameQuestion')}
-                      >
-                        <Edit3 className="h-3.5 w-3.5 text-primary" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => handleDeleteClick(e, index)}
-                        className="h-7 w-7 p-0 hover:bg-destructive/10 flex-shrink-0"
-                        title={t('createQuiz.deleteQuestion')}
-                        disabled={questions.length <= 1}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
+
+                      {/* Action buttons - inline, always visible */}
+                      <div className="flex-shrink-0 flex gap-0.5">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingLabel(customLabel || questionText || '');
+                            setEditingIndex(index);
+                          }}
+                          className="h-6 w-6 p-0 hover:bg-primary/10"
+                          title={t('createQuiz.renameQuestion')}
+                        >
+                          <Edit3 className="h-3 w-3 text-primary" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => handleDeleteClick(e, index)}
+                          className="h-6 w-6 p-0 hover:bg-destructive/10"
+                          title={t('createQuiz.deleteQuestion')}
+                          disabled={questions.length <= 1}
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
