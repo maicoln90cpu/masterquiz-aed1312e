@@ -52,46 +52,53 @@ export const useQuizTemplates = () => {
 
       return data as unknown as DBTemplate[];
     },
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Query para verificar se existem templates no banco (ativos ou não)
-  const { data: totalCount } = useQuery({
-    queryKey: ['quiz-templates-count'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('quiz_templates')
-        .select('*', { count: 'exact', head: true });
-      return count || 0;
-    },
-    staleTime: 10 * 60 * 1000,
+  // ✅ CORREÇÃO: Mesclar hardcoded + banco, priorizando hardcoded por ID
+  // Isso garante que os templates de funil aparecem no selector mesmo com banco populado
+  const mergedTemplates = (() => {
+    const allHardcoded = [...hardcodedTemplates, ...hardcodedPremiumTemplates];
+
+    if (!dbTemplates || dbTemplates.length === 0) {
+      return allHardcoded;
+    }
+
+    // Começar com todos os hardcoded
+    const templateMap = new Map<string, QuizTemplate>();
+    allHardcoded.forEach(t => templateMap.set(t.id, t));
+
+    // Adicionar do banco os que NÃO existem no hardcoded
+    dbTemplates.forEach(dt => {
+      if (!templateMap.has(dt.id)) {
+        templateMap.set(dt.id, convertDBTemplateToQuizTemplate(dt));
+      }
+    });
+
+    return Array.from(templateMap.values());
+  })();
+
+  // ✅ Separar normais e premium
+  // Premium: se veio do banco, usar is_premium do banco; se hardcoded premium, marcar como premium
+  const premiumIds = new Set(hardcodedPremiumTemplates.map(t => t.id));
+
+  const normalTemplates = mergedTemplates.filter(t => {
+    const dbT = dbTemplates?.find(dt => dt.id === t.id);
+    if (dbT) return !dbT.is_premium;
+    return !premiumIds.has(t.id);
   });
 
-  // Se existem templates no banco (mesmo que inativos), NÃO usar fallback
-  const hasTemplatesInDB = totalCount !== undefined && totalCount > 0;
-  
-  const templates = hasTemplatesInDB
-    ? (dbTemplates || []).map(convertDBTemplateToQuizTemplate)
-    : [...hardcodedTemplates, ...hardcodedPremiumTemplates];
-
-  // ✅ CORREÇÃO: Usar APENAS o campo is_premium do banco, não verificar string no ID
-  const normalTemplates = templates.filter(t => {
-    const dbTemplate = dbTemplates?.find(dt => dt.id === t.id);
-    // Se veio do banco, usar is_premium do banco; senão, considerar não-premium
-    return dbTemplate ? !dbTemplate.is_premium : true;
-  });
-  
-  const premiumTemplates = templates.filter(t => {
-    const dbTemplate = dbTemplates?.find(dt => dt.id === t.id);
-    // Só é premium se is_premium === true no banco
-    return dbTemplate?.is_premium === true;
+  const premiumTemplates = mergedTemplates.filter(t => {
+    const dbT = dbTemplates?.find(dt => dt.id === t.id);
+    if (dbT) return dbT.is_premium === true;
+    return premiumIds.has(t.id);
   });
 
   return {
-    templates,
+    templates: mergedTemplates,
     normalTemplates,
     premiumTemplates,
-    dbTemplates, // Expor para uso no selector
+    dbTemplates,
     isLoading,
     error,
     usingFallback: !dbTemplates || dbTemplates.length === 0
