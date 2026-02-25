@@ -1,5 +1,5 @@
 import { QuizTemplate } from './types';
-import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock } from './helpers';
+import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, imageBlock } from './helpers';
 
 export const courseOnboardingTemplate: QuizTemplate = {
   id: 'funil-onboarding-curso',
@@ -31,7 +31,8 @@ export const courseOnboardingTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
-          textBlock('co-q1', '<p>🎯 Suas respostas vão personalizar toda a experiência do curso para você.</p>', 0),
+          imageBlock('co-q1', '/templates/course-onboarding.jpg', 'Profissional fazendo curso online com fones de ouvido', 0),
+          textBlock('co-q1', '<p>🎯 Suas respostas vão personalizar toda a experiência do curso para você.</p>', 1),
           questionBlock('co-q1', 'Qual seu nível de experiência na área do curso?', [
             { text: 'Zero — nunca estudei sobre isso', value: 'zero' },
             { text: 'Iniciante — vi alguns conteúdos', value: 'beginner' },

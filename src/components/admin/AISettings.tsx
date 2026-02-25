@@ -585,19 +585,33 @@ const CostsTab = () => {
         }
       });
 
-      // Buscar emails dos usuários (via profiles não temos email, então mostramos ID abreviado)
+      // Buscar nomes dos usuários via profiles
+      const userIdsToFetch = Object.keys(userStats);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIdsToFetch);
+
+      const profilesMap = new Map(
+        (profiles || []).map((p: any) => [p.id, p])
+      );
+
       return Object.entries(userStats)
-        .map(([userId, data]) => ({
-          userId,
-          userIdShort: userId.substring(0, 8) + '...',
-          generations: data.generations,
-          questions: data.questions,
-          tokens: data.tokens,
-          cost: data.cost,
-          modelsUsed: data.models.size,
-          lastUsed: data.lastUsed ? format(new Date(data.lastUsed), 'dd/MM/yy HH:mm') : '-'
-        }))
-        .sort((a, b) => b.cost - a.cost) // Ordenar por custo
+        .map(([userId, data]) => {
+          const profile = profilesMap.get(userId);
+          const displayName = profile?.full_name || profile?.email || userId.substring(0, 8) + '...';
+          return {
+            userId,
+            userIdShort: displayName,
+            generations: data.generations,
+            questions: data.questions,
+            tokens: data.tokens,
+            cost: data.cost,
+            modelsUsed: data.models.size,
+            lastUsed: data.lastUsed ? format(new Date(data.lastUsed), 'dd/MM/yy HH:mm') : '-'
+          };
+        })
+        .sort((a, b) => b.cost - a.cost)
         .slice(0, 10);
     }
   });
@@ -910,7 +924,7 @@ const CostsTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>#</TableHead>
-                  <TableHead>User ID</TableHead>
+                  <TableHead>Usuário</TableHead>
                   <TableHead className="text-right">Gerações</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
                   <TableHead className="text-right">Custo (USD)</TableHead>
@@ -925,7 +939,7 @@ const CostsTab = () => {
                         {index + 1}º
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{user.userIdShort}</TableCell>
+                    <TableCell className="text-sm font-medium">{user.userIdShort}</TableCell>
                     <TableCell className="text-right">{user.generations}</TableCell>
                     <TableCell className="text-right">{formatTokens(user.tokens)}</TableCell>
                     <TableCell className="text-right font-medium text-green-600">${user.cost.toFixed(4)}</TableCell>

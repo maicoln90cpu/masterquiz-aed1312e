@@ -1,5 +1,5 @@
 import { QuizTemplate } from './types';
-import { questionBlock, textBlock, socialProofBlock, progressBlock, separatorBlock } from './helpers';
+import { questionBlock, textBlock, socialProofBlock, progressBlock, separatorBlock, imageBlock } from './helpers';
 
 export const diagnosticExamTemplate: QuizTemplate = {
   id: 'funil-avaliacao-diagnostica',
@@ -32,7 +32,8 @@ export const diagnosticExamTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
-          textBlock('de-q1', '<p>Esta avaliação identifica seu nível atual e recomenda o melhor caminho de estudo.</p>', 0),
+          imageBlock('de-q1', '/templates/diagnostic-assessment.jpg', 'Pessoa concentrada fazendo avaliação online em tablet', 0),
+          textBlock('de-q1', '<p>Esta avaliação identifica seu nível atual e recomenda o melhor caminho de estudo.</p>', 1),
           questionBlock('de-q1', 'Qual sua área de interesse principal?', [
             { text: 'Marketing Digital', value: 'marketing' },
             { text: 'Programação / Tecnologia', value: 'tech' },

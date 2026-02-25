@@ -1,5 +1,5 @@
 import type { QuizTemplate } from './types';
-import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, testimonialBlock } from './helpers';
+import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, testimonialBlock, imageBlock } from './helpers';
 
 export const paidTrafficTemplate: QuizTemplate = {
   id: 'funil-trafego-pago',
@@ -28,6 +28,7 @@ export const paidTrafficTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
+          imageBlock('pt1', '/templates/paid-traffic-dashboard.jpg', 'Dashboard de analytics e métricas de tráfego pago', 0),
           textBlock('pt1', '<h2>Teste rápido de qualificação</h2><p>12 perguntas. Sem enrolação.</p>'),
           questionBlock('pt1', 'Qual sua faixa etária?', [
             { text: '18-25', value: '18-25' }, { text: '26-35', value: '26-35' },

@@ -241,16 +241,18 @@ export default function TemplateManagement() {
                 <TableHead>Nome</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Origem</TableHead>
+                <TableHead className="text-center">Ordem</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Perguntas</TableHead>
+                <TableHead className="text-center">Uso</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {templates.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground">
                     Nenhum template cadastrado. Clique em "Novo Template" para criar.
                   </TableCell>
                 </TableRow>
@@ -288,6 +290,9 @@ export default function TemplateManagement() {
                           </Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-sm text-muted-foreground">{template.display_order}</span>
+                      </TableCell>
                       <TableCell>
                         {template.is_active ? (
                           <Badge variant="default">Ativo</Badge>
@@ -305,6 +310,14 @@ export default function TemplateManagement() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">{questionCount}</TableCell>
+                      <TableCell className="text-center">
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <span className="text-sm text-muted-foreground">—</span>
+                          </TooltipTrigger>
+                          <TooltipContent>Tracking de uso será implementado em breve</TooltipContent>
+                        </Tooltip>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           {!isHardcoded && (

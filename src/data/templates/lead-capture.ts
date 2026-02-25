@@ -1,5 +1,5 @@
 import type { QuizTemplate } from './types';
-import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, testimonialBlock } from './helpers';
+import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, testimonialBlock, imageBlock } from './helpers';
 
 export const leadCaptureTemplate: QuizTemplate = {
   id: 'funil-captacao-leads',
@@ -33,6 +33,7 @@ export const leadCaptureTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
+          imageBlock('lc1', '/templates/lead-capture-hero.jpg', 'Profissional analisando dados de crescimento do negócio', 0),
           textBlock('lc1', '<h2>Vamos conhecer você</h2><p>Para indicar a melhor solução, precisamos entender sua realidade atual.</p>'),
           separatorBlock('lc1', 1),
           questionBlock('lc1', 'Qual o tamanho da sua operação hoje?', [
