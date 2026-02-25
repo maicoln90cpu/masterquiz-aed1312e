@@ -1,18 +1,12 @@
 import React, { useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { FileQuestion, Plus, Trash2, AlertCircle } from "lucide-react";
+import { FileQuestion, Plus, Trash2, AlertCircle, Edit3 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +29,19 @@ interface QuestionsListProps {
   questionsPerQuizLimit?: number;
 }
 
-// ✅ Memoizado para evitar re-renders desnecessários
+const stripHtml = (html: string) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+};
+
+const isQuestionComplete = (question: any) => {
+  const questionBlock = question.blocks?.find((b: any) => b.type === 'question');
+  const hasText = questionBlock?.questionText?.trim().length > 0 || question.question_text?.trim().length > 0;
+  const hasOptions = questionBlock?.options?.length > 0 || question.options?.length > 0;
+  return hasText && hasOptions;
+};
+
 export const QuestionsList = memo(({ 
   questions, 
   currentStep, 
@@ -51,7 +57,7 @@ export const QuestionsList = memo(({
   const [editingLabel, setEditingLabel] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [questionToDeleteIndex, setQuestionToDeleteIndex] = useState<number | null>(null);
-  
+
   const handleDeleteClick = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
     setQuestionToDeleteIndex(index);
@@ -65,25 +71,24 @@ export const QuestionsList = memo(({
     setDeleteConfirmOpen(false);
     setQuestionToDeleteIndex(null);
   };
-  
-  // ✅ Função para remover HTML e deixar apenas texto
-  const stripHtml = (html: string) => {
-    if (!html) return '';
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    return doc.body.textContent || '';
+
+  const startEditing = (e: React.MouseEvent, index: number, currentLabel: string, questionText: string) => {
+    e.stopPropagation();
+    setEditingLabel(currentLabel || questionText || '');
+    setEditingIndex(index);
   };
-  
-  // Check if a question is complete
-  const isQuestionComplete = (question: any) => {
-    const questionBlock = question.blocks?.find((b: any) => b.type === 'question');
-    const hasText = questionBlock?.questionText?.trim().length > 0 || question.question_text?.trim().length > 0;
-    const hasOptions = questionBlock?.options?.length > 0 || question.options?.length > 0;
-    return hasText && hasOptions;
+
+  const finishEditing = () => {
+    if (editingIndex !== null && onUpdateQuestion) {
+      onUpdateQuestion(editingIndex, { custom_label: editingLabel });
+    }
+    setEditingIndex(null);
   };
-  
+
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold text-sm flex items-center gap-2">
             <FileQuestion className="h-4 w-4" />
@@ -95,7 +100,7 @@ export const QuestionsList = memo(({
             variant="ghost"
             onClick={onAddQuestion}
             disabled={questions.length >= questionsPerQuizLimit}
-            className="h-7 w-7 p-0"
+            className="h-7 w-7 p-0 flex-shrink-0"
             title={questions.length >= questionsPerQuizLimit 
               ? t('createQuiz.questionsLimitReached', { limit: questionsPerQuizLimit })
               : t('createQuiz.addQuestion')}
@@ -106,17 +111,14 @@ export const QuestionsList = memo(({
         <p className="text-xs text-muted-foreground mb-2">
           {questions.length}/{questionsPerQuizLimit} {t('createQuiz.appearance.questions')}
         </p>
-        <Progress 
-          value={(questions.length / questionsPerQuizLimit) * 100} 
-          className="h-2"
-        />
+        <Progress value={(questions.length / questionsPerQuizLimit) * 100} className="h-2" />
       </div>
 
       {/* Alerta de limite */}
       {questions.length >= questionsPerQuizLimit * 0.8 && (
         <Alert 
           variant={questions.length >= questionsPerQuizLimit ? "destructive" : "default"} 
-          className="mx-4 mt-4"
+          className="mx-4 mt-4 flex-shrink-0"
         >
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-xs">
@@ -126,8 +128,9 @@ export const QuestionsList = memo(({
           </AlertDescription>
         </Alert>
       )}
-      
-      <ScrollArea className="flex-1">
+
+      {/* Lista */}
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-2 space-y-1">
           {questions.length === 0 ? (
             <div className="p-4 text-center">
@@ -136,119 +139,100 @@ export const QuestionsList = memo(({
               </p>
             </div>
           ) : (
-            <>
-              {questions.map((q, index) => {
-                const questionBlock = q.blocks?.find((b: any) => b.type === 'question');
-                const questionText = questionBlock?.questionText || q.question_text || '';
-                const customLabel = q.custom_label || '';
-                // ✅ Limpar HTML do texto para exibição
-                const cleanText = stripHtml(questionText);
-                const displayText = customLabel || cleanText || t('createQuiz.emptyQuestion');
-                const isTruncated = cleanText.length > 50;
-                const isComplete = isQuestionComplete(q);
-                const isEditing = editingIndex === index;
-                
-                
-                
-                return (
-                  <div
-                    key={index}
-                    className={cn(
-                      "w-full text-left p-1.5 rounded-md transition-all border overflow-hidden",
-                      currentStep === 3 && currentQuestionIndex === index
-                        ? "bg-primary/10 border-primary shadow-sm"
-                        : "bg-card border-border hover:border-primary/30"
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      {/* Badge número + indicador de completude */}
-                      <button
-                        onClick={() => onQuestionClick(index)}
-                        className="flex-shrink-0 relative"
-                      >
-                        <div className={cn(
-                          "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold",
-                          currentStep === 3 && currentQuestionIndex === index
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        )}>
-                          {index + 1}
-                        </div>
-                        {isComplete && (
-                          <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 border border-background" />
-                        )}
-                      </button>
+            questions.map((q, index) => {
+              const questionBlock = q.blocks?.find((b: any) => b.type === 'question');
+              const questionText = questionBlock?.questionText || q.question_text || '';
+              const customLabel = q.custom_label || '';
+              const cleanText = stripHtml(questionText);
+              const displayText = customLabel || cleanText || t('createQuiz.emptyQuestion');
+              const isComplete = isQuestionComplete(q);
+              const isEditing = editingIndex === index;
+              const isActive = currentStep === 3 && currentQuestionIndex === index;
 
-                      {/* Texto — duplo clique para editar */}
-                      <div
-                        className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => onQuestionClick(index)}
-                        onDoubleClick={(e) => {
-                          e.stopPropagation();
-                          setEditingLabel(customLabel || questionText || '');
-                          setEditingIndex(index);
-                        }}
-                      >
-                        {isEditing ? (
-                          <Input
-                            value={editingLabel}
-                            onChange={(e) => setEditingLabel(e.target.value)}
-                            onBlur={() => {
-                              if (onUpdateQuestion) {
-                                onUpdateQuestion(index, { custom_label: editingLabel });
-                              }
-                              setEditingIndex(null);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                if (onUpdateQuestion) {
-                                  onUpdateQuestion(index, { custom_label: editingLabel });
-                                }
-                                setEditingIndex(null);
-                              }
-                              if (e.key === 'Escape') {
-                                setEditingIndex(null);
-                              }
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            autoFocus
-                            className="h-5 text-xs"
-                            placeholder={cleanText || t('createQuiz.emptyQuestion')}
-                          />
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <p className="text-xs font-medium text-left truncate">
-                                  {displayText}
-                                </p>
-                              </TooltipTrigger>
-                              {isTruncated && (
-                                <TooltipContent side="right" className="max-w-xs">
-                                  <p>{cleanText}</p>
-                                </TooltipContent>
-                              )}
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
+              return (
+                <div
+                  key={q.id || index}
+                  className={cn(
+                    "w-full text-left p-2 rounded-md transition-all border",
+                    isActive
+                      ? "bg-primary/10 border-primary shadow-sm"
+                      : "bg-card border-border hover:border-primary/30"
+                  )}
+                >
+                  <div className="flex items-start gap-1.5">
+                    {/* Badge numérico */}
+                    <button
+                      onClick={() => onQuestionClick(index)}
+                      className="flex-shrink-0 relative mt-0.5"
+                      type="button"
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {index + 1}
                       </div>
+                      {isComplete && (
+                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 border border-background" />
+                      )}
+                    </button>
 
-                      {/* Apenas botão delete */}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => handleDeleteClick(e, index)}
-                        className="flex-shrink-0 h-5 w-5 p-0 hover:bg-destructive/10"
-                        title={t('createQuiz.deleteQuestion')}
-                        disabled={questions.length <= 1}
+                    {/* Texto — 2 linhas max */}
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => onQuestionClick(index)}
+                      onDoubleClick={(e) => startEditing(e, index, customLabel, questionText)}
+                    >
+                      {isEditing ? (
+                        <Input
+                          value={editingLabel}
+                          onChange={(e) => setEditingLabel(e.target.value)}
+                          onBlur={finishEditing}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') finishEditing();
+                            if (e.key === 'Escape') setEditingIndex(null);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          autoFocus
+                          className="h-6 text-xs py-0 px-1 min-h-0"
+                          placeholder={cleanText || t('createQuiz.emptyQuestion')}
+                        />
+                      ) : (
+                        <p className="text-xs font-medium text-left line-clamp-2 break-words">
+                          {displayText}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Ícones fixos à direita */}
+                    <div className="flex-shrink-0 flex items-center gap-0.5 mt-0.5">
+                      <button
+                        type="button"
+                        onClick={(e) => startEditing(e, index, customLabel, questionText)}
+                        className="h-5 w-5 flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                        title={t('createQuiz.editQuestion', 'Editar')}
                       >
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
+                        <Edit3 className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteClick(e, index)}
+                        className={cn(
+                          "h-5 w-5 flex items-center justify-center rounded hover:bg-destructive/10 text-destructive transition-colors",
+                          questions.length <= 1 && "opacity-50 pointer-events-none"
+                        )}
+                        disabled={questions.length <= 1}
+                        title={t('createQuiz.deleteQuestion')}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </>
+                </div>
+              );
+            })
           )}
         </div>
       </ScrollArea>
