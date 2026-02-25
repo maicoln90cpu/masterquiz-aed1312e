@@ -105,6 +105,21 @@ export const useQuizTemplates = () => {
   };
 };
 
+export interface AdminTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  icon: string | null;
+  is_active: boolean;
+  is_premium: boolean;
+  display_order: number;
+  preview_config: TemplatePreviewConfig;
+  full_config: TemplateFullConfig;
+  source: 'hardcoded' | 'database';
+  question_count?: number;
+}
+
 export const useAllQuizTemplates = () => {
   const { data: dbTemplates, isLoading, error, refetch } = useQuery({
     queryKey: ['all-quiz-templates'],
@@ -124,8 +139,41 @@ export const useAllQuizTemplates = () => {
     staleTime: 2 * 60 * 1000,
   });
 
+  // Mesclar hardcoded + DB para visão completa no admin
+  const allTemplates: AdminTemplate[] = (() => {
+    const allHardcoded = [...hardcodedTemplates, ...hardcodedPremiumTemplates];
+    const dbIds = new Set((dbTemplates || []).map(t => t.id));
+    const premiumIds = new Set(hardcodedPremiumTemplates.map(t => t.id));
+
+    // Templates hardcoded que NÃO estão no banco
+    const hardcodedOnly: AdminTemplate[] = allHardcoded
+      .filter(t => !dbIds.has(t.id))
+      .map((t, i) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description || null,
+        category: t.category,
+        icon: t.icon || '📝',
+        is_active: true,
+        is_premium: premiumIds.has(t.id),
+        display_order: i,
+        preview_config: t.preview as unknown as TemplatePreviewConfig,
+        full_config: t.config as unknown as TemplateFullConfig,
+        source: 'hardcoded' as const,
+        question_count: t.config?.questions?.length || 0,
+      }));
+
+    // Templates do banco
+    const fromDB: AdminTemplate[] = (dbTemplates || []).map(dt => ({
+      ...dt,
+      source: 'database' as const,
+    }));
+
+    return [...hardcodedOnly, ...fromDB];
+  })();
+
   return {
-    templates: dbTemplates || [],
+    templates: allTemplates,
     isLoading,
     error,
     refetch
