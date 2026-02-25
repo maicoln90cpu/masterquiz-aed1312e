@@ -1,9 +1,9 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Save, Copy, ExternalLink, Menu, Blocks, Loader2, RotateCcw, Play, PanelRightClose, PanelRight, Eye, ListChecks, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Copy, ExternalLink, Menu, Blocks, Loader2, RotateCcw, Play, PanelRightClose, PanelRight, Eye, ListChecks, AlertTriangle, Rocket } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
@@ -34,6 +34,8 @@ import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
+import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
+import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 
 // ✅ HOOKS CUSTOMIZADOS EXTRAÍDOS
 import { useQuizState } from "@/hooks/useQuizState";
@@ -53,6 +55,9 @@ const CreateQuiz = () => {
   const { profile } = useProfile();
   
   const isEditMode = !!searchParams.get('id');
+  const isExpressMode = searchParams.get('mode') === 'express';
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
 
   // ✅ Hook de estado principal
   const {
@@ -150,22 +155,27 @@ const CreateQuiz = () => {
   // ✅ Tour guiado
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('quiz_tour_completed');
-    if (!hasSeenTour && !uiState.showTemplateSelector && questions.length > 0) {
+    if (!hasSeenTour && !isExpressMode && !uiState.showTemplateSelector && questions.length > 0) {
       const timer = setTimeout(() => {
         startQuizCreationTour(t);
         localStorage.setItem('quiz_tour_completed', 'true');
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [uiState.showTemplateSelector, questions.length, t]);
+  }, [uiState.showTemplateSelector, questions.length, t, isExpressMode]);
 
-  // ✅ Carregar quiz existente (suporta ?id= para edição)
+  // ✅ Carregar quiz existente (suporta ?id= para edição e modo express)
   useEffect(() => {
     const editQuizId = searchParams.get('id');
     if (editQuizId) {
       loadExistingQuiz(editQuizId);
+      // Express mode: force step 3 after loading
+      if (isExpressMode) {
+        updateEditor({ step: 3 });
+        updateUI({ showTemplateSelector: false });
+      }
     }
-  }, [searchParams, loadExistingQuiz]);
+  }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI]);
 
   // ✅ Limpar localStorage quando não é modo edição
   useEffect(() => {
@@ -185,14 +195,46 @@ const CreateQuiz = () => {
     updateUI({ resetDialogOpen: false });
   }, [clearLocalStorage, clearAndStartFresh, updateUI]);
 
-  // ✅ Handler para publicar
+  // ✅ Handler para publicar (com suporte a express celebration)
   const handlePublish = useCallback(async () => {
-    await saveQuiz();
-  }, [saveQuiz]);
+    const success = await saveQuiz();
+    if (success && isExpressMode) {
+      // Build quiz URL for celebration
+      const slug = editorState.quizSlug;
+      const url = profile?.company_slug
+        ? `${window.location.origin}/${profile.company_slug}/${slug}`
+        : `${window.location.origin}/quiz/${slug}`;
+      setPublishedQuizUrl(url);
+      setShowCelebration(true);
+    }
+  }, [saveQuiz, isExpressMode, editorState.quizSlug, profile?.company_slug]);
+
+  // ✅ Compute quiz URL for express celebration
+  const expressQuizUrl = useMemo(() => {
+    if (!editorState.quizSlug) return '';
+    return profile?.company_slug
+      ? `${window.location.origin}/${profile.company_slug}/${editorState.quizSlug}`
+      : `${window.location.origin}/quiz/${editorState.quizSlug}`;
+  }, [editorState.quizSlug, profile?.company_slug]);
 
   // ============================================
   // RENDERS CONDICIONAIS
   // ============================================
+
+  // Express Celebration Screen
+  if (showCelebration && isExpressMode) {
+    return (
+      <ExpressCelebration
+        quizUrl={publishedQuizUrl || expressQuizUrl}
+        quizTitle={appearanceState.title || t('createQuiz.newQuiz')}
+        onGoToDashboard={() => {
+          queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+          navigate('/dashboard');
+        }}
+      />
+    );
+  }
 
   // AI Generator
   if (uiState.showAIGenerator) {
@@ -223,7 +265,7 @@ const CreateQuiz = () => {
   }
 
   // Template Selector (apenas se NÃO for modo edição)
-  if (uiState.showTemplateSelector && !isEditMode) {
+  if (uiState.showTemplateSelector && !isEditMode && !isExpressMode) {
     return (
       <main className="min-h-screen bg-background">
         <header className="border-b bg-card">
@@ -260,8 +302,14 @@ const CreateQuiz = () => {
 
   return (
     <main className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      {/* Express Progress Bar */}
+      {isExpressMode && <ExpressProgressBar currentStep={1} />}
+
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className={cn(
+        "sticky z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60",
+        isExpressMode ? "top-0" : "top-0"
+      )}>
         <div className="w-full max-w-full px-3 sm:px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -269,21 +317,59 @@ const CreateQuiz = () => {
                 <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
                 <span className="hidden xs:inline">{t('createQuiz.back')}</span>
               </Button>
-              <h1 className="text-base sm:text-xl font-bold hidden sm:block truncate">{t('createQuiz.title')}</h1>
+              <h1 className="text-base sm:text-xl font-bold hidden sm:block truncate">
+                {isExpressMode ? t('express.editTitle', 'Revise seu quiz') : t('createQuiz.title')}
+              </h1>
             </div>
             
-            {/* Controls */}
+            {/* Controls - hidden in express mode except preview */}
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => updateUI({ resetDialogOpen: true })}
-                className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
-                title={t('createQuiz.clearAndStartFresh', 'Limpar e começar do zero')}
-              >
-                <RotateCcw className="h-4 w-4" />
-                <span className="hidden md:inline ml-1">{t('createQuiz.reset', 'Reset')}</span>
-              </Button>
+              {!isExpressMode && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateUI({ resetDialogOpen: true })}
+                    className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                    title={t('createQuiz.clearAndStartFresh', 'Limpar e começar do zero')}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    <span className="hidden md:inline ml-1">{t('createQuiz.reset', 'Reset')}</span>
+                  </Button>
+
+                  <Button
+                    variant={showInlinePreview ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateUI({ showInlinePreview: !showInlinePreview })}
+                    className="hidden xl:flex flex-shrink-0"
+                    title={showInlinePreview ? "Ocultar preview" : "Mostrar preview"}
+                  >
+                    {showInlinePreview ? <PanelRightClose className="h-4 w-4" /> : <PanelRight className="h-4 w-4" />}
+                  </Button>
+                  
+                  <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+                  
+                  <UndoRedoControls
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                    undoCount={undoCount}
+                    redoCount={redoCount}
+                    size="sm"
+                    variant="ghost"
+                  />
+                  
+                  <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+                  
+                  <AutoSaveIndicator
+                    status={!isOnline ? 'offline' : autoSaveStatus}
+                    lastSavedAt={lastSavedToSupabase}
+                    hasQuizId={!!quizId}
+                    compact
+                  />
+                </>
+              )}
 
               <Button
                 variant="outline"
@@ -297,38 +383,7 @@ const CreateQuiz = () => {
                 <span className="hidden md:inline ml-1">{t('createQuiz.preview', 'Preview')}</span>
               </Button>
 
-              <Button
-                variant={showInlinePreview ? "default" : "outline"}
-                size="sm"
-                onClick={() => updateUI({ showInlinePreview: !showInlinePreview })}
-                className="hidden xl:flex flex-shrink-0"
-                title={showInlinePreview ? "Ocultar preview" : "Mostrar preview"}
-              >
-                {showInlinePreview ? <PanelRightClose className="h-4 w-4" /> : <PanelRight className="h-4 w-4" />}
-              </Button>
-              
-              <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
-              
-              <UndoRedoControls
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-                canUndo={canUndo}
-                canRedo={canRedo}
-                undoCount={undoCount}
-                redoCount={redoCount}
-                size="sm"
-                variant="ghost"
-              />
-              
-              <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
-              
-              <AutoSaveIndicator
-                status={!isOnline ? 'offline' : autoSaveStatus}
-                lastSavedAt={lastSavedToSupabase}
-                hasQuizId={!!quizId}
-                compact
-              />
-              <LanguageSwitch />
+              {!isExpressMode && <LanguageSwitch />}
             </div>
           </div>
         </div>
@@ -337,33 +392,9 @@ const CreateQuiz = () => {
       {/* Main Layout */}
       <div className="flex-1 flex w-full max-w-full overflow-hidden h-[calc(100vh-5rem)] min-h-0">
         
-        {/* Sidebar - Questions List (Desktop) */}
-        <aside id="questions-sidebar" className="hidden lg:flex w-64 xl:w-72 border-r bg-card flex-col fixed top-20 left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
-          <QuestionsList
-            questions={questions}
-            currentStep={step}
-            currentQuestionIndex={currentQuestionIndex}
-            onQuestionClick={handleQuestionClick}
-            onAddQuestion={handleAddQuestion}
-            onDeleteQuestion={handleDeleteQuestion}
-            onUpdateQuestion={updateQuestion}
-            questionsPerQuizLimit={questionsLimit}
-          />
-        </aside>
-
-        {/* Sidebar - Questions List (Mobile Drawer) */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="lg:hidden fixed bottom-[5.5rem] left-2 sm:left-4 z-40 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-xl border-2"
-              title="Lista de perguntas"
-            >
-              <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0">
+        {/* Sidebar - Questions List (Desktop) - hidden in express mode */}
+        {!isExpressMode && (
+          <aside id="questions-sidebar" className="hidden lg:flex w-64 xl:w-72 border-r bg-card flex-col fixed top-20 left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
             <QuestionsList
               questions={questions}
               currentStep={step}
@@ -374,11 +405,39 @@ const CreateQuiz = () => {
               onUpdateQuestion={updateQuestion}
               questionsPerQuizLimit={questionsLimit}
             />
-          </SheetContent>
-        </Sheet>
+          </aside>
+        )}
 
-        {/* Block Palette (Step 3 only) */}
-        {step === 3 && (
+        {/* Sidebar - Questions List (Mobile Drawer) - hidden in express */}
+        {!isExpressMode && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="lg:hidden fixed bottom-[5.5rem] left-2 sm:left-4 z-40 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-xl border-2"
+                title="Lista de perguntas"
+              >
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80 p-0">
+              <QuestionsList
+                questions={questions}
+                currentStep={step}
+                currentQuestionIndex={currentQuestionIndex}
+                onQuestionClick={handleQuestionClick}
+                onAddQuestion={handleAddQuestion}
+                onDeleteQuestion={handleDeleteQuestion}
+                onUpdateQuestion={updateQuestion}
+                questionsPerQuizLimit={questionsLimit}
+              />
+            </SheetContent>
+          </Sheet>
+        )}
+
+        {/* Block Palette (Step 3 only, hidden in express) */}
+        {step === 3 && !isExpressMode && (
           <>
             <aside 
               id="block-palette" 
@@ -451,16 +510,17 @@ const CreateQuiz = () => {
           direction="horizontal" 
           className={cn(
             "flex-1 h-full min-w-0", 
-            "lg:ml-[256px] xl:ml-[288px]",
-            step === 3 && "xl:ml-[calc(288px+280px)]",
-            showInlinePreview && "xl:mr-[380px]"
+            !isExpressMode && "lg:ml-[256px] xl:ml-[288px]",
+            step === 3 && !isExpressMode && "xl:ml-[calc(288px+280px)]",
+            showInlinePreview && !isExpressMode && "xl:mr-[380px]"
           )}
         >
           <ResizablePanel defaultSize={100} minSize={40} className="h-full">
             <div className="w-full h-[calc(100vh-5rem)] overflow-y-auto quiz-editor-mobile-scope">
               <div className="w-full max-w-full 2xl:max-w-[1400px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
                 
-                {/* Sticky Header */}
+                {/* Sticky Header - simplified in express */}
+                {!isExpressMode && (
                 <div className="sticky top-0 z-20 space-y-3 bg-background pt-4 pb-2 -mx-3 px-3 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 shadow-sm border-b border-border/40">
                   <FloatingTutorial currentStep={step} />
                   
@@ -513,9 +573,10 @@ const CreateQuiz = () => {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Step Content */}
-                {step === 1 && (
+                {step === 1 && !isExpressMode && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-2xl">{t('createQuiz.step1.title')}</CardTitle>
@@ -572,7 +633,7 @@ const CreateQuiz = () => {
                   </Card>
                 )}
 
-                {step === 2 && (
+                {step === 2 && !isExpressMode && (
                   <AppearanceConfigStep 
                     title={title}
                     description={description}
@@ -596,7 +657,7 @@ const CreateQuiz = () => {
                   />
                 )}
 
-                {step === 3 && (
+                {(step === 3 || isExpressMode) && (
                   <QuestionConfigStep
                     questions={questions}
                     questionCount={questionCount}
@@ -610,7 +671,7 @@ const CreateQuiz = () => {
                   />
                 )}
 
-                {step === 4 && (
+                {step === 4 && !isExpressMode && (
                   <>
                     {!appearanceState.showResults && (
                       <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
@@ -635,7 +696,7 @@ const CreateQuiz = () => {
                   </>
                 )}
 
-                {step === 5 && (
+                {step === 5 && !isExpressMode && (
                   <>
                     {!appearanceState.showResults && (
                       <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
@@ -656,66 +717,99 @@ const CreateQuiz = () => {
                 )}
 
                 {/* Navigation */}
-                <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => updateEditor({ step: Math.max(1, step - 1) })}
-                    disabled={step === 1}
-                    className="w-full sm:w-auto"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    {t('common.previous')}
-                  </Button>
-                  
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    {step < totalSteps ? (
-                      <Button
-                        onClick={() => {
-                          try {
-                            // ✅ FIX: Inicializar perguntas vazias ao sair do Step 1
-                            if (step === 1 && questions.length === 0) {
-                              const emptyQuestions = initializeEmptyQuestions(questionCount);
-                              setQuestions(emptyQuestions);
-                            }
-                            updateEditor({ step: step + 1 });
-                          } catch (error) {
-                            console.error('[CreateQuiz] Erro na transição de step:', error);
-                            toast.error('Erro ao avançar. Tente novamente.');
-                          }
-                        }}
-                        className="w-full sm:w-auto"
-                      >
-                        {t('common.next')}
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handlePublish}
-                        disabled={isSaving}
-                        className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                      >
-                        {isSaving ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            {t('createQuiz.publishing')}
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4 mr-2" />
-                            {t('createQuiz.publishQuiz')}
-                          </>
-                        )}
-                      </Button>
-                    )}
+                {isExpressMode ? (
+                  <div className="flex flex-col items-center gap-4 pt-6 pb-8">
+                    <Button
+                      size="xl"
+                      onClick={handlePublish}
+                      disabled={isSaving}
+                      className="w-full max-w-md h-14 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                          {t('createQuiz.publishing', 'Publicando...')}
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="h-5 w-5 mr-2" />
+                          {t('express.publishButton', 'PUBLICAR MEU QUIZ')}
+                        </>
+                      )}
+                    </Button>
+                    <button
+                      onClick={() => {
+                        // Switch to full editor mode by removing express param
+                        const newParams = new URLSearchParams(searchParams);
+                        newParams.delete('mode');
+                        navigate(`/create-quiz?${newParams.toString()}`, { replace: true });
+                      }}
+                      className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
+                    >
+                      {t('express.advancedMode', 'Modo avançado →')}
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => updateEditor({ step: Math.max(1, step - 1) })}
+                      disabled={step === 1}
+                      className="w-full sm:w-auto"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      {t('common.previous')}
+                    </Button>
+                    
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      {step < totalSteps ? (
+                        <Button
+                          onClick={() => {
+                            try {
+                              if (step === 1 && questions.length === 0) {
+                                const emptyQuestions = initializeEmptyQuestions(questionCount);
+                                setQuestions(emptyQuestions);
+                              }
+                              updateEditor({ step: step + 1 });
+                            } catch (error) {
+                              console.error('[CreateQuiz] Erro na transição de step:', error);
+                              toast.error('Erro ao avançar. Tente novamente.');
+                            }
+                          }}
+                          className="w-full sm:w-auto"
+                        >
+                          {t('common.next')}
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={handlePublish}
+                          disabled={isSaving}
+                          className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                        >
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              {t('createQuiz.publishing')}
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              {t('createQuiz.publishQuiz')}
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
 
         {/* Inline Preview (Desktop XL) */}
-        {showInlinePreview && (
+        {showInlinePreview && !isExpressMode && (
           <aside className="hidden xl:flex w-[380px] border-l bg-muted/20 flex-col fixed top-20 right-0 h-[calc(100vh-5rem)] overflow-hidden z-30">
             <div className="p-4 border-b bg-card/50">
               <div className="flex items-center justify-between mb-2">
@@ -875,7 +969,7 @@ const CreateQuiz = () => {
       </Dialog>
 
       {/* Share Dialog */}
-      <Dialog open={shareDialogOpen} onOpenChange={(open) => updateUI({ shareDialogOpen: open })}>
+      <Dialog open={shareDialogOpen && !isExpressMode} onOpenChange={(open) => updateUI({ shareDialogOpen: open })}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center text-2xl">🎉 {t('createQuiz.quizPublished')}</DialogTitle>
