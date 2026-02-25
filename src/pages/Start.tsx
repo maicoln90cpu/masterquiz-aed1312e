@@ -100,9 +100,9 @@ const Start = () => {
           title: template.config.title,
           description: template.config.description,
           template: template.config.template,
-          question_count: template.config.questions.length,
+          question_count: Math.min(template.config.questions.length, 8),
           status: "draft" as any,
-          is_public: false,
+          is_public: true,
         })
         .select("id")
         .single();
@@ -114,8 +114,10 @@ const Start = () => {
         return;
       }
 
-      // 4. Inserir perguntas do template
-      const questionsToInsert = template.config.questions.map((q, index) => ({
+      // 4. Inserir perguntas do template (limitado a 8 no express)
+      const maxExpressQuestions = 8;
+      const limitedQuestions = template.config.questions.slice(0, maxExpressQuestions);
+      const questionsToInsert = limitedQuestions.map((q, index) => ({
         quiz_id: quiz.id,
         question_text: q.question_text,
         answer_format: q.answer_format,

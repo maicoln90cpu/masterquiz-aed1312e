@@ -253,17 +253,17 @@ export function useQuizPersistence({
     // Validação básica
     if (!title || title.trim() === '') {
       toast.error(t('createQuiz.titleRequired'));
-      return false;
+      return { success: false, slug: '' };
     }
 
     if (questionCount < 1) {
       toast.error(t('createQuiz.minQuestionsRequired'));
-      return false;
+      return { success: false, slug: '' };
     }
 
     if (collectionTiming !== 'none' && !collectName && !collectEmail && !collectWhatsapp) {
       toast.error(t('createQuiz.minFieldRequired'));
-      return false;
+      return { success: false, slug: '' };
     }
 
     try {
@@ -274,13 +274,13 @@ export function useQuizPersistence({
       if (!user) {
         toast.error(t('createQuiz.loginRequired'));
         navigate('/login');
-        return false;
+        return { success: false, slug: '' };
       }
 
       const rateLimitCheck = await checkRateLimit('quiz:create', user.id);
       if (!rateLimitCheck.allowed) {
         updateUI({ isSaving: false });
-        return false;
+        return { success: false, slug: '' };
       }
 
       let quiz;
@@ -505,13 +505,13 @@ export function useQuizPersistence({
       localStorage.removeItem(getStorageKey(user.id, 'draft_state'));
       updateUI({ shareDialogOpen: true, isSaving: false });
       
-      return true;
+      return { success: true, slug: quiz.slug || '' };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[CreateQuiz] ❌ Erro ao salvar quiz:', errorMessage);
       toast.error(t('createQuiz.errorPublishing'));
       updateUI({ isSaving: false });
-      return false;
+      return { success: false, slug: '' };
     }
   }, [
     appearanceState, formConfigState, editorState, questions, quizId,
