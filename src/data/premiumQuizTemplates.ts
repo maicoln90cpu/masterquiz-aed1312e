@@ -1,5 +1,5 @@
 import { QuizTemplate } from './quizTemplates';
-import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock } from './templates/helpers';
+import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, imageBlock } from './templates/helpers';
 
 export const premiumQuizTemplates: QuizTemplate[] = [
   // ═══════════════════════════════════════════════════════════
@@ -35,7 +35,8 @@ export const premiumQuizTemplates: QuizTemplate[] = [
           ],
           order_number: 1,
           blocks: [
-            textBlock('ec-q1', '<p>Este diagnóstico é confidencial e personalizado para sua empresa.</p>', 0),
+            imageBlock('ec-q1', '/templates/corporate-boardroom.jpg', 'Reunião executiva em sala de diretoria com vista panorâmica da cidade', 0),
+            textBlock('ec-q1', '<p>Este diagnóstico é confidencial e personalizado para sua empresa.</p>', 1),
             questionBlock('ec-q1', 'Qual o faturamento anual da empresa?', [
               { text: 'Até R$ 1M', value: 'small' },
               { text: 'R$ 1M - R$ 10M', value: 'medium' },
@@ -317,7 +318,8 @@ export const premiumQuizTemplates: QuizTemplate[] = [
           ],
           order_number: 1,
           blocks: [
-            textBlock('lp-q1', '<p>✨ Esta curadoria é exclusiva e personalizada para você.</p>', 0),
+            imageBlock('lp-q1', '/templates/luxury-lifestyle.jpg', 'Produtos de luxo e estilo de vida premium elegante', 0),
+            textBlock('lp-q1', '<p>✨ Esta curadoria é exclusiva e personalizada para você.</p>', 1),
             questionBlock('lp-q1', 'Qual estilo reflete sua personalidade?', [
               { text: 'Clássico Atemporal', value: 'classic' },
               { text: 'Moderno Sofisticado', value: 'modern' },

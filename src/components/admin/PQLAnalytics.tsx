@@ -247,6 +247,45 @@ export function PQLAnalytics() {
                   </TableCell>
                 </TableRow>
               ))}
+              {intentTable.length > 0 && (() => {
+                const totals = intentTable.reduce(
+                  (acc, r) => ({
+                    total: acc.total + r.total,
+                    quizzes: acc.quizzes + r.quizzes,
+                    published: acc.published + r.published,
+                    withLeads: acc.withLeads + r.withLeads,
+                    explorador: acc.explorador + r.explorador,
+                    construtor: acc.construtor + r.construtor,
+                    operador: acc.operador + r.operador,
+                    free: acc.free + r.free,
+                    paid: acc.paid + r.paid,
+                  }),
+                  { total: 0, quizzes: 0, published: 0, withLeads: 0, explorador: 0, construtor: 0, operador: 0, free: 0, paid: 0 }
+                );
+                return (
+                  <TableRow className="bg-muted/50 font-bold border-t-2">
+                    <TableCell><Badge variant="default">TOTAL / MÉDIA</Badge></TableCell>
+                    <TableCell className="text-center">{totals.total}</TableCell>
+                    <TableCell className="text-center">{totals.quizzes}</TableCell>
+                    <TableCell className="text-center">{totals.published}</TableCell>
+                    <TableCell className="text-center">{totals.withLeads}</TableCell>
+                    <TableCell className="text-center">{totals.explorador}</TableCell>
+                    <TableCell className="text-center">{totals.construtor}</TableCell>
+                    <TableCell className="text-center">{totals.operador}</TableCell>
+                    <TableCell className="text-center">
+                      {formatPct(pct(totals.construtor + totals.operador, totals.total))}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {formatPct(pct(totals.operador, totals.construtor + totals.operador))}
+                    </TableCell>
+                    <TableCell className="text-center">{totals.free}</TableCell>
+                    <TableCell className="text-center">{totals.paid}</TableCell>
+                    <TableCell className="text-center">
+                      {formatPct(pct(totals.paid, totals.free + totals.paid))}
+                    </TableCell>
+                  </TableRow>
+                );
+              })()}
               {intentTable.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={13} className="text-center text-muted-foreground py-8">

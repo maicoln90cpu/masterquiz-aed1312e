@@ -1,5 +1,5 @@
 import type { QuizTemplate } from './types';
-import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, testimonialBlock } from './helpers';
+import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, testimonialBlock, imageBlock } from './helpers';
 
 export const vslConversionTemplate: QuizTemplate = {
   id: 'funil-pre-vsl',
@@ -28,6 +28,7 @@ export const vslConversionTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
+          imageBlock('vsl1', '/templates/vsl-transformation.jpg', 'Pessoa celebrando momento de transformação e sucesso', 0),
           textBlock('vsl1', '<h2>Antes de tudo, vamos te conhecer</h2><p>Isso leva menos de 3 minutos.</p>'),
           questionBlock('vsl1', 'Qual sua faixa etária?', [
             { text: '18-25 anos', value: '18-25' }, { text: '26-35 anos', value: '26-35' },

@@ -5,7 +5,8 @@ import { QuizTemplate } from '@/data/quizTemplates';
 import { usePlanFeatures } from '@/hooks/usePlanFeatures';
 import { useQuizTemplates } from '@/hooks/useQuizTemplates';
 import { useUserRole } from '@/hooks/useUserRole';
-import { CheckCircle2, Sparkles, Lock } from 'lucide-react';
+import { CheckCircle2, Sparkles, Lock, Crown } from 'lucide-react';
+import { premiumQuizTemplates } from '@/data/premiumQuizTemplates';
 import { toast } from 'sonner';
 
 interface QuizTemplateSelectorProps {
@@ -19,6 +20,14 @@ const categoryLabels: Record<string, string> = {
   product_discovery: 'Descoberta de Produto',
   customer_satisfaction: 'Satisfação do Cliente',
   engagement: 'Engajamento',
+  conversion: 'Conversão / VSL',
+  paid_traffic: 'Tráfego Pago',
+  offer_validation: 'Validação de Oferta',
+  educational: 'Educacional',
+  health_wellness: 'Saúde & Bem-estar',
+  income_opportunity: 'Renda Extra',
+  diagnostic: 'Diagnóstico',
+  course_onboarding: 'Onboarding de Curso',
 };
 
 export const QuizTemplateSelector = ({ onSelectTemplate, onCreateFromScratch, onCreateWithAI }: QuizTemplateSelectorProps) => {
@@ -30,9 +39,10 @@ export const QuizTemplateSelector = ({ onSelectTemplate, onCreateFromScratch, on
 
   const allTemplates = [...normalTemplates, ...premiumTemplates];
   
-  // ✅ CORREÇÃO: Master admin tem acesso a TODOS os templates
-  // Usuários normais: templates não-premium são sempre disponíveis
-  // Templates premium aparecem bloqueados para planos que não são premium/partner
+  // Premium template IDs for visual badge
+  const premiumIds = new Set(premiumQuizTemplates.map(t => t.id));
+  
+  // Master admin tem acesso a TODOS os templates mas ainda vê badge Premium
   const availableTemplates = isMasterAdmin 
     ? [...normalTemplates, ...premiumTemplates] 
     : normalTemplates;
@@ -111,15 +121,24 @@ export const QuizTemplateSelector = ({ onSelectTemplate, onCreateFromScratch, on
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full">
           {availableTemplates.map((template) => {
             const isFeatured = template.id === 'funil-captacao-leads';
+            const isPremiumTemplate = premiumIds.has(template.id);
             return (
               <Card 
                 key={template.id} 
                 className={`hover:border-primary transition-all cursor-pointer group relative ${
                   isFeatured ? 'border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10' : ''
-                }`}
+                } ${isPremiumTemplate ? 'border-amber-500/30' : ''}`}
                 onClick={() => handleSelectTemplate(template, false)}
               >
-                {isFeatured && (
+                {isPremiumTemplate && (
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs px-2 py-1 shadow-md">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Premium
+                    </Badge>
+                  </div>
+                )}
+                {isFeatured && !isPremiumTemplate && (
                   <div className="absolute -top-2 -right-2 z-10">
                     <Badge className="bg-primary text-primary-foreground text-xs px-2 py-1 shadow-md">
                       <Sparkles className="h-3 w-3 mr-1" />

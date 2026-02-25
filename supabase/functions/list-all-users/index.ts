@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
       adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
       adminClient.from("user_roles").select("*").in("user_id", userIds),
       adminClient.from("quizzes").select("user_id, id, is_public, status").in("user_id", userIds),
-      adminClient.from("quiz_responses").select("quiz_id, id, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
+      adminClient.from("quiz_responses").select("quiz_id, id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
       adminClient.from("audit_logs").select("user_id, resource_id").eq("action", "quiz:deleted").in("user_id", userIds),
       adminClient.from("quiz_responses").select("quiz_id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
     ]);
@@ -98,11 +98,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build lead count map
+    // Build lead count map (excluding test leads)
     const leadCountMap = new Map<string, number>();
     for (const r of leadCountRes.data || []) {
       const ownerUserId = (r as any).quizzes?.user_id;
-      if (ownerUserId) {
+      const answers = (r as any).answers;
+      const isTestLead = answers && typeof answers === 'object' && answers._is_test_lead === true;
+      if (ownerUserId && !isTestLead) {
         leadCountMap.set(ownerUserId, (leadCountMap.get(ownerUserId) || 0) + 1);
       }
     }

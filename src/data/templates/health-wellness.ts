@@ -1,5 +1,5 @@
 import { QuizTemplate } from './types';
-import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock } from './helpers';
+import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, imageBlock } from './helpers';
 
 export const healthWellnessTemplate: QuizTemplate = {
   id: 'funil-saude-bem-estar',
@@ -32,7 +32,8 @@ export const healthWellnessTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
-          textBlock('hw-q1', '<p>Vamos entender seu momento de vida para personalizar tudo.</p>', 0),
+          imageBlock('hw-q1', '/templates/health-wellness.jpg', 'Mulher praticando yoga e meditação em ambiente sereno', 0),
+          textBlock('hw-q1', '<p>Vamos entender seu momento de vida para personalizar tudo.</p>', 1),
           questionBlock('hw-q1', 'Qual a sua faixa etária?', [
             { text: '18-25 anos', value: '18-25' },
             { text: '26-35 anos', value: '26-35' },

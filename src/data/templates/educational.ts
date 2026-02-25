@@ -1,5 +1,5 @@
 import type { QuizTemplate } from './types';
-import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, testimonialBlock } from './helpers';
+import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, testimonialBlock, imageBlock } from './helpers';
 
 export const educationalTemplate: QuizTemplate = {
   id: 'funil-educacional',
@@ -30,6 +30,7 @@ export const educationalTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
+          imageBlock('ed1', '/templates/educational-study.jpg', 'Ambiente de estudo moderno com laptop e livros', 0),
           textBlock('ed1', '<h2>📝 Avaliação de conhecimento</h2><p>Seja sincero(a) — não existe resposta errada nesta etapa.</p>'),
           questionBlock('ed1', 'Qual seu nível de experiência com o assunto?', [
             { text: 'Iniciante total — nunca estudei', value: 'beginner' },

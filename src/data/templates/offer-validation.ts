@@ -1,5 +1,5 @@
 import type { QuizTemplate } from './types';
-import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, testimonialBlock } from './helpers';
+import { questionBlock, textBlock, separatorBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, testimonialBlock, imageBlock } from './helpers';
 
 export const offerValidationTemplate: QuizTemplate = {
   id: 'funil-validacao-oferta',
@@ -30,6 +30,7 @@ export const offerValidationTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
+          imageBlock('ov1', '/templates/offer-validation-research.jpg', 'Equipe colaborando em sessão de brainstorming e validação', 0),
           textBlock('ov1', '<h2>Queremos ouvir você</h2><p>Esta pesquisa vai moldar o que vamos criar. Sua opinião é valiosa.</p>'),
           questionBlock('ov1', 'Com qual perfil você mais se identifica?', [
             { text: 'Empreendedor iniciante', value: 'beginner' },

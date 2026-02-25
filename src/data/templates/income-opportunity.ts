@@ -1,5 +1,5 @@
 import { QuizTemplate } from './types';
-import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock } from './helpers';
+import { questionBlock, textBlock, socialProofBlock, comparisonBlock, countdownBlock, progressBlock, sliderBlock, imageBlock } from './helpers';
 
 export const incomeOpportunityTemplate: QuizTemplate = {
   id: 'funil-renda-extra',
@@ -32,7 +32,8 @@ export const incomeOpportunityTemplate: QuizTemplate = {
         ],
         order_number: 1,
         blocks: [
-          textBlock('io-q1', '<p>Vamos entender sua realidade para recomendar a melhor oportunidade.</p>', 0),
+          imageBlock('io-q1', '/templates/income-opportunity.jpg', 'Pessoa trabalhando remotamente em ambiente tropical, liberdade financeira', 0),
+          textBlock('io-q1', '<p>Vamos entender sua realidade para recomendar a melhor oportunidade.</p>', 1),
           questionBlock('io-q1', 'Qual sua situação profissional atual?', [
             { text: 'CLT — empregado(a)', value: 'clt' },
             { text: 'Autônomo / freelancer', value: 'freelancer' },

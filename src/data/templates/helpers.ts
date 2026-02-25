@@ -130,3 +130,14 @@ export function testimonialBlock(id: string, order: number, quote: string, autho
     style: 'card' as const,
   };
 }
+
+export function imageBlock(id: string, url: string, alt: string, order: number, size: 'small' | 'medium' | 'large' | 'full' = 'medium') {
+  return {
+    id: `block-${id}-img`,
+    type: 'image' as const,
+    order,
+    url,
+    alt,
+    size,
+  };
+}
