@@ -1,114 +1,109 @@
 
-# Plano: 6 Correcoes do Fluxo de Primeiro Acesso
 
-## Diagnostico Detalhado
+# Plano: Correcao de Erros Supabase, Layout Sidebar e Renderizacao de Templates
 
-### Bug 1: Link do quiz sem slug na celebracao
-**Causa raiz**: Em `CreateQuiz.tsx` linha 199-210, `handlePublish` chama `saveQuiz()` que retorna `true/false`. Dentro de `saveQuiz` (em `useQuizPersistence.ts` linha 386), o slug e atualizado via `updateEditor({ quizSlug: quiz.slug })` — porem isso e React state assíncrono. Quando `handlePublish` le `editorState.quizSlug` na linha 203, o state ainda nao foi atualizado, entao `slug = ''`, gerando URL como `https://masterquiz.com.br/quiz/` (sem slug) → 404.
+## Item 1: Erros e Avisos no Supabase
 
-**Correcao**: 
-- `useQuizPersistence.ts`: Alterar `saveQuiz` para retornar `{ success: true, slug: quiz.slug }` em vez de `true`.
-- `CreateQuiz.tsx`: Alterar `handlePublish` para ler o slug do retorno: `const result = await saveQuiz(); if (result?.slug) { buildUrl(result.slug); }`.
+### Diagnostico dos erros no screenshot:
 
-### Bug 2: Toggle de quiz publico — padronizar
-**Estado atual**: Em `QuestionConfigStep.tsx` linhas 270-287, o toggle "Visibilidade do Quiz" esta presente e funciona. O `editorState.isPublic` e inicializado como `true` em `useQuizState.ts` linha 108. O template express em `Start.tsx` linha 105 cria o quiz com `is_public: false`. Quando o usuario chega no express mode, o toggle pode estar inconsistente.
+| Erro | Causa | Status |
+|------|-------|--------|
+| **400 GET /validation_requests** (repetido ~15x) | Query do AdminDashboard executa para todos os usuarios, mas RLS so permite admin. Usuarios normais recebem 400. | **Ativo — precisa corrigir** |
+| **400 GET /quiz_step_analytics** (4x) | RLS so tem policy de SELECT para "Users view own" e INSERT para anon. Se a query usa filtros incompativeis, retorna 400. | **Verificar query no codigo** |
+| **400 POST /auth/v1/token** (2x) | Tentativa de login com credenciais invalidas. Comportamento normal de auth, nao e bug. | **OK — ignorar** |
+| **23505 user_roles_user_id_role_key** | Tentativa de inserir role duplicada para usuario. | **Ativo — precisa upsert** |
+| **23505 user_subscriptions_user_id_key** | Tentativa de inserir subscription duplicada. | **Ativo — precisa upsert** |
+| **409 POST /user_roles** | Conflito por unique constraint (mesmo que acima). | **Ativo** |
+| **409 PATCH /user_subscriptions** | Conflito por unique constraint. | **Ativo** |
+| **403 GET /auth/v1/user** (2x) | Token expirado ou invalido. Comportamento normal de sessao. | **OK — ignorar** |
+| **406 GET /scheduled_deletions** | Accept header incompativel (provavelmente `.single()` sem resultado). | **Ativo — usar `.maybeSingle()`** |
 
-**Correcao**: Garantir que no express mode o toggle comece como `true` (quiz publico por padrao), pois o usuario esta publicando. No `Start.tsx` linha 105, mudar `is_public: false` para `is_public: true`. E no express mode do `CreateQuiz.tsx`, remover o toggle de visibilidade (o quiz express sempre sera publico).
+### Correcoes necessarias:
 
-### Bug 3: Botoes Proxima/Anterior pouco visiveis
-**Estado atual**: Em `QuestionConfigStep.tsx` linhas 290-321, os botoes usam `variant="outline" size="sm"` — discretos demais. O usuario pode nao notar.
+**1a. validation_requests — proteger query com check de role**
+Em `AdminDashboard.tsx` (linha 251-258), a query a `validation_requests` e executada como parte do `fetchDashboardData` que deve ser protegido por role check. Se o componente ja verifica admin, o problema pode ser que a query executa antes da verificacao. Solucao: adicionar guard `if (!isAdmin)` antes da query ou mover para dentro do bloco admin-only.
 
-**Correcao**: Tornar os botoes mais destacados:
-- "Proxima": usar `variant="default"` (preenchido com cor primaria), tamanho `default`
-- "Anterior": manter `variant="outline"` mas tamanho `default`
-- Adicionar texto mais visivel e iconografia maior
+**1b. user_roles e user_subscriptions — usar upsert**
+Procurar onde esses inserts acontecem e trocar `.insert()` por `.upsert()` com `onConflict`.
 
-### Bug 4: "Ver como divulgar" → "Divulgar meu Quiz"
-**Estado atual**: Em `ExpressCelebration.tsx` linhas 131-149, o botao "Ver como divulgar" redireciona para `/integrations` — pagina tecnica demais para primeiro acesso. O usuario precisa de compartilhamento social simples.
+**1c. scheduled_deletions — usar maybeSingle()**
+Em `Settings.tsx` linha 76, verificar se usa `.single()` e trocar por `.maybeSingle()`.
 
-**Correcao**: 
-- Trocar texto para "Divulgar meu Quiz"
-- Em vez de navegar para `/integrations`, abrir um mini-painel inline com botoes de compartilhamento: WhatsApp, copiar link (ja existe), redes sociais (Facebook, Twitter/X, LinkedIn) usando URLs de share nativas (`https://wa.me/?text=...`, `https://www.facebook.com/sharer/...` etc).
-- Remover o texto "Proximo passo: Envie trafego para comecar a capturar leads" pois e prematuro.
+**1d. quiz_step_analytics — verificar queries**
+Verificar se ha queries SELECT com filtros que falham para usuarios normais.
 
-### Bug 5: Templates de primeiro acesso com 12 perguntas → reduzir para 6-8
-**Estado atual**: Todos os 9 templates base em `src/data/templates/` tem `questionCount: 12` e 12 perguntas cada. Para primeiro acesso via `/start`, isso e muito. O usuario quer publicar rapido.
-
-**Correcao**: Como os templates sao usados tanto no `/start` (express) quanto no editor completo, nao devemos reduzir os templates em si. Em vez disso, no `Start.tsx`, ao criar o quiz, limitar as perguntas inseridas para no maximo 8 (pegar as primeiras 8 do template). Isso mantem os templates completos para uso normal mas encurta o express.
-
-Alterar `Start.tsx` linhas 118-126:
-```
-const maxExpressQuestions = 8;
-const limitedQuestions = template.config.questions.slice(0, maxExpressQuestions);
-const questionsToInsert = limitedQuestions.map(...)
-```
-E atualizar `question_count` na linha 103 para `limitedQuestions.length`.
-
-### Bug 6: Sidebar de perguntas no express mode
-**Estado atual**: Em `CreateQuiz.tsx` linhas 396 e 412, a sidebar e explicitamente escondida com `{!isExpressMode && (...)}`. O usuario nao tem como navegar visualmente pelas perguntas.
-
-**Correcao**: Mostrar a sidebar no express mode. Remover a condicao `!isExpressMode` das linhas 396 e 412, e ajustar o margin-left do editor (linha 513) para tambem aplicar no express mode.
+### Arquivos:
+- `src/pages/AdminDashboard.tsx` — guard na query de validation_requests
+- `src/pages/Settings.tsx` — `.maybeSingle()` em scheduled_deletions
+- Buscar e corrigir inserts de `user_roles` e `user_subscriptions` para usar upsert
 
 ---
 
-## Arquivos a Alterar
+## Item 2: Sidebar Express Mode — Layout Cortado
+
+### Diagnostico:
+A sidebar usa `fixed top-20 left-0 w-64 xl:w-72`. No express mode, o `ExpressProgressBar` (~52px) renderiza ANTES do header sticky, adicionando altura extra. Porem `top-20` (80px) nao contabiliza essa barra extra, fazendo a sidebar iniciar atras/sobre a progress bar.
+
+Alem disso, dentro do `QuestionsList`, os botoes de acao (editar/excluir) estao em `absolute top-1.5 right-1` com `min-w-fit`, mas o container pai tem `pr-20` que pode nao ser suficiente quando ha thumbnail de imagem. O resultado e que botoes ficam cortados na lateral.
+
+### Correcoes:
+
+**2a. Ajustar top da sidebar no express mode**
+Passar prop `isExpressMode` e ajustar `top` da sidebar para `top-[8.5rem]` (~136px = progress bar + header) quando express, ou melhor, usar classe condicional.
+
+**2b. Melhorar layout dos botoes no QuestionsList**
+- Reduzir `pr-20` para `pr-16` ou usar flex layout em vez de absolute positioning para os botoes
+- Garantir que botoes nao saiam do container com `overflow-hidden` no item
+
+### Arquivos:
+- `src/pages/CreateQuiz.tsx` — classe condicional na sidebar para express mode
+- `src/components/quiz/QuestionsList.tsx` — ajustar layout dos botoes de acao
+
+---
+
+## Item 3: Renderizacao de Perguntas de Template na Sidebar
+
+### Diagnostico (bug principal):
+Em `QuestionsList.tsx` linha 142:
+```typescript
+const questionText = questionBlock?.content || q.question_text || '';
+```
+
+O campo esta buscando `questionBlock.content`, mas o tipo `QuestionBlock` usa `questionText` (nao `content`). O helper `questionBlock()` em `helpers.ts` gera `{ questionText: text }`. Entao para perguntas vindas de template, `content` e `undefined`, e o fallback `q.question_text` funciona — MAS so se o template definiu `question_text` no nivel da pergunta.
+
+Olhando os templates (ex: `lead-capture.ts` linha 25): `question_text: 'Qual o tamanho da sua operação hoje?'` esta presente. Entao o texto deveria aparecer. Porem, quando o template e processado por `handleSelectTemplate` (linha 83), o `question_text` e extraido corretamente.
+
+O problema real pode ser que `questionBlock?.content` e `undefined` (correto, campo nao existe), e `q.question_text` existe mas esta sendo truncado demais (`max-w-[140px]` na linha 279). Combinado com `pr-20` e thumbnail de imagem, o texto visivel e minimo.
+
+**Verificacao adicional**: No screenshot image-112 (edicao normal com template), as perguntas mostram texto correto ("Espelhamento", "Há quanto tempo v...", etc.) porque tem `custom_label`. Mas no image-113 (quiz do zero), mostra "Pergunta vazia" porque nao tem texto nem label.
+
+O bug de renderizacao que o usuario reporta no image-112 e visual (layout), nao de dados. O texto aparece mas os itens estao apertados/cortados.
+
+### Correcoes:
+
+**3a. Corrigir leitura do texto da pergunta**
+Trocar `questionBlock?.content` por `questionBlock?.questionText` para alinhar com o tipo `QuestionBlock`.
+
+**3b. Aumentar espaco para texto**
+Aumentar `max-w-[140px]` para `max-w-[160px]` ou usar `flex-1 min-w-0 truncate` sem max-width fixo.
+
+**3c. Reduzir padding direito**
+Mudar `pr-20` para `pr-14` e ajustar posicao dos botoes.
+
+### Arquivo:
+- `src/components/quiz/QuestionsList.tsx`
+
+---
+
+## Resumo de Impacto
 
 | Arquivo | Mudanca |
 |---------|---------|
-| `src/hooks/useQuizPersistence.ts` | `saveQuiz` retorna `{ success, slug }` em vez de `boolean` |
-| `src/pages/CreateQuiz.tsx` | `handlePublish` usa slug do retorno; mostra sidebar no express; ajusta margins |
-| `src/components/quiz/QuestionConfigStep.tsx` | Botoes Proxima/Anterior mais destacados |
-| `src/components/quiz/ExpressCelebration.tsx` | "Divulgar meu Quiz" com share social inline |
-| `src/pages/Start.tsx` | Limitar perguntas a 8 no express; `is_public: true` |
+| `src/components/quiz/QuestionsList.tsx` | Fix `content` → `questionText`; ajustar layout; reduzir pr |
+| `src/pages/CreateQuiz.tsx` | Classe condicional top sidebar para express |
+| `src/pages/AdminDashboard.tsx` | Guard na query validation_requests |
+| `src/pages/Settings.tsx` | `.maybeSingle()` em scheduled_deletions |
+| Buscar inserts user_roles/user_subscriptions | Trocar por upsert |
 
-## Detalhamento Tecnico
+Nenhum risco para fluxos existentes. Todas as mudancas sao defensivas e de layout.
 
-### useQuizPersistence.ts
-Linha 508: `return true` → `return { success: true, slug: quiz.slug }`
-Linha 514: `return false` → `return { success: false, slug: '' }`
-Tipo de retorno: `Promise<{ success: boolean; slug: string }>`
-
-### CreateQuiz.tsx — handlePublish
-```typescript
-const handlePublish = useCallback(async () => {
-  const result = await saveQuiz();
-  if (result?.success && isExpressMode) {
-    const slug = result.slug;
-    const url = profile?.company_slug
-      ? `${window.location.origin}/${profile.company_slug}/${slug}`
-      : `${window.location.origin}/quiz/${slug}`;
-    setPublishedQuizUrl(url);
-    setShowCelebration(true);
-  }
-}, [saveQuiz, isExpressMode, profile?.company_slug]);
-```
-
-### CreateQuiz.tsx — Sidebar no express
-Remover `!isExpressMode &&` das linhas 396 e 412. Manter a paleta de blocos escondida (linha 440).
-
-### QuestionConfigStep.tsx — Botoes destacados
-```tsx
-<Button variant="outline" size="default" ...>
-  <ChevronLeft className="h-5 w-5 mr-2" /> Anterior
-</Button>
-<Button variant="default" size="default" ...>
-  Proxima <ChevronRight className="h-5 w-5 ml-2" />
-</Button>
-```
-
-### ExpressCelebration.tsx — Share social
-Substituir o bloco "Proximo passo" por painel de compartilhamento:
-- Botao WhatsApp: `https://wa.me/?text=Faca+meu+quiz:+${encodeURIComponent(quizUrl)}`
-- Botao Facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(quizUrl)}`
-- Botao Twitter/X: `https://twitter.com/intent/tweet?url=${encodeURIComponent(quizUrl)}&text=...`
-- Botao LinkedIn: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(quizUrl)}`
-- Texto: "Compartilhe seu quiz nas redes sociais"
-
-### Start.tsx — Limitar perguntas
-```typescript
-const maxExpressQuestions = 8;
-const limitedQuestions = template.config.questions.slice(0, maxExpressQuestions);
-// question_count: limitedQuestions.length
-// questionsToInsert = limitedQuestions.map(...)
-```
-E `is_public: true` na insercao do quiz.
