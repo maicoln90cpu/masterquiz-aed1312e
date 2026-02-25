@@ -94,13 +94,15 @@ const Dashboard = () => {
         setCurrentUserId(user.id);
         
         // Show objective modal if user_objectives is null or empty
+        // BUT skip if user already completed /start flow
+        const startCompleted = localStorage.getItem('mq_start_completed');
         const objectives = profile?.user_objectives;
-        if (!objectives || (Array.isArray(objectives) && objectives.length === 0)) {
+        if (!startCompleted && (!objectives || (Array.isArray(objectives) && objectives.length === 0))) {
           setShowObjectiveModal(true);
         }
         
-        // Check if first time user (show onboarding)
-        if ((stats?.totalQuizzes ?? 0) === 0 && !localStorage.getItem(`onboarding_completed_${user.id}`)) {
+        // Check if first time user (show onboarding) — skip if came from /start
+        if (!startCompleted && (stats?.totalQuizzes ?? 0) === 0 && !localStorage.getItem(`onboarding_completed_${user.id}`)) {
           setShowOnboarding(true);
         }
       } catch (error) {

@@ -111,6 +111,7 @@ const KiwifyCancel = lazyWithRetry(() => import("./pages/KiwifyCancel"), "Kiwify
 const Integrations = lazyWithRetry(() => import("./pages/Integrations"), "Integrations");
 const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"), "PrivacyPolicy");
 const MyQuizzes = lazyWithRetry(() => import("./pages/MyQuizzes"), "MyQuizzes");
+const Start = lazyWithRetry(() => import("./pages/Start"), "Start");
 
 // ✅ GTM GLOBAL: Layout route que carrega tracking apenas nas rotas do site (NÃO quiz público/preview)
 const GlobalTrackingLayout = () => {
@@ -236,6 +237,11 @@ const App = () => (
                   <Route path="/faq" element={<LazyRoute Component={FAQ} />} />
                   <Route path="/precos" element={<LazyRoute Component={Pricing} />} />
                   <Route path="/privacy-policy" element={<LazyRoute Component={PrivacyPolicy} />} />
+                  <Route path="/start" element={
+                    <RequireAuth>
+                      <LazyRoute Component={Start} />
+                    </RequireAuth>
+                  } />
                   <Route path="/dashboard" element={
                     <RequireAuth>
                       <ProtectedRoute requiredRole="admin">
