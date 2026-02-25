@@ -2976,6 +2976,20 @@ const pt = {
       educationalDesc: "Avaliações, testes de conhecimento e quizzes didáticos",
     },
   },
+  express: {
+    step1: "Revise as perguntas",
+    step2: "Publicar",
+    editTitle: "Revise seu quiz",
+    publishButton: "PUBLICAR MEU QUIZ",
+    advancedMode: "Modo avançado →",
+    celebration: {
+      title: "Seu quiz está no ar! 🎉",
+      subtitle: "\"{{title}}\" foi publicado com sucesso.",
+      openQuiz: "Ver meu quiz",
+      goDashboard: "Ir para o Dashboard",
+      tip: "Dica: No dashboard você pode acompanhar respostas, configurar integrações e muito mais.",
+    },
+  },
 };
 
 const en = {
@@ -5577,6 +5591,20 @@ const en = {
       offerValidationDesc: "Discover if your product/service has real market demand",
       educational: "Educational use",
       educationalDesc: "Assessments, knowledge tests and didactic quizzes",
+    },
+  },
+  express: {
+    step1: "Review questions",
+    step2: "Publish",
+    editTitle: "Review your quiz",
+    publishButton: "PUBLISH MY QUIZ",
+    advancedMode: "Advanced mode →",
+    celebration: {
+      title: "Your quiz is live! 🎉",
+      subtitle: "\"{{title}}\" was published successfully.",
+      openQuiz: "View my quiz",
+      goDashboard: "Go to Dashboard",
+      tip: "Tip: In the dashboard you can track responses, set up integrations and much more.",
     },
   },
 };
@@ -8389,6 +8417,20 @@ const es = {
       offerValidationDesc: "Descubre si tu producto/servicio tiene demanda real en el mercado",
       educational: "Uso educacional",
       educationalDesc: "Evaluaciones, tests de conocimiento y quizzes didácticos",
+    },
+  },
+  express: {
+    step1: "Revisa las preguntas",
+    step2: "Publicar",
+    editTitle: "Revisa tu quiz",
+    publishButton: "PUBLICAR MI QUIZ",
+    advancedMode: "Modo avanzado →",
+    celebration: {
+      title: "¡Tu quiz está en vivo! 🎉",
+      subtitle: "\"{{title}}\" fue publicado con éxito.",
+      openQuiz: "Ver mi quiz",
+      goDashboard: "Ir al Dashboard",
+      tip: "Consejo: En el dashboard puedes seguir respuestas, configurar integraciones y mucho más.",
     },
   },
 };
