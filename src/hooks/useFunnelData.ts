@@ -20,111 +20,108 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
   return useQuery({
     queryKey: ['funnel-data', quizId, startDate, endDate],
     queryFn: async (): Promise<FunnelStep[]> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-      // Buscar quiz_step_analytics agregado
-      let query = supabase
-        .from('quiz_step_analytics')
-        .select(`
-          step_number,
-          quiz_id,
-          question_id,
-          quizzes!inner(user_id, title),
-          quiz_questions(question_text)
-        `)
-        .eq('quizzes.user_id', user.id);
+        // Primeiro buscar os quiz_ids do usuário
+        let quizQuery = supabase
+          .from('quizzes')
+          .select('id')
+          .eq('user_id', user.id);
 
-      if (quizId) {
-        query = query.eq('quiz_id', quizId);
-      }
+        const { data: userQuizzes, error: quizError } = await quizQuery;
+        
+        if (quizError || !userQuizzes || userQuizzes.length === 0) {
+          return [];
+        }
 
-      if (startDate) {
-        query = query.gte('date', startDate);
-      }
+        const userQuizIds = userQuizzes.map(q => q.id);
+        const targetQuizIds = quizId ? [quizId].filter(id => userQuizIds.includes(id)) : userQuizIds;
 
-      if (endDate) {
-        query = query.lte('date', endDate);
-      }
+        if (targetQuizIds.length === 0) return [];
 
-      const { data, error } = await query;
+        // Buscar step analytics filtrado pelos quizzes do usuário
+        let stepQuery = supabase
+          .from('quiz_step_analytics')
+          .select('step_number, session_id, question_id, quiz_id')
+          .in('quiz_id', targetQuizIds);
 
-      if (error) {
-        console.error('Error fetching funnel data:', error);
-        throw error;
-      }
+        if (startDate) {
+          stepQuery = stepQuery.gte('date', startDate);
+        }
 
-      if (!data || data.length === 0) {
-        return [];
-      }
+        if (endDate) {
+          stepQuery = stepQuery.lte('date', endDate);
+        }
 
-      // Agregar por step_number contando sessões únicas
-      const stepMap = new Map<number, {
-        count: number;
-        questionId?: string;
-        questionText?: string;
-        sessions: Set<string>;
-      }>();
+        const { data: rawData, error: rawError } = await stepQuery;
 
-      // Buscar sessões distintas para cada step
-      const { data: rawData, error: rawError } = await supabase
-        .from('quiz_step_analytics')
-        .select('step_number, session_id, question_id')
-        .in('quiz_id', quizId 
-          ? [quizId] 
-          : data.map(d => d.quiz_id).filter((v, i, a) => a.indexOf(v) === i)
-        );
+        if (rawError) {
+          console.error('Error fetching funnel data:', rawError);
+          return [];
+        }
 
-      if (rawError) {
-        console.error('Error fetching raw funnel data:', rawError);
-        throw rawError;
-      }
+        if (!rawData || rawData.length === 0) {
+          return [];
+        }
 
-      rawData?.forEach(row => {
-        if (!stepMap.has(row.step_number)) {
-          stepMap.set(row.step_number, {
-            count: 0,
-            questionId: row.question_id || undefined,
-            sessions: new Set()
+        // Agregar por step_number contando sessões únicas
+        const stepMap = new Map<number, {
+          count: number;
+          questionId?: string;
+          sessions: Set<string>;
+        }>();
+
+        rawData.forEach(row => {
+          if (!stepMap.has(row.step_number)) {
+            stepMap.set(row.step_number, {
+              count: 0,
+              questionId: row.question_id || undefined,
+              sessions: new Set()
+            });
+          }
+          const step = stepMap.get(row.step_number)!;
+          step.sessions.add(row.session_id);
+          step.count = step.sessions.size;
+        });
+
+        // Buscar nomes das perguntas
+        const questionIds = Array.from(stepMap.values())
+          .map(s => s.questionId)
+          .filter(Boolean) as string[];
+
+        const questionNames = new Map<string, string>();
+        if (questionIds.length > 0) {
+          const { data: questions } = await supabase
+            .from('quiz_questions')
+            .select('id, question_text')
+            .in('id', questionIds);
+          
+          questions?.forEach(q => {
+            questionNames.set(q.id, q.question_text);
           });
         }
-        const step = stepMap.get(row.step_number)!;
-        step.sessions.add(row.session_id);
-        step.count = step.sessions.size;
-      });
 
-      // Buscar nomes das perguntas
-      const questionIds = Array.from(stepMap.values())
-        .map(s => s.questionId)
-        .filter(Boolean) as string[];
+        // Converter para array ordenado
+        const funnelSteps: FunnelStep[] = Array.from(stepMap.entries())
+          .sort(([a], [b]) => a - b)
+          .map(([stepNumber, data]) => ({
+            stepNumber,
+            label: stepNumber === 0 
+              ? 'Início do Quiz'
+              : data.questionId && questionNames.has(data.questionId)
+                ? `Pergunta ${stepNumber}: ${questionNames.get(data.questionId)?.substring(0, 30)}...`
+                : `Etapa ${stepNumber}`,
+            count: data.count,
+            questionId: data.questionId
+          }));
 
-      const questionNames = new Map<string, string>();
-      if (questionIds.length > 0) {
-        const { data: questions } = await supabase
-          .from('quiz_questions')
-          .select('id, question_text')
-          .in('id', questionIds);
-        
-        questions?.forEach(q => {
-          questionNames.set(q.id, q.question_text);
-        });
+        return funnelSteps;
+      } catch (error) {
+        console.error('Error in useFunnelData:', error);
+        return [];
       }
-
-      // Converter para array ordenado
-      const funnelSteps: FunnelStep[] = Array.from(stepMap.entries())
-        .sort(([a], [b]) => a - b)
-        .map(([stepNumber, data]) => ({
-          stepNumber,
-          label: stepNumber === 0 
-            ? 'Início do Quiz'
-            : data.questionId && questionNames.has(data.questionId)
-              ? `Pergunta ${stepNumber}: ${questionNames.get(data.questionId)?.substring(0, 30)}...`
-              : `Etapa ${stepNumber}`,
-          count: data.count,
-          questionId: data.questionId
-        }));
-
-      return funnelSteps;
     },
     enabled: true,
     staleTime: 1000 * 60 * 5, // 5 minutos
