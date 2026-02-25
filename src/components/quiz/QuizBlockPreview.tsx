@@ -1272,12 +1272,15 @@ const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'accordio
 
 // Comparison Block Preview
 const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: 'comparison' } }) => {
+  const leftItems = block.leftItems || [];
+  const rightItems = block.rightItems || [];
+  
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className={`p-4 rounded-lg ${block.leftStyle === 'negative' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-muted'}`}>
-        <h4 className={`font-semibold mb-3 ${block.leftStyle === 'negative' ? 'text-red-600' : ''}`}>{block.leftTitle}</h4>
+        <h4 className={`font-semibold mb-3 ${block.leftStyle === 'negative' ? 'text-red-600' : ''}`}>{block.leftTitle || ''}</h4>
         <ul className="space-y-2">
-          {block.leftItems.map((item, i) => (
+          {leftItems.map((item, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
               {block.showIcons && <X className="h-4 w-4 text-red-500" />}
               <span>{item}</span>
@@ -1286,9 +1289,9 @@ const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: 'compari
         </ul>
       </div>
       <div className={`p-4 rounded-lg ${block.rightStyle === 'positive' ? 'bg-green-50 dark:bg-green-950/30' : 'bg-muted'}`}>
-        <h4 className={`font-semibold mb-3 ${block.rightStyle === 'positive' ? 'text-green-600' : ''}`}>{block.rightTitle}</h4>
+        <h4 className={`font-semibold mb-3 ${block.rightStyle === 'positive' ? 'text-green-600' : ''}`}>{block.rightTitle || ''}</h4>
         <ul className="space-y-2">
-          {block.rightItems.map((item, i) => (
+          {rightItems.map((item, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
               {block.showIcons && <Check className="h-4 w-4 text-green-500" />}
               <span>{item}</span>
@@ -1302,7 +1305,8 @@ const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: 'compari
 
 // Social Proof Block Preview
 const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 'socialProof' } }) => {
-  const notification = block.notifications[0];
+  const notification = (block.notifications || [])[0];
+  if (!notification) return null;
   return (
     <div className="bg-background border shadow-lg rounded-lg p-3 max-w-xs">
       <div className="flex items-center gap-3">
