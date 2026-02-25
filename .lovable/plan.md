@@ -1,97 +1,98 @@
 
 
-# Plano: Refatoracao Completa do QuestionsList — Cards Compactos com Icones Visiveis
+# Analise dos Erros do Banco de Dados
 
-## Diagnostico
+## Erros identificados no print (19 rows)
 
-Existe apenas **1 componente** `QuestionsList` em `src/components/quiz/QuestionsList.tsx`, usado em 2 lugares no `CreateQuiz.tsx` (desktop sidebar e mobile drawer). Nao ha duplicacao de componente.
+### 1. `GET /rest/v1/validation_requests` → 400 (4 ocorrencias)
+**Causa**: A tabela `validation_requests` tem RLS que exige role `admin` ou `master_admin`. O erro 400 acontece quando um usuario normal (sem essas roles) tenta acessar, ou quando a autenticacao ainda nao resolveu no momento da query.
 
-O problema real e que o layout interno dos cards usa `flex items-center` com texto `truncate` (1 linha), mas o `truncate` nao esta funcionando corretamente — o texto empurra o botao de delete para fora do container. Isso acontece porque:
-1. O container do card nao tem largura maxima restrita (`w-full` dentro de uma sidebar fixa)
-2. O `flex-1 min-w-0` no div do texto deveria funcionar, mas o `overflow-hidden` no card pai pode estar conflitando
-3. Faltam os icones de **editar (lapis)** e **excluir (lixeira)** visiveis — o botao de delete esta la mas fica invisivel por ser empurrado
+**Status**: **Parcialmente protegido**. A rota `/masteradm` tem `ProtectedRoute requiredRole="master_admin"`, entao usuarios normais nao deveriam chegar la. Porem, o `loadData()` pode ser chamado antes do `isAdmin` resolver, ou o guard `if (isAdmin)` pode ter um timing issue. A query tambem nao tem tratamento gracioso — deveria retornar `[]` em caso de erro de permissao em vez de logar 400.
 
-## Solucao: Reescrever o layout dos cards
+**Correcao**: Adicionar guard mais robusto no `AdminDashboard.tsx` — verificar `isAdmin` antes de qualquer query, e capturar erros de RLS graciosamente (retornar dados vazios).
 
-Manter a largura da sidebar como esta (`w-56 xl:w-64`). Refatorar apenas o layout interno de cada card em `QuestionsList.tsx`:
+### 2. `GET /rest/v1/quiz_step_analytics` → 400 (2 ocorrencias)
+**Causa**: O `useFunnelData.ts` (linha 33) faz `.select('quizzes!inner(user_id, title)')` — um JOIN com a tabela `quizzes` — mas a tabela `quiz_step_analytics` **NAO tem FK para `quizzes`**. Sem FK, o PostgREST nao consegue resolver o join e retorna 400.
 
-### Layout final de cada card:
+**Status**: **BUG ATIVO**. Precisa criar a FK ou reescrever a query sem join.
 
-```text
-+--------------------------------------+
-| [1●] Qual eh a sua faixa       [✏][🗑] |
-|      etaria?                         |
-+--------------------------------------+
+**Correcao**: 
+- Opcao A: Criar FK `quiz_step_analytics.quiz_id → quizzes.id`
+- Opcao B: Reescrever a query em `useFunnelData.ts` para fazer 2 queries separadas (buscar step_analytics, depois buscar quizzes pelo user_id)
+
+A opcao A eh a correta — a FK deveria existir. Criar com:
+```sql
+ALTER TABLE quiz_step_analytics 
+ADD CONSTRAINT fk_quiz_step_analytics_quiz_id 
+FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE;
 ```
 
-- Badge numerico (flex-shrink-0, w-6 h-6)
-- Texto: `line-clamp-2` (max 2 linhas, ~20 chars/linha), `text-left`, sem `truncate`
-- Icones: `flex-shrink-0` em um div fixo a direita com `gap-0.5`
-- Container: `flex items-start` (nao `items-center`) para alinhar badge e icones ao topo quando texto quebra
+### 3. `column "qual" does not exist` → 42703 (2 ocorrencias)
+**Causa**: Nenhum codigo no frontend referencia uma coluna "qual". Este erro provavelmente vem de uma query manual feita no Supabase Dashboard ou de uma migration/trigger antigo. Nao ha codigo no projeto que gere esse erro.
 
-### Mudancas especificas no `QuestionsList.tsx`:
+**Status**: **NAO eh um bug do app**. Provavelmente foi uma query manual executada diretamente no DB.
 
-1. **Linha 163**: Trocar `flex items-center gap-1.5` por `flex items-start gap-1.5`
-2. **Linha 222**: Trocar `truncate` por `line-clamp-2 break-words` no `<p>` do texto
-3. **Adicionar icone Edit3 (lapis)** ao lado do Trash2, ambos em um `div flex-shrink-0 flex items-center gap-0.5`
-4. **Import**: Adicionar `Edit3` do lucide-react
-5. **Clicar no lapis**: entra em modo edicao inline (mesmo comportamento do `onDoubleClick`)
-6. **Manter onDoubleClick** no texto tambem
+**Correcao**: Nenhuma necessaria no codigo. Se persistir, investigar no Supabase Dashboard quem esta executando essa query.
 
-### Estrutura JSX refatorada do card:
+### 4. `POST /auth/v1/token` → 400 (4 ocorrencias)
+**Causa**: Tentativas de login com credenciais invalidas (senha errada, email nao cadastrado, etc). Isso eh comportamento normal do auth — nao eh bug.
 
-```tsx
-<div className="w-full text-left p-2 rounded-md border overflow-hidden">
-  <div className="flex items-start gap-1.5">
-    {/* Badge */}
-    <button onClick={click} className="flex-shrink-0 relative mt-0.5">
-      <div className="w-6 h-6 rounded-full ...">
-        {index + 1}
-      </div>
-      {isComplete && <span className="absolute ..." />}
-    </button>
+**Status**: **Normal/Esperado**. Erro 400 em auth/token significa credenciais invalidas.
 
-    {/* Texto — 2 linhas max */}
-    <div
-      className="flex-1 min-w-0 cursor-pointer"
-      onClick={click}
-      onDoubleClick={startEdit}
-    >
-      {isEditing ? (
-        <Input ... />
-      ) : (
-        <p className="text-xs font-medium text-left line-clamp-2 break-words">
-          {displayText}
-        </p>
-      )}
-    </div>
+**Correcao**: Nenhuma necessaria. O frontend ja mostra mensagem de erro ao usuario.
 
-    {/* Icones fixos */}
-    <div className="flex-shrink-0 flex items-center gap-0.5 mt-0.5">
-      <Button size="sm" variant="ghost" onClick={startEdit}
-        className="h-5 w-5 p-0">
-        <Edit3 className="h-3 w-3" />
-      </Button>
-      <Button size="sm" variant="ghost" onClick={delete}
-        className="h-5 w-5 p-0" disabled={questions.length <= 1}>
-        <Trash2 className="h-3 w-3 text-destructive" />
-      </Button>
-    </div>
-  </div>
-</div>
+### 5. `duplicate key value violates unique constraint "user_roles_user_id_role_key"` → 23505
+**Causa**: A trigger `handle_new_user_role()` faz `INSERT INTO user_roles ... ON CONFLICT DO NOTHING`. O erro 23505 eh logado pelo Postgres antes do `ON CONFLICT` resolver. Isso eh **esperado e tratado** — o `ON CONFLICT DO NOTHING` impede que o erro afete o fluxo.
+
+**Status**: **Tratado**. O log aparece no Postgres mas a operacao nao falha.
+
+**Correcao**: Nenhuma necessaria — o `ON CONFLICT DO NOTHING` ja trata isso corretamente.
+
+### 6. `PATCH /rest/v1/user_subscriptions` → 409 + `duplicate key violates "user_subscriptions_user_id_key"` → 23505
+**Causa**: Similar ao anterior — a trigger `handle_new_user_subscription()` usa `ON CONFLICT (user_id) DO NOTHING`. O erro eh logado mas tratado.
+
+**Status**: **Tratado**. Conforme documentado na memoria `auth/provisao-automatica-usuarios`.
+
+**Correcao**: Nenhuma necessaria.
+
+### 7. `GET /auth/v1/user` → 403 (2 ocorrencias)
+**Causa**: Token expirado ou sessao invalida. O client Supabase tenta pegar o usuario, mas o token ja expirou. O `autoRefreshToken: true` deveria prevenir isso, mas pode falhar em edge cases (tab inativa por muito tempo, etc).
+
+**Status**: **Esperado em edge cases**. O frontend redireciona para login quando isso acontece.
+
+**Correcao**: Nenhuma critica necessaria.
+
+---
+
+## Resumo
+
+| Erro | Gravidade | Status | Acao |
+|------|-----------|--------|------|
+| validation_requests 400 | Baixa | Guard existe mas pode ter timing issue | Adicionar tratamento gracioso de erro |
+| quiz_step_analytics 400 | **ALTA** | **BUG — FK ausente** | Criar FK `quiz_id → quizzes.id` |
+| column "qual" 42703 | Nenhuma | Query manual externa | Ignorar |
+| auth/token 400 | Nenhuma | Login com credenciais invalidas | Normal |
+| user_roles 23505 | Nenhuma | ON CONFLICT trata | Normal |
+| user_subscriptions 23505/409 | Nenhuma | ON CONFLICT trata | Normal |
+| auth/user 403 | Nenhuma | Token expirado | Normal |
+
+## Plano de correcao (somente os bugs reais)
+
+### 1. Criar FK em `quiz_step_analytics` (SQL migration)
+```sql
+ALTER TABLE public.quiz_step_analytics 
+ADD CONSTRAINT fk_quiz_step_analytics_quiz_id 
+FOREIGN KEY (quiz_id) REFERENCES public.quizzes(id) ON DELETE CASCADE;
 ```
 
-### Arquivo unico a editar:
-- `src/components/quiz/QuestionsList.tsx`
+### 2. Melhorar tratamento de erros no `useFunnelData.ts`
+Adicionar `try/catch` que retorna `[]` em caso de erro 400, em vez de propagar a excecao.
 
-### O que NAO sera tocado:
-- `src/pages/CreateQuiz.tsx` (sidebar width e margins permanecem)
-- `src/index.css` (nenhuma mudanca em CSS global)
-- Nenhum outro componente
+### 3. Guard mais robusto no `AdminDashboard.tsx`
+Garantir que `loadData()` so execute quando `isAdmin === true` (ja tem o guard, mas adicionar tratamento de erro nas queries de `validation_requests` para retornar dados vazios graciosamente em caso de 400).
 
-### Impacto:
-- Cards ficam com altura variavel (1-2 linhas) mas nunca ultrapassam 2 linhas
-- Icones de lapis e lixeira sempre visiveis, alinhados ao topo direito
-- Funciona tanto no editor normal quanto no express mode
-- Funciona tanto para templates (texto longo) quanto para quiz manual (texto curto/vazio)
+### Arquivos a editar:
+- **SQL migration**: Criar FK em `quiz_step_analytics`
+- `src/hooks/useFunnelData.ts`: Tratamento de erro gracioso
+- `src/pages/AdminDashboard.tsx`: Tratamento de erro gracioso nas queries de validation_requests
 
