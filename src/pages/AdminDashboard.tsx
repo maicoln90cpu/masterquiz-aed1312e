@@ -26,6 +26,7 @@ import { AdminSubTabs } from "@/components/admin/AdminSubTabs";
 import { SystemHealthAlert } from "@/components/admin/SystemHealthAlert";
 import logo from "@/assets/logo.png";
 import { useQuery } from "@tanstack/react-query";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -56,6 +57,7 @@ const ComponentLoader = () => (
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isAdmin } = useUserRole();
   const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
   const [loading, setLoading] = useState(true);
   const [openTicketsCount, setOpenTicketsCount] = useState(0);
@@ -223,8 +225,10 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (isAdmin) {
+      loadData();
+    }
+  }, [isAdmin]);
 
   const loadData = async () => {
     try {

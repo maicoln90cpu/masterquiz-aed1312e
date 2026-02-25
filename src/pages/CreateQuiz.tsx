@@ -392,7 +392,10 @@ const CreateQuiz = () => {
       <div className="flex-1 flex w-full max-w-full overflow-hidden h-[calc(100vh-5rem)] min-h-0">
         
         {/* Sidebar - Questions List (Desktop) */}
-        <aside id="questions-sidebar" className="hidden lg:flex w-64 xl:w-72 border-r bg-card flex-col fixed top-20 left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
+        <aside id="questions-sidebar" className={cn(
+          "hidden lg:flex w-64 xl:w-72 border-r bg-card flex-col fixed left-0 overflow-y-auto z-30",
+          isExpressMode ? "top-[8.5rem] h-[calc(100vh-8.5rem)]" : "top-20 h-[calc(100vh-5rem)]"
+        )}>
             <QuestionsList
               questions={questions}
               currentStep={step}

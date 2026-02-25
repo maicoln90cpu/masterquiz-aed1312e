@@ -76,7 +76,7 @@ export const QuestionsList = memo(({
   // Check if a question is complete
   const isQuestionComplete = (question: any) => {
     const questionBlock = question.blocks?.find((b: any) => b.type === 'question');
-    const hasText = questionBlock?.content?.trim().length > 0 || question.question_text?.trim().length > 0;
+    const hasText = questionBlock?.questionText?.trim().length > 0 || question.question_text?.trim().length > 0;
     const hasOptions = questionBlock?.options?.length > 0 || question.options?.length > 0;
     return hasText && hasOptions;
   };
@@ -139,7 +139,7 @@ export const QuestionsList = memo(({
             <>
               {questions.map((q, index) => {
                 const questionBlock = q.blocks?.find((b: any) => b.type === 'question');
-                const questionText = questionBlock?.content || q.question_text || '';
+                const questionText = questionBlock?.questionText || q.question_text || '';
                 const customLabel = q.custom_label || '';
                 // ✅ Limpar HTML do texto para exibição
                 const cleanText = stripHtml(questionText);
@@ -186,7 +186,7 @@ export const QuestionsList = memo(({
                         : "bg-card border-border hover:border-primary/30"
                     )}
                   >
-                    <div className="flex items-start gap-2 pr-20">
+                    <div className="flex items-start gap-2 pr-[4.5rem]">
                       {/* Thumbnail de Mídia */}
                       {firstMediaBlock && (
                         <div className="flex-shrink-0 w-12 h-12 rounded-md overflow-hidden bg-muted border border-border">
@@ -276,7 +276,7 @@ export const QuestionsList = memo(({
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="text-sm font-medium max-w-[140px] truncate">
+                                  <div className="text-sm font-medium truncate">
                                     {displayText}
                                   </div>
                                 </TooltipTrigger>

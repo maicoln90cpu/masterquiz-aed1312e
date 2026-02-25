@@ -77,7 +77,7 @@ const Settings = () => {
         .select('scheduled_for, cancellation_token')
         .eq('user_id', user.id)
         .is('cancelled_at', null)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setScheduledDeletion(data);
