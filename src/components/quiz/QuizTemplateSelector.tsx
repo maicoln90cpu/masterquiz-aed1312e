@@ -110,7 +110,7 @@ export const QuizTemplateSelector = ({ onSelectTemplate, onCreateFromScratch, on
         
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full">
           {availableTemplates.map((template) => {
-            const isFeatured = template.id === 'qualificacao-lead';
+            const isFeatured = template.id === 'funil-captacao-leads';
             return (
               <Card 
                 key={template.id} 

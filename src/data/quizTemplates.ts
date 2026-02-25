@@ -19,7 +19,7 @@ export interface QuizTemplate {
       id?: string;
       question_text: string;
       custom_label?: string;
-      answer_format: 'single_choice' | 'multiple_choice';
+      answer_format: 'single_choice' | 'multiple_choice' | 'yes_no';
       options: Array<{ text: string; value: string; imageUrl?: string }>;
       order_number: number;
       blocks?: any[];
@@ -39,1059 +39,1097 @@ export interface QuizTemplate {
   };
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// Helper: cria bloco de pergunta padrão com texto introdutório
+// ──────────────────────────────────────────────────────────────────────
+function questionBlock(id: string, text: string, opts: any[], format = 'single_choice', order = 1) {
+  return {
+    id: `block-${id}-question`,
+    type: 'question',
+    order,
+    content: text,
+    options: opts,
+    answerFormat: format,
+    required: true,
+    autoAdvance: false,
+  };
+}
+
+function textBlock(id: string, html: string, order = 0) {
+  return { id: `block-${id}-text`, type: 'text', order, content: html, fontSize: 'medium', textAlign: 'left' };
+}
+
+function separatorBlock(id: string, order = 0) {
+  return { id: `block-${id}-sep`, type: 'separator', order, content: '', style: 'solid' };
+}
+
+function socialProofBlock(id: string, order: number, items: Array<{ name: string; text: string; rating?: number }>) {
+  return {
+    id: `block-${id}-social`,
+    type: 'social_proof',
+    order,
+    notifications: items.map((i, idx) => ({
+      id: `sp-${id}-${idx}`,
+      name: i.name,
+      text: i.text,
+      rating: i.rating ?? 5,
+      timeAgo: `${Math.floor(Math.random() * 20) + 1}min atrás`,
+    })),
+  };
+}
+
+function comparisonBlock(id: string, order: number, before: { title: string; items: string[] }, after: { title: string; items: string[] }) {
+  return {
+    id: `block-${id}-comp`,
+    type: 'comparison',
+    order,
+    beforeTitle: before.title,
+    afterTitle: after.title,
+    beforeItems: before.items,
+    afterItems: after.items,
+  };
+}
+
+function countdownBlock(id: string, order: number, minutes: number, label: string) {
+  return { id: `block-${id}-cd`, type: 'countdown', order, minutes, label, showProgress: true };
+}
+
+function progressBlock(id: string, order: number, value: number, label: string) {
+  return { id: `block-${id}-prog`, type: 'progress', order, value, label, showPercentage: true };
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 1) CAPTAÇÃO DE LEADS — Funil de qualificação + auto-convencimento
+// ══════════════════════════════════════════════════════════════════════
+const leadCaptureTemplate: QuizTemplate = {
+  id: 'funil-captacao-leads',
+  name: '🎯 Captação de Leads — Funil Persuasivo',
+  description: 'Quiz de 10 perguntas com funil de auto-convencimento para qualificar e aquecer leads antes do checkout',
+  category: 'lead_qualification',
+  icon: '🎯',
+  preview: {
+    title: 'Descubra a solução ideal para o seu negócio',
+    description: 'Responda 10 perguntas e receba uma recomendação personalizada',
+    questionCount: 10,
+    template: 'moderno',
+  },
+  config: {
+    title: 'Descubra a solução ideal para o seu negócio',
+    description: 'Em apenas 2 minutos, vamos entender sua situação e indicar o melhor caminho',
+    questionCount: 10,
+    template: 'moderno',
+    questions: [
+      // ── FASE 1: ESPELHAMENTO (perguntas 1-3) ──
+      {
+        id: 'lc-1',
+        question_text: 'Qual o tamanho da sua operação hoje?',
+        custom_label: '🧊 Espelhamento',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Sou solo / freelancer', value: 'solo' },
+          { text: 'Tenho equipe pequena (2-10)', value: 'small' },
+          { text: 'Time médio (11-50)', value: 'medium' },
+          { text: 'Empresa grande (50+)', value: 'large' },
+        ],
+        order_number: 1,
+        blocks: [
+          textBlock('lc1', '<h2>Vamos conhecer você</h2><p>Para indicar a melhor solução, precisamos entender sua realidade atual.</p>'),
+          separatorBlock('lc1', 1),
+          questionBlock('lc1', 'Qual o tamanho da sua operação hoje?', [
+            { text: 'Sou solo / freelancer', value: 'solo' },
+            { text: 'Tenho equipe pequena (2-10)', value: 'small' },
+            { text: 'Time médio (11-50)', value: 'medium' },
+            { text: 'Empresa grande (50+)', value: 'large' },
+          ], 'single_choice', 2),
+        ],
+      },
+      {
+        id: 'lc-2',
+        question_text: 'Há quanto tempo você está no mercado?',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Estou começando agora', value: 'starting' },
+          { text: '1-3 anos', value: '1-3' },
+          { text: '3-5 anos', value: '3-5' },
+          { text: 'Mais de 5 anos', value: '5+' },
+        ],
+        order_number: 2,
+        blocks: [
+          textBlock('lc2', '<p>Cada fase de negócio tem desafios diferentes. Vamos personalizar.</p>'),
+          questionBlock('lc2', 'Há quanto tempo você está no mercado?', [
+            { text: 'Estou começando agora', value: 'starting' },
+            { text: '1-3 anos', value: '1-3' },
+            { text: '3-5 anos', value: '3-5' },
+            { text: 'Mais de 5 anos', value: '5+' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'lc-3',
+        question_text: 'Qual seu faturamento mensal atual?',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Até R$ 5 mil', value: 'up-5k' },
+          { text: 'R$ 5 mil a R$ 20 mil', value: '5-20k' },
+          { text: 'R$ 20 mil a R$ 100 mil', value: '20-100k' },
+          { text: 'Acima de R$ 100 mil', value: '100k+' },
+        ],
+        order_number: 3,
+        blocks: [
+          textBlock('lc3', '<p>Isso nos ajuda a calibrar a solução ao seu porte.</p>'),
+          questionBlock('lc3', 'Qual seu faturamento mensal atual?', [
+            { text: 'Até R$ 5 mil', value: 'up-5k' },
+            { text: 'R$ 5 mil a R$ 20 mil', value: '5-20k' },
+            { text: 'R$ 20 mil a R$ 100 mil', value: '20-100k' },
+            { text: 'Acima de R$ 100 mil', value: '100k+' },
+          ], 'single_choice', 1),
+        ],
+      },
+
+      // ── FASE 2: AMPLIFICAÇÃO DA DOR (perguntas 4-5) ──
+      {
+        id: 'lc-4',
+        question_text: 'Qual é o seu MAIOR gargalo hoje?',
+        custom_label: '🔥 Dor Principal',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Não consigo gerar leads qualificados o suficiente', value: 'leads' },
+          { text: 'Tenho leads mas não converto em vendas', value: 'conversion' },
+          { text: 'Processo manual me consome tempo demais', value: 'manual' },
+          { text: 'Não sei quem é meu cliente ideal', value: 'icp' },
+        ],
+        order_number: 4,
+        blocks: [
+          textBlock('lc4', '<h3>Vamos falar do que mais importa</h3><p>Identificar o gargalo certo é o primeiro passo para destravar o crescimento.</p>'),
+          separatorBlock('lc4', 1),
+          questionBlock('lc4', 'Qual é o seu MAIOR gargalo hoje?', [
+            { text: 'Não consigo gerar leads qualificados o suficiente', value: 'leads' },
+            { text: 'Tenho leads mas não converto em vendas', value: 'conversion' },
+            { text: 'Processo manual me consome tempo demais', value: 'manual' },
+            { text: 'Não sei quem é meu cliente ideal', value: 'icp' },
+          ], 'single_choice', 2),
+        ],
+      },
+      {
+        id: 'lc-5',
+        question_text: 'Quantas horas por semana você perde com tarefas que poderiam ser automatizadas?',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Menos de 5h', value: '<5h' },
+          { text: '5-10 horas', value: '5-10h' },
+          { text: '10-20 horas', value: '10-20h' },
+          { text: 'Mais de 20 horas', value: '20h+' },
+        ],
+        order_number: 5,
+        blocks: [
+          textBlock('lc5', '<p>Pense em follow-ups manuais, planilhas, qualificação de lead uma a uma...</p>'),
+          questionBlock('lc5', 'Quantas horas por semana você perde com tarefas que poderiam ser automatizadas?', [
+            { text: 'Menos de 5h', value: '<5h' },
+            { text: '5-10 horas', value: '5-10h' },
+            { text: '10-20 horas', value: '10-20h' },
+            { text: 'Mais de 20 horas 😰', value: '20h+' },
+          ], 'single_choice', 1),
+        ],
+      },
+
+      // ── FASE 3: CONSEQUÊNCIA (perguntas 6-7) ──
+      {
+        id: 'lc-6',
+        question_text: 'Se nada mudar nos próximos 6 meses, qual seria o impacto?',
+        custom_label: '⚠️ Consequência',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Vou continuar estagnado', value: 'stagnation' },
+          { text: 'Vou perder clientes para concorrentes', value: 'competitors' },
+          { text: 'Vou ter que demitir / cortar custos', value: 'cuts' },
+          { text: 'Posso fechar o negócio', value: 'close' },
+        ],
+        order_number: 6,
+        blocks: [
+          textBlock('lc6', '<h3>O custo de não agir</h3><p>Às vezes, o maior risco é manter tudo como está.</p>'),
+          questionBlock('lc6', 'Se nada mudar nos próximos 6 meses, qual seria o impacto?', [
+            { text: 'Vou continuar estagnado', value: 'stagnation' },
+            { text: 'Vou perder clientes para concorrentes', value: 'competitors' },
+            { text: 'Vou ter que demitir / cortar custos', value: 'cuts' },
+            { text: 'Posso fechar o negócio', value: 'close' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'lc-7',
+        question_text: 'Já tentou alguma solução antes e não funcionou?',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Nunca tentei nada', value: 'never' },
+          { text: 'Sim, tentei por conta própria', value: 'diy' },
+          { text: 'Sim, contratei mas não tive resultado', value: 'hired_failed' },
+          { text: 'Sim, funcionou parcialmente', value: 'partial' },
+        ],
+        order_number: 7,
+        blocks: [
+          textBlock('lc7', '<p>Entender tentativas anteriores nos ajuda a evitar os mesmos erros.</p>'),
+          questionBlock('lc7', 'Já tentou alguma solução antes e não funcionou?', [
+            { text: 'Nunca tentei nada', value: 'never' },
+            { text: 'Sim, tentei por conta própria', value: 'diy' },
+            { text: 'Sim, contratei mas não tive resultado', value: 'hired_failed' },
+            { text: 'Sim, funcionou parcialmente', value: 'partial' },
+          ], 'single_choice', 1),
+          socialProofBlock('lc7', 2, [
+            { name: 'Carlos M.', text: 'Tentei 3 ferramentas antes. Só com essa consegui resultado real.', rating: 5 },
+            { name: 'Ana R.', text: 'Em 2 semanas já tinha mais leads que no mês inteiro.', rating: 5 },
+          ]),
+        ],
+      },
+
+      // ── FASE 4: CONTRASTE (perguntas 8-9) ──
+      {
+        id: 'lc-8',
+        question_text: 'Se existisse uma solução que resolvesse esse gargalo automaticamente, quanto você investiria?',
+        custom_label: '✨ Contraste',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Até R$ 100/mês', value: '100' },
+          { text: 'R$ 100-300/mês', value: '100-300' },
+          { text: 'R$ 300-500/mês', value: '300-500' },
+          { text: 'O valor certo para o resultado certo', value: 'roi' },
+        ],
+        order_number: 8,
+        blocks: [
+          comparisonBlock('lc8', 0,
+            { title: '❌ Sem solução', items: ['Leads frios', 'Processos manuais', 'Tempo desperdiçado', 'Vendas incertas'] },
+            { title: '✅ Com solução', items: ['Leads qualificados', 'Automação total', 'Tempo focado em vender', 'Previsibilidade'] }
+          ),
+          separatorBlock('lc8', 1),
+          questionBlock('lc8', 'Se existisse uma solução que resolvesse esse gargalo automaticamente, quanto você investiria?', [
+            { text: 'Até R$ 100/mês', value: '100' },
+            { text: 'R$ 100-300/mês', value: '100-300' },
+            { text: 'R$ 300-500/mês', value: '300-500' },
+            { text: 'O valor certo para o resultado certo', value: 'roi' },
+          ], 'single_choice', 2),
+        ],
+      },
+      {
+        id: 'lc-9',
+        question_text: 'Quando você quer ver os primeiros resultados?',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Esta semana!', value: 'week' },
+          { text: 'Nos próximos 30 dias', value: '30d' },
+          { text: 'Próximos 3 meses', value: '3m' },
+          { text: 'Sem pressa, quero fazer direito', value: 'noRush' },
+        ],
+        order_number: 9,
+        blocks: [
+          progressBlock('lc9', 0, 90, 'Análise quase completa'),
+          questionBlock('lc9', 'Quando você quer ver os primeiros resultados?', [
+            { text: 'Esta semana!', value: 'week' },
+            { text: 'Nos próximos 30 dias', value: '30d' },
+            { text: 'Próximos 3 meses', value: '3m' },
+            { text: 'Sem pressa, quero fazer direito', value: 'noRush' },
+          ], 'single_choice', 1),
+        ],
+      },
+
+      // ── FASE 5: CONCLUSÃO GUIADA (pergunta 10) ──
+      {
+        id: 'lc-10',
+        question_text: 'Se pudéssemos resolver seu maior gargalo com uma solução comprovada, você gostaria de saber como?',
+        custom_label: '🚀 Decisão',
+        answer_format: 'single_choice',
+        options: [
+          { text: 'Sim, quero saber agora!', value: 'yes_now' },
+          { text: 'Sim, mas preciso avaliar antes', value: 'yes_later' },
+          { text: 'Talvez, me mostre os resultados', value: 'maybe' },
+        ],
+        order_number: 10,
+        blocks: [
+          textBlock('lc10', '<h2>🎯 Última pergunta!</h2><p>Baseado nas suas respostas, já temos uma recomendação personalizada para você.</p>'),
+          countdownBlock('lc10', 1, 10, 'Sua análise expira em'),
+          separatorBlock('lc10', 2),
+          questionBlock('lc10', 'Se pudéssemos resolver seu maior gargalo com uma solução comprovada, você gostaria de saber como?', [
+            { text: 'Sim, quero saber agora! 🔥', value: 'yes_now' },
+            { text: 'Sim, mas preciso avaliar antes', value: 'yes_later' },
+            { text: 'Talvez, me mostre os resultados', value: 'maybe' },
+          ], 'single_choice', 3),
+        ],
+      },
+    ],
+    formConfig: { collect_name: true, collect_email: true, collect_whatsapp: true, collection_timing: 'after' },
+    results: [
+      {
+        result_text: '🔥 Perfil identificado: Lead Qualificado!\n\nCom base nas suas respostas, você tem tudo para destravar resultados rápidos. Sua recomendação personalizada está pronta — clique abaixo para acessar.',
+        button_text: 'Ver minha recomendação',
+        condition_type: 'always',
+        order_number: 1,
+      },
+    ],
+  },
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// 2) CONVERSÃO VSL — Pré-qualifica antes de enviar para a VSL
+// ══════════════════════════════════════════════════════════════════════
+const vslConversionTemplate: QuizTemplate = {
+  id: 'funil-pre-vsl',
+  name: '📈 Pré-VSL — Filtro de Curiosos',
+  description: 'Quiz de 8 perguntas que aquece o lead antes da VSL, filtrando curiosos e amplificando desejo',
+  category: 'lead_qualification',
+  icon: '📈',
+  preview: {
+    title: 'Descubra se [produto] é para você',
+    description: 'Quiz rápido de qualificação pré-VSL',
+    questionCount: 8,
+    template: 'moderno',
+  },
+  config: {
+    title: 'Descubra se [produto] é realmente para você',
+    description: 'Responda com sinceridade — em 2 minutos saberemos se faz sentido para o seu caso',
+    questionCount: 8,
+    template: 'moderno',
+    questions: [
+      // ESPELHAMENTO
+      {
+        id: 'vsl-1', question_text: 'Qual sua faixa etária?', answer_format: 'single_choice',
+        options: [
+          { text: '18-25 anos', value: '18-25' }, { text: '26-35 anos', value: '26-35' },
+          { text: '36-45 anos', value: '36-45' }, { text: '46+ anos', value: '46+' },
+        ],
+        order_number: 1,
+        blocks: [
+          textBlock('vsl1', '<h2>Antes de tudo, vamos te conhecer</h2><p>Isso leva menos de 2 minutos.</p>'),
+          questionBlock('vsl1', 'Qual sua faixa etária?', [
+            { text: '18-25 anos', value: '18-25' }, { text: '26-35 anos', value: '26-35' },
+            { text: '36-45 anos', value: '36-45' }, { text: '46+ anos', value: '46+' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'vsl-2', question_text: 'Como você descreveria sua situação atual?', answer_format: 'single_choice',
+        options: [
+          { text: 'Estou frustrado(a) e preciso mudar', value: 'frustrated' },
+          { text: 'Estou ok, mas sei que posso melhorar', value: 'ok' },
+          { text: 'Estou em um bom momento e quero escalar', value: 'scaling' },
+          { text: 'Estou só pesquisando por curiosidade', value: 'curious' },
+        ],
+        order_number: 2,
+        blocks: [
+          questionBlock('vsl2', 'Como você descreveria sua situação atual?', [
+            { text: 'Estou frustrado(a) e preciso mudar', value: 'frustrated' },
+            { text: 'Estou ok, mas sei que posso melhorar', value: 'ok' },
+            { text: 'Estou em um bom momento e quero escalar', value: 'scaling' },
+            { text: 'Estou só pesquisando por curiosidade', value: 'curious' },
+          ]),
+        ],
+      },
+      // DOR
+      {
+        id: 'vsl-3', question_text: 'O que mais te incomoda na sua rotina hoje?', answer_format: 'single_choice',
+        custom_label: '🔥 Dor',
+        options: [
+          { text: 'Falta de tempo para o que importa', value: 'time' },
+          { text: 'Resultados abaixo do esperado', value: 'results' },
+          { text: 'Não saber por onde começar', value: 'lost' },
+          { text: 'Já tentei de tudo e nada funciona', value: 'exhausted' },
+        ],
+        order_number: 3,
+        blocks: [
+          textBlock('vsl3', '<h3>Vamos ao que importa</h3><p>Ser honesto aqui faz toda a diferença no resultado.</p>'),
+          questionBlock('vsl3', 'O que mais te incomoda na sua rotina hoje?', [
+            { text: 'Falta de tempo para o que importa', value: 'time' },
+            { text: 'Resultados abaixo do esperado', value: 'results' },
+            { text: 'Não saber por onde começar', value: 'lost' },
+            { text: 'Já tentei de tudo e nada funciona 😩', value: 'exhausted' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'vsl-4', question_text: 'Há quanto tempo você convive com esse problema?', answer_format: 'single_choice',
+        options: [
+          { text: 'Menos de 3 meses', value: '<3m' }, { text: '3-6 meses', value: '3-6m' },
+          { text: '6-12 meses', value: '6-12m' }, { text: 'Mais de 1 ano', value: '1y+' },
+        ],
+        order_number: 4,
+        blocks: [
+          questionBlock('vsl4', 'Há quanto tempo você convive com esse problema?', [
+            { text: 'Menos de 3 meses', value: '<3m' }, { text: '3-6 meses', value: '3-6m' },
+            { text: '6-12 meses', value: '6-12m' }, { text: 'Mais de 1 ano 😰', value: '1y+' },
+          ]),
+        ],
+      },
+      // CONSEQUÊNCIA
+      {
+        id: 'vsl-5', question_text: 'O que acontece se você não resolver isso nos próximos 90 dias?', answer_format: 'single_choice',
+        custom_label: '⚠️ Consequência',
+        options: [
+          { text: 'Vou continuar na mesma', value: 'same' },
+          { text: 'Posso perder uma oportunidade única', value: 'opportunity' },
+          { text: 'Minha situação vai piorar', value: 'worse' },
+          { text: 'Vou me arrepender de não ter agido', value: 'regret' },
+        ],
+        order_number: 5,
+        blocks: [
+          textBlock('vsl5', '<h3>Reflexão importante</h3>'),
+          questionBlock('vsl5', 'O que acontece se você não resolver isso nos próximos 90 dias?', [
+            { text: 'Vou continuar na mesma', value: 'same' },
+            { text: 'Posso perder uma oportunidade única', value: 'opportunity' },
+            { text: 'Minha situação vai piorar', value: 'worse' },
+            { text: 'Vou me arrepender de não ter agido', value: 'regret' },
+          ], 'single_choice', 1),
+        ],
+      },
+      // CONTRASTE
+      {
+        id: 'vsl-6', question_text: 'Se existisse um método comprovado para resolver isso em semanas, você investiria tempo para assistir uma apresentação de 15 minutos?', answer_format: 'single_choice',
+        custom_label: '✨ Contraste',
+        options: [
+          { text: 'Com certeza!', value: 'yes' },
+          { text: 'Depende do que vou aprender', value: 'depends' },
+          { text: 'Talvez, se for gratuito', value: 'maybe' },
+        ],
+        order_number: 6,
+        blocks: [
+          comparisonBlock('vsl6', 0,
+            { title: '❌ Sem o método', items: ['Tentativa e erro', 'Meses sem resultado', 'Frustração crescente'] },
+            { title: '✅ Com o método', items: ['Passo a passo claro', 'Resultados em semanas', 'Confiança na direção'] }
+          ),
+          questionBlock('vsl6', 'Se existisse um método comprovado, você investiria 15 minutos para conhecê-lo?', [
+            { text: 'Com certeza! 🔥', value: 'yes' },
+            { text: 'Depende do que vou aprender', value: 'depends' },
+            { text: 'Talvez, se for gratuito', value: 'maybe' },
+          ], 'single_choice', 1),
+        ],
+      },
+      // PROVA SOCIAL
+      {
+        id: 'vsl-7', question_text: 'Qual resultado mais te motivaria?', answer_format: 'single_choice',
+        options: [
+          { text: 'Resultado financeiro rápido', value: 'money' },
+          { text: 'Mais liberdade de tempo', value: 'freedom' },
+          { text: 'Reconhecimento e autoridade', value: 'authority' },
+          { text: 'Segurança e previsibilidade', value: 'security' },
+        ],
+        order_number: 7,
+        blocks: [
+          socialProofBlock('vsl7', 0, [
+            { name: 'Marcos S.', text: 'Eu estava cético, mas em 3 semanas já vi resultado.', rating: 5 },
+            { name: 'Juliana P.', text: 'Finalmente encontrei algo que funciona de verdade.', rating: 5 },
+            { name: 'Roberto L.', text: 'Assistir a apresentação mudou minha visão completamente.', rating: 5 },
+          ]),
+          separatorBlock('vsl7', 1),
+          questionBlock('vsl7', 'Qual resultado mais te motivaria?', [
+            { text: 'Resultado financeiro rápido', value: 'money' },
+            { text: 'Mais liberdade de tempo', value: 'freedom' },
+            { text: 'Reconhecimento e autoridade', value: 'authority' },
+            { text: 'Segurança e previsibilidade', value: 'security' },
+          ], 'single_choice', 2),
+        ],
+      },
+      // CONCLUSÃO
+      {
+        id: 'vsl-8', question_text: 'Você está pronto para descobrir como resolver isso de uma vez?', answer_format: 'single_choice',
+        custom_label: '🚀 Decisão',
+        options: [
+          { text: 'Sim, me mostra agora!', value: 'yes' },
+          { text: 'Sim, mas quero mais informações', value: 'info' },
+        ],
+        order_number: 8,
+        blocks: [
+          textBlock('vsl8', '<h2>🎯 Análise completa!</h2><p>Suas respostas indicam que você tem perfil para alcançar resultados acima da média.</p>'),
+          countdownBlock('vsl8', 1, 5, 'Acesso ao conteúdo exclusivo'),
+          questionBlock('vsl8', 'Você está pronto para descobrir como resolver isso de uma vez?', [
+            { text: 'Sim, me mostra agora! 🔥', value: 'yes' },
+            { text: 'Sim, mas quero mais informações primeiro', value: 'info' },
+          ], 'single_choice', 2),
+        ],
+      },
+    ],
+    formConfig: { collect_name: true, collect_email: true, collect_whatsapp: false, collection_timing: 'after' },
+    results: [
+      {
+        result_text: '🎬 Parabéns! Você foi aprovado para assistir a apresentação exclusiva.\n\nBaseado nas suas respostas, o método foi feito para pessoas no seu perfil. Clique abaixo para assistir agora.',
+        button_text: 'Assistir apresentação',
+        condition_type: 'always',
+        order_number: 1,
+      },
+    ],
+  },
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// 3) TRÁFEGO PAGO — Qualificação rápida de leads de anúncios
+// ══════════════════════════════════════════════════════════════════════
+const paidTrafficTemplate: QuizTemplate = {
+  id: 'funil-trafego-pago',
+  name: '📣 Tráfego Pago — Qualificação Rápida',
+  description: 'Quiz de 8 perguntas otimizado para campanhas de tráfego pago: rápido, direto e com alta conversão',
+  category: 'lead_qualification',
+  icon: '📣',
+  preview: {
+    title: 'Teste: Você está pronto para [resultado]?',
+    description: 'Quiz de qualificação em 90 segundos',
+    questionCount: 8,
+    template: 'moderno',
+  },
+  config: {
+    title: 'Teste: Você está pronto para escalar seus resultados?',
+    description: 'Responda com sinceridade — em 90 segundos você terá sua resposta',
+    questionCount: 8,
+    template: 'moderno',
+    questions: [
+      // ESPELHAMENTO (2 perguntas rápidas)
+      {
+        id: 'pt-1', question_text: 'Qual sua faixa etária?', answer_format: 'single_choice',
+        options: [
+          { text: '18-25', value: '18-25' }, { text: '26-35', value: '26-35' },
+          { text: '36-45', value: '36-45' }, { text: '46+', value: '46+' },
+        ],
+        order_number: 1,
+        blocks: [
+          textBlock('pt1', '<h2>Teste rápido de qualificação</h2><p>Apenas 8 perguntas. Sem enrolação.</p>'),
+          questionBlock('pt1', 'Qual sua faixa etária?', [
+            { text: '18-25', value: '18-25' }, { text: '26-35', value: '26-35' },
+            { text: '36-45', value: '36-45' }, { text: '46+', value: '46+' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'pt-2', question_text: 'Quanto você investe em tráfego pago por mês?', answer_format: 'single_choice',
+        options: [
+          { text: 'Ainda não invisto', value: 'zero' },
+          { text: 'Até R$ 1.000/mês', value: '<1k' },
+          { text: 'R$ 1.000 - R$ 5.000/mês', value: '1-5k' },
+          { text: 'Acima de R$ 5.000/mês', value: '5k+' },
+        ],
+        order_number: 2,
+        blocks: [
+          questionBlock('pt2', 'Quanto você investe em tráfego pago por mês?', [
+            { text: 'Ainda não invisto', value: 'zero' },
+            { text: 'Até R$ 1.000/mês', value: '<1k' },
+            { text: 'R$ 1.000 - R$ 5.000/mês', value: '1-5k' },
+            { text: 'Acima de R$ 5.000/mês', value: '5k+' },
+          ]),
+        ],
+      },
+      // DOR
+      {
+        id: 'pt-3', question_text: 'Qual seu custo por lead hoje?', answer_format: 'single_choice',
+        custom_label: '🔥 Dor',
+        options: [
+          { text: 'Não sei (esse é o problema)', value: 'unknown' },
+          { text: 'Menos de R$ 10', value: '<10' },
+          { text: 'R$ 10-30', value: '10-30' },
+          { text: 'Mais de R$ 30 (muito caro)', value: '30+' },
+        ],
+        order_number: 3,
+        blocks: [
+          textBlock('pt3', '<h3>Vamos falar de números</h3>'),
+          questionBlock('pt3', 'Qual seu custo por lead hoje?', [
+            { text: 'Não sei (esse é o problema) 😬', value: 'unknown' },
+            { text: 'Menos de R$ 10', value: '<10' },
+            { text: 'R$ 10-30', value: '10-30' },
+            { text: 'Mais de R$ 30 (muito caro)', value: '30+' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'pt-4', question_text: 'Desses leads, quantos realmente compram?', answer_format: 'single_choice',
+        options: [
+          { text: 'Quase nenhum (menos de 1%)', value: '<1' },
+          { text: '1-3%', value: '1-3' },
+          { text: '3-5%', value: '3-5' },
+          { text: 'Mais de 5%', value: '5+' },
+        ],
+        order_number: 4,
+        blocks: [
+          questionBlock('pt4', 'Desses leads, quantos realmente compram?', [
+            { text: 'Quase nenhum (menos de 1%) 😰', value: '<1' },
+            { text: '1-3%', value: '1-3' },
+            { text: '3-5%', value: '3-5' },
+            { text: 'Mais de 5%', value: '5+' },
+          ]),
+        ],
+      },
+      // CONSEQUÊNCIA
+      {
+        id: 'pt-5', question_text: 'Se você mantiver esse custo por lead, quanto dinheiro vai desperdiçar em 12 meses?', answer_format: 'single_choice',
+        custom_label: '⚠️ Custo oculto',
+        options: [
+          { text: 'Nem quero pensar nisso', value: 'scary' },
+          { text: 'Milhares de reais', value: 'thousands' },
+          { text: 'Já perdi muito e quero reverter', value: 'revert' },
+        ],
+        order_number: 5,
+        blocks: [
+          textBlock('pt5', '<h3>Reflexão de impacto</h3><p>Cada real desperdiçado em tráfego é um real a menos no seu lucro.</p>'),
+          questionBlock('pt5', 'Se mantiver esse custo por lead, quanto vai desperdiçar em 12 meses?', [
+            { text: 'Nem quero pensar nisso 😱', value: 'scary' },
+            { text: 'Milhares de reais', value: 'thousands' },
+            { text: 'Já perdi muito e quero reverter', value: 'revert' },
+          ], 'single_choice', 1),
+        ],
+      },
+      // CONTRASTE
+      {
+        id: 'pt-6', question_text: 'Imagine reduzir seu custo por lead pela metade. O que você faria com essa economia?', answer_format: 'single_choice',
+        custom_label: '✨ Contraste',
+        options: [
+          { text: 'Investiria mais em tráfego', value: 'more_traffic' },
+          { text: 'Aumentaria meu lucro', value: 'profit' },
+          { text: 'Testaria novos produtos/ofertas', value: 'new_offers' },
+          { text: 'Tudo isso junto!', value: 'all' },
+        ],
+        order_number: 6,
+        blocks: [
+          comparisonBlock('pt6', 0,
+            { title: '❌ Hoje', items: ['CPL alto', 'Leads frios', 'Sem qualificação', 'ROI negativo'] },
+            { title: '✅ Com qualificação', items: ['CPL 50% menor', 'Leads aquecidos', 'Filtro automático', 'ROI positivo'] }
+          ),
+          questionBlock('pt6', 'Imagine reduzir seu CPL pela metade. O que faria com a economia?', [
+            { text: 'Investiria mais em tráfego', value: 'more_traffic' },
+            { text: 'Aumentaria meu lucro', value: 'profit' },
+            { text: 'Testaria novos produtos', value: 'new_offers' },
+            { text: 'Tudo isso junto! 🚀', value: 'all' },
+          ], 'single_choice', 1),
+        ],
+      },
+      // PROVA SOCIAL + URGÊNCIA
+      {
+        id: 'pt-7', question_text: 'Qual plataforma de anúncios você mais usa?', answer_format: 'single_choice',
+        options: [
+          { text: 'Facebook / Instagram Ads', value: 'meta' },
+          { text: 'Google Ads', value: 'google' },
+          { text: 'TikTok Ads', value: 'tiktok' },
+          { text: 'Várias plataformas', value: 'multi' },
+        ],
+        order_number: 7,
+        blocks: [
+          socialProofBlock('pt7', 0, [
+            { name: 'Diego F.', text: 'Reduzi meu CPL de R$25 para R$9 em 2 semanas.', rating: 5 },
+            { name: 'Camila R.', text: 'Meus leads agora chegam quentes e prontos para comprar.', rating: 5 },
+          ]),
+          questionBlock('pt7', 'Qual plataforma de anúncios você mais usa?', [
+            { text: 'Facebook / Instagram Ads', value: 'meta' },
+            { text: 'Google Ads', value: 'google' },
+            { text: 'TikTok Ads', value: 'tiktok' },
+            { text: 'Várias plataformas', value: 'multi' },
+          ], 'single_choice', 1),
+        ],
+      },
+      // CONCLUSÃO
+      {
+        id: 'pt-8', question_text: 'Você quer descobrir como qualificar leads automaticamente antes do checkout?', answer_format: 'single_choice',
+        custom_label: '🚀 Decisão',
+        options: [
+          { text: 'Sim, me mostra como!', value: 'yes' },
+          { text: 'Sim, quero testar', value: 'test' },
+        ],
+        order_number: 8,
+        blocks: [
+          textBlock('pt8', '<h2>🎯 Resultado do teste</h2><p>Suas respostas indicam que você pode otimizar significativamente seus resultados.</p>'),
+          countdownBlock('pt8', 1, 5, 'Oferta especial disponível por'),
+          questionBlock('pt8', 'Você quer descobrir como qualificar leads automaticamente?', [
+            { text: 'Sim, me mostra como! 🔥', value: 'yes' },
+            { text: 'Sim, quero testar gratuitamente', value: 'test' },
+          ], 'single_choice', 2),
+        ],
+      },
+    ],
+    formConfig: { collect_name: true, collect_email: true, collect_whatsapp: true, collection_timing: 'after' },
+    results: [
+      {
+        result_text: '📊 Diagnóstico: Seu tráfego tem potencial de melhoria significativo!\n\nVocê pode reduzir seu custo por lead e aumentar a qualidade dos contatos que chegam ao seu checkout. Veja como abaixo.',
+        button_text: 'Ver meu diagnóstico completo',
+        condition_type: 'always',
+        order_number: 1,
+      },
+    ],
+  },
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// 4) VALIDAÇÃO DE OFERTA — Descobre se a oferta resolve uma dor real
+// ══════════════════════════════════════════════════════════════════════
+const offerValidationTemplate: QuizTemplate = {
+  id: 'funil-validacao-oferta',
+  name: '🧪 Validação de Oferta — Pesquisa Inteligente',
+  description: 'Quiz de 8 perguntas para validar sua oferta antes de investir em tráfego, coletando insights reais',
+  category: 'product_discovery',
+  icon: '🧪',
+  preview: {
+    title: 'Pesquisa: O que você realmente precisa?',
+    description: 'Nos ajude a criar a solução perfeita',
+    questionCount: 8,
+    template: 'moderno',
+  },
+  config: {
+    title: 'Pesquisa: O que você realmente precisa?',
+    description: 'Suas respostas vão nos ajudar a criar algo feito sob medida para pessoas como você',
+    questionCount: 8,
+    template: 'moderno',
+    questions: [
+      // ESPELHAMENTO
+      {
+        id: 'ov-1', question_text: 'Com qual perfil você mais se identifica?', answer_format: 'single_choice',
+        options: [
+          { text: 'Empreendedor iniciante', value: 'beginner' },
+          { text: 'Profissional em transição', value: 'transition' },
+          { text: 'Empresário(a) experiente', value: 'experienced' },
+          { text: 'Profissional liberal', value: 'freelancer' },
+        ],
+        order_number: 1,
+        blocks: [
+          textBlock('ov1', '<h2>Queremos ouvir você</h2><p>Esta pesquisa vai moldar o que vamos criar. Sua opinião é valiosa.</p>'),
+          questionBlock('ov1', 'Com qual perfil você mais se identifica?', [
+            { text: 'Empreendedor iniciante', value: 'beginner' },
+            { text: 'Profissional em transição', value: 'transition' },
+            { text: 'Empresário(a) experiente', value: 'experienced' },
+            { text: 'Profissional liberal', value: 'freelancer' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'ov-2', question_text: 'Qual área você atua?', answer_format: 'single_choice',
+        options: [
+          { text: 'Marketing / Vendas', value: 'marketing' },
+          { text: 'Saúde / Bem-estar', value: 'health' },
+          { text: 'Educação / Infoprodutos', value: 'education' },
+          { text: 'Serviços / Consultoria', value: 'services' },
+          { text: 'Outro', value: 'other' },
+        ],
+        order_number: 2,
+        blocks: [
+          questionBlock('ov2', 'Qual área você atua?', [
+            { text: 'Marketing / Vendas', value: 'marketing' },
+            { text: 'Saúde / Bem-estar', value: 'health' },
+            { text: 'Educação / Infoprodutos', value: 'education' },
+            { text: 'Serviços / Consultoria', value: 'services' },
+            { text: 'Outro', value: 'other' },
+          ]),
+        ],
+      },
+      // DOR
+      {
+        id: 'ov-3', question_text: 'Qual é o problema que mais te tira o sono hoje?', answer_format: 'single_choice',
+        custom_label: '🔥 Dor real',
+        options: [
+          { text: 'Não consigo atrair clientes consistentemente', value: 'attract' },
+          { text: 'Não sei se minha oferta é boa o suficiente', value: 'offer_doubt' },
+          { text: 'Tenho ideia mas não sei validar', value: 'validate' },
+          { text: 'Já lancei e não vendeu como esperava', value: 'failed_launch' },
+        ],
+        order_number: 3,
+        blocks: [
+          textBlock('ov3', '<h3>Aqui é importante ser sincero(a)</h3>'),
+          questionBlock('ov3', 'Qual é o problema que mais te tira o sono hoje?', [
+            { text: 'Não consigo atrair clientes consistentemente', value: 'attract' },
+            { text: 'Não sei se minha oferta é boa o suficiente', value: 'offer_doubt' },
+            { text: 'Tenho ideia mas não sei validar', value: 'validate' },
+            { text: 'Já lancei e não vendeu como esperava', value: 'failed_launch' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'ov-4', question_text: 'O que você já tentou para resolver?', answer_format: 'multiple_choice',
+        options: [
+          { text: 'Cursos online', value: 'courses' },
+          { text: 'Mentorias', value: 'mentoring' },
+          { text: 'Ferramentas/softwares', value: 'tools' },
+          { text: 'Nada ainda', value: 'nothing' },
+        ],
+        order_number: 4,
+        blocks: [
+          questionBlock('ov4', 'O que você já tentou para resolver?', [
+            { text: 'Cursos online', value: 'courses' },
+            { text: 'Mentorias', value: 'mentoring' },
+            { text: 'Ferramentas/softwares', value: 'tools' },
+            { text: 'Nada ainda', value: 'nothing' },
+          ], 'multiple_choice'),
+        ],
+      },
+      // CONSEQUÊNCIA
+      {
+        id: 'ov-5', question_text: 'Se continuar sem resolver, como estará daqui a 1 ano?', answer_format: 'single_choice',
+        custom_label: '⚠️ Futuro',
+        options: [
+          { text: 'Na mesma situação de hoje', value: 'same' },
+          { text: 'Provavelmente pior', value: 'worse' },
+          { text: 'Terei desistido', value: 'quit' },
+          { text: 'Prefiro não pensar nisso', value: 'avoid' },
+        ],
+        order_number: 5,
+        blocks: [
+          questionBlock('ov5', 'Se continuar sem resolver, como estará daqui a 1 ano?', [
+            { text: 'Na mesma situação de hoje', value: 'same' },
+            { text: 'Provavelmente pior', value: 'worse' },
+            { text: 'Terei desistido', value: 'quit' },
+            { text: 'Prefiro não pensar nisso 😔', value: 'avoid' },
+          ]),
+        ],
+      },
+      // CONTRASTE / SOLUÇÃO
+      {
+        id: 'ov-6', question_text: 'O que mais te ajudaria agora?', answer_format: 'single_choice',
+        custom_label: '✨ Solução ideal',
+        options: [
+          { text: 'Um método passo a passo para validar minha ideia', value: 'method' },
+          { text: 'Feedback direto de especialistas', value: 'feedback' },
+          { text: 'Dados reais do mercado', value: 'data' },
+          { text: 'Uma comunidade de pessoas no mesmo estágio', value: 'community' },
+        ],
+        order_number: 6,
+        blocks: [
+          textBlock('ov6', '<h3>Agora a parte boa</h3><p>Queremos criar exatamente o que você precisa.</p>'),
+          questionBlock('ov6', 'O que mais te ajudaria agora?', [
+            { text: 'Um método passo a passo para validar minha ideia', value: 'method' },
+            { text: 'Feedback direto de especialistas', value: 'feedback' },
+            { text: 'Dados reais do mercado', value: 'data' },
+            { text: 'Uma comunidade de apoio', value: 'community' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'ov-7', question_text: 'Quanto você estaria disposto a investir em uma solução que resolvesse isso?', answer_format: 'single_choice',
+        options: [
+          { text: 'Até R$ 97', value: '97' },
+          { text: 'R$ 97 - R$ 297', value: '97-297' },
+          { text: 'R$ 297 - R$ 997', value: '297-997' },
+          { text: 'O que resolver, eu invisto', value: 'any' },
+        ],
+        order_number: 7,
+        blocks: [
+          questionBlock('ov7', 'Quanto investiria em uma solução que resolvesse isso?', [
+            { text: 'Até R$ 97', value: '97' },
+            { text: 'R$ 97 - R$ 297', value: '97-297' },
+            { text: 'R$ 297 - R$ 997', value: '297-997' },
+            { text: 'O que resolver, eu invisto', value: 'any' },
+          ]),
+        ],
+      },
+      // CONCLUSÃO
+      {
+        id: 'ov-8', question_text: 'Quer ser avisado em primeira mão quando lançarmos a solução?', answer_format: 'single_choice',
+        custom_label: '🚀 Lista VIP',
+        options: [
+          { text: 'Sim! Quero acesso antecipado', value: 'vip' },
+          { text: 'Sim, me avise quando sair', value: 'notify' },
+        ],
+        order_number: 8,
+        blocks: [
+          textBlock('ov8', '<h2>✅ Pesquisa completa!</h2><p>Obrigado por participar. Suas respostas vão nos ajudar a criar algo incrível.</p>'),
+          questionBlock('ov8', 'Quer ser avisado em primeira mão quando lançarmos?', [
+            { text: 'Sim! Quero acesso antecipado 🔥', value: 'vip' },
+            { text: 'Sim, me avise quando sair', value: 'notify' },
+          ], 'single_choice', 1),
+        ],
+      },
+    ],
+    formConfig: { collect_name: true, collect_email: true, collect_whatsapp: true, collection_timing: 'after' },
+    results: [
+      {
+        result_text: '🎉 Obrigado por participar!\n\nSuas respostas foram registradas. Você será avisado em primeira mão quando a solução estiver disponível. Enquanto isso, fique atento ao seu e-mail para conteúdos exclusivos.',
+        button_text: 'Garantir meu lugar',
+        condition_type: 'always',
+        order_number: 1,
+      },
+    ],
+  },
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// 5) EDUCACIONAL — Avaliação de conhecimento com engajamento
+// ══════════════════════════════════════════════════════════════════════
+const educationalTemplate: QuizTemplate = {
+  id: 'funil-educacional',
+  name: '📚 Avaliação Educacional — Engajamento',
+  description: 'Quiz de 8 perguntas para medir conhecimento, engajar alunos e identificar gaps de aprendizado',
+  category: 'engagement',
+  icon: '📚',
+  preview: {
+    title: 'Teste seu conhecimento sobre [tema]',
+    description: 'Descubra seu nível e receba recomendações',
+    questionCount: 8,
+    template: 'moderno',
+  },
+  config: {
+    title: 'Teste seu conhecimento sobre o tema',
+    description: 'Descubra seu nível atual e receba recomendações personalizadas de estudo',
+    questionCount: 8,
+    template: 'moderno',
+    questions: [
+      // ESPELHAMENTO
+      {
+        id: 'ed-1', question_text: 'Qual seu nível de experiência com o assunto?', answer_format: 'single_choice',
+        options: [
+          { text: 'Iniciante total — nunca estudei', value: 'beginner' },
+          { text: 'Já li/assisti algo sobre', value: 'basic' },
+          { text: 'Tenho conhecimento intermediário', value: 'intermediate' },
+          { text: 'Considero-me avançado', value: 'advanced' },
+        ],
+        order_number: 1,
+        blocks: [
+          textBlock('ed1', '<h2>📝 Avaliação de conhecimento</h2><p>Seja sincero(a) — não existe resposta errada nesta etapa. Queremos calibrar o teste para você.</p>'),
+          questionBlock('ed1', 'Qual seu nível de experiência com o assunto?', [
+            { text: 'Iniciante total — nunca estudei', value: 'beginner' },
+            { text: 'Já li/assisti algo sobre', value: 'basic' },
+            { text: 'Tenho conhecimento intermediário', value: 'intermediate' },
+            { text: 'Considero-me avançado', value: 'advanced' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'ed-2', question_text: 'Por que você quer aprender sobre isso?', answer_format: 'single_choice',
+        options: [
+          { text: 'Crescimento profissional / carreira', value: 'career' },
+          { text: 'Projeto pessoal / hobby', value: 'personal' },
+          { text: 'Obrigação (trabalho/faculdade)', value: 'obligation' },
+          { text: 'Curiosidade genuína', value: 'curiosity' },
+        ],
+        order_number: 2,
+        blocks: [
+          questionBlock('ed2', 'Por que você quer aprender sobre isso?', [
+            { text: 'Crescimento profissional', value: 'career' },
+            { text: 'Projeto pessoal', value: 'personal' },
+            { text: 'Obrigação (trabalho/faculdade)', value: 'obligation' },
+            { text: 'Curiosidade genuína', value: 'curiosity' },
+          ]),
+        ],
+      },
+      // DIAGNÓSTICO (DOR adaptada para educação)
+      {
+        id: 'ed-3', question_text: 'Qual é a maior dificuldade que você enfrenta ao estudar?', answer_format: 'single_choice',
+        custom_label: '🔍 Diagnóstico',
+        options: [
+          { text: 'Não sei por onde começar', value: 'where_start' },
+          { text: 'Começo mas não consigo manter consistência', value: 'consistency' },
+          { text: 'Estudo mas não consigo aplicar', value: 'apply' },
+          { text: 'Conteúdos muito superficiais ou muito complexos', value: 'level' },
+        ],
+        order_number: 3,
+        blocks: [
+          textBlock('ed3', '<h3>Identificando seus gaps</h3>'),
+          questionBlock('ed3', 'Qual é a maior dificuldade que você enfrenta ao estudar?', [
+            { text: 'Não sei por onde começar', value: 'where_start' },
+            { text: 'Começo mas não mantenho consistência', value: 'consistency' },
+            { text: 'Estudo mas não consigo aplicar', value: 'apply' },
+            { text: 'Nível inadequado (muito fácil/difícil)', value: 'level' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'ed-4', question_text: 'Quanto tempo por semana você consegue dedicar ao estudo?', answer_format: 'single_choice',
+        options: [
+          { text: 'Menos de 1 hora', value: '<1h' },
+          { text: '1-3 horas', value: '1-3h' },
+          { text: '3-5 horas', value: '3-5h' },
+          { text: 'Mais de 5 horas', value: '5h+' },
+        ],
+        order_number: 4,
+        blocks: [
+          questionBlock('ed4', 'Quanto tempo por semana você consegue dedicar?', [
+            { text: 'Menos de 1 hora', value: '<1h' },
+            { text: '1-3 horas', value: '1-3h' },
+            { text: '3-5 horas', value: '3-5h' },
+            { text: 'Mais de 5 horas', value: '5h+' },
+          ]),
+        ],
+      },
+      // CONSEQUÊNCIA (motivação)
+      {
+        id: 'ed-5', question_text: 'Se você não aprender isso nos próximos meses, o que perde?', answer_format: 'single_choice',
+        custom_label: '⚠️ Motivação',
+        options: [
+          { text: 'Uma promoção ou oportunidade', value: 'promotion' },
+          { text: 'Ficarei defasado no mercado', value: 'outdated' },
+          { text: 'Não consigo avançar no meu projeto', value: 'stuck' },
+          { text: 'Nada urgente, é curiosidade', value: 'nothing' },
+        ],
+        order_number: 5,
+        blocks: [
+          questionBlock('ed5', 'Se não aprender isso nos próximos meses, o que perde?', [
+            { text: 'Uma promoção ou oportunidade', value: 'promotion' },
+            { text: 'Ficarei defasado no mercado', value: 'outdated' },
+            { text: 'Não consigo avançar no meu projeto', value: 'stuck' },
+            { text: 'Nada urgente, é curiosidade', value: 'nothing' },
+          ]),
+        ],
+      },
+      // CONTRASTE
+      {
+        id: 'ed-6', question_text: 'Qual formato de aprendizado funciona melhor para você?', answer_format: 'single_choice',
+        custom_label: '✨ Preferência',
+        options: [
+          { text: 'Vídeo-aulas curtas (5-15 min)', value: 'video_short' },
+          { text: 'Aulas longas e aprofundadas', value: 'video_long' },
+          { text: 'Texto / artigos / e-books', value: 'text' },
+          { text: 'Prática / exercícios / projetos', value: 'practice' },
+        ],
+        order_number: 6,
+        blocks: [
+          textBlock('ed6', '<h3>Quase lá!</h3><p>Vamos personalizar a recomendação para o seu estilo.</p>'),
+          questionBlock('ed6', 'Qual formato de aprendizado funciona melhor para você?', [
+            { text: 'Vídeo-aulas curtas (5-15 min)', value: 'video_short' },
+            { text: 'Aulas longas e aprofundadas', value: 'video_long' },
+            { text: 'Texto / artigos / e-books', value: 'text' },
+            { text: 'Prática / exercícios / projetos', value: 'practice' },
+          ], 'single_choice', 1),
+        ],
+      },
+      {
+        id: 'ed-7', question_text: 'Quais tópicos você gostaria de aprofundar?', answer_format: 'multiple_choice',
+        options: [
+          { text: 'Fundamentos e conceitos básicos', value: 'fundamentals' },
+          { text: 'Técnicas avançadas', value: 'advanced' },
+          { text: 'Casos práticos e exemplos reais', value: 'cases' },
+          { text: 'Tendências e novidades', value: 'trends' },
+        ],
+        order_number: 7,
+        blocks: [
+          questionBlock('ed7', 'Quais tópicos gostaria de aprofundar?', [
+            { text: 'Fundamentos e conceitos básicos', value: 'fundamentals' },
+            { text: 'Técnicas avançadas', value: 'advanced' },
+            { text: 'Casos práticos e exemplos reais', value: 'cases' },
+            { text: 'Tendências e novidades', value: 'trends' },
+          ], 'multiple_choice'),
+        ],
+      },
+      // CONCLUSÃO
+      {
+        id: 'ed-8', question_text: 'Quer receber um plano de estudo personalizado com base nas suas respostas?', answer_format: 'single_choice',
+        custom_label: '🚀 Resultado',
+        options: [
+          { text: 'Sim, quero meu plano!', value: 'yes' },
+          { text: 'Sim, e quero dicas extras', value: 'yes_extra' },
+        ],
+        order_number: 8,
+        blocks: [
+          textBlock('ed8', '<h2>✅ Avaliação concluída!</h2><p>Temos informações suficientes para criar sua trilha personalizada.</p>'),
+          progressBlock('ed8', 1, 100, 'Avaliação completa'),
+          questionBlock('ed8', 'Quer receber seu plano de estudo personalizado?', [
+            { text: 'Sim, quero meu plano! 📚', value: 'yes' },
+            { text: 'Sim, e quero dicas extras por e-mail', value: 'yes_extra' },
+          ], 'single_choice', 2),
+        ],
+      },
+    ],
+    formConfig: { collect_name: true, collect_email: true, collect_whatsapp: false, collection_timing: 'after' },
+    results: [
+      {
+        result_text: '📊 Seu diagnóstico está pronto!\n\nCom base nas suas respostas, identificamos seu nível atual e as áreas com maior potencial de desenvolvimento. Acesse seu plano de estudo personalizado clicando abaixo.',
+        button_text: 'Ver meu plano de estudo',
+        condition_type: 'always',
+        order_number: 1,
+      },
+    ],
+  },
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// EXPORTAÇÃO
+// ══════════════════════════════════════════════════════════════════════
 export const quizTemplates: QuizTemplate[] = [
-  {
-    id: 'qualificacao-lead',
-    name: '⭐ Qualificação de Lead (Exemplo Completo)',
-    description: 'Template completo com blocos enriquecidos - Use como referência!',
-    category: 'lead_qualification',
-    icon: '🎯',
-    preview: {
-      title: 'Qual solução ideal para seu negócio?',
-      description: 'Descubra em 2 minutos',
-      questionCount: 10,
-      template: 'moderno'
-    },
-    config: {
-      title: 'Qual solução ideal para seu negócio?',
-      description: 'Responda 10 perguntas rápidas e descubra a melhor opção para você',
-      questionCount: 10,
-      template: 'moderno',
-      questions: [
-        {
-          id: 'q1-lead-qual',
-          question_text: 'Qual o tamanho da sua empresa?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Apenas eu (Freelancer)', value: 'freelancer', imageUrl: '' },
-            { text: '2-10 pessoas', value: 'small', imageUrl: '' },
-            { text: '11-50 pessoas', value: 'medium', imageUrl: '' },
-            { text: 'Mais de 50 pessoas', value: 'large', imageUrl: '' }
-          ],
-          order_number: 1,
-          blocks: [
-            {
-              id: 'block-q1-image',
-              type: 'image',
-              order: 0,
-              content: '',
-              imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800',
-              imageAlt: 'Equipe trabalhando em escritório moderno'
-            },
-            {
-              id: 'block-q1-text',
-              type: 'text',
-              order: 1,
-              content: '<h2>Vamos conhecer sua empresa</h2><p>Queremos entender melhor o tamanho da sua operação para oferecer a solução mais adequada às suas necessidades.</p>',
-              fontSize: 'medium',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q1-separator',
-              type: 'separator',
-              order: 2,
-              content: '',
-              style: 'solid'
-            },
-            {
-              id: 'block-q1-question',
-              type: 'question',
-              order: 3,
-              content: 'Qual o tamanho da sua empresa?',
-              options: [
-                { text: 'Apenas eu (Freelancer)', value: 'freelancer', imageUrl: '' },
-                { text: '2-10 pessoas', value: 'small', imageUrl: '' },
-                { text: '11-50 pessoas', value: 'medium', imageUrl: '' },
-                { text: 'Mais de 50 pessoas', value: 'large', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q2-lead-qual',
-          question_text: 'Qual seu principal desafio hoje?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Gerar mais leads qualificados', value: 'leads', imageUrl: '' },
-            { text: 'Aumentar conversão de vendas', value: 'conversion', imageUrl: '' },
-            { text: 'Automatizar processos', value: 'automation', imageUrl: '' },
-            { text: 'Reduzir custos', value: 'costs', imageUrl: '' }
-          ],
-          order_number: 2,
-          blocks: [
-            {
-              id: 'block-q2-text',
-              type: 'text',
-              order: 0,
-              content: '<h3>Identificando seus desafios</h3><p>Cada negócio tem suas prioridades. Nos conte qual é a sua maior dor hoje.</p>',
-              fontSize: 'medium',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q2-question',
-              type: 'question',
-              order: 1,
-              content: 'Qual seu principal desafio hoje?',
-              options: [
-                { text: 'Gerar mais leads qualificados', value: 'leads', imageUrl: '' },
-                { text: 'Aumentar conversão de vendas', value: 'conversion', imageUrl: '' },
-                { text: 'Automatizar processos', value: 'automation', imageUrl: '' },
-                { text: 'Reduzir custos', value: 'costs', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q3-lead-qual',
-          question_text: 'Qual seu orçamento mensal para ferramentas?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Até R$ 200', value: 'low', imageUrl: '' },
-            { text: 'R$ 200 - R$ 500', value: 'medium', imageUrl: '' },
-            { text: 'R$ 500 - R$ 1.000', value: 'high', imageUrl: '' },
-            { text: 'Acima de R$ 1.000', value: 'enterprise', imageUrl: '' }
-          ],
-          order_number: 3,
-          blocks: [
-            {
-              id: 'block-q3-image',
-              type: 'image',
-              order: 0,
-              content: '',
-              imageUrl: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800',
-              imageAlt: 'Planejamento financeiro'
-            },
-            {
-              id: 'block-q3-question',
-              type: 'question',
-              order: 1,
-              content: 'Qual seu orçamento mensal para ferramentas?',
-              options: [
-                { text: 'Até R$ 200', value: 'low', imageUrl: '' },
-                { text: 'R$ 200 - R$ 500', value: 'medium', imageUrl: '' },
-                { text: 'R$ 500 - R$ 1.000', value: 'high', imageUrl: '' },
-                { text: 'Acima de R$ 1.000', value: 'enterprise', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q4-lead-qual',
-          question_text: 'Quando pretende implementar uma solução?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Imediatamente (esta semana)', value: 'immediate', imageUrl: '' },
-            { text: 'Próximo mês', value: 'month', imageUrl: '' },
-            { text: 'Próximos 3 meses', value: 'quarter', imageUrl: '' },
-            { text: 'Apenas pesquisando', value: 'research', imageUrl: '' }
-          ],
-          order_number: 4,
-          blocks: [
-            {
-              id: 'block-q4-video',
-              type: 'video',
-              order: 0,
-              content: '',
-              videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-              videoTitle: 'Como nossa solução funciona'
-            },
-            {
-              id: 'block-q4-text',
-              type: 'text',
-              order: 1,
-              content: '<p>Entender seu prazo nos ajuda a priorizar e oferecer o melhor suporte na implementação.</p>',
-              fontSize: 'small',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q4-question',
-              type: 'question',
-              order: 2,
-              content: 'Quando pretende implementar uma solução?',
-              options: [
-                { text: 'Imediatamente (esta semana)', value: 'immediate', imageUrl: '' },
-                { text: 'Próximo mês', value: 'month', imageUrl: '' },
-                { text: 'Próximos 3 meses', value: 'quarter', imageUrl: '' },
-                { text: 'Apenas pesquisando', value: 'research', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q5-lead-qual',
-          question_text: 'Já usa alguma ferramenta similar?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Não, seria minha primeira', value: 'no', imageUrl: '' },
-            { text: 'Sim, mas não estou satisfeito', value: 'unsatisfied', imageUrl: '' },
-            { text: 'Sim, e funciona bem', value: 'satisfied', imageUrl: '' }
-          ],
-          order_number: 5,
-          blocks: [
-            {
-              id: 'block-q5-text',
-              type: 'text',
-              order: 0,
-              content: '<h3>Experiência anterior</h3><p>Saber se você já tem familiaridade com ferramentas similares nos ajuda a personalizar sua experiência.</p>',
-              fontSize: 'medium',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q5-separator',
-              type: 'separator',
-              order: 1,
-              content: '',
-              style: 'dashed'
-            },
-            {
-              id: 'block-q5-question',
-              type: 'question',
-              order: 2,
-              content: 'Já usa alguma ferramenta similar?',
-              options: [
-                { text: 'Não, seria minha primeira', value: 'no', imageUrl: '' },
-                { text: 'Sim, mas não estou satisfeito', value: 'unsatisfied', imageUrl: '' },
-                { text: 'Sim, e funciona bem', value: 'satisfied', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q6-lead-qual',
-          question_text: 'Em qual região você atua?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Região Sul', value: 'sul', imageUrl: '' },
-            { text: 'Região Sudeste', value: 'sudeste', imageUrl: '' },
-            { text: 'Região Centro-Oeste', value: 'centro', imageUrl: '' },
-            { text: 'Região Nordeste', value: 'nordeste', imageUrl: '' },
-            { text: 'Região Norte', value: 'norte', imageUrl: '' },
-            { text: 'Todo Brasil', value: 'nacional', imageUrl: '' }
-          ],
-          order_number: 6,
-          blocks: [
-            {
-              id: 'block-q6-image',
-              type: 'image',
-              order: 0,
-              content: '',
-              imageUrl: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800',
-              imageAlt: 'Mapa do Brasil'
-            },
-            {
-              id: 'block-q6-text',
-              type: 'text',
-              order: 1,
-              content: '<h3>Área de atuação</h3>',
-              fontSize: 'medium',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q6-question',
-              type: 'question',
-              order: 2,
-              content: 'Em qual região você atua?',
-              options: [
-                { text: 'Região Sul', value: 'sul', imageUrl: '' },
-                { text: 'Região Sudeste', value: 'sudeste', imageUrl: '' },
-                { text: 'Região Centro-Oeste', value: 'centro', imageUrl: '' },
-                { text: 'Região Nordeste', value: 'nordeste', imageUrl: '' },
-                { text: 'Região Norte', value: 'norte', imageUrl: '' },
-                { text: 'Todo Brasil', value: 'nacional', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q7-lead-qual',
-          question_text: 'Quantos funcionários trabalham no setor comercial?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Apenas eu', value: '1', imageUrl: '' },
-            { text: '2-5 pessoas', value: '2-5', imageUrl: '' },
-            { text: '6-15 pessoas', value: '6-15', imageUrl: '' },
-            { text: 'Mais de 15 pessoas', value: '15+', imageUrl: '' }
-          ],
-          order_number: 7,
-          blocks: [
-            {
-              id: 'block-q7-metrics',
-              type: 'metrics',
-              order: 0,
-              title: 'Nossos Resultados',
-              chartType: 'bar',
-              data: [
-                { label: 'Empresas atendidas', value: 1000, color: '#3b82f6' },
-                { label: 'Taxa de satisfação', value: 98, color: '#10b981' }
-              ],
-              showLegend: true,
-              showValues: true
-            },
-            {
-              id: 'block-q7-question',
-              type: 'question',
-              order: 1,
-              content: 'Quantos funcionários trabalham no setor comercial?',
-              options: [
-                { text: 'Apenas eu', value: '1', imageUrl: '' },
-                { text: '2-5 pessoas', value: '2-5', imageUrl: '' },
-                { text: '6-15 pessoas', value: '6-15', imageUrl: '' },
-                { text: 'Mais de 15 pessoas', value: '15+', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q8-lead-qual',
-          question_text: 'Qual segmento do seu negócio?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'B2B (Vendas para empresas)', value: 'b2b', imageUrl: '' },
-            { text: 'B2C (Vendas para consumidor final)', value: 'b2c', imageUrl: '' },
-            { text: 'Ambos (B2B e B2C)', value: 'both', imageUrl: '' }
-          ],
-          order_number: 8,
-          blocks: [
-            {
-              id: 'block-q8-text',
-              type: 'text',
-              order: 0,
-              content: '<h3>Tipo de operação</h3><p>Cada modelo de negócio tem suas particularidades. Vamos personalizar a solução para você.</p>',
-              fontSize: 'medium',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q8-gallery',
-              type: 'gallery',
-              order: 1,
-              content: '',
-              images: [
-                { url: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=400', alt: 'B2B' },
-                { url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400', alt: 'B2C' }
-              ]
-            },
-            {
-              id: 'block-q8-question',
-              type: 'question',
-              order: 2,
-              content: 'Qual segmento do seu negócio?',
-              options: [
-                { text: 'B2B (Vendas para empresas)', value: 'b2b', imageUrl: '' },
-                { text: 'B2C (Vendas para consumidor final)', value: 'b2c', imageUrl: '' },
-                { text: 'Ambos (B2B e B2C)', value: 'both', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q9-lead-qual',
-          question_text: 'Quais canais de marketing você usa?',
-          custom_label: '',
-          answer_format: 'multiple_choice',
-          options: [
-            { text: 'Redes Sociais', value: 'social', imageUrl: '' },
-            { text: 'Google Ads', value: 'google', imageUrl: '' },
-            { text: 'E-mail Marketing', value: 'email', imageUrl: '' },
-            { text: 'Indicação', value: 'referral', imageUrl: '' },
-            { text: 'Eventos', value: 'events', imageUrl: '' }
-          ],
-          order_number: 9,
-          blocks: [
-            {
-              id: 'block-q9-image',
-              type: 'image',
-              order: 0,
-              content: '',
-              imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800',
-              imageAlt: 'Estratégia de marketing digital'
-            },
-            {
-              id: 'block-q9-text',
-              type: 'text',
-              order: 1,
-              content: '<h3>Seus canais de aquisição</h3><p><strong>Você pode selecionar múltiplas opções!</strong></p>',
-              fontSize: 'medium',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q9-question',
-              type: 'question',
-              order: 2,
-              content: 'Quais canais de marketing você usa?',
-              options: [
-                { text: 'Redes Sociais', value: 'social', imageUrl: '' },
-                { text: 'Google Ads', value: 'google', imageUrl: '' },
-                { text: 'E-mail Marketing', value: 'email', imageUrl: '' },
-                { text: 'Indicação', value: 'referral', imageUrl: '' },
-                { text: 'Eventos', value: 'events', imageUrl: '' }
-              ],
-              answerFormat: 'multiple_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        },
-        {
-          id: 'q10-lead-qual',
-          question_text: 'Qual ROI você espera com a solução?',
-          custom_label: '',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Retorno em até 3 meses', value: '3m', imageUrl: '' },
-            { text: 'Retorno em 6 meses', value: '6m', imageUrl: '' },
-            { text: 'Retorno em 1 ano', value: '1y', imageUrl: '' },
-            { text: 'Foco em longo prazo (2+ anos)', value: 'long', imageUrl: '' }
-          ],
-          order_number: 10,
-          blocks: [
-            {
-              id: 'block-q10-image',
-              type: 'image',
-              order: 0,
-              content: '',
-              imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800',
-              imageAlt: 'Crescimento e resultados'
-            },
-            {
-              id: 'block-q10-text',
-              type: 'text',
-              order: 1,
-              content: '<h2>Última pergunta!</h2><p>Entender suas expectativas de retorno nos ajuda a alinhar a proposta de valor ideal.</p>',
-              fontSize: 'medium',
-              textAlign: 'left'
-            },
-            {
-              id: 'block-q10-separator',
-              type: 'separator',
-              order: 2,
-              content: '',
-              style: 'solid'
-            },
-            {
-              id: 'block-q10-question',
-              type: 'question',
-              order: 3,
-              content: 'Qual ROI você espera com a solução?',
-              options: [
-                { text: 'Retorno em até 3 meses', value: '3m', imageUrl: '' },
-                { text: 'Retorno em 6 meses', value: '6m', imageUrl: '' },
-                { text: 'Retorno em 1 ano', value: '1y', imageUrl: '' },
-                { text: 'Foco em longo prazo (2+ anos)', value: 'long', imageUrl: '' }
-              ],
-              answerFormat: 'single_choice',
-              required: true,
-              autoAdvance: false
-            }
-          ]
-        }
-      ],
-      formConfig: {
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: true,
-        collection_timing: 'after'
-      },
-      results: [
-        {
-          result_text: 'Você tem perfil de LEAD QUENTE! 🔥\n\nSua empresa está no momento ideal para implementar uma solução. Vamos conversar sobre como podemos ajudar você a alcançar seus objetivos.',
-          button_text: 'Falar com especialista',
-          condition_type: 'always',
-          order_number: 1
-        }
-      ]
-    }
-  },
-  {
-    id: 'descoberta-produto',
-    name: 'Descoberta de Produto',
-    description: 'Ajude clientes a encontrar o produto/serviço perfeito',
-    category: 'product_discovery',
-    icon: '🔍',
-    preview: {
-      title: 'Qual produto é ideal para você?',
-      description: 'Quiz de recomendação personalizada',
-      questionCount: 4,
-      template: 'moderno'
-    },
-    config: {
-      title: 'Encontre seu produto ideal',
-      description: 'Responda 4 perguntas e receba uma recomendação personalizada',
-      questionCount: 4,
-      template: 'moderno',
-      questions: [
-        {
-          question_text: 'Qual seu principal objetivo?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Aumentar produtividade', value: 'productivity' },
-            { text: 'Economizar tempo', value: 'time' },
-            { text: 'Melhorar qualidade', value: 'quality' },
-            { text: 'Reduzir custos', value: 'cost' }
-          ],
-          order_number: 1
-        },
-        {
-          question_text: 'Nível de experiência com ferramentas digitais?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Iniciante', value: 'beginner' },
-            { text: 'Intermediário', value: 'intermediate' },
-            { text: 'Avançado', value: 'advanced' }
-          ],
-          order_number: 2
-        },
-        {
-          question_text: 'Quantas pessoas vão usar?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Apenas eu', value: 'solo' },
-            { text: '2-5 pessoas', value: 'small_team' },
-            { text: '6-20 pessoas', value: 'medium_team' },
-            { text: 'Mais de 20', value: 'large_team' }
-          ],
-          order_number: 3
-        },
-        {
-          question_text: 'Qual funcionalidade é mais importante?',
-          answer_format: 'multiple_choice',
-          options: [
-            { text: 'Integração com outras ferramentas', value: 'integration' },
-            { text: 'Relatórios detalhados', value: 'reports' },
-            { text: 'Suporte 24/7', value: 'support' },
-            { text: 'Personalização avançada', value: 'customization' }
-          ],
-          order_number: 4
-        }
-      ],
-      formConfig: {
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: false,
-        collection_timing: 'after'
-      },
-      results: [
-        {
-          result_text: 'Com base nas suas respostas, recomendamos:\n\n✨ Nosso plano PROFISSIONAL\n\nEle oferece todas as funcionalidades que você precisa para alcançar seus objetivos!',
-          button_text: 'Ver detalhes do plano',
-          condition_type: 'always',
-          order_number: 1
-        }
-      ]
-    }
-  },
-  {
-    id: 'diagnostico-negocio',
-    name: 'Diagnóstico de Negócio',
-    description: 'Avalie a maturidade digital e identifique oportunidades',
-    category: 'lead_qualification',
-    icon: '📊',
-    preview: {
-      title: 'Diagnóstico Digital do seu Negócio',
-      description: 'Descubra seu nível de maturidade',
-      questionCount: 6,
-      template: 'moderno'
-    },
-    config: {
-      title: 'Diagnóstico Digital do seu Negócio',
-      description: 'Avalie a maturidade digital da sua empresa em 6 perguntas',
-      questionCount: 6,
-      template: 'moderno',
-      questions: [
-        {
-          question_text: 'Como você captura leads atualmente?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Formulários manuais/papel', value: 'manual' },
-            { text: 'Formulários digitais simples', value: 'basic' },
-            { text: 'Sistema de CRM integrado', value: 'crm' },
-            { text: 'Automação completa com IA', value: 'ai' }
-          ],
-          order_number: 1
-        },
-        {
-          question_text: 'Como acompanha performance de vendas?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Planilhas manuais', value: 'spreadsheet' },
-            { text: 'Relatórios básicos', value: 'basic_reports' },
-            { text: 'Dashboard em tempo real', value: 'dashboard' },
-            { text: 'BI com previsões e insights', value: 'bi' }
-          ],
-          order_number: 2
-        },
-        {
-          question_text: 'Nível de automação de marketing?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Nenhuma automação', value: 'none' },
-            { text: 'E-mail marketing básico', value: 'email' },
-            { text: 'Múltiplos canais automatizados', value: 'multi' },
-            { text: 'Marketing totalmente automatizado', value: 'full' }
-          ],
-          order_number: 3
-        },
-        {
-          question_text: 'Como qualifica leads?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Manualmente, um por um', value: 'manual' },
-            { text: 'Critérios básicos (formulário)', value: 'basic' },
-            { text: 'Lead scoring automatizado', value: 'scoring' },
-            { text: 'IA preditiva + comportamento', value: 'ai' }
-          ],
-          order_number: 4
-        },
-        {
-          question_text: 'Integração entre ferramentas?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Sem integração', value: 'none' },
-            { text: '1-2 integrações básicas', value: 'few' },
-            { text: 'Várias integrações nativas', value: 'many' },
-            { text: 'Ecosistema totalmente integrado', value: 'ecosystem' }
-          ],
-          order_number: 5
-        },
-        {
-          question_text: 'Tempo médio de resposta a leads?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Mais de 24 horas', value: 'slow' },
-            { text: '4-24 horas', value: 'medium' },
-            { text: '1-4 horas', value: 'fast' },
-            { text: 'Imediato (minutos)', value: 'instant' }
-          ],
-          order_number: 6
-        }
-      ],
-      formConfig: {
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: true,
-        collection_timing: 'after'
-      },
-      results: [
-        {
-          result_text: '📊 Diagnóstico completo!\n\nIdentificamos oportunidades de melhoria para escalar seu negócio. Vamos conversar sobre como implementar soluções que aumentem sua eficiência em até 300%.',
-          button_text: 'Receber diagnóstico completo',
-          condition_type: 'always',
-          order_number: 1
-        }
-      ]
-    }
-  },
-  {
-    id: 'satisfacao-cliente',
-    name: 'Satisfação do Cliente',
-    description: 'Colete feedback e melhore a experiência do cliente',
-    category: 'customer_satisfaction',
-    icon: '⭐',
-    preview: {
-      title: 'Como foi sua experiência?',
-      description: 'Queremos ouvir você',
-      questionCount: 4,
-      template: 'moderno'
-    },
-    config: {
-      title: 'Avalie sua experiência conosco',
-      description: 'Sua opinião é muito importante para nós!',
-      questionCount: 4,
-      template: 'moderno',
-      questions: [
-        {
-          question_text: 'Como avalia nosso atendimento?',
-          answer_format: 'single_choice',
-          options: [
-            { text: '⭐ Ruim', value: '1' },
-            { text: '⭐⭐ Regular', value: '2' },
-            { text: '⭐⭐⭐ Bom', value: '3' },
-            { text: '⭐⭐⭐⭐ Muito bom', value: '4' },
-            { text: '⭐⭐⭐⭐⭐ Excelente', value: '5' }
-          ],
-          order_number: 1
-        },
-        {
-          question_text: 'Nosso produto/serviço atendeu suas expectativas?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Superou expectativas', value: 'exceeded' },
-            { text: 'Atendeu expectativas', value: 'met' },
-            { text: 'Ficou abaixo das expectativas', value: 'below' }
-          ],
-          order_number: 2
-        },
-        {
-          question_text: 'Recomendaria para um amigo?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Definitivamente sim', value: 'yes' },
-            { text: 'Provavelmente sim', value: 'maybe' },
-            { text: 'Não recomendaria', value: 'no' }
-          ],
-          order_number: 3
-        },
-        {
-          question_text: 'O que podemos melhorar?',
-          answer_format: 'multiple_choice',
-          options: [
-            { text: 'Velocidade de entrega', value: 'speed' },
-            { text: 'Qualidade do produto', value: 'quality' },
-            { text: 'Comunicação', value: 'communication' },
-            { text: 'Preço', value: 'price' },
-            { text: 'Está tudo ótimo!', value: 'nothing' }
-          ],
-          order_number: 4
-        }
-      ],
-      formConfig: {
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: false,
-        collection_timing: 'after'
-      },
-      results: [
-        {
-          result_text: '🙏 Muito obrigado pelo seu feedback!\n\nSua opinião nos ajuda a melhorar continuamente. Conte sempre conosco!',
-          button_text: 'Fechar',
-          condition_type: 'always',
-          order_number: 1
-        }
-      ]
-    }
-  },
-  {
-    id: 'nps-survey',
-    name: 'NPS - Net Promoter Score',
-    description: 'Meça a lealdade dos clientes com metodologia NPS',
-    category: 'customer_satisfaction',
-    icon: '📈',
-    preview: {
-      title: 'Avalie nossa empresa',
-      description: 'De 0 a 10, quanto você recomendaria?',
-      questionCount: 5,
-      template: 'moderno'
-    },
-    config: {
-      title: 'Quanto você nos recomendaria?',
-      description: 'Ajude-nos a melhorar com sua opinião sincera',
-      questionCount: 5,
-      template: 'moderno',
-      questions: [
-        {
-          question_text: 'Em uma escala de 0 a 10, qual a probabilidade de você recomendar nossa empresa para um amigo ou colega?',
-          answer_format: 'single_choice',
-          options: [
-            { text: '0 - Nada provável', value: '0' },
-            { text: '1', value: '1' },
-            { text: '2', value: '2' },
-            { text: '3', value: '3' },
-            { text: '4', value: '4' },
-            { text: '5', value: '5' },
-            { text: '6', value: '6' },
-            { text: '7', value: '7' },
-            { text: '8', value: '8' },
-            { text: '9', value: '9' },
-            { text: '10 - Extremamente provável', value: '10' }
-          ],
-          order_number: 1
-        },
-        {
-          question_text: 'Qual o principal motivo da sua nota?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Qualidade do produto/serviço', value: 'quality' },
-            { text: 'Atendimento ao cliente', value: 'service' },
-            { text: 'Custo-benefício', value: 'value' },
-            { text: 'Facilidade de uso', value: 'usability' },
-            { text: 'Confiabilidade', value: 'reliability' },
-            { text: 'Outro motivo', value: 'other' }
-          ],
-          order_number: 2
-        },
-        {
-          question_text: 'Há quanto tempo você é nosso cliente?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Menos de 1 mês', value: 'new' },
-            { text: '1-6 meses', value: 'recent' },
-            { text: '6-12 meses', value: 'regular' },
-            { text: 'Mais de 1 ano', value: 'loyal' }
-          ],
-          order_number: 3
-        },
-        {
-          question_text: 'Com que frequência você usa nosso produto/serviço?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Diariamente', value: 'daily' },
-            { text: 'Semanalmente', value: 'weekly' },
-            { text: 'Mensalmente', value: 'monthly' },
-            { text: 'Raramente', value: 'rarely' }
-          ],
-          order_number: 4
-        },
-        {
-          question_text: 'Qual funcionalidade você mais utiliza?',
-          answer_format: 'multiple_choice',
-          options: [
-            { text: 'Recursos básicos', value: 'basic' },
-            { text: 'Recursos avançados', value: 'advanced' },
-            { text: 'Integrações', value: 'integrations' },
-            { text: 'Relatórios', value: 'reports' },
-            { text: 'Suporte', value: 'support' }
-          ],
-          order_number: 5
-        }
-      ],
-      formConfig: {
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: false,
-        collection_timing: 'after'
-      },
-      results: [
-        {
-          result_text: '🎉 Obrigado por participar da nossa pesquisa NPS!\n\nSeu feedback é valioso para continuarmos melhorando nossos serviços. Em breve entraremos em contato com novidades!',
-          button_text: 'Concluir',
-          condition_type: 'always',
-          order_number: 1
-        }
-      ]
-    }
-  },
-  {
-    id: 'pos-compra-satisfacao',
-    name: 'Satisfação Pós-Compra',
-    description: 'Colete feedback sobre a experiência de compra',
-    category: 'customer_satisfaction',
-    icon: '🛍️',
-    preview: {
-      title: 'Como foi sua experiência de compra?',
-      description: 'Conte-nos sobre sua compra recente',
-      questionCount: 6,
-      template: 'moderno'
-    },
-    config: {
-      title: 'Avalie sua experiência de compra',
-      description: 'Queremos saber como foi sua última compra conosco',
-      questionCount: 6,
-      template: 'moderno',
-      questions: [
-        {
-          question_text: 'Qual produto você comprou recentemente?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Produto físico', value: 'physical' },
-            { text: 'Produto digital', value: 'digital' },
-            { text: 'Serviço', value: 'service' },
-            { text: 'Assinatura/Plano', value: 'subscription' }
-          ],
-          order_number: 1
-        },
-        {
-          question_text: 'Como foi o processo de compra?',
-          answer_format: 'single_choice',
-          options: [
-            { text: '😊 Muito fácil e rápido', value: 'excellent' },
-            { text: '🙂 Tranquilo', value: 'good' },
-            { text: '😐 Com algumas dificuldades', value: 'ok' },
-            { text: '😞 Complicado', value: 'difficult' }
-          ],
-          order_number: 2
-        },
-        {
-          question_text: 'O prazo de entrega/acesso foi adequado?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Sim, mais rápido que o esperado', value: 'faster' },
-            { text: 'Sim, dentro do prazo', value: 'ontime' },
-            { text: 'Atrasou um pouco', value: 'delayed' },
-            { text: 'Atrasou muito', value: 'very_delayed' }
-          ],
-          order_number: 3
-        },
-        {
-          question_text: 'O produto atendeu suas expectativas?',
-          answer_format: 'single_choice',
-          options: [
-            { text: '🌟 Superou minhas expectativas', value: 'exceeded' },
-            { text: '✅ Atendeu perfeitamente', value: 'met' },
-            { text: '😐 Atendeu parcialmente', value: 'partial' },
-            { text: '😞 Não atendeu', value: 'not_met' }
-          ],
-          order_number: 4
-        },
-        {
-          question_text: 'Como foi o atendimento/suporte durante a compra?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Excelente - Muito atencioso', value: '5' },
-            { text: 'Bom - Resolveu minhas dúvidas', value: '4' },
-            { text: 'Regular - Poderia ser melhor', value: '3' },
-            { text: 'Ruim - Demorado ou incompleto', value: '2' },
-            { text: 'Não precisei de suporte', value: 'na' }
-          ],
-          order_number: 5
-        },
-        {
-          question_text: 'Você compraria novamente?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Sim, com certeza!', value: 'yes_definitely' },
-            { text: 'Provavelmente sim', value: 'yes_probably' },
-            { text: 'Talvez', value: 'maybe' },
-            { text: 'Provavelmente não', value: 'no_probably' },
-            { text: 'Definitivamente não', value: 'no_definitely' }
-          ],
-          order_number: 6
-        }
-      ],
-      formConfig: {
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: false,
-        collection_timing: 'after'
-      },
-      results: [
-        {
-          result_text: '💙 Muito obrigado pelo seu feedback!\n\nSua opinião nos ajuda a melhorar cada vez mais. Esperamos vê-lo novamente em breve!',
-          button_text: 'Finalizar',
-          condition_type: 'always',
-          order_number: 1
-        }
-      ]
-    }
-  },
-  {
-    id: 'recomendacao-produto',
-    name: 'Quiz de Recomendação de Produto',
-    description: 'Ajude clientes a encontrar o produto perfeito',
-    category: 'product_discovery',
-    icon: '🎁',
-    preview: {
-      title: 'Qual produto é perfeito para você?',
-      description: 'Descubra em 5 perguntas',
-      questionCount: 5,
-      template: 'moderno'
-    },
-    config: {
-      title: 'Encontre seu produto ideal',
-      description: 'Responda 5 perguntas e receba uma recomendação personalizada',
-      questionCount: 5,
-      template: 'moderno',
-      questions: [
-        {
-          question_text: 'Qual é o seu objetivo principal?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Uso pessoal/hobby', value: 'personal' },
-            { text: 'Trabalho/profissional', value: 'professional' },
-            { text: 'Presente para alguém', value: 'gift' },
-            { text: 'Estudo/aprendizado', value: 'learning' }
-          ],
-          order_number: 1
-        },
-        {
-          question_text: 'Qual seu nível de experiência com produtos similares?',
-          answer_format: 'single_choice',
-          options: [
-            { text: '🌱 Iniciante - Primeiro contato', value: 'beginner' },
-            { text: '📚 Intermediário - Já usei antes', value: 'intermediate' },
-            { text: '🚀 Avançado - Uso frequentemente', value: 'advanced' },
-            { text: '⭐ Expert - Conheço muito bem', value: 'expert' }
-          ],
-          order_number: 2
-        },
-        {
-          question_text: 'Qual faixa de preço você considera?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Até R$ 100 - Econômico', value: 'budget' },
-            { text: 'R$ 100 - R$ 300 - Intermediário', value: 'mid' },
-            { text: 'R$ 300 - R$ 600 - Premium', value: 'premium' },
-            { text: 'Acima de R$ 600 - Top de linha', value: 'luxury' }
-          ],
-          order_number: 3
-        },
-        {
-          question_text: 'Quais características são mais importantes para você?',
-          answer_format: 'multiple_choice',
-          options: [
-            { text: 'Qualidade superior', value: 'quality' },
-            { text: 'Facilidade de uso', value: 'easy' },
-            { text: 'Design moderno', value: 'design' },
-            { text: 'Durabilidade', value: 'durability' },
-            { text: 'Funcionalidades avançadas', value: 'features' },
-            { text: 'Melhor custo-benefício', value: 'value' }
-          ],
-          order_number: 4
-        },
-        {
-          question_text: 'Quando você precisa do produto?',
-          answer_format: 'single_choice',
-          options: [
-            { text: 'Urgente - Esta semana', value: 'urgent' },
-            { text: 'Breve - Até 2 semanas', value: 'soon' },
-            { text: 'Sem pressa - Até 1 mês', value: 'flexible' },
-            { text: 'Só pesquisando por enquanto', value: 'researching' }
-          ],
-          order_number: 5
-        }
-      ],
-      formConfig: {
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: true,
-        collection_timing: 'after'
-      },
-      results: [
-        {
-          result_text: '🎯 Recomendação Personalizada!\n\nCom base nas suas respostas, temos o produto perfeito para você. Nossa equipe entrará em contato com uma proposta exclusiva!',
-          button_text: 'Receber recomendação',
-          condition_type: 'always',
-          order_number: 1
-        }
-      ]
-    }
-  }
+  leadCaptureTemplate,
+  vslConversionTemplate,
+  paidTrafficTemplate,
+  offerValidationTemplate,
+  educationalTemplate,
 ];
-
-export const getTemplateById = (id: string): QuizTemplate | undefined => {
-  return quizTemplates.find(t => t.id === id);
-};
-
-export const getTemplatesByCategory = (category: QuizTemplate['category']): QuizTemplate[] => {
-  return quizTemplates.filter(t => t.category === category);
-};

@@ -10,11 +10,11 @@ import { quizTemplates } from "@/data/quizTemplates";
 
 // Mapeamento objetivo → template ID
 const OBJECTIVE_TEMPLATE_MAP: Record<string, string> = {
-  lead_capture_launch: "qualificacao-lead",
-  vsl_conversion: "descoberta-produto",
-  paid_traffic: "qualificacao-lead",
-  offer_validation: "descoberta-produto",
-  educational: "qualificacao-lead",
+  lead_capture_launch: "funil-captacao-leads",
+  vsl_conversion: "funil-pre-vsl",
+  paid_traffic: "funil-trafego-pago",
+  offer_validation: "funil-validacao-oferta",
+  educational: "funil-educacional",
 };
 
 interface ObjectiveCard {
@@ -83,7 +83,7 @@ const Start = () => {
         .eq("id", user.id);
 
       // 2. Buscar template correspondente
-      const templateId = OBJECTIVE_TEMPLATE_MAP[objective] || "qualificacao-lead";
+      const templateId = OBJECTIVE_TEMPLATE_MAP[objective] || "funil-captacao-leads";
       const template = quizTemplates.find((t) => t.id === templateId);
 
       if (!template) {
