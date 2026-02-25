@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Palette, Code } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Palette, Code, HardDrive, Server } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAllQuizTemplates } from '@/hooks/useQuizTemplates';
@@ -240,109 +240,137 @@ export default function TemplateManagement() {
                 <TableHead className="w-12"></TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Categoria</TableHead>
+                <TableHead>Origem</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Ordem</TableHead>
+                <TableHead className="text-right">Perguntas</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {templates.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     Nenhum template cadastrado. Clique em "Novo Template" para criar.
                   </TableCell>
                 </TableRow>
               ) : (
-                templates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell>
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>{template.icon}</span>
-                        <span className="font-medium">{template.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{template.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {template.is_active ? (
-                        <Badge variant="default">Ativo</Badge>
-                      ) : (
-                        <Badge variant="secondary">Oculto</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {template.is_premium ? (
-                        <Badge variant="default" className="bg-gradient-to-r from-amber-500 to-orange-500">
-                          Premium
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Gratuito</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">{template.display_order}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/masteradm/template-editor/${template.id}`)}
-                            >
-                              <Palette className="h-4 w-4 text-primary" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Editor Visual</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleToggleActive(template.id, template.is_active)}
-                            >
-                              {template.is_active ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{template.is_active ? 'Ocultar' : 'Ativar'}</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(template)}
-                            >
-                              <Code className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Editar JSON</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => confirmDelete(template.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Excluir</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                templates.map((template) => {
+                  const isHardcoded = template.source === 'hardcoded';
+                  const questionCount = isHardcoded
+                    ? (template as any).question_count || 0
+                    : (template.full_config as any)?.questions?.length || '—';
+
+                  return (
+                    <TableRow key={template.id} className={isHardcoded ? 'bg-muted/30' : ''}>
+                      <TableCell>
+                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span>{template.icon}</span>
+                          <span className="font-medium">{template.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{template.category}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {isHardcoded ? (
+                          <Badge variant="secondary" className="gap-1">
+                            <HardDrive className="h-3 w-3" />
+                            Código
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="gap-1">
+                            <Server className="h-3 w-3" />
+                            Banco
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {template.is_active ? (
+                          <Badge variant="default">Ativo</Badge>
+                        ) : (
+                          <Badge variant="secondary">Oculto</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {template.is_premium ? (
+                          <Badge variant="default" className="bg-gradient-to-r from-amber-500 to-orange-500">
+                            Premium
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">Gratuito</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">{questionCount}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {!isHardcoded && (
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => navigate(`/masteradm/template-editor/${template.id}`)}
+                                  >
+                                    <Palette className="h-4 w-4 text-primary" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Editor Visual</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleToggleActive(template.id, template.is_active)}
+                                  >
+                                    {template.is_active ? (
+                                      <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{template.is_active ? 'Ocultar' : 'Ativar'}</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEdit(template)}
+                                  >
+                                    <Code className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Editar JSON</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => confirmDelete(template.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Excluir</TooltipContent>
+                              </Tooltip>
+                            </>
+                          )}
+                          {isHardcoded && (
+                            <span className="text-xs text-muted-foreground px-2">Somente código</span>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -405,6 +433,13 @@ export default function TemplateManagement() {
                     <SelectItem value="product_discovery">Descoberta de Produto</SelectItem>
                     <SelectItem value="customer_satisfaction">Satisfação do Cliente</SelectItem>
                     <SelectItem value="engagement">Engajamento</SelectItem>
+                    <SelectItem value="conversion">Conversão / VSL</SelectItem>
+                    <SelectItem value="paid_traffic">Tráfego Pago</SelectItem>
+                    <SelectItem value="offer_validation">Validação de Oferta</SelectItem>
+                    <SelectItem value="educational">Educacional</SelectItem>
+                    <SelectItem value="health_wellness">Saúde & Bem-estar</SelectItem>
+                    <SelectItem value="income_opportunity">Renda Extra</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
