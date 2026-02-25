@@ -1,9 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 04 de Fevereiro de 2025 | Versão 2.25
-
-**Conceito Central:** O MasterQuiz não é apenas um criador de quizzes — é um **condutor de decisão**. Através de perguntas estratégicas, o sistema revela dores ocultas, cria consciência e conduz leads a decidirem por conta própria que precisam da solução.
+> Última atualização: 25 de Fevereiro de 2026 | Versão 2.27
 
 ---
 
@@ -18,62 +16,63 @@
 - [Integrações Externas](#integrações-externas)
 - [Segurança e RLS](#segurança-e-rls)
 - [Performance](#performance)
+- [Sistema de Recuperação WhatsApp](#sistema-de-recuperação-whatsapp)
 
 ---
 
 ## 🎯 Visão Geral da Arquitetura
 
-### Diagrama de Alto Nível
-
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         FRONTEND (React)                            │
+│                         FRONTEND (React 18)                         │
 ├─────────────────────────────────────────────────────────────────────┤
-│  Pages        │  Components   │  Hooks          │  State            │
-│  ─────────    │  ──────────   │  ─────          │  ─────            │
-│  Index        │  quiz/*       │  useQuizState   │  TanStack Query   │
-│  CreateQuiz   │  landing/*    │  useAutoSave    │  React Context    │
-│  QuizView     │  admin/*      │  usePlanFeatures│  URL State        │
-│  Dashboard    │  crm/*        │  useHistory     │                   │
-│  CRM          │  analytics/*  │  useSubscription│                   │
-└───────────────┴───────────────┴─────────────────┴───────────────────┘
-                                   │
-                                   │ HTTPS + JWT
-                                   ▼
+│  Pages         │  Components    │  Hooks           │  State          │
+│  ─────────     │  ──────────    │  ─────           │  ─────          │
+│  Index         │  quiz/*        │  useQuizState    │  TanStack Query │
+│  CreateQuiz    │  landing/*     │  useAutoSave     │  React Context  │
+│  QuizView      │  admin/*       │  usePlanFeatures │  URL State      │
+│  Dashboard     │  crm/*         │  useHistory      │                 │
+│  CRM/Analytics │  analytics/*   │  useFunnelData   │                 │
+└────────────────┴────────────────┴──────────────────┴─────────────────┘
+                                    │
+                                    │ HTTPS + JWT
+                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      LOVABLE CLOUD (Supabase)                       │
+│                    SUPABASE (Projeto Externo)                        │
 ├─────────────────────────────────────────────────────────────────────┤
-│  Auth           │  PostgreSQL      │  Edge Functions  │  Storage    │
-│  ────           │  ──────────      │  ──────────────  │  ───────    │
-│  JWT Sessions   │  RLS Policies    │  generate-quiz-ai│  quiz-media │
-│  Email/Password │  Triggers        │  kiwify-webhook  │  (images)   │
-│  Password Reset │  Functions       │  sync-integration│             │
-└─────────────────┴──────────────────┴──────────────────┴─────────────┘
-                                   │
-                                   ▼
+│  Auth            │  PostgreSQL       │  Edge Functions  │  Storage   │
+│  ────            │  ──────────       │  ──────────────  │  ───────   │
+│  JWT Sessions    │  RLS em tudo      │  39 funções      │  quiz-media│
+│  Email/Password  │  Triggers         │  Deno runtime    │  (público) │
+│  Auto-refresh    │  DB Functions     │  _shared/        │            │
+└──────────────────┴───────────────────┴──────────────────┴────────────┘
+                                    │
+                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                       INTEGRAÇÕES EXTERNAS                          │
 ├─────────────────────────────────────────────────────────────────────┤
-│  Bunny CDN     │  Kiwify         │  CRMs            │  Marketing    │
-│  ─────────     │  ──────         │  ────            │  ─────────    │
-│  Video Storage │  Payments       │  HubSpot         │  Mailchimp    │
-│  Global CDN    │  Webhooks       │  RD Station      │  ActiveCampaign│
-│  Streaming     │  Subscriptions  │  Pipedrive       │  GTM/Pixel    │
-└────────────────┴─────────────────┴──────────────────┴───────────────┘
+│  Bunny CDN      │  Kiwify          │  CRMs            │  WhatsApp   │
+│  ─────────      │  ──────          │  ────            │  ────────   │
+│  Video Storage  │  Payments        │  HubSpot         │  Evolution  │
+│  6 EFs dedicadas│  Webhook         │  RD Station      │  API        │
+│  Streaming      │  Subscriptions   │  Pipedrive       │  Recovery   │
+│                 │                  │  +Email Marketing │             │
+└─────────────────┴──────────────────┴──────────────────┴─────────────┘
 ```
 
-### Stack Tecnológica
+### Stack
 
 | Camada | Tecnologias |
 |--------|-------------|
-| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
-| **State Management** | TanStack Query, React Context, useHistory (undo/redo) |
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion |
+| **State** | TanStack Query 5, React Context, useHistory (undo/redo) |
 | **Routing** | React Router 6 |
 | **i18n** | i18next (PT/EN/ES) |
 | **Backend** | Supabase (PostgreSQL, Auth, Edge Functions, Storage) |
-| **CDN** | Bunny CDN (vídeos), Cloudflare (assets) |
+| **CDN** | Bunny CDN (vídeos) |
 | **Payments** | Kiwify |
-| **Testes** | Vitest, Testing Library |
+| **WhatsApp** | Evolution API |
+| **Testes** | Vitest 4, Testing Library |
 
 ---
 
@@ -82,194 +81,123 @@
 ### 1. Criação de Quiz
 
 ```
-┌──────────┐    ┌──────────────┐    ┌─────────────┐    ┌────────────┐
-│ Template │───▶│ Quiz Editor  │───▶│  AutoSave   │───▶│  Supabase  │
-│ Selector │    │ (5 Steps)    │    │ (30s debounce)│   │  Database  │
-└──────────┘    └──────────────┘    └─────────────┘    └────────────┘
-     │                │                    │
-     │                ▼                    │
-     │         ┌─────────────┐             │
-     └────────▶│ AI Generator│─────────────┘
-               │ (Gemini)    │
-               └─────────────┘
+Template/AI ──▶ Quiz Editor (5 Steps) ──▶ AutoSave (30s) ──▶ Supabase
+                     │
+                     ├── Step 1: Quantidade de perguntas
+                     ├── Step 2: Aparência (título, template, logo)
+                     ├── Step 3: Perguntas (blocos, opções, scores)
+                     ├── Step 4: Formulário (coleta de dados)
+                     └── Step 5: Resultados (always, score, calculator)
 ```
-
-**Steps do Editor:**
-1. **Step 1** - Quantidade de perguntas (Slider)
-2. **Step 2** - Aparência (título, descrição, template, logo)
-3. **Step 3** - Configuração de perguntas (blocos, opções, scores)
-4. **Step 4** - Formulário de coleta (nome, email, WhatsApp, campos custom)
-5. **Step 5** - Resultados (always, score_range, calculator)
 
 ### 2. Resposta de Quiz (Público)
 
 ```
-┌──────────┐    ┌──────────────┐    ┌─────────────┐    ┌────────────┐
-│  Visitor │───▶│   QuizView   │───▶│   Tracking  │───▶│  Analytics │
-│          │    │  (questions) │    │ (GTM/Pixel) │    │   Tables   │
-└──────────┘    └──────────────┘    └─────────────┘    └────────────┘
-                       │                                      │
-                       ▼                                      │
-                ┌─────────────┐    ┌─────────────┐            │
-                │    Form     │───▶│   Lead      │────────────┘
-                │  (capture)  │    │ quiz_responses│
-                └─────────────┘    └─────────────┘
-                       │
-                       ▼
-                ┌─────────────┐    ┌─────────────┐
-                │   Result    │───▶│  Webhooks   │
-                │  (display)  │    │ Integrations│
-                └─────────────┘    └─────────────┘
+Visitor ──▶ QuizView ──▶ Tracking (GTM/Pixel) ──▶ quiz_analytics
+                │                                    quiz_step_analytics
+                ▼
+           Form (capture) ──▶ quiz_responses ──▶ Webhooks/Integrations
+                │
+                ▼
+            Result ──▶ CTA/Redirect
 ```
 
-### 3. Processamento de Pagamento
+### 3. Pagamento Kiwify
 
 ```
-┌──────────┐    ┌──────────────┐    ┌─────────────┐    ┌────────────┐
-│  User    │───▶│   Kiwify     │───▶│  Webhook    │───▶│ user_subs  │
-│ Checkout │    │  Checkout    │    │ Edge Func   │    │   UPDATE   │
-└──────────┘    └──────────────┘    └─────────────┘    └────────────┘
-                                           │
-                                           ▼
-                                    ┌─────────────┐
-                                    │ Audit Log   │
-                                    │  (payment)  │
-                                    └─────────────┘
+User → Kiwify Checkout → Webhook (Edge Function) → user_subscriptions UPDATE → Audit Log
+```
+
+### 4. Recuperação WhatsApp
+
+```
+Trigger (signup/quiz) → recovery_contacts INSERT → process-recovery-queue → Evolution API → WhatsApp
 ```
 
 ---
 
 ## 🧩 Componentes Principais
 
-### Estrutura de Diretórios
-
-```
-src/
-├── components/
-│   ├── quiz/           # Editor de quiz
-│   │   ├── blocks/     # Componentes de blocos (22 tipos)
-│   │   ├── preview/    # Preview components
-│   │   ├── view/       # QuizView components
-│   │   └── wizard/     # Calculator Wizard (3 steps)
-│   ├── landing/        # Landing page
-│   ├── admin/          # Painel administrativo
-│   ├── crm/            # Gestão de leads
-│   ├── analytics/      # Gráficos e métricas
-│   ├── lazy/           # Lazy-loaded bundles
-│   └── ui/             # shadcn components
-├── hooks/              # Custom hooks (35+)
-├── pages/              # Route components
-├── types/              # TypeScript interfaces
-├── lib/                # Utilitários
-└── contexts/           # React Contexts
-```
-
-### Componentes Críticos
-
-| Componente | Arquivo | Propósito |
-|------------|---------|-----------|
-| `CreateQuiz` | `pages/CreateQuiz.tsx` | Orquestra editor de quiz |
-| `QuizView` | `pages/QuizView.tsx` | Renderiza quiz público |
-| `UnifiedQuizPreview` | `components/quiz/UnifiedQuizPreview.tsx` | Preview em tempo real |
-| `BlockEditor` | `components/quiz/blocks/BlockEditor.tsx` | Edição de blocos |
-| `ResultsConfigStep` | `components/quiz/ResultsConfigStep.tsx` | Configuração de resultados |
-| `CalculatorWizard` | `components/quiz/CalculatorWizard.tsx` | Wizard de calculadoras |
-
-### Hooks Principais
+### Hooks (35+)
 
 | Hook | Propósito | Arquivo |
 |------|-----------|---------|
 | `useQuizState` | Estado completo do editor | `hooks/useQuizState.ts` |
-| `useQuizPersistence` | Autosave + carregamento | `hooks/useQuizPersistence.ts` |
+| `useQuizPersistence` | Autosave + CRUD | `hooks/useQuizPersistence.ts` |
 | `useHistory` | Undo/Redo | `hooks/useHistory.ts` |
-| `useAutoSave` | Debounced save (30s) | `hooks/useAutoSave.ts` |
+| `useAutoSave` | Debounced save 30s | `hooks/useAutoSave.ts` |
 | `useSubscriptionLimits` | Limites por plano | `hooks/useSubscriptionLimits.ts` |
-| `usePlanFeatures` | Features permitidas | `hooks/usePlanFeatures.ts` |
+| `usePlanFeatures` | Features booleanas | `hooks/usePlanFeatures.ts` |
+| `useFunnelData` | Dados do funil (sem JOIN) | `hooks/useFunnelData.ts` |
+| `useUserRole` | Roles do usuário | `hooks/useUserRole.ts` |
+| `useUserStage` | Nível PQL | `hooks/useUserStage.ts` |
+| `useTestLead` | Gera leads de teste | `hooks/useTestLead.ts` |
+
+### Componentes Críticos
+
+| Componente | Propósito |
+|------------|-----------|
+| `CreateQuiz` | Orquestra editor 5 steps |
+| `QuizView` | Renderiza quiz público |
+| `UnifiedQuizPreview` | Preview em tempo real |
+| `BlockEditor` | Edição dos 22 tipos de blocos |
+| `QuestionsList` | Sidebar de perguntas (cards compactos) |
+| `CalculatorWizard` | Wizard de calculadoras (3 steps) |
+| `ProtectedRoute` | Guard de rotas por role |
 
 ---
 
-## 📦 Sistema de Blocos
-
-### Tipos de Bloco (22 tipos)
+## 📦 Sistema de Blocos (22 tipos)
 
 ```typescript
-// types/blocks.ts
-export type BlockType = 
-  | 'question'      // Pergunta principal
-  | 'text'          // Texto formatado
-  | 'separator'     // Divisor visual
-  | 'image'         // Imagem
-  | 'video'         // Vídeo (YouTube/Vimeo/Bunny)
-  | 'audio'         // Áudio
-  | 'gallery'       // Galeria de imagens
-  | 'embed'         // Embed externo
-  | 'button'        // Botão de ação
-  | 'price'         // Card de preço
-  | 'metrics'       // Gráficos
-  | 'loading'       // Animação de loading
-  | 'progress'      // Barra de progresso
-  | 'countdown'     // Contador regressivo
-  | 'testimonial'   // Depoimento
-  | 'slider'        // Slider numérico
-  | 'textInput'     // Input de texto
-  | 'nps'           // Escala NPS (0-10)
-  | 'accordion'     // FAQ expansível
-  | 'comparison'    // Comparação lado a lado
-  | 'socialProof';  // Notificações de prova social
+type BlockType =
+  | 'question' | 'text' | 'separator' | 'image' | 'video' | 'audio'
+  | 'gallery' | 'embed' | 'button' | 'price' | 'metrics' | 'loading'
+  | 'progress' | 'countdown' | 'testimonial' | 'slider' | 'textInput'
+  | 'nps' | 'accordion' | 'comparison' | 'socialProof';
 ```
 
-### Hierarquia de Tipos
-
-```typescript
-// BaseBlock - comum a todos
-interface BaseBlock {
-  id: string;
-  type: BlockType;
-  order: number;
-}
-
-// QuestionBlock - tipo principal
-interface QuestionBlock extends BaseBlock {
-  type: 'question';
-  questionText: string;
-  answerFormat: 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text';
-  options?: string[];
-  scores?: number[];
-  emojis?: string[];
-  required?: boolean;
-  autoAdvance?: boolean;
-}
-
-// Union type para todos os blocos
-type QuizBlock = QuestionBlock | TextBlock | ImageBlock | ...;
-```
-
-### Factory Function
-
-```typescript
-// Criar novo bloco com defaults
-const newBlock = createBlock('question', 0);
-// Retorna QuestionBlock com valores padrão
-```
+Cada pergunta pode ter múltiplos blocos organizados por `order`. O bloco `question` é obrigatório e define o tipo de resposta (`yes_no`, `single_choice`, `multiple_choice`, `short_text`).
 
 ---
 
-## 🔌 APIs e Edge Functions
+## 🔌 APIs e Edge Functions (39 funções)
 
-### Endpoints Disponíveis
+### Autenticação dos Endpoints
 
-| Função | Método | Autenticação | Propósito |
-|--------|--------|--------------|-----------|
-| `generate-quiz-ai` | POST | JWT | Gera quiz com IA |
-| `parse-pdf-document` | POST | JWT | Extrai conteúdo de PDF |
-| `kiwify-webhook` | POST | Token | Processa pagamentos |
-| `sync-integration` | POST | JWT | Sincroniza com CRMs |
-| `trigger-user-webhook` | POST | JWT | Dispara webhooks custom |
-| `track-quiz-analytics` | POST | Anon | Tracking de eventos |
-| `track-quiz-step` | POST | Anon | Tracking de funil |
-| `bunny-upload-video` | POST | JWT | Upload para Bunny |
-| `save-quiz-draft` | POST | JWT | Salva rascunho |
-| `rate-limiter` | POST | Anon | Rate limiting |
+| Tipo | Header | Uso |
+|------|--------|-----|
+| JWT | `Authorization: Bearer <token>` | Endpoints autenticados |
+| Anon | Nenhum ou anon key | Tracking, responses, rate-limiter |
+| Token | Query param ou body | kiwify-webhook |
+
+### Padrão de Edge Function
+
+```typescript
+// supabase/functions/my-function/index.ts
+import { corsHeaders } from '../_shared/cors.ts';
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+    // Lógica...
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+```
 
 ### Exemplo: generate-quiz-ai
 
@@ -277,7 +205,6 @@ const newBlock = createBlock('question', 0);
 // Request
 POST /functions/v1/generate-quiz-ai
 Authorization: Bearer <jwt>
-Content-Type: application/json
 
 {
   "mode": "form",
@@ -290,368 +217,182 @@ Content-Type: application/json
 // Response
 {
   "success": true,
-  "quiz": {
-    "title": "Descubra seu perfil de marketing",
-    "description": "...",
-    "questions": [...]
-  },
+  "quiz": { "title": "...", "questions": [...] },
   "tokens": { "prompt": 500, "completion": 800 }
 }
-```
-
-### Padrão de Edge Function
-
-```typescript
-// supabase/functions/my-function/index.ts
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from '../_shared/cors.ts';
-
-Deno.serve(async (req) => {
-  // CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    // Auth
-    const authHeader = req.headers.get('Authorization');
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    // Lógica
-    const { data, error } = await supabase.from('...').select();
-
-    return new Response(JSON.stringify({ success: true, data }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
-});
 ```
 
 ---
 
 ## 🧮 Algoritmos Críticos
 
-### 1. Motor de Cálculo (Calculator Engine)
+### 1. Motor de Cálculo (`lib/calculatorEngine.ts`)
 
-```typescript
-// lib/calculatorEngine.ts
+```
+Formula: "(X1 + X2) * 0.15"
+Variables: { X1: "question_id_1", X2: "question_id_2" }
+Answers: { "question_id_1": "5000", "question_id_2": "3000" }
 
-/**
- * Substitui variáveis (X1, X2, ...) por valores das respostas
- */
-function substituteVariables(
-  formula: string,
-  variableMapping: Record<string, string>, // { X1: 'question_id_1' }
-  answers: Record<string, string | string[]>
-): string {
-  let result = formula;
-  
-  for (const [variable, questionId] of Object.entries(variableMapping)) {
-    const answer = answers[questionId];
-    const value = extractNumericValue(answer);
-    result = result.replace(new RegExp(variable, 'g'), value.toString());
-  }
-  
-  return result;
-}
-
-/**
- * Avalia expressão matemática de forma segura (sem eval)
- */
-function evaluateFormula(expression: string): number {
-  // Parser seguro com suporte a +, -, *, /, (, ), ^
-  // Não usa eval() por segurança
-  return safeEval(expression);
-}
-
-/**
- * Formata resultado conforme configuração
- */
-function formatResult(
-  value: number,
-  format: 'number' | 'currency' | 'percentage' | 'custom',
-  unit?: string,
-  decimalPlaces?: number
-): string {
-  const fixed = value.toFixed(decimalPlaces ?? 2);
-  
-  switch (format) {
-    case 'currency':
-      return `R$ ${fixed}`;
-    case 'percentage':
-      return `${fixed}%`;
-    case 'custom':
-      return `${fixed} ${unit || ''}`;
-    default:
-      return fixed;
-  }
-}
+→ substituteVariables → "(5000 + 3000) * 0.15"
+→ evaluateFormula (parser seguro, sem eval) → 1200
+→ formatResult('currency', 2) → "R$ 1200.00"
 ```
 
-### 2. Avaliador de Condições
+### 2. Avaliador de Condições (`lib/conditionEvaluator.ts`)
 
-```typescript
-// lib/conditionEvaluator.ts
-
-interface Condition {
-  questionId: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
-  value: string | string[];
-  logic?: 'AND' | 'OR';
-}
-
-/**
- * Avalia condições para determinar resultado
- */
-function evaluateConditions(
-  conditions: Condition[],
-  answers: Record<string, string | string[]>
-): boolean {
-  if (conditions.length === 0) return true;
-  
-  const results = conditions.map(cond => 
-    evaluateSingleCondition(cond, answers[cond.questionId])
-  );
-  
-  // Aplica lógica AND/OR
-  const logic = conditions[0].logic || 'AND';
-  return logic === 'AND' 
-    ? results.every(r => r) 
-    : results.some(r => r);
-}
-```
+Suporta operadores: `equals`, `not_equals`, `contains`, `greater_than`, `less_than`.
+Lógica: AND/OR entre condições. Detecta ciclos em branching.
 
 ### 3. Score Calculation
 
-```typescript
-/**
- * Calcula score baseado nas respostas
- */
-function calculateScore(
-  questions: QuizQuestion[],
-  answers: Record<string, string | string[]>
-): number {
-  let totalScore = 0;
-  
-  for (const question of questions) {
-    const questionBlock = question.blocks?.find(b => b.type === 'question');
-    if (!questionBlock?.scores) continue;
-    
-    const answer = answers[question.id];
-    const answerIndex = questionBlock.options?.indexOf(answer as string);
-    
-    if (answerIndex !== undefined && answerIndex >= 0) {
-      totalScore += questionBlock.scores[answerIndex] || 0;
-    }
-  }
-  
-  return totalScore;
-}
+Soma de scores por opção selecionada → match com `quiz_results` por `min_score`/`max_score`.
+
+### 4. Funnel Analytics (`hooks/useFunnelData.ts`)
+
 ```
+1. Busca quiz_ids do user via quizzes table
+2. Filtra quiz_step_analytics por quiz_ids + date range
+3. Agrega por step_number contando sessões únicas (Set)
+4. Busca question_text para labels
+5. Retorna array ordenado por step_number
+```
+
+> **Nota v2.27:** Não usa JOINs PostgREST — queries separadas para robustez.
 
 ---
 
 ## 🔗 Integrações Externas
 
-### Bunny CDN
+### Kiwify (Pagamento)
+- Webhook processa eventos: `order_approved`, `subscription_renewed`, `subscription_canceled`
+- Verifica token de autenticação
+- Atualiza `user_subscriptions.plan_type`
+- Registra em `audit_logs`
 
-```
-Upload Flow:
-┌────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────┐
-│ Client │───▶│ bunny-upload │───▶│ Bunny API   │───▶│ CDN URL  │
-│        │    │ edge function│    │ (TUS proto) │    │ returned │
-└────────┘    └──────────────┘    └─────────────┘    └──────────┘
+### Bunny CDN (Vídeo)
+- 6 Edge Functions para upload (simples, multipart, chunked, TUS)
+- Secrets: `BUNNY_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_ZONE_PASSWORD`, `BUNNY_CDN_HOSTNAME`
+- Tabela `bunny_videos` rastreia status
 
-CDN URL Format: https://masterquiz.b-cdn.net/{videoId}/play_{quality}.mp4
-```
+### Evolution API (WhatsApp)
+- Conexão via `evolution-connect`
+- Webhook bidirecional via `evolution-webhook`
+- Templates de mensagem em `recovery_templates`
+- Fila de envio em `recovery_contacts`
+- Rate limiting: batch_size, delay, horários permitidos
 
-### Kiwify Webhook
-
-```
-Payment Flow:
-┌─────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
-│ Kiwify  │───▶│ kiwify-webhook│───▶│ Validate    │───▶│ Update       │
-│ Event   │    │ edge function │    │ Signature   │    │ Subscription │
-└─────────┘    └──────────────┘    └─────────────┘    └──────────────┘
-
-Events: purchase_approved, subscription_renewed, refund_issued
-```
-
-### CRM Sync
-
-```typescript
-// Providers suportados
-const PROVIDERS = {
-  hubspot: { endpoint: 'https://api.hubapi.com/crm/v3/objects/contacts' },
-  rdstation: { endpoint: 'https://api.rd.services/platform/conversions' },
-  pipedrive: { endpoint: 'https://api.pipedrive.com/v1/persons' },
-  mailchimp: { endpoint: 'https://us1.api.mailchimp.com/3.0/lists/{list}/members' },
-  activecampaign: { endpoint: 'https://{account}.api-us1.com/api/3/contacts' }
-};
-
-// Payload padronizado
-interface LeadPayload {
-  email: string;
-  name?: string;
-  phone?: string;
-  quiz_name: string;
-  quiz_result: string;
-  answers: Record<string, string>;
-}
-```
+### CRMs e Marketing
+- Sync via `sync-integration` (HubSpot, RD Station, Pipedrive, Mailchimp, ActiveCampaign)
+- Logs em `integration_logs`
 
 ---
 
-## 🔐 Segurança e RLS
+## 🔒 Segurança e RLS
 
-### Políticas de RLS
+### Princípios
+1. RLS ativo em **todas** as tabelas
+2. Roles verificados via `has_role()` (SECURITY DEFINER) — evita recursão
+3. Chaves privadas **nunca** no client — apenas em Edge Functions via secrets
+4. Input validado em endpoints públicos
+5. Rate limiting obrigatório em endpoints públicos (`rate-limiter`)
+6. IPs anonimizados após 6 meses (`anonymize_old_ips()`)
 
-```sql
--- Usuários só veem seus próprios quizzes
-CREATE POLICY "Users can view own quizzes"
-ON quizzes FOR SELECT
-USING (auth.uid() = user_id);
-
--- Quizzes públicos são acessíveis para respostas
-CREATE POLICY "Public quizzes accept responses"
-ON quiz_responses FOR INSERT
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM quizzes 
-    WHERE id = quiz_id AND is_public = true
-  )
-);
-
--- UPDATE restrito a 24h (anti-fraude)
-CREATE POLICY "ab_test_sessions update within 24h"
-ON ab_test_sessions FOR UPDATE
-USING (
-  auth.uid() IS NOT NULL
-  AND started_at > now() - interval '24 hours'
-);
-```
-
-### View Segura para Integrações
+### Padrões RLS
 
 ```sql
--- Mascara API keys para admins
-CREATE VIEW user_integrations_safe AS
-SELECT 
-  id, user_id, provider, is_active,
-  CASE WHEN api_key IS NOT NULL 
-    THEN '****' || RIGHT(api_key, 4) 
-    ELSE NULL 
-  END as api_key_masked,
-  last_sync_at, created_at, updated_at
-FROM user_integrations;
+-- Usuário acessa próprios dados
+CREATE POLICY "Users CRUD own data" ON table
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+-- Quiz público acessível
+CREATE POLICY "Public viewable" ON child_table
+  USING (EXISTS (
+    SELECT 1 FROM quizzes
+    WHERE quizzes.id = child_table.quiz_id
+      AND quizzes.is_public = true
+      AND quizzes.status = 'active'
+  ));
+
+-- Admin via has_role()
+CREATE POLICY "Admins manage" ON admin_table
+  USING (has_role(auth.uid(), 'admin') OR has_role(auth.uid(), 'master_admin'));
 ```
 
-### Rate Limiting
+### Triggers de Provisão Automática
 
-```typescript
-// Implementação em edge function
-const LIMITS = {
-  quiz_response: { max: 100, window: 3600 },    // 100/hora
-  ai_generation: { max: 10, window: 86400 },    // 10/dia
-  webhook: { max: 1000, window: 3600 }          // 1000/hora
-};
-
-async function checkRateLimit(identifier: string, action: string): Promise<boolean> {
-  const { data } = await supabase
-    .from('rate_limit_tracker')
-    .select('attempt_count, window_start')
-    .eq('identifier', identifier)
-    .eq('action', action)
-    .single();
-
-  const limit = LIMITS[action];
-  const windowExpired = new Date(data?.window_start) < new Date(Date.now() - limit.window * 1000);
-  
-  if (windowExpired || !data) {
-    // Reset window
-    await supabase.from('rate_limit_tracker').upsert({ ... });
-    return true;
-  }
-  
-  return data.attempt_count < limit.max;
-}
 ```
+auth.users INSERT → handle_new_user_profile() → profiles INSERT
+                  → handle_new_user_role() → user_roles INSERT (admin)
+                  → handle_new_user_subscription() → user_subscriptions INSERT (free)
+```
+
+Todos usam `ON CONFLICT DO NOTHING` para idempotência.
 
 ---
 
 ## ⚡ Performance
 
-### Lazy Loading Strategy
+### Estratégias Implementadas
 
-```typescript
-// components/lazy/EditorComponentsBundle.tsx
-const BlockEditor = lazy(() => import('../quiz/blocks/BlockEditor'));
-const UnifiedQuizPreview = lazy(() => import('../quiz/UnifiedQuizPreview'));
-const AIQuizGenerator = lazy(() => import('../quiz/AIQuizGenerator'));
+| Técnica | Aplicação |
+|---------|-----------|
+| Lazy loading | 15+ componentes admin, editor bundles |
+| Code splitting | 13 chunks Vite separados |
+| TanStack Query cache | staleTime 5min para dados admin |
+| Debounced autosave | 30s no editor |
+| WebP conversion | Imagens no editor |
+| ES2020 target | Build menor |
+| Memoização | useMemo/useCallback em listas grandes |
 
-// Fallbacks com Skeleton
-export const BlockEditorWrapper = (props) => (
-  <Suspense fallback={<EditorSkeleton />}>
-    <BlockEditor {...props} />
-  </Suspense>
-);
+### Otimizações de Query
+
+- `useFunnelData`: Queries separadas em vez de JOINs PostgREST (robustez > performance)
+- AdminDashboard: `Promise.all()` para queries paralelas
+- Paginação: USERS_PER_PAGE = 20, RESPONDENTS_PER_PAGE = 50
+- Supabase limit padrão: 1000 rows
+
+---
+
+## 📱 Sistema de Recuperação WhatsApp
+
+### Arquitetura
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Triggers    │────▶│  recovery_   │────▶│  process-    │
+│  (DB/manual) │     │  contacts    │     │  recovery-   │
+└──────────────┘     └──────────────┘     │  queue (EF)  │
+                                          └──────┬───────┘
+                                                 │
+                                                 ▼
+                                          ┌──────────────┐
+                                          │ Evolution API│
+                                          │  (WhatsApp)  │
+                                          └──────────────┘
 ```
 
-### Chunk Splitting (vite.config.ts)
+### Tabelas
+- `recovery_settings`: Configuração global (limites, horários, API)
+- `recovery_templates`: Templates de mensagem por categoria (welcome, first_quiz, recovery)
+- `recovery_campaigns`: Campanhas automáticas ou manuais
+- `recovery_contacts`: Fila de envio com status tracking
+- `recovery_blacklist`: Opt-out
 
-```javascript
-manualChunks: {
-  'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-  'vendor-ui': ['@radix-ui/*'],
-  'vendor-motion': ['framer-motion'],
-  'vendor-charts': ['recharts'],
-  'vendor-query': ['@tanstack/react-query'],
-  'vendor-supabase': ['@supabase/supabase-js'],
-  'vendor-i18n': ['i18next', 'react-i18next'],
-  'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable'],
-  'vendor-date': ['date-fns'],
-  'vendor-form': ['react-hook-form', '@hookform/resolvers', 'zod']
-}
-```
-
-### Hooks de Performance
-
-```typescript
-// Evita re-renders desnecessários
-const stableCallback = useStableCallback(myFunction);
-
-// Valores deferidos para filtros
-const deferredFilter = useDeferredValue(filter);
-
-// Debounce para buscas
-const debouncedSearch = useDebounce(searchTerm, 300);
-```
+### Triggers Automáticos
+- `trigger_welcome_on_whatsapp_update()`: Dispara welcome quando WhatsApp é adicionado ao perfil
+- `trigger_first_quiz_message()`: Dispara mensagem quando 1º quiz é publicado
 
 ---
 
 ## 📚 Documentação Relacionada
 
-| Documento | Propósito |
+| Documento | Descrição |
 |-----------|-----------|
-| [README.md](../README.md) | Setup, stack, comandos |
-| [PRD.md](../PRD.md) | Requisitos funcionais |
+| [README.md](../README.md) | Setup, stack e comandos |
+| [PRD.md](../PRD.md) | Requisitos do produto |
 | [ROADMAP.md](../ROADMAP.md) | Planejamento estratégico |
-| [PENDENCIAS.md](../PENDENCIAS.md) | Changelog detalhado |
+| [PENDENCIAS.md](../PENDENCIAS.md) | Changelog |
 | [STYLE_GUIDE.md](../STYLE_GUIDE.md) | Padrões de código |
 | [CHECKLIST.md](../CHECKLIST.md) | Validação MVP |
-| [src/__tests__/README.md](../src/__tests__/README.md) | Guia de testes |
-
----
-
-## 📞 Contato
-
-- **Suporte técnico**: suporte@masterquizz.com
-- **Issues**: Via tickets no painel admin
+| [AUDIT_TEMPLATE.md](./AUDIT_TEMPLATE.md) | Template de auditoria |

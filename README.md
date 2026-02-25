@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.25.0** | Última atualização: 04 de Fevereiro de 2025
+**Versão 2.27.0** | Última atualização: 25 de Fevereiro de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -33,8 +33,6 @@
 - [Funcionalidades](#-funcionalidades)
 - [Troubleshooting](#-troubleshooting)
 - [Documentação Relacionada](#-documentação-relacionada)
-- [System Design](#-system-design)
-- [Checklist de Validação](#-checklist-de-validação)
 - [Contribuição](#-contribuição)
 
 ---
@@ -51,38 +49,38 @@
 | shadcn/ui | latest | Componentes UI |
 | Framer Motion | 12.x | Animações |
 | React Router | 6.x | Roteamento |
-| TanStack Query | 5.x | Cache e state management |
+| TanStack Query | 5.x | Cache e server state |
 | i18next | 25.x | Internacionalização (PT/EN/ES) |
 | driver.js | 1.4.x | Onboarding tours |
 | Recharts | 2.x | Gráficos e analytics |
-| @dnd-kit | 6.x | Drag and drop |
+| @dnd-kit | 6.x/10.x | Drag and drop |
 
-### Backend (Lovable Cloud / Supabase)
+### Backend (Supabase Externo)
 | Serviço | Propósito |
 |---------|-----------|
-| PostgreSQL | Banco de dados relacional |
-| Edge Functions | Lógica serverless (Deno) |
-| Auth | Autenticação de usuários |
-| Storage | Armazenamento de mídia |
-| Realtime | Atualizações em tempo real |
+| PostgreSQL | Banco de dados relacional com RLS |
+| Edge Functions (Deno) | Lógica serverless |
+| Auth | Autenticação email/senha |
+| Storage | Bucket `quiz-media` (público) |
+| Realtime | Updates em tempo real |
 
 ### Testes & Qualidade
 | Ferramenta | Propósito |
 |------------|-----------|
-| Vitest | Framework de testes |
+| Vitest 4.x | Framework de testes |
 | Testing Library | Testes de componentes React |
 | ESLint | Linting e padrões de código |
 | Prettier | Formatação de código |
-| GitHub Actions | CI/CD pipeline |
 
 ### Integrações
 | Serviço | Propósito |
 |---------|-----------|
-| Kiwify | Gateway de pagamento |
+| Kiwify | Gateway de pagamento + webhook |
 | Bunny CDN | Armazenamento e streaming de vídeos |
 | Google Tag Manager | Tracking global |
 | Facebook Pixel | Tracking por quiz |
 | Lovable AI (Gemini) | Geração de quizzes com IA |
+| Evolution API | WhatsApp (recuperação de usuários) |
 | Zapier/Make/n8n | Automações via webhook |
 | HubSpot/RD Station/Pipedrive | CRMs externos |
 | Mailchimp/ActiveCampaign | Email marketing |
@@ -93,64 +91,56 @@
 
 ```
 masterquizz/
-├── .github/
-│   └── workflows/            # CI/CD pipelines
-│       └── pr.yml            # Validação de PRs
-├── public/                   # Assets estáticos
-│   ├── _headers              # Cache headers (Cloudflare)
-│   └── favicon.png
-├── scripts/                  # Scripts de automação
-│   ├── analyze-bundle.js     # Análise de bundle size
-│   ├── health-check.js       # Verificação de saúde
-│   └── validate-docs.js      # Validação de documentação
+├── docs/
+│   ├── SYSTEM_DESIGN.md      # Arquitetura e fluxos técnicos
+│   └── AUDIT_TEMPLATE.md     # Template de auditoria
+├── public/                    # Assets estáticos
+├── scripts/                   # Scripts de automação
 ├── src/
-│   ├── __tests__/            # Setup e utilities de testes
-│   │   ├── setup.ts          # Configuração global
-│   │   ├── test-utils.tsx    # Render customizado
-│   │   └── README.md         # Documentação de testes
-│   ├── assets/               # Imagens importadas
+│   ├── __tests__/             # Setup e utilities de testes
+│   ├── assets/                # Imagens importadas (ES6)
 │   ├── components/
-│   │   ├── admin/            # Painel administrativo
-│   │   ├── analytics/        # Componentes de analytics
-│   │   ├── crm/              # Gestão de leads
-│   │   ├── integrations/     # Gestão de integrações
-│   │   ├── kiwify/           # Componentes pós-compra
-│   │   ├── landing/          # Landing page
-│   │   ├── lazy/             # Componentes lazy-loaded
-│   │   ├── onboarding/       # Tours guiados
-│   │   ├── quiz/             # Editor de quizzes
-│   │   │   ├── blocks/       # Blocos do editor
-│   │   │   └── __tests__/    # Testes de componentes quiz
-│   │   ├── support/          # Tickets de suporte
-│   │   ├── video/            # Player de vídeo customizado
-│   │   ├── ui/               # shadcn components
-│   │   └── __tests__/        # Testes de componentes
-│   ├── contexts/             # React contexts (Auth)
-│   │   └── __tests__/        # Testes de contexts
-│   ├── hooks/                # Custom hooks
-│   │   └── __tests__/        # Testes de hooks
-│   ├── i18n/                 # Traduções
+│   │   ├── admin/             # Painel administrativo (lazy-loaded)
+│   │   │   └── recovery/      # Sistema de recuperação WhatsApp
+│   │   ├── analytics/         # Componentes de analytics
+│   │   ├── crm/               # Gestão de leads (kanban)
+│   │   ├── integrations/      # Gestão de integrações
+│   │   ├── kiwify/            # Componentes pós-compra
+│   │   ├── landing/           # Landing page (i18n)
+│   │   ├── lazy/              # Componentes lazy-loaded
+│   │   ├── onboarding/        # Tours guiados (driver.js)
+│   │   ├── quiz/              # Editor de quizzes
+│   │   │   ├── blocks/        # 22 tipos de blocos
+│   │   │   ├── view/          # Componentes de visualização pública
+│   │   │   ├── wizard/        # Calculator Wizard (3 steps)
+│   │   │   └── __tests__/     # Testes de componentes quiz
+│   │   ├── support/           # Tickets de suporte
+│   │   ├── video/             # Player de vídeo customizado
+│   │   └── ui/                # shadcn components
+│   ├── contexts/              # React contexts (Auth)
+│   ├── hooks/                 # Custom hooks (35+)
+│   ├── i18n/                  # Traduções (PT/EN/ES)
 │   ├── integrations/
-│   │   └── supabase/         # Cliente e tipos
-│   ├── lib/                  # Utilitários
-│   │   └── __tests__/        # Testes de utilitários
-│   ├── pages/                # Rotas da aplicação
-│   │   └── __tests__/        # Testes de páginas
-│   ├── styles/               # CSS adicional
-│   ├── types/                # Tipos TypeScript
-│   └── utils/                # Helpers
+│   │   └── supabase/          # Cliente e tipos gerados
+│   ├── lib/                   # Utilitários (calculator, sanitize, etc.)
+│   ├── pages/                 # Rotas da aplicação
+│   ├── styles/                # CSS adicional
+│   ├── types/                 # Tipos TypeScript compartilhados
+│   └── utils/                 # Helpers
 ├── supabase/
-│   ├── config.toml           # Configuração Supabase
-│   └── functions/            # Edge Functions
-│       └── _shared/          # Código compartilhado
-├── PENDENCIAS.md             # Changelog e pendências
-├── PRD.md                    # Product Requirements
-├── ROADMAP.md                # Planejamento estratégico
-├── STYLE_GUIDE.md            # Padrões de código
+│   ├── config.toml            # Configuração Supabase
+│   ├── migrations/            # SQL migrations (read-only)
+│   └── functions/             # 39 Edge Functions
+│       └── _shared/           # Código compartilhado (cors.ts, auth.ts)
+├── PENDENCIAS.md              # Changelog e pendências
+├── PRD.md                     # Product Requirements
+├── ROADMAP.md                 # Planejamento estratégico
+├── STYLE_GUIDE.md             # Padrões de código
+├── CHECKLIST.md               # Checklist de validação MVP
 └── [config files]
 ```
 
-### Fluxo de Dados
+### Fluxo de Dados Principal
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
@@ -175,8 +165,8 @@ masterquizz/
 ## 🚀 Setup do Projeto
 
 ### Pré-requisitos
-- Node.js 18+
-- npm ou bun
+- Node.js 18+ ou Bun
+- Supabase project ID: `kmmdzwoidakmbekqvkmq`
 
 ### Instalação
 
@@ -186,7 +176,7 @@ git clone <YOUR_GIT_URL>
 cd <YOUR_PROJECT_NAME>
 
 # Instale dependências
-npm install
+npm install   # ou: bun install
 
 # Inicie o servidor de desenvolvimento
 npm run dev
@@ -194,31 +184,40 @@ npm run dev
 
 ### Variáveis de Ambiente
 
-O arquivo `.env` é gerado automaticamente pelo Lovable Cloud:
+O arquivo `.env` é auto-populado com:
 
 ```env
-VITE_SUPABASE_URL=https://otabjwhvrwtixlyebkvm.supabase.co
+VITE_SUPABASE_URL=https://kmmdzwoidakmbekqvkmq.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
-VITE_SUPABASE_PROJECT_ID=otabjwhvrwtixlyebkvm
+VITE_SUPABASE_PROJECT_ID=kmmdzwoidakmbekqvkmq
 ```
 
 ### Secrets (Edge Functions)
 
-Configurados via Admin Panel:
-- `BUNNY_API_KEY` - API Key do Bunny CDN
-- `BUNNY_LIBRARY_ID` - ID da biblioteca de vídeos Bunny
-- `LOVABLE_API_KEY` - API para geração de quiz com IA
+Configurados no Supabase Dashboard → Settings → Functions:
+
+| Secret | Propósito |
+|--------|-----------|
+| `SUPABASE_SERVICE_ROLE_KEY` | Acesso admin ao DB |
+| `LOVABLE_API_KEY` | Gateway AI (Gemini) |
+| `BUNNY_API_KEY` | API Bunny CDN |
+| `BUNNY_STORAGE_ZONE_NAME` | Storage zone Bunny |
+| `BUNNY_STORAGE_ZONE_PASSWORD` | Password storage Bunny |
+| `BUNNY_CDN_HOSTNAME` | Hostname CDN Bunny |
+| `EVOLUTION_API_URL` | URL da Evolution API (WhatsApp) |
+| `EVOLUTION_API_KEY` | Key da Evolution API |
+| `OPENAI_API_KEY` | Fallback para IA |
 
 ### Scripts Disponíveis
 
 ```bash
-npm run dev           # Servidor de desenvolvimento
-npm run build         # Build de produção
-npm run preview       # Preview do build
-npm run test          # Executa testes (single run)
+npm run dev              # Servidor de desenvolvimento
+npm run build            # Build de produção
+npm run preview          # Preview do build
+npm run test             # Executa testes (single run)
 npm run test -- --watch  # Testes em modo watch
 npm run test -- --coverage  # Testes com cobertura
-npm run lint          # Linting com ESLint
+npm run lint             # Linting com ESLint
 ```
 
 ---
@@ -259,8 +258,8 @@ npm run lint          # Linting com ESLint
 ### Componentes UI
 
 Baseado em **shadcn/ui** com customizações:
-- Button variants: default, outline, ghost, hero, premium
-- Card com glassmorphism
+- Button variants: `default`, `outline`, `ghost`, `hero`, `premium`
+- Card com glassmorphism sutil
 - Toast notifications (sonner)
 - Dialog/Sheet responsivos
 
@@ -268,212 +267,192 @@ Baseado em **shadcn/ui** com customizações:
 
 ## 🔐 Autenticação
 
-### Fluxo de Auth
-
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Login     │────▶│  Supabase   │────▶│  Dashboard  │
-│   Signup    │     │    Auth     │     │  Protected  │
-└─────────────┘     └─────────────┘     └─────────────┘
-```
-
-### Roles de Usuário
+### Roles de Usuário (tabela `user_roles`)
 
 | Role | Permissões |
 |------|------------|
-| `user` | Acesso básico, criar quizzes |
-| `admin` | Gestão de usuários |
-| `master_admin` | Acesso total, configurações globais |
+| `user` | Acesso implícito — todos os autenticados |
+| `admin` | Atribuído automaticamente via trigger `handle_new_user_role()` |
+| `master_admin` | Acesso total; email deve estar em `master_admin_emails` |
 
-### Configuração Auth
+**Verificação de role:** Usa `has_role()` (SECURITY DEFINER) para evitar recursão RLS.
 
-- **Auto-confirm email**: Habilitado
-- **Password recovery**: Via email
-- **Session**: JWT com refresh automático
+### Fluxo
+
+```
+Signup → trigger handle_new_user_profile() → cria profile
+       → trigger handle_new_user_role() → atribui role admin (ou nada se master)
+       → trigger handle_new_user_subscription() → cria subscription free
+```
 
 ---
 
-## ⚡ Edge Functions
+## ⚡ Edge Functions (39 funções)
 
-### Funções Disponíveis
+### Core
+| Função | Propósito |
+|--------|-----------|
+| `generate-quiz-ai` | Geração de quiz com IA (Gemini) |
+| `parse-pdf-document` | Extração de conteúdo PDF para quiz |
+| `save-quiz-draft` | Autosave de rascunhos |
+| `generate-pdf-report` | Exportação de relatórios PDF |
 
-| Função | Endpoint | Propósito |
-|--------|----------|-----------|
-| `generate-quiz-ai` | `/functions/v1/generate-quiz-ai` | Geração de quiz com IA |
-| `parse-pdf-document` | `/functions/v1/parse-pdf-document` | Extração de conteúdo PDF |
-| `kiwify-webhook` | `/functions/v1/kiwify-webhook` | Processamento de pagamentos |
-| `trigger-user-webhook` | `/functions/v1/trigger-user-webhook` | Webhooks personalizados |
-| `sync-integration` | `/functions/v1/sync-integration` | Sincronização com integrações |
-| `track-quiz-analytics` | `/functions/v1/track-quiz-analytics` | Tracking de eventos |
-| `track-quiz-step` | `/functions/v1/track-quiz-step` | Tracking de funil |
-| `track-video-analytics` | `/functions/v1/track-video-analytics` | Analytics de vídeo |
-| `bunny-upload-video` | `/functions/v1/bunny-upload-video` | Upload para Bunny CDN |
-| `bunny-delete-video` | `/functions/v1/bunny-delete-video` | Exclusão de vídeo Bunny |
-| `generate-pdf-report` | `/functions/v1/generate-pdf-report` | Exportação de relatórios |
-| `save-quiz-draft` | `/functions/v1/save-quiz-draft` | Autosave de rascunhos |
-| `delete-user` | `/functions/v1/delete-user` | Exclusão de conta |
-| `list-all-users` | `/functions/v1/list-all-users` | Listagem admin |
-| `rate-limiter` | `/functions/v1/rate-limiter` | Controle de rate limit |
+### Pagamento & Usuários
+| Função | Propósito |
+|--------|-----------|
+| `kiwify-webhook` | Processamento de pagamentos Kiwify |
+| `list-all-users` | Listagem de usuários (Admin API) |
+| `delete-user` / `delete-user-complete` | Exclusão de conta |
+| `export-user-data` | Exportação LGPD |
+| `update-user-profile` | Atualização de perfil |
+| `merge-user-data` / `migrate-imported-user` | Migração de dados |
+| `check-imported-user` | Verificação de usuário importado |
 
-### Exemplo: Geração de Quiz com IA
+### Analytics & Tracking
+| Função | Propósito |
+|--------|-----------|
+| `track-quiz-analytics` | Tracking de eventos (views, starts, completions) |
+| `track-quiz-step` | Tracking de funil por step |
+| `track-video-analytics` | Analytics de vídeo |
+| `rate-limiter` | Controle de rate limit |
 
-```typescript
-const response = await supabase.functions.invoke('generate-quiz-ai', {
-  body: {
-    mode: 'form', // ou 'pdf'
-    numberOfQuestions: 5,
-    productName: 'Meu Produto',
-    targetAudience: 'Empreendedores',
-    // ...
-  }
-});
-```
+### Integrações
+| Função | Propósito |
+|--------|-----------|
+| `sync-integration` | Sincronização com CRMs externos |
+| `trigger-user-webhook` | Dispara webhooks custom |
+
+### Bunny CDN (6 funções)
+| Função | Propósito |
+|--------|-----------|
+| `bunny-upload-video` | Upload simples |
+| `bunny-upload-video-multipart` | Upload multipart |
+| `bunny-chunked-init` / `bunny-chunked-complete` | Upload chunked |
+| `bunny-tus-create` / `bunny-tus-confirm` | Upload TUS protocol |
+| `bunny-confirm-upload` | Confirmação |
+| `bunny-delete-video` | Exclusão |
+| `bunny-generate-thumbnail` | Thumbnail |
+
+### WhatsApp Recovery (6 funções)
+| Função | Propósito |
+|--------|-----------|
+| `evolution-connect` | Conexão com Evolution API |
+| `evolution-webhook` | Webhook de eventos WhatsApp |
+| `send-welcome-message` | Mensagem de boas-vindas |
+| `send-whatsapp-recovery` | Mensagem de recuperação |
+| `send-test-message` | Teste de conexão |
+| `process-recovery-queue` | Processamento da fila |
+| `check-inactive-users` | Detecção de inativos |
+| `check-activation-24h` | Check de ativação 24h |
+
+### Admin
+| Função | Propósito |
+|--------|-----------|
+| `system-health-check` | Saúde do sistema |
+| `export-schema-sql` / `export-table-data` | Exportação de dados |
+| `anonymize-ips` | Anonimização LGPD |
 
 ---
 
 ## 🗄 API e Database
 
-### Schema Principal
+### Schema Principal (30+ tabelas)
 
 ```sql
--- Quizzes
-quizzes (id, user_id, title, description, template, status, is_public, slug, ...)
-
--- Perguntas
-quiz_questions (id, quiz_id, question_text, answer_format, options, blocks, order_number, ...)
-
--- Respostas
-quiz_responses (id, quiz_id, respondent_email, answers, result_id, lead_status, ...)
-
--- Resultados
-quiz_results (id, quiz_id, result_text, condition_type, min_score, max_score, formula, variable_mapping, ...)
-
--- Vídeos Bunny
-bunny_videos (id, user_id, quiz_id, bunny_video_id, cdn_url, size_mb, status, ...)
+-- Core
+quizzes, quiz_questions, quiz_responses, quiz_results
+quiz_form_config, custom_form_fields
 
 -- Analytics
-quiz_analytics (id, quiz_id, date, views, starts, completions, conversion_rate, ...)
-video_analytics (id, quiz_id, video_url, event_type, watch_time_seconds, ...)
-quiz_step_analytics (id, quiz_id, step_number, session_id, ...)
+quiz_analytics, quiz_step_analytics
+
+-- Vídeo
+bunny_videos
 
 -- Usuários
-profiles (id, full_name, company_slug, facebook_pixel_id, gtm_container_id, ...)
-user_subscriptions (id, user_id, plan_type, status, quiz_limit, response_limit, ...)
-user_roles (id, user_id, role)
+profiles, user_subscriptions, user_roles, user_onboarding
 
 -- Integrações
-user_integrations (id, user_id, provider, api_key, webhook_url, is_active, ...)
-integration_logs (id, integration_id, action, status, error_message, ...)
+user_integrations, integration_logs, user_webhooks
 
--- Planos
-subscription_plans (id, plan_name, plan_type, quiz_limit, response_limit, features, kiwify_checkout_url, ...)
+-- Admin
+subscription_plans, quiz_templates, system_settings
+audit_logs, support_tickets, ticket_messages
+
+-- A/B Testing
+quiz_variants, ab_test_sessions
+landing_ab_tests, landing_ab_sessions
+
+-- Recovery (WhatsApp)
+recovery_settings, recovery_templates, recovery_campaigns
+recovery_contacts, recovery_blacklist
+
+-- LGPD
+cookie_consents, scheduled_deletions, rate_limit_tracker
+
+-- i18n
+quiz_translations, quiz_question_translations
+
+-- Outros
+landing_content, master_admin_emails, notification_preferences
+ai_quiz_generations, system_health_metrics, quiz_tags, quiz_tag_relations
 ```
 
 ### RLS Policies
 
-Todas as tabelas possuem Row Level Security:
-- Usuários só acessam seus próprios dados
-- Master admins têm acesso global
-- Quizzes públicos são acessíveis para respostas
+Todas as tabelas possuem Row Level Security ativo:
+- Usuários acessam apenas seus dados via `auth.uid()`
+- Admin/master_admin verificados via `has_role()` (SECURITY DEFINER)
+- Quizzes públicos acessíveis via `is_public = true AND status = 'active'`
+- Endpoints públicos (analytics, responses) permitem INSERT anon
 
-### Queries Comuns
+### Database Functions
 
-```typescript
-// Buscar quizzes do usuário
-const { data } = await supabase
-  .from('quizzes')
-  .select('*')
-  .eq('user_id', userId)
-  .order('created_at', { ascending: false });
-
-// Buscar respostas de um quiz
-const { data } = await supabase
-  .from('quiz_responses')
-  .select('*, quiz_results(*)')
-  .eq('quiz_id', quizId);
-```
+| Função | Propósito |
+|--------|-----------|
+| `has_role(uuid, app_role)` | Verifica role sem recursão RLS |
+| `handle_new_user_profile()` | Cria profile no signup |
+| `handle_new_user_role()` | Atribui role no signup |
+| `handle_new_user_subscription()` | Cria subscription free |
+| `generate_slug(text)` | Gera slug único para quiz |
+| `get_quiz_for_display(slug)` | Busca quiz público (SECURITY DEFINER) |
+| `get_user_quiz_stats(uuid[])` | Stats agregados para admin |
+| `increment_login_count(uuid)` | Incrementa contador de login |
+| `delete_user_by_id(uuid)` | Fallback para deleção |
+| `cleanup_old_audit_logs()` | Limpeza de logs > 90 dias |
+| `cleanup_old_health_metrics()` | Limpeza de métricas > 30 dias |
+| `cleanup_expired_rate_limits()` | Limpeza de rate limits |
+| `anonymize_old_ips()` | Anonimização LGPD (6 meses) |
+| `trigger_welcome_message()` | Dispara welcome WhatsApp |
+| `trigger_first_quiz_message()` | Dispara msg no 1º quiz ativo |
 
 ---
 
 ## 🧪 Testes Automatizados
 
-[![Test Coverage](https://img.shields.io/badge/coverage-70%25+-green)](./coverage/index.html)
-
-### Visão Geral
-
-O projeto possui uma suíte completa de testes automatizados com **Vitest** e **Testing Library**, cobrindo:
-
-- **Funções utilitárias** (validações, sanitização, cálculos)
-- **Hooks** (useAutoSave, useVideoAnalytics, useFunnelData, useABTest)
-- **Componentes React** (renderização, interações)
-- **Contexts** (AuthContext)
-- **Páginas/Fluxos** (Login, QuizView, Dashboard, CRM, Analytics)
-
-### Executando Testes
+### Executando
 
 ```bash
-# Rodar todos os testes
-npm run test
-
-# Modo watch (re-executa ao salvar)
-npm run test -- --watch
-
-# Interface visual do Vitest
-npm run test -- --ui
-
-# Com relatório de cobertura
-npm run test -- --coverage
+npm run test                    # Single run
+npm run test -- --watch         # Watch mode
+npm run test -- --ui            # Interface visual
+npm run test -- --coverage      # Com cobertura
 ```
 
-### Estrutura de Testes
+### Estrutura
 
 ```
 src/
-├── __tests__/
-│   ├── setup.ts              # Configuração global
-│   └── test-utils.tsx        # Utilities customizadas
-│
-├── lib/__tests__/            # ~165 testes de utilitários
-│   ├── validations.test.ts   # 45+ testes de schemas Zod
-│   ├── sanitize.test.ts      # 40+ testes de XSS
-│   ├── errorHandler.test.ts  # 25+ testes de erros
-│   ├── calculatorEngine.test.ts  # 25+ testes de cálculos
-│   └── conditionEvaluator.test.ts # 30+ testes de lógica
-│
-├── hooks/__tests__/          # ~80 testes de hooks
-│   ├── useAutoSave.test.ts   # 15+ testes de autosave
-│   ├── useVideoAnalytics.test.ts # 20+ testes de video tracking
-│   ├── useFunnelData.test.ts # 15+ testes de funil
-│   └── useABTest.test.ts     # 15+ testes de A/B testing
-│
-├── contexts/__tests__/       # Testes de contexts
-│   └── AuthContext.test.tsx  # 15+ testes de auth
-│
-├── components/quiz/__tests__/ # Testes de componentes
-│   ├── LivePreview.test.tsx  # 35+ testes de preview
-│   ├── AIQuizGenerator.test.tsx # 15+ testes de geração IA
-│   └── ConditionBuilder.test.tsx # 15+ testes de condições
-│
-└── pages/__tests__/          # Testes de páginas
-    ├── Login.test.tsx        # 40+ testes de login
-    ├── QuizView.test.tsx     # 30+ testes de quiz
-    ├── Dashboard.test.tsx    # 20+ testes de dashboard
-    ├── CRM.test.tsx          # 15+ testes de CRM
-    └── Analytics.test.tsx    # 15+ testes de analytics
+├── __tests__/setup.ts          # Mocks globais (Supabase, i18n, matchMedia)
+├── __tests__/test-utils.tsx    # Renders customizados (authenticated, loading)
+├── lib/__tests__/              # ~165 testes (validations, sanitize, calculator)
+├── hooks/__tests__/            # ~80 testes (useAutoSave, useFunnelData, useABTest)
+├── contexts/__tests__/         # AuthContext
+├── components/quiz/__tests__/  # LivePreview, AIQuizGenerator, ConditionBuilder
+└── pages/__tests__/            # Login, QuizView, Dashboard, CRM, Analytics
 ```
 
-### Hooks Principais com Cobertura
-
-| Hook | Propósito | Testes |
-|------|-----------|--------|
-| `useAutoSave` | Autosave com debounce 30s | 15+ |
-| `useVideoAnalytics` | Tracking de eventos de vídeo | 20+ |
-| `useFunnelData` | Dados do funil de conversão | 15+ |
-| `useABTest` | Gestão de testes A/B | 15+ |
-
 ### Cobertura Mínima
-
-O CI/CD requer **50% de cobertura** para aprovação de PRs.
 
 | Métrica | Mínimo | Meta |
 |---------|--------|------|
@@ -482,96 +461,56 @@ O CI/CD requer **50% de cobertura** para aprovação de PRs.
 | Functions | 50% | 80% |
 | Branches | 40% | 70% |
 
-### Documentação Detalhada
-
-Veja [src/__tests__/README.md](./src/__tests__/README.md) para:
-- Como escrever novos testes
-- Utilities disponíveis (render, mocks)
-- Padrões AAA (Arrange-Act-Assert)
-- Mocking do Supabase
-
 ---
 
 ## ✨ Funcionalidades
 
 ### Para Usuários
-
-- ✅ Criar quizzes com editor visual de blocos
-- ✅ Geração de quiz com IA (Gemini)
-- ✅ Upload de PDF para geração de quiz
+- ✅ Editor visual de blocos (22 tipos)
+- ✅ Geração de quiz com IA (auto-convencimento)
+- ✅ Upload de PDF para geração
 - ✅ 8 templates visuais
-- ✅ Resultados condicionais por score
-- ✅ Resultados tipo Calculadora com fórmulas + **Calculator Wizard (3 passos)**
-- ✅ Custom labels para perguntas (títulos personalizados)
-- ✅ Coleta de leads (nome, email, WhatsApp)
+- ✅ Quiz branching (lógica condicional)
+- ✅ Resultados por score, condições ou calculadora
+- ✅ Calculator Wizard (3 passos: variáveis → fórmula → faixas)
+- ✅ Coleta de leads (nome, email, WhatsApp, campos custom)
 - ✅ CRM integrado com Kanban
-- ✅ Analytics em tempo real
-- ✅ Funnel visualization
-- ✅ Heatmap de respostas
-- ✅ A/B testing de quizzes
-- ✅ Quiz branching (perguntas condicionais)
-- ✅ Webhooks personalizados
-- ✅ Integrações (Zapier, Make, n8n, CRMs)
-- ✅ Upload de vídeos (Supabase + Bunny CDN)
-- ✅ Upload de imagens com conversão WebP automática
-- ✅ Video analytics
-- ✅ Embed de quizzes
-- ✅ URLs customizadas (/:company/:slug)
-- ✅ Internacionalização (PT/EN/ES)
-- ✅ Facebook Pixel por quiz
-- ✅ Exportação de dados (Excel/CSV)
-- ✅ Undo/Redo no editor
+- ✅ Analytics + Funnel + Heatmap + A/B Testing
+- ✅ Video upload (Bunny CDN) + Video Analytics
+- ✅ Webhooks + 8 integrações (CRMs, email marketing)
+- ✅ URLs customizadas `/:company/:slug`
+- ✅ i18n (PT/EN/ES)
+- ✅ Facebook Pixel por quiz + GTM global
+- ✅ Exportação Excel/CSV + PDF
+- ✅ Undo/Redo + Autosave (30s debounce)
+- ✅ Embed via iframe + QR Code
 
 ### Para Admins
-
-- ✅ Gestão de templates (JSON + Editor Visual)
-- ✅ Editor visual de templates sem JSON
-- ✅ Configuração de planos
-- ✅ Logs de pagamento Kiwify
-- ✅ Configuração Bunny CDN
-- ✅ Prompts de IA customizáveis
-- ✅ GTM global
-- ✅ Auditoria de ações
+- ✅ Gestão de templates e planos
+- ✅ Listagem de usuários (Edge Function)
+- ✅ Sistema de recuperação via WhatsApp (Evolution API)
 - ✅ Tickets de suporte
-- ✅ CSP monitoring
-- ✅ Análise de Bundle Size
+- ✅ Audit logs + System health
+- ✅ Configuração Kiwify, Bunny, AI prompts
+- ✅ CSP monitoring + Bundle analysis
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Problemas Comuns
+| Problema | Solução |
+|----------|---------|
+| Quiz não aparece | Verificar `status` = `active` e `user_id` correto |
+| Mídia não carrega | CSP headers devem incluir `*.b-cdn.net` |
+| Webhook Kiwify falha | Verificar token no `system_settings` |
+| IA não gera quiz | Verificar `LOVABLE_API_KEY` e limites do plano |
+| Erro 400 em analytics | FK `quiz_step_analytics.quiz_id` deve existir |
+| `validation_requests` 400 | Normal para não-admin; tratado graciosamente |
 
-**Quiz não aparece no dashboard**
-- Verifique se o status é `draft` ou `active`
-- Confirme que o `user_id` está correto
-
-**Mídia não carrega**
-- Verifique CSP headers (deve incluir *.b-cdn.net para Bunny)
-- Confirme bucket permissions no Storage
-
-**Vídeo Bunny não carrega**
-- Verifique se CSP inclui `https://*.b-cdn.net` em media-src e connect-src
-- Confirme que BUNNY_API_KEY e BUNNY_LIBRARY_ID estão configurados
-
-**Webhook Kiwify não processa**
-- Verifique token no system_settings
-- Confira logs em PaymentWebhookLogs
-
-**IA não gera quiz**
-- Verifique LOVABLE_API_KEY
-- Confirme limites do plano
-
-**Testes falhando**
-- Execute `npm run test -- --reporter=verbose` para detalhes
-- Verifique se mocks estão configurados em `setup.ts`
-
-### Logs de Debug
+### Debug
 
 ```typescript
-// Use o logger categorizado em desenvolvimento
 import { logger } from '@/lib/logger';
-
 logger.quiz('Saving quiz', { id, title });
 logger.api('API call', { endpoint, status });
 ```
@@ -588,6 +527,7 @@ logger.api('API call', { endpoint, status });
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código e convenções |
 | [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação do MVP |
 | [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
+| [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
 | [src/__tests__/README.md](./src/__tests__/README.md) | Guia de testes automatizados |
 
 ---
@@ -595,67 +535,37 @@ logger.api('API call', { endpoint, status });
 ## 🤝 Contribuição
 
 ### Padrões de Código
-
-- TypeScript strict mode
-- ESLint + Prettier
-- Componentes funcionais com hooks
+- TypeScript strict, sem `any`
+- Componentes funcionais + hooks
 - Nomes em inglês, comentários em português
+- UI primitives em `src/components/ui/`
+- Componentes por domínio em `src/components/<domain>/`
+- Cores via tokens semânticos HSL (nunca hardcoded)
 
-### Estrutura de Commits
-
+### Commits
 ```
 feat: adiciona novo bloco de vídeo
 fix: corrige salvamento de blocos
 refactor: extrai hook useQuizEditor
 docs: atualiza README
 test: adiciona testes para AuthContext
-```
-
-### Processo de PR
-
-1. Crie uma branch: `git checkout -b feat/nova-feature`
-2. Faça commits seguindo o padrão
-3. Abra um PR para `main` ou `develop`
-4. O CI/CD executará:
-   - ESLint
-   - TypeScript check
-   - Testes com cobertura
-   - Build de produção
-   - Análise de bundle size
-5. PR precisa de 50%+ de cobertura de testes
-
-### Criando Componentes
-
-```typescript
-// src/components/quiz/blocks/NewBlock.tsx
-interface NewBlockProps {
-  data: BlockData;
-  onChange: (data: BlockData) => void;
-}
-
-export function NewBlock({ data, onChange }: NewBlockProps) {
-  return (
-    <div className="p-4 border rounded-lg">
-      {/* Conteúdo */}
-    </div>
-  );
-}
+chore: atualiza dependências
 ```
 
 ---
 
 ## 📄 Licença
 
-Proprietary - MasterQuizz © 2025
+Proprietary - MasterQuizz © 2025-2026
 
 ---
 
-## 🔗 Links Úteis
+## 🔗 Links
 
-- [Lovable Documentation](https://docs.lovable.dev/)
+- **Preview:** https://id-preview--7eff0065-6ae9-416d-bf40-6fc07607f40d.lovable.app
+- **Produção:** https://masterquiz.lovable.app
+- [Supabase Dashboard](https://supabase.com/dashboard/project/kmmdzwoidakmbekqvkmq)
 - [Supabase Docs](https://supabase.com/docs)
-- [Bunny CDN Docs](https://docs.bunny.net/)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [Vitest](https://vitest.dev/)
-- [Testing Library](https://testing-library.com/)
