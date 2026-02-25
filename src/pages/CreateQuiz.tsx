@@ -197,17 +197,16 @@ const CreateQuiz = () => {
 
   // ✅ Handler para publicar (com suporte a express celebration)
   const handlePublish = useCallback(async () => {
-    const success = await saveQuiz();
-    if (success && isExpressMode) {
-      // Build quiz URL for celebration
-      const slug = editorState.quizSlug;
+    const result = await saveQuiz();
+    if (result?.success && isExpressMode) {
+      const slug = result.slug;
       const url = profile?.company_slug
         ? `${window.location.origin}/${profile.company_slug}/${slug}`
         : `${window.location.origin}/quiz/${slug}`;
       setPublishedQuizUrl(url);
       setShowCelebration(true);
     }
-  }, [saveQuiz, isExpressMode, editorState.quizSlug, profile?.company_slug]);
+  }, [saveQuiz, isExpressMode, profile?.company_slug]);
 
   // ✅ Compute quiz URL for express celebration
   const expressQuizUrl = useMemo(() => {
@@ -392,9 +391,8 @@ const CreateQuiz = () => {
       {/* Main Layout */}
       <div className="flex-1 flex w-full max-w-full overflow-hidden h-[calc(100vh-5rem)] min-h-0">
         
-        {/* Sidebar - Questions List (Desktop) - hidden in express mode */}
-        {!isExpressMode && (
-          <aside id="questions-sidebar" className="hidden lg:flex w-64 xl:w-72 border-r bg-card flex-col fixed top-20 left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
+        {/* Sidebar - Questions List (Desktop) */}
+        <aside id="questions-sidebar" className="hidden lg:flex w-64 xl:w-72 border-r bg-card flex-col fixed top-20 left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
             <QuestionsList
               questions={questions}
               currentStep={step}
@@ -406,11 +404,9 @@ const CreateQuiz = () => {
               questionsPerQuizLimit={questionsLimit}
             />
           </aside>
-        )}
 
-        {/* Sidebar - Questions List (Mobile Drawer) - hidden in express */}
-        {!isExpressMode && (
-          <Sheet>
+        {/* Sidebar - Questions List (Mobile Drawer) */}
+        <Sheet>
             <SheetTrigger asChild>
               <Button 
                 variant="outline" 
@@ -434,7 +430,6 @@ const CreateQuiz = () => {
               />
             </SheetContent>
           </Sheet>
-        )}
 
         {/* Block Palette (Step 3 only, hidden in express) */}
         {step === 3 && !isExpressMode && (
@@ -510,7 +505,7 @@ const CreateQuiz = () => {
           direction="horizontal" 
           className={cn(
             "flex-1 h-full min-w-0", 
-            !isExpressMode && "lg:ml-[256px] xl:ml-[288px]",
+            "lg:ml-[256px] xl:ml-[288px]",
             step === 3 && !isExpressMode && "xl:ml-[calc(288px+280px)]",
             showInlinePreview && !isExpressMode && "xl:mr-[380px]"
           )}

@@ -287,20 +287,21 @@ export const QuestionConfigStep = ({
           </div>
 
           {/* Question Navigation */}
-          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="default"
               onClick={goToPreviousQuestion}
               disabled={currentQuestionIndex === 0}
+              className="gap-2 font-semibold"
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
+              <ChevronLeft className="h-5 w-5" />
               Anterior
             </Button>
 
             <div className="text-center">
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-bold text-foreground">
                 Pergunta {currentQuestionIndex + 1} de {allQuestions.length}
               </div>
               <div className="text-xs text-muted-foreground">
@@ -310,13 +311,14 @@ export const QuestionConfigStep = ({
 
             <Button
               type="button"
-              variant="outline"
-              size="sm"
+              variant="default"
+              size="default"
               onClick={goToNextQuestion}
               disabled={currentQuestionIndex === allQuestions.length - 1}
+              className="gap-2 font-semibold"
             >
               Próxima
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
 
