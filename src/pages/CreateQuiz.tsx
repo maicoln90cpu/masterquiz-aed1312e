@@ -393,7 +393,7 @@ const CreateQuiz = () => {
         
         {/* Sidebar - Questions List (Desktop) */}
         <aside id="questions-sidebar" className={cn(
-          "hidden lg:flex w-64 xl:w-72 border-r bg-card flex-col fixed left-0 overflow-y-auto z-30",
+          "hidden lg:flex w-56 xl:w-64 border-r bg-card flex-col fixed left-0 overflow-y-auto z-30",
           isExpressMode ? "top-[8.5rem] h-[calc(100vh-8.5rem)]" : "top-20 h-[calc(100vh-5rem)]"
         )}>
             <QuestionsList
@@ -508,8 +508,8 @@ const CreateQuiz = () => {
           direction="horizontal" 
           className={cn(
             "flex-1 h-full min-w-0", 
-            "lg:ml-[256px] xl:ml-[288px]",
-            step === 3 && !isExpressMode && "xl:ml-[calc(288px+280px)]",
+            "lg:ml-[224px] xl:ml-[256px]",
+            step === 3 && !isExpressMode && "xl:ml-[calc(256px+280px)]",
             showInlinePreview && !isExpressMode && "xl:mr-[380px]"
           )}
         >
