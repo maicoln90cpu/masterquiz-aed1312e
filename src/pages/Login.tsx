@@ -182,7 +182,8 @@ const Login = () => {
      // Flag para disparar evento GTM account_created no Dashboard
      localStorage.setItem('mq_just_registered', 'true');
      
-    navigate('/dashboard');
+    // Novos usuários vão para /start (fast-path para criar primeiro quiz)
+    navigate('/start');
     setIsLoading(false);
   };
 
