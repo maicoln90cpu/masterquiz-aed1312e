@@ -142,10 +142,10 @@ const CRM = () => {
         respondent_email: response.respondent_email || "",
         respondent_whatsapp: response.respondent_whatsapp || "",
         quiz_title: response.quizzes?.title || t('crm.quiz'),
-        result_text: response.quiz_results?.result_text || "N/A",
+        result_text: Array.isArray(response.quiz_results) ? (response.quiz_results[0]?.result_text || "N/A") : (response.quiz_results?.result_text || "N/A"),
         completed_at: response.completed_at,
         status: (response.lead_status || 'new') as LeadStatus,
-        answers: response.answers,
+        answers: response.answers || {},
         custom_field_data: response.custom_field_data,
       }));
 
@@ -989,11 +989,12 @@ const CRM = () => {
                           {t('crm.compareDialog.question', { number: idx + 1 })}
                         </td>
                         {getSelectedLeads().map((lead) => {
-                          const answer = lead.answers[questionKey];
+                          const answer = (lead.answers || {})[questionKey];
                           const answerDisplay = Array.isArray(answer) ? answer.join(', ') : answer;
-                          const isSameAsFirst = answerDisplay === (Array.isArray(getSelectedLeads()[0].answers[questionKey]) 
-                            ? getSelectedLeads()[0].answers[questionKey].join(', ') 
-                            : getSelectedLeads()[0].answers[questionKey]);
+                          const firstAnswers = getSelectedLeads()[0]?.answers || {};
+                          const isSameAsFirst = answerDisplay === (Array.isArray(firstAnswers[questionKey]) 
+                            ? firstAnswers[questionKey].join(', ') 
+                            : firstAnswers[questionKey]);
                           
                           return (
                             <td 
