@@ -9,6 +9,7 @@ const corsHeaders = {
  * check-activation-24h
  * Identifica usuários no estágio 'explorador' que criaram conta há mais de 24h
  * mas não publicaram nenhum quiz, e enfileira mensagem de ativação via WhatsApp.
+ * Diferencia mensagens: "criou draft mas não publicou" vs "não criou nada".
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -34,17 +35,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 2. Buscar template activation_reminder
-    const { data: template } = await supabase
+    // 2. Buscar templates: activation_reminder (genérico) e activation_draft (para quem tem draft)
+    const { data: templates } = await supabase
       .from('recovery_templates')
-      .select('id')
-      .eq('category', 'activation_reminder')
+      .select('id, category')
+      .in('category', ['activation_reminder', 'activation_draft'])
       .eq('is_active', true)
-      .order('priority', { ascending: true })
-      .limit(1)
-      .single();
+      .order('priority', { ascending: true });
 
-    if (!template) {
+    const templateReminder = templates?.find(t => t.category === 'activation_reminder');
+    const templateDraft = templates?.find(t => t.category === 'activation_draft');
+
+    // Precisa de pelo menos o template genérico
+    if (!templateReminder) {
       return new Response(
         JSON.stringify({ message: 'Nenhum template activation_reminder ativo', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -53,7 +56,7 @@ Deno.serve(async (req) => {
 
     // 3. Buscar exploradores com conta > 24h, que têm WhatsApp
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const maxCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(); // max 7 dias
+    const maxCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: explorers, error: expError } = await supabase
       .from('profiles')
@@ -96,7 +99,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 6. Verificar blacklist e contatos já enviados com este template
+    // 5b. Verificar quem tem draft (criou mas não publicou) vs quem não criou nada
+    const { data: draftQuizzes } = await supabase
+      .from('quizzes')
+      .select('user_id')
+      .in('user_id', unpublished.map(u => u.id))
+      .eq('status', 'draft');
+
+    const usersWithDraft = new Set((draftQuizzes || []).map(q => q.user_id));
+
+    // 6. Verificar blacklist e contatos já enviados
     const { data: blacklist } = await supabase
       .from('recovery_blacklist')
       .select('user_id, phone_number');
@@ -104,15 +116,17 @@ Deno.serve(async (req) => {
     const blacklistedUsers = new Set((blacklist || []).map(b => b.user_id));
     const blacklistedPhones = new Set((blacklist || []).map(b => b.phone_number));
 
+    // Verificar se já receberam qualquer template de activation
+    const templateIds = [templateReminder.id, ...(templateDraft ? [templateDraft.id] : [])];
     const { data: alreadySent } = await supabase
       .from('recovery_contacts')
       .select('user_id')
-      .eq('template_id', template.id)
+      .in('template_id', templateIds)
       .in('user_id', unpublished.map(u => u.id));
 
     const alreadySentSet = new Set((alreadySent || []).map(c => c.user_id));
 
-    // 7. Montar fila
+    // 7. Montar fila com template diferenciado
     const toQueue = unpublished.filter(u =>
       !blacklistedUsers.has(u.id) &&
       !blacklistedPhones.has(u.whatsapp) &&
@@ -126,13 +140,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 8. Inserir na fila
+    // 8. Inserir na fila — usar template_draft para quem tem draft, template_reminder para quem não criou nada
     const contacts = toQueue.map(u => ({
       user_id: u.id,
       phone_number: u.whatsapp!,
-      template_id: template.id,
+      template_id: (usersWithDraft.has(u.id) && templateDraft) ? templateDraft.id : templateReminder.id,
       status: 'pending' as const,
-      priority: 10, // Alta prioridade — ativação
+      priority: 10,
       days_inactive_at_contact: Math.floor((Date.now() - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24)),
       scheduled_at: new Date().toISOString(),
     }));
@@ -146,12 +160,17 @@ Deno.serve(async (req) => {
       throw insertError;
     }
 
-    console.log(`✅ [Activation 24h] Queued ${contacts.length} explorers for follow-up`);
+    const draftCount = contacts.filter(c => c.template_id === templateDraft?.id).length;
+    const noQuizCount = contacts.length - draftCount;
+
+    console.log(`✅ [Activation 24h] Queued ${contacts.length} explorers (${draftCount} with draft, ${noQuizCount} no quiz)`);
 
     return new Response(
       JSON.stringify({
         message: `${contacts.length} exploradores enfileirados para ativação`,
         queued: contacts.length,
+        with_draft: draftCount,
+        no_quiz: noQuizCount,
         total_eligible: unpublished.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

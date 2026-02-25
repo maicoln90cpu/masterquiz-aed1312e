@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, LayoutDashboard, PartyPopper } from "lucide-react";
+import { Copy, ExternalLink, LayoutDashboard, Megaphone, PartyPopper } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -128,11 +128,32 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
           </div>
         </motion.div>
 
+        {/* Next step CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-muted/50 rounded-xl p-4 space-y-2"
+        >
+          <p className="text-sm font-medium text-foreground">
+            📊 {t('express.celebration.nextStep', 'Próximo passo: Envie tráfego para começar a capturar leads.')}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/integrations')}
+            className="gap-2"
+          >
+            <Megaphone className="h-4 w-4" />
+            {t('express.celebration.howToShare', 'Ver como divulgar')}
+          </Button>
+        </motion.div>
+
         {/* Tip */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.9 }}
           className="text-xs text-muted-foreground"
         >
           {t('express.celebration.tip', 'Dica: No dashboard você pode acompanhar respostas, configurar integrações e muito mais.')}
