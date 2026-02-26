@@ -219,7 +219,7 @@ const Start = () => {
             </h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
-            {t("start.subtitle", "Escolha e teremos um quiz pronto para você personalizar em minutos")}
+            {t("start.subtitle", "Vamos montar um quiz estruturado automaticamente pra você — em poucos cliques.")}
           </p>
         </motion.div>
 

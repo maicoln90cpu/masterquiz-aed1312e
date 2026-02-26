@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, LayoutDashboard, PartyPopper, Share2, MessageCircle } from "lucide-react";
+import { Copy, ExternalLink, LayoutDashboard, PartyPopper, Share2, MessageCircle, Check } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -14,11 +14,62 @@ interface ExpressCelebrationProps {
   onGoToDashboard: () => void;
 }
 
+const WhatsAppReadyMessages = ({ quizUrl }: { quizUrl: string }) => {
+  const { t } = useTranslation();
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+  const messages = [
+    {
+      label: t('express.celebration.msgNeutral', 'Neutra'),
+      text: t('express.celebration.msgNeutralText', 'Oi! Você pode responder esse quiz rapidinho? {{url}}', { url: quizUrl }),
+    },
+    {
+      label: t('express.celebration.msgContext', 'Com contexto'),
+      text: t('express.celebration.msgContextText', 'Quero sua opinião: fiz um quiz rápido e queria que você testasse. {{url}}', { url: quizUrl }),
+    },
+    {
+      label: t('express.celebration.msgCuriosity', 'Curiosidade'),
+      text: t('express.celebration.msgCuriosityText', 'Me diz se isso faz sentido pra você — é um quiz de 1 minuto. {{url}}', { url: quizUrl }),
+    },
+  ];
+
+  const handleCopy = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    toast.success(t('express.celebration.messageCopied', 'Mensagem copiada!'));
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-foreground flex items-center gap-2">
+        <MessageCircle className="h-4 w-4 text-[#25D366]" />
+        {t('express.celebration.readyMessages', 'Mensagens prontas para WhatsApp')}
+      </p>
+      {messages.map((msg, idx) => (
+        <div key={idx} className="flex items-start gap-2 bg-muted rounded-lg p-3">
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{msg.label}</span>
+            <p className="text-sm text-foreground mt-0.5 break-words">{msg.text}</p>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="shrink-0 mt-1"
+            onClick={() => handleCopy(msg.text, idx)}
+          >
+            {copiedIdx === idx ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: ExpressCelebrationProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const confettiFired = useRef(false);
-  const [showShare, setShowShare] = useState(false);
 
   useEffect(() => {
     if (confettiFired.current) return;
@@ -55,12 +106,6 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
   const shareText = t('express.celebration.shareText', 'Faça meu quiz: {{title}}', { title: quizTitle });
 
   const shareLinks = [
-    {
-      label: "WhatsApp",
-      icon: <MessageCircle className="h-5 w-5" />,
-      url: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + quizUrl)}`,
-      className: "bg-[#25D366] hover:bg-[#1da851] text-white",
-    },
     {
       label: "Facebook",
       icon: <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
@@ -157,47 +202,47 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
           </div>
         </motion.div>
 
-        {/* Share Social Panel */}
+        {/* Traffic CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <p className="text-sm font-semibold text-foreground">
+            {t('express.celebration.trafficCta', '📣 Agora começa a parte importante: enviar tráfego.')}
+          </p>
+        </motion.div>
+
+        {/* Share Social Panel — expanded by default */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-muted/50 rounded-xl p-5 space-y-4"
+          className="bg-muted/50 rounded-xl p-5 space-y-5 text-left"
         >
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setShowShare(!showShare)}
-            className="w-full gap-2 font-semibold"
-          >
-            <Share2 className="h-5 w-5" />
-            {t('express.celebration.shareQuiz', 'Divulgar meu Quiz')}
-          </Button>
+          {/* WhatsApp ready messages */}
+          <WhatsAppReadyMessages quizUrl={quizUrl} />
 
-          {showShare && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="space-y-3"
-            >
-              <p className="text-sm text-muted-foreground">
-                {t('express.celebration.shareDesc', 'Compartilhe seu quiz nas redes sociais')}
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {shareLinks.map((link) => (
-                  <Button
-                    key={link.label}
-                    variant="ghost"
-                    className={`gap-2 ${link.className}`}
-                    onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer,width=600,height=400')}
-                  >
-                    {link.icon}
-                    {link.label}
-                  </Button>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {/* Social share buttons */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Share2 className="h-4 w-4" />
+              {t('express.celebration.shareDesc', 'Compartilhe nas redes sociais')}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {shareLinks.map((link) => (
+                <Button
+                  key={link.label}
+                  variant="ghost"
+                  className={`gap-2 ${link.className}`}
+                  onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer,width=600,height=400')}
+                >
+                  {link.icon}
+                  {link.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
         {/* Tip */}
