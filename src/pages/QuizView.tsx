@@ -69,17 +69,20 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
           onLanguageChange={state.setSelectedLanguage}
         />
 
-        <Card>
-          <CardContent className="pt-6">
+        <div className="py-6">
             {showFormBefore || showFormAfter ? (
-              <QuizViewForm
-                formConfig={state.formConfig}
-                customFields={state.customFields}
-                formData={state.formData}
-                setFormData={state.setFormData}
-                onSubmit={showFormBefore ? state.nextStep : state.submitQuiz}
-                isBeforeQuiz={showFormBefore}
-              />
+              <Card>
+                <CardContent className="pt-6">
+                  <QuizViewForm
+                    formConfig={state.formConfig}
+                    customFields={state.customFields}
+                    formData={state.formData}
+                    setFormData={state.setFormData}
+                    onSubmit={showFormBefore ? state.nextStep : state.submitQuiz}
+                    isBeforeQuiz={showFormBefore}
+                  />
+                </CardContent>
+              </Card>
             ) : state.currentQuestion ? (
               <QuizViewQuestion
                 quiz={state.quiz}
@@ -97,8 +100,7 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
                 showResults={quizShowResults}
               />
             ) : null}
-          </CardContent>
-        </Card>
+        </div>
         
         {!state.quiz.hide_branding && (
           <div className="text-center py-4">
