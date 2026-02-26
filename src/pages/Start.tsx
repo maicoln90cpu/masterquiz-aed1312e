@@ -104,7 +104,23 @@ const Start = () => {
         return;
       }
 
-      // 3. Verificar limite de quizzes antes de criar
+      // 3. Verificar se já existe draft express_auto do mesmo usuário
+      const { data: existingDraft } = await supabase
+        .from('quizzes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('creation_source', 'express_auto')
+        .eq('status', 'draft' as any)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingDraft) {
+        navigate(`/create-quiz?id=${existingDraft.id}&mode=express`);
+        return;
+      }
+
+      // 4. Verificar limite de quizzes antes de criar
       const canCreate = await checkQuizLimit();
       if (!canCreate) {
         toast.error(t("start.quizLimitReached", "Você atingiu o limite de quizzes do seu plano. Faça upgrade para criar mais."));
@@ -113,7 +129,7 @@ const Start = () => {
         return;
       }
 
-      // 4. Criar quiz rascunho
+      // 5. Criar quiz rascunho
       const { data: quiz, error: quizError } = await supabase
         .from("quizzes")
         .insert({
