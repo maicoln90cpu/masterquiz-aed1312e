@@ -842,6 +842,9 @@ export const QuizBlockPreview = ({
       case "socialProof":
         return <SocialProofBlockPreview key={block.id} block={block} />;
 
+      case "animatedCounter":
+        return <AnimatedCounterBlockPreview key={block.id} block={block} />;
+
       default:
         return null;
     }
@@ -1041,7 +1044,7 @@ const ProgressBlockPreview = ({
   );
 };
 
-// Countdown Block Preview
+// Countdown Block Preview - Premium with pulse animation
 const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'countdown' } }) => {
   const [timeLeft, setTimeLeft] = useState(() => {
     if (block.mode === 'date' && block.targetDate) {
@@ -1052,12 +1055,15 @@ const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'countdow
     }
     return block.duration || 300;
   });
+  const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
 
     const interval = setInterval(() => {
       setTimeLeft(prev => Math.max(0, prev - 1));
+      setPulse(true);
+      setTimeout(() => setPulse(false), 300);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -1070,8 +1076,8 @@ const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'countdow
 
   if (timeLeft === 0 && block.expiryMessage) {
     return (
-      <div className="text-center p-6 rounded-lg" style={{ backgroundColor: block.secondaryColor }}>
-        <p className="text-xl font-semibold" style={{ color: block.primaryColor }}>
+      <div className="text-center p-8 rounded-xl border-2 border-dashed" style={{ borderColor: block.primaryColor, backgroundColor: block.secondaryColor }}>
+        <p className="text-2xl font-bold" style={{ color: block.primaryColor }}>
           {block.expiryMessage}
         </p>
       </div>
@@ -1079,98 +1085,151 @@ const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'countdow
   }
 
   const TimeUnit = ({ value, label }: { value: number; label: string }) => (
-    <div className={`text-center ${block.style === 'card' ? 'p-4 bg-background rounded-lg shadow-md' : ''}`}>
+    <div className={`text-center ${
+      block.style === 'card' 
+        ? 'p-4 bg-background rounded-xl shadow-lg border-2 min-w-[80px]' 
+        : block.style === 'bold'
+        ? 'p-3 min-w-[70px]'
+        : 'p-2 min-w-[60px]'
+    }`} style={block.style === 'card' ? { borderColor: `${block.primaryColor}30` } : undefined}>
       <div 
-        className={`${block.style === 'bold' ? 'text-4xl font-bold' : block.style === 'minimal' ? 'text-2xl font-medium' : 'text-3xl font-semibold'}`}
+        className={`tabular-nums transition-transform duration-300 ${
+          pulse ? 'scale-110' : 'scale-100'
+        } ${
+          block.style === 'bold' ? 'text-5xl font-black' : 
+          block.style === 'minimal' ? 'text-2xl font-medium' : 
+          'text-4xl font-bold'
+        }`}
         style={{ color: block.primaryColor }}
       >
         {value.toString().padStart(2, '0')}
       </div>
-      <div className="text-xs text-muted-foreground mt-1 uppercase">{label}</div>
+      <div className="text-xs text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">{label}</div>
     </div>
   );
 
+  const Separator = () => (
+    <span className={`text-2xl font-bold self-start mt-3 ${pulse ? 'opacity-100' : 'opacity-40'} transition-opacity`} style={{ color: block.primaryColor }}>:</span>
+  );
+
   return (
-    <div className="flex gap-3 justify-center flex-wrap">
-      {block.showDays && <TimeUnit value={days} label="dias" />}
-      {block.showHours && <TimeUnit value={hours} label="horas" />}
-      {block.showMinutes && <TimeUnit value={minutes} label="min" />}
+    <div className="flex gap-2 justify-center items-start flex-wrap">
+      {block.showDays && <><TimeUnit value={days} label="dias" /><Separator /></>}
+      {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <Separator />}</>}
+      {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <Separator />}</>}
       {block.showSeconds && <TimeUnit value={seconds} label="seg" />}
     </div>
   );
 };
 
-// Testimonial Block Preview
+// Testimonial Block Preview - Premium
 const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 'testimonial' } }) => {
   return (
-    <div className={`${block.style === 'card' ? 'p-6 bg-background rounded-lg shadow-lg border' : 'py-4'}`}>
-      {block.style === 'quote' && (
-        <div className="text-6xl text-muted-foreground/30 leading-none mb-2">"</div>
-      )}
-      <p className={`${block.style === 'minimal' ? 'text-sm' : 'text-base'} italic mb-4 text-foreground`}>
-        "{block.quote}"
-      </p>
-      {block.showRating && block.rating && (
-        <div className="flex gap-1 mb-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <svg
-              key={i}
-              className={`w-5 h-5 ${i < block.rating! ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-300 text-gray-300'}`}
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-          ))}
-        </div>
-      )}
-      <div className="flex items-center gap-4">
-        {block.authorImage && (
-          <img
-            src={block.authorImage}
-            alt={block.authorName}
-            className="w-14 h-14 rounded-full object-cover"
-          />
+    <div className={`relative ${
+      block.style === 'card' 
+        ? 'p-8 bg-background rounded-2xl shadow-xl border' 
+        : block.style === 'quote'
+        ? 'py-6 px-4'
+        : block.style === 'minimal'
+        ? 'py-4'
+        : 'p-6 bg-background rounded-xl shadow-md border'
+    }`}>
+      {/* Decorative quote mark */}
+      <div className="absolute -top-3 left-6 text-7xl leading-none opacity-15 select-none pointer-events-none" style={{ color: block.primaryColor || 'hsl(var(--primary))' }}>
+        "
+      </div>
+      
+      <div className="relative z-10">
+        <p className={`${block.style === 'minimal' ? 'text-sm' : 'text-lg leading-relaxed'} italic mb-6 text-foreground`}>
+          "{block.quote}"
+        </p>
+        
+        {block.showRating && block.rating && (
+          <div className="flex gap-1 mb-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <svg
+                key={i}
+                className={`w-5 h-5 transition-colors ${i < block.rating! ? 'fill-yellow-400 text-yellow-400' : 'fill-muted text-muted'}`}
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            ))}
+          </div>
         )}
-        <div>
-          <p className="font-semibold text-base" style={{ color: block.primaryColor }}>
-            {block.authorName}
-          </p>
-          {(block.authorRole || block.authorCompany) && (
-            <p className="text-sm text-muted-foreground">
-              {block.authorRole}
-              {block.authorRole && block.authorCompany && ' • '}
-              {block.authorCompany}
-          </p>
+        
+        <div className="flex items-center gap-4">
+          {block.authorImage ? (
+            <img
+              src={block.authorImage}
+              alt={block.authorName}
+              className="w-14 h-14 rounded-full object-cover ring-2 ring-primary ring-offset-2 shadow-md"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-primary-foreground shadow-md" style={{ backgroundColor: block.primaryColor || 'hsl(var(--primary))' }}>
+              {block.authorName?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
           )}
+          <div>
+            <p className="font-bold text-base" style={{ color: block.primaryColor }}>
+              {block.authorName}
+            </p>
+            {(block.authorRole || block.authorCompany) && (
+              <p className="text-sm text-muted-foreground">
+                {block.authorRole}
+                {block.authorRole && block.authorCompany && ' • '}
+                {block.authorCompany}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Slider Block Preview
+// Slider Block Preview - Premium with tick marks
 const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slider' } }) => {
   const [value, setValue] = useState(block.defaultValue ?? block.min);
+  
+  // Generate tick marks
+  const range = block.max - block.min;
+  const tickCount = Math.min(10, Math.floor(range / block.step));
+  const tickStep = tickCount > 0 ? range / tickCount : range;
+  const ticks = Array.from({ length: tickCount + 1 }, (_, i) => Math.round(block.min + i * tickStep));
 
   return (
     <div className="space-y-4">
       <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-muted-foreground">{block.min}{block.unit}</span>
-        <Slider
-          value={[value]}
-          min={block.min}
-          max={block.max}
-          step={block.step}
-          onValueChange={(v) => setValue(v[0])}
-          className="flex-1"
-        />
-        <span className="text-sm text-muted-foreground">{block.max}{block.unit}</span>
+      <div className="px-2">
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground font-medium tabular-nums min-w-[40px] text-right">{block.min}{block.unit}</span>
+          <Slider
+            value={[value]}
+            min={block.min}
+            max={block.max}
+            step={block.step}
+            onValueChange={(v) => setValue(v[0])}
+            className="flex-1"
+          />
+          <span className="text-sm text-muted-foreground font-medium tabular-nums min-w-[40px]">{block.max}{block.unit}</span>
+        </div>
+        {/* Tick marks */}
+        <div className="flex justify-between px-[20px] mt-1">
+          {ticks.map((tick, i) => (
+            <div key={i} className="flex flex-col items-center">
+              <div className="w-px h-2 bg-muted-foreground/30" />
+              <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">{tick}</span>
+            </div>
+          ))}
+        </div>
       </div>
       {block.showValue && (
-        <p className="text-center text-2xl font-bold text-primary">
-          {value}{block.unit}
-        </p>
+        <div className="text-center">
+          <span className="inline-block text-3xl font-bold text-primary tabular-nums transition-all duration-150">
+            {value}{block.unit}
+          </span>
+        </div>
       )}
     </div>
   );
@@ -1322,6 +1381,61 @@ const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 'social
           <p className="text-xs text-muted-foreground">{notification?.time}</p>
         </div>
       </div>
+    </div>
+  );
+};
+
+// Animated Counter Block Preview - on-view trigger with requestAnimationFrame
+const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { type: 'animatedCounter' } }) => {
+  const [displayValue, setDisplayValue] = useState(block.startValue);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          const start = block.startValue;
+          const end = block.endValue;
+          const duration = (block.duration || 2) * 1000;
+          const startTime = performance.now();
+
+          const easing = (t: number) => {
+            if (block.easing === 'linear') return t;
+            if (block.easing === 'easeInOut') return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            // easeOut
+            return 1 - Math.pow(1 - t, 3);
+          };
+
+          const animate = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easing(progress);
+            const current = Math.round(start + (end - start) * easedProgress);
+            setDisplayValue(current);
+            if (progress < 1) requestAnimationFrame(animate);
+          };
+
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [hasAnimated, block.startValue, block.endValue, block.duration, block.easing]);
+
+  const formatted = block.separator ? displayValue.toLocaleString('pt-BR') : displayValue.toString();
+  const fontSizeClass = block.fontSize === 'xlarge' ? 'text-6xl' : block.fontSize === 'large' ? 'text-5xl' : block.fontSize === 'medium' ? 'text-3xl' : 'text-2xl';
+
+  return (
+    <div ref={ref} className="text-center py-6 space-y-2">
+      <p className={`font-black tabular-nums ${fontSizeClass}`} style={{ color: block.color || 'hsl(var(--primary))' }}>
+        {block.prefix}{formatted}{block.suffix}
+      </p>
+      {block.label && <p className="text-muted-foreground text-sm font-medium">{block.label}</p>}
     </div>
   );
 };

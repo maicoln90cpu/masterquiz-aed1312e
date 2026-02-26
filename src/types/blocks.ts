@@ -21,7 +21,8 @@ export type BlockType =
   | 'nps'
   | 'accordion'
   | 'comparison'
-  | 'socialProof';
+  | 'socialProof'
+  | 'animatedCounter';
 
 export interface BaseBlock {
   id: string;
@@ -266,10 +267,24 @@ export interface SocialProofBlock extends BaseBlock {
     time: string;
     avatar?: string;
   }[];
-  interval: number; // em segundos
+  interval: number;
   style?: 'toast' | 'banner' | 'floating';
   position?: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
   showAvatar?: boolean;
+}
+
+export interface AnimatedCounterBlock extends BaseBlock {
+  type: 'animatedCounter';
+  startValue: number;
+  endValue: number;
+  duration: number; // em segundos
+  prefix?: string;
+  suffix?: string;
+  easing?: 'linear' | 'easeOut' | 'easeInOut';
+  fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
+  color?: string;
+  label?: string;
+  separator?: boolean; // usar separador de milhar
 }
 
 export type QuizBlock = 
@@ -293,7 +308,8 @@ export type QuizBlock =
   | NPSBlock
   | AccordionBlock
   | ComparisonBlock
-  | SocialProofBlock;
+  | SocialProofBlock
+  | AnimatedCounterBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
@@ -551,6 +567,21 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         position: 'bottom-left',
         showAvatar: true,
       } as SocialProofBlock;
+
+    case 'animatedCounter':
+      return {
+        ...baseBlock,
+        type: 'animatedCounter',
+        startValue: 0,
+        endValue: 1000,
+        duration: 2,
+        prefix: '',
+        suffix: '+',
+        easing: 'easeOut',
+        fontSize: 'large',
+        label: 'Clientes satisfeitos',
+        separator: true,
+      } as AnimatedCounterBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);

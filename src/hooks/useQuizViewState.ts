@@ -300,12 +300,12 @@ export function useQuizViewState({
         }).catch(err => console.warn('Final step tracking failed:', err));
       }
 
-      // Check response limit for quiz owner
+      // Check response limit for quiz owner (maybeSingle: anon users can't SELECT this table)
       const { data: ownerSub } = await supabase
         .from('user_subscriptions')
         .select('response_limit')
         .eq('user_id', quiz.user_id)
-        .single();
+        .maybeSingle();
 
       if (ownerSub?.response_limit) {
         const { data: ownerQuizzes } = await supabase
