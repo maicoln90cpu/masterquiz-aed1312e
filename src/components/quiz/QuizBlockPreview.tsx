@@ -168,9 +168,9 @@ interface QuizBlockPreviewProps {
   nextButtonText?: string;
   onNavigateNext?: () => void;
   onNavigateToQuestion?: (index: number) => void;
-  // Props para renderização interativa do bloco question
   selectedAnswer?: string | string[];
   onAnswerSelect?: (value: string, isMultiple: boolean) => void;
+  onTextChange?: (text: string) => void;
 }
 
 export const QuizBlockPreview = ({ 
@@ -181,7 +181,8 @@ export const QuizBlockPreview = ({
   onNavigateNext,
   onNavigateToQuestion,
   selectedAnswer,
-  onAnswerSelect
+  onAnswerSelect,
+  onTextChange
 }: QuizBlockPreviewProps) => {
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
@@ -420,7 +421,11 @@ export const QuizBlockPreview = ({
             )}
 
             {block.answerFormat === "short_text" && (
-              <Input placeholder="Digite sua resposta..." />
+              <Input 
+                placeholder="Digite sua resposta..." 
+                value={typeof selectedAnswer === 'string' ? selectedAnswer : ''}
+                onChange={(e) => onTextChange?.(e.target.value)}
+              />
             )}
           </div>
         );

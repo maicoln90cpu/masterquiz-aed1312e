@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { evaluateConditions } from '@/lib/conditionEvaluator';
 import type { EditorQuestion } from '@/types/quiz';
 import type { QuizBlock } from '@/types/blocks';
@@ -58,8 +58,17 @@ export const useQuizPreviewState = ({
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', whatsapp: '' });
   const [totalScore, setTotalScore] = useState(0);
 
-  // Computed values
-  const currentQuestionIndex = externalQuestionIndex !== undefined ? externalQuestionIndex : internalQuestionIndex;
+  // Sync with external question index (editor sidebar click)
+  const prevExternalIndex = useRef(externalQuestionIndex);
+  useEffect(() => {
+    if (externalQuestionIndex !== undefined && externalQuestionIndex !== prevExternalIndex.current) {
+      setInternalQuestionIndex(externalQuestionIndex);
+      prevExternalIndex.current = externalQuestionIndex;
+    }
+  }, [externalQuestionIndex]);
+
+  // Computed values - always use internal (allows free navigation in preview)
+  const currentQuestionIndex = internalQuestionIndex;
   
   // Filter visible questions based on conditions (branching)
   const visibleQuestions = useMemo(() => {
@@ -228,6 +237,12 @@ export const useQuizPreviewState = ({
     ? !!selectedAnswers[currentQuestion.id]
     : false;
 
+  // Handle text answer for short_text questions
+  const handleTextAnswer = (questionId: string, text: string) => {
+    const newAnswers = { ...selectedAnswers, [questionId]: text };
+    setSelectedAnswers(newAnswers);
+  };
+
   return {
     // State
     deviceMode,
@@ -256,6 +271,7 @@ export const useQuizPreviewState = ({
     
     // Handlers
     handleAnswerSelect,
+    handleTextAnswer,
     handleNext,
     handlePrevious,
     handleStartQuiz,
