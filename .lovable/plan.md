@@ -1,98 +1,86 @@
 
 
-# Analise dos Erros do Banco de Dados
+# Plano: Fix Loop Infinito Express + Cores dos Botoes
 
-## Erros identificados no print (19 rows)
+## 1. Bug Critico: Loop Infinito /start → Dashboard → /start
 
-### 1. `GET /rest/v1/validation_requests` → 400 (4 ocorrencias)
-**Causa**: A tabela `validation_requests` tem RLS que exige role `admin` ou `master_admin`. O erro 400 acontece quando um usuario normal (sem essas roles) tenta acessar, ou quando a autenticacao ainda nao resolveu no momento da query.
+### Causa Raiz (2 bugs combinados)
 
-**Status**: **Parcialmente protegido**. A rota `/masteradm` tem `ProtectedRoute requiredRole="master_admin"`, entao usuarios normais nao deveriam chegar la. Porem, o `loadData()` pode ser chamado antes do `isAdmin` resolver, ou o guard `if (isAdmin)` pode ter um timing issue. A query tambem nao tem tratamento gracioso — deveria retornar `[]` em caso de erro de permissao em vez de logar 400.
+**Bug A — user_stage nunca atualiza no fluxo express:**
 
-**Correcao**: Adicionar guard mais robusto no `AdminDashboard.tsx` — verificar `isAdmin` antes de qualquer query, e capturar erros de RLS graciosamente (retornar dados vazios).
+Em `src/hooks/useQuizPersistence.ts`, a funcao `saveQuiz()` tem dois branches:
+- **INSERT** (quiz novo, linhas 314-383): Detecta primeiro quiz (`isFirstQuiz`), atualiza `user_stage` de 'explorador' para 'construtor', dispara GTM
+- **UPDATE** (quiz existente, linhas 289-313): NAO faz nada disso
 
-### 2. `GET /rest/v1/quiz_step_analytics` → 400 (2 ocorrencias)
-**Causa**: O `useFunnelData.ts` (linha 33) faz `.select('quizzes!inner(user_id, title)')` — um JOIN com a tabela `quizzes` — mas a tabela `quiz_step_analytics` **NAO tem FK para `quizzes`**. Sem FK, o PostgREST nao consegue resolver o join e retorna 400.
+O fluxo express cria o quiz em `Start.tsx` (INSERT direto no Supabase com status 'draft'), depois no editor chama `saveQuiz()` que entra no branch UPDATE (porque `currentQuizId` ja existe). Resultado: `user_stage` permanece 'explorador' para sempre.
 
-**Status**: **BUG ATIVO**. Precisa criar a FK ou reescrever a query sem join.
+**Bug B — Dashboard redireciona antes dos stats carregarem:**
 
-**Correcao**: 
-- Opcao A: Criar FK `quiz_step_analytics.quiz_id → quizzes.id`
-- Opcao B: Reescrever a query em `useFunnelData.ts` para fazer 2 queries separadas (buscar step_analytics, depois buscar quizzes pelo user_id)
-
-A opcao A eh a correta — a FK deveria existir. Criar com:
-```sql
-ALTER TABLE quiz_step_analytics 
-ADD CONSTRAINT fk_quiz_step_analytics_quiz_id 
-FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE;
+Em `src/pages/Dashboard.tsx` linha 100:
+```ts
+if (profile?.user_stage === 'explorador' && (stats?.activeQuizzes ?? 0) === 0) {
+  navigate('/start', { replace: true });
 ```
 
-### 3. `column "qual" does not exist` → 42703 (2 ocorrencias)
-**Causa**: Nenhum codigo no frontend referencia uma coluna "qual". Este erro provavelmente vem de uma query manual feita no Supabase Dashboard ou de uma migration/trigger antigo. Nao ha codigo no projeto que gere esse erro.
+O `useEffect` roda assim que stats muda. Durante o loading, `stats` e `undefined`, logo `(undefined ?? 0) === 0` → true. Com user_stage ainda 'explorador' (Bug A), o redirect dispara imediatamente, antes de carregar os dados reais.
 
-**Status**: **NAO eh um bug do app**. Provavelmente foi uma query manual executada diretamente no DB.
+**Bug C — Start.tsx cria quiz sem verificar limite:**
 
-**Correcao**: Nenhuma necessaria no codigo. Se persistir, investigar no Supabase Dashboard quem esta executando essa query.
+`Start.tsx` faz `INSERT INTO quizzes` direto, sem chamar `checkQuizLimit()`. Cada loop cria um novo quiz draft, ultrapassando o limite do plano free.
 
-### 4. `POST /auth/v1/token` → 400 (4 ocorrencias)
-**Causa**: Tentativas de login com credenciais invalidas (senha errada, email nao cadastrado, etc). Isso eh comportamento normal do auth — nao eh bug.
+### Correcoes
 
-**Status**: **Normal/Esperado**. Erro 400 em auth/token significa credenciais invalidas.
+**Arquivo: `src/hooks/useQuizPersistence.ts`**
+- Apos o branch UPDATE (depois da linha 313), adicionar a mesma logica de deteccao de primeiro quiz:
+  1. Buscar `user_stage` do profile
+  2. Se `user_stage === 'explorador'`: atualizar para 'construtor', disparar GTM `first_quiz_created`, atualizar `onboarding_status`
 
-**Correcao**: Nenhuma necessaria. O frontend ja mostra mensagem de erro ao usuario.
+**Arquivo: `src/pages/Dashboard.tsx`**
+- Linha 100: Adicionar guard `!statsLoading` para nao redirecionar enquanto stats esta carregando
+- Mudanca: `if (!statsLoading && profile?.user_stage === 'explorador' && (stats?.activeQuizzes ?? 0) === 0)`
 
-### 5. `duplicate key value violates unique constraint "user_roles_user_id_role_key"` → 23505
-**Causa**: A trigger `handle_new_user_role()` faz `INSERT INTO user_roles ... ON CONFLICT DO NOTHING`. O erro 23505 eh logado pelo Postgres antes do `ON CONFLICT` resolver. Isso eh **esperado e tratado** — o `ON CONFLICT DO NOTHING` impede que o erro afete o fluxo.
-
-**Status**: **Tratado**. O log aparece no Postgres mas a operacao nao falha.
-
-**Correcao**: Nenhuma necessaria — o `ON CONFLICT DO NOTHING` ja trata isso corretamente.
-
-### 6. `PATCH /rest/v1/user_subscriptions` → 409 + `duplicate key violates "user_subscriptions_user_id_key"` → 23505
-**Causa**: Similar ao anterior — a trigger `handle_new_user_subscription()` usa `ON CONFLICT (user_id) DO NOTHING`. O erro eh logado mas tratado.
-
-**Status**: **Tratado**. Conforme documentado na memoria `auth/provisao-automatica-usuarios`.
-
-**Correcao**: Nenhuma necessaria.
-
-### 7. `GET /auth/v1/user` → 403 (2 ocorrencias)
-**Causa**: Token expirado ou sessao invalida. O client Supabase tenta pegar o usuario, mas o token ja expirou. O `autoRefreshToken: true` deveria prevenir isso, mas pode falhar em edge cases (tab inativa por muito tempo, etc).
-
-**Status**: **Esperado em edge cases**. O frontend redireciona para login quando isso acontece.
-
-**Correcao**: Nenhuma critica necessaria.
+**Arquivo: `src/pages/Start.tsx`**
+- Antes de criar o quiz (linha 96), chamar `checkQuizLimit()` do `useSubscriptionLimits`
+- Se limite atingido, redirecionar para `/dashboard` com toast de aviso em vez de criar outro quiz
 
 ---
 
-## Resumo
+## 2. Botao "Proxima" — Gradiente Vermelho
 
-| Erro | Gravidade | Status | Acao |
-|------|-----------|--------|------|
-| validation_requests 400 | Baixa | Guard existe mas pode ter timing issue | Adicionar tratamento gracioso de erro |
-| quiz_step_analytics 400 | **ALTA** | **BUG — FK ausente** | Criar FK `quiz_id → quizzes.id` |
-| column "qual" 42703 | Nenhuma | Query manual externa | Ignorar |
-| auth/token 400 | Nenhuma | Login com credenciais invalidas | Normal |
-| user_roles 23505 | Nenhuma | ON CONFLICT trata | Normal |
-| user_subscriptions 23505/409 | Nenhuma | ON CONFLICT trata | Normal |
-| auth/user 403 | Nenhuma | Token expirado | Normal |
-
-## Plano de correcao (somente os bugs reais)
-
-### 1. Criar FK em `quiz_step_analytics` (SQL migration)
-```sql
-ALTER TABLE public.quiz_step_analytics 
-ADD CONSTRAINT fk_quiz_step_analytics_quiz_id 
-FOREIGN KEY (quiz_id) REFERENCES public.quizzes(id) ON DELETE CASCADE;
+**Arquivo: `src/components/quiz/QuestionConfigStep.tsx`**
+- Linha 312-322: Alterar o `<Button>` "Proxima" de `variant="default"` para classes de gradiente vermelho:
+```tsx
+className="gap-2 font-semibold bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white"
 ```
 
-### 2. Melhorar tratamento de erros no `useFunnelData.ts`
-Adicionar `try/catch` que retorna `[]` em caso de erro 400, em vez de propagar a excecao.
+---
 
-### 3. Guard mais robusto no `AdminDashboard.tsx`
-Garantir que `loadData()` so execute quando `isAdmin === true` (ja tem o guard, mas adicionar tratamento de erro nas queries de `validation_requests` para retornar dados vazios graciosamente em caso de 400).
+## 3. Botoes de Preview — Roxo Gradiente
 
-### Arquivos a editar:
-- **SQL migration**: Criar FK em `quiz_step_analytics`
-- `src/hooks/useFunnelData.ts`: Tratamento de erro gracioso
-- `src/pages/AdminDashboard.tsx`: Tratamento de erro gracioso nas queries de validation_requests
+**Arquivo: `src/components/quiz/QuestionConfigStep.tsx`**
+- Linha 333-336: Tab "Preview em Tempo Real" — quando ativa, aplicar gradiente roxo:
+```tsx
+className={cn("gap-2", previewTab === 'preview' && "bg-gradient-to-r from-violet-600 to-purple-600 text-white")}
+```
+
+**Arquivo: `src/pages/CreateQuiz.tsx`**
+- Linha 373-383: Botao Play/Preview do header — alterar de `border-primary/50 text-primary` para gradiente roxo:
+```tsx
+className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white flex-shrink-0"
+```
+
+**Arquivo: `src/components/quiz/LivePreview.tsx`**
+- Linha 68-71: Texto "Preview em Tempo Real" — manter como referencia visual, sem mudanca funcional
+
+---
+
+## Resumo de Arquivos a Editar
+
+| Arquivo | Mudanca |
+|---------|---------|
+| `src/hooks/useQuizPersistence.ts` | Adicionar logica first-quiz no branch UPDATE |
+| `src/pages/Dashboard.tsx` | Guard `!statsLoading` antes do redirect |
+| `src/pages/Start.tsx` | Verificar limite de quiz antes de criar |
+| `src/components/quiz/QuestionConfigStep.tsx` | Botao Proxima vermelho + Tab preview roxo |
+| `src/pages/CreateQuiz.tsx` | Botao Preview header roxo |
 
