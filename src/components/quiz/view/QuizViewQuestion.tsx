@@ -115,8 +115,8 @@ export function QuizViewQuestion({
   const hasQuestionBlock = question.blocks?.some((b: any) => b.type === 'question');
   const hasButtonBlock = question.blocks?.some((b: any) => b.type === 'button' && (b as any).action === 'next_question');
   const isInformationalSlide = !hasQuestionBlock && hasButtonBlock;
-  // Hide auto next button when user placed a manual navigation button AND there's no question block
-  const hasManualNavButton = hasButtonBlock && !hasQuestionBlock;
+  // Hide auto next button when user placed a manual navigation button (regardless of question block)
+  const hasManualNavButton = hasButtonBlock;
 
   const renderQuestionBlocks = () => {
     if (!question.blocks || !Array.isArray(question.blocks) || question.blocks.length === 0) {
