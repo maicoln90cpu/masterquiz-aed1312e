@@ -1,34 +1,60 @@
 
 
-## Diagnostico dos 2 Problemas
+## Todas as regras atuais do sistema de campanhas
 
-### Problema 1: Campanha "Feedback" com 0 alvos
+### 1. Pré-requisitos globais (bloqueiam TUDO)
+- **Sistema ativo**: `is_active = true` E `is_connected = true` (WhatsApp conectado)
+- **Horário permitido**: só funciona entre 09:00 e 20:00 (horário de Brasília)
+- **Limite diário**: máximo 50 mensagens/dia (conta TODAS as campanhas somadas). Hoje já foram enviadas 67 nos últimos 10 dias
 
-**Causa raiz:** A edge function `check-inactive-users` OBRIGA que os usuarios estejam inativos (sem login ha X dias). O fluxo e:
+### 2. Pool de usuários (quem entra na lista)
+- Só usuários com **WhatsApp cadastrado** no perfil
+- Se a campanha NÃO tem filtros de audiência: busca apenas **usuários inativos há 10+ dias** (padrão `inactivity_days_trigger`)
+- Se a campanha TEM filtros (no_leads, no_quizzes, etc.) mas SEM `min_inactive_days`: busca **todos os usuários**
 
-1. Busca usuarios que NAO logaram nos ultimos `min_inactive_days` dias (default: 10 dias do `inactivity_days_trigger`)
-2. SO DEPOIS aplica os filtros `no_leads`, `no_quizzes`, etc.
+### 3. Exclusões automáticas (removem do pool)
+- **Blacklist**: usuários ou telefones na tabela `recovery_blacklist`
+- **Cooldown global**: usuários que receberam QUALQUER mensagem nos últimos **10 dias** (`user_cooldown_days = 10`) — de QUALQUER campanha
+- **Planos excluídos**: `exclude_plan_types` (atualmente `null`, nenhum excluído)
 
-Resultado: se voce quer atingir usuarios sem leads/quizzes mas que logaram recentemente, eles sao filtrados ANTES dos criterios serem aplicados. O filtro de inatividade age como pre-requisito obrigatorio.
+### 4. UNIQUE constraint na tabela `recovery_contacts`
+- Constraint: `UNIQUE (user_id, template_id)` — um usuário SÓ pode receber cada template UMA VEZ na vida toda
+- Isso significa: se você usa o mesmo template em 2 campanhas diferentes, o segundo insert FALHA
 
-**Fix:** Quando `min_inactive_days` NAO e definido nos criterios E existem outros filtros (no_leads, no_quizzes, plans, stages, objectives), buscar TODOS os usuarios com WhatsApp — nao apenas inativos. O filtro de inatividade so deve ser obrigatorio quando explicitamente selecionado ou quando nenhum outro criterio e fornecido.
+### 5. Limite de fila
+- Após todos os filtros, pega no máximo `remainingLimit` usuários (50 - já enviados hoje)
 
-### Problema 2: "Recuperacao Clientes" presa em 21 alvos
+### 6. Resumo do que te bloqueou
 
-**Causa raiz:** A tabela `recovery_contacts` tem constraint UNIQUE em `(user_id, template_id)`. Os 21 usuarios ja foram inseridos com o template `4ef644e7...`. Ao re-iniciar a campanha, o edge function tenta inserir novamente mas o `ON CONFLICT` nao existe — ele usa `.insert()` normal, que falha silenciosamente ou os mesmos usuarios sao filtrados pelo cooldown (contatados nos ultimos 10 dias).
-
-**Fix:** Ao re-iniciar uma campanha existente, usar `ignoreCooldown: true` para campanhas ja com contatos, OU permitir criar novos contatos com `campaign_id` diferente ignorando o UNIQUE constraint (que e por user_id+template_id).
+| Problema | Causa |
+|----------|-------|
+| Campanha "sem leads" só pegou 11 | **67 usuários** já receberam mensagem nos últimos 10 dias (cooldown global). Sobraram ~11 |
+| Campanha presa em 21 | UNIQUE constraint `(user_id, template_id)` impede re-inserir os mesmos usuários com mesmo template |
 
 ---
 
-### Mudancas
+## Sua necessidade real vs. o que existe
 
-**`supabase/functions/check-inactive-users/index.ts`:**
-- Quando `targetCriteria` tem filtros ativos (no_leads, no_quizzes, plans, stages, objectives) MAS `min_inactive_days` nao foi definido explicitamente: buscar TODOS os usuarios com WhatsApp (nao filtrar por inatividade)
-- Quando `min_inactive_days` e definido explicitamente OU nenhum filtro e fornecido: manter comportamento atual (filtrar por inatividade)
-- Isso permite campanhas direcionadas por criterios sem exigir inatividade
+Você quer: **criar campanhas sazonais/promocionais e disparar para todos os usuários com WhatsApp**, sem que regras de recuperação de inativos atrapalhem.
 
-**`src/components/admin/recovery/RecoveryCampaigns.tsx`:**
-- No `startCampaign`, se campanha ja tem contatos (re-inicio), passar `ignoreCooldown: true`
-- Mostrar aviso quando campanha nao tem filtros nem inatividade definida
+O sistema atual foi feito para **recuperação de clientes inativos** — com proteções anti-spam (cooldown, limite diário, horário). Essas proteções fazem sentido para recuperação automática, mas atrapalham campanhas manuais/sazonais.
+
+## Proposta de solução
+
+Criar um modo **"Campanha Manual / Sazonal"** dentro do mesmo sistema, com um checkbox no modal:
+
+**"Campanha de disparo direto"** (quando marcado):
+- Ignora cooldown global (não importa se o usuário recebeu outra mensagem recentemente)
+- Ignora UNIQUE constraint — insere com `ON CONFLICT DO NOTHING` em vez de falhar
+- Busca TODOS os usuários com WhatsApp (sem filtro de inatividade obrigatório)
+- Mantém: blacklist, horário permitido, limite diário (proteções essenciais)
+
+### Mudanças
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/admin/recovery/RecoveryCampaigns.tsx` | Adicionar checkbox "Campanha de disparo direto" no modal. Quando ativo, passa `ignoreCooldown: true` e `directCampaign: true` ao edge function |
+| `supabase/functions/check-inactive-users/index.ts` | Quando `directCampaign: true`: ignorar cooldown, usar `upsert` com `onConflict: 'user_id,template_id'` + `ignoreDuplicates: true` em vez de `insert` |
+
+Isso resolve os 2 problemas sem criar uma nova aba — apenas um toggle no modal existente.
 
