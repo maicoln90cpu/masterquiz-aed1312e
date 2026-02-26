@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -31,12 +33,63 @@ interface Campaign {
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
+  target_criteria: unknown;
 }
 
 interface Template {
   id: string;
   name: string;
+  category: string;
+  is_active: boolean;
 }
+
+interface TargetCriteria {
+  no_leads: boolean;
+  no_quizzes: boolean;
+  plans: string[];
+  stages: string[];
+  objectives: string[];
+  min_inactive_days: number | null;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  general: 'Geral',
+  welcome: 'Boas-vindas',
+  first_quiz: 'Primeiro Quiz',
+  reengagement: 'Reengajamento',
+  upgrade: 'Upgrade',
+  educational: 'Educacional',
+  feedback: 'Feedback',
+};
+
+const STAGE_OPTIONS = [
+  { value: 'explorador', label: 'Explorador' },
+  { value: 'iniciado', label: 'Iniciado' },
+  { value: 'construtor', label: 'Construtor' },
+  { value: 'operador', label: 'Operador' },
+];
+
+const OBJECTIVE_OPTIONS = [
+  { value: 'educational', label: 'Educacional' },
+  { value: 'lead_capture_launch', label: 'Captura de Leads' },
+  { value: 'offer_validation', label: 'Validação de Oferta' },
+  { value: 'paid_traffic', label: 'Tráfego Pago' },
+  { value: 'vsl_conversion', label: 'Conversão VSL' },
+];
+
+const PLAN_OPTIONS = [
+  { value: 'free', label: 'Free' },
+  { value: 'starter', label: 'Starter' },
+  { value: 'professional', label: 'Professional' },
+  { value: 'enterprise', label: 'Enterprise' },
+];
+
+const INACTIVITY_OPTIONS = [
+  { value: 7, label: '7+ dias' },
+  { value: 15, label: '15+ dias' },
+  { value: 30, label: '30+ dias' },
+  { value: 60, label: '60+ dias' },
+];
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   draft: { label: 'Rascunho', color: 'bg-gray-500' },
@@ -47,17 +100,28 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   cancelled: { label: 'Cancelada', color: 'bg-red-500' },
 };
 
+const defaultCriteria: TargetCriteria = {
+  no_leads: false,
+  no_quizzes: false,
+  plans: [],
+  stages: [],
+  objectives: [],
+  min_inactive_days: null,
+};
+
 export function RecoveryCampaigns() {
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     template_id: '',
     scheduled_at: '',
   });
+  const [criteria, setCriteria] = useState<TargetCriteria>({ ...defaultCriteria });
 
   useEffect(() => {
     loadData();
@@ -72,8 +136,8 @@ export function RecoveryCampaigns() {
           .order('created_at', { ascending: false }),
         supabase
           .from('recovery_templates')
-          .select('id, name')
-          .eq('is_active', true)
+          .select('id, name, category, is_active')
+          // Sem filtro is_active — admin pode usar qualquer template em campanhas manuais
       ]);
 
       if (campaignsRes.error) throw campaignsRes.error;
@@ -89,28 +153,63 @@ export function RecoveryCampaigns() {
     }
   };
 
+  const toggleArrayItem = (arr: string[], item: string) => {
+    return arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
+  };
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (criteria.no_leads) count++;
+    if (criteria.no_quizzes) count++;
+    count += criteria.plans.length;
+    count += criteria.stages.length;
+    count += criteria.objectives.length;
+    if (criteria.min_inactive_days) count++;
+    return count;
+  };
+
+  // Agrupar templates por categoria
+  const templatesByCategory = templates.reduce<Record<string, Template[]>>((acc, t) => {
+    const cat = t.category || 'general';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(t);
+    return acc;
+  }, {});
+
   const handleCreate = async () => {
     if (!formData.name || !formData.template_id) {
       toast.error('Preencha nome e selecione um template');
       return;
     }
 
+    const tc: Record<string, unknown> = {};
+    if (criteria.no_leads) tc.no_leads = true;
+    if (criteria.no_quizzes) tc.no_quizzes = true;
+    if (criteria.plans.length > 0) tc.plans = criteria.plans;
+    if (criteria.stages.length > 0) tc.stages = criteria.stages;
+    if (criteria.objectives.length > 0) tc.objectives = criteria.objectives;
+    if (criteria.min_inactive_days) tc.min_inactive_days = criteria.min_inactive_days;
+    const targetCriteriaJson = Object.keys(tc).length > 0 ? JSON.parse(JSON.stringify(tc)) : {};
+
     try {
       const { error } = await supabase
         .from('recovery_campaigns')
-        .insert({
+        .insert([{
           name: formData.name,
           description: formData.description || null,
           template_id: formData.template_id,
           scheduled_at: formData.scheduled_at || null,
-          status: formData.scheduled_at ? 'scheduled' : 'draft',
-        });
+          status: (formData.scheduled_at ? 'scheduled' : 'draft') as 'scheduled' | 'draft',
+          target_criteria: targetCriteriaJson,
+        }]);
 
       if (error) throw error;
 
       toast.success('Campanha criada!');
       setDialogOpen(false);
       setFormData({ name: '', description: '', template_id: '', scheduled_at: '' });
+      setCriteria({ ...defaultCriteria });
+      setFiltersOpen(false);
       loadData();
     } catch (error) {
       console.error('Error creating campaign:', error);
@@ -120,7 +219,7 @@ export function RecoveryCampaigns() {
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         status: newStatus,
         updated_at: new Date().toISOString(),
       };
@@ -148,12 +247,12 @@ export function RecoveryCampaigns() {
 
   const startCampaign = async (campaign: Campaign) => {
     try {
-      // Buscar usuários inativos, passando o campaignId e templateId
       const { data, error } = await supabase.functions.invoke('check-inactive-users', {
         body: { 
           campaignId: campaign.id,
-          templateId: campaign.template_id, // Passar template específico da campanha
-          ignoreCooldown: false // Pode ser alterado para true em campanhas manuais se necessário
+          templateId: campaign.template_id,
+          ignoreCooldown: false,
+          targetCriteria: campaign.target_criteria || {},
         }
       });
 
@@ -182,13 +281,11 @@ export function RecoveryCampaigns() {
 
   const deleteCampaign = async (campaignId: string) => {
     try {
-      // Primeiro, remover contatos vinculados à campanha
       await supabase
         .from('recovery_contacts')
         .delete()
         .eq('campaign_id', campaignId);
 
-      // Depois, deletar a campanha
       const { error } = await supabase
         .from('recovery_campaigns')
         .delete()
@@ -219,6 +316,8 @@ export function RecoveryCampaigns() {
     );
   }
 
+  const activeFiltersCount = getActiveFiltersCount();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -229,13 +328,19 @@ export function RecoveryCampaigns() {
             Crie e gerencie campanhas para reengajar clientes inativos
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setCriteria({ ...defaultCriteria });
+            setFiltersOpen(false);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" /> Nova Campanha
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nova Campanha</DialogTitle>
               <DialogDescription>
@@ -275,14 +380,122 @@ export function RecoveryCampaigns() {
                     <SelectValue placeholder="Selecione um template" />
                   </SelectTrigger>
                   <SelectContent>
-                    {templates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.name}
-                      </SelectItem>
+                    {Object.entries(templatesByCategory).map(([category, tpls]) => (
+                      <SelectGroup key={category}>
+                        <SelectLabel>{CATEGORY_LABELS[category] || category}</SelectLabel>
+                        {tpls.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                            {!template.is_active && ' (inativo)'}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Filtros de Audiência */}
+              <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between" type="button">
+                    <span className="flex items-center gap-2">
+                      <Filter className="h-4 w-4" />
+                      Filtros de Audiência
+                      {activeFiltersCount > 0 && (
+                        <Badge variant="secondary" className="ml-1">{activeFiltersCount}</Badge>
+                      )}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-3">
+                  {/* Atividade */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground">Atividade</Label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                          checked={criteria.no_leads}
+                          onCheckedChange={(checked) => setCriteria({ ...criteria, no_leads: !!checked })}
+                        />
+                        Sem leads (0 leads)
+                      </label>
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                          checked={criteria.no_quizzes}
+                          onCheckedChange={(checked) => setCriteria({ ...criteria, no_quizzes: !!checked })}
+                        />
+                        Sem quiz publicado
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Plano */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground">Plano</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {PLAN_OPTIONS.map((opt) => (
+                        <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={criteria.plans.includes(opt.value)}
+                            onCheckedChange={() => setCriteria({ ...criteria, plans: toggleArrayItem(criteria.plans, opt.value) })}
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Estágio */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground">Estágio do Usuário</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {STAGE_OPTIONS.map((opt) => (
+                        <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={criteria.stages.includes(opt.value)}
+                            onCheckedChange={() => setCriteria({ ...criteria, stages: toggleArrayItem(criteria.stages, opt.value) })}
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Objetivo */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground">Objetivo</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {OBJECTIVE_OPTIONS.map((opt) => (
+                        <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={criteria.objectives.includes(opt.value)}
+                            onCheckedChange={() => setCriteria({ ...criteria, objectives: toggleArrayItem(criteria.objectives, opt.value) })}
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Inatividade */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground">Dias de Inatividade</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {INACTIVITY_OPTIONS.map((opt) => (
+                        <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={criteria.min_inactive_days === opt.value}
+                            onCheckedChange={(checked) => setCriteria({ ...criteria, min_inactive_days: checked ? opt.value : null })}
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               <div className="space-y-2">
                 <Label htmlFor="scheduled">Agendar Para (opcional)</Label>
@@ -359,7 +572,6 @@ export function RecoveryCampaigns() {
                         </Button>
                       </>
                     )}
-                    {/* Botão de Deletar - disponível para draft, completed e cancelled */}
                     {['draft', 'completed', 'cancelled'].includes(campaign.status) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -391,7 +603,6 @@ export function RecoveryCampaigns() {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Progress */}
                 {campaign.total_targets > 0 && (
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
@@ -402,7 +613,6 @@ export function RecoveryCampaigns() {
                   </div>
                 )}
 
-                {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                   <div className="text-center p-2 bg-muted rounded">
                     <Users className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
@@ -436,7 +646,6 @@ export function RecoveryCampaigns() {
                   </div>
                 </div>
 
-                {/* Dates */}
                 <div className="flex gap-4 mt-4 text-xs text-muted-foreground">
                   <span>Criada: {new Date(campaign.created_at).toLocaleDateString('pt-BR')}</span>
                   {campaign.started_at && (
