@@ -145,6 +145,12 @@ export function QuizViewQuestion({
                   answers={answers}
                   onAnswer={onAnswer}
                   onAutoAdvance={shouldAutoAdvance ? handleAutoAdvance : undefined}
+                  showNextButton={!shouldAutoAdvance && !hasButtonBlock}
+                  onNextClick={handleNextClick}
+                  isNextDisabled={isNextDisabled()}
+                  isLastQuestion={isLastQuestion}
+                  showFormAfter={showFormAfter}
+                  showResults={showResults}
                 />
               );
             }
@@ -238,9 +244,16 @@ interface QuestionBlockRendererProps {
   answers: Record<string, any>;
   onAnswer: (questionId: string, value: any) => void;
   onAutoAdvance?: () => void;
+  showNextButton?: boolean;
+  onNextClick?: () => void;
+  isNextDisabled?: boolean;
+  isLastQuestion?: boolean;
+  showFormAfter?: boolean;
+  showResults?: boolean;
 }
 
-function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdvance }: QuestionBlockRendererProps) {
+function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdvance, showNextButton, onNextClick, isNextDisabled, isLastQuestion, showFormAfter, showResults }: QuestionBlockRendererProps) {
+  const { t } = useTranslation();
   const [answered, setAnswered] = useState(false);
   const questionBlock = block as any;
   const answerFormat = questionBlock.answerFormat;
@@ -337,6 +350,22 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
             </div>
           )}
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{explanation}</p>
+        </div>
+      )}
+
+      {/* Botão Próxima integrado ao bloco de pergunta */}
+      {showNextButton && !(isLastQuestion && !showResults && !showFormAfter) && (
+        <div className="pt-2">
+          <Button
+            onClick={onNextClick}
+            disabled={isNextDisabled}
+            className="w-full btn-primary"
+          >
+            {isLastQuestion
+              ? t('quizView.finish')
+              : (questionBlock.nextButtonText || t('quizView.next'))}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>
