@@ -1,57 +1,45 @@
 
 
-# Plano: 7 Ajustes de UX no Quiz
+# Plano: 4 Correções de Layout e Funcionalidade
 
-## 1. Checkbox no canto direito (MultipleChoiceOptions)
-**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linhas 363-393)
-- Mover o `<Checkbox>` de antes do `<Label>` para depois dele (trocar ordem no flex layout)
-- Checkbox fica no extremo direito com `ml-auto`
+## 1. Remover bordas de todos os blocos no quiz público
+**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linha 152)
+- Passar `wrapInCard={false}` no `QuizBlockPreview` dentro de `renderQuestionBlocks()`
+- Isso remove o `Card border-2` wrapper que envolve imagens, separadores, vídeos etc.
+- Apenas os cards de resposta (SingleChoiceOptions/MultipleChoiceOptions) mantêm bordas
 
-## 2. Texto customizado do botão "Próxima" no quiz publicado
-**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linha 205)
-- Ler `questionBlock?.nextButtonText` do bloco atual
-- Usar como texto do botão quando existir, senão fallback para `t('quizView.next')`
+## 2. Vídeo sem aspect ratio forçado
+**Arquivo:** `src/components/video/CustomVideoPlayer.tsx` (linhas 152-158, 542-545)
+- Remover `aspectRatioClass` do container principal — deixar o vídeo usar sua proporção natural
+- Remover `bg-muted` do container (causa a borda cinza)
+- O vídeo respeitará `w-full` + proporção nativa dentro do container
 
-## 3. Sidebar do editor: "Etapas" como default
-**Arquivo:** `src/hooks/useQuizState.ts` (linha 88)
-- Mudar `rightPanelMode: 'preview'` → `rightPanelMode: 'steps'`
+**Arquivo:** `src/components/quiz/QuizBlockPreview.tsx` (linha 486)
+- Remover `bg-muted` do wrapper do vídeo no QuizBlockPreview
 
-## 4. Progress bar como select (3 opções) em vez de toggle
-**Arquivos:**
-- `src/components/quiz/AppearanceConfigStep.tsx` (linhas 198-208): Trocar Switch por Select com 3 opções: "Barra de Progresso", "Número da Pergunta", "Não mostrar"
-- `src/components/quiz/QuizSettings.tsx`: Mudar tipo de `showQuestionNumber: boolean` → `progressStyle: 'bar' | 'counter' | 'none'`
-- `src/components/quiz/QuizActions.tsx`: Mapear `progressStyle` → `show_question_number` no DB (manter compatibilidade: 'counter'=true, 'bar'=true, 'none'=false) + salvar `progress_style` se coluna existir
-- `src/components/quiz/view/QuizViewQuestion.tsx` (linhas 184-192): Renderizar condicionalmente: `bar` = progress bar, `counter` = texto "X de Y", `none` = nada
-- `src/components/quiz/UnifiedQuizPreview.tsx`: Mesma lógica no preview do editor
-- **Migration SQL:** Adicionar coluna `progress_style text default 'counter'` na tabela `quizzes`
+## 3. Corrigir select de progresso (salvar progress_style no DB)
+O problema: o select só altera `showQuestionNumber` (boolean), que mapeia counter=true, bar=true, none=false. O `progress_style` nunca é salvo.
 
-## 5. Botão Salvar 30% maior
-**Arquivo:** `src/pages/CreateQuiz.tsx` (linha 572-582)
-- Adicionar `px-6` ou `min-w-[120px]` ao botão Salvar
+**Arquivos afetados:**
+- `src/components/quiz/QuizSettings.tsx`: Adicionar campo `progressStyle: 'bar' | 'counter' | 'none'` ao state, expor setter
+- `src/components/quiz/AppearanceConfigStep.tsx`: Receber `progressStyle` + `onProgressStyleChange`, usar no select em vez de mapear para boolean
+- `src/components/quiz/QuizActions.tsx` (linhas 93, 177, 219): Incluir `progress_style: settings.progressStyle` no payload de save/draft
+- `src/hooks/useQuizPersistence.ts`: Carregar `progress_style` do quiz existente e mapear para o state
+- `src/components/quiz/view/QuizViewQuestion.tsx` (linha 188): Priorizar `quiz.progress_style` diretamente (já faz, mas precisa que o dado chegue do DB)
 
-## 6. Bloco imagem + botão: remover botão "Próxima" duplicado
-**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linhas 131-161 e 197-209)
-- Quando a pergunta contém um bloco `button` com `action: 'next_question'`, NÃO renderizar o botão de navegação automático no final
-- Atualizar `isInformationalSlide` para detectar se há botão de navegação nos blocos mesmo quando há question block
-- Na renderização de blocos não-question via `QuizBlockPreview`, passar `showNavigationButton: false` para evitar que cada bloco gere seu próprio botão "Próxima Pergunta" duplicado
-
-## 7. Template colorido — borda amarela envolvendo tudo
-**Arquivo:** `src/styles/quiz-templates.css` (linhas 51-55)
-- O `.quiz-template-colorido .card` tem `border: 2px solid hsl(var(--template-border))` que afeta TODOS os cards incluindo o wrapper principal
-- Reduzir/remover a borda do card wrapper principal: adicionar regra específica para o container do quiz (não os cards de resposta)
-- Alternativa: no `QuizView.tsx`, o wrapper `py-6` não tem card, mas os blocos internos renderizados via `QuizBlockPreview` usam `wrapInCard=true` que herda a borda grossa amarela — passar `wrapInCard: false` para blocos no quiz público
+## 4. Animação hover nas opções de resposta
+**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx`
+- Em `SingleChoiceOptions` e `MultipleChoiceOptions`, adicionar ao className das opções: `hover:shadow-md hover:scale-[1.02] transition-all duration-200`
+- Efeito sutil de elevação + leve escala ao passar o mouse
 
 ---
 
-## Resumo de Arquivos
+## Resumo
 
-| # | Arquivo | Risco |
-|---|---------|-------|
-| 1 | `QuizViewQuestion.tsx` | Baixo |
-| 2 | `QuizViewQuestion.tsx` | Baixo |
-| 3 | `useQuizState.ts` | Baixo |
-| 4 | Migration + AppearanceConfigStep + QuizSettings + QuizActions + QuizViewQuestion + UnifiedQuizPreview | Médio |
-| 5 | `CreateQuiz.tsx` | Baixo |
-| 6 | `QuizViewQuestion.tsx` | Médio |
-| 7 | `quiz-templates.css` + `QuizViewQuestion.tsx` | Baixo |
+| # | O que | Arquivos | Risco |
+|---|-------|----------|-------|
+| 1 | wrapInCard=false no quiz público | QuizViewQuestion.tsx | Baixo |
+| 2 | Remover aspect ratio forçado do vídeo | CustomVideoPlayer.tsx, QuizBlockPreview.tsx | Baixo |
+| 3 | Salvar progress_style corretamente | QuizSettings, AppearanceConfig, QuizActions, useQuizPersistence | Médio |
+| 4 | Hover animation nas respostas | QuizViewQuestion.tsx | Baixo |
 
