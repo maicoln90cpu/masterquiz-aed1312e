@@ -155,6 +155,7 @@ export const CompactBlockPalette = ({
     { type: "accordion" as BlockType, icon: ChevronDown, name: "Acordeão FAQ", tooltip: "FAQ expansível" },
     { type: "comparison" as BlockType, icon: Columns, name: "Comparação", tooltip: "Antes vs Depois, A vs B" },
     { type: "socialProof" as BlockType, icon: Bell, name: "Prova Social", tooltip: "Notificações animadas" },
+    { type: "animatedCounter" as BlockType, icon: TrendingUp, name: "Contador Animado", tooltip: "Contador numérico com animação progressiva" },
   ];
 
   const templates = [
