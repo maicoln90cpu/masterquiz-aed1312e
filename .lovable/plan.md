@@ -1,40 +1,57 @@
 
 
-# Plano: Prevenir Colisao de Slug para Quizzes Manuais
+# Plano: 7 Ajustes de UX no Quiz
 
-## Problema
-A funcao `generate_slug()` tenta contador ate 5, depois 1 unico fallback md5. Se esse md5 tambem colidir (improvavel mas possivel em race condition), nao ha retry. Alem disso, o codigo frontend (`useQuizPersistence.ts` INSERT branch e `QuizActions.tsx`) NAO tem retry para erro 23505 em quizzes manuais — so express tem.
+## 1. Checkbox no canto direito (MultipleChoiceOptions)
+**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linhas 363-393)
+- Mover o `<Checkbox>` de antes do `<Label>` para depois dele (trocar ordem no flex layout)
+- Checkbox fica no extremo direito com `ml-auto`
 
-## Correcoes
+## 2. Texto customizado do botão "Próxima" no quiz publicado
+**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linha 205)
+- Ler `questionBlock?.nextButtonText` do bloco atual
+- Usar como texto do botão quando existir, senão fallback para `t('quizView.next')`
 
-### 1. SQL: Tornar `generate_slug()` a prova de colisao (Migration)
-Reescrever `generate_slug()` com loop de retry igual ao `generate_express_slug()`:
-- Manter logica atual (base_slug + contador ate 5)
-- Apos 5, entrar em loop com sufixo aleatorio (ate 20 tentativas)
-- Garantir que SEMPRE retorna slug unico
+## 3. Sidebar do editor: "Etapas" como default
+**Arquivo:** `src/hooks/useQuizState.ts` (linha 88)
+- Mudar `rightPanelMode: 'preview'` → `rightPanelMode: 'steps'`
 
-```sql
-CREATE OR REPLACE FUNCTION public.generate_slug(title text) ...
-  -- apos counter loop ate 5:
-  WHILE EXISTS(...) AND attempts < 20 LOOP
-    final_slug := base_slug || '-' || substring(md5(random()::text), 1, 6);
-    attempts := attempts + 1;
-  END LOOP;
-```
+## 4. Progress bar como select (3 opções) em vez de toggle
+**Arquivos:**
+- `src/components/quiz/AppearanceConfigStep.tsx` (linhas 198-208): Trocar Switch por Select com 3 opções: "Barra de Progresso", "Número da Pergunta", "Não mostrar"
+- `src/components/quiz/QuizSettings.tsx`: Mudar tipo de `showQuestionNumber: boolean` → `progressStyle: 'bar' | 'counter' | 'none'`
+- `src/components/quiz/QuizActions.tsx`: Mapear `progressStyle` → `show_question_number` no DB (manter compatibilidade: 'counter'=true, 'bar'=true, 'none'=false) + salvar `progress_style` se coluna existir
+- `src/components/quiz/view/QuizViewQuestion.tsx` (linhas 184-192): Renderizar condicionalmente: `bar` = progress bar, `counter` = texto "X de Y", `none` = nada
+- `src/components/quiz/UnifiedQuizPreview.tsx`: Mesma lógica no preview do editor
+- **Migration SQL:** Adicionar coluna `progress_style text default 'counter'` na tabela `quizzes`
 
-### 2. Frontend: Retry para 23505 em `useQuizPersistence.ts` (INSERT branch)
-Linha ~416-436: ao fazer INSERT de quiz manual, se erro 23505, limpar slug (setar NULL) e reinserir — o trigger gera novo slug automaticamente.
+## 5. Botão Salvar 30% maior
+**Arquivo:** `src/pages/CreateQuiz.tsx` (linha 572-582)
+- Adicionar `px-6` ou `min-w-[120px]` ao botão Salvar
 
-### 3. Frontend: Retry para 23505 em `QuizActions.tsx` (UPDATE e INSERT)
-Mesma logica: ao pegar erro 23505, fazer retry com `slug: null` para forcar o trigger a regenerar.
+## 6. Bloco imagem + botão: remover botão "Próxima" duplicado
+**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linhas 131-161 e 197-209)
+- Quando a pergunta contém um bloco `button` com `action: 'next_question'`, NÃO renderizar o botão de navegação automático no final
+- Atualizar `isInformationalSlide` para detectar se há botão de navegação nos blocos mesmo quando há question block
+- Na renderização de blocos não-question via `QuizBlockPreview`, passar `showNavigationButton: false` para evitar que cada bloco gere seu próprio botão "Próxima Pergunta" duplicado
+
+## 7. Template colorido — borda amarela envolvendo tudo
+**Arquivo:** `src/styles/quiz-templates.css` (linhas 51-55)
+- O `.quiz-template-colorido .card` tem `border: 2px solid hsl(var(--template-border))` que afeta TODOS os cards incluindo o wrapper principal
+- Reduzir/remover a borda do card wrapper principal: adicionar regra específica para o container do quiz (não os cards de resposta)
+- Alternativa: no `QuizView.tsx`, o wrapper `py-6` não tem card, mas os blocos internos renderizados via `QuizBlockPreview` usam `wrapInCard=true` que herda a borda grossa amarela — passar `wrapInCard: false` para blocos no quiz público
 
 ---
 
-## Resumo
+## Resumo de Arquivos
 
-| # | O que | Tipo |
-|---|-------|------|
-| 1 | `generate_slug()` com loop robusto | Migration SQL |
-| 2 | Retry 23505 no INSERT branch | `useQuizPersistence.ts` |
-| 3 | Retry 23505 em ambos branches | `QuizActions.tsx` |
+| # | Arquivo | Risco |
+|---|---------|-------|
+| 1 | `QuizViewQuestion.tsx` | Baixo |
+| 2 | `QuizViewQuestion.tsx` | Baixo |
+| 3 | `useQuizState.ts` | Baixo |
+| 4 | Migration + AppearanceConfigStep + QuizSettings + QuizActions + QuizViewQuestion + UnifiedQuizPreview | Médio |
+| 5 | `CreateQuiz.tsx` | Baixo |
+| 6 | `QuizViewQuestion.tsx` | Médio |
+| 7 | `quiz-templates.css` + `QuizViewQuestion.tsx` | Baixo |
 
