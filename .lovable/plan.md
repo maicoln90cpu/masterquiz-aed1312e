@@ -1,33 +1,34 @@
 
 
-## Problema e Solução
+## Diagnostico dos 2 Problemas
 
-### Bug: Templates novos não aparecem no dropdown
-A query na linha 75 filtra `.eq('is_active', true)`. Templates criados pelo admin podem estar com `is_active = false`. Solução: mostrar TODOS os templates no dropdown de campanhas (campanhas são manuais, admin deve poder usar qualquer template), agrupados por categoria e mostrando a categoria no label.
+### Problema 1: Campanha "Feedback" com 0 alvos
 
-### Nova feature: Filtros de audiência no modal de campanha
-A tabela `recovery_campaigns` já tem coluna `target_criteria` (JSONB). Adicionar multi-select de filtros no modal e passar esses critérios para a edge function `check-inactive-users`.
+**Causa raiz:** A edge function `check-inactive-users` OBRIGA que os usuarios estejam inativos (sem login ha X dias). O fluxo e:
 
-**Filtros propostos (multi-select com checkboxes):**
-- Sem leads (0 leads)
-- Sem quiz publicado (0 quizzes ativos)
-- Plano Free
-- Plano Admin/Pro
-- Por estágio: explorador, iniciado, construtor, operador
-- Por objetivo: educational, lead_capture_launch, offer_validation, paid_traffic, vsl_conversion
-- Inativos há 7+ dias
-- Inativos há 15+ dias
-- Inativos há 30+ dias
+1. Busca usuarios que NAO logaram nos ultimos `min_inactive_days` dias (default: 10 dias do `inactivity_days_trigger`)
+2. SO DEPOIS aplica os filtros `no_leads`, `no_quizzes`, etc.
 
-### Arquivos a modificar
+Resultado: se voce quer atingir usuarios sem leads/quizzes mas que logaram recentemente, eles sao filtrados ANTES dos criterios serem aplicados. O filtro de inatividade age como pre-requisito obrigatorio.
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/admin/recovery/RecoveryCampaigns.tsx` | Mostrar todos templates (sem filtro is_active) com categoria; adicionar seção de filtros multi-select no modal; salvar filtros em `target_criteria`; passar filtros ao iniciar campanha |
-| `supabase/functions/check-inactive-users/index.ts` | Ler `target_criteria` da campanha e aplicar filtros (leads=0, quiz=0, plano, estágio, objetivo, dias de inatividade) na seleção de usuários elegíveis |
+**Fix:** Quando `min_inactive_days` NAO e definido nos criterios E existem outros filtros (no_leads, no_quizzes, plans, stages, objectives), buscar TODOS os usuarios com WhatsApp — nao apenas inativos. O filtro de inatividade so deve ser obrigatorio quando explicitamente selecionado ou quando nenhum outro criterio e fornecido.
 
-### Detalhes da UI dos filtros
-- Seção com accordion/collapsible no modal "Nova Campanha"
-- Checkboxes agrupados: "Atividade" (sem leads, sem quiz), "Plano" (free, admin), "Estágio" (explorador, iniciado...), "Objetivo" (educational, lead_capture...), "Inatividade" (7+, 15+, 30+ dias)
-- Salvar como `target_criteria: { no_leads: true, no_quizzes: true, plans: ['free'], stages: ['explorador'], objectives: ['educational'], min_inactive_days: 15 }`
+### Problema 2: "Recuperacao Clientes" presa em 21 alvos
+
+**Causa raiz:** A tabela `recovery_contacts` tem constraint UNIQUE em `(user_id, template_id)`. Os 21 usuarios ja foram inseridos com o template `4ef644e7...`. Ao re-iniciar a campanha, o edge function tenta inserir novamente mas o `ON CONFLICT` nao existe — ele usa `.insert()` normal, que falha silenciosamente ou os mesmos usuarios sao filtrados pelo cooldown (contatados nos ultimos 10 dias).
+
+**Fix:** Ao re-iniciar uma campanha existente, usar `ignoreCooldown: true` para campanhas ja com contatos, OU permitir criar novos contatos com `campaign_id` diferente ignorando o UNIQUE constraint (que e por user_id+template_id).
+
+---
+
+### Mudancas
+
+**`supabase/functions/check-inactive-users/index.ts`:**
+- Quando `targetCriteria` tem filtros ativos (no_leads, no_quizzes, plans, stages, objectives) MAS `min_inactive_days` nao foi definido explicitamente: buscar TODOS os usuarios com WhatsApp (nao filtrar por inatividade)
+- Quando `min_inactive_days` e definido explicitamente OU nenhum filtro e fornecido: manter comportamento atual (filtrar por inatividade)
+- Isso permite campanhas direcionadas por criterios sem exigir inatividade
+
+**`src/components/admin/recovery/RecoveryCampaigns.tsx`:**
+- No `startCampaign`, se campanha ja tem contatos (re-inicio), passar `ignoreCooldown: true`
+- Mostrar aviso quando campanha nao tem filtros nem inatividade definida
 
