@@ -40,6 +40,22 @@ interface UseQuizViewStateProps {
   previewData?: PreviewData;
 }
 
+// Sanitize answers to prevent circular reference errors (DOM elements stored accidentally)
+const sanitizeAnswers = (answers: Record<string, any>): Record<string, any> => {
+  const clean: Record<string, any> = {};
+  for (const [key, value] of Object.entries(answers)) {
+    if (value === null || value === undefined) continue;
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      clean[key] = value;
+    } else if (Array.isArray(value)) {
+      clean[key] = value.filter(v => typeof v === 'string' || typeof v === 'number');
+    } else if (typeof value === 'object' && !(value instanceof Element) && !(value instanceof Event)) {
+      try { JSON.stringify(value); clean[key] = value; } catch { /* skip non-serializable */ }
+    }
+  }
+  return clean;
+};
+
 export function useQuizViewState({
   slug,
   company,
@@ -192,6 +208,11 @@ export function useQuizViewState({
   const [autoSubmitted, setAutoSubmitted] = useState(false);
 
   const handleAnswer = (questionId: string, value: any) => {
+    // Guard: reject DOM elements and Event objects
+    if (value instanceof Element || value instanceof Event) {
+      console.warn('[handleAnswer] Rejected non-serializable value for', questionId);
+      return;
+    }
     const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
     
@@ -409,13 +430,16 @@ export function useQuizViewState({
         result = results.find(r => r.condition_type === 'always') || results[0];
       }
 
+      // Sanitize answers before insert to prevent circular reference errors (DOM elements)
+      const sanitizedAnswers = sanitizeAnswers(finalAnswers);
+
       // Save response - don't use .select().single() since anon has INSERT but not SELECT RLS
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp, ...onlyCustomFields } = formData || {};
       const { error } = await supabase
         .from('quiz_responses')
         .insert({
           quiz_id: quiz.id,
-          answers: finalAnswers,
+          answers: sanitizedAnswers,
           respondent_name: leadName || null,
           respondent_email: leadEmail || null,
           respondent_whatsapp: leadWhatsapp || null,

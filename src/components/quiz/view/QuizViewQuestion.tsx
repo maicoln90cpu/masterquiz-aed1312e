@@ -221,7 +221,7 @@ export function QuizViewQuestion({
       {renderQuestionBlocks()}
       
       {/* Navigation: only show Next/Finish when not auto-advancing */}
-      {!hideNextButton && !isInformationalSlide && !hasManualNavButton && !(isLastQuestion && !showResults) && (
+      {!hideNextButton && !isInformationalSlide && !hasManualNavButton && !(isLastQuestion && !showResults && !showFormAfter) && (
         <div className="flex gap-2">
           <Button
             onClick={handleNextClick}
