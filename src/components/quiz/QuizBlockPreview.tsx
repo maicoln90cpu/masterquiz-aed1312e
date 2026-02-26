@@ -483,7 +483,7 @@ export const QuizBlockPreview = ({
       case "video":
         return block.url ? (
           <div key={block.id} className="space-y-2">
-            <div className={`rounded-lg overflow-hidden bg-muted ${
+            <div className={`rounded-lg overflow-hidden ${
               block.size === "small"
                 ? "max-w-xs mx-auto"
                 : block.size === "large"

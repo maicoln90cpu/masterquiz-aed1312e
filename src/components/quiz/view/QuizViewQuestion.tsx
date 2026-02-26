@@ -155,6 +155,7 @@ export function QuizViewQuestion({
                 showNavigationButton={block.type === 'button'}
                 onNavigateNext={handleNextClick}
                 onNavigateToQuestion={() => {}}
+                wrapInCard={false}
               />
             );
           })}
@@ -185,7 +186,7 @@ export function QuizViewQuestion({
 
       {/* Progress indicator: bar, counter, or none */}
       {(() => {
-        const progressStyle = (quiz as any).progress_style || (quiz.show_question_number !== false ? 'counter' : 'none');
+        const progressStyle = (quiz as any).progress_style ?? (quiz.show_question_number !== false ? 'counter' : 'none');
         if (progressStyle === 'none') return null;
         if (progressStyle === 'bar') return (
           <div className="space-y-1">
@@ -375,7 +376,7 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${getOptionStyle(optionText)}`}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] ${getOptionStyle(optionText)}`}
             onClick={() => {
               const newValue = isSelected 
                 ? currentAnswers.filter((v: string) => v !== optionText)
@@ -439,7 +440,7 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, d
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${getOptionStyle(optionText)}`}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] ${getOptionStyle(optionText)}`}
             onClick={() => { if (!disabled) onAnswer(questionId, optionText); }}
           >
             <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${

@@ -671,6 +671,8 @@ const CreateQuiz = () => {
                     onShowDescriptionChange={(v) => updateAppearance({ showDescription: v })}
                     onShowQuestionNumberChange={(v) => updateAppearance({ showQuestionNumber: v })}
                     onShowResultsChange={(v) => updateAppearance({ showResults: v })}
+                    progressStyle={appearanceState.progressStyle}
+                    onProgressStyleChange={(v) => updateAppearance({ progressStyle: v })}
                   />
                 )}
 
