@@ -34,10 +34,10 @@
 ## Etapa 2C — Componentes premium + Correções (ATUAL)
 
 ### Correções de bugs
-- [x] Fix: Modal de excluir pergunta aparecia 2x (onOpenChange conflitava com confirmDeleteQuestion)
-- [x] Fix: Botão "Próxima" duplicado no quiz publicado (hasManualNavButton só oculta quando não há questionBlock)
+- [x] Fix: Modal de excluir pergunta aparecia 2x — removido AlertDialog interno do QuestionsList, mantido apenas o central em CreateQuiz
+- [x] Fix: Botão "Próxima" duplicado — hasManualNavButton agora oculta botão auto sempre que há bloco button com action next_question
 - [x] Fix: Force refresh ao entrar em /meus-quizzes (invalidateQueries on mount)
-- [x] Fix: Erro ao enviar resposta em template (validação passava formData inteiro como customFields + empty strings)
+- [x] Fix: Erro ao enviar resposta — removido .select().single() (anon não tem SELECT RLS), separado lead fields de custom_field_data
 
 ### Componentes premium
 - [ ] Slider Premium: régua visual com campo de texto livre para unidade/rótulo

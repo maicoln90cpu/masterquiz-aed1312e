@@ -409,20 +409,19 @@ export function useQuizViewState({
         result = results.find(r => r.condition_type === 'always') || results[0];
       }
 
-      // Save response
-      const { error, data } = await supabase
+      // Save response - don't use .select().single() since anon has INSERT but not SELECT RLS
+      const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp, ...onlyCustomFields } = formData || {};
+      const { error } = await supabase
         .from('quiz_responses')
         .insert({
           quiz_id: quiz.id,
           answers: finalAnswers,
-          respondent_name: formData.name || null,
-          respondent_email: formData.email || null,
-          respondent_whatsapp: formData.whatsapp || null,
-          custom_field_data: formData,
+          respondent_name: leadName || null,
+          respondent_email: leadEmail || null,
+          respondent_whatsapp: leadWhatsapp || null,
+          custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
           result_id: result?.id
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         console.error('Error inserting quiz response:', error);
@@ -430,10 +429,9 @@ export function useQuizViewState({
       }
 
       // Trigger webhook
-      if (data && quiz.user_id) {
+      if (quiz.user_id) {
         supabase.functions.invoke('trigger-user-webhook', {
           body: {
-            response_id: data.id,
             quiz_id: quiz.id,
             user_id: quiz.user_id
           }

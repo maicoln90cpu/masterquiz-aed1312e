@@ -7,16 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface QuestionsListProps {
   questions: any[];
@@ -55,21 +45,9 @@ export const QuestionsList = memo(({
   const { t } = useTranslation();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [questionToDeleteIndex, setQuestionToDeleteIndex] = useState<number | null>(null);
-
   const handleDeleteClick = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
-    setQuestionToDeleteIndex(index);
-    setDeleteConfirmOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (questionToDeleteIndex !== null) {
-      onDeleteQuestion(questionToDeleteIndex);
-    }
-    setDeleteConfirmOpen(false);
-    setQuestionToDeleteIndex(null);
+    onDeleteQuestion(index);
   };
 
   const startEditing = (e: React.MouseEvent, index: number, currentLabel: string, questionText: string) => {
@@ -237,26 +215,6 @@ export const QuestionsList = memo(({
         </div>
       </ScrollArea>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('createQuiz.deleteConfirmTitle', 'Excluir pergunta?')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('createQuiz.deleteQuestionConfirm', 'Esta ação não pode ser desfeita. A pergunta será removida permanentemente do quiz.')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel', 'Cancelar')}</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {t('common.delete', 'Excluir')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 });
