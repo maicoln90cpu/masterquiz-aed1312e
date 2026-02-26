@@ -496,6 +496,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_created_event_sent: boolean | null
           analytics_viewed_at: string | null
           company_slug: string | null
           created_at: string
@@ -514,6 +515,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          account_created_event_sent?: boolean | null
           analytics_viewed_at?: string | null
           company_slug?: string | null
           created_at?: string
@@ -532,6 +534,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          account_created_event_sent?: boolean | null
           analytics_viewed_at?: string | null
           company_slug?: string | null
           created_at?: string

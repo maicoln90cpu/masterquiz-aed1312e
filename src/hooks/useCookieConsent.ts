@@ -40,63 +40,58 @@ export const useCookieConsent = (): UseCookieConsentReturn => {
   const [showBanner, setShowBanner] = useState(false);
   const [requireConsent, setRequireConsent] = useState(true);
 
-  // Verificar se o sistema exige consentimento
+  // Unified: check system config + localStorage in a single effect to prevent flash
   useEffect(() => {
-    const checkSystemConfig = async () => {
+    let cancelled = false;
+    const init = async () => {
       try {
+        // 1. Check system setting
         const { data } = await supabase
           .from('system_settings')
           .select('setting_value')
           .eq('setting_key', 'require_cookie_consent')
           .maybeSingle();
         
+        if (cancelled) return;
         const required = data?.setting_value !== 'false';
         setRequireConsent(required);
-        console.log('🍪 [Consent] System requires consent:', required);
-        
-        // Se não exigir consentimento, não mostrar banner
+
+        // 2. If not required, done — no banner
         if (!required) {
-          setShowBanner(false);
           setIsLoading(false);
+          return;
         }
-      } catch (error) {
-        // Se erro, assume que exige consentimento (seguro por padrão)
-        console.log('🍪 [Consent] Error checking config, defaulting to require consent');
-        setRequireConsent(true);
-      }
-    };
-    
-    checkSystemConfig();
-  }, []);
 
-  // Carregar consentimento do localStorage na inicialização
-  useEffect(() => {
-    // Só carregar se exigir consentimento
-    if (!requireConsent) {
-      setIsLoading(false);
-      return;
-    }
-
-    const loadConsent = () => {
-      try {
+        // 3. Check localStorage
         const stored = localStorage.getItem(CONSENT_STORAGE_KEY);
         if (stored) {
-          const parsed = JSON.parse(stored) as CookieConsentState;
-          setConsent(parsed);
-          setShowBanner(false);
+          try {
+            const parsed = JSON.parse(stored) as CookieConsentState;
+            setConsent(parsed);
+          } catch {
+            // Invalid JSON, show banner
+            if (!cancelled) setShowBanner(true);
+          }
+        } else {
+          if (!cancelled) setShowBanner(true);
+        }
+      } catch {
+        // Error checking config — safe default: require consent, check localStorage
+        if (cancelled) return;
+        setRequireConsent(true);
+        const stored = localStorage.getItem(CONSENT_STORAGE_KEY);
+        if (stored) {
+          try { setConsent(JSON.parse(stored)); } catch { setShowBanner(true); }
         } else {
           setShowBanner(true);
         }
-      } catch (error) {
-        console.error('Erro ao carregar consentimento:', error);
-        setShowBanner(true);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
-
-    loadConsent();
-  }, [requireConsent]);
+    init();
+    return () => { cancelled = true; };
+  }, []);
 
   // Salvar consentimento no localStorage e DB
   const saveConsentToStorage = useCallback(async (newConsent: CookieConsentState) => {

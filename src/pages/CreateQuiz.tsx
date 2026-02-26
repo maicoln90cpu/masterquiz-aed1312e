@@ -390,6 +390,21 @@ const CreateQuiz = () => {
                 </>
               )}
 
+              {/* Save button — always visible */}
+              {!isExpressMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => saveDraftToSupabase()}
+                  disabled={isSavingDraft || questions.length === 0}
+                  className="flex-shrink-0"
+                  title={t('createQuiz.saveDraft', 'Salvar rascunho')}
+                >
+                  {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  <span className="hidden md:inline ml-1">{t('createQuiz.save', 'Salvar')}</span>
+                </Button>
+              )}
+
               <Button
                 size="sm"
                 onClick={() => updateUI({ showInteractivePreview: true })}

@@ -319,14 +319,14 @@ export const QuizBlockPreview = ({
         return (
           <div key={block.id} className="space-y-4">
             <div>
-              <h3 
-                className="text-xl font-semibold mb-2"
-                dangerouslySetInnerHTML={{ __html: sanitizeSimpleText(block.questionText) }}
+              <div 
+                className="prose prose-sm max-w-none text-xl font-semibold mb-2 [&>p]:m-0 [&>h1]:m-0 [&>h2]:m-0 [&>h3]:m-0"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.questionText) }}
               />
               {block.subtitle && (
-                <p 
-                  className="text-sm text-muted-foreground mb-2"
-                  dangerouslySetInnerHTML={{ __html: sanitizeSimpleText(block.subtitle) }}
+                <div 
+                  className="prose prose-sm max-w-none text-sm text-muted-foreground mb-2 [&>p]:m-0"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.subtitle) }}
                 />
               )}
               {block.hint && (
