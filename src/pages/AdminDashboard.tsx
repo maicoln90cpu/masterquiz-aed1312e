@@ -266,10 +266,9 @@ export default function AdminDashboard() {
           }
         }),
         measureQuery('quiz-respondents', async () => {
-          const result = await supabase
-            .from('quiz_responses')
-            .select('respondent_name, respondent_email, respondent_whatsapp, completed_at');
-          return result;
+          const result = await supabase.functions.invoke('list-all-respondents');
+          if (result.error) return { data: [], error: result.error };
+          return { data: result.data?.respondents || [], error: null };
         })
       ]);
 
@@ -282,28 +281,8 @@ export default function AdminDashboard() {
 
       setValidationRequests(requestsResult.data || []);
 
-      const userMap = new Map();
-      respondentsResult.data?.forEach((resp) => {
-        const key = resp.respondent_email || resp.respondent_whatsapp || resp.respondent_name;
-        if (key) {
-          if (!userMap.has(key)) {
-            userMap.set(key, {
-              name: resp.respondent_name,
-              email: resp.respondent_email,
-              whatsapp: resp.respondent_whatsapp,
-              responseCount: 0,
-              lastResponse: resp.completed_at
-            });
-          }
-          const user = userMap.get(key);
-          user.responseCount++;
-          if (new Date(resp.completed_at) > new Date(user.lastResponse)) {
-            user.lastResponse = resp.completed_at;
-          }
-        }
-      });
-
-      setAllUsers(Array.from(userMap.values()));
+      // Edge function already returns aggregated respondents
+      setAllUsers(respondentsResult.data || []);
       await loadFinancialData();
       await loadSettings();
       setLoading(false);
@@ -1032,16 +1011,28 @@ export default function AdminDashboard() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>WhatsApp</TableHead>
+                    <TableHead>Quiz</TableHead>
                     <TableHead>Respostas</TableHead>
                     <TableHead>Última Resposta</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedRespondents.map((user, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>{user.name || '-'}</TableCell>
+                    <TableRow key={idx} className={user.isTestLead ? 'opacity-60' : ''}>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          {user.name || '-'}
+                          {user.isTestLead && (
+                            <Badge variant="outline" className="text-xs gap-1 shrink-0">
+                              <FlaskConical className="h-3 w-3" />
+                              Teste
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{user.email || '-'}</TableCell>
                       <TableCell>{user.whatsapp || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{user.lastQuizTitle || '-'}</TableCell>
                       <TableCell>{user.responseCount}</TableCell>
                       <TableCell>
                         {new Date(user.lastResponse).toLocaleDateString('pt-BR')}
@@ -1060,17 +1051,26 @@ export default function AdminDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.05, ease: "easeOut" }}
                 >
-                  <Card className="p-4">
+                  <Card className={`p-4 ${user.isTestLead ? 'opacity-60 border-dashed' : ''}`}>
                     <div className="space-y-2">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium">{user.name || '-'}</p>
+                          <p className="font-medium flex items-center gap-1.5">
+                            {user.name || '-'}
+                            {user.isTestLead && (
+                              <Badge variant="outline" className="text-xs gap-1">
+                                <FlaskConical className="h-3 w-3" />
+                                Teste
+                              </Badge>
+                            )}
+                          </p>
                           <p className="text-sm text-muted-foreground">{user.email || '-'}</p>
                         </div>
                         <Badge variant="secondary">{user.responseCount}</Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
                         <p>WhatsApp: {user.whatsapp || '-'}</p>
+                        <p>Quiz: {user.lastQuizTitle || '-'}</p>
                         <p>Última resposta: {new Date(user.lastResponse).toLocaleDateString('pt-BR')}</p>
                       </div>
                     </div>

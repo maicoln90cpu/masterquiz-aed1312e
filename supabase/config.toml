@@ -117,3 +117,6 @@ verify_jwt = false
 
 [functions.check-activation-24h]
 verify_jwt = false
+
+[functions.list-all-respondents]
+verify_jwt = false
