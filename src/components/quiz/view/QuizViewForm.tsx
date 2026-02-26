@@ -33,7 +33,7 @@ export function QuizViewForm({
         <div>
           <Label className="text-base md:text-sm">{t('quizView.name')}</Label>
           <Input
-            className="h-12 md:h-10 text-base md:text-sm w-full"
+            className="h-12 md:h-10 text-base md:text-sm w-full transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
             value={formData.name || ''}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
@@ -45,7 +45,7 @@ export function QuizViewForm({
           <Label className="text-base md:text-sm">{t('quizView.email')}</Label>
           <Input
             type="email"
-            className="h-12 md:h-10 text-base md:text-sm w-full"
+            className="h-12 md:h-10 text-base md:text-sm w-full transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
             value={formData.email || ''}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
@@ -56,7 +56,7 @@ export function QuizViewForm({
         <div>
           <Label className="text-base md:text-sm">{t('quizView.whatsapp')}</Label>
           <Input
-            className="h-12 md:h-10 text-base md:text-sm w-full"
+            className="h-12 md:h-10 text-base md:text-sm w-full transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
             value={formData.whatsapp || ''}
             onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
           />
@@ -70,14 +70,14 @@ export function QuizViewForm({
           </Label>
           {field.field_type === 'textarea' ? (
             <Textarea
-              className="min-h-[120px] text-base md:text-sm w-full"
+              className="min-h-[120px] text-base md:text-sm w-full transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
               value={formData[field.field_name] || ''}
               onChange={(e) => setFormData({ ...formData, [field.field_name]: e.target.value })}
             />
           ) : (
             <Input
               type={field.field_type}
-              className="h-12 md:h-10 text-base md:text-sm w-full"
+              className="h-12 md:h-10 text-base md:text-sm w-full transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
               value={formData[field.field_name] || ''}
               onChange={(e) => setFormData({ ...formData, [field.field_name]: e.target.value })}
             />

@@ -360,8 +360,8 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
     if (!answered || !correctAnswer) {
       const isSelected = currentAnswers.includes(optionText);
       return isSelected 
-        ? 'border-primary bg-primary/10' 
-        : 'border-muted-foreground/20 hover:border-primary/50';
+        ? 'border-primary bg-primary/10 shadow-md shadow-primary/10' 
+        : 'border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5';
     }
     const isSelected = currentAnswers.includes(optionText);
     const isCorrect = optionText === correctAnswer;
@@ -421,8 +421,8 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, d
     const isSelected = answers[questionId] === optionText;
     if (!answered || !correctAnswer) {
       return isSelected 
-        ? 'border-primary bg-primary/10' 
-        : 'border-muted-foreground/20 hover:border-primary/50';
+        ? 'border-primary bg-primary/10 shadow-md shadow-primary/10' 
+        : 'border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5';
     }
     const isCorrect = optionText === correctAnswer;
     if (isSelected && isCorrect) return 'border-green-500 bg-green-50 dark:bg-green-950/30';

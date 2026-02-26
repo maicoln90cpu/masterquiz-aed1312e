@@ -1,14 +1,44 @@
 import { useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuizViewState, type PreviewData } from "@/hooks/useQuizViewState";
 import { useQuizTracking } from "@/hooks/useQuizTracking";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   QuizViewResult, 
   QuizViewForm, 
   QuizViewQuestion, 
   QuizViewHeader 
 } from "@/components/quiz/view";
+
+// Shimmer loading skeleton
+function QuizLoadingSkeleton() {
+  return (
+    <main className="min-h-screen bg-background py-8 md:py-12 px-4">
+      <div className="container max-w-2xl mx-auto space-y-6">
+        {/* Header skeleton */}
+        <div className="space-y-3">
+          <div className="h-8 w-48 mx-auto rounded-lg bg-muted animate-pulse" />
+          <div className="h-4 w-64 mx-auto rounded bg-muted animate-pulse" />
+        </div>
+        {/* Progress bar skeleton */}
+        <div className="h-2.5 w-full rounded-full bg-muted animate-pulse" />
+        {/* Question skeleton */}
+        <div className="space-y-4 pt-4">
+          <div className="h-6 w-3/4 rounded bg-muted animate-pulse" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="flex items-center gap-3 p-4 rounded-xl border-2 border-muted">
+                <div className="w-10 h-10 rounded-lg bg-muted animate-pulse" />
+                <div className="flex-1 h-5 rounded bg-muted animate-pulse" />
+                <div className="w-5 h-5 rounded bg-muted animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
 
 interface QuizViewProps {
   previewMode?: boolean;
@@ -32,11 +62,7 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
   });
 
   if (state.loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </main>
-    );
+    return <QuizLoadingSkeleton />;
   }
 
   if (!state.quiz) return null;
@@ -70,36 +96,54 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
         />
 
         <div className="py-6">
+          <AnimatePresence mode="wait">
             {showFormBefore || showFormAfter ? (
-              <Card>
-                <CardContent className="pt-6">
-                  <QuizViewForm
-                    formConfig={state.formConfig}
-                    customFields={state.customFields}
-                    formData={state.formData}
-                    setFormData={state.setFormData}
-                    onSubmit={showFormBefore ? state.nextStep : state.submitQuiz}
-                    isBeforeQuiz={showFormBefore}
-                  />
-                </CardContent>
-              </Card>
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <Card>
+                  <CardContent className="pt-6">
+                    <QuizViewForm
+                      formConfig={state.formConfig}
+                      customFields={state.customFields}
+                      formData={state.formData}
+                      setFormData={state.setFormData}
+                      onSubmit={showFormBefore ? state.nextStep : state.submitQuiz}
+                      isBeforeQuiz={showFormBefore}
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
             ) : state.currentQuestion ? (
-              <QuizViewQuestion
-                quiz={state.quiz}
-                question={state.currentQuestion}
-                currentStep={state.currentStep}
-                totalQuestions={state.questions.length}
-                visibleQuestionsCount={state.visibleQuestions.length}
-                answers={state.answers}
-                onAnswer={state.handleAnswer}
-                onNext={state.nextStep}
-                onPrev={state.prevStep}
-                isLastQuestion={state.currentStep === state.questions.length - 1}
-                showFormAfter={state.formConfig?.collection_timing === 'after'}
-                onSubmit={state.submitQuiz}
-                showResults={quizShowResults}
-              />
+              <motion.div
+                key={`question-${state.currentStep}`}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <QuizViewQuestion
+                  quiz={state.quiz}
+                  question={state.currentQuestion}
+                  currentStep={state.currentStep}
+                  totalQuestions={state.questions.length}
+                  visibleQuestionsCount={state.visibleQuestions.length}
+                  answers={state.answers}
+                  onAnswer={state.handleAnswer}
+                  onNext={state.nextStep}
+                  onPrev={state.prevStep}
+                  isLastQuestion={state.currentStep === state.questions.length - 1}
+                  showFormAfter={state.formConfig?.collection_timing === 'after'}
+                  onSubmit={state.submitQuiz}
+                  showResults={quizShowResults}
+                />
+              </motion.div>
             ) : null}
+          </AnimatePresence>
         </div>
         
         {!state.quiz.hide_branding && (
