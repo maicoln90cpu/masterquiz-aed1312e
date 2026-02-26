@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { ArrowRight, ArrowLeft, Check, Lightbulb, CheckCircle2, XCircle } from "lucide-react";
 import { QuizBlockPreview } from "@/components/quiz/QuizBlockPreview";
 import { sanitizeSimpleText } from "@/lib/sanitize";
@@ -43,12 +44,37 @@ export function QuizViewQuestion({
   showResults = true
 }: QuizViewQuestionProps) {
   const { t } = useTranslation();
+  const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Detect auto-advance from question block settings
+  const questionBlock = question.blocks?.find((b: any) => b.type === 'question') as any;
+  const answerFormat = questionBlock?.answerFormat || question.answer_format;
+  const isRequired = questionBlock?.required !== false;
+  const autoAdvance = questionBlock?.autoAdvance === true;
+  
+  // Auto-advance: for single_choice/yes_no, advance after selection
+  const shouldAutoAdvance = autoAdvance && (answerFormat === 'single_choice' || answerFormat === 'yes_no');
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    };
+  }, []);
+
+  const handleAutoAdvance = useCallback(() => {
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = setTimeout(() => {
+      if (isLastQuestion) {
+        if (showFormAfter) onNext(); else onSubmit();
+      } else {
+        onNext();
+      }
+    }, 500);
+  }, [isLastQuestion, showFormAfter, onNext, onSubmit]);
 
   const isNextDisabled = () => {
-    const questionBlock = question.blocks?.find((b: any) => b.type === 'question') as any;
     const options = questionBlock?.options || (question as any).options || [];
-    const answerFormat = questionBlock?.answerFormat;
-    const isRequired = questionBlock?.required !== false;
     
     if (!isRequired) return false;
     
@@ -85,6 +111,11 @@ export function QuizViewQuestion({
     }
   };
 
+  // Check if question has no answer options (informational slide with button block)
+  const hasQuestionBlock = question.blocks?.some((b: any) => b.type === 'question');
+  const hasButtonBlock = question.blocks?.some((b: any) => b.type === 'button');
+  const isInformationalSlide = !hasQuestionBlock && hasButtonBlock;
+
   const renderQuestionBlocks = () => {
     if (!question.blocks || !Array.isArray(question.blocks) || question.blocks.length === 0) {
       return (
@@ -110,6 +141,7 @@ export function QuizViewQuestion({
                   questionId={question.id}
                   answers={answers}
                   onAnswer={onAnswer}
+                  onAutoAdvance={shouldAutoAdvance ? handleAutoAdvance : undefined}
                 />
               );
             }
@@ -118,8 +150,8 @@ export function QuizViewQuestion({
               <QuizBlockPreview 
                 key={block.id} 
                 blocks={[block]} 
-                showNavigationButton={false}
-                onNavigateNext={onNext}
+                showNavigationButton={true}
+                onNavigateNext={handleNextClick}
                 onNavigateToQuestion={() => {}}
               />
             );
@@ -128,25 +160,43 @@ export function QuizViewQuestion({
     );
   };
 
+  // Progress bar percentage
+  const progressPercent = totalQuestions > 0 ? ((currentStep + 1) / totalQuestions) * 100 : 0;
+
+  // Determine if we should show navigation buttons
+  // Hide "Next" when auto-advance is active AND answer is single choice
+  const hideNextButton = shouldAutoAdvance && !isInformationalSlide;
+
   return (
     <div className="space-y-6">
+      {/* Back arrow at top-left */}
+      {currentStep > 0 && (
+        <button 
+          onClick={onPrev}
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors -mt-2 mb-2"
+          aria-label={t('quizView.previous')}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-sm">{t('quizView.previous')}</span>
+        </button>
+      )}
+
+      {/* Progress indicator: bar or counter */}
       {quiz.show_question_number !== false && (
-        <div className="text-sm text-muted-foreground">
-          Questão {currentStep + 1} de {totalQuestions}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{currentStep + 1} / {totalQuestions}</span>
+            <span>{Math.round(progressPercent)}%</span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
         </div>
       )}
       
       {renderQuestionBlocks()}
       
-      {/* Hide navigation buttons on last question when show_results=false (auto-submit mode) */}
-      {!(isLastQuestion && !showResults) && (
+      {/* Navigation: only show Next/Finish when not auto-advancing */}
+      {!hideNextButton && !isInformationalSlide && !(isLastQuestion && !showResults) && (
         <div className="flex gap-2">
-          {currentStep > 0 && (
-            <Button variant="outline" onClick={onPrev}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('quizView.previous')}
-            </Button>
-          )}
           <Button
             onClick={handleNextClick}
             disabled={isNextDisabled()}
@@ -154,15 +204,6 @@ export function QuizViewQuestion({
           >
             {isLastQuestion ? t('quizView.finish') : t('quizView.next')}
             <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      )}
-      {/* Show only back button on last question when show_results=false */}
-      {isLastQuestion && !showResults && currentStep > 0 && (
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onPrev}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('quizView.previous')}
           </Button>
         </div>
       )}
@@ -176,11 +217,11 @@ interface QuestionBlockRendererProps {
   questionId: string;
   answers: Record<string, any>;
   onAnswer: (questionId: string, value: any) => void;
+  onAutoAdvance?: () => void;
 }
 
-function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: QuestionBlockRendererProps) {
+function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdvance }: QuestionBlockRendererProps) {
   const [answered, setAnswered] = useState(false);
-  // Cast to any for question block properties
   const questionBlock = block as any;
   const answerFormat = questionBlock.answerFormat;
   const options = questionBlock.options || [];
@@ -220,23 +261,26 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: Questio
           disabled={answered}
         />
       ) : answerFormat === 'multiple_choice' ? (
-        <MultipleChoiceOptions
-          options={options}
-          emojis={emojis}
-          questionId={questionId}
-          answers={answers}
-          correctAnswer={correctAnswer}
-          answered={answered}
-          onAnswer={(qId, val) => {
-            if (!answered) {
-              onAnswer(qId, val);
-              if (explanation && explanationMode !== 'end_of_quiz' && Array.isArray(val) && val.length > 0) {
-                setAnswered(true);
+        <>
+          <p className="text-xs text-muted-foreground">Selecione uma ou mais opções</p>
+          <MultipleChoiceOptions
+            options={options}
+            emojis={emojis}
+            questionId={questionId}
+            answers={answers}
+            correctAnswer={correctAnswer}
+            answered={answered}
+            onAnswer={(qId, val) => {
+              if (!answered) {
+                onAnswer(qId, val);
+                if (explanation && explanationMode !== 'end_of_quiz' && Array.isArray(val) && val.length > 0) {
+                  setAnswered(true);
+                }
               }
-            }
-          }}
-          disabled={answered}
-        />
+            }}
+            disabled={answered}
+          />
+        </>
       ) : (
         <SingleChoiceOptions
           options={options}
@@ -250,6 +294,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer }: Questio
               onAnswer(qId, val);
               if (explanation && explanationMode !== 'end_of_quiz') {
                 setAnswered(true);
+              } else if (onAutoAdvance) {
+                // Auto-advance for single choice when no explanation
+                onAutoAdvance();
               }
             }
           }}
@@ -331,17 +378,18 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
             }`}>
               {emoji || String.fromCharCode(65 + idx)}
             </div>
+            {/* Visible checkbox for multiple choice */}
             <Checkbox 
-              id={`checkbox-${idx}`}
+              id={`checkbox-${questionId}-${idx}`}
               checked={isSelected}
-              className="sr-only"
+              className="h-5 w-5 flex-shrink-0"
+              tabIndex={-1}
             />
-            <Label htmlFor={`checkbox-${idx}`} className="flex-1 cursor-pointer text-base">
+            <Label htmlFor={`checkbox-${questionId}-${idx}`} className="flex-1 cursor-pointer text-base">
               {optionText}
             </Label>
             {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
             {answered && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-red-500" />}
-            {!answered && isSelected && <Check className="h-5 w-5 text-primary" />}
           </div>
         );
       })}
@@ -389,8 +437,8 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, d
             }`}>
               {emoji || String.fromCharCode(65 + idx)}
             </div>
-            <RadioGroupItem value={optionText} id={`option-${idx}`} className="sr-only" />
-            <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer text-base">
+            <RadioGroupItem value={optionText} id={`option-${questionId}-${idx}`} className="sr-only" />
+            <Label htmlFor={`option-${questionId}-${idx}`} className="flex-1 cursor-pointer text-base">
               {optionText}
             </Label>
             {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
