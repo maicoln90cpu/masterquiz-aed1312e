@@ -178,7 +178,7 @@ export const useQuizActions = ({
             question_count: questionCount,
             is_public: true,
             status: 'active' as const
-        };
+        } as any;
 
         let { data, error } = await supabase
           .from('quizzes')
@@ -220,7 +220,7 @@ export const useQuizActions = ({
             question_count: questionCount,
             is_public: true,
             status: 'active' as const
-        };
+        } as any;
 
         let { data, error } = await supabase
           .from('quizzes')

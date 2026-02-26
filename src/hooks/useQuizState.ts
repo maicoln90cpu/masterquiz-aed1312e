@@ -85,7 +85,7 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
     showInteractivePreview: false,
     resetDialogOpen: false,
     showInlinePreview: true,
-    rightPanelMode: 'preview',
+    rightPanelMode: 'steps',
   }));
 
   // ✅ Sincronizar estado quando isEditMode muda (corrige race condition)
