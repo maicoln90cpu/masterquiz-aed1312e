@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ArrowRight, ArrowLeft, Check, Lightbulb, CheckCircle2, XCircle } from "lucide-react";
 import { QuizBlockPreview } from "@/components/quiz/QuizBlockPreview";
-import { sanitizeSimpleText } from "@/lib/sanitize";
+import { sanitizeHtml } from "@/lib/sanitize";
 import type { QuizBlock } from "@/types/blocks";
 import type { QuizQuestion, Quiz } from "@/types/quiz";
 
@@ -189,18 +189,16 @@ export function QuizViewQuestion({
         const progressStyle = (quiz as any).progress_style ?? (quiz.show_question_number !== false ? 'counter' : 'none');
         if (progressStyle === 'none') return null;
         if (progressStyle === 'bar') return (
+          <Progress value={progressPercent} className="h-2" />
+        );
+        // counter: bar + number + percentage
+        return (
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>{currentStep + 1} / {totalQuestions}</span>
               <span>{Math.round(progressPercent)}%</span>
             </div>
             <Progress value={progressPercent} className="h-2" />
-          </div>
-        );
-        // counter (default)
-        return (
-          <div className="text-xs text-muted-foreground">
-            {t('quizView.questionOf', 'Pergunta {{current}} de {{total}}', { current: currentStep + 1, total: totalQuestions })}
           </div>
         );
       })()}
@@ -247,14 +245,14 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
   return (
     <div className="space-y-4">
       <div>
-        <h3 
-          className="text-xl font-semibold mb-2"
-          dangerouslySetInnerHTML={{ __html: sanitizeSimpleText(questionBlock.questionText || '') }}
+        <div 
+          className="prose prose-sm max-w-none text-xl font-semibold mb-2 [&>p]:m-0 [&>h1]:m-0 [&>h2]:m-0 [&>h3]:m-0"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(questionBlock.questionText || '') }}
         />
         {questionBlock.subtitle && (
-          <p 
-            className="text-sm text-muted-foreground mb-2"
-            dangerouslySetInnerHTML={{ __html: sanitizeSimpleText(questionBlock.subtitle) }}
+          <div 
+            className="prose prose-sm max-w-none text-sm text-muted-foreground mb-2 [&>p]:m-0"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(questionBlock.subtitle) }}
           />
         )}
         {questionBlock.hint && (

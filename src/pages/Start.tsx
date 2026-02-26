@@ -211,7 +211,7 @@ const Start = () => {
 
       // 7. Marcar que o usuário completou o /start (skip modais no dashboard)
       localStorage.setItem("mq_start_completed", "true");
-      localStorage.removeItem("mq_just_registered");
+      // NÃO remover mq_just_registered aqui — o Dashboard precisa dela para disparar account_created
 
       // 8. Redirecionar para editor em modo express
       navigate(`/create-quiz?id=${quiz.id}&mode=express`);

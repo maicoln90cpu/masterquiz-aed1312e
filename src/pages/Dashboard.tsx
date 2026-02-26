@@ -83,6 +83,31 @@ const Dashboard = () => {
            user_email: user.email
          });
          console.log('🎯 [GTM] Event pushed: account_created');
+         // Marcar no DB que o evento foi enviado
+         await supabase.from('profiles').update({ account_created_event_sent: true } as any).eq('id', user.id);
+       } else {
+         // Retroativo: se usuário recente (< 7 dias) e evento nunca foi enviado, disparar agora
+         const { data: profileCheck } = await supabase
+           .from('profiles')
+           .select('account_created_event_sent, created_at')
+           .eq('id', user.id)
+           .maybeSingle();
+         
+         if (profileCheck && !(profileCheck as any).account_created_event_sent) {
+           const createdAt = new Date((profileCheck as any).created_at);
+           const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+           if (createdAt > sevenDaysAgo) {
+             const w = window as Window & { dataLayer?: Record<string, unknown>[] };
+             w.dataLayer = w.dataLayer || [];
+             w.dataLayer.push({
+               event: 'account_created',
+               user_id: user.id,
+               user_email: user.email
+             });
+             console.log('🎯 [GTM] Event pushed: account_created (retroactive)');
+             await supabase.from('profiles').update({ account_created_event_sent: true } as any).eq('id', user.id);
+           }
+         }
        }
         
         // Load user profile
