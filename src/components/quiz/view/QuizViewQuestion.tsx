@@ -113,8 +113,10 @@ export function QuizViewQuestion({
 
   // Check if question has no answer options (informational slide with button block)
   const hasQuestionBlock = question.blocks?.some((b: any) => b.type === 'question');
-  const hasButtonBlock = question.blocks?.some((b: any) => b.type === 'button');
+  const hasButtonBlock = question.blocks?.some((b: any) => b.type === 'button' && (b as any).action === 'next_question');
   const isInformationalSlide = !hasQuestionBlock && hasButtonBlock;
+  // Hide auto next button when user placed a manual navigation button
+  const hasManualNavButton = hasButtonBlock;
 
   const renderQuestionBlocks = () => {
     if (!question.blocks || !Array.isArray(question.blocks) || question.blocks.length === 0) {
@@ -150,7 +152,7 @@ export function QuizViewQuestion({
               <QuizBlockPreview 
                 key={block.id} 
                 blocks={[block]} 
-                showNavigationButton={true}
+                showNavigationButton={block.type === 'button'}
                 onNavigateNext={handleNextClick}
                 onNavigateToQuestion={() => {}}
               />
@@ -181,28 +183,38 @@ export function QuizViewQuestion({
         </button>
       )}
 
-      {/* Progress indicator: bar or counter */}
-      {quiz.show_question_number !== false && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{currentStep + 1} / {totalQuestions}</span>
-            <span>{Math.round(progressPercent)}%</span>
+      {/* Progress indicator: bar, counter, or none */}
+      {(() => {
+        const progressStyle = (quiz as any).progress_style || (quiz.show_question_number !== false ? 'counter' : 'none');
+        if (progressStyle === 'none') return null;
+        if (progressStyle === 'bar') return (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{currentStep + 1} / {totalQuestions}</span>
+              <span>{Math.round(progressPercent)}%</span>
+            </div>
+            <Progress value={progressPercent} className="h-2" />
           </div>
-          <Progress value={progressPercent} className="h-2" />
-        </div>
-      )}
+        );
+        // counter (default)
+        return (
+          <div className="text-xs text-muted-foreground">
+            {t('quizView.questionOf', 'Pergunta {{current}} de {{total}}', { current: currentStep + 1, total: totalQuestions })}
+          </div>
+        );
+      })()}
       
       {renderQuestionBlocks()}
       
       {/* Navigation: only show Next/Finish when not auto-advancing */}
-      {!hideNextButton && !isInformationalSlide && !(isLastQuestion && !showResults) && (
+      {!hideNextButton && !isInformationalSlide && !hasManualNavButton && !(isLastQuestion && !showResults) && (
         <div className="flex gap-2">
           <Button
             onClick={handleNextClick}
             disabled={isNextDisabled()}
             className="flex-1 btn-primary"
           >
-            {isLastQuestion ? t('quizView.finish') : t('quizView.next')}
+            {isLastQuestion ? t('quizView.finish') : (questionBlock?.nextButtonText || t('quizView.next'))}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -378,16 +390,16 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
             }`}>
               {emoji || String.fromCharCode(65 + idx)}
             </div>
-            {/* Visible checkbox for multiple choice */}
-            <Checkbox 
-              id={`checkbox-${questionId}-${idx}`}
-              checked={isSelected}
-              className="h-5 w-5 flex-shrink-0"
-              tabIndex={-1}
-            />
             <Label htmlFor={`checkbox-${questionId}-${idx}`} className="flex-1 cursor-pointer text-base">
               {optionText}
             </Label>
+            {/* Visible checkbox on the right for multiple choice */}
+            <Checkbox 
+              id={`checkbox-${questionId}-${idx}`}
+              checked={isSelected}
+              className="h-5 w-5 flex-shrink-0 ml-auto"
+              tabIndex={-1}
+            />
             {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
             {answered && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-red-500" />}
           </div>

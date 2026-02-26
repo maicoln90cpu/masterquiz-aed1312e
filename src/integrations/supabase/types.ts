@@ -1112,6 +1112,7 @@ export type Database = {
           id: string
           is_public: boolean
           logo_url: string | null
+          progress_style: string | null
           question_count: number
           show_description: boolean | null
           show_logo: boolean | null
@@ -1135,6 +1136,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           logo_url?: string | null
+          progress_style?: string | null
           question_count?: number
           show_description?: boolean | null
           show_logo?: boolean | null
@@ -1158,6 +1160,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           logo_url?: string | null
+          progress_style?: string | null
           question_count?: number
           show_description?: boolean | null
           show_logo?: boolean | null

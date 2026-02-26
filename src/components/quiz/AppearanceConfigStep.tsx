@@ -197,14 +197,26 @@ export const AppearanceConfigStep = ({
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="show-question-number">Exibir número da pergunta</Label>
-                    <p className="text-xs text-muted-foreground">Mostrar "Pergunta X de Y" durante o quiz</p>
+                    <Label htmlFor="progress-style">Indicador de progresso</Label>
+                    <p className="text-xs text-muted-foreground">Como exibir o progresso durante o quiz</p>
                   </div>
-                  <Switch
-                    id="show-question-number"
-                    checked={showQuestionNumber}
-                    onCheckedChange={onShowQuestionNumberChange}
-                  />
+                  <select
+                    id="progress-style"
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    value={showQuestionNumber === false ? 'none' : showQuestionNumber === true ? 'counter' : 'counter'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (onShowQuestionNumberChange) {
+                        // For now map: counter=true, bar=true, none=false
+                        // The actual progress_style will be handled separately
+                        onShowQuestionNumberChange(val !== 'none');
+                      }
+                    }}
+                  >
+                    <option value="counter">Número da Pergunta</option>
+                    <option value="bar">Barra de Progresso</option>
+                    <option value="none">Não mostrar</option>
+                  </select>
                 </div>
 
                 <Separator className="my-2" />

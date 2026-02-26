@@ -571,12 +571,12 @@ const CreateQuiz = () => {
                       <div className="flex items-center gap-2 ml-auto">
                         <Button
                           size="sm"
-                          className="gap-1.5 bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-800 hover:to-blue-950 text-white shadow-md"
+                          className="gap-1.5 bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-800 hover:to-blue-950 text-white shadow-md min-w-[120px] px-5"
                           onClick={saveDraftToSupabase}
                           disabled={isSavingDraft || !quizId}
                         >
                           <Save className={`h-3.5 w-3.5 ${isSavingDraft ? 'animate-spin' : ''}`} />
-                          <span className="hidden xs:inline text-xs font-medium">
+                          <span className="hidden xs:inline text-sm font-medium">
                             {isSavingDraft ? 'Salvando...' : 'Salvar'}
                           </span>
                         </Button>
