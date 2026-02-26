@@ -18,6 +18,15 @@ interface RecoverySettings {
   user_cooldown_days: number;
 }
 
+interface TargetCriteria {
+  no_leads?: boolean;
+  no_quizzes?: boolean;
+  plans?: string[];
+  stages?: string[];
+  objectives?: string[];
+  min_inactive_days?: number;
+}
+
 interface InactiveUser {
   id: string;
   full_name: string | null;
@@ -27,6 +36,8 @@ interface InactiveUser {
   plan_type: string;
   quiz_count: number;
   lead_count: number;
+  user_stage: string | null;
+  user_objectives: string[] | null;
 }
 
 Deno.serve(async (req) => {
@@ -40,28 +51,40 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Parse request body for optional campaignId and templateId
     let campaignId: string | null = null;
     let templateId: string | null = null;
     let ignoreCooldown = false;
+    let targetCriteria: TargetCriteria = {};
 
     try {
       const body = await req.json();
       campaignId = body.campaignId || null;
       templateId = body.templateId || null;
       ignoreCooldown = body.ignoreCooldown || false;
+      targetCriteria = body.targetCriteria || {};
     } catch {
-      // No body provided, use defaults
+      // No body provided
     }
 
-    // Buscar configurações de recuperação
+    // Se campaignId fornecido, buscar target_criteria da campanha (fallback)
+    if (campaignId && Object.keys(targetCriteria).length === 0) {
+      const { data: campaign } = await supabase
+        .from('recovery_campaigns')
+        .select('target_criteria')
+        .eq('id', campaignId)
+        .single();
+      if (campaign?.target_criteria) {
+        targetCriteria = campaign.target_criteria as TargetCriteria;
+      }
+    }
+
+    // Buscar configurações
     const { data: settings, error: settingsError } = await supabase
       .from('recovery_settings')
       .select('*')
       .single();
 
     if (settingsError || !settings) {
-      console.log('No recovery settings found');
       return new Response(
         JSON.stringify({ message: 'Configurações não encontradas', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -70,29 +93,22 @@ Deno.serve(async (req) => {
 
     const typedSettings = settings as RecoverySettings;
 
-    // Verificar se o sistema está ativo e conectado
     if (!typedSettings.is_active || !typedSettings.is_connected) {
-      console.log('Recovery system is not active or not connected');
       return new Response(
         JSON.stringify({ message: 'Sistema inativo ou desconectado', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verificar horário permitido (timezone: America/Sao_Paulo)
+    // Verificar horário permitido
     const now = new Date();
     const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    const currentHour = brasilTime.getHours();
-    const currentMinute = brasilTime.getMinutes();
-    const currentTimeMinutes = currentHour * 60 + currentMinute;
+    const currentTimeMinutes = brasilTime.getHours() * 60 + brasilTime.getMinutes();
 
     const [startHour, startMin] = typedSettings.allowed_hours_start.split(':').map(Number);
     const [endHour, endMin] = typedSettings.allowed_hours_end.split(':').map(Number);
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
 
-    if (currentTimeMinutes < startMinutes || currentTimeMinutes > endMinutes) {
-      console.log(`Outside allowed hours: ${currentHour}:${currentMinute}`);
+    if (currentTimeMinutes < startHour * 60 + startMin || currentTimeMinutes > endHour * 60 + endMin) {
       return new Response(
         JSON.stringify({ message: 'Fora do horário permitido', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -108,39 +124,28 @@ Deno.serve(async (req) => {
       .in('status', ['sent', 'delivered', 'read', 'responded']);
 
     const remainingLimit = typedSettings.daily_message_limit - (sentToday || 0);
-
     if (remainingLimit <= 0) {
-      console.log('Daily limit reached');
       return new Response(
         JSON.stringify({ message: 'Limite diário atingido', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Buscar usuários inativos com WhatsApp
+    // Determinar dias mínimos de inatividade
+    const minInactiveDays = targetCriteria.min_inactive_days || typedSettings.inactivity_days_trigger;
     const inactivityDate = new Date();
-    inactivityDate.setDate(inactivityDate.getDate() - typedSettings.inactivity_days_trigger);
+    inactivityDate.setDate(inactivityDate.getDate() - minInactiveDays);
 
-    // Query para buscar usuários inativos via auth.users
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
-      perPage: 1000
-    });
+    // Buscar usuários inativos via auth.users
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    if (authError) throw authError;
 
-    if (authError) {
-      console.error('Error fetching auth users:', authError);
-      throw authError;
-    }
-
-    // Filtrar usuários inativos
     const inactiveUserIds = authUsers.users
       .filter(user => {
         const lastSignIn = user.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
         return lastSignIn && lastSignIn < inactivityDate;
       })
-      .map(user => ({
-        id: user.id,
-        last_sign_in_at: user.last_sign_in_at
-      }));
+      .map(user => ({ id: user.id, last_sign_in_at: user.last_sign_in_at }));
 
     if (inactiveUserIds.length === 0) {
       return new Response(
@@ -149,80 +154,91 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Buscar perfis com WhatsApp
+    // Buscar perfis com WhatsApp + stage + objectives
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, full_name, whatsapp')
+      .select('id, full_name, whatsapp, user_stage, user_objectives')
       .in('id', inactiveUserIds.map(u => u.id))
       .not('whatsapp', 'is', null);
 
-    if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
-      throw profilesError;
-    }
+    if (profilesError) throw profilesError;
 
     // Buscar blacklist
-    const { data: blacklist } = await supabase
-      .from('recovery_blacklist')
-      .select('phone_number, user_id');
-
+    const { data: blacklist } = await supabase.from('recovery_blacklist').select('phone_number, user_id');
     const blacklistedPhones = new Set((blacklist || []).map(b => b.phone_number));
     const blacklistedUserIds = new Set((blacklist || []).map(b => b.user_id));
 
-    // Buscar contatos recentes usando o cooldown configurável
+    // Cooldown
     const cooldownDays = typedSettings.user_cooldown_days || 7;
     const cooldownDate = new Date();
     cooldownDate.setDate(cooldownDate.getDate() - cooldownDays);
 
     let recentlyContactedIds = new Set<string>();
-
     if (!ignoreCooldown) {
       const { data: recentContacts } = await supabase
         .from('recovery_contacts')
         .select('user_id')
         .gte('created_at', cooldownDate.toISOString())
         .not('status', 'eq', 'cancelled');
-
       recentlyContactedIds = new Set((recentContacts || []).map(c => c.user_id));
     }
 
-    // Buscar subscriptions para filtrar por plano
+    // Subscriptions
     const { data: subscriptions } = await supabase
       .from('user_subscriptions')
       .select('user_id, plan_type')
       .in('user_id', inactiveUserIds.map(u => u.id));
-
     const userPlans = new Map((subscriptions || []).map(s => [s.user_id, s.plan_type]));
 
-    // Buscar estatísticas de quiz/leads
+    // Quiz/lead stats
     const userStats = await supabase.rpc('get_user_quiz_stats', {
       user_ids: inactiveUserIds.map(u => u.id)
     });
-
     const statsMap = new Map((userStats.data || []).map((s: { user_id: string; quiz_count: number; lead_count: number }) => [s.user_id, s]));
 
     // Filtrar usuários elegíveis
     const eligibleUsers: InactiveUser[] = [];
 
     for (const profile of profiles || []) {
-      if (blacklistedUserIds.has(profile.id) || blacklistedPhones.has(profile.whatsapp)) {
-        continue;
-      }
-
-      if (recentlyContactedIds.has(profile.id)) {
-        continue;
-      }
+      if (blacklistedUserIds.has(profile.id) || blacklistedPhones.has(profile.whatsapp)) continue;
+      if (recentlyContactedIds.has(profile.id)) continue;
 
       const userPlan = userPlans.get(profile.id) || 'free';
-      if (typedSettings.exclude_plan_types.includes(userPlan)) {
-        continue;
-      }
+      if (typedSettings.exclude_plan_types.includes(userPlan)) continue;
 
       const authUser = inactiveUserIds.find(u => u.id === profile.id);
       const lastSignIn = authUser?.last_sign_in_at ? new Date(authUser.last_sign_in_at) : null;
       const daysInactive = lastSignIn ? Math.floor((Date.now() - lastSignIn.getTime()) / (1000 * 60 * 60 * 24)) : 999;
 
       const stats = statsMap.get(profile.id) as { quiz_count: number; lead_count: number } | undefined;
+      const quizCount = stats?.quiz_count ?? 0;
+      const leadCount = stats?.lead_count ?? 0;
+
+      // ===== Aplicar filtros de target_criteria =====
+
+      // Filtro: no_leads — apenas usuários com 0 leads
+      if (targetCriteria.no_leads && leadCount > 0) continue;
+
+      // Filtro: no_quizzes — apenas usuários com 0 quizzes
+      if (targetCriteria.no_quizzes && quizCount > 0) continue;
+
+      // Filtro: plans — apenas usuários no plano especificado
+      if (targetCriteria.plans && targetCriteria.plans.length > 0) {
+        if (!targetCriteria.plans.includes(userPlan)) continue;
+      }
+
+      // Filtro: stages — apenas usuários no estágio especificado
+      if (targetCriteria.stages && targetCriteria.stages.length > 0) {
+        const userStage = profile.user_stage || 'explorador';
+        if (!targetCriteria.stages.includes(userStage)) continue;
+      }
+
+      // Filtro: objectives — pelo menos 1 objetivo em comum
+      if (targetCriteria.objectives && targetCriteria.objectives.length > 0) {
+        const userObjectives: string[] = profile.user_objectives || [];
+        const hasMatch = targetCriteria.objectives.some((o: string) => userObjectives.includes(o));
+        if (!hasMatch) continue;
+      }
 
       eligibleUsers.push({
         id: profile.id,
@@ -231,18 +247,18 @@ Deno.serve(async (req) => {
         last_sign_in_at: authUser?.last_sign_in_at || null,
         days_inactive: daysInactive,
         plan_type: userPlan,
-        quiz_count: stats?.quiz_count ?? 0,
-        lead_count: stats?.lead_count ?? 0
+        quiz_count: quizCount,
+        lead_count: leadCount,
+        user_stage: profile.user_stage,
+        user_objectives: profile.user_objectives,
       });
     }
 
-    // Ordenar por prioridade (mais leads = maior prioridade)
+    // Ordenar por prioridade
     eligibleUsers.sort((a, b) => b.lead_count - a.lead_count);
-
-    // Limitar ao remaining limit
     const usersToQueue = eligibleUsers.slice(0, remainingLimit);
 
-    // Se templateId foi fornecido (campanha manual), usar esse template
+    // Template selection
     let selectedTemplate: { id: string; trigger_days: number } | null = null;
     let templates: Array<{ id: string; trigger_days: number }> = [];
 
@@ -252,17 +268,13 @@ Deno.serve(async (req) => {
         .select('id, trigger_days')
         .eq('id', templateId)
         .single();
-
-      if (template) {
-        selectedTemplate = template;
-      }
+      if (template) selectedTemplate = template;
     } else {
       const { data: templatesData } = await supabase
         .from('recovery_templates')
         .select('id, trigger_days')
         .eq('is_active', true)
         .order('trigger_days', { ascending: true });
-
       templates = templatesData || [];
 
       if (templates.length === 0) {
@@ -275,19 +287,13 @@ Deno.serve(async (req) => {
 
     // Criar registros na fila
     const queuedContacts = [];
-
     for (const user of usersToQueue) {
       let templateToUse = selectedTemplate;
-
       if (!templateToUse && templates.length > 0) {
         const sortedDesc = [...templates].sort((a, b) => b.trigger_days - a.trigger_days);
         templateToUse = sortedDesc.find(t => t.trigger_days <= user.days_inactive) || templates[0];
       }
-
-      if (!templateToUse) {
-        console.log(`No template found for user ${user.id} with ${user.days_inactive} days inactive`);
-        continue;
-      }
+      if (!templateToUse) continue;
 
       queuedContacts.push({
         user_id: user.id,
@@ -308,11 +314,7 @@ Deno.serve(async (req) => {
       const { error: insertError } = await supabase
         .from('recovery_contacts')
         .insert(queuedContacts);
-
-      if (insertError) {
-        console.error('Error inserting contacts:', insertError);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
       if (campaignId) {
         await supabase
