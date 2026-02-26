@@ -104,7 +104,6 @@ export function useQuizQuestions({
     });
     
     toast.success(t('createQuiz.questionDeleted', { number: questionToDelete + 1 }));
-    updateUI({ deleteDialogOpen: false, questionToDelete: null });
   }, [questions, currentQuestionIndex, setQuestions, updateEditor, updateUI, t]);
 
   // ✅ Atualizar uma pergunta específica

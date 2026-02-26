@@ -31,8 +31,15 @@
 
 ---
 
-## Etapa 2C — Componentes premium (PRÓXIMA)
+## Etapa 2C — Componentes premium + Correções (ATUAL)
 
+### Correções de bugs
+- [x] Fix: Modal de excluir pergunta aparecia 2x (onOpenChange conflitava com confirmDeleteQuestion)
+- [x] Fix: Botão "Próxima" duplicado no quiz publicado (hasManualNavButton só oculta quando não há questionBlock)
+- [x] Fix: Force refresh ao entrar em /meus-quizzes (invalidateQueries on mount)
+- [x] Fix: Erro ao enviar resposta em template (validação passava formData inteiro como customFields + empty strings)
+
+### Componentes premium
 - [ ] Slider Premium: régua visual com campo de texto livre para unidade/rótulo
 - [ ] Timer/Countdown block: contagem regressiva animada
 - [ ] Testimonial block: card de depoimento com foto/estrelas
