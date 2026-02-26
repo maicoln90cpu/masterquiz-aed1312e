@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
       if (recentlyContactedIds.has(profile.id)) continue;
 
       const userPlan = userPlans.get(profile.id) || 'free';
-      if (typedSettings.exclude_plan_types.includes(userPlan)) continue;
+      if ((typedSettings.exclude_plan_types || []).includes(userPlan)) continue;
 
       const authUser = userPool.find(u => u.id === profile.id);
       const lastSignIn = authUser?.last_sign_in_at ? new Date(authUser.last_sign_in_at) : null;
