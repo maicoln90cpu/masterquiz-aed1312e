@@ -1105,6 +1105,7 @@ export type Database = {
         Row: {
           ab_test_active: boolean | null
           created_at: string
+          creation_source: string | null
           description: string | null
           facebook_pixel_id: string | null
           hide_branding: boolean | null
@@ -1127,6 +1128,7 @@ export type Database = {
         Insert: {
           ab_test_active?: boolean | null
           created_at?: string
+          creation_source?: string | null
           description?: string | null
           facebook_pixel_id?: string | null
           hide_branding?: boolean | null
@@ -1149,6 +1151,7 @@ export type Database = {
         Update: {
           ab_test_active?: boolean | null
           created_at?: string
+          creation_source?: string | null
           description?: string | null
           facebook_pixel_id?: string | null
           hide_branding?: boolean | null
