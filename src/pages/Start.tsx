@@ -124,6 +124,7 @@ const Start = () => {
           question_count: Math.min(template.config.questions.length, 8),
           status: "draft" as any,
           is_public: true,
+          creation_source: "express_auto",
         })
         .select("id")
         .single();

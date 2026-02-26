@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Rocket, TrendingUp, Megaphone, FlaskConical, GraduationCap, MoreHorizontal, Loader2 } from "lucide-react";
+import { Rocket, TrendingUp, Megaphone, FlaskConical, GraduationCap, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +21,6 @@ const OBJECTIVES: ObjectiveOption[] = [
   { value: "paid_traffic", icon: <Megaphone className="h-5 w-5" />, labelKey: "userObjectives.options.paidTraffic" },
   { value: "offer_validation", icon: <FlaskConical className="h-5 w-5" />, labelKey: "userObjectives.options.offerValidation" },
   { value: "educational", icon: <GraduationCap className="h-5 w-5" />, labelKey: "userObjectives.options.educational" },
-  { value: "other", icon: <MoreHorizontal className="h-5 w-5" />, labelKey: "userObjectives.options.other" },
 ];
 
 interface UserObjectiveModalProps {
@@ -34,7 +32,6 @@ interface UserObjectiveModalProps {
 export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveModalProps) => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<string[]>([]);
-  const [otherText, setOtherText] = useState("");
   const [saving, setSaving] = useState(false);
 
   const toggleObjective = (value: string) => {
@@ -47,9 +44,7 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
     if (selected.length === 0) return;
     setSaving(true);
     try {
-      const objectives = selected.includes("other") && otherText.trim()
-        ? [...selected.filter((v) => v !== "other"), `other:${otherText.trim()}`]
-        : selected;
+      const objectives = selected;
 
       const { error } = await (supabase as any)
         .from("profiles")
@@ -116,20 +111,6 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
               );
             })}
           </div>
-
-          {selected.includes("other") && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-            >
-              <Input
-                placeholder={t("userObjectives.otherPlaceholder")}
-                value={otherText}
-                onChange={(e) => setOtherText(e.target.value)}
-                maxLength={100}
-              />
-            </motion.div>
-          )}
 
           <Button
             className="w-full"
