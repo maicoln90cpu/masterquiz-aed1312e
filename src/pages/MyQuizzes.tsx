@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Plus, Search, Tag, FileQuestion, Loader2 } from "lucide-react";
@@ -51,8 +52,9 @@ const MyQuizzes = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // Data hooks
+  // Data hooks - force refetch on mount
   const { data: quizzes = [], isLoading } = useRecentQuizzes();
+  const queryClient = useQueryClient();
   const { data: allTags = [] } = useTagsData();
   const deleteQuizMutation = useDeleteQuiz();
   const duplicateQuizMutation = useDuplicateQuiz();
@@ -74,6 +76,11 @@ const MyQuizzes = () => {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedQuizSlug, setSelectedQuizSlug] = useState("");
   const [selectedQuizId, setSelectedQuizId] = useState("");
+
+  // Force refetch quizzes on mount
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+  }, [queryClient]);
 
   // Load user profile
   useEffect(() => {

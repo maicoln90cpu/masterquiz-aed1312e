@@ -329,11 +329,12 @@ export function useQuizViewState({
       }
 
       const { quizResponseSchema } = await import('@/lib/validations');
+      const { name, email, whatsapp, ...customFieldsOnly } = formData || {};
       const validationResult = quizResponseSchema.safeParse({
-        name: formData.name || '',
-        email: formData.email || '',
-        whatsapp: formData.whatsapp || '',
-        customFields: formData
+        name: name || undefined,
+        email: email || undefined,
+        whatsapp: whatsapp || undefined,
+        customFields: Object.keys(customFieldsOnly).length > 0 ? customFieldsOnly : undefined
       });
 
       if (!validationResult.success) {

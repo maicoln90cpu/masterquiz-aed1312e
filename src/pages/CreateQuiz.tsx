@@ -944,7 +944,7 @@ const CreateQuiz = () => {
       </div>
 
       {/* Dialogs */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => updateUI({ deleteDialogOpen: open })}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { if (!open) updateUI({ deleteDialogOpen: false, questionToDelete: null }); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('createQuiz.deleteQuestion')}</AlertDialogTitle>
