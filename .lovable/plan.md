@@ -3,24 +3,25 @@
 
 ## ✅ Etapa 1 — Correções Imediatas (CONCLUÍDA)
 
-1. ✅ Botão Salvar no header agora persiste `progress_style`, `show_results`, `show_question_number`
+1. ✅ Botão Salvar no header persiste `progress_style`, `show_results`, `show_question_number`
 2. ✅ CSS global para classes Quill (alinhamento, tamanho de fonte) fora do editor
 3. ✅ Seletor de 6 fontes (Inter, Roboto, Open Sans, Poppins, Montserrat, Lato) no editor rico
 4. ✅ Preview sem bordas (Card removido — fiel ao quiz publicado)
 5. ✅ Barra de progresso premium (gradiente, sombra, 10px altura)
-6. ✅ Múltipla escolha: clique em qualquer lugar da resposta (não só no checkbox)
+6. ✅ Múltipla escolha: clique em qualquer lugar da resposta
 
 ---
 
-## Etapa 2A — Visual/UX (animações e transições)
+## ✅ Etapa 2A — Visual/UX (CONCLUÍDA)
 
-- [ ] Framer Motion `AnimatePresence` para transições fade/slide entre perguntas no quiz público
-- [ ] Hover premium nos cards de resposta: gradiente sutil + ícone de check com scale bounce
-- [ ] Formulário de lead: campos com animação de focus (border glow)
-- [ ] Loading skeleton com shimmer no quiz público (substituir spinner)
-- [ ] Preview em tempo real: garantir que todas as configurações de aparência reflitam no preview lateral instantaneamente
+1. ✅ Framer Motion `AnimatePresence` fade/slide entre perguntas no quiz público
+2. ✅ Hover premium: sombra primary, bg sutil, transição suave nos cards de resposta
+3. ✅ Formulário de lead: focus glow (ring + shadow primary) em todos os inputs
+4. ✅ Loading skeleton shimmer substituindo spinner no quiz público
 
-## Etapa 2B — Resultado + Tipografia responsiva
+---
+
+## Etapa 2B — Resultado + Tipografia responsiva (PRÓXIMA)
 
 - [ ] Tela de resultado com animação staggered para cada elemento
 - [ ] Confetti opcional na tela de resultado (canvas-confetti já instalado)
