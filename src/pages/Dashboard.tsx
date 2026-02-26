@@ -97,7 +97,8 @@ const Dashboard = () => {
         setCurrentUserId(user.id);
 
         // Redirect explorador sem quiz publicado para /start
-        if (profile?.user_stage === 'explorador' && (stats?.activeQuizzes ?? 0) === 0) {
+        // Guard: só redirecionar quando stats já carregou (evita loop infinito)
+        if (!statsLoading && profile?.user_stage === 'explorador' && (stats?.activeQuizzes ?? 0) === 0) {
           navigate('/start', { replace: true });
           return;
         }

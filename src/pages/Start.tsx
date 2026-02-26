@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { quizTemplates } from "@/data/quizTemplates";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 
 // Mapeamento objetivo → template ID
 const OBJECTIVE_TEMPLATE_MAP: Record<string, string> = {
@@ -67,6 +68,7 @@ const Start = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { checkQuizLimit } = useSubscriptionLimits();
   const [loading, setLoading] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
 
@@ -92,7 +94,16 @@ const Start = () => {
         return;
       }
 
-      // 3. Criar quiz rascunho
+      // 3. Verificar limite de quizzes antes de criar
+      const canCreate = await checkQuizLimit();
+      if (!canCreate) {
+        toast.error(t("start.quizLimitReached", "Você atingiu o limite de quizzes do seu plano. Faça upgrade para criar mais."));
+        navigate('/dashboard', { replace: true });
+        setLoading(false);
+        return;
+      }
+
+      // 4. Criar quiz rascunho
       const { data: quiz, error: quizError } = await supabase
         .from("quizzes")
         .insert({

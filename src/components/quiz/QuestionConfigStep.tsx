@@ -14,6 +14,7 @@ import { AISuggestionsSidebar } from "./AISuggestionsSidebar";
 import { ConditionBuilder, type QuestionConditions } from "./ConditionBuilder";
 import type { QuizBlock } from "@/types/blocks";
 import { createBlock, migrateQuestionToBlocks, normalizeOption } from "@/types/blocks";
+import { cn } from "@/lib/utils";
 
 interface QuestionConfigStepProps {
   questions: any[];
@@ -311,11 +312,10 @@ export const QuestionConfigStep = ({
 
             <Button
               type="button"
-              variant="default"
               size="default"
               onClick={goToNextQuestion}
               disabled={currentQuestionIndex === allQuestions.length - 1}
-              className="gap-2 font-semibold"
+              className="gap-2 font-semibold bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white"
             >
               Próxima
               <ChevronRight className="h-5 w-5" />
@@ -330,7 +330,7 @@ export const QuestionConfigStep = ({
                   <Edit className="h-4 w-4" />
                   Editar Blocos
                 </TabsTrigger>
-                <TabsTrigger value="preview" className="gap-2">
+                <TabsTrigger value="preview" className={cn("gap-2", previewTab === 'preview' && "bg-gradient-to-r from-violet-600 to-purple-600 text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white")}>
                   <Eye className="h-4 w-4" />
                   Preview em Tempo Real
                 </TabsTrigger>

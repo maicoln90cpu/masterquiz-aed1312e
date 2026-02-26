@@ -311,6 +311,47 @@ export function useQuizPersistence({
         quiz = data;
         
         logQuizAction("quiz:updated", quiz.id, { title: quiz.title });
+
+        // Express mode fix: detectar primeiro quiz no branch UPDATE também
+        // (Start.tsx cria o draft via INSERT direto, então saveQuiz entra aqui)
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_stage')
+            .eq('id', user.id)
+            .single();
+
+          if (profile?.user_stage === 'explorador') {
+            const w = window as Window & { dataLayer?: Record<string, unknown>[] };
+            w.dataLayer = w.dataLayer || [];
+            w.dataLayer.push({
+              event: 'first_quiz_created',
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id
+            });
+            console.log('🎯 [GTM] Event pushed: first_quiz_created (UPDATE branch)');
+
+            await supabase
+              .from('profiles')
+              .update({ 
+                user_stage: 'construtor',
+                stage_updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id)
+              .eq('user_stage', 'explorador');
+            
+            console.log('🎯 [PQL] User stage upgraded to construtor (UPDATE branch)');
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+              .from('onboarding_status')
+              .update({ first_quiz_created: true })
+              .eq('id', user.id);
+          }
+        } catch (stageErr) {
+          console.warn('⚠️ Failed to update user_stage in UPDATE branch:', stageErr);
+        }
       } else {
         // Verificar user_stage para detectar primeiro quiz (mais robusto que contar quizzes)
         const { data: profile } = await supabase
