@@ -716,3 +716,63 @@ html, body {
 .landing-stagger-1 { animation-delay: 100ms; }
 .landing-stagger-2 { animation-delay: 200ms; }
 .landing-stagger-3 { animation-delay: 300ms; }
+
+/* ============================================
+   Quill CSS classes — renderização fora do editor
+   ============================================ */
+
+/* Alignment */
+.ql-align-center { text-align: center !important; }
+.ql-align-right { text-align: right !important; }
+.ql-align-justify { text-align: justify !important; }
+
+/* Sizes */
+.ql-size-small { font-size: 0.75em !important; }
+.ql-size-large { font-size: 1.5em !important; }
+.ql-size-huge { font-size: 2.5em !important; }
+
+/* Fonts — Quill custom font classes */
+.ql-font-inter { font-family: 'Inter', sans-serif !important; }
+.ql-font-roboto { font-family: 'Roboto', sans-serif !important; }
+.ql-font-open-sans { font-family: 'Open Sans', sans-serif !important; }
+.ql-font-poppins { font-family: 'Poppins', sans-serif !important; }
+.ql-font-montserrat { font-family: 'Montserrat', sans-serif !important; }
+.ql-font-lato { font-family: 'Lato', sans-serif !important; }
+
+/* Quill built-in fonts */
+.ql-font-serif { font-family: Georgia, 'Times New Roman', serif !important; }
+.ql-font-monospace { font-family: 'SFMono-Regular', Consolas, monospace !important; }
+
+/* Quill font picker labels */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="inter"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="inter"]::before { content: 'Inter' !important; font-family: 'Inter', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="roboto"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="roboto"]::before { content: 'Roboto' !important; font-family: 'Roboto', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="open-sans"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="open-sans"]::before { content: 'Open Sans' !important; font-family: 'Open Sans', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="poppins"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="poppins"]::before { content: 'Poppins' !important; font-family: 'Poppins', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="montserrat"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="montserrat"]::before { content: 'Montserrat' !important; font-family: 'Montserrat', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="lato"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lato"]::before { content: 'Lato' !important; font-family: 'Lato', sans-serif; }
+
+/* Quill font picker width */
+.ql-snow .ql-picker.ql-font { width: 120px !important; }
+.ql-snow .ql-picker.ql-font .ql-picker-options { z-index: 50; background: hsl(var(--popover)); }
+
+/* Premium progress bar */
+.quiz-progress-premium .progress-root {
+  height: 10px;
+  border-radius: 9999px;
+  background: hsl(var(--muted));
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+.quiz-progress-premium .progress-indicator {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(160 84% 50%));
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px hsl(var(--primary) / 0.4);
+}

@@ -189,16 +189,24 @@ export function QuizViewQuestion({
         const progressStyle = (quiz as any).progress_style ?? (quiz.show_question_number !== false ? 'counter' : 'none');
         if (progressStyle === 'none') return null;
         if (progressStyle === 'bar') return (
-          <Progress value={progressPercent} className="h-2" />
+          <div className="quiz-progress-premium">
+            <div className="progress-root">
+              <div className="progress-indicator" style={{ transform: `translateX(-${100 - progressPercent}%)` }} />
+            </div>
+          </div>
         );
-        // counter: bar + number + percentage
+        // counter
         return (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
               <span>{currentStep + 1} / {totalQuestions}</span>
               <span>{Math.round(progressPercent)}%</span>
             </div>
-            <Progress value={progressPercent} className="h-2" />
+            <div className="quiz-progress-premium">
+              <div className="progress-root">
+                <div className="progress-indicator" style={{ transform: `translateX(-${100 - progressPercent}%)` }} />
+              </div>
+            </div>
           </div>
         );
       })()}
@@ -374,8 +382,9 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] ${getOptionStyle(optionText)}`}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] select-none ${getOptionStyle(optionText)}`}
             onClick={() => {
+              if (disabled) return;
               const newValue = isSelected 
                 ? currentAnswers.filter((v: string) => v !== optionText)
                 : [...currentAnswers, optionText];
@@ -389,14 +398,13 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
             }`}>
               {emoji || String.fromCharCode(65 + idx)}
             </div>
-            <Label htmlFor={`checkbox-${questionId}-${idx}`} className="flex-1 cursor-pointer text-base">
+            <span className="flex-1 text-base">
               {optionText}
-            </Label>
-            {/* Visible checkbox on the right for multiple choice */}
+            </span>
             <Checkbox 
               id={`checkbox-${questionId}-${idx}`}
               checked={isSelected}
-              className="h-5 w-5 flex-shrink-0 ml-auto"
+              className="h-5 w-5 flex-shrink-0 ml-auto pointer-events-none"
               tabIndex={-1}
             />
             {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}

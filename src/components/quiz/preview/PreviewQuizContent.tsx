@@ -61,7 +61,7 @@ export const PreviewQuizContent = ({
         exit={{ opacity: 0.8 }}
         transition={{ duration: 0.1, ease: "easeOut" }}
       >
-        <Card className="p-4 space-y-3 overflow-hidden">
+        <div className="space-y-3 overflow-hidden">
           {sortedBlocks.length > 0 ? (
             <QuizBlockPreview
               blocks={sortedBlocks}
@@ -146,7 +146,7 @@ export const PreviewQuizContent = ({
               )}
             </div>
           )}
-        </Card>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
