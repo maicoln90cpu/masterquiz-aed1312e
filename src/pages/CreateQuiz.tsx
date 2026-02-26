@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useMemo } from "react";
+import { useEffect, useCallback, useState, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ import { useQuizPersistence } from "@/hooks/useQuizPersistence";
 import { useQuizQuestions } from "@/hooks/useQuizQuestions";
 import { useQuizTemplateSelection } from "@/hooks/useQuizTemplateSelection";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useEditorInteractionTracker } from "@/hooks/useEditorInteractionTracker";
 
 import { useProfile } from "@/hooks/useProfile";
 
@@ -58,6 +59,22 @@ const CreateQuiz = () => {
   const isExpressMode = searchParams.get('mode') === 'express';
   const [showCelebration, setShowCelebration] = useState(false);
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
+
+  // ✅ Interaction tracker for PQL v2 — tracks real user edits
+  const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
+
+  // ✅ Idempotent GTM event firing (1x per quizId per event)
+  const firedEventsRef = useRef(new Set<string>());
+  const fireOnce = useCallback((event: string, data: Record<string, unknown> = {}) => {
+    const quizId = searchParams.get('id');
+    const key = `${event}_${quizId}`;
+    if (firedEventsRef.current.has(key)) return;
+    firedEventsRef.current.add(key);
+    const w = window as Window & { dataLayer?: Record<string, unknown>[] };
+    w.dataLayer = w.dataLayer || [];
+    w.dataLayer.push({ event, ...data });
+    console.log(`🎯 [GTM] Event fired (once): ${event}`);
+  }, [searchParams]);
 
   // ✅ Hook de estado principal
   const {
@@ -112,6 +129,8 @@ const CreateQuiz = () => {
     updateFormConfig,
     setQuestions,
     clearHistory,
+    hasUserInteracted: hasInteracted,
+    isExpressMode,
   });
 
   // ✅ Hook de manipulação de perguntas
@@ -169,13 +188,14 @@ const CreateQuiz = () => {
     const editQuizId = searchParams.get('id');
     if (editQuizId) {
       loadExistingQuiz(editQuizId);
-      // Express mode: force step 3 after loading
+      // Express mode: force step 3 after loading + fire express_started
       if (isExpressMode) {
         updateEditor({ step: 3 });
         updateUI({ showTemplateSelector: false });
+        fireOnce('express_started', { quiz_id: editQuizId });
       }
     }
-  }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI]);
+  }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI, fireOnce]);
 
   // ✅ Limpar localStorage quando não é modo edição
   useEffect(() => {
@@ -665,6 +685,9 @@ const CreateQuiz = () => {
                     quizId={quizId || undefined}
                     onQuestionsUpdate={handleQuestionsUpdate}
                     initialQuestionIndex={currentQuestionIndex}
+                    isExpressMode={isExpressMode}
+                    fireOnce={fireOnce}
+                    trackInteraction={trackInteraction}
                   />
                 )}
 

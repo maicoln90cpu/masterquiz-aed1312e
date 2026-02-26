@@ -4,7 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 
-export type UserStage = 'explorador' | 'construtor' | 'operador';
+export type UserStage =
+  | 'explorador'         // 1 — conta criada
+  | 'iniciado'           // 2 — atingiu pergunta 2 no express
+  | 'engajado'           // 3 — first_quiz_created (interação real)
+  | 'construtor'         // 4 — quiz_first_published
+  | 'operador'           // 5 — primeiro lead capturado
+  | 'potencial_pagante'  // 6 — >=30 respostas OU >=10 leads
+  | 'quase_upgrade'      // 7 — >=60 respostas OU >=25 leads
+  | 'limite_atingido';   // 8 — 100 respostas
 
 export type UserIntent =
   | 'lead_capture_launch'
@@ -38,7 +46,7 @@ export interface UserStageData {
   loading: boolean;
 }
 
-// ── Matriz 3×6: Estágio × Intenção ──────────────────────────────────
+// ── Matriz 8×6: Estágio × Intenção ──────────────────────────────────
 const STAGE_INTENT_MATRIX: Record<UserStage, Record<UserIntent, StageIntentConfig>> = {
   explorador: {
     lead_capture_launch: {
@@ -74,6 +82,84 @@ const STAGE_INTENT_MATRIX: Record<UserStage, Record<UserIntent, StageIntentConfi
     other: {
       headline: 'Comece publicando seu primeiro quiz.',
       ctaLabel: 'Criar primeiro quiz',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+  },
+
+  iniciado: {
+    lead_capture_launch: {
+      headline: 'Seu quiz de captação já está tomando forma.',
+      ctaLabel: 'Continuar editando',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    vsl_conversion: {
+      headline: 'Sua pré-qualificação já tem estrutura.',
+      ctaLabel: 'Continuar editando',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    paid_traffic: {
+      headline: 'Seu funil de qualificação está tomando forma.',
+      ctaLabel: 'Continuar editando',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    offer_validation: {
+      headline: 'Sua validação já está sendo construída.',
+      ctaLabel: 'Continuar editando',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    educational: {
+      headline: 'Seu quiz avaliativo já está sendo montado.',
+      ctaLabel: 'Continuar editando',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    other: {
+      headline: 'Seu quiz já está tomando forma. Continue!',
+      ctaLabel: 'Continuar editando',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+  },
+
+  engajado: {
+    lead_capture_launch: {
+      headline: 'Agora é só publicar e começar a captar leads.',
+      ctaLabel: 'Publicar meu quiz',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    vsl_conversion: {
+      headline: 'Seu quiz está pronto. Publique e comece a filtrar.',
+      ctaLabel: 'Publicar meu quiz',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    paid_traffic: {
+      headline: 'Publique e conecte ao seu tráfego pago.',
+      ctaLabel: 'Publicar meu quiz',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    offer_validation: {
+      headline: 'Publique e comece a coletar dados reais.',
+      ctaLabel: 'Publicar meu quiz',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    educational: {
+      headline: 'Publique e envie para seus alunos.',
+      ctaLabel: 'Publicar meu quiz',
+      ctaRoute: '/create-quiz',
+      upgradeHint: null,
+    },
+    other: {
+      headline: 'Agora é só publicar. Seu quiz está pronto!',
+      ctaLabel: 'Publicar meu quiz',
       ctaRoute: '/create-quiz',
       upgradeHint: null,
     },
@@ -156,13 +242,141 @@ const STAGE_INTENT_MATRIX: Record<UserStage, Record<UserIntent, StageIntentConfi
       upgradeHint: null,
     },
   },
+
+  potencial_pagante: {
+    lead_capture_launch: {
+      headline: 'Seus leads estão chegando. Hora de escalar.',
+      ctaLabel: 'Ver planos',
+      ctaRoute: '/precos',
+      upgradeHint: 'Desbloquear respostas ilimitadas',
+    },
+    vsl_conversion: {
+      headline: 'Seu funil está validado. Escale com segurança.',
+      ctaLabel: 'Ver planos',
+      ctaRoute: '/precos',
+      upgradeHint: 'Analytics + automação',
+    },
+    paid_traffic: {
+      headline: 'Seus dados mostram tração. Hora de investir mais.',
+      ctaLabel: 'Ver planos',
+      ctaRoute: '/precos',
+      upgradeHint: 'Integrações avançadas',
+    },
+    offer_validation: {
+      headline: 'Os dados confirmam sua hipótese. Hora de crescer.',
+      ctaLabel: 'Ver planos',
+      ctaRoute: '/precos',
+      upgradeHint: 'Relatórios completos',
+    },
+    educational: {
+      headline: 'Seus alunos estão engajados. Escale o processo.',
+      ctaLabel: 'Ver planos',
+      ctaRoute: '/precos',
+      upgradeHint: 'Exportação + escala',
+    },
+    other: {
+      headline: 'Você está crescendo. Hora de desbloquear mais.',
+      ctaLabel: 'Ver planos',
+      ctaRoute: '/precos',
+      upgradeHint: null,
+    },
+  },
+
+  quase_upgrade: {
+    lead_capture_launch: {
+      headline: 'Você está quase no limite. Não perca leads.',
+      ctaLabel: 'Fazer upgrade',
+      ctaRoute: '/precos',
+      upgradeHint: 'Respostas acabando',
+    },
+    vsl_conversion: {
+      headline: 'Seu funil está próximo do limite. Atualize agora.',
+      ctaLabel: 'Fazer upgrade',
+      ctaRoute: '/precos',
+      upgradeHint: 'Respostas acabando',
+    },
+    paid_traffic: {
+      headline: 'Não deixe seu tráfego pago bater no limite.',
+      ctaLabel: 'Fazer upgrade',
+      ctaRoute: '/precos',
+      upgradeHint: 'Respostas acabando',
+    },
+    offer_validation: {
+      headline: 'Seus dados estão quase no limite. Não pare agora.',
+      ctaLabel: 'Fazer upgrade',
+      ctaRoute: '/precos',
+      upgradeHint: 'Respostas acabando',
+    },
+    educational: {
+      headline: 'Seus alunos estão chegando. Não pare no limite.',
+      ctaLabel: 'Fazer upgrade',
+      ctaRoute: '/precos',
+      upgradeHint: 'Respostas acabando',
+    },
+    other: {
+      headline: 'Você está quase no limite. Faça upgrade.',
+      ctaLabel: 'Fazer upgrade',
+      ctaRoute: '/precos',
+      upgradeHint: 'Respostas acabando',
+    },
+  },
+
+  limite_atingido: {
+    lead_capture_launch: {
+      headline: 'Limite de respostas atingido. Faça upgrade para continuar.',
+      ctaLabel: 'Upgrade agora',
+      ctaRoute: '/precos',
+      upgradeHint: 'Seus leads estão sendo perdidos',
+    },
+    vsl_conversion: {
+      headline: 'Limite atingido. Seu funil está parado.',
+      ctaLabel: 'Upgrade agora',
+      ctaRoute: '/precos',
+      upgradeHint: 'Leads não estão entrando',
+    },
+    paid_traffic: {
+      headline: 'Limite atingido. Seu tráfego pago está sendo desperdiçado.',
+      ctaLabel: 'Upgrade agora',
+      ctaRoute: '/precos',
+      upgradeHint: 'Dinheiro sendo perdido',
+    },
+    offer_validation: {
+      headline: 'Limite atingido. Seus dados pararam de chegar.',
+      ctaLabel: 'Upgrade agora',
+      ctaRoute: '/precos',
+      upgradeHint: 'Validação incompleta',
+    },
+    educational: {
+      headline: 'Limite atingido. Alunos não conseguem responder.',
+      ctaLabel: 'Upgrade agora',
+      ctaRoute: '/precos',
+      upgradeHint: 'Alunos bloqueados',
+    },
+    other: {
+      headline: 'Limite de respostas atingido. Faça upgrade.',
+      ctaLabel: 'Upgrade agora',
+      ctaRoute: '/precos',
+      upgradeHint: 'Respostas bloqueadas',
+    },
+  },
 };
 
 const STAGE_META: Record<UserStage, { label: string; emoji: string }> = {
-  explorador: { label: 'Explorador', emoji: '🧊' },
-  construtor: { label: 'Construtor', emoji: '🔥' },
-  operador: { label: 'Operador', emoji: '🚀' },
+  explorador:        { label: 'Explorador',        emoji: '🧊' },
+  iniciado:          { label: 'Iniciado',           emoji: '🌱' },
+  engajado:          { label: 'Engajado',           emoji: '⚡' },
+  construtor:        { label: 'Construtor',         emoji: '🔥' },
+  operador:          { label: 'Operador',           emoji: '🚀' },
+  potencial_pagante: { label: 'Potencial Pagante',  emoji: '💎' },
+  quase_upgrade:     { label: 'Quase Upgrade',      emoji: '⚠️' },
+  limite_atingido:   { label: 'Limite Atingido',    emoji: '🔒' },
 };
+
+// Estágios válidos para validação
+const VALID_STAGES: UserStage[] = [
+  'explorador', 'iniciado', 'engajado', 'construtor',
+  'operador', 'potencial_pagante', 'quase_upgrade', 'limite_atingido',
+];
 
 /**
  * Deriva a intenção primária a partir do array user_objectives
@@ -208,7 +422,7 @@ export function useUserStage(): UserStageData {
           .eq('id', user.id)
           .single();
 
-        if (profile?.user_stage) {
+        if (profile?.user_stage && VALID_STAGES.includes(profile.user_stage as UserStage)) {
           setStage(profile.user_stage as UserStage);
         }
         setIntent(deriveIntent(profile?.user_objectives as string[] | null));

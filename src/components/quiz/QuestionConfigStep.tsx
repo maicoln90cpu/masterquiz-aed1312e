@@ -26,6 +26,12 @@ interface QuestionConfigStepProps {
   quizId?: string;
   onQuestionsUpdate: (questions: any[]) => void;
   initialQuestionIndex?: number;
+  /** Whether we're in express mode (for milestone events/banners) */
+  isExpressMode?: boolean;
+  /** Fire idempotent GTM events (1x per quizId) */
+  fireOnce?: (event: string, data?: Record<string, unknown>) => void;
+  /** Track real user interactions for PQL */
+  trackInteraction?: (actionKey: string) => void;
 }
 
 interface QuestionWithConditions {
@@ -43,7 +49,10 @@ export const QuestionConfigStep = ({
   quizDescription,
   quizId,
   onQuestionsUpdate,
-  initialQuestionIndex = 0
+  initialQuestionIndex = 0,
+  isExpressMode = false,
+  fireOnce,
+  trackInteraction,
 }: QuestionConfigStepProps) => {
   const { t } = useTranslation();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(initialQuestionIndex);
@@ -177,7 +186,6 @@ export const QuestionConfigStep = ({
   // ✅ Proteção contra índice inválido
   const updateCurrentQuestionBlocks = useCallback((blocks: QuizBlock[]) => {
     setAllQuestions(prev => {
-      // ✅ Verificar se o índice é válido antes de atualizar
       if (!prev[currentQuestionIndex]) {
         console.warn('[updateCurrentQuestionBlocks] Índice inválido:', currentQuestionIndex, 'total:', prev.length);
         return prev;
@@ -188,12 +196,15 @@ export const QuestionConfigStep = ({
         ...updatedQuestions[currentQuestionIndex],
         blocks
       };
-      // Notificar parent de forma assíncrona para evitar loop
       setTimeout(() => onQuestionsUpdate(updatedQuestions), 0);
       return updatedQuestions;
     });
-    // ✅ Persistência centralizada - sem save direto aqui
-  }, [currentQuestionIndex, onQuestionsUpdate]);
+
+    // Track real interaction for PQL v2
+    if (trackInteraction) {
+      trackInteraction(`block_edit_q${currentQuestionIndex}`);
+    }
+  }, [currentQuestionIndex, onQuestionsUpdate, trackInteraction]);
 
   const handleAddBlockFromSuggestion = (block: QuizBlock, position: 'before' | 'after') => {
     const currentBlocks = currentQuestion?.blocks || [];
@@ -230,7 +241,30 @@ export const QuestionConfigStep = ({
 
   const goToNextQuestion = () => {
     if (currentQuestionIndex < allQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+
+      // Express milestone events (idempotent via fireOnce)
+      if (isExpressMode && fireOnce) {
+        if (nextIndex >= 1) fireOnce('express_q2_reached', { quiz_id: quizId });
+        if (nextIndex >= 3) fireOnce('express_halfway', { quiz_id: quizId });
+        if (nextIndex >= allQuestions.length - 1) fireOnce('express_completed', { quiz_id: quizId });
+      }
+
+      // PQL v2: Promover explorador → iniciado ao atingir pergunta 2
+      if (isExpressMode && nextIndex >= 1) {
+        import('@/integrations/supabase/client').then(({ supabase }) => {
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+              supabase.from('profiles')
+                .update({ user_stage: 'iniciado', stage_updated_at: new Date().toISOString() })
+                .eq('id', user.id)
+                .eq('user_stage', 'explorador')
+                .then(() => console.log('🎯 [PQL] Promoted to iniciado (reached Q2)'));
+            }
+          });
+        });
+      }
     }
   };
 
@@ -330,7 +364,10 @@ export const QuestionConfigStep = ({
                   <Edit className="h-4 w-4" />
                   Editar Blocos
                 </TabsTrigger>
-                <TabsTrigger value="preview" className={cn("gap-2", previewTab === 'preview' && "bg-gradient-to-r from-violet-600 to-purple-600 text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white")}>
+                <TabsTrigger 
+                  value="preview" 
+                  className="gap-2 bg-gradient-to-r from-violet-500/80 to-purple-500/80 text-white hover:from-violet-600 hover:to-purple-600 data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md"
+                >
                   <Eye className="h-4 w-4" />
                   Preview em Tempo Real
                 </TabsTrigger>

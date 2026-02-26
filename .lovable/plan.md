@@ -1,86 +1,61 @@
 
+# Plano: PQL v2, Tracking Inteligente, Copy/UX e Eventos
 
-# Plano: Fix Loop Infinito Express + Cores dos Botoes
+## STATUS: Etapa 1 — ✅ IMPLEMENTADA
 
-## 1. Bug Critico: Loop Infinito /start → Dashboard → /start
+### O que foi feito na Etapa 1:
 
-### Causa Raiz (2 bugs combinados)
+1. **`src/hooks/useEditorInteractionTracker.ts`** (NOVO)
+   - Hook para rastrear interações reais do usuário no editor
+   - Idempotente por actionKey (Set<string>)
+   - Reset automático ao mudar quizId
 
-**Bug A — user_stage nunca atualiza no fluxo express:**
+2. **`src/hooks/useUserStage.ts`** (REESCRITO)
+   - Expandido de 3 para 8 estágios PQL
+   - Novos: `iniciado`, `engajado`, `potencial_pagante`, `quase_upgrade`, `limite_atingido`
+   - STAGE_INTENT_MATRIX 8×6 com headlines/CTAs específicos
+   - STAGE_META com emojis e labels
 
-Em `src/hooks/useQuizPersistence.ts`, a funcao `saveQuiz()` tem dois branches:
-- **INSERT** (quiz novo, linhas 314-383): Detecta primeiro quiz (`isFirstQuiz`), atualiza `user_stage` de 'explorador' para 'construtor', dispara GTM
-- **UPDATE** (quiz existente, linhas 289-313): NAO faz nada disso
+3. **`src/hooks/useQuizPersistence.ts`** (ATUALIZADO)
+   - `first_quiz_created` agora condicionado a `hasUserInteracted === true`
+   - Novo evento `quiz_first_published` com `publish_source` (express_auto/manual)
+   - Promoção PQL: explorador/iniciado/engajado → construtor ao publicar
+   - Aceita params `hasUserInteracted` e `isExpressMode`
 
-O fluxo express cria o quiz em `Start.tsx` (INSERT direto no Supabase com status 'draft'), depois no editor chama `saveQuiz()` que entra no branch UPDATE (porque `currentQuizId` ja existe). Resultado: `user_stage` permanece 'explorador' para sempre.
+4. **`src/pages/Start.tsx`** (ATUALIZADO)
+   - Eventos GTM segmentados: `objective_selectedON` (comercial) e `objective_selectedOFF` (educacional)
+   - COMMERCIAL_OBJECTIVES array para segmentação
 
-**Bug B — Dashboard redireciona antes dos stats carregarem:**
+5. **`src/pages/CreateQuiz.tsx`** (ATUALIZADO)
+   - Integrado `useEditorInteractionTracker`
+   - Mecanismo `fireOnce` com `useRef<Set>` para eventos idempotentes
+   - Evento `express_started` no mount do editor express
+   - Props `isExpressMode`, `fireOnce`, `trackInteraction` propagados para QuestionConfigStep
 
-Em `src/pages/Dashboard.tsx` linha 100:
-```ts
-if (profile?.user_stage === 'explorador' && (stats?.activeQuizzes ?? 0) === 0) {
-  navigate('/start', { replace: true });
-```
+6. **`src/components/quiz/QuestionConfigStep.tsx`** (ATUALIZADO)
+   - Eventos express idempotentes: `express_q2_reached`, `express_halfway`, `express_completed`
+   - Promoção PQL `explorador → iniciado` ao atingir pergunta 2
+   - `trackInteraction` chamado em `updateCurrentQuestionBlocks`
+   - Tab "Preview em Tempo Real" com gradiente roxo PERMANENTE
 
-O `useEffect` roda assim que stats muda. Durante o loading, `stats` e `undefined`, logo `(undefined ?? 0) === 0` → true. Com user_stage ainda 'explorador' (Bug A), o redirect dispara imediatamente, antes de carregar os dados reais.
-
-**Bug C — Start.tsx cria quiz sem verificar limite:**
-
-`Start.tsx` faz `INSERT INTO quizzes` direto, sem chamar `checkQuizLimit()`. Cada loop cria um novo quiz draft, ultrapassando o limite do plano free.
-
-### Correcoes
-
-**Arquivo: `src/hooks/useQuizPersistence.ts`**
-- Apos o branch UPDATE (depois da linha 313), adicionar a mesma logica de deteccao de primeiro quiz:
-  1. Buscar `user_stage` do profile
-  2. Se `user_stage === 'explorador'`: atualizar para 'construtor', disparar GTM `first_quiz_created`, atualizar `onboarding_status`
-
-**Arquivo: `src/pages/Dashboard.tsx`**
-- Linha 100: Adicionar guard `!statsLoading` para nao redirecionar enquanto stats esta carregando
-- Mudanca: `if (!statsLoading && profile?.user_stage === 'explorador' && (stats?.activeQuizzes ?? 0) === 0)`
-
-**Arquivo: `src/pages/Start.tsx`**
-- Antes de criar o quiz (linha 96), chamar `checkQuizLimit()` do `useSubscriptionLimits`
-- Se limite atingido, redirecionar para `/dashboard` com toast de aviso em vez de criar outro quiz
+7. **`src/pages/Dashboard.tsx`** (ATUALIZADO)
+   - Redirect inclui estágio `iniciado` além de `explorador`
 
 ---
 
-## 2. Botao "Proxima" — Gradiente Vermelho
+## Etapa 2 — PENDENTE (Copy/UX)
 
-**Arquivo: `src/components/quiz/QuestionConfigStep.tsx`**
-- Linha 312-322: Alterar o `<Button>` "Proxima" de `variant="default"` para classes de gradiente vermelho:
-```tsx
-className="gap-2 font-semibold bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white"
-```
+### Mudanças planejadas:
 
----
-
-## 3. Botoes de Preview — Roxo Gradiente
-
-**Arquivo: `src/components/quiz/QuestionConfigStep.tsx`**
-- Linha 333-336: Tab "Preview em Tempo Real" — quando ativa, aplicar gradiente roxo:
-```tsx
-className={cn("gap-2", previewTab === 'preview' && "bg-gradient-to-r from-violet-600 to-purple-600 text-white")}
-```
-
-**Arquivo: `src/pages/CreateQuiz.tsx`**
-- Linha 373-383: Botao Play/Preview do header — alterar de `border-primary/50 text-primary` para gradiente roxo:
-```tsx
-className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white flex-shrink-0"
-```
-
-**Arquivo: `src/components/quiz/LivePreview.tsx`**
-- Linha 68-71: Texto "Preview em Tempo Real" — manter como referencia visual, sem mudanca funcional
-
----
-
-## Resumo de Arquivos a Editar
-
-| Arquivo | Mudanca |
+| Arquivo | Mudança |
 |---------|---------|
-| `src/hooks/useQuizPersistence.ts` | Adicionar logica first-quiz no branch UPDATE |
-| `src/pages/Dashboard.tsx` | Guard `!statsLoading` antes do redirect |
-| `src/pages/Start.tsx` | Verificar limite de quiz antes de criar |
-| `src/components/quiz/QuestionConfigStep.tsx` | Botao Proxima vermelho + Tab preview roxo |
-| `src/pages/CreateQuiz.tsx` | Botao Preview header roxo |
+| `src/pages/Start.tsx` | Ajuste de copy subtítulo |
+| `src/components/quiz/ExpressProgressBar.tsx` | Texto motivacional abaixo da barra |
+| `src/components/quiz/QuestionConfigStep.tsx` | Banners motivacionais metade/final no express |
+| `src/components/quiz/ExpressCelebration.tsx` | Share expandido por default + bloco tráfego + 3 msgs WhatsApp prontas |
 
+### Fase 2 (Backend — não implementada):
+- Estágios 5-8 (operador → limite_atingido) via edge function/trigger
+- Score numérico PQL
+- Dashboard de métricas de funil interno
+- Follow-up WhatsApp 24h
