@@ -106,6 +106,7 @@ export const UnifiedQuizPreview = ({
     getQuestionData,
     getFinalResult,
     handleAnswerSelect,
+    handleTextAnswer,
     handleNext,
     handlePrevious,
     handleStartQuiz,
@@ -121,11 +122,33 @@ export const UnifiedQuizPreview = ({
     externalQuestionIndex
   });
 
+  const questionData = currentQuestion ? getQuestionData(currentQuestion, t) : null;
   const nextButtonText = questionBlock?.nextButtonText || t('preview.next', 'Próxima');
+
+  // Determine if Next button should be hidden (mirror published quiz logic)
+  const shouldHideNextButton = (() => {
+    if (!questionData) return false;
+    const { autoAdvance, answerFormat } = questionData;
+    const isSingleType = answerFormat === 'single_choice' || answerFormat === 'yes_no';
+    if (autoAdvance && isSingleType) return true;
+    // Check for button block with next_question action
+    const hasNavButtonBlock = currentQuestion?.blocks?.some(
+      (b: any) => b.type === 'button' && b.action === 'next_question'
+    );
+    if (hasNavButtonBlock) return true;
+    return false;
+  })();
 
   // Helper for answer selection with translation
   const onAnswerSelect = (value: string, isMultiple: boolean) => {
     handleAnswerSelect(value, isMultiple, t, handleNext);
+  };
+
+  // Handle text input for short_text
+  const onTextAnswer = (text: string) => {
+    if (currentQuestion) {
+      handleTextAnswer(currentQuestion.id, text);
+    }
   };
 
   // Render main quiz step content
@@ -164,10 +187,11 @@ export const UnifiedQuizPreview = ({
         currentQuestion={currentQuestion}
         currentQuestionIndex={currentQuestionIndex}
         sortedBlocks={sortedBlocks}
-        questionData={currentQuestion ? getQuestionData(currentQuestion, t) : { questionText: '', answerFormat: 'single_choice', options: [] }}
+        questionData={questionData || { questionText: '', answerFormat: 'single_choice', options: [] }}
         selectedAnswers={selectedAnswers}
         visibleQuestionsLength={visibleQuestions.length}
         onAnswerSelect={onAnswerSelect}
+        onTextAnswer={onTextAnswer}
         onNavigateNext={() => setInternalQuestionIndex(currentQuestionIndex + 1)}
         onNavigateToQuestion={setInternalQuestionIndex}
       />
@@ -179,6 +203,7 @@ export const UnifiedQuizPreview = ({
           totalQuestions={visibleQuestions.length}
           isAnswered={isAnswered}
           nextButtonText={nextButtonText}
+          hideNextButton={shouldHideNextButton}
           onPrevious={handlePrevious}
           onNext={handleNext}
         />

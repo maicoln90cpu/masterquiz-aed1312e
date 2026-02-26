@@ -7,6 +7,7 @@ interface PreviewNavigationProps {
   totalQuestions: number;
   isAnswered: boolean;
   nextButtonText?: string;
+  hideNextButton?: boolean;
   onPrevious: () => void;
   onNext: () => void;
 }
@@ -16,6 +17,7 @@ export const PreviewNavigation = ({
   totalQuestions,
   isAnswered,
   nextButtonText,
+  hideNextButton,
   onPrevious,
   onNext
 }: PreviewNavigationProps) => {
@@ -34,20 +36,22 @@ export const PreviewNavigation = ({
         {t('preview.previous', 'Anterior')}
       </Button>
       
-      {!isLastQuestion ? (
-        <Button 
-          size="sm"
-          onClick={onNext}
-          disabled={!isAnswered}
-        >
-          {nextButtonText || t('preview.next', 'Próxima')}
-          <ArrowRight className="h-3 w-3 ml-1" />
-        </Button>
-      ) : (
-        <Button size="sm" onClick={onNext} disabled={!isAnswered}>
-          <Check className="h-3 w-3 mr-1" />
-          {t('preview.finish', 'Finalizar')}
-        </Button>
+      {!hideNextButton && (
+        !isLastQuestion ? (
+          <Button 
+            size="sm"
+            onClick={onNext}
+            disabled={!isAnswered}
+          >
+            {nextButtonText || t('preview.next', 'Próxima')}
+            <ArrowRight className="h-3 w-3 ml-1" />
+          </Button>
+        ) : (
+          <Button size="sm" onClick={onNext} disabled={!isAnswered}>
+            <Check className="h-3 w-3 mr-1" />
+            {t('preview.finish', 'Finalizar')}
+          </Button>
+        )
       )}
     </div>
   );

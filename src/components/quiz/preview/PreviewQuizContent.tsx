@@ -24,6 +24,7 @@ interface PreviewQuizContentProps {
   selectedAnswers: Record<string, string | string[]>;
   visibleQuestionsLength: number;
   onAnswerSelect: (value: string, isMultiple: boolean) => void;
+  onTextAnswer?: (text: string) => void;
   onNavigateNext: () => void;
   onNavigateToQuestion: (index: number) => void;
 }
@@ -36,6 +37,7 @@ export const PreviewQuizContent = ({
   selectedAnswers,
   visibleQuestionsLength,
   onAnswerSelect,
+  onTextAnswer,
   onNavigateNext,
   onNavigateToQuestion
 }: PreviewQuizContentProps) => {
@@ -69,6 +71,7 @@ export const PreviewQuizContent = ({
               wrapInCard={false}
               selectedAnswer={selectedAnswers[currentQuestion.id]}
               onAnswerSelect={onAnswerSelect}
+              onTextChange={onTextAnswer}
               onNavigateNext={() => {
                 if (currentQuestionIndex < visibleQuestionsLength - 1) {
                   onNavigateNext();

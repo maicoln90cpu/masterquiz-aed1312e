@@ -894,6 +894,7 @@ const CreateQuiz = () => {
                   showQuestionNumber={showQuestionNumber}
                   formConfig={{ collect_name: collectName, collect_email: collectEmail, collect_whatsapp: collectWhatsapp, collection_timing: collectionTiming as 'none' | 'before' | 'after' | 'both' }}
                   mode="inline"
+                  externalQuestionIndex={editorState.currentQuestionIndex}
                 />
               ) : (
                 <div className="space-y-3">
