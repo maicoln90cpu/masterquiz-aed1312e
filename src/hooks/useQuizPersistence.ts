@@ -30,6 +30,10 @@ interface UseQuizPersistenceOptions {
   updateFormConfig: (updates: Partial<QuizFormConfigState>) => void;
   setQuestions: (questions: EditorQuestion[]) => void;
   clearHistory: () => void;
+  /** Whether the user has made real edits (not just auto-generated content) */
+  hasUserInteracted?: boolean;
+  /** Whether this is express mode (for publish_source tracking) */
+  isExpressMode?: boolean;
 }
 
 // ============================================
@@ -48,6 +52,8 @@ export function useQuizPersistence({
   updateFormConfig,
   setQuestions,
   clearHistory,
+  hasUserInteracted = false,
+  isExpressMode = false,
 }: UseQuizPersistenceOptions) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -312,8 +318,7 @@ export function useQuizPersistence({
         
         logQuizAction("quiz:updated", quiz.id, { title: quiz.title });
 
-        // Express mode fix: detectar primeiro quiz no branch UPDATE também
-        // (Start.tsx cria o draft via INSERT direto, então saveQuiz entra aqui)
+        // PQL v2: Promoção de estágio + eventos condicionais
         try {
           const { data: profile } = await supabase
             .from('profiles')
@@ -321,26 +326,51 @@ export function useQuizPersistence({
             .eq('id', user.id)
             .single();
 
-          if (profile?.user_stage === 'explorador') {
-            const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-            w.dataLayer = w.dataLayer || [];
+          const currentStage = profile?.user_stage || 'explorador';
+          const earlyStages = ['explorador', 'iniciado', 'engajado'];
+          const w = window as Window & { dataLayer?: Record<string, unknown>[] };
+          w.dataLayer = w.dataLayer || [];
+
+          // Evento quiz_first_published — 1x ao publicar pela primeira vez
+          if (earlyStages.includes(currentStage)) {
+            w.dataLayer.push({
+              event: 'quiz_first_published',
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id,
+              publish_source: isExpressMode ? 'express_auto' : 'manual',
+            });
+            console.log('🎯 [GTM] Event pushed: quiz_first_published (UPDATE branch, source:', isExpressMode ? 'express_auto' : 'manual', ')');
+          }
+
+          // first_quiz_created — SOMENTE se houve interação real
+          if (earlyStages.includes(currentStage) && hasUserInteracted) {
             w.dataLayer.push({
               event: 'first_quiz_created',
               quiz_id: quiz.id,
               quiz_title: quiz.title,
-              user_id: user.id
+              user_id: user.id,
             });
-            console.log('🎯 [GTM] Event pushed: first_quiz_created (UPDATE branch)');
+            console.log('🎯 [GTM] Event pushed: first_quiz_created (UPDATE branch, real interaction)');
 
+            // Promover para engajado se ainda não passou
+            if (currentStage === 'explorador' || currentStage === 'iniciado') {
+              await supabase
+                .from('profiles')
+                .update({ user_stage: 'engajado', stage_updated_at: new Date().toISOString() })
+                .eq('id', user.id)
+                .in('user_stage', ['explorador', 'iniciado']);
+              console.log('🎯 [PQL] User stage upgraded to engajado (UPDATE branch)');
+            }
+          }
+
+          // Promover para construtor ao publicar (independente de interação)
+          if (earlyStages.includes(currentStage)) {
             await supabase
               .from('profiles')
-              .update({ 
-                user_stage: 'construtor',
-                stage_updated_at: new Date().toISOString()
-              })
+              .update({ user_stage: 'construtor', stage_updated_at: new Date().toISOString() })
               .eq('id', user.id)
-              .eq('user_stage', 'explorador');
-            
+              .in('user_stage', ['explorador', 'iniciado', 'engajado']);
             console.log('🎯 [PQL] User stage upgraded to construtor (UPDATE branch)');
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -360,7 +390,8 @@ export function useQuizPersistence({
           .eq('id', user.id)
           .single();
 
-        const isFirstQuiz = profile?.user_stage === 'explorador';
+        const currentStage = profile?.user_stage || 'explorador';
+        const earlyStages = ['explorador', 'iniciado', 'engajado'];
 
         const { data, error } = await supabase
           .from('quizzes')
@@ -389,19 +420,33 @@ export function useQuizPersistence({
         
         localStorage.setItem(getStorageKey(user.id, 'current_quiz_id'), quiz.id);
 
-        // Disparar evento GTM se for o primeiro quiz
-        if (isFirstQuiz) {
+        // PQL v2: Promoção de estágio + eventos condicionais (INSERT branch)
+        if (earlyStages.includes(currentStage)) {
           const w = window as Window & { dataLayer?: Record<string, unknown>[] };
           w.dataLayer = w.dataLayer || [];
+
+          // quiz_first_published — sempre ao publicar pela primeira vez
           w.dataLayer.push({
-            event: 'first_quiz_created',
+            event: 'quiz_first_published',
             quiz_id: quiz.id,
             quiz_title: quiz.title,
-            user_id: user.id
+            user_id: user.id,
+            publish_source: isExpressMode ? 'express_auto' : 'manual',
           });
-          console.log('🎯 [GTM] Event pushed: first_quiz_created');
+          console.log('🎯 [GTM] Event pushed: quiz_first_published (INSERT branch)');
 
-          // Atualizar estágio do usuário para 'construtor'
+          // first_quiz_created — SOMENTE se houve interação real
+          if (hasUserInteracted) {
+            w.dataLayer.push({
+              event: 'first_quiz_created',
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id,
+            });
+            console.log('🎯 [GTM] Event pushed: first_quiz_created (INSERT branch, real interaction)');
+          }
+
+          // Promover para construtor ao publicar
           await supabase
             .from('profiles')
             .update({ 
@@ -409,11 +454,10 @@ export function useQuizPersistence({
               stage_updated_at: new Date().toISOString()
             })
             .eq('id', user.id)
-            .eq('user_stage', 'explorador');
+            .in('user_stage', ['explorador', 'iniciado', 'engajado']);
           
-          console.log('🎯 [PQL] User stage upgraded to construtor');
+          console.log('🎯 [PQL] User stage upgraded to construtor (INSERT branch)');
 
-          // Marcar milestone de onboarding (tabela fora do schema tipado)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (supabase as any)
             .from('onboarding_status')
@@ -556,7 +600,8 @@ export function useQuizPersistence({
     }
   }, [
     appearanceState, formConfigState, editorState, questions, quizId,
-    t, navigate, checkRateLimit, updateUI, updateEditor, markAsSaved, getStorageKey
+    t, navigate, checkRateLimit, updateUI, updateEditor, markAsSaved, getStorageKey,
+    hasUserInteracted, isExpressMode
   ]);
 
   // ✅ Salvar rascunho manualmente (save direto, não depende do auto-save)

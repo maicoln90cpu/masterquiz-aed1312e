@@ -18,6 +18,9 @@ const OBJECTIVE_TEMPLATE_MAP: Record<string, string> = {
   educational: "funil-educacional",
 };
 
+// Segmentação ON/OFF para GTM — ON = comercial (público comprador), OFF = educacional
+const COMMERCIAL_OBJECTIVES = ['lead_capture_launch', 'vsl_conversion', 'paid_traffic', 'offer_validation'];
+
 interface ObjectiveCard {
   value: string;
   icon: React.ReactNode;
@@ -78,6 +81,13 @@ const Start = () => {
     setLoading(true);
 
     try {
+      // 0. Disparar evento GTM segmentado: objective_selectedON (comercial) ou objective_selectedOFF (educacional)
+      const gtmEvent = COMMERCIAL_OBJECTIVES.includes(objective) ? 'objective_selectedON' : 'objective_selectedOFF';
+      const w = window as Window & { dataLayer?: Record<string, unknown>[] };
+      w.dataLayer = w.dataLayer || [];
+      w.dataLayer.push({ event: gtmEvent, objective, user_id: user.id });
+      console.log(`🎯 [GTM] Event pushed: ${gtmEvent} (objective: ${objective})`);
+
       // 1. Salvar objetivo no perfil
       await supabase
         .from("profiles")
