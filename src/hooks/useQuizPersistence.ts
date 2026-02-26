@@ -293,9 +293,11 @@ export function useQuizPersistence({
       const currentQuizId = quizId;
 
       if (currentQuizId) {
-        const { data, error } = await supabase
-          .from('quizzes')
-          .update({
+        // Helper: generate random express slug client-side for retry
+        const generateExpressSlugClient = () => 
+          'exp-' + String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
+
+        const publishPayload = {
             title: title || 'Novo Quiz',
             description,
             template,
@@ -308,11 +310,29 @@ export function useQuizPersistence({
             question_count: questionCount,
             is_public: true,
             status: 'active'
-          } as any)
+          } as any;
+
+        let { data, error } = await supabase
+          .from('quizzes')
+          .update(publishPayload)
           .eq('id', currentQuizId)
           .select()
           .single();
         
+        // Retry once on slug collision (23505) for express quizzes
+        if (error && error.code === '23505' && isExpressMode) {
+          console.warn('[QuizPersistence] Slug collision on publish, retrying with new slug...');
+          const { data: retryData, error: retryError } = await supabase
+            .from('quizzes')
+            .update({ ...publishPayload, slug: generateExpressSlugClient() })
+            .eq('id', currentQuizId)
+            .select()
+            .single();
+          if (retryError) throw retryError;
+          data = retryData;
+          error = null;
+        }
+
         if (error) throw error;
         quiz = data;
         

@@ -129,7 +129,8 @@ const Start = () => {
         return;
       }
 
-      // 5. Criar quiz rascunho
+      // 5. Criar quiz rascunho com slug aleatório numérico
+      const expressSlug = 'exp-' + String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
       const { data: quiz, error: quizError } = await supabase
         .from("quizzes")
         .insert({
@@ -141,6 +142,7 @@ const Start = () => {
           status: "draft" as any,
           is_public: true,
           creation_source: "express_auto",
+          slug: expressSlug,
         })
         .select("id")
         .single();

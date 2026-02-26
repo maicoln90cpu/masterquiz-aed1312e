@@ -2188,6 +2188,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      generate_express_slug: { Args: never; Returns: string }
       generate_slug: { Args: { title: string }; Returns: string }
       get_quiz_for_display: {
         Args: { p_company_slug?: string; p_quiz_slug?: string }
