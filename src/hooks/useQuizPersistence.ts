@@ -319,12 +319,15 @@ export function useQuizPersistence({
           .select()
           .single();
         
-        // Retry once on slug collision (23505) for express quizzes
-        if (error && error.code === '23505' && isExpressMode) {
+        // Retry once on slug collision (23505) for any quiz
+        if (error && error.code === '23505') {
           console.warn('[QuizPersistence] Slug collision on publish, retrying with new slug...');
+          const retrySlug = isExpressMode 
+            ? generateExpressSlugClient() 
+            : null; // null forces trigger to regenerate
           const { data: retryData, error: retryError } = await supabase
             .from('quizzes')
-            .update({ ...publishPayload, slug: generateExpressSlugClient() })
+            .update({ ...publishPayload, slug: retrySlug })
             .eq('id', currentQuizId)
             .select()
             .single();
@@ -413,7 +416,7 @@ export function useQuizPersistence({
         const currentStage = profile?.user_stage || 'explorador';
         const earlyStages = ['explorador', 'iniciado', 'engajado'];
 
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from('quizzes')
           .insert({
             user_id: user.id,
@@ -433,6 +436,34 @@ export function useQuizPersistence({
           .select()
           .single();
         
+        // Retry once on slug collision (23505) for manual quizzes
+        if (error && error.code === '23505') {
+          console.warn('[QuizPersistence] Slug collision on manual INSERT, retrying with slug: null...');
+          const retryResult = await supabase
+            .from('quizzes')
+            .insert({
+              user_id: user.id,
+              title: title || t('createQuiz.newQuiz'),
+              description,
+              template,
+              logo_url: logoUrl,
+              show_logo: showLogo,
+              show_title: showTitle,
+              show_description: showDescription,
+              show_question_number: showQuestionNumber,
+              show_results: appearanceState.showResults,
+              question_count: questionCount,
+              is_public: true,
+              status: 'active',
+              slug: null
+            } as any)
+            .select()
+            .single();
+          if (retryResult.error) throw retryResult.error;
+          data = retryResult.data;
+          error = null;
+        }
+
         if (error) throw error;
         quiz = data;
         

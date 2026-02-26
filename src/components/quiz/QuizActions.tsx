@@ -166,9 +166,7 @@ export const useQuizActions = ({
 
       let quiz;
       if (quizId) {
-        const { data, error } = await supabase
-          .from('quizzes')
-          .update({
+        const updatePayload = {
             title: settings.title || 'Novo Quiz',
             description: settings.description,
             template: settings.template,
@@ -179,21 +177,37 @@ export const useQuizActions = ({
             show_question_number: settings.showQuestionNumber,
             question_count: questionCount,
             is_public: true,
-            status: 'active'
-          })
+            status: 'active' as const
+        };
+
+        let { data, error } = await supabase
+          .from('quizzes')
+          .update(updatePayload)
           .eq('id', quizId)
           .select()
           .single();
         
+        // Retry once on slug collision (23505)
+        if (error && error.code === '23505') {
+          console.warn('[QuizActions] Slug collision on UPDATE, retrying with slug: null...');
+          const retryResult = await supabase
+            .from('quizzes')
+            .update({ ...updatePayload, slug: null } as any)
+            .eq('id', quizId)
+            .select()
+            .single();
+          if (retryResult.error) throw retryResult.error;
+          data = retryResult.data;
+          error = null;
+        }
+
         if (error) throw error;
         quiz = data;
         setQuizSlug(quiz.slug);
         
         logQuizAction("quiz:updated", quiz.id, { title: quiz.title });
       } else {
-        const { data, error } = await supabase
-          .from('quizzes')
-          .insert({
+        const insertPayload = {
             user_id: user.id,
             title: settings.title || t('createQuiz.newQuiz'),
             description: settings.description,
@@ -205,11 +219,28 @@ export const useQuizActions = ({
             show_question_number: settings.showQuestionNumber,
             question_count: questionCount,
             is_public: true,
-            status: 'active'
-          })
+            status: 'active' as const
+        };
+
+        let { data, error } = await supabase
+          .from('quizzes')
+          .insert(insertPayload)
           .select()
           .single();
         
+        // Retry once on slug collision (23505)
+        if (error && error.code === '23505') {
+          console.warn('[QuizActions] Slug collision on INSERT, retrying with slug: null...');
+          const retryResult = await supabase
+            .from('quizzes')
+            .insert({ ...insertPayload, slug: null } as any)
+            .select()
+            .single();
+          if (retryResult.error) throw retryResult.error;
+          data = retryResult.data;
+          error = null;
+        }
+
         if (error) throw error;
         quiz = data;
         setQuizId(quiz.id);
