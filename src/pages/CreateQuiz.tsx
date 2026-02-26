@@ -371,10 +371,9 @@ const CreateQuiz = () => {
               )}
 
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => updateUI({ showInteractivePreview: true })}
-                className="border-primary/50 text-primary hover:bg-primary/10 flex-shrink-0"
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white flex-shrink-0"
                 title={t('createQuiz.testQuiz', 'Testar quiz')}
                 disabled={questions.length === 0}
               >
