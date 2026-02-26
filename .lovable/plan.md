@@ -43,16 +43,14 @@
 
 ---
 
-## Etapa 2 — PENDENTE (Copy/UX)
+## Etapa 2 — ✅ IMPLEMENTADA
 
-### Mudanças planejadas:
+### O que foi feito na Etapa 2:
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/Start.tsx` | Ajuste de copy subtítulo |
-| `src/components/quiz/ExpressProgressBar.tsx` | Texto motivacional abaixo da barra |
-| `src/components/quiz/QuestionConfigStep.tsx` | Banners motivacionais metade/final no express |
-| `src/components/quiz/ExpressCelebration.tsx` | Share expandido por default + bloco tráfego + 3 msgs WhatsApp prontas |
+1. **`src/pages/Start.tsx`** — Copy do subtítulo atualizada para "Vamos montar um quiz estruturado automaticamente pra você — em poucos cliques."
+2. **`src/components/quiz/ExpressProgressBar.tsx`** — Texto motivacional abaixo da barra: "Você pode editar tudo depois. O objetivo agora é colocar no ar."
+3. **`src/components/quiz/QuestionConfigStep.tsx`** — Banners motivacionais no express: metade (Q4) e última pergunta
+4. **`src/components/quiz/ExpressCelebration.tsx`** — Share expandido por default + bloco "enviar tráfego" + 3 mensagens WhatsApp prontas (Neutra/Com contexto/Curiosidade) + WhatsApp removido dos social links (agora é seção dedicada)
 
 ### Fase 2 (Backend — não implementada):
 - Estágios 5-8 (operador → limite_atingido) via edge function/trigger

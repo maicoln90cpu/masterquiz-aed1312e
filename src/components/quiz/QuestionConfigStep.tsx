@@ -321,6 +321,18 @@ export const QuestionConfigStep = ({
             />
           </div>
 
+          {/* Express motivational banners */}
+          {isExpressMode && currentQuestionIndex === 3 && allQuestions.length >= 7 && (
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center text-sm text-green-800 dark:text-green-200">
+              🚀 {t('express.bannerHalfway', 'Você já está na metade. Do jeito que está, já funciona.')}
+            </div>
+          )}
+          {isExpressMode && currentQuestionIndex === allQuestions.length - 1 && (
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center text-sm text-blue-800 dark:text-blue-200">
+              {t('express.bannerFinal', 'Ao avançar, seu quiz será publicado automaticamente.')}
+            </div>
+          )}
+
           {/* Question Navigation */}
           <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
             <Button

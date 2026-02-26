@@ -51,6 +51,9 @@ export const ExpressProgressBar = ({ currentStep }: ExpressProgressBarProps) => 
             </div>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          {t('express.motivational', 'Você pode editar tudo depois. O objetivo agora é colocar no ar.')}
+        </p>
       </div>
     </div>
   );
