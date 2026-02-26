@@ -40,6 +40,16 @@ interface InactiveUser {
   user_objectives: string[] | null;
 }
 
+function hasActiveCriteriaFilters(criteria: TargetCriteria): boolean {
+  return !!(
+    criteria.no_leads ||
+    criteria.no_quizzes ||
+    (criteria.plans && criteria.plans.length > 0) ||
+    (criteria.stages && criteria.stages.length > 0) ||
+    (criteria.objectives && criteria.objectives.length > 0)
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -131,25 +141,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Determinar dias mínimos de inatividade
-    const minInactiveDays = targetCriteria.min_inactive_days || typedSettings.inactivity_days_trigger;
-    const inactivityDate = new Date();
-    inactivityDate.setDate(inactivityDate.getDate() - minInactiveDays);
+    // ===== DECISÃO: filtrar por inatividade ou buscar todos? =====
+    // Se min_inactive_days NÃO foi definido explicitamente E existem outros filtros ativos,
+    // buscar TODOS os usuários com WhatsApp (não filtrar por inatividade).
+    const hasExplicitInactivity = targetCriteria.min_inactive_days !== undefined && targetCriteria.min_inactive_days > 0;
+    const hasOtherFilters = hasActiveCriteriaFilters(targetCriteria);
+    const shouldFilterByInactivity = hasExplicitInactivity || !hasOtherFilters;
 
-    // Buscar usuários inativos via auth.users
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    if (authError) throw authError;
+    let userPool: Array<{ id: string; last_sign_in_at: string | null }> = [];
 
-    const inactiveUserIds = authUsers.users
-      .filter(user => {
-        const lastSignIn = user.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
-        return lastSignIn && lastSignIn < inactivityDate;
-      })
-      .map(user => ({ id: user.id, last_sign_in_at: user.last_sign_in_at }));
+    if (shouldFilterByInactivity) {
+      // Comportamento original: buscar apenas usuários inativos
+      const minInactiveDays = targetCriteria.min_inactive_days || typedSettings.inactivity_days_trigger;
+      const inactivityDate = new Date();
+      inactivityDate.setDate(inactivityDate.getDate() - minInactiveDays);
 
-    if (inactiveUserIds.length === 0) {
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      if (authError) throw authError;
+
+      userPool = authUsers.users
+        .filter(user => {
+          const lastSignIn = user.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
+          return lastSignIn && lastSignIn < inactivityDate;
+        })
+        .map(user => ({ id: user.id, last_sign_in_at: user.last_sign_in_at ?? null }));
+
+      console.log(`Inactivity filter: ${minInactiveDays} days, found ${userPool.length} inactive users`);
+    } else {
+      // Novo: buscar TODOS os usuários (sem filtro de inatividade)
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      if (authError) throw authError;
+
+      userPool = authUsers.users.map(user => ({
+        id: user.id,
+        last_sign_in_at: user.last_sign_in_at ?? null,
+      }));
+
+      console.log(`No inactivity filter (criteria-based campaign), pool: ${userPool.length} users`);
+    }
+
+    if (userPool.length === 0) {
       return new Response(
-        JSON.stringify({ message: 'Nenhum usuário inativo encontrado', queued: 0 }),
+        JSON.stringify({ message: 'Nenhum usuário encontrado', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -158,7 +191,7 @@ Deno.serve(async (req) => {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, full_name, whatsapp, user_stage, user_objectives')
-      .in('id', inactiveUserIds.map(u => u.id))
+      .in('id', userPool.map(u => u.id))
       .not('whatsapp', 'is', null);
 
     if (profilesError) throw profilesError;
@@ -187,12 +220,12 @@ Deno.serve(async (req) => {
     const { data: subscriptions } = await supabase
       .from('user_subscriptions')
       .select('user_id, plan_type')
-      .in('user_id', inactiveUserIds.map(u => u.id));
+      .in('user_id', userPool.map(u => u.id));
     const userPlans = new Map((subscriptions || []).map(s => [s.user_id, s.plan_type]));
 
     // Quiz/lead stats
     const userStats = await supabase.rpc('get_user_quiz_stats', {
-      user_ids: inactiveUserIds.map(u => u.id)
+      user_ids: userPool.map(u => u.id)
     });
     const statsMap = new Map((userStats.data || []).map((s: { user_id: string; quiz_count: number; lead_count: number }) => [s.user_id, s]));
 
@@ -206,7 +239,7 @@ Deno.serve(async (req) => {
       const userPlan = userPlans.get(profile.id) || 'free';
       if (typedSettings.exclude_plan_types.includes(userPlan)) continue;
 
-      const authUser = inactiveUserIds.find(u => u.id === profile.id);
+      const authUser = userPool.find(u => u.id === profile.id);
       const lastSignIn = authUser?.last_sign_in_at ? new Date(authUser.last_sign_in_at) : null;
       const daysInactive = lastSignIn ? Math.floor((Date.now() - lastSignIn.getTime()) / (1000 * 60 * 60 * 24)) : 999;
 
@@ -330,7 +363,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Queued ${queuedContacts.length} contacts for recovery`);
+    console.log(`Queued ${queuedContacts.length} contacts (eligible: ${eligibleUsers.length}, inactivity_filter: ${shouldFilterByInactivity}, cooldown_ignored: ${ignoreCooldown})`);
 
     return new Response(
       JSON.stringify({

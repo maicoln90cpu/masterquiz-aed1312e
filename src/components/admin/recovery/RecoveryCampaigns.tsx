@@ -247,11 +247,13 @@ export function RecoveryCampaigns() {
 
   const startCampaign = async (campaign: Campaign) => {
     try {
+      // Se campanha já tem contatos (re-início), ignorar cooldown
+      const hasExistingContacts = (campaign.queued_count || 0) > 0 || (campaign.sent_count || 0) > 0;
       const { data, error } = await supabase.functions.invoke('check-inactive-users', {
         body: { 
           campaignId: campaign.id,
           templateId: campaign.template_id,
-          ignoreCooldown: false,
+          ignoreCooldown: hasExistingContacts,
           targetCriteria: campaign.target_criteria || {},
         }
       });
