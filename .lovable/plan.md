@@ -1,96 +1,85 @@
 
 
-## Diagnose completo + Plano de implementacao
+## Auditoria Completa - Causas Raiz Encontradas
 
----
+### Bug 1: "Erro ao enviar resposta" - CAUSA RAIZ DEFINITIVA
 
-### Bug 1: "Erro ao enviar resposta" — CAUSA RAIZ ENCONTRADA
-
-**Arquivo:** `src/hooks/useQuizViewState.ts`, linha 304-308
-
-```typescript
-const { data: ownerSub } = await supabase
-  .from('user_subscriptions')
-  .select('response_limit')
-  .eq('user_id', quiz.user_id)
-  .single(); // ← ESTE E O PROBLEMA
+**Evidencia do console do browser (reproduzido ao vivo):**
+```
+"Converting circular structure to JSON
+    --> starting at object with constructor 'HTMLButtonElement'
+    |     property '__reactFiber$...' -> object with constructor 'FiberNode'
+    --- property 'stateNode' closes the circle"
 ```
 
-A tabela `user_subscriptions` tem RLS de SELECT apenas para `authenticated` com `user_id = auth.uid()`. O respondente publico e **anon**, portanto recebe 0 linhas. `.single()` lanca erro PGRST116 (nenhuma linha encontrada), que cai no catch e mostra "Erro ao enviar resposta".
+**O que acontece:** Um elemento DOM (HTMLButtonElement) esta sendo armazenado no objeto `answers` em vez de um valor string. Quando o `submitQuiz` tenta fazer `.insert({ answers: finalAnswers })`, o Supabase JS chama `JSON.stringify(answers)` que falha porque DOM elements tem referencia circular.
 
-**Fix:** Trocar `.single()` por `.maybeSingle()`. Se `ownerSub` for null, pular a verificacao de limite.
+**Onde o DOM element entra nos answers:** A questao de order_number 2 do quiz "teste" tem `answer_format: multiple_choice` mas seus blocos sao `[text, button]` - SEM bloco `question`. Quando o usuario clica no botao "Falar com especialista no WhatsApp", o evento pode estar sendo propagado para o `onAnswer` em algum ponto, armazenando o event target (HTMLButtonElement) como resposta.
 
----
+**Fix (2 camadas de protecao):**
 
-### Bug 2: Botao "Proxima Pergunta" duplicado — CAUSA RAIZ ENCONTRADA
+1. **Sanitizar answers antes do insert** em `useQuizViewState.ts` (linhas 414-424): Filtrar valores nao-serializaveis do objeto `answers` antes de enviar ao banco. Remover qualquer valor que nao seja string, number, boolean, array ou plain object.
 
-**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx`, linha 155
+2. **Garantir que handleAnswer so aceita valores serializaveis** em `useQuizViewState.ts` (linha 194): Adicionar guard na funcao `handleAnswer` para rejeitar DOM elements e event objects.
 
 ```typescript
-showNavigationButton={block.type === 'button'}
+// Sanitizacao defensiva
+const sanitizeAnswers = (answers: Record<string, any>): Record<string, any> => {
+  const clean: Record<string, any> = {};
+  for (const [key, value] of Object.entries(answers)) {
+    if (value === null || value === undefined) continue;
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      clean[key] = value;
+    } else if (Array.isArray(value)) {
+      clean[key] = value.filter(v => typeof v === 'string' || typeof v === 'number');
+    } else if (typeof value === 'object' && !(value instanceof Element) && !(value instanceof Event)) {
+      try { JSON.stringify(value); clean[key] = value; } catch { /* skip */ }
+    }
+  }
+  return clean;
+};
 ```
 
-Quando o bloco e do tipo `button`, `showNavigationButton=true` faz o `QuizBlockPreview` renderizar o botao do bloco (via `renderBlock` case "button") **E TAMBEM** renderizar um botao extra "Proxima Pergunta" generico (linhas 857-861 do QuizBlockPreview). Resultado: 3 botoes na tela.
+### Bug 2: Botao "Proxima" - Logica ainda incompleta
 
-**Fix:** Mudar para `showNavigationButton={false}` — o bloco button ja se renderiza sozinho via `renderBlock`.
+**Situacao atual (linha 120):**
+```typescript
+const hasManualNavButton = hasQuestionBlock || hasButtonBlock;
+```
 
----
+Isso oculta o botao externo em TODOS os casos que tem question block ou button block. Mas:
+- Para questoes COM question block: o botao interno (QuestionBlockRenderer) funciona
+- Para questoes SEM question block e COM button block `next_question`: o button block avanca
+- Para questoes SEM question block e SEM button block: **TRAVADO** - nenhum botao aparece
 
-### Fase 2C: Componentes Premium
+**Fix:** Mudar a logica para so ocultar o botao externo quando existe um mecanismo de avanco real:
 
-#### 2C.1 — Slider Premium (melhorias visuais)
-- Adicionar tick marks (regua visual) no `SliderBlockPreview` do QuizBlockPreview
-- Valor animado com transicao ao arrastar
-- Melhorar estilo do thumb e track com cores premium
+```typescript
+// Botao externo so fica oculto se:
+// 1. Existe question block (tem botao interno) OU
+// 2. Existe button block com action=next_question (funciona como nav)
+const hasManualNavButton = hasQuestionBlock || hasButtonBlock;
+// ↑ Isso ja esta correto DESDE QUE hasButtonBlock verifique action=next_question
+```
 
-**Arquivos:** `src/components/quiz/QuizBlockPreview.tsx` (SliderBlockPreview)
+Verificando linha 116: `const hasButtonBlock = question.blocks?.some((b: any) => b.type === 'button' && (b as any).action === 'next_question');` - isso JA filtra por next_question. Entao a logica ESTA correta.
 
-#### 2C.2 — Timer/Countdown Premium (melhorias visuais)
-- Animacao de flip/pulse por segundo no `CountdownBlockPreview`
-- Acao padrao ao expirar: mostrar mensagem (conforme escolha do usuario)
-- Estilo premium nos cards de unidade de tempo
+O problema real do botao e que questoes SEM question block E SEM button block nao tem como avancar. Precisamos adicionar o botao externo para esses casos. Verificar se o bloco de navegacao externo (linhas 180+) aparece quando `!hasManualNavButton`.
 
-**Arquivos:** `src/components/quiz/QuizBlockPreview.tsx` (CountdownBlockPreview)
+**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` linhas 170-230
 
-#### 2C.3 — Testimonial Block Premium (melhorias visuais)
-- Sombra premium, avatar maior, transicao suave
-- Aspas decorativas e tipografia melhorada no `TestimonialBlockPreview`
+### Arquivos a modificar
 
-**Arquivos:** `src/components/quiz/QuizBlockPreview.tsx` (TestimonialBlockPreview)
-
-#### 2C.4 — Animated Counter (NOVO BLOCO)
-- Novo tipo `animatedCounter` em `types/blocks.ts`
-- Componente editor `AnimatedCounterBlock.tsx`
-- Preview no `QuizBlockPreview.tsx` com contagem progressiva usando `requestAnimationFrame`
-- Configuraveis: valor inicial/final, duracao, prefixo/sufixo, easing
-- Gatilho: anima automaticamente ao entrar na tela (on view, conforme escolha)
-- Adicionar no menu do `BlockEditor.tsx`
-
-**Arquivos novos:** `src/components/quiz/blocks/AnimatedCounterBlock.tsx`
-**Arquivos modificados:** `src/types/blocks.ts`, `src/components/quiz/blocks/BlockEditor.tsx`, `src/components/quiz/QuizBlockPreview.tsx`
-
----
-
-### Resumo de arquivos
-
-| Acao | Arquivo |
-|------|---------|
-| Fix submit `.single()` → `.maybeSingle()` | `useQuizViewState.ts` (1 linha) |
-| Fix botao duplicado `showNavigationButton={false}` | `QuizViewQuestion.tsx` (1 linha) |
-| Slider/Countdown/Testimonial premium | `QuizBlockPreview.tsx` |
-| Animated Counter tipo + editor | `blocks.ts`, `AnimatedCounterBlock.tsx`, `BlockEditor.tsx` |
-| Update plan | `.lovable/plan.md` |
-
----
+| Arquivo | Mudanca |
+|---------|---------|
+| `src/hooks/useQuizViewState.ts` | Sanitizar `answers` antes do insert + guard no `handleAnswer` |
+| `src/components/quiz/view/QuizViewQuestion.tsx` | Verificar logica do botao externo para questoes sem question block |
 
 ### Checklist pos-implementacao
 
-1. Publicar template → responder → preencher form → clicar Finalizar → sem erro, resposta salva
-2. Abrir quiz publicado com botao manual → apenas 1 botao de navegacao visivel
-3. Adicionar bloco Slider no editor → preview mostra regua com ticks
-4. Adicionar bloco Countdown → preview anima segundo a segundo
-5. Adicionar bloco Testimonial → preview mostra card premium
-6. Adicionar bloco Animated Counter → preview anima contagem de 0 ate valor final
-7. Regressao: auto-advance em single choice continua funcionando
-8. Regressao: fluxo form before/after continua correto
+1. Quiz "teste" → responder tudo → preencher form → Finalizar → SEM ERRO, resposta salva
+2. Questoes com question block + autoAdvance OFF → botao "Proxima" visivel
+3. Questoes com question block + autoAdvance ON → sem botao, avanca ao clicar
+4. Questoes sem question block com button next_question → button block avanca
+5. Questoes sem question block sem button → botao externo visivel
 
