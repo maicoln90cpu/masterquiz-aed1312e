@@ -115,8 +115,9 @@ export function QuizViewQuestion({
   const hasQuestionBlock = question.blocks?.some((b: any) => b.type === 'question');
   const hasButtonBlock = question.blocks?.some((b: any) => b.type === 'button' && (b as any).action === 'next_question');
   const isInformationalSlide = !hasQuestionBlock && hasButtonBlock;
-  // Hide auto next button when user placed a manual navigation button (regardless of question block)
-  const hasManualNavButton = hasButtonBlock;
+  // REGRA: sempre que existe bloco de pergunta, NÃO mostrar botão "Próxima Pergunta" automático
+  // O bloco de pergunta já tem seu próprio fluxo de resposta
+  const hasManualNavButton = hasQuestionBlock || hasButtonBlock;
 
   const renderQuestionBlocks = () => {
     if (!question.blocks || !Array.isArray(question.blocks) || question.blocks.length === 0) {
@@ -152,7 +153,7 @@ export function QuizViewQuestion({
               <QuizBlockPreview 
                 key={block.id} 
                 blocks={[block]} 
-                showNavigationButton={block.type === 'button'}
+                showNavigationButton={false}
                 onNavigateNext={handleNextClick}
                 onNavigateToQuestion={() => {}}
                 wrapInCard={false}

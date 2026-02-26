@@ -55,6 +55,7 @@ import { SocialProofBlock } from "./SocialProofBlock";
 import TestimonialBlock from "./TestimonialBlock";
 import CountdownBlock from "./CountdownBlock";
 import ProgressBlock from "./ProgressBlock";
+import { AnimatedCounterBlock } from "./AnimatedCounterBlock";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
@@ -131,17 +132,19 @@ const SortableBlock = ({ block, onUpdate, onDelete, totalQuestions = 0, currentQ
       case 'loading':
         return true; // Loading com valores default é completo
       case 'slider':
-        return true; // Slider com valores default é completo
+        return true;
       case 'textInput':
-        return true; // TextInput com valores default é completo
+        return true;
       case 'nps':
-        return true; // NPS com valores default é completo
+        return true;
       case 'accordion':
-        return true; // Accordion com valores default é completo
+        return true;
       case 'comparison':
-        return true; // Comparison com valores default é completo
+        return true;
       case 'socialProof':
-        return true; // SocialProof com valores default é completo
+        return true;
+      case 'animatedCounter':
+        return true;
       default:
         return false;
     }
@@ -193,6 +196,8 @@ const SortableBlock = ({ block, onUpdate, onDelete, totalQuestions = 0, currentQ
         return <CountdownBlock block={block} onChange={onUpdate} />;
       case 'progress':
         return <ProgressBlock block={block} onChange={onUpdate} />;
+      case 'animatedCounter':
+        return <AnimatedCounterBlock block={block} onChange={onUpdate} />;
       default:
         return null;
     }
@@ -345,7 +350,8 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       nps: t('createQuiz.blocks.nps'),
       accordion: t('createQuiz.blocks.accordion'),
       comparison: t('createQuiz.blocks.comparison'),
-      socialProof: t('createQuiz.blocks.socialProof')
+      socialProof: t('createQuiz.blocks.socialProof'),
+      animatedCounter: t('createQuiz.blocks.animatedCounter', { defaultValue: 'Contador Animado' })
     };
     
     toast.success(
@@ -499,6 +505,10 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               <DropdownMenuItem onClick={() => addBlock('testimonial')}>
                 <Star className="h-4 w-4 mr-2" />
                 Depoimento
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('animatedCounter')}>
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                Contador Animado
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -63,6 +63,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       case 'accordion': return <ChevronDown className="h-3 w-3" />;
       case 'comparison': return <Columns className="h-3 w-3" />;
       case 'socialProof': return <Bell className="h-3 w-3" />;
+      case 'animatedCounter': return <TrendingUp className="h-3 w-3" />;
     }
   };
 
@@ -88,7 +89,8 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       nps: 'NPS',
       accordion: 'Acordeão FAQ',
       comparison: 'Comparação',
-      socialProof: 'Prova Social'
+      socialProof: 'Prova Social',
+      animatedCounter: 'Contador Animado'
     };
     return labels[type];
   };
