@@ -50,6 +50,7 @@ interface TargetCriteria {
   stages: string[];
   objectives: string[];
   min_inactive_days: number | null;
+  direct_campaign: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -107,6 +108,7 @@ const defaultCriteria: TargetCriteria = {
   stages: [],
   objectives: [],
   min_inactive_days: null,
+  direct_campaign: false,
 };
 
 export function RecoveryCampaigns() {
@@ -189,6 +191,7 @@ export function RecoveryCampaigns() {
     if (criteria.stages.length > 0) tc.stages = criteria.stages;
     if (criteria.objectives.length > 0) tc.objectives = criteria.objectives;
     if (criteria.min_inactive_days) tc.min_inactive_days = criteria.min_inactive_days;
+    if (criteria.direct_campaign) tc.direct_campaign = true;
     const targetCriteriaJson = Object.keys(tc).length > 0 ? JSON.parse(JSON.stringify(tc)) : {};
 
     try {
@@ -247,14 +250,16 @@ export function RecoveryCampaigns() {
 
   const startCampaign = async (campaign: Campaign) => {
     try {
-      // Se campanha já tem contatos (re-início), ignorar cooldown
+      const tc = (campaign.target_criteria || {}) as Record<string, unknown>;
+      const isDirectCampaign = !!tc.direct_campaign;
       const hasExistingContacts = (campaign.queued_count || 0) > 0 || (campaign.sent_count || 0) > 0;
       const { data, error } = await supabase.functions.invoke('check-inactive-users', {
         body: { 
           campaignId: campaign.id,
           templateId: campaign.template_id,
-          ignoreCooldown: hasExistingContacts,
-          targetCriteria: campaign.target_criteria || {},
+          ignoreCooldown: isDirectCampaign || hasExistingContacts,
+          directCampaign: isDirectCampaign,
+          targetCriteria: tc,
         }
       });
 
@@ -498,6 +503,21 @@ export function RecoveryCampaigns() {
                   </div>
                 </CollapsibleContent>
               </Collapsible>
+
+              {/* Disparo Direto */}
+              <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4 space-y-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
+                  <Checkbox
+                    checked={criteria.direct_campaign}
+                    onCheckedChange={(checked) => setCriteria({ ...criteria, direct_campaign: !!checked })}
+                  />
+                  🚀 Campanha de disparo direto
+                </label>
+                <p className="text-xs text-muted-foreground pl-6">
+                  Ignora cooldown global e permite reenviar mesmo template. Ideal para campanhas sazonais/promocionais.
+                  Mantém: blacklist, horário e limite diário.
+                </p>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="scheduled">Agendar Para (opcional)</Label>
