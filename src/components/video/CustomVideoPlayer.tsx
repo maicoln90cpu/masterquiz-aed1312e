@@ -530,7 +530,7 @@ export const CustomVideoPlayer = ({
 
   if (error) {
     return (
-      <div className={cn('bg-muted rounded-lg flex items-center justify-center p-8', aspectRatioClass, className)}>
+      <div className={cn('rounded-lg flex items-center justify-center p-8', className)}>
         <p className="text-destructive">{error}</p>
       </div>
     );
@@ -540,8 +540,7 @@ export const CustomVideoPlayer = ({
     <div
       ref={containerRef}
       className={cn(
-        'relative group bg-muted rounded-lg overflow-hidden focus:outline-none',
-        aspectRatioClass,
+        'relative group rounded-lg overflow-hidden focus:outline-none',
         className
       )}
       tabIndex={0}

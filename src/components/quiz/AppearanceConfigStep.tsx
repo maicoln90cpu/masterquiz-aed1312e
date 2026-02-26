@@ -28,11 +28,13 @@ interface AppearanceConfigStepProps {
   showDescription?: boolean;
   showQuestionNumber?: boolean;
   showResults?: boolean;
+  progressStyle?: 'bar' | 'counter' | 'none';
   onShowLogoChange?: (value: boolean) => void;
   onShowTitleChange?: (value: boolean) => void;
   onShowDescriptionChange?: (value: boolean) => void;
   onShowQuestionNumberChange?: (value: boolean) => void;
   onShowResultsChange?: (value: boolean) => void;
+  onProgressStyleChange?: (value: 'bar' | 'counter' | 'none') => void;
 }
 
 const getTemplates = (t: any) => [
@@ -101,11 +103,13 @@ export const AppearanceConfigStep = ({
   showDescription = true,
   showQuestionNumber = true,
   showResults = true,
+  progressStyle = 'counter',
   onShowLogoChange,
   onShowTitleChange,
   onShowDescriptionChange,
   onShowQuestionNumberChange,
-  onShowResultsChange
+  onShowResultsChange,
+  onProgressStyleChange
 }: AppearanceConfigStepProps) => {
   const { t } = useTranslation();
   const { allowedTemplates, isLoading } = usePlanFeatures();
@@ -203,13 +207,11 @@ export const AppearanceConfigStep = ({
                   <select
                     id="progress-style"
                     className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-                    value={showQuestionNumber === false ? 'none' : showQuestionNumber === true ? 'counter' : 'counter'}
+                    value={progressStyle || 'counter'}
                     onChange={(e) => {
-                      const val = e.target.value;
-                      if (onShowQuestionNumberChange) {
-                        // For now map: counter=true, bar=true, none=false
-                        // The actual progress_style will be handled separately
-                        onShowQuestionNumberChange(val !== 'none');
+                      const val = e.target.value as 'bar' | 'counter' | 'none';
+                      if (onProgressStyleChange) {
+                        onProgressStyleChange(val);
                       }
                     }}
                   >

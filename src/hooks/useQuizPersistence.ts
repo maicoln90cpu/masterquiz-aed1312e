@@ -203,6 +203,7 @@ export function useQuizPersistence({
         showDescription: quiz.show_description ?? true,
         showQuestionNumber: quiz.show_question_number ?? true,
         showResults: (quiz as any).show_results ?? true,
+        progressStyle: ((quiz as any).progress_style as 'bar' | 'counter' | 'none') || 'counter',
       });
 
       if (formConfig) {
@@ -307,6 +308,7 @@ export function useQuizPersistence({
             show_description: showDescription,
             show_question_number: showQuestionNumber,
             show_results: appearanceState.showResults,
+            progress_style: appearanceState.progressStyle || 'counter',
             question_count: questionCount,
             is_public: true,
             status: 'active'
@@ -429,6 +431,7 @@ export function useQuizPersistence({
             show_description: showDescription,
             show_question_number: showQuestionNumber,
             show_results: appearanceState.showResults,
+            progress_style: appearanceState.progressStyle || 'counter',
             question_count: questionCount,
             is_public: true,
             status: 'active'
@@ -452,6 +455,7 @@ export function useQuizPersistence({
               show_description: showDescription,
               show_question_number: showQuestionNumber,
               show_results: appearanceState.showResults,
+              progress_style: appearanceState.progressStyle || 'counter',
               question_count: questionCount,
               is_public: true,
               status: 'active',

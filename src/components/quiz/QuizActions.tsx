@@ -91,6 +91,7 @@ export const useQuizActions = ({
           show_title: settings.showTitle,
           show_description: settings.showDescription,
           show_question_number: settings.showQuestionNumber,
+          progress_style: (settings as any).progressStyle || 'counter',
           question_count: questionCount,
           is_public: settings.isPublic
         })
@@ -175,6 +176,7 @@ export const useQuizActions = ({
             show_title: settings.showTitle,
             show_description: settings.showDescription,
             show_question_number: settings.showQuestionNumber,
+            progress_style: (settings as any).progressStyle || 'counter',
             question_count: questionCount,
             is_public: true,
             status: 'active' as const
@@ -217,6 +219,7 @@ export const useQuizActions = ({
             show_title: settings.showTitle,
             show_description: settings.showDescription,
             show_question_number: settings.showQuestionNumber,
+            progress_style: (settings as any).progressStyle || 'counter',
             question_count: questionCount,
             is_public: true,
             status: 'active' as const
