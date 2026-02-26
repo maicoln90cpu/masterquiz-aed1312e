@@ -1,53 +1,33 @@
 
 
-## Plano: Sincronizar Preview com Editor
+## Problema e Solução
 
-### 3 problemas identificados
+### Bug: Templates novos não aparecem no dropdown
+A query na linha 75 filtra `.eq('is_active', true)`. Templates criados pelo admin podem estar com `is_active = false`. Solução: mostrar TODOS os templates no dropdown de campanhas (campanhas são manuais, admin deve poder usar qualquer template), agrupados por categoria e mostrando a categoria no label.
 
-**1. Clique na pergunta esquerda não navega o preview**
-- `CreateQuiz.tsx` linha 885: `UnifiedQuizPreview` é renderizado SEM `externalQuestionIndex`
-- `editorState.currentQuestionIndex` existe e é atualizado por `handleQuestionClick`, mas não é passado ao preview
+### Nova feature: Filtros de audiência no modal de campanha
+A tabela `recovery_campaigns` já tem coluna `target_criteria` (JSONB). Adicionar multi-select de filtros no modal e passar esses critérios para a edge function `check-inactive-users`.
 
-**Fix**: Passar `externalQuestionIndex={currentQuestionIndex}` ao `UnifiedQuizPreview` inline. Porém, o hook `useQuizPreviewState` precisa ser ajustado: quando `externalQuestionIndex` muda, sincronizar `internalQuestionIndex` mas permitir navegação interna livre (não travar no external).
+**Filtros propostos (multi-select com checkboxes):**
+- Sem leads (0 leads)
+- Sem quiz publicado (0 quizzes ativos)
+- Plano Free
+- Plano Admin/Pro
+- Por estágio: explorador, iniciado, construtor, operador
+- Por objetivo: educational, lead_capture_launch, offer_validation, paid_traffic, vsl_conversion
+- Inativos há 7+ dias
+- Inativos há 15+ dias
+- Inativos há 30+ dias
 
-**Mudança em `useQuizPreviewState.ts`**: Substituir a lógica de override por um `useEffect` que sincroniza `internalQuestionIndex` quando `externalQuestionIndex` muda, mas mantém `currentQuestionIndex = internalQuestionIndex` sempre (permitindo navegação livre no preview).
-
-**Mudança em `CreateQuiz.tsx` linha 885**: Adicionar `externalQuestionIndex={currentQuestionIndex}`.
-
----
-
-**2. Botão "Próxima" sempre visível no preview (ignora autoAdvance)**
-- `PreviewNavigation` sempre renderiza os botões "Anterior/Próxima" sem considerar `autoAdvance`
-- `UnifiedQuizPreview.renderQuizStep()` sempre renderiza `PreviewNavigation` (linha 176)
-
-**Fix**: Passar `autoAdvance` e `hasButtonBlock` do `questionBlock` atual para controlar a visibilidade do `PreviewNavigation`. Se `autoAdvance === true` e formato é `single_choice`/`yes_no`, ocultar o botão "Próxima" (manter "Anterior"). Se há `buttonBlock` com `next_question`, ocultar "Próxima" também.
-
-**Mudança em `UnifiedQuizPreview.tsx`**: Extrair `autoAdvance` e `hasButtonBlock` do `currentQuestion`, e condicionalmente ocultar `PreviewNavigation` ou passar props para esconder o botão "Next".
-
-**Mudança em `PreviewNavigation.tsx`**: Adicionar prop `hideNextButton?: boolean` para ocultar apenas o "Próxima" quando auto-advance está ativo.
-
----
-
-**3. Botão "Próximo" não funciona para `short_text` no preview**
-- `isAnswered` em `useQuizPreviewState` (linha 227) usa `!!selectedAnswers[currentQuestion.id]`
-- Para `short_text`, o `QuizBlockPreview` renderiza um `Input` mas o `onAnswerSelect` callback é para cliques em opções — texto digitado **não** é armazenado em `selectedAnswers`
-- Logo `isAnswered = false` e o botão fica desabilitado permanentemente
-
-**Fix em `PreviewQuizContent.tsx`**: Passar uma callback `onTextAnswer` para o `QuizBlockPreview` que armazene o texto em `selectedAnswers`. Alternativamente, fazer o `onAnswerSelect` funcionar para texto.
-
-**Fix em `useQuizPreviewState.ts`**: Expor um `handleTextAnswer(questionId, text)` que atualiza `selectedAnswers`.
-
-**Fix em `UnifiedQuizPreview.tsx`**: Conectar a callback de texto.
-
----
-
-### Arquivos modificados
+### Arquivos a modificar
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/hooks/useQuizPreviewState.ts` | `useEffect` para sync `externalQuestionIndex` → `internalQuestionIndex`; expor `handleTextAnswer` |
-| `src/pages/CreateQuiz.tsx` | Passar `externalQuestionIndex={currentQuestionIndex}` ao preview inline |
-| `src/components/quiz/UnifiedQuizPreview.tsx` | Extrair autoAdvance/hasButtonBlock; controlar visibilidade do PreviewNavigation; conectar text answer |
-| `src/components/quiz/preview/PreviewNavigation.tsx` | Adicionar prop `hideNextButton` |
-| `src/components/quiz/preview/PreviewQuizContent.tsx` | Suportar callback de texto para `short_text` |
+| `src/components/admin/recovery/RecoveryCampaigns.tsx` | Mostrar todos templates (sem filtro is_active) com categoria; adicionar seção de filtros multi-select no modal; salvar filtros em `target_criteria`; passar filtros ao iniciar campanha |
+| `supabase/functions/check-inactive-users/index.ts` | Ler `target_criteria` da campanha e aplicar filtros (leads=0, quiz=0, plano, estágio, objetivo, dias de inatividade) na seleção de usuários elegíveis |
+
+### Detalhes da UI dos filtros
+- Seção com accordion/collapsible no modal "Nova Campanha"
+- Checkboxes agrupados: "Atividade" (sem leads, sem quiz), "Plano" (free, admin), "Estágio" (explorador, iniciado...), "Objetivo" (educational, lead_capture...), "Inatividade" (7+, 15+, 30+ dias)
+- Salvar como `target_criteria: { no_leads: true, no_quizzes: true, plans: ['free'], stages: ['explorador'], objectives: ['educational'], min_inactive_days: 15 }`
 
