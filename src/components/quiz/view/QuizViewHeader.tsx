@@ -29,10 +29,10 @@ export function QuizViewHeader({
             </div>
           )}
           {quiz.show_title !== false && (
-            <h1 className="text-3xl font-bold">{quiz.title}</h1>
+            <h1 className="quiz-title-responsive font-bold">{quiz.title}</h1>
           )}
           {quiz.show_description !== false && quiz.description && (
-            <p className="text-muted-foreground">{quiz.description}</p>
+            <p className="quiz-body-responsive text-muted-foreground">{quiz.description}</p>
           )}
         </div>
       )}

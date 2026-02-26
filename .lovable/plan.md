@@ -21,15 +21,17 @@
 
 ---
 
-## Etapa 2B — Resultado + Tipografia responsiva (PRÓXIMA)
+## ✅ Etapa 2B — Resultado + Tipografia responsiva (CONCLUÍDA)
 
-- [ ] Tela de resultado com animação staggered para cada elemento
-- [ ] Confetti opcional na tela de resultado (canvas-confetti já instalado)
-- [ ] Tipografia responsiva com `clamp()` para títulos/textos do quiz
-- [ ] Touch targets mobile mínimo 44px em todos os elementos interativos
-- [ ] Dark mode: revisão de contraste em todos os templates
+1. ✅ Tela de resultado com animação staggered (Framer Motion)
+2. ✅ Confetti automático na tela de resultado (canvas-confetti)
+3. ✅ Tipografia responsiva com `clamp()` (título, perguntas, body, número resultado)
+4. ✅ Touch targets mobile mínimo 44px em todos os elementos interativos
+5. ✅ Dark mode: contraste revisado na barra de progresso e gabarito
 
-## Etapa 2C — Componentes premium (novos blocos)
+---
+
+## Etapa 2C — Componentes premium (PRÓXIMA)
 
 - [ ] Slider Premium: régua visual com campo de texto livre para unidade/rótulo
 - [ ] Timer/Countdown block: contagem regressiva animada
