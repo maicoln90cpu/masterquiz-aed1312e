@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
     let campaignId: string | null = null;
     let templateId: string | null = null;
     let ignoreCooldown = false;
+    let directCampaign = false;
     let targetCriteria: TargetCriteria = {};
 
     try {
@@ -71,6 +72,7 @@ Deno.serve(async (req) => {
       campaignId = body.campaignId || null;
       templateId = body.templateId || null;
       ignoreCooldown = body.ignoreCooldown || false;
+      directCampaign = body.directCampaign || false;
       targetCriteria = body.targetCriteria || {};
     } catch {
       // No body provided
@@ -344,10 +346,18 @@ Deno.serve(async (req) => {
     }
 
     if (queuedContacts.length > 0) {
-      const { error: insertError } = await supabase
-        .from('recovery_contacts')
-        .insert(queuedContacts);
-      if (insertError) throw insertError;
+      if (directCampaign) {
+        // Disparo direto: usar upsert para ignorar UNIQUE constraint (user_id, template_id)
+        const { error: insertError } = await supabase
+          .from('recovery_contacts')
+          .upsert(queuedContacts, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
+        if (insertError) throw insertError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('recovery_contacts')
+          .insert(queuedContacts);
+        if (insertError) throw insertError;
+      }
 
       if (campaignId) {
         await supabase
@@ -363,7 +373,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Queued ${queuedContacts.length} contacts (eligible: ${eligibleUsers.length}, inactivity_filter: ${shouldFilterByInactivity}, cooldown_ignored: ${ignoreCooldown})`);
+    console.log(`Queued ${queuedContacts.length} contacts (eligible: ${eligibleUsers.length}, inactivity_filter: ${shouldFilterByInactivity}, cooldown_ignored: ${ignoreCooldown}, direct: ${directCampaign})`);
 
     return new Response(
       JSON.stringify({
