@@ -1,45 +1,36 @@
 
+# Plano de Evolução MasterQuiz — Etapa 2 (3 Fases)
 
-# Plano: 4 Correções de Layout e Funcionalidade
+## ✅ Etapa 1 — Correções Imediatas (CONCLUÍDA)
 
-## 1. Remover bordas de todos os blocos no quiz público
-**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx` (linha 152)
-- Passar `wrapInCard={false}` no `QuizBlockPreview` dentro de `renderQuestionBlocks()`
-- Isso remove o `Card border-2` wrapper que envolve imagens, separadores, vídeos etc.
-- Apenas os cards de resposta (SingleChoiceOptions/MultipleChoiceOptions) mantêm bordas
-
-## 2. Vídeo sem aspect ratio forçado
-**Arquivo:** `src/components/video/CustomVideoPlayer.tsx` (linhas 152-158, 542-545)
-- Remover `aspectRatioClass` do container principal — deixar o vídeo usar sua proporção natural
-- Remover `bg-muted` do container (causa a borda cinza)
-- O vídeo respeitará `w-full` + proporção nativa dentro do container
-
-**Arquivo:** `src/components/quiz/QuizBlockPreview.tsx` (linha 486)
-- Remover `bg-muted` do wrapper do vídeo no QuizBlockPreview
-
-## 3. Corrigir select de progresso (salvar progress_style no DB)
-O problema: o select só altera `showQuestionNumber` (boolean), que mapeia counter=true, bar=true, none=false. O `progress_style` nunca é salvo.
-
-**Arquivos afetados:**
-- `src/components/quiz/QuizSettings.tsx`: Adicionar campo `progressStyle: 'bar' | 'counter' | 'none'` ao state, expor setter
-- `src/components/quiz/AppearanceConfigStep.tsx`: Receber `progressStyle` + `onProgressStyleChange`, usar no select em vez de mapear para boolean
-- `src/components/quiz/QuizActions.tsx` (linhas 93, 177, 219): Incluir `progress_style: settings.progressStyle` no payload de save/draft
-- `src/hooks/useQuizPersistence.ts`: Carregar `progress_style` do quiz existente e mapear para o state
-- `src/components/quiz/view/QuizViewQuestion.tsx` (linha 188): Priorizar `quiz.progress_style` diretamente (já faz, mas precisa que o dado chegue do DB)
-
-## 4. Animação hover nas opções de resposta
-**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx`
-- Em `SingleChoiceOptions` e `MultipleChoiceOptions`, adicionar ao className das opções: `hover:shadow-md hover:scale-[1.02] transition-all duration-200`
-- Efeito sutil de elevação + leve escala ao passar o mouse
+1. ✅ Botão Salvar no header agora persiste `progress_style`, `show_results`, `show_question_number`
+2. ✅ CSS global para classes Quill (alinhamento, tamanho de fonte) fora do editor
+3. ✅ Seletor de 6 fontes (Inter, Roboto, Open Sans, Poppins, Montserrat, Lato) no editor rico
+4. ✅ Preview sem bordas (Card removido — fiel ao quiz publicado)
+5. ✅ Barra de progresso premium (gradiente, sombra, 10px altura)
+6. ✅ Múltipla escolha: clique em qualquer lugar da resposta (não só no checkbox)
 
 ---
 
-## Resumo
+## Etapa 2A — Visual/UX (animações e transições)
 
-| # | O que | Arquivos | Risco |
-|---|-------|----------|-------|
-| 1 | wrapInCard=false no quiz público | QuizViewQuestion.tsx | Baixo |
-| 2 | Remover aspect ratio forçado do vídeo | CustomVideoPlayer.tsx, QuizBlockPreview.tsx | Baixo |
-| 3 | Salvar progress_style corretamente | QuizSettings, AppearanceConfig, QuizActions, useQuizPersistence | Médio |
-| 4 | Hover animation nas respostas | QuizViewQuestion.tsx | Baixo |
+- [ ] Framer Motion `AnimatePresence` para transições fade/slide entre perguntas no quiz público
+- [ ] Hover premium nos cards de resposta: gradiente sutil + ícone de check com scale bounce
+- [ ] Formulário de lead: campos com animação de focus (border glow)
+- [ ] Loading skeleton com shimmer no quiz público (substituir spinner)
+- [ ] Preview em tempo real: garantir que todas as configurações de aparência reflitam no preview lateral instantaneamente
 
+## Etapa 2B — Resultado + Tipografia responsiva
+
+- [ ] Tela de resultado com animação staggered para cada elemento
+- [ ] Confetti opcional na tela de resultado (canvas-confetti já instalado)
+- [ ] Tipografia responsiva com `clamp()` para títulos/textos do quiz
+- [ ] Touch targets mobile mínimo 44px em todos os elementos interativos
+- [ ] Dark mode: revisão de contraste em todos os templates
+
+## Etapa 2C — Componentes premium (novos blocos)
+
+- [ ] Slider Premium: régua visual com campo de texto livre para unidade/rótulo
+- [ ] Timer/Countdown block: contagem regressiva animada
+- [ ] Testimonial block: card de depoimento com foto/estrelas
+- [ ] Animated number counter: contagem progressiva com easing

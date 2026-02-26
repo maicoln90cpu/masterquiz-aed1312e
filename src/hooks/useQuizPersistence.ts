@@ -685,6 +685,8 @@ export function useQuizPersistence({
           show_title: appearanceState.showTitle,
           show_description: appearanceState.showDescription,
           show_question_number: appearanceState.showQuestionNumber,
+          progress_style: appearanceState.progressStyle || 'counter',
+          show_results: appearanceState.showResults !== false,
           question_count: editorState.questionCount,
           updated_at: new Date().toISOString()
         })

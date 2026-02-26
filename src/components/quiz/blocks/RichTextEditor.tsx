@@ -1,6 +1,16 @@
-import { useMemo } from "react";
-import ReactQuill from "react-quill";
+import { useMemo, useEffect } from "react";
+import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
+
+// Register custom fonts in Quill
+const Font = Quill.import('formats/font') as any;
+Font.whitelist = ['inter', 'roboto', 'open-sans', 'poppins', 'montserrat', 'lato'];
+Quill.register(Font, true);
+
+// Register size whitelist
+const Size = Quill.import('formats/size') as any;
+Size.whitelist = ['small', false, 'large', 'huge'];
+Quill.register(Size, true);
 
 interface RichTextEditorProps {
   value: string;
@@ -33,6 +43,8 @@ export const RichTextEditor = ({
 }: RichTextEditorProps) => {
   const modules = useMemo(() => ({
     toolbar: [
+      [{ font: ['', 'inter', 'roboto', 'open-sans', 'poppins', 'montserrat', 'lato'] }],
+      [{ size: ['small', false, 'large', 'huge'] }],
       [{ header: [1, 2, 3, false] }],
       ["bold", "italic", "underline", "strike"],
       [{ color: TEXT_COLORS }, { background: HIGHLIGHT_COLORS }],
@@ -44,6 +56,8 @@ export const RichTextEditor = ({
   }), []);
 
   const formats = [
+    "font",
+    "size",
     "header",
     "bold",
     "italic",
@@ -145,6 +159,12 @@ export const RichTextEditor = ({
           }
           .rich-text-editor .ql-container {
             font-size: 14px;
+          }
+          .rich-text-editor .ql-picker.ql-font {
+            width: 90px !important;
+          }
+          .rich-text-editor .ql-picker.ql-size {
+            width: 70px !important;
           }
         }
       `}</style>
