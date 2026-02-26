@@ -1,88 +1,36 @@
 
+Objetivo aprovado: forçar slug aleatório numérico para quizzes do modo express (draft e publicado), eliminando colisões de slug baseadas em título.
 
-# Diagnóstico e Plano de Correção: Erro ao Publicar no Express Mode
+1) Do I know what the issue is?
+- Sim. O fluxo express ainda usa slug derivado de título via trigger (`set_quiz_slug -> generate_slug(title)`), o que mantém risco de conflito em concorrência e não atende sua regra de “slug numérico aleatório no express”.
 
-## Causa Raiz Identificada
+2) Arquivos/partes a alterar
+- `supabase/migrations/*` (nova migration)
+- `src/pages/Start.tsx`
+- `src/hooks/useQuizPersistence.ts`
+- `src/integrations/supabase/types.ts` (se necessário por regeneração de tipos)
+- `.lovable/plan.md` (marcar execução)
 
-O trigger `set_quiz_slug_trigger` está configurado para disparar **apenas em UPDATE**, e **NÃO em INSERT**:
+3) Implementação (etapas curtas)
+- Criar função SQL dedicada `generate_express_slug()` com formato numérico aleatório (ex.: `exp-########`) e loop de unicidade.
+- Atualizar função trigger `set_quiz_slug()`:
+  - Se `creation_source = 'express_auto'` e `slug` vazio/nulo: usar `generate_express_slug()`.
+  - Caso contrário: manter `generate_slug(title)` atual.
+- Atualizar trigger de slug para continuar em `BEFORE INSERT OR UPDATE` (mantendo cobertura de draft/publicação).
+- Incluir no `Start.tsx` a criação explícita de slug aleatório no insert express (defesa dupla app+DB).
+- No `saveQuiz` (`useQuizPersistence.ts`), ao publicar quiz express:
+  - garantir que, se slug estiver vazio/legado inválido, faça update com slug aleatório antes de setar `status='active'`.
+- Backfill seguro:
+  - atualizar somente quizzes `creation_source='express_auto'` com `slug` nulo/vazio para slug aleatório.
+  - não reescrever slugs já ativos válidos para evitar quebrar links existentes.
 
-```text
-set_quiz_slug_trigger  →  BEFORE UPDATE only
-```
+4) Hardening para evitar recorrência
+- Adicionar retry local (1 tentativa) no publish express para erro `23505` de slug (regenera slug e repete update).
+- Padronizar validação de slug express por regex em runtime (somente no fluxo express).
+- Log técnico com contexto mínimo (`quiz_id`, `creation_source`, `status_transition`) para auditoria de conflitos.
 
-**O que acontece:**
-1. `/start` cria um quiz draft via INSERT → trigger NÃO dispara → **slug fica NULL**
-2. Usuário clica "PUBLICAR MEU QUIZ" → UPDATE dispara → trigger tenta gerar slug
-3. Slug base "descubra-a-soluo-ideal-para-o-seu-negcio" já existe (quiz ativo de outro user)
-4. Tentativa "-1" também existe → a função `generate_slug` deveria tentar "-2", mas há concorrência: autosave e botão publicar disparam UPDATEs simultâneos, ambos tentando gerar o mesmo slug → **409 duplicate key**
-
-**Evidência:** 14 quizzes no banco com `slug = NULL`, todos drafts. Múltiplos 409s nos logs a cada 2 min (usuário clicando repetidamente "Publicar" sem sucesso).
-
----
-
-## Plano de Correção (3 itens)
-
-### ITEM 1 — Corrigir trigger para disparar em INSERT + UPDATE
-
-**Migration SQL:**
-
-1. DROP o trigger atual e recriá-lo como `BEFORE INSERT OR UPDATE`:
-```sql
-DROP TRIGGER IF EXISTS set_quiz_slug_trigger ON quizzes;
-CREATE TRIGGER set_quiz_slug_trigger
-  BEFORE INSERT OR UPDATE ON quizzes
-  FOR EACH ROW
-  EXECUTE FUNCTION set_quiz_slug();
-```
-
-2. Melhorar `generate_slug()` para adicionar um sufixo aleatório como fallback anti-race-condition (após 5 tentativas de contador, usa `substring(md5(random()::text), 1, 4)` como sufixo único).
-
-3. Gerar slugs para todos os quizzes existentes com `slug IS NULL`:
-```sql
-UPDATE quizzes SET slug = generate_slug(title) WHERE slug IS NULL;
-```
-
-**Resultado:** Todos os quizzes (drafts e ativos) terão slug desde a criação. O erro 409 na publicação desaparece.
-
-### ITEM 2 — Prevenir criação de múltiplos drafts express pelo mesmo usuário
-
-Atualmente, se o usuário vai ao `/start` e seleciona objetivo múltiplas vezes (reload, voltar, etc.), cada clique cria um novo draft. Resultado: 3+ drafts idênticos para o mesmo user.
-
-**Correção em `Start.tsx`:**
-Antes de criar um novo draft, verificar se já existe um draft `express_auto` do mesmo usuário. Se sim, reutilizar ao invés de criar outro:
-
-```typescript
-// Verificar se já existe draft express_auto
-const { data: existingDraft } = await supabase
-  .from('quizzes')
-  .select('id')
-  .eq('user_id', user.id)
-  .eq('creation_source', 'express_auto')
-  .eq('status', 'draft')
-  .order('created_at', { ascending: false })
-  .limit(1)
-  .maybeSingle();
-
-if (existingDraft) {
-  navigate(`/create-quiz?id=${existingDraft.id}&mode=express`);
-  return;
-}
-```
-
-### ITEM 3 — Desabilitar botão Publicar durante salvamento
-
-**Correção em `CreateQuiz.tsx`:**
-O botão "PUBLICAR MEU QUIZ" deve ficar `disabled` enquanto `isSaving` é true, prevenindo cliques duplos que geram UPDATEs concorrentes e race conditions no slug.
-
----
-
-## Resumo de Alterações
-
-| # | O que | Tipo | Arquivo |
-|---|-------|------|---------|
-| 1a | Trigger INSERT + UPDATE | Migration SQL | Nova migration |
-| 1b | `generate_slug` anti-race | Migration SQL | Mesma migration |
-| 1c | Backfill slugs NULL | Migration SQL | Mesma migration |
-| 2 | Reutilizar draft existente | Frontend | `Start.tsx` |
-| 3 | Disable botão durante save | Frontend | `CreateQuiz.tsx` |
-
+5) Verificação pós-implementação
+- Criar quiz via `/start` e confirmar slug já nasce aleatório no draft.
+- Publicar no express e confirmar manutenção/geração correta de slug aleatório sem erro.
+- Repetir fluxo com múltiplos cliques rápidos e confirmar ausência de conflito.
+- Validar que quizzes manuais continuam usando slug semântico (baseado em título).
