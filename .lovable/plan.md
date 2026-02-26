@@ -1,46 +1,96 @@
 
-# Plano de Evolução MasterQuiz — Etapa 2 (3 Fases)
 
-## ✅ Etapa 1 — Correções Imediatas (CONCLUÍDA)
-
-1. ✅ Botão Salvar no header persiste `progress_style`, `show_results`, `show_question_number`
-2. ✅ CSS global para classes Quill (alinhamento, tamanho de fonte) fora do editor
-3. ✅ Seletor de 6 fontes (Inter, Roboto, Open Sans, Poppins, Montserrat, Lato) no editor rico
-4. ✅ Preview sem bordas (Card removido — fiel ao quiz publicado)
-5. ✅ Barra de progresso premium (gradiente, sombra, 10px altura)
-6. ✅ Múltipla escolha: clique em qualquer lugar da resposta
+## Diagnose completo + Plano de implementacao
 
 ---
 
-## ✅ Etapa 2A — Visual/UX (CONCLUÍDA)
+### Bug 1: "Erro ao enviar resposta" — CAUSA RAIZ ENCONTRADA
 
-1. ✅ Framer Motion `AnimatePresence` fade/slide entre perguntas no quiz público
-2. ✅ Hover premium: sombra primary, bg sutil, transição suave nos cards de resposta
-3. ✅ Formulário de lead: focus glow (ring + shadow primary) em todos os inputs
-4. ✅ Loading skeleton shimmer substituindo spinner no quiz público
+**Arquivo:** `src/hooks/useQuizViewState.ts`, linha 304-308
+
+```typescript
+const { data: ownerSub } = await supabase
+  .from('user_subscriptions')
+  .select('response_limit')
+  .eq('user_id', quiz.user_id)
+  .single(); // ← ESTE E O PROBLEMA
+```
+
+A tabela `user_subscriptions` tem RLS de SELECT apenas para `authenticated` com `user_id = auth.uid()`. O respondente publico e **anon**, portanto recebe 0 linhas. `.single()` lanca erro PGRST116 (nenhuma linha encontrada), que cai no catch e mostra "Erro ao enviar resposta".
+
+**Fix:** Trocar `.single()` por `.maybeSingle()`. Se `ownerSub` for null, pular a verificacao de limite.
 
 ---
 
-## ✅ Etapa 2B — Resultado + Tipografia responsiva (CONCLUÍDA)
+### Bug 2: Botao "Proxima Pergunta" duplicado — CAUSA RAIZ ENCONTRADA
 
-1. ✅ Tela de resultado com animação staggered (Framer Motion)
-2. ✅ Confetti automático na tela de resultado (canvas-confetti)
-3. ✅ Tipografia responsiva com `clamp()` (título, perguntas, body, número resultado)
-4. ✅ Touch targets mobile mínimo 44px em todos os elementos interativos
-5. ✅ Dark mode: contraste revisado na barra de progresso e gabarito
+**Arquivo:** `src/components/quiz/view/QuizViewQuestion.tsx`, linha 155
+
+```typescript
+showNavigationButton={block.type === 'button'}
+```
+
+Quando o bloco e do tipo `button`, `showNavigationButton=true` faz o `QuizBlockPreview` renderizar o botao do bloco (via `renderBlock` case "button") **E TAMBEM** renderizar um botao extra "Proxima Pergunta" generico (linhas 857-861 do QuizBlockPreview). Resultado: 3 botoes na tela.
+
+**Fix:** Mudar para `showNavigationButton={false}` — o bloco button ja se renderiza sozinho via `renderBlock`.
 
 ---
 
-## Etapa 2C — Componentes premium + Correções (ATUAL)
+### Fase 2C: Componentes Premium
 
-### Correções de bugs
-- [x] Fix: Modal de excluir pergunta aparecia 2x — removido AlertDialog interno do QuestionsList, mantido apenas o central em CreateQuiz
-- [x] Fix: Botão "Próxima" duplicado — hasManualNavButton agora oculta botão auto sempre que há bloco button com action next_question
-- [x] Fix: Force refresh ao entrar em /meus-quizzes (invalidateQueries on mount)
-- [x] Fix: Erro ao enviar resposta — removido .select().single() (anon não tem SELECT RLS), separado lead fields de custom_field_data
+#### 2C.1 — Slider Premium (melhorias visuais)
+- Adicionar tick marks (regua visual) no `SliderBlockPreview` do QuizBlockPreview
+- Valor animado com transicao ao arrastar
+- Melhorar estilo do thumb e track com cores premium
 
-### Componentes premium
-- [ ] Slider Premium: régua visual com campo de texto livre para unidade/rótulo
-- [ ] Timer/Countdown block: contagem regressiva animada
-- [ ] Testimonial block: card de depoimento com foto/estrelas
-- [ ] Animated number counter: contagem progressiva com easing
+**Arquivos:** `src/components/quiz/QuizBlockPreview.tsx` (SliderBlockPreview)
+
+#### 2C.2 — Timer/Countdown Premium (melhorias visuais)
+- Animacao de flip/pulse por segundo no `CountdownBlockPreview`
+- Acao padrao ao expirar: mostrar mensagem (conforme escolha do usuario)
+- Estilo premium nos cards de unidade de tempo
+
+**Arquivos:** `src/components/quiz/QuizBlockPreview.tsx` (CountdownBlockPreview)
+
+#### 2C.3 — Testimonial Block Premium (melhorias visuais)
+- Sombra premium, avatar maior, transicao suave
+- Aspas decorativas e tipografia melhorada no `TestimonialBlockPreview`
+
+**Arquivos:** `src/components/quiz/QuizBlockPreview.tsx` (TestimonialBlockPreview)
+
+#### 2C.4 — Animated Counter (NOVO BLOCO)
+- Novo tipo `animatedCounter` em `types/blocks.ts`
+- Componente editor `AnimatedCounterBlock.tsx`
+- Preview no `QuizBlockPreview.tsx` com contagem progressiva usando `requestAnimationFrame`
+- Configuraveis: valor inicial/final, duracao, prefixo/sufixo, easing
+- Gatilho: anima automaticamente ao entrar na tela (on view, conforme escolha)
+- Adicionar no menu do `BlockEditor.tsx`
+
+**Arquivos novos:** `src/components/quiz/blocks/AnimatedCounterBlock.tsx`
+**Arquivos modificados:** `src/types/blocks.ts`, `src/components/quiz/blocks/BlockEditor.tsx`, `src/components/quiz/QuizBlockPreview.tsx`
+
+---
+
+### Resumo de arquivos
+
+| Acao | Arquivo |
+|------|---------|
+| Fix submit `.single()` → `.maybeSingle()` | `useQuizViewState.ts` (1 linha) |
+| Fix botao duplicado `showNavigationButton={false}` | `QuizViewQuestion.tsx` (1 linha) |
+| Slider/Countdown/Testimonial premium | `QuizBlockPreview.tsx` |
+| Animated Counter tipo + editor | `blocks.ts`, `AnimatedCounterBlock.tsx`, `BlockEditor.tsx` |
+| Update plan | `.lovable/plan.md` |
+
+---
+
+### Checklist pos-implementacao
+
+1. Publicar template → responder → preencher form → clicar Finalizar → sem erro, resposta salva
+2. Abrir quiz publicado com botao manual → apenas 1 botao de navegacao visivel
+3. Adicionar bloco Slider no editor → preview mostra regua com ticks
+4. Adicionar bloco Countdown → preview anima segundo a segundo
+5. Adicionar bloco Testimonial → preview mostra card premium
+6. Adicionar bloco Animated Counter → preview anima contagem de 0 ate valor final
+7. Regressao: auto-advance em single choice continua funcionando
+8. Regressao: fluxo form before/after continua correto
+
