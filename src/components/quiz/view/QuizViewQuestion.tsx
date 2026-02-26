@@ -254,7 +254,7 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
     <div className="space-y-4">
       <div>
         <div 
-          className="prose prose-sm max-w-none text-xl font-semibold mb-2 [&>p]:m-0 [&>h1]:m-0 [&>h2]:m-0 [&>h3]:m-0"
+          className="prose prose-sm max-w-none quiz-question-responsive font-semibold mb-2 [&>p]:m-0 [&>h1]:m-0 [&>h2]:m-0 [&>h3]:m-0"
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(questionBlock.questionText || '') }}
         />
         {questionBlock.subtitle && (
@@ -382,7 +382,7 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] select-none ${getOptionStyle(optionText)}`}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] select-none min-h-[44px] ${getOptionStyle(optionText)}`}
             onClick={() => {
               if (disabled) return;
               const newValue = isSelected 
@@ -446,7 +446,7 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, d
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] ${getOptionStyle(optionText)}`}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] min-h-[44px] ${getOptionStyle(optionText)}`}
             onClick={() => { if (!disabled) onAnswer(questionId, optionText); }}
           >
             <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
