@@ -773,7 +773,9 @@ export default function AdminDashboard() {
       const csvHeader = 'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Email\n';
       const csvRows = data.map((row: any) => {
         const date = new Date(row.created_at);
-        const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+        // Google Ads exige timezone — formato: YYYY-MM-DD HH:MM:SS-03:00
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}-03:00`;
         return `,account_created,${formatted},0,BRL,${row.email}`;
       }).join('\n');
 
@@ -789,6 +791,22 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Export error:', err);
       toast.error('Erro ao exportar CSV');
+    }
+  };
+
+  const markAllAccountCreatedAsSent = async () => {
+    try {
+      const { error, count } = await supabase
+        .from('profiles')
+        .update({ account_created_event_sent: true } as any)
+        .eq('account_created_event_sent', false as any)
+        .not('email', 'is', null);
+
+      if (error) throw error;
+      toast.success(`${count ?? 'Todos os'} usuários marcados como enviados!`);
+    } catch (err) {
+      console.error('Mark sent error:', err);
+      toast.error('Erro ao marcar usuários');
     }
   };
 
@@ -832,6 +850,16 @@ export default function AdminDashboard() {
             >
               <Download className="h-4 w-4 mr-1" />
               CSV Ads
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={markAllAccountCreatedAsSent}
+              title="Marcar todos como enviados (usar APÓS importar CSV no Google Ads)"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10"
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Marcar enviados
             </Button>
           </div>
         </div>
