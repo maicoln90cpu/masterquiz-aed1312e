@@ -103,6 +103,8 @@ const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"), "Ad
 const AdminTemplateEditor = lazyWithRetry(() => import("./pages/AdminTemplateEditor"), "AdminTemplateEditor");
 const Checkout = lazyWithRetry(() => import("./pages/Checkout"), "Checkout");
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"), "FAQ");
+const Blog = lazyWithRetry(() => import("./pages/Blog"), "Blog");
+const BlogPost = lazyWithRetry(() => import("./pages/BlogPost"), "BlogPost");
 const Pricing = lazyWithRetry(() => import("./pages/Pricing"), "Pricing");
 const MediaLibrary = lazyWithRetry(() => import("./pages/MediaLibrary"), "MediaLibrary");
 const PreviewQuiz = lazyWithRetry(() => import("./pages/PreviewQuiz"), "PreviewQuiz");
@@ -235,6 +237,8 @@ const App = () => (
                   <Route path="/kiwify/success" element={<LazyRoute Component={KiwifySuccess} />} />
                   <Route path="/kiwify/cancel" element={<LazyRoute Component={KiwifyCancel} />} />
                   <Route path="/faq" element={<LazyRoute Component={FAQ} />} />
+                  <Route path="/blog" element={<LazyRoute Component={Blog} />} />
+                  <Route path="/blog/:slug" element={<LazyRoute Component={BlogPost} />} />
                   <Route path="/precos" element={<LazyRoute Component={Pricing} />} />
                   <Route path="/privacy-policy" element={<LazyRoute Component={PrivacyPolicy} />} />
                   <Route path="/start" element={
