@@ -770,14 +770,14 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Google Ads Offline Import — template oficial
+      // Google Ads Offline Import — template oficial (5 colunas nas instruções, 7 nos dados)
       const instructions = [
-        '### INSTRUCTIONS ###,,,,,,',
-        '# IMPORTANT: Remember to set the TimeZone value in the "parameters" row and/or in your Conversion Time column,,,,,,',
-        '# For instructions on how to set your timezones visit http://goo.gl/T1C5Ov,,,,,,',
-        ',,,,,,',
-        '### TEMPLATE ###,,,,,,',
-        'Parameters:TimeZone=America/Sao_Paulo,,,,,,',
+        '### INSTRUCTIONS ###,,,,',
+        '"# IMPORTANT: Remember to set the TimeZone value in the ""parameters"" row and/or in your Conversion Time column",,,,',
+        '# For instructions on how to set your timezones visit http://goo.gl/T1C5Ov,,,,',
+        ',,,,',
+        '### TEMPLATE ###,,,,',
+        'Parameters:TimeZone=America/Sao_Paulo,,,,',
         'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Ad User Data,Ad Personalization',
       ].join('\n');
 
