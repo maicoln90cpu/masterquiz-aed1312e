@@ -1,44 +1,40 @@
 
 
-## Correção do CSV para Google Ads Offline Import
+## Mudança de abordagem: Export CSV para Google Analytics 4 (Event Import)
 
-### Problema
-O CSV gerado não segue o template oficial do Google Ads. Faltam:
-- Bloco de instruções obrigatório no topo
-- Linha `Parameters:TimeZone=America/Sao_Paulo` (timezone declarado aqui, NÃO no valor da coluna)
-- Colunas `Ad User Data` e `Ad Personalization` (obrigatórias no template)
-- Coluna `Email` não existe no template — não é usada nesse formato
+### Contexto
+O Google Ads Offline Import estava rejeitando o CSV. A nova abordagem é importar eventos diretamente no GA4, que já alimenta o Google Ads.
 
-### Correção (arquivo único: `src/pages/AdminDashboard.tsx`)
+### Formato do CSV (GA4 Event Import)
 
-Reescrever a função `exportMissingAccountCreatedCSV` para gerar o CSV exatamente conforme o template Google:
-
-```csv
-### INSTRUCTIONS ###,,,,,,
-# IMPORTANT: Remember to set the TimeZone value in the "parameters" row and/or in your Conversion Time column,,,,,,
-# For instructions on how to set your timezones visit http://goo.gl/T1C5Ov,,,,,,
-,,,,,,
-### TEMPLATE ###,,,,,,
-Parameters:TimeZone=America/Sao_Paulo,,,,,,
-Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Ad User Data,Ad Personalization
-,account_created,2026-02-25 16:13:22,0,BRL,,
+Colunas necessárias (mínimas):
+```text
+measurement_id | client_id | user_id | event_name | timestamp_micros
 ```
 
-Mudanças:
-- Adicionar header de instruções + `Parameters:TimeZone=America/Sao_Paulo`
-- Remover `-03:00` do timestamp (timezone já está no Parameters)
-- Substituir coluna `Email` por `Ad User Data` e `Ad Personalization` (vazios)
-- Formato do tempo: `YYYY-MM-DD HH:MM:SS` sem offset
+- **measurement_id**: `G-H8NWKZ5NZJ` (fixo)
+- **client_id**: obrigatório pelo GA4 — como não armazenamos o cookie `_ga`, vamos gerar um client_id sintético por usuário (hash numérico do user.id no formato `XXXXXXXXXX.YYYYYYYYYY`)
+- **user_id**: ID do Supabase (permite associação futura se o GA4 receber o mesmo user_id via GTM)
+- **event_name**: `AccountCreated` (conforme configurado no GTM)
+- **timestamp_micros**: `created_at` convertido para microssegundos Unix
 
----
+### Ponto de atenção: client_id sintético
+Não temos o `_ga` cookie desses usuários no banco. O GA4 exige `client_id`. Ao usar um ID sintético, o GA4 tratará cada evento como uma sessão/dispositivo novo — **não** vai associar ao histórico de navegação real do usuário. Porém, a conversão `AccountCreated` será registrada e ficará disponível no Google Ads como evento importado.
 
-### Fases restantes do Blog (referência para próxima implementação)
+**Sugestão futura**: capturar o `_ga` cookie no momento do signup e salvar em `profiles` para imports retroativos mais precisos.
 
-| Fase | Descrição |
-|------|-----------|
-| 3 | Admin Blog Manager — CRUD de posts, editor Rich Text, configurações |
-| 4 | Edge Function `generate-blog-post` — geração IA (Gemini) com SEO |
-| 5 | Geração de imagem destaque (IA ou placeholder) |
-| 6 | Cron automático `blog-cron` para publicação agendada |
-| 7 | Sitemap XML dinâmico + RSS |
+### Alteração (arquivo único: `src/pages/AdminDashboard.tsx`)
+
+Reescrever `exportMissingAccountCreatedCSV`:
+
+```csv
+measurement_id,client_id,user_id,event_name,timestamp_micros
+G-H8NWKZ5NZJ,1000000001.1000000001,uuid-do-usuario,AccountCreated,1609488000000000
+G-H8NWKZ5NZJ,1000000002.1000000002,uuid-do-usuario-2,AccountCreated,1609574400000000
+```
+
+- Sem BOM, sem instruções — o GA4 espera CSV limpo
+- `timestamp_micros` = `new Date(created_at).getTime() * 1000` (millis → micros)
+- Client ID gerado: hash simples do UUID → dois blocos de 10 dígitos separados por ponto
+- Nome do download: `ga4_account_created_import_YYYY-MM-DD.csv`
 
