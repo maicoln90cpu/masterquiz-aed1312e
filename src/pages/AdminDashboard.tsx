@@ -760,7 +760,7 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('email, created_at')
+        .select('id, created_at')
         .eq('account_created_event_sent', false as any)
         .not('email', 'is', null);
 
@@ -770,34 +770,42 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Google Ads Offline Import — template oficial (5 colunas nas instruções, 7 nos dados)
-      const instructions = [
-        '### INSTRUCTIONS ###,,,,',
-        '"# IMPORTANT: Remember to set the TimeZone value in the ""parameters"" row and/or in your Conversion Time column",,,,',
-        '# For instructions on how to set your timezones visit http://goo.gl/T1C5Ov,,,,',
-        ',,,,',
-        '### TEMPLATE ###,,,,',
-        'Parameters:TimeZone=America/Sao_Paulo,,,,',
-        'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Ad User Data,Ad Personalization',
-      ].join('\n');
+      // Gera client_id sintético a partir do UUID (GA4 exige formato XXXXXXXXXX.YYYYYYYYYY)
+      const uuidToClientId = (uuid: string): string => {
+        const clean = uuid.replace(/-/g, '');
+        const half = Math.floor(clean.length / 2);
+        const part1 = clean.slice(0, half);
+        const part2 = clean.slice(half);
+        const hash = (s: string) => {
+          let h = 0;
+          for (let i = 0; i < s.length; i++) {
+            h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+          }
+          return Math.abs(h);
+        };
+        const p1 = String(hash(part1)).padStart(10, '0').slice(0, 10);
+        const p2 = String(hash(part2)).padStart(10, '0').slice(0, 10);
+        return `${p1}.${p2}`;
+      };
 
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const csvRows = data.map((row: any) => {
-        const date = new Date(row.created_at);
-        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-        return `,account_created,${formatted},0,BRL,,`;
-      }).join('\n');
+      const MEASUREMENT_ID = 'G-H8NWKZ5NZJ';
+      const header = 'measurement_id,client_id,user_id,event_name,timestamp_micros';
+      const rows = data.map((row: any) => {
+        const clientId = uuidToClientId(row.id);
+        const timestampMicros = new Date(row.created_at).getTime() * 1000;
+        return `${MEASUREMENT_ID},${clientId},${row.id},AccountCreated,${timestampMicros}`;
+      });
 
-      const BOM = '\uFEFF';
-      const blob = new Blob([BOM + instructions + '\n' + csvRows], { type: 'text/csv;charset=utf-8;' });
+      const csv = [header, ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `account_created_missing_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `ga4_account_created_import_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`CSV exportado com ${data.length} usuários!`);
+      toast.success(`CSV GA4 exportado com ${data.length} eventos!`);
     } catch (err) {
       console.error('Export error:', err);
       toast.error('Erro ao exportar CSV');
@@ -856,7 +864,7 @@ export default function AdminDashboard() {
               variant="outline"
               size="sm"
               onClick={exportMissingAccountCreatedCSV}
-              title="Exportar usuários sem evento account_created (Google Ads Offline Import)"
+              title="Exportar eventos AccountCreated para importação no GA4"
             >
               <Download className="h-4 w-4 mr-1" />
               CSV Ads
