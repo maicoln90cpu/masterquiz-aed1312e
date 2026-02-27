@@ -770,16 +770,25 @@ export default function AdminDashboard() {
         return;
       }
 
-      const csvHeader = 'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Email\n';
+      // Google Ads Offline Import — template oficial
+      const instructions = [
+        '### INSTRUCTIONS ###,,,,,,',
+        '# IMPORTANT: Remember to set the TimeZone value in the "parameters" row and/or in your Conversion Time column,,,,,,',
+        '# For instructions on how to set your timezones visit http://goo.gl/T1C5Ov,,,,,,',
+        ',,,,,,',
+        '### TEMPLATE ###,,,,,,',
+        'Parameters:TimeZone=America/Sao_Paulo,,,,,,',
+        'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Ad User Data,Ad Personalization',
+      ].join('\n');
+
+      const pad = (n: number) => String(n).padStart(2, '0');
       const csvRows = data.map((row: any) => {
         const date = new Date(row.created_at);
-        // Google Ads exige timezone — formato: YYYY-MM-DD HH:MM:SS-03:00
-        const pad = (n: number) => String(n).padStart(2, '0');
-        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}-03:00`;
-        return `,account_created,${formatted},0,BRL,${row.email}`;
+        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+        return `,account_created,${formatted},0,BRL,,`;
       }).join('\n');
 
-      const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([instructions + '\n' + csvRows], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
