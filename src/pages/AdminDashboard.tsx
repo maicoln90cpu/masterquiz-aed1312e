@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download } from "lucide-react";
+import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
@@ -46,6 +46,7 @@ const LandingContentEditor = lazy(() => import("@/components/admin/LandingConten
 const LandingABTestDashboard = lazy(() => import("@/components/admin/LandingABTestDashboard").then(m => ({ default: m.LandingABTestDashboard })));
 const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m => ({ default: m.CustomerRecovery })));
 const PQLAnalytics = lazy(() => import("@/components/admin/PQLAnalytics").then(m => ({ default: m.PQLAnalytics })));
+const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -1466,6 +1467,7 @@ export default function AdminDashboard() {
               tabs={[
                 { id: 'templates', label: 'Templates', icon: <FileText className="h-4 w-4" />, color: 'pink' },
                 { id: 'ai', label: 'Configurações IA', icon: <Sparkles className="h-4 w-4" />, color: 'purple' },
+                { id: 'blog', label: 'Blog', icon: <BookOpen className="h-4 w-4" />, color: 'emerald' },
               ]}
               defaultTab="templates"
             >
@@ -1473,6 +1475,7 @@ export default function AdminDashboard() {
                 <>
                   {activeTab === 'templates' && <TemplateManagement />}
                   {activeTab === 'ai' && <AISettings />}
+                  {activeTab === 'blog' && <BlogManager />}
                 </>
               )}
             </AdminSubTabs>
