@@ -788,7 +788,8 @@ export default function AdminDashboard() {
         return `,account_created,${formatted},0,BRL,,`;
       }).join('\n');
 
-      const blob = new Blob([instructions + '\n' + csvRows], { type: 'text/csv;charset=utf-8;' });
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + instructions + '\n' + csvRows], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
