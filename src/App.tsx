@@ -17,6 +17,7 @@ import { useInvalidateOnLogout } from "@/hooks/useInvalidateOnLogout";
 import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 import { useProductionWebVitals } from "@/hooks/useWebVitals";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useAccountCreatedEvent } from "@/hooks/useAccountCreatedEvent";
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
@@ -129,6 +130,9 @@ const RequireAuth = ({ children }: { children: ReactNode }) => {
   
   // ✅ ITEM 4: Limpar cache ao fazer logout
   useInvalidateOnLogout();
+  
+  // ✅ Disparar account_created globalmente (qualquer rota autenticada)
+  useAccountCreatedEvent();
 
   useEffect(() => {
     if (!loading && !user) {
