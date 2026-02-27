@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil } from "lucide-react";
+import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
@@ -756,6 +756,42 @@ export default function AdminDashboard() {
     </>
   );
 
+  const exportMissingAccountCreatedCSV = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('email, created_at')
+        .eq('account_created_event_sent', false as any)
+        .not('email', 'is', null);
+
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        toast.info('Todos os usuários já tiveram o evento disparado!');
+        return;
+      }
+
+      const csvHeader = 'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Email\n';
+      const csvRows = data.map((row: any) => {
+        const date = new Date(row.created_at);
+        const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+        return `,account_created,${formatted},0,BRL,${row.email}`;
+      }).join('\n');
+
+      const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `account_created_missing_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success(`CSV exportado com ${data.length} usuários!`);
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('Erro ao exportar CSV');
+    }
+  };
+
   const renderAdministratorsContent = () => (
     <Card>
       <CardHeader className="space-y-4">
@@ -788,6 +824,15 @@ export default function AdminDashboard() {
                 <SelectItem value="premium">{t('admin.premium')}</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportMissingAccountCreatedCSV}
+              title="Exportar usuários sem evento account_created (Google Ads Offline Import)"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              CSV Ads
+            </Button>
           </div>
         </div>
       </CardHeader>
