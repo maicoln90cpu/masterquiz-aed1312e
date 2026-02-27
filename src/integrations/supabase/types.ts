@@ -142,6 +142,194 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_generation_logs: {
+        Row: {
+          completion_tokens: number | null
+          created_at: string
+          error_message: string | null
+          generation_type: string | null
+          id: string
+          image_cost_usd: number | null
+          model_used: string
+          post_id: string | null
+          prompt_tokens: number | null
+          status: string
+          text_cost_usd: number | null
+          total_cost_usd: number | null
+          total_tokens: number | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          created_at?: string
+          error_message?: string | null
+          generation_type?: string | null
+          id?: string
+          image_cost_usd?: number | null
+          model_used: string
+          post_id?: string | null
+          prompt_tokens?: number | null
+          status?: string
+          text_cost_usd?: number | null
+          total_cost_usd?: number | null
+          total_tokens?: number | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          created_at?: string
+          error_message?: string | null
+          generation_type?: string | null
+          id?: string
+          image_cost_usd?: number | null
+          model_used?: string
+          post_id?: string | null
+          prompt_tokens?: number | null
+          status?: string
+          text_cost_usd?: number | null
+          total_cost_usd?: number | null
+          total_tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_generation_logs_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_posts: {
+        Row: {
+          author_name: string | null
+          categories: string[] | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          faq_schema: Json | null
+          featured_image_url: string | null
+          generation_cost_usd: number | null
+          id: string
+          image_generation_cost_usd: number | null
+          internal_links: Json | null
+          is_ai_generated: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          model_used: string | null
+          og_image_url: string | null
+          published_at: string | null
+          reading_time_min: number | null
+          seo_keywords: string[] | null
+          slug: string
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number | null
+        }
+        Insert: {
+          author_name?: string | null
+          categories?: string[] | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          faq_schema?: Json | null
+          featured_image_url?: string | null
+          generation_cost_usd?: number | null
+          id?: string
+          image_generation_cost_usd?: number | null
+          internal_links?: Json | null
+          is_ai_generated?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          model_used?: string | null
+          og_image_url?: string | null
+          published_at?: string | null
+          reading_time_min?: number | null
+          seo_keywords?: string[] | null
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Update: {
+          author_name?: string | null
+          categories?: string[] | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          faq_schema?: Json | null
+          featured_image_url?: string | null
+          generation_cost_usd?: number | null
+          id?: string
+          image_generation_cost_usd?: number | null
+          internal_links?: Json | null
+          is_ai_generated?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          model_used?: string | null
+          og_image_url?: string | null
+          published_at?: string | null
+          reading_time_min?: number | null
+          seo_keywords?: string[] | null
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_settings: {
+        Row: {
+          ai_model: string | null
+          auto_publish: boolean | null
+          categories_list: Json | null
+          created_at: string
+          cron_schedule: string | null
+          default_author: string | null
+          id: string
+          image_model: string | null
+          image_prompt_template: string | null
+          is_active: boolean | null
+          system_prompt: string | null
+          topics_pool: Json | null
+          updated_at: string
+        }
+        Insert: {
+          ai_model?: string | null
+          auto_publish?: boolean | null
+          categories_list?: Json | null
+          created_at?: string
+          cron_schedule?: string | null
+          default_author?: string | null
+          id?: string
+          image_model?: string | null
+          image_prompt_template?: string | null
+          is_active?: boolean | null
+          system_prompt?: string | null
+          topics_pool?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          ai_model?: string | null
+          auto_publish?: boolean | null
+          categories_list?: Json | null
+          created_at?: string
+          cron_schedule?: string | null
+          default_author?: string | null
+          id?: string
+          image_model?: string | null
+          image_prompt_template?: string | null
+          is_active?: boolean | null
+          system_prompt?: string | null
+          topics_pool?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bunny_videos: {
         Row: {
           bunny_video_id: string
