@@ -1,60 +1,55 @@
 
 
-## Todas as regras atuais do sistema de campanhas
+## Diagnóstico do Bug `account_created`
 
-### 1. Pré-requisitos globais (bloqueiam TUDO)
-- **Sistema ativo**: `is_active = true` E `is_connected = true` (WhatsApp conectado)
-- **Horário permitido**: só funciona entre 09:00 e 20:00 (horário de Brasília)
-- **Limite diário**: máximo 50 mensagens/dia (conta TODAS as campanhas somadas). Hoje já foram enviadas 67 nos últimos 10 dias
+### O problema raiz
+O fluxo atual do novo usuário é: **Login → /start → /create-quiz (editor)**. O evento `account_created` só dispara no **Dashboard.tsx**. Mas o usuário novo **nunca visita o Dashboard imediatamente** — ele vai direto para o editor express. A flag `mq_just_registered` fica no localStorage esperando uma visita ao Dashboard que pode demorar horas ou dias.
 
-### 2. Pool de usuários (quem entra na lista)
-- Só usuários com **WhatsApp cadastrado** no perfil
-- Se a campanha NÃO tem filtros de audiência: busca apenas **usuários inativos há 10+ dias** (padrão `inactivity_days_trigger`)
-- Se a campanha TEM filtros (no_leads, no_quizzes, etc.) mas SEM `min_inactive_days`: busca **todos os usuários**
+O mecanismo retroativo tem uma **limitação de 7 dias** e só roda no Dashboard também — então se o usuário não abrir o Dashboard em 7 dias, o evento é perdido para sempre.
 
-### 3. Exclusões automáticas (removem do pool)
-- **Blacklist**: usuários ou telefones na tabela `recovery_blacklist`
-- **Cooldown global**: usuários que receberam QUALQUER mensagem nos últimos **10 dias** (`user_cooldown_days = 10`) — de QUALQUER campanha
-- **Planos excluídos**: `exclude_plan_types` (atualmente `null`, nenhum excluído)
-
-### 4. UNIQUE constraint na tabela `recovery_contacts`
-- Constraint: `UNIQUE (user_id, template_id)` — um usuário SÓ pode receber cada template UMA VEZ na vida toda
-- Isso significa: se você usa o mesmo template em 2 campanhas diferentes, o segundo insert FALHA
-
-### 5. Limite de fila
-- Após todos os filtros, pega no máximo `remainingLimit` usuários (50 - já enviados hoje)
-
-### 6. Resumo do que te bloqueou
-
-| Problema | Causa |
-|----------|-------|
-| Campanha "sem leads" só pegou 11 | **67 usuários** já receberam mensagem nos últimos 10 dias (cooldown global). Sobraram ~11 |
-| Campanha presa em 21 | UNIQUE constraint `(user_id, template_id)` impede re-inserir os mesmos usuários com mesmo template |
+### Dados atuais
+- **116 usuários** total no sistema
+- **70 NÃO receberam** o evento (60%)
+- **67 dos últimos 7 dias** não receberam
+- Apenas **3 de 70 recentes** receberam — confirmando que o fluxo está quase totalmente quebrado
 
 ---
 
-## Sua necessidade real vs. o que existe
+## Plano de Correção
 
-Você quer: **criar campanhas sazonais/promocionais e disparar para todos os usuários com WhatsApp**, sem que regras de recuperação de inativos atrapalhem.
+### Mudança 1: Mover o disparo para um local que SEMPRE executa
+Criar um hook `useAccountCreatedEvent` que roda em qualquer página autenticada (via `AuthContext` ou layout compartilhado). Assim não importa se o usuário vai pro Dashboard, Editor, ou qualquer outra rota — o evento dispara.
 
-O sistema atual foi feito para **recuperação de clientes inativos** — com proteções anti-spam (cooldown, limite diário, horário). Essas proteções fazem sentido para recuperação automática, mas atrapalham campanhas manuais/sazonais.
+**Arquivo:** `src/hooks/useAccountCreatedEvent.ts` (novo)
+- Verifica se o usuário está autenticado
+- Caminho 1: `mq_just_registered` no localStorage → dispara imediatamente, remove flag, marca no DB
+- Caminho 2 (retroativo): consulta `profiles.account_created_event_sent` — se `false`, dispara independente de há quantos dias a conta foi criada (sem limite de 7 dias)
+- Guard: `sessionStorage` flag para não rodar mais de 1x por sessão (evita re-consulta desnecessária)
 
-## Proposta de solução
+### Mudança 2: Integrar o hook no layout autenticado
+**Arquivo:** `src/pages/Dashboard.tsx`
+- Remover todo o bloco de lógica de `account_created` (linhas 74-111)
+- Importar e chamar `useAccountCreatedEvent()`
 
-Criar um modo **"Campanha Manual / Sazonal"** dentro do mesmo sistema, com um checkbox no modal:
+**Arquivo:** `src/App.tsx` ou layout wrapper
+- Garantir que o hook roda em qualquer rota autenticada (Dashboard, Editor, etc.)
 
-**"Campanha de disparo direto"** (quando marcado):
-- Ignora cooldown global (não importa se o usuário recebeu outra mensagem recentemente)
-- Ignora UNIQUE constraint — insere com `ON CONFLICT DO NOTHING` em vez de falhar
-- Busca TODOS os usuários com WhatsApp (sem filtro de inatividade obrigatório)
-- Mantém: blacklist, horário permitido, limite diário (proteções essenciais)
+### Mudança 3: Compensar os 70 usuários perdidos
+Duas abordagens combinadas:
 
-### Mudanças
+**A) Retroativo automático (já coberto acima):** Ao remover o limite de 7 dias, TODOS os 70 usuários que logarem novamente terão o evento disparado automaticamente no próximo acesso. Isso resolve sem intervenção manual.
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/admin/recovery/RecoveryCampaigns.tsx` | Adicionar checkbox "Campanha de disparo direto" no modal. Quando ativo, passa `ignoreCooldown: true` e `directCampaign: true` ao edge function |
-| `supabase/functions/check-inactive-users/index.ts` | Quando `directCampaign: true`: ignorar cooldown, usar `upsert` com `onConflict: 'user_id,template_id'` + `ignoreDuplicates: true` em vez de `insert` |
+**B) Para compensar no Google Ads imediatamente (sem esperar login):** Usar o Google Ads Offline Conversion Import — exportar a lista de emails+datas dos 70 usuários que não tiveram o evento enviado e importar manualmente como conversões no Google Ads. Isso recupera a atribuição.
 
-Isso resolve os 2 problemas sem criar uma nova aba — apenas um toggle no modal existente.
+Para facilitar isso, posso criar um botão no painel admin que exporte os dados dos usuários com `account_created_event_sent = false`.
+
+---
+
+### Resumo de arquivos
+
+| Arquivo | Ação |
+|---------|------|
+| `src/hooks/useAccountCreatedEvent.ts` | **Novo** — hook que dispara `account_created` para qualquer rota autenticada |
+| `src/pages/Dashboard.tsx` | Remover lógica duplicada (linhas 74-111), usar o hook |
+| `src/App.tsx` ou layout compartilhado | Integrar o hook para rodar em todas as rotas autenticadas |
 
