@@ -1,56 +1,75 @@
 
 
-## Plano: 4 Correções/Melhorias no Sistema de Blog
+## Diagnóstico Completo: Posts do Blog
 
-### 1. Renomear label "Gemini 2.5 Flash Image" → "Nano Banana"
-**Arquivo:** `src/components/admin/blog/BlogAutomationSettings.tsx`
-- Alterar o label do `SelectItem` de "Gemini 2.5 Flash Image" para "Nano Banana (Gemini Flash Image)"
-- Adicionar opção "Nano Banana Pro (Gemini 3 Pro)" com value `google/gemini-3-pro-image-preview`
-- Manter os values técnicos iguais (o backend já usa corretamente)
+### Análise dos Dados no Banco
 
-### 2. Adicionar frequências por intervalo de horas
-**Arquivo:** `src/components/admin/blog/BlogAutomationSettings.tsx`
-- Adicionar novas opções ao Select de Frequência:
-  - `every_12h` — A cada 12 horas
-  - `every_24h` — A cada 24 horas  
-  - `every_36h` — A cada 36 horas
-  - `every_48h` — A cada 48 horas
-  - `every_72h` — A cada 72 horas
-- Manter as opções existentes (daily, weekly, biweekly, monthly)
+Consultei todos os 10 posts no banco de dados. Resultado:
 
-**Nota:** A frequência é salva em `blog_settings.cron_schedule` e lida pelo `blog-cron-trigger`. O cron atual roda 1x/dia; o controle granular (36h, 48h) seria feito com lógica de "última geração" no trigger — verificando o timestamp do último post gerado e pulando se o intervalo não tiver passado.
+| Campo | Preenchido? | Detalhe |
+|---|---|---|
+| `title` | Sim (10/10) | Todos têm título |
+| `meta_title` | Sim (10/10) | Todos preenchidos |
+| `content` | **8/10 VAZIOS** | Apenas 2 posts têm conteúdo, e está em formato JSON (não HTML) |
+| `excerpt` | **0/10** | Todos `null` |
+| `meta_description` | **0/10** | Todos `null` |
+| `seo_keywords` | **0/10** | Todos `[]` vazio |
+| `tags` | **0/10** | Todos `[]` vazio |
+| `categories` | 2/10 | Apenas os 2 com conteúdo |
+| `faq_schema` | 2/10 | Apenas os 2 com conteúdo |
+| `featured_image_url` | Parcial | Alguns têm imagem |
 
-**Arquivo:** `supabase/functions/blog-cron-trigger/index.ts`
-- Adicionar lógica: carregar `cron_schedule`, calcular intervalo em horas, comparar com `created_at` do último post AI gerado, pular se não atingiu o intervalo
+### Causa Raiz Identificada
 
-### 3. Modal de edição não carrega conteúdo dos posts
-**Arquivo:** `src/components/admin/blog/BlogPostsManager.tsx`
+**Problema 1 — Conteúdo em formato JSON, não HTML:**
+Os 2 posts que têm conteúdo armazenaram JSON estruturado (`{"sections":[{"heading":"...","content":"..."}]}`) em vez de HTML como o prompt pede. Isso acontece quando o modelo (provavelmente Gemini no fallback) não segue a instrução de retornar HTML.
 
-**Diagnóstico:** O `openEditor` faz `setEditPost({ ...post })` e o query usa `select("*")`, então o conteúdo deveria estar lá. O problema provável é que para posts com conteúdo HTML longo, a listagem traz tudo mas o ReactQuill pode não renderizar corretamente no mount. 
+**Problema 2 — 8 posts com conteúdo completamente vazio:**
+A geração falhou silenciosamente para esses posts — o content foi salvo como string vazia. Provavelmente o JSON parsing extraiu um campo `content` vazio ou inexistente.
 
-**Solução:** Ao abrir o modal para edição, fazer um fetch individual do post completo por ID (`select("*").eq("id", post.id).single()`) para garantir dados frescos e completos. Isso também resolve possíveis problemas de cache ou truncamento.
+**Problema 3 — Campos SEO nunca preenchidos:**
+Mesmo nos 2 posts com conteúdo, `excerpt`, `meta_description`, `seo_keywords` e `tags` estão todos vazios. O modelo retornou esses campos no JSON mas em formato diferente do esperado, ou simplesmente não retornou.
 
-### 4. Arquitetura do prompt de geração — Explicação
+**Problema 4 — Modal não mostra conteúdo:**
+O fix anterior (fetch by ID) funciona, mas o problema real é que os dados simplesmente não existem no banco.
 
-**Como funciona hoje:**
-- O prompt é controlado em **2 lugares**:
-  1. **`blog_settings.system_prompt`** (banco de dados) — editável via Admin Panel → Blog → aba "Prompts IA" (`BlogPromptConfig.tsx`)
-  2. **`DEFAULT_SYSTEM_PROMPT`** (hardcoded na Edge Function `generate-blog-post/index.ts`, linhas 43-76) — usado como fallback quando `blog_settings.system_prompt` está vazio
+### Plano de Correção
 
-- **Fluxo:** A Edge Function carrega `settings.system_prompt`; se vazio, usa o `DEFAULT_SYSTEM_PROMPT`. Depois substitui variáveis (`{{topic}}`, `{{categories}}`, `{{author}}`, `{{keywords}}`, `{{base_url}}`).
+#### 1. Fix na Edge Function: Normalizar conteúdo para HTML
+**Arquivo:** `supabase/functions/generate-blog-post/index.ts`
 
-- **O prompt do usuário** (linha 165-166) é fixo: `"Escreva um artigo completo e detalhado sobre: '{{topic}}'. Responda APENAS com o JSON no formato especificado."`
+Após o `JSON.parse(rawContent)`, adicionar lógica de normalização:
+- Se `textResult.content` é um objeto/array (não string HTML), converter para HTML automaticamente (percorrer sections, headings, paragraphs e gerar tags `<h2>`, `<h3>`, `<p>`, `<ul>`, `<li>`)
+- Garantir que o resultado final é sempre uma string HTML válida
+- Adicionar fallback: se `content` está vazio mas existem outros campos com conteúdo estruturado, reconstruir
 
-**Recomendação:** O system prompt na aba "Prompts IA" do admin é 100% o que controla a geração. Para melhorar os artigos, basta editar esse campo no painel. Não há outra instrução oculta — tudo passa por ali. O formato JSON de resposta (title, content, meta_title, etc.) está embutido no prompt e precisa ser mantido para o parser funcionar.
+#### 2. Fix na Edge Function: Extrair campos SEO com fallback robusto
+**Arquivo:** `supabase/functions/generate-blog-post/index.ts`
 
-**Nenhuma mudança de código** necessária para o ponto 4 — é apenas orientação. O usuário pode ir ao painel Admin → Blog → Prompts IA e reescrever o system prompt livremente, mantendo o bloco `FORMATO DE RESPOSTA (JSON)` no final.
+Adicionar fallbacks inteligentes após o parse:
+- `excerpt`: Se vazio, gerar automaticamente dos primeiros 160 chars do conteúdo (strip HTML)
+- `meta_description`: Se vazio, usar `excerpt` ou gerar dos primeiros 155 chars
+- `seo_keywords`: Se vazio, extrair palavras-chave do título
+- `tags`: Se vazio, extrair do título + categorias
 
----
+#### 3. Backfill: Preencher os posts existentes que estão incompletos
+**Arquivo:** Nova migration SQL
+
+Para os 2 posts com conteúdo JSON:
+- Converter o JSON para HTML e atualizar o campo `content`
+- Gerar `excerpt`, `meta_description`, `seo_keywords`, `tags` a partir do conteúdo existente
+
+Para os 8 posts sem conteúdo:
+- Deletar esses posts vazios (são irrecuperáveis sem re-gerar)
+
+#### 4. Prompt mais explícito para o modelo
+**Arquivo:** `supabase/functions/generate-blog-post/index.ts`
+
+Reforçar no user message: `"O campo 'content' DEVE ser uma string HTML, NÃO um objeto JSON. Use tags <h2>, <p>, <ul>, <li>, <a>, <strong>."`
 
 ### Arquivos modificados
 | Arquivo | Mudança |
 |---|---|
-| `BlogAutomationSettings.tsx` | Labels Nano Banana + frequências por hora |
-| `BlogPostsManager.tsx` | Fetch individual ao abrir modal de edição |
-| `blog-cron-trigger/index.ts` | Lógica de intervalo dinâmico baseado em horas |
+| `generate-blog-post/index.ts` | Normalização JSON→HTML, fallbacks SEO, prompt reforçado |
+| Nova migration SQL | Backfill dos 2 posts com dados + delete dos 8 vazios |
 
