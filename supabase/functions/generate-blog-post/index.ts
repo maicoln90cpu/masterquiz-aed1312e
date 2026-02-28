@@ -80,6 +80,117 @@ Modern, clean, vibrant colors, professional business/marketing aesthetic.
 Editorial quality, 16:9 aspect ratio, suitable for a blog header. Visual elements related to digital marketing, data analytics, or interactive quizzes.
 No text overlay. Ultra high resolution.`;
 
+// ── Helpers: normalize AI output ──
+
+function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeContentToHtml(content: unknown): string {
+  if (typeof content === 'string') {
+    // Already a string — check if it looks like HTML
+    const trimmed = content.trim();
+    if (trimmed.startsWith('<') || trimmed.includes('<p>') || trimmed.includes('<h2>')) {
+      return trimmed; // Already HTML
+    }
+    // Plain text — wrap in paragraphs
+    return trimmed.split('\n\n').filter(Boolean).map(p => `<p>${p.trim()}</p>`).join('\n');
+  }
+
+  if (content === null || content === undefined) return '';
+
+  // Object/Array — convert structured JSON to HTML
+  if (Array.isArray(content)) {
+    return content.map(section => sectionToHtml(section)).join('\n');
+  }
+
+  if (typeof content === 'object') {
+    const obj = content as Record<string, unknown>;
+    // Format: { sections: [...] }
+    if (Array.isArray(obj.sections)) {
+      return obj.sections.map(s => sectionToHtml(s)).join('\n');
+    }
+    // Format: { section1: {...}, section2: {...} }
+    const sectionKeys = Object.keys(obj).filter(k => k.startsWith('section'));
+    if (sectionKeys.length > 0) {
+      return sectionKeys
+        .sort()
+        .map(k => sectionToHtml(obj[k]))
+        .join('\n');
+    }
+    // Generic object — try to extract text
+    return sectionToHtml(obj);
+  }
+
+  return String(content);
+}
+
+function sectionToHtml(section: unknown): string {
+  if (!section || typeof section !== 'object') return '';
+  const s = section as Record<string, unknown>;
+  let html = '';
+
+  if (s.heading) html += `<h2>${s.heading}</h2>\n`;
+
+  if (Array.isArray(s.paragraphs)) {
+    html += s.paragraphs.map((p: unknown) => `<p>${p}</p>`).join('\n');
+  }
+  if (typeof s.content === 'string') {
+    html += `<p>${s.content}</p>\n`;
+  }
+
+  if (Array.isArray(s.subsections)) {
+    for (const sub of s.subsections) {
+      const ss = sub as Record<string, unknown>;
+      if (ss.subheading) html += `<h3>${ss.subheading}</h3>\n`;
+      if (Array.isArray(ss.paragraphs)) {
+        html += ss.paragraphs.map((p: unknown) => `<p>${p}</p>`).join('\n');
+      }
+      if (typeof ss.content === 'string') {
+        html += `<p>${ss.content}</p>\n`;
+      }
+    }
+  }
+
+  if (Array.isArray(s.items)) {
+    html += '<ul>\n' + s.items.map((i: unknown) => `<li>${i}</li>`).join('\n') + '\n</ul>\n';
+  }
+
+  return html;
+}
+
+function ensureSeoFields(result: Record<string, unknown>, topic: string): void {
+  // Normalize content
+  result.content = normalizeContentToHtml(result.content);
+  const contentText = stripHtmlTags(result.content as string);
+
+  // excerpt
+  if (!result.excerpt || (typeof result.excerpt === 'string' && result.excerpt.trim() === '')) {
+    result.excerpt = contentText.substring(0, 157).trim() + '...';
+  }
+
+  // meta_description
+  if (!result.meta_description || (typeof result.meta_description === 'string' && result.meta_description.trim() === '')) {
+    result.meta_description = result.excerpt || contentText.substring(0, 152).trim() + '...';
+  }
+
+  // seo_keywords
+  if (!result.seo_keywords || !Array.isArray(result.seo_keywords) || result.seo_keywords.length === 0) {
+    const words = topic.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    result.seo_keywords = [...new Set(words)].slice(0, 5);
+  }
+
+  // tags
+  if (!result.tags || !Array.isArray(result.tags) || result.tags.length === 0) {
+    result.tags = ['quiz', 'marketing digital', 'leads'];
+  }
+
+  // categories
+  if (!result.categories || !Array.isArray(result.categories) || result.categories.length === 0) {
+    result.categories = ['Marketing Digital', 'Funil de Vendas'];
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -162,7 +273,7 @@ Deno.serve(async (req: Request) => {
           model: aiModel,
           messages: [
             { role: 'system', content: finalPrompt },
-            { role: 'user', content: `Escreva um artigo completo e detalhado sobre: "${topic}". Responda APENAS com o JSON no formato especificado.` },
+            { role: 'user', content: `Escreva um artigo completo e detalhado sobre: "${topic}". Responda APENAS com o JSON no formato especificado. IMPORTANTE: O campo "content" DEVE ser uma STRING HTML válida usando tags <h2>, <h3>, <p>, <ul>, <li>, <a>, <strong>, <em>. NÃO retorne um objeto JSON no campo content.` },
           ],
           temperature: 0.7,
           max_tokens: 4096,
@@ -183,6 +294,7 @@ Deno.serve(async (req: Request) => {
 
       const rawContent = openaiData.choices?.[0]?.message?.content || '';
       textResult = JSON.parse(rawContent);
+      ensureSeoFields(textResult, topic);
     } else {
       // Fallback to Lovable AI Gateway
       console.log(`${PREFIX} Using Lovable AI Gateway as fallback`);
@@ -196,7 +308,7 @@ Deno.serve(async (req: Request) => {
           model: 'google/gemini-2.5-flash',
           messages: [
             { role: 'system', content: finalPrompt },
-            { role: 'user', content: `Escreva um artigo completo e detalhado sobre: "${topic}". Responda APENAS com o JSON no formato especificado.` },
+            { role: 'user', content: `Escreva um artigo completo e detalhado sobre: "${topic}". Responda APENAS com o JSON no formato especificado. IMPORTANTE: O campo "content" DEVE ser uma STRING HTML válida usando tags <h2>, <h3>, <p>, <ul>, <li>, <a>, <strong>, <em>. NÃO retorne um objeto JSON no campo content.` },
           ],
           temperature: 0.7,
         }),
@@ -217,6 +329,7 @@ Deno.serve(async (req: Request) => {
       // Clean markdown fences if present
       const cleanedContent = rawContent.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
       textResult = JSON.parse(cleanedContent);
+      ensureSeoFields(textResult, topic);
     }
 
     console.log(`${PREFIX} Article generated: "${textResult.title}" (${totalTokens} tokens)`);
