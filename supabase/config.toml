@@ -131,3 +131,6 @@ verify_jwt = false
 
 [functions.track-blog-view]
 verify_jwt = false
+
+[functions.regenerate-blog-asset]
+verify_jwt = false
