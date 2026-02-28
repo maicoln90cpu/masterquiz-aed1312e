@@ -269,6 +269,7 @@ Deno.serve(async (req: Request) => {
             messages: [
               { role: 'user', content: imagePrompt },
             ],
+            modalities: ['image', 'text'],
           }),
         });
 
@@ -276,17 +277,20 @@ Deno.serve(async (req: Request) => {
           const imageData = await imageResponse.json();
           const message = imageData.choices?.[0]?.message;
           
-          // Try multiple extraction strategies for base64 image data
           let base64Data: string | null = null;
           let mimeType = 'image/webp';
 
-          // Strategy 1: Parts array (Gemini native format via gateway)
-          if (message?.parts && Array.isArray(message.parts)) {
-            for (const part of message.parts) {
-              if (part.inline_data?.data) {
-                base64Data = part.inline_data.data;
-                mimeType = part.inline_data.mime_type || mimeType;
-                break;
+          // Strategy 1: images array (Lovable gateway standard format)
+          if (message?.images && Array.isArray(message.images)) {
+            for (const img of message.images) {
+              const imgUrl = img.image_url?.url || img.url;
+              if (imgUrl && imgUrl.startsWith('data:image/')) {
+                const dataUrlMatch = imgUrl.match(/data:image\/([^;]+);base64,(.+)/s);
+                if (dataUrlMatch) {
+                  mimeType = `image/${dataUrlMatch[1]}`;
+                  base64Data = dataUrlMatch[2].replace(/\s/g, '');
+                  break;
+                }
               }
             }
           }
@@ -304,7 +308,7 @@ Deno.serve(async (req: Request) => {
           if (!base64Data && Array.isArray(message?.content)) {
             for (const part of message.content) {
               if (part.type === 'image_url' && part.image_url?.url) {
-                const urlMatch = part.image_url.url.match(/data:image\/([^;]+);base64,([A-Za-z0-9+/=\s]+)/);
+                const urlMatch = part.image_url.url.match(/data:image\/([^;]+);base64,(.+)/s);
                 if (urlMatch) {
                   mimeType = `image/${urlMatch[1]}`;
                   base64Data = urlMatch[2].replace(/\s/g, '');
@@ -313,11 +317,21 @@ Deno.serve(async (req: Request) => {
             }
           }
 
+          // Strategy 4: Parts array (Gemini native)
+          if (!base64Data && message?.parts && Array.isArray(message.parts)) {
+            for (const part of message.parts) {
+              if (part.inline_data?.data) {
+                base64Data = part.inline_data.data;
+                mimeType = part.inline_data.mime_type || mimeType;
+                break;
+              }
+            }
+          }
+
           if (base64Data) {
             const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
             console.log(`${PREFIX} Image decoded: ${imageBytes.length} bytes (${mimeType})`);
 
-            // Upload to Bunny Storage
             const bunnyApiKey = Deno.env.get('BUNNY_STORAGE_ZONE_PASSWORD');
             const bunnyZone = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
             const bunnyCdnHost = Deno.env.get('BUNNY_CDN_HOSTNAME');
@@ -349,16 +363,15 @@ Deno.serve(async (req: Request) => {
               }
             }
           } else {
-            // Log full response structure for debugging
             const fullResponse = JSON.stringify(imageData.choices?.[0]?.message || {}).substring(0, 2000);
             console.warn(`${PREFIX} No image data found. Full message: ${fullResponse}`);
           }
         } else {
-          console.error(`${PREFIX} Image generation failed: ${imageResponse.status}`);
+          const errBody = await imageResponse.text();
+          console.error(`${PREFIX} Image generation failed: ${imageResponse.status}`, errBody);
         }
       } catch (imgErr) {
         console.error(`${PREFIX} Image generation error:`, imgErr);
-        // Continue without image — not critical
       }
     }
 
