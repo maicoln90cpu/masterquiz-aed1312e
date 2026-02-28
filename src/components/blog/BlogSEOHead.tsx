@@ -96,6 +96,17 @@ export const BlogSEOHead = ({
     }
     canonical.setAttribute('href', canonicalUrl);
 
+    // RSS Feed link
+    let rssLink = document.querySelector('link[type="application/rss+xml"]') as HTMLLinkElement;
+    if (!rssLink) {
+      rssLink = document.createElement('link');
+      rssLink.setAttribute('rel', 'alternate');
+      rssLink.setAttribute('type', 'application/rss+xml');
+      rssLink.setAttribute('title', 'Blog MasterQuiz RSS Feed');
+      rssLink.setAttribute('href', 'https://kmmdzwoidakmbekqvkmq.supabase.co/functions/v1/blog-sitemap?format=rss');
+      document.head.appendChild(rssLink);
+    }
+
     // JSON-LD Schema
     const existingSchemas = document.querySelectorAll('script[data-blog-schema]');
     existingSchemas.forEach(el => el.remove());

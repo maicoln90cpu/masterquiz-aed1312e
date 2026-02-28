@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react';
+import { Search, Rss } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -89,6 +89,15 @@ const Blog = () => {
             <p className="text-muted-foreground max-w-2xl mx-auto">
               {t('blog.subtitle', 'Estratégias de marketing digital, funis de vendas e como usar quizzes para converter mais leads.')}
             </p>
+            <a
+              href={`${baseUrl.replace('://masterquiz.lovable.app', '://kmmdzwoidakmbekqvkmq.supabase.co')}/functions/v1/blog-sitemap?format=rss`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-3 text-sm text-primary hover:underline"
+            >
+              <Rss className="h-4 w-4" />
+              RSS Feed
+            </a>
           </div>
 
           {/* Search + Filters */}

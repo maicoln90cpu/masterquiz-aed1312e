@@ -488,6 +488,13 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // 7b. Fallback: placeholder image if generation failed
+    if (!featuredImageUrl) {
+      const encodedTitle = encodeURIComponent(textResult.title || 'MasterQuiz Blog');
+      featuredImageUrl = `https://placehold.co/1200x630/10B981/FFFFFF?text=${encodedTitle.substring(0, 40)}`;
+      console.log(`${PREFIX} Using placeholder image: ${featuredImageUrl}`);
+    }
+
     // 8. Build FAQ schema
     const faqSchema = textResult.faq?.length > 0 ? {
       '@context': 'https://schema.org',
