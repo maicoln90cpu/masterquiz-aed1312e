@@ -28,7 +28,7 @@ export const LogoCarousel = () => {
       // Each list is identical; reset when we've scrolled past the first copy
       const firstList = el.querySelector("ul");
       if (firstList) {
-        const gap = window.innerWidth >= 768 ? 100 : window.innerWidth >= 640 ? 64 : 48;
+        const gap = window.innerWidth >= 768 ? 100 : window.innerWidth >= 640 ? 56 : 40;
         const listWidth = firstList.scrollWidth + gap;
         if (pos >= listWidth) pos -= listWidth;
       }
@@ -43,9 +43,9 @@ export const LogoCarousel = () => {
   const LogoList = ({ ariaHidden }: { ariaHidden: boolean }) => (
     <ul className="flex items-center" role="list" aria-hidden={ariaHidden}>
       {LOGOS.map((logo) => (
-        <li key={logo.alt} className="flex-none mr-12 sm:mr-16 md:mr-[100px]" role="listitem">
+        <li key={logo.alt} className="flex-none mr-10 sm:mr-14 md:mr-[100px]" role="listitem">
           <img
-            className="max-h-8 sm:max-h-10 md:max-h-14 h-auto w-auto block pointer-events-none"
+            className="max-w-[80px] max-h-6 sm:max-w-[110px] sm:max-h-8 md:max-w-none md:max-h-14 h-auto w-auto block pointer-events-none"
             src={logo.src}
             alt={logo.alt}
             loading="lazy"
