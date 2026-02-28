@@ -397,13 +397,58 @@ Deno.serve(async (req: Request) => {
       { url: 'https://masterquiz.lovable.app/blog', text: 'Blog' },
     ];
 
-    // 10. Insert blog post
+    // 10. Auto internal linking: inject links to other published posts
+    let enrichedContent = textResult.content || '';
+
+    try {
+      const { data: otherPosts } = await supabase
+        .from('blog_posts')
+        .select('title, slug')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(20);
+
+      if (otherPosts && otherPosts.length > 0) {
+        let linksInjected = 0;
+        const maxAutoLinks = 5;
+
+        for (const op of otherPosts) {
+          if (linksInjected >= maxAutoLinks) break;
+
+          // Extract meaningful keywords from the post title (3+ char words)
+          const keywords = op.title
+            .split(/\s+/)
+            .filter((w: string) => w.length > 3)
+            .map((w: string) => w.toLowerCase().replace(/[^a-záàâãéèêíïóôõúç]/gi, ''));
+
+          // Try to find a keyword match in the content (case-insensitive, whole word)
+          for (const kw of keywords) {
+            if (kw.length < 4) continue;
+            // Only match plain text (not inside HTML tags or existing links)
+            const regex = new RegExp(`(?<![<\\/a-zA-Z"=])\\b(${kw})\\b(?![^<]*>|[^<]*<\\/a>)`, 'i');
+            if (regex.test(enrichedContent)) {
+              enrichedContent = enrichedContent.replace(
+                regex,
+                `<a href="https://masterquiz.lovable.app/blog/${op.slug}" title="${op.title}">$1</a>`
+              );
+              linksInjected++;
+              break;
+            }
+          }
+        }
+        console.log(`${PREFIX} Auto-linked ${linksInjected} internal references`);
+      }
+    } catch (linkErr) {
+      console.warn(`${PREFIX} Auto-linking skipped:`, linkErr);
+    }
+
+    // 11. Insert blog post
     const totalCost = textCostUsd + imageCostUsd;
 
     const postPayload = {
       title: textResult.title || topic,
       slug: finalSlug,
-      content: textResult.content || '',
+      content: enrichedContent,
       excerpt: textResult.excerpt || null,
       meta_title: textResult.meta_title || textResult.title,
       meta_description: textResult.meta_description || textResult.excerpt || null,
