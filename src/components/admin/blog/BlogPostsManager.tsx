@@ -151,9 +151,21 @@ export function BlogPostsManager() {
       p.slug.toLowerCase().includes(search.toLowerCase())
   );
 
-  const openEditor = (post?: BlogPost) => {
+  const openEditor = async (post?: BlogPost) => {
     if (post) {
-      setEditPost({ ...post });
+      // Fetch fresh full data to ensure content is complete
+      try {
+        const { data, error } = await supabase
+          .from("blog_posts")
+          .select("*")
+          .eq("id", post.id)
+          .single();
+        if (error) throw error;
+        setEditPost({ ...data } as BlogPost);
+      } catch {
+        // Fallback to cached data
+        setEditPost({ ...post });
+      }
       setIsCreating(false);
     } else {
       setEditPost({ ...emptyPost });

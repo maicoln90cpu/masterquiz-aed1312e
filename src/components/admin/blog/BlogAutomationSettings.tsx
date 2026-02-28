@@ -158,6 +158,11 @@ export function BlogAutomationSettings() {
               <Select value={form.cron_schedule} onValueChange={(v) => setForm((p) => ({ ...p, cron_schedule: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="every_12h">A cada 12 horas</SelectItem>
+                  <SelectItem value="every_24h">A cada 24 horas</SelectItem>
+                  <SelectItem value="every_36h">A cada 36 horas</SelectItem>
+                  <SelectItem value="every_48h">A cada 48 horas</SelectItem>
+                  <SelectItem value="every_72h">A cada 72 horas</SelectItem>
                   <SelectItem value="daily">Diário</SelectItem>
                   <SelectItem value="weekly">Semanal</SelectItem>
                   <SelectItem value="biweekly">Quinzenal</SelectItem>
@@ -183,7 +188,8 @@ export function BlogAutomationSettings() {
               <Select value={form.image_model} onValueChange={(v) => setForm((p) => ({ ...p, image_model: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="google/gemini-2.5-flash-image">Gemini 2.5 Flash Image</SelectItem>
+                  <SelectItem value="google/gemini-2.5-flash-image">Nano Banana (Gemini Flash Image)</SelectItem>
+                  <SelectItem value="google/gemini-3-pro-image-preview">Nano Banana Pro (Gemini 3 Pro)</SelectItem>
                   <SelectItem value="google/gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
                 </SelectContent>
               </Select>
