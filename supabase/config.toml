@@ -125,3 +125,6 @@ verify_jwt = false
 
 [functions.blog-cron-trigger]
 verify_jwt = false
+
+[functions.blog-sitemap]
+verify_jwt = false
