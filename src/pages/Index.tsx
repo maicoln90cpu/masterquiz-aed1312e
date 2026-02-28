@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { LogoCarousel } from "@/components/landing/LogoCarousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLandingPlans } from "@/hooks/useLandingPlans";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
@@ -228,6 +229,9 @@ const Index = () => {
         <section id="hero">
           <HeroSection />
         </section>
+
+        {/* Logo Carousel - parceiros */}
+        <LogoCarousel />
 
         {/* Personas Section - deferred */}
         <DeferredSection id="personas" className="py-20 bg-gradient-to-b from-background to-secondary/30" fallbackHeight="600px">
