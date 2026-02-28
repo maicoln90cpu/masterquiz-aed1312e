@@ -37,15 +37,13 @@ const BlogPost = () => {
     enabled: !!slug,
   });
 
-  // Increment view count (fire and forget)
+  // Track view server-side (bot filtering + dedup)
   useEffect(() => {
-    if (!post?.id) return;
-    supabase
-      .from('blog_posts')
-      .update({ views_count: (post.views_count || 0) + 1 })
-      .eq('id', post.id)
-      .then();
-  }, [post?.id]);
+    if (!slug) return;
+    supabase.functions.invoke('track-blog-view', {
+      body: { slug },
+    }).catch(() => {});
+  }, [slug]);
 
   // Process content: add IDs to headings for TOC
   const processedContent = useMemo(() => {
