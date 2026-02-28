@@ -61,10 +61,21 @@ const BlogPost = () => {
   const postUrl = `${baseUrl}/blog/${slug}`;
 
   const faqSchema = useMemo(() => {
-    if (!post?.faq_schema || !Array.isArray(post.faq_schema)) return [];
-    return (post.faq_schema as Array<{ question: string; answer: string }>).filter(
-      f => f.question && f.answer
-    );
+    if (!post?.faq_schema) return [];
+    const raw = post.faq_schema as any;
+    
+    // Handle both formats: direct array or {mainEntity: [...]}
+    let items: Array<{ question: string; answer: string }> = [];
+    if (Array.isArray(raw)) {
+      items = raw;
+    } else if (raw.mainEntity && Array.isArray(raw.mainEntity)) {
+      items = raw.mainEntity.map((e: any) => ({
+        question: e.name || e.question || '',
+        answer: e.acceptedAnswer?.text || e.answer || '',
+      }));
+    }
+    
+    return items.filter(f => f.question && f.answer);
   }, [post?.faq_schema]);
 
   if (isLoading) {
