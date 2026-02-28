@@ -209,10 +209,7 @@ const BlogPost = () => {
 
           {/* Article Content */}
           <article
-            className="prose prose-lg dark:prose-invert max-w-none mb-8
-              prose-headings:text-foreground prose-headings:scroll-mt-20
-              prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-              prose-img:rounded-xl prose-img:mx-auto"
+            className="blog-article-content max-w-none mb-8"
             dangerouslySetInnerHTML={{ __html: processedContent }}
           />
 
