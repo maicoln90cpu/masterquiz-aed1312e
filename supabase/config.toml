@@ -128,3 +128,6 @@ verify_jwt = false
 
 [functions.blog-sitemap]
 verify_jwt = false
+
+[functions.track-blog-view]
+verify_jwt = false
