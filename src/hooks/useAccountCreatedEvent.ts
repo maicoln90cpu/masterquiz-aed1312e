@@ -25,11 +25,11 @@ export const useAccountCreatedEvent = () => {
       const w = window as Window & { dataLayer?: Record<string, unknown>[] };
       w.dataLayer = w.dataLayer || [];
       w.dataLayer.push({
-        event: 'account_created',
+        event: 'AccountCreated',
         user_id: userId,
         user_email: email,
       });
-      console.log(`🎯 [GTM] Event pushed: account_created (${source})`);
+      console.log(`🎯 [GTM] Event pushed: AccountCreated (${source})`);
     };
 
     const run = async () => {
