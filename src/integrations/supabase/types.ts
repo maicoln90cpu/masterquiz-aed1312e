@@ -461,6 +461,30 @@ export type Database = {
           },
         ]
       }
+      gtm_event_logs: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       integration_logs: {
         Row: {
           action: string
@@ -2377,6 +2401,7 @@ export type Database = {
       anonymize_old_ips: { Args: never; Returns: number }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
+      cleanup_old_gtm_events: { Args: never; Returns: undefined }
       cleanup_old_health_metrics: { Args: never; Returns: number }
       delete_user_by_id: {
         Args: { target_user_id: string }

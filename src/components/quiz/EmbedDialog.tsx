@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 interface EmbedDialogProps {
   open: boolean;
@@ -37,6 +38,7 @@ export const EmbedDialog = ({ open, onOpenChange, quizSlug, companySlug }: Embed
     navigator.clipboard.writeText(embedCode);
     setCopied(true);
     toast.success("Código copiado!");
+    pushGTMEvent('QuizShared', { method: 'embed', quiz_slug: quizSlug });
     setTimeout(() => setCopied(false), 2000);
   };
 

@@ -44,6 +44,7 @@ import { useQuizQuestions } from "@/hooks/useQuizQuestions";
 import { useQuizTemplateSelection } from "@/hooks/useQuizTemplateSelection";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useEditorInteractionTracker } from "@/hooks/useEditorInteractionTracker";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 import { useProfile } from "@/hooks/useProfile";
 
@@ -207,6 +208,28 @@ const CreateQuiz = () => {
     };
     checkAndClearStorage();
   }, [searchParams, clearLocalStorage]);
+
+  // ✅ EditorAbandoned: detectar saída do editor sem publicar
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && editorState.quizId && hasInteracted) {
+        // Só disparar se quiz NÃO foi publicado
+        const quizStatus = editorState.quizId ? 'draft' : null;
+        if (quizStatus) {
+          const w = window as Window & { dataLayer?: Record<string, unknown>[] };
+          w.dataLayer = w.dataLayer || [];
+          w.dataLayer.push({
+            event: 'EditorAbandoned',
+            quiz_id: editorState.quizId,
+            questions_count: questions.length,
+            had_title: !!appearanceState.title?.trim(),
+          });
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [editorState.quizId, appearanceState.title, hasInteracted, questions.length]);
 
   // ✅ Handler para reset
   const handleReset = useCallback(async () => {
@@ -1042,6 +1065,7 @@ const CreateQuiz = () => {
                     onClick={() => {
                       navigator.clipboard.writeText(quizPublicUrl);
                       toast.success(t('createQuiz.linkCopied'));
+                      pushGTMEvent('QuizShared', { method: 'link', quiz_id: quizId });
                     }}
                   >
                     <Copy className="h-4 w-4" />
