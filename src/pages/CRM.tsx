@@ -250,6 +250,12 @@ const CRM = () => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Leads");
       XLSX.writeFile(wb, `leads_crm_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      // GTM: LeadExported
+      const w = window as Window & { dataLayer?: Record<string, unknown>[] };
+      w.dataLayer = w.dataLayer || [];
+      w.dataLayer.push({ event: 'LeadExported', source: 'crm', count: leads.length });
+      
       toast.success(t('crm.toast.exportSuccess', { count: leads.length }));
     } catch (error) {
       console.error('Error exporting to Excel:', error);

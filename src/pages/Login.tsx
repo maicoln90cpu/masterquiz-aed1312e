@@ -15,6 +15,7 @@ import { useRateLimit } from "@/hooks/useRateLimit";
 import { fetchIPWithCache } from "@/lib/ipCache";
 import { Eye, EyeOff, ArrowLeft, Loader2, XCircle } from "lucide-react";
 import { PhoneInput, isValidPhoneForCountry } from "@/components/ui/phone-input";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -294,7 +295,12 @@ const Login = () => {
           <p className="text-muted-foreground">{t('login.subtitle')}</p>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs defaultValue="login" className="w-full" onValueChange={(val) => {
+            if (val === 'register' && !sessionStorage.getItem('mq_signup_started')) {
+              sessionStorage.setItem('mq_signup_started', '1');
+              pushGTMEvent('SignupStarted');
+            }
+          }}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">{t('login.loginTab')}</TabsTrigger>
             <TabsTrigger value="register">{t('login.registerTab')}</TabsTrigger>

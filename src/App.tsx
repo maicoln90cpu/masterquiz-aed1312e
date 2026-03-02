@@ -18,6 +18,7 @@ import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 import { useProductionWebVitals } from "@/hooks/useWebVitals";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useAccountCreatedEvent } from "@/hooks/useAccountCreatedEvent";
+import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
@@ -133,6 +134,9 @@ const RequireAuth = ({ children }: { children: ReactNode }) => {
   
   // ✅ Disparar account_created globalmente (qualquer rota autenticada)
   useAccountCreatedEvent();
+  
+  // ✅ Detectar upgrade de plano (free → pago)
+  usePlanUpgradeEvent();
 
   useEffect(() => {
     if (!loading && !user) {

@@ -47,6 +47,7 @@ const LandingABTestDashboard = lazy(() => import("@/components/admin/LandingABTe
 const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m => ({ default: m.CustomerRecovery })));
 const PQLAnalytics = lazy(() => import("@/components/admin/PQLAnalytics").then(m => ({ default: m.PQLAnalytics })));
 const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
+const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -1536,6 +1537,7 @@ export default function AdminDashboard() {
               tabs={[
                 { id: 'health', label: 'Saúde do Sistema', icon: <Activity className="h-4 w-4" />, color: 'green' },
                 { id: 'report', label: 'Relatório Consolidado', icon: <FileText className="h-4 w-4" />, color: 'blue' },
+                { id: 'gtm-events', label: 'Eventos GTM', icon: <BarChart3 className="h-4 w-4" />, color: 'purple' },
               ]}
               defaultTab="health"
             >
@@ -1543,6 +1545,7 @@ export default function AdminDashboard() {
                 <>
                   {activeTab === 'health' && <SystemHealthDashboard />}
                   {activeTab === 'report' && <HealthReport />}
+                  {activeTab === 'gtm-events' && <Suspense fallback={<ComponentLoader />}><GTMEventsDashboard /></Suspense>}
                 </>
               )}
             </AdminSubTabs>
