@@ -423,6 +423,7 @@ Todas as tabelas possuem Row Level Security ativo:
 | `cleanup_old_health_metrics()` | Limpeza de métricas > 30 dias |
 | `cleanup_expired_rate_limits()` | Limpeza de rate limits |
 | `anonymize_old_ips()` | Anonimização LGPD (6 meses) |
+| `cleanup_old_gtm_events()` | Limpeza de eventos GTM > 30 dias |
 | `trigger_welcome_message()` | Dispara welcome WhatsApp |
 | `trigger_first_quiz_message()` | Dispara msg no 1º quiz ativo |
 
