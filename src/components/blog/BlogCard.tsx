@@ -13,6 +13,7 @@ interface BlogCardProps {
   readingTimeMin: number;
   publishedAt: string;
   viewsCount: number;
+  isHero?: boolean;
 }
 
 export const BlogCard = ({
@@ -24,14 +25,19 @@ export const BlogCard = ({
   readingTimeMin,
   publishedAt,
   viewsCount,
+  isHero = false,
 }: BlogCardProps) => {
   return (
     <Link
       to={`/blog/${slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm hover:shadow-md transition-all duration-300"
+      className={`group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm hover:shadow-md transition-all duration-300 ${
+        isHero ? 'sm:flex-row sm:col-span-full' : ''
+      }`}
     >
       {/* Image */}
-      <div className="aspect-video overflow-hidden bg-muted">
+      <div className={`overflow-hidden bg-muted ${
+        isHero ? 'aspect-video sm:aspect-auto sm:w-1/2 sm:min-h-[280px]' : 'aspect-video'
+      }`}>
         {featuredImageUrl ? (
           <img
             src={featuredImageUrl}
@@ -47,7 +53,7 @@ export const BlogCard = ({
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-4 md:p-5">
+      <div className={`flex flex-1 flex-col p-4 md:p-5 ${isHero ? 'sm:p-6 sm:justify-center' : ''}`}>
         {/* Categories */}
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
@@ -60,13 +66,17 @@ export const BlogCard = ({
         )}
 
         {/* Title */}
-        <h2 className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-2">
+        <h2 className={`font-semibold text-foreground group-hover:text-primary transition-colors mb-2 ${
+          isHero ? 'text-xl md:text-2xl line-clamp-3' : 'text-lg line-clamp-2'
+        }`}>
           {title}
         </h2>
 
         {/* Excerpt */}
         {excerpt && (
-          <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
+          <p className={`text-sm text-muted-foreground mb-4 flex-1 ${
+            isHero ? 'line-clamp-4' : 'line-clamp-3'
+          }`}>
             {excerpt}
           </p>
         )}
@@ -79,7 +89,7 @@ export const BlogCard = ({
           </span>
           <span className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />
-            {readingTimeMin} min
+            {readingTimeMin} min de leitura
           </span>
           <span className="flex items-center gap-1 ml-auto">
             <Eye className="h-3.5 w-3.5" />

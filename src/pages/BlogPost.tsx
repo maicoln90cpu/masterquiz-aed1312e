@@ -246,6 +246,25 @@ const BlogPost = () => {
             </div>
           )}
 
+          {/* Author Bio */}
+          <div className="flex items-start gap-4 mt-10 p-5 rounded-xl border bg-muted/30">
+            <div className="flex-shrink-0 h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">
+              ✍️
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">{post.author_name || 'MasterQuiz'}</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Conteúdo produzido pela equipe do MasterQuiz — a plataforma líder em quizzes interativos para qualificação de leads e aumento de conversões.
+              </p>
+              <Link
+                to="/blog"
+                className="text-sm text-primary hover:underline mt-2 inline-block"
+              >
+                Ver mais artigos →
+              </Link>
+            </div>
+          </div>
+
           {/* Related Posts */}
           <RelatedPosts currentSlug={slug!} categories={post.categories || []} />
         </PageContainer>
