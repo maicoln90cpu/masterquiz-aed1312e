@@ -2,8 +2,8 @@
 
 > Guia completo para validação manual do aplicativo antes do lançamento.
 
-**Versão:** 2.25.0  
-**Data:** 04/02/2025
+**Versão:** 2.28.0  
+**Data:** 09/03/2026
 
 ---
 

@@ -207,6 +207,7 @@ Consultar histórico detalhado nos commits e no ROADMAP.md.
 ### Prioridade Alta
 - [ ] Internacionalização: remover strings hardcoded restantes
 - [ ] 2FA implementation
+- [ ] Migrar eventos GTM legados para pushGTMEvent (landing, tracking, vitals)
 
 ### Prioridade Média
 - [ ] API pública v1

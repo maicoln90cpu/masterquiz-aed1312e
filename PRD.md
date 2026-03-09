@@ -572,4 +572,4 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 ---
 
 **Documento mantido por:** Product Team  
-**Próxima revisão:** Abril 2026
+**Próxima revisão:** Junho 2026

@@ -268,6 +268,25 @@ Soma de scores por opção selecionada → match com `quiz_results` por `min_sco
 
 > **Nota v2.27:** Não usa JOINs PostgREST — queries separadas para robustez.
 
+### 5. GTM Event Logger (`lib/gtmLogger.ts`)
+
+```
+pushGTMEvent(event, metadata, { persist })
+  1. window.dataLayer.push({ event, ...metadata })
+  2. Se persist=true: INSERT gtm_event_logs (fire-and-forget)
+  3. Console log com prefixo 🎯
+
+Eventos centralizados: SignupStarted, AccountCreated, PlanUpgraded,
+  QuizShared, EditorAbandoned, LeadExported
+
+Eventos legados (NÃO usam o helper — pendente migração):
+  - Start.tsx (objective_selected)
+  - useQuizTracking.ts (quiz_view, quiz_start, quiz_complete, lead_captured)
+  - useQuizPersistence.ts (first_quiz_created, quiz_first_published)
+  - useWebVitals.ts (web_vitals)
+  - Landing components (cta_click, header_nav_click, pricing_cta_click)
+```
+
 ---
 
 ## 🔗 Integrações Externas

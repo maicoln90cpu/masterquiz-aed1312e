@@ -508,6 +508,7 @@ src/
 | IA não gera quiz | Verificar `LOVABLE_API_KEY` e limites do plano |
 | Erro 400 em analytics | FK `quiz_step_analytics.quiz_id` deve existir |
 | `validation_requests` 400 | Normal para não-admin; tratado graciosamente |
+| Eventos GTM não aparecem | Verificar se `pushGTMEvent` está sendo chamado e tabela `gtm_event_logs` tem RLS INSERT |
 
 ### Debug
 
