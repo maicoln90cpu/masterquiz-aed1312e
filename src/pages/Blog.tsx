@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, Rss } from 'lucide-react';
@@ -18,7 +18,7 @@ const Blog = () => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['blog-posts'],
@@ -62,8 +62,15 @@ const Blog = () => {
     return result;
   }, [posts, search, selectedCategory]);
 
-  const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE);
-  const paginated = filtered.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
+  // Hero post = first filtered post (most recent)
+  const heroPost = filtered.length > 0 ? filtered[0] : null;
+  const remainingPosts = filtered.slice(1);
+  const visiblePosts = remainingPosts.slice(0, visibleCount);
+  const hasMore = visibleCount < remainingPosts.length;
+
+  const loadMore = useCallback(() => {
+    setVisibleCount(prev => prev + POSTS_PER_PAGE);
+  }, []);
 
   const baseUrl = window.location.origin;
 
@@ -72,7 +79,7 @@ const Blog = () => {
       <BlogSEOHead
         title="Blog MasterQuiz - Dicas de Marketing Digital, Funis e Quizzes"
         description="Aprenda sobre marketing digital, funis de vendas, copywriting e como usar quizzes interativos para qualificar leads e aumentar suas conversões."
-        keywords={['quiz', 'marketing digital', 'funil de vendas', 'leads', 'copywriting', 'quiz interativo']}
+        keywords={['quiz', 'marketing digital', 'funil de vendas', 'leads', 'copywriting', 'quiz interativo', 'infoprodutos']}
         canonicalUrl={`${baseUrl}/blog`}
         type="blog"
       />
@@ -87,10 +94,10 @@ const Blog = () => {
               {t('blog.title', 'Blog MasterQuiz')}
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              {t('blog.subtitle', 'Estratégias de marketing digital, funis de vendas e como usar quizzes para converter mais leads.')}
+              {t('blog.subtitle', 'Estratégias de marketing digital, infoprodutos, funis de vendas e como usar quizzes para converter mais leads.')}
             </p>
             <a
-              href={`${baseUrl.replace('://masterquiz.lovable.app', '://kmmdzwoidakmbekqvkmq.supabase.co')}/functions/v1/blog-sitemap?format=rss`}
+              href="https://kmmdzwoidakmbekqvkmq.supabase.co/functions/v1/blog-sitemap?format=rss"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-3 text-sm text-primary hover:underline"
@@ -107,7 +114,7 @@ const Blog = () => {
               <Input
                 placeholder={t('blog.searchPlaceholder', 'Buscar artigos...')}
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                onChange={(e) => { setSearch(e.target.value); setVisibleCount(POSTS_PER_PAGE); }}
                 className="pl-9"
               />
             </div>
@@ -119,7 +126,7 @@ const Blog = () => {
               <Badge
                 variant={selectedCategory === null ? 'default' : 'outline'}
                 className="cursor-pointer"
-                onClick={() => { setSelectedCategory(null); setPage(1); }}
+                onClick={() => { setSelectedCategory(null); setVisibleCount(POSTS_PER_PAGE); }}
               >
                 {t('common.all', 'Todos')}
               </Badge>
@@ -128,7 +135,7 @@ const Blog = () => {
                   key={cat}
                   variant={selectedCategory === cat ? 'default' : 'outline'}
                   className="cursor-pointer"
-                  onClick={() => { setSelectedCategory(cat); setPage(1); }}
+                  onClick={() => { setSelectedCategory(cat); setVisibleCount(POSTS_PER_PAGE); }}
                 >
                   {cat}
                 </Badge>
@@ -151,53 +158,63 @@ const Blog = () => {
                 </div>
               ))}
             </div>
-          ) : paginated.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-xl text-muted-foreground">
                 {t('blog.noPosts', 'Nenhum artigo encontrado.')}
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {paginated.map((post) => (
-                <BlogCard
-                  key={post.slug}
-                  slug={post.slug}
-                  title={post.title}
-                  excerpt={post.excerpt}
-                  featuredImageUrl={post.featured_image_url}
-                  categories={post.categories || []}
-                  readingTimeMin={post.reading_time_min || 5}
-                  publishedAt={post.published_at!}
-                  viewsCount={post.views_count || 0}
-                />
-              ))}
-            </div>
-          )}
+            <>
+              {/* Hero Post */}
+              {heroPost && (
+                <div className="mb-8">
+                  <BlogCard
+                    slug={heroPost.slug}
+                    title={heroPost.title}
+                    excerpt={heroPost.excerpt}
+                    featuredImageUrl={heroPost.featured_image_url}
+                    categories={heroPost.categories || []}
+                    readingTimeMin={heroPost.reading_time_min || 5}
+                    publishedAt={heroPost.published_at!}
+                    viewsCount={heroPost.views_count || 0}
+                    isHero
+                  />
+                </div>
+              )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-10">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-              >
-                {t('common.previous', 'Anterior')}
-              </Button>
-              <span className="flex items-center text-sm text-muted-foreground px-3">
-                {page} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-              >
-                {t('common.next', 'Próximo')}
-              </Button>
-            </div>
+              {/* Remaining Posts Grid */}
+              {visiblePosts.length > 0 && (
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {visiblePosts.map((post) => (
+                    <BlogCard
+                      key={post.slug}
+                      slug={post.slug}
+                      title={post.title}
+                      excerpt={post.excerpt}
+                      featuredImageUrl={post.featured_image_url}
+                      categories={post.categories || []}
+                      readingTimeMin={post.reading_time_min || 5}
+                      publishedAt={post.published_at!}
+                      viewsCount={post.views_count || 0}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Load More */}
+              {hasMore && (
+                <div className="flex justify-center mt-10">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={loadMore}
+                  >
+                    {t('blog.loadMore', 'Carregar mais artigos')}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </PageContainer>
       </main>

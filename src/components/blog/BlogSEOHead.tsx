@@ -107,6 +107,30 @@ export const BlogSEOHead = ({
       document.head.appendChild(rssLink);
     }
 
+    // hreflang for pt-BR
+    let hreflang = document.querySelector('link[hreflang="pt-BR"]') as HTMLLinkElement;
+    if (!hreflang) {
+      hreflang = document.createElement('link');
+      hreflang.setAttribute('rel', 'alternate');
+      hreflang.setAttribute('hreflang', 'pt-BR');
+      hreflang.setAttribute('href', canonicalUrl);
+      document.head.appendChild(hreflang);
+    } else {
+      hreflang.setAttribute('href', canonicalUrl);
+    }
+
+    // x-default hreflang
+    let xdefault = document.querySelector('link[hreflang="x-default"]') as HTMLLinkElement;
+    if (!xdefault) {
+      xdefault = document.createElement('link');
+      xdefault.setAttribute('rel', 'alternate');
+      xdefault.setAttribute('hreflang', 'x-default');
+      xdefault.setAttribute('href', canonicalUrl);
+      document.head.appendChild(xdefault);
+    } else {
+      xdefault.setAttribute('href', canonicalUrl);
+    }
+
     // JSON-LD Schema
     const existingSchemas = document.querySelectorAll('script[data-blog-schema]');
     existingSchemas.forEach(el => el.remove());
