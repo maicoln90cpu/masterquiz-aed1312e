@@ -494,6 +494,7 @@ src/
 - ✅ Audit logs + System health
 - ✅ Configuração Kiwify, Bunny, AI prompts
 - ✅ CSP monitoring + Bundle analysis
+- ✅ Dashboard de Eventos GTM (observabilidade)
 
 ---
 
