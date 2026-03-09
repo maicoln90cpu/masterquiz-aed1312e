@@ -280,6 +280,9 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF08.2 | GTM global | Alta | ✅ |
 | RF08.3 | GTM por quiz | Média | ✅ |
 | RF08.4 | Eventos de vídeo | Média | ✅ |
+| RF08.5 | Eventos GTM centralizados (pushGTMEvent) | Alta | ✅ |
+| RF08.6 | Persistência de eventos para analytics admin | Média | ✅ |
+| RF08.7 | Dashboard de eventos GTM no admin | Média | ✅ |
 
 ### RF09 - Pagamentos
 
