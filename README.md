@@ -364,7 +364,7 @@ quizzes, quiz_questions, quiz_responses, quiz_results
 quiz_form_config, custom_form_fields
 
 -- Analytics
-quiz_analytics, quiz_step_analytics
+quiz_analytics, quiz_step_analytics, gtm_event_logs
 
 -- Vídeo
 bunny_videos
