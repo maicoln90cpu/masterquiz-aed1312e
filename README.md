@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.27.0** | Última atualização: 25 de Fevereiro de 2026
+**Versão 2.28.0** | Última atualização: 09 de Març026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -78,7 +78,7 @@
 | Kiwify | Gateway de pagamento + webhook |
 | Bunny CDN | Armazenamento e streaming de vídeos |
 | Google Tag Manager | Tracking global |
-| Facebook Pixel | Tracking por quiz |
+|(ce(centralizado via `pushGTMEvent`) ntralizado via `pushGTMEvent`)  Facebook Pixel | Tracking por quiz |
 | Lovable AI (Gemini) | Geração de quizzes com IA |
 | Evolution API | WhatsApp (recuperação de usuários) |
 | Zapier/Make/n8n | Automações via webhook |
@@ -118,7 +118,7 @@ masterquizz/
 │   │   ├── video/             # Player de vídeo customizado
 │   │   └── ui/                # shadcn components
 │   ├── contexts/              # React contexts (Auth)
-│   ├── hooks/                 # Custom hooks (35+)
+│   ├── hooks/   7             # Custom hooks (35+)
 │   ├── i18n/                  # Traduções (PT/EN/ES)
 │   ├── integrations/
 │   │   └── supabase/          # Cliente e tipos gerados
@@ -364,7 +364,7 @@ quizzes, quiz_questions, quiz_responses, quiz_results
 quiz_form_config, custom_form_fields
 
 -- Analytics
-quiz_analytics, quiz_step_analytics
+quiz_analytics, quiz_step_analytics, gtm_event_logs
 
 -- Vídeo
 bunny_videos
@@ -423,6 +423,7 @@ Todas as tabelas possuem Row Level Security ativo:
 | `cleanup_old_health_metrics()` | Limpeza de métricas > 30 dias |
 | `cleanup_expired_rate_limits()` | Limpeza de rate limits |
 | `anonymize_old_ips()` | Anonimização LGPD (6 meses) |
+| `cleanup_old_gtm_events()` | Limpeza de eventos GTM > 30 dias |
 | `trigger_welcome_message()` | Dispara welcome WhatsApp |
 | `trigger_first_quiz_message()` | Dispara msg no 1º quiz ativo |
 
@@ -493,6 +494,7 @@ src/
 - ✅ Audit logs + System health
 - ✅ Configuração Kiwify, Bunny, AI prompts
 - ✅ CSP monitoring + Bundle analysis
+- ✅ Dashboard de Eventos GTM (observabilidade)
 
 ---
 
@@ -506,6 +508,7 @@ src/
 | IA não gera quiz | Verificar `LOVABLE_API_KEY` e limites do plano |
 | Erro 400 em analytics | FK `quiz_step_analytics.quiz_id` deve existir |
 | `validation_requests` 400 | Normal para não-admin; tratado graciosamente |
+| Eventos GTM não aparecem | Verificar se `pushGTMEvent` está sendo chamado e tabela `gtm_event_logs` tem RLS INSERT |
 
 ### Debug
 

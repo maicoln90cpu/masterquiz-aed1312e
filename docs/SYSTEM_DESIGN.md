@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 25 de Fevereiro de 2026 | Versão 2.27
+> Última atualização: 09 de Março de 2026 | Versão 2.28
 
 ---
 
@@ -114,6 +114,14 @@ User → Kiwify Checkout → Webhook (Edge Function) → user_subscriptions UPDA
 Trigger (signup/quiz) → recovery_contacts INSERT → process-recovery-queue → Evolution API → WhatsApp
 ```
 
+### 5. Tracking GTM (centralizado)
+
+```
+UI Action → pushGTMEvent() → dataLayer.push() + gtm_event_logs INSERT
+                                    ↓
+                          GTM Dashboard (Admin) ← useQuery(gtm_event_logs)
+```
+
 ---
 
 ## 🧩 Componentes Principais
@@ -132,6 +140,7 @@ Trigger (signup/quiz) → recovery_contacts INSERT → process-recovery-queue �
 | `useUserRole` | Roles do usuário | `hooks/useUserRole.ts` |
 | `useUserStage` | Nível PQL | `hooks/useUserStage.ts` |
 | `useTestLead` | Gera leads de teste | `hooks/useTestLead.ts` |
+| `usePlanUpgradeEvent` | Detecta upgrade free→pago | `hooks/usePlanUpgradeEvent.ts` |
 
 ### Componentes Críticos
 
@@ -258,6 +267,25 @@ Soma de scores por opção selecionada → match com `quiz_results` por `min_sco
 ```
 
 > **Nota v2.27:** Não usa JOINs PostgREST — queries separadas para robustez.
+
+### 5. GTM Event Logger (`lib/gtmLogger.ts`)
+
+```
+pushGTMEvent(event, metadata, { persist })
+  1. window.dataLayer.push({ event, ...metadata })
+  2. Se persist=true: INSERT gtm_event_logs (fire-and-forget)
+  3. Console log com prefixo 🎯
+
+Eventos centralizados: SignupStarted, AccountCreated, PlanUpgraded,
+  QuizShared, EditorAbandoned, LeadExported
+
+Eventos legados (NÃO usam o helper — pendente migração):
+  - Start.tsx (objective_selected)
+  - useQuizTracking.ts (quiz_view, quiz_start, quiz_complete, lead_captured)
+  - useQuizPersistence.ts (first_quiz_created, quiz_first_published)
+  - useWebVitals.ts (web_vitals)
+  - Landing components (cta_click, header_nav_click, pricing_cta_click)
+```
 
 ---
 

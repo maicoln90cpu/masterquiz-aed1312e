@@ -99,6 +99,7 @@ Q4 2025: Expansão Internacional
 - GDPR enhanced compliance
 - Multi-language AI
 - Agency partner program
+- Tracking GTM centralizado + Dashboard de observabilidade ✅
 
 ### H2 2026
 - Expansão para EUA
@@ -126,6 +127,7 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-03-09 | **v2.28 — 5 Eventos GTM + Dashboard Observabilidade + gtmLogger centralizado** |
 | 2026-02-25 | **v2.27 — Correção useFunnelData, AdminDashboard, QuestionsList refatorado** |
 | 2025-02-05 | **v2.26 — Sistema PQL + Lead de Teste** |
 | 2025-02-04 | **v2.25 — Paradigma Auto-Convencimento + i18n completo** |

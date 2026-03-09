@@ -2,8 +2,8 @@
 
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
-**Versão:** 2.27  
-**Última atualização:** 25 de Fevereiro de 2026  
+**Versão:** 2.28  
+**Última atualização:** 09 de Março de 2026  
 **Owner:** Product Team
 
 ---
@@ -280,6 +280,9 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF08.2 | GTM global | Alta | ✅ |
 | RF08.3 | GTM por quiz | Média | ✅ |
 | RF08.4 | Eventos de vídeo | Média | ✅ |
+| RF08.5 | Eventos GTM centralizados (pushGTMEvent) | Alta | ✅ |
+| RF08.6 | Persistência de eventos para analytics admin | Média | ✅ |
+| RF08.7 | Dashboard de eventos GTM no admin | Média | ✅ |
 
 ### RF09 - Pagamentos
 
@@ -317,6 +320,7 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF11.7 | Audit logs expandido (integrações, exports) | Média | ✅ |
 | RF11.8 | Support tickets | Média | ✅ |
 | RF11.9 | CSP monitoring | Média | ✅ |
+| RF11.10 | Dashboard de eventos GTM (observabilidade) | Média | ✅ |
 
 ---
 
@@ -568,4 +572,4 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 ---
 
 **Documento mantido por:** Product Team  
-**Próxima revisão:** Abril 2026
+**Próxima revisão:** Junho 2026
