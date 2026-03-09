@@ -99,6 +99,7 @@ Q4 2025: Expansão Internacional
 - GDPR enhanced compliance
 - Multi-language AI
 - Agency partner program
+- Tracking GTM centralizado + Dashboard de observabilidade ✅
 
 ### H2 2026
 - Expansão para EUA
