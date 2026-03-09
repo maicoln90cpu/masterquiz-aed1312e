@@ -320,6 +320,7 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF11.7 | Audit logs expandido (integrações, exports) | Média | ✅ |
 | RF11.8 | Support tickets | Média | ✅ |
 | RF11.9 | CSP monitoring | Média | ✅ |
+| RF11.10 | Dashboard de eventos GTM (observabilidade) | Média | ✅ |
 
 ---
 
