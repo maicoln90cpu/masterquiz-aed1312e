@@ -114,6 +114,14 @@ User → Kiwify Checkout → Webhook (Edge Function) → user_subscriptions UPDA
 Trigger (signup/quiz) → recovery_contacts INSERT → process-recovery-queue → Evolution API → WhatsApp
 ```
 
+### 5. Tracking GTM (centralizado)
+
+```
+UI Action → pushGTMEvent() → dataLayer.push() + gtm_event_logs INSERT
+                                    ↓
+                          GTM Dashboard (Admin) ← useQuery(gtm_event_logs)
+```
+
 ---
 
 ## 🧩 Componentes Principais
