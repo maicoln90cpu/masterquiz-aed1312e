@@ -4,6 +4,48 @@
 
 ---
 
+## ✅ v2.28.0 - Eventos GTM Completos + Dashboard de Observabilidade (09/03/2026)
+
+### 5 Novos Eventos GTM
+- **SignupStarted**: Disparado ao acessar aba "Criar Conta" (Login.tsx, 1x/sessão)
+- **PlanUpgraded**: Hook detecta transição free→pago via localStorage (usePlanUpgradeEvent.ts)
+- **QuizShared**: Disparado ao copiar link (CreateQuiz.tsx) ou embed (EmbedDialog.tsx)
+- **EditorAbandoned**: Disparado via visibilitychange quando editor tem alterações não publicadas
+- **LeadExported**: Disparado ao exportar Excel/CSV no CRM e Responses
+
+### Infraestrutura de Tracking
+- **gtmLogger.ts**: Helper centralizado — push dataLayer + persist em gtm_event_logs
+- **Tabela gtm_event_logs**: Persistência de eventos com cleanup automático 30 dias
+- **RLS**: INSERT para authenticated, SELECT para admins
+
+### Dashboard GTM no Admin
+- Sub-tab "Eventos GTM" na aba Observabilidade
+- Cards: total 24h, total 7d, tipos únicos
+- Tabela de contagem por evento com categoria
+- Log dos últimos 100 disparos com filtro
+- Auto-refresh (15s logs, 30s contagens)
+
+### Re-disparo AccountCreated
+- Reset de account_created_event_sent para perfis dos últimos 5 dias
+- Correção de captura GTM que estava com evento divergente
+
+### Arquivos Criados/Editados
+| Arquivo | Ação |
+|---------|------|
+| src/lib/gtmLogger.ts | NOVO — helper centralizado |
+| src/hooks/usePlanUpgradeEvent.ts | NOVO — detecta upgrade |
+| src/components/admin/GTMEventsDashboard.tsx | NOVO — dashboard |
+| src/pages/Login.tsx | SignupStarted |
+| src/pages/CreateQuiz.tsx | QuizShared + EditorAbandoned |
+| src/components/quiz/EmbedDialog.tsx | QuizShared (embed) |
+| src/pages/CRM.tsx | LeadExported |
+| src/pages/Responses.tsx | LeadExported (Excel + CSV) |
+| src/App.tsx | Integrar usePlanUpgradeEvent |
+| src/pages/AdminDashboard.tsx | Sub-tab GTM Events |
+| Migration SQL | gtm_event_logs + cleanup |
+
+---
+
 ## ✅ v2.27.0 - Correções de Banco + Refatoração QuestionsList (25/02/2026)
 
 ### Correções de Banco de Dados
