@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.28.0** | Última atualização: 09 de Março de 2026
+**Versão 2.28.0** | Última atualização: 09 de Marçe 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -78,7 +78,7 @@
 | Kiwify | Gateway de pagamento + webhook |
 | Bunny CDN | Armazenamento e streaming de vídeos |
 | Google Tag Manager | Tracking global |
-| Facebook Pixel | Tracking por quiz |
+|(centralizado via `pushGTMEvent`)  Facebook Pixel | Tracking por quiz |
 | Lovable AI (Gemini) | Geração de quizzes com IA |
 | Evolution API | WhatsApp (recuperação de usuários) |
 | Zapier/Make/n8n | Automações via webhook |
