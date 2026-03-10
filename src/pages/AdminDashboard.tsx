@@ -258,7 +258,7 @@ export default function AdminDashboard() {
           try {
             const result = await supabase
               .from('validation_requests')
-              .select(`*, quizzes (title)`)
+              .select(`*, quizzes!inner(title)`)
               .eq('status', 'pending')
               .order('requested_at', { ascending: false });
             return result;
