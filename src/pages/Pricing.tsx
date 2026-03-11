@@ -9,6 +9,7 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { usePricingPlans } from "@/hooks/usePricingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { PricingCard } from "@/components/landing/PricingCard";
+import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 
 export default function Pricing() {
   
