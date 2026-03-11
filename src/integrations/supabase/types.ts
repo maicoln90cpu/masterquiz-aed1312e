@@ -626,6 +626,7 @@ export type Database = {
           description: string | null
           id: string
           key: string
+          site_mode: string
           updated_at: string | null
           value_en: string | null
           value_es: string | null
@@ -637,6 +638,7 @@ export type Database = {
           description?: string | null
           id?: string
           key: string
+          site_mode?: string
           updated_at?: string | null
           value_en?: string | null
           value_es?: string | null
@@ -648,6 +650,7 @@ export type Database = {
           description?: string | null
           id?: string
           key?: string
+          site_mode?: string
           updated_at?: string | null
           value_en?: string | null
           value_es?: string | null
