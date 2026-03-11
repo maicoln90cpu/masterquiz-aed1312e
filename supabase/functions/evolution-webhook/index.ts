@@ -109,6 +109,37 @@ Deno.serve(async (req) => {
           .eq('id', contact.id);
 
         console.log(`[EVOLUTION-WEBHOOK] Contact ${contact.id} marked as responded`);
+
+        // Trigger AI reply for template responses
+        try {
+          // Look up user_id from recovery_contacts
+          const { data: contactData } = await supabase
+            .from('recovery_contacts')
+            .select('user_id')
+            .eq('id', contact.id)
+            .single();
+
+          const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+          const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+          await fetch(`${supabaseUrl}/functions/v1/whatsapp-ai-reply`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({
+              phone_number: phoneNumber,
+              message_text: messageText,
+              user_id: contactData?.user_id || null,
+              contact_id: contact.id,
+            }),
+          });
+
+          console.log(`[EVOLUTION-WEBHOOK] AI reply triggered for ${phoneNumber}`);
+        } catch (aiError) {
+          console.error('[EVOLUTION-WEBHOOK] Failed to trigger AI reply:', aiError);
+        }
       }
 
       return new Response(
