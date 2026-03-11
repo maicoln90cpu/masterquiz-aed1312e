@@ -1,21 +1,28 @@
-## Plano: Site Mode A/B (Fluxo Completo)
 
-### Etapa 1 ✅ — Infraestrutura Base
-- [x] Corrigir cards do AdminDashboard (remover queries redundantes de loadData)
-- [x] Criar tabela `site_settings` com `site_mode` (A ou B)
-- [x] Adicionar `payment_confirmed` em `user_subscriptions`
-- [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
-- [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-### Etapa 2 ✅ — Frontend Condicional (Landing + Pricing + Login)
-- [x] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
-- [x] HeroSection: CTA "Escolher meu plano" + navega para `/precos` no modo B
-- [x] FinalCTA: Navega para `/precos` no modo B
-- [x] Pricing: Esconder card Free no modo B
-- [x] Login: No modo B, após cadastro redirecionar para `/precos`
+## Plano: Seção de Depoimentos (Carrossel) + FAQ na página /precos
 
-### Etapa 3 ✅ — Auth Guards + Payment Flow
-- [x] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
-- [x] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
-- [x] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
-- [x] Modo B: Novos cadastros criam subscription com `payment_confirmed = false` (via trigger existente com default true)
+### O que será feito
+
+1. **Criar componente `TestimonialsCarousel`** -- seção de depoimentos com cards em carrossel horizontal (Embla Carousel, já instalado), estilo inspirado na imagem de referência (cards com avatar, nome, @handle, rede social, texto do depoimento, data). Layout em coluna única com scroll lateral.
+
+2. **Inserir na Landing Page (`Index.tsx`)** -- abaixo da seção de pricing (após `DeferredSection id="pricing"`) e antes do FAQ.
+
+3. **Inserir na página `/precos` (`Pricing.tsx`)** -- abaixo do grid de cards de preço, seguido da seção FAQ (substituindo o botão "Ver FAQ" atual pelo componente `FAQAccordion` inline).
+
+### Componente `TestimonialsCarousel`
+- Usa `Carousel`, `CarouselContent`, `CarouselItem`, `CarouselPrevious`, `CarouselNext` do `ui/carousel`
+- Cada card: avatar circular, nome, @handle, icone de rede social (Instagram/X/WhatsApp), texto do depoimento, data
+- Dados hardcoded inicialmente (5-6 depoimentos fictícios inspirados na imagem de referência)
+- Cards com `basis-[85%] md:basis-[45%] lg:basis-[35%]` para mostrar parcialmente o próximo card
+- Título da seção: "Depoimentos de quem comprovou e recomenda."
+- Subtítulo: "Casos reais de clientes que testaram nossa solução"
+
+### Arquivos
+
+| Arquivo | Ação |
+|---|---|
+| `src/components/landing/TestimonialsCarousel.tsx` | **Novo** -- componente carrossel de depoimentos |
+| `src/pages/Index.tsx` | Inserir `TestimonialsCarousel` entre pricing e FAQ |
+| `src/pages/Pricing.tsx` | Inserir `TestimonialsCarousel` + `FAQAccordion` inline (remover botão "Ver FAQ") |
+
