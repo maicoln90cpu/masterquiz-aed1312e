@@ -1,43 +1,21 @@
+## Plano: Site Mode A/B (Fluxo Completo)
 
+### Etapa 1 ✅ — Infraestrutura Base
+- [x] Corrigir cards do AdminDashboard (remover queries redundantes de loadData)
+- [x] Criar tabela `site_settings` com `site_mode` (A ou B)
+- [x] Adicionar `payment_confirmed` em `user_subscriptions`
+- [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
+- [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-## Plano: Editor de Landing Page com suporte a Modo A e Modo B
+### Etapa 2 ✅ — Frontend Condicional (Landing + Pricing + Login)
+- [x] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
+- [x] HeroSection: CTA "Escolher meu plano" + navega para `/precos` no modo B
+- [x] FinalCTA: Navega para `/precos` no modo B
+- [x] Pricing: Esconder card Free no modo B
+- [x] Login: No modo B, após cadastro redirecionar para `/precos`
 
-### Problema
-A tabela `landing_content` não tem coluna `site_mode` — todas as entradas são usadas apenas no Modo A. Quando o admin troca para Modo B, o editor continua mostrando o mesmo conteúdo.
-
-### Solução
-
-#### 1. Migration: Adicionar `site_mode` à tabela `landing_content`
-- Adicionar coluna `site_mode TEXT DEFAULT 'A'` à tabela
-- Marcar todas as entradas existentes como `site_mode = 'A'`
-- Duplicar todas as 14 entradas hero com `site_mode = 'B'` e copy apropriada para o modo pago:
-  - `hero_cta_primary` → "Escolher meu plano"
-  - `hero_cta_secondary` → "Ver planos"
-  - `hero_trust_1` → "15 dias de garantia"
-  - `hero_trust_2` → "Acesso imediato"
-  - `hero_trust_3` → "Suporte prioritário"
-  - `hero_headline_main` → "Transforme cliques em decisões antes do checkout" (mesmo)
-  - `hero_badge` → "Plataforma completa de quizzes"
-  - Bullets ajustados para remover menção a "grátis"
-
-#### 2. Hook `useLandingContent` — filtrar por site_mode
-- Atualizar a query para receber o `siteMode` atual e filtrar `WHERE site_mode = ?`
-- Ou carregar tudo e filtrar no client (mais simples, cache único)
-
-#### 3. `LandingContentEditor.tsx` — toggle Modo A/B
-- Importar `useSiteMode` para mostrar o modo atual
-- Adicionar um seletor/tabs "Modo A" / "Modo B" no topo do editor
-- Filtrar `contentByCategory` pelo `site_mode` selecionado
-- Preview adapta-se ao modo selecionado
-
-#### 4. `HeroSection.tsx` — usar conteúdo do modo correto
-- O `useLandingContent` já filtra pelo `siteMode`, então o fallback condicional existente (`isModeB`) continua como backup mas o CMS assume prioridade
-
-### Arquivos a modificar
-| Arquivo | Ação |
-|---|---|
-| Migration SQL | Adicionar `site_mode`, duplicar entradas para Modo B |
-| `src/hooks/useLandingContent.ts` | Filtrar por `site_mode` |
-| `src/components/admin/LandingContentEditor.tsx` | Tabs Modo A/B, filtro |
-| `src/integrations/supabase/types.ts` | Adicionar `site_mode` ao tipo |
-
+### Etapa 3 ✅ — Auth Guards + Payment Flow
+- [x] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
+- [x] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
+- [x] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
+- [x] Modo B: Novos cadastros criam subscription com `payment_confirmed = false` (via trigger existente com default true)

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { useSiteMode, SiteMode } from "@/hooks/useSiteMode";
 
 interface LandingContent {
   id: string;
@@ -10,6 +11,7 @@ interface LandingContent {
   value_es: string | null;
   category: string | null;
   description: string | null;
+  site_mode: string;
   updated_at: string;
 }
 
@@ -23,26 +25,27 @@ const getValueField = (lang: string): keyof LandingContent => {
 
 export const useLandingContent = () => {
   const { i18n } = useTranslation();
+  const { siteMode } = useSiteMode();
   const queryClient = useQueryClient();
 
   const { data: allContent, isLoading, error } = useQuery({
-    queryKey: ['landing-content'],
+    queryKey: ['landing-content', siteMode],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('landing_content')
         .select('*')
+        .eq('site_mode', siteMode)
         .order('category', { ascending: true });
 
       if (error) throw error;
       return data as LandingContent[];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes - longer cache
-    gcTime: 30 * 60 * 1000, // Keep in memory for 30 minutes
-    refetchOnWindowFocus: false, // Don't refetch on tab focus
-    refetchOnMount: false, // Don't refetch on component mount if fresh
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
-  // Get content value by key with current language fallback
   const getContent = (key: string, fallback?: string): string => {
     if (!allContent) return fallback || '';
     
@@ -52,11 +55,9 @@ export const useLandingContent = () => {
     const valueField = getValueField(i18n.language);
     const value = item[valueField];
     
-    // Fallback chain: current lang -> pt -> fallback
     return value || item.value_pt || fallback || '';
   };
 
-  // Get all content as a key-value map
   const getContentMap = (): Record<string, string> => {
     if (!allContent) return {};
     
@@ -71,7 +72,6 @@ export const useLandingContent = () => {
     return map;
   };
 
-  // Get content grouped by category
   const getContentByCategory = (category: string): LandingContent[] => {
     if (!allContent) return [];
     return allContent.filter(c => c.category === category);
@@ -87,18 +87,23 @@ export const useLandingContent = () => {
   };
 };
 
-// Admin hook with mutation capabilities
-export const useLandingContentAdmin = () => {
+// Admin hook with mutation capabilities — accepts explicit mode override
+export const useLandingContentAdmin = (modeOverride?: SiteMode) => {
   const queryClient = useQueryClient();
 
   const { data: allContent, isLoading, error } = useQuery({
-    queryKey: ['landing-content'],
+    queryKey: ['landing-content-admin', modeOverride || 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('landing_content')
         .select('*')
         .order('category', { ascending: true });
 
+      if (modeOverride) {
+        query = query.eq('site_mode', modeOverride);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as LandingContent[];
     },
@@ -129,6 +134,7 @@ export const useLandingContentAdmin = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landing-content-admin'] });
       queryClient.invalidateQueries({ queryKey: ['landing-content'] });
     },
   });
@@ -142,6 +148,7 @@ export const useLandingContentAdmin = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landing-content-admin'] });
       queryClient.invalidateQueries({ queryKey: ['landing-content'] });
     },
   });
@@ -156,11 +163,11 @@ export const useLandingContentAdmin = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landing-content-admin'] });
       queryClient.invalidateQueries({ queryKey: ['landing-content'] });
     },
   });
 
-  // Group content by category for admin UI
   const contentByCategory = allContent?.reduce((acc, item) => {
     const category = item.category || 'general';
     if (!acc[category]) acc[category] = [];
