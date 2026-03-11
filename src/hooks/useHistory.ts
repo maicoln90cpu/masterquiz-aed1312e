@@ -50,7 +50,7 @@ export function useHistory<T>(
   const [future, setFuture] = useState<T[]>([]);
   
   // Refs para debounce
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingState = useRef<T | null>(null);
   const lastSavedState = useRef<T>(initialState);
 

@@ -49,7 +49,7 @@ export function RecoveryQueue() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState<ProcessingProgress | null>(null);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [cancelingSelected, setCancelingSelected] = useState(false);

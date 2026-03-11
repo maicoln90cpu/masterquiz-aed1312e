@@ -67,7 +67,7 @@ export function WhatsAppConnection() {
   const [testTemplateId, setTestTemplateId] = useState<string>("");
   const [sendingTest, setSendingTest] = useState(false);
   
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Limpar polling ao desmontar
   useEffect(() => {

@@ -36,7 +36,7 @@ export const BunnyVideoUploader = ({
   const [videoError, setVideoError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetrying, setAutoRetrying] = useState(false);
-  const autoRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { uploadToBunny, deleteFromBunny, uploading, progress, isTusUpload } = useBunnyUpload();
 
   // Cleanup auto-retry timeout on unmount
