@@ -8,6 +8,7 @@ import { LandingQuizDemo } from "./LandingQuizDemo";
 import { BlockIndicators } from "./BlockIndicators";
 import { useLandingContent } from "@/hooks/useLandingContent";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
+import { useSiteMode } from "@/hooks/useSiteMode";
 
 // Fallback content for instant render (no loading state) - PARADIGMA AUTO-CONVENCIMENTO
 const FALLBACK_CONTENT = {
