@@ -171,11 +171,12 @@ Deno.serve(async (req) => {
       }
 
       // Atualizar recovery_contacts se existir contato pendente
+      // Check for contacts that responded to our messages (include 'responded' to allow continued conversations)
       const { data: contacts } = await supabase
         .from('recovery_contacts')
         .select('id, status')
         .eq('phone_number', phoneNumber)
-        .in('status', ['sent', 'delivered', 'read'])
+        .in('status', ['sent', 'delivered', 'read', 'responded'])
         .order('created_at', { ascending: false })
         .limit(1);
 
