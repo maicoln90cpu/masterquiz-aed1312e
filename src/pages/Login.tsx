@@ -16,6 +16,7 @@ import { fetchIPWithCache } from "@/lib/ipCache";
 import { Eye, EyeOff, ArrowLeft, Loader2, XCircle } from "lucide-react";
 import { PhoneInput, isValidPhoneForCountry } from "@/components/ui/phone-input";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useSiteMode } from "@/hooks/useSiteMode";
 
 const Login = () => {
   const navigate = useNavigate();
