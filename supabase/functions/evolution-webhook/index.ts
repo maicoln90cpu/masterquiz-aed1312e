@@ -86,6 +86,90 @@ Deno.serve(async (req) => {
 
       console.log(`[EVOLUTION-WEBHOOK] Message from: ${phoneNumber}, text: ${messageText.substring(0, 50)}`);
 
+      // ========== CHECK "SAIR" OPT-OUT ==========
+      if (messageText.trim().toUpperCase() === 'SAIR') {
+        console.log(`[EVOLUTION-WEBHOOK] SAIR opt-out from ${phoneNumber}`);
+
+        // Find user_id from recovery_contacts
+        const { data: contactData } = await supabase
+          .from('recovery_contacts')
+          .select('user_id')
+          .eq('phone_number', phoneNumber)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // Insert into blacklist (upsert to avoid duplicates)
+        await supabase
+          .from('recovery_blacklist')
+          .upsert({
+            phone_number: phoneNumber,
+            user_id: contactData?.user_id || null,
+            reason: 'opt_out',
+            notes: 'Auto opt-out via SAIR',
+          }, { onConflict: 'phone_number', ignoreDuplicates: true });
+
+        // Update all recovery_contacts for this phone to opted_out
+        await supabase
+          .from('recovery_contacts')
+          .update({
+            status: 'failed' as any,
+            error_message: 'Usuário optou por sair (SAIR)',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('phone_number', phoneNumber)
+          .in('status', ['sent', 'delivered', 'read', 'queued', 'pending'] as any[]);
+
+        // Send confirmation message via Evolution API
+        try {
+          const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
+          const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
+          const { data: recoverySettings } = await supabase
+            .from('recovery_settings')
+            .select('instance_name')
+            .limit(1)
+            .maybeSingle();
+          const instanceName = recoverySettings?.instance_name || 'masterquizz';
+
+          if (evolutionUrl && evolutionKey) {
+            await fetch(`${evolutionUrl}/message/sendText/${instanceName}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': evolutionKey,
+              },
+              body: JSON.stringify({
+                number: phoneNumber,
+                text: '✅ Você foi removido da nossa lista de mensagens. Não enviaremos mais mensagens automáticas para este número.',
+              }),
+            });
+            console.log(`[EVOLUTION-WEBHOOK] Opt-out confirmation sent to ${phoneNumber}`);
+          }
+        } catch (confirmError) {
+          console.error('[EVOLUTION-WEBHOOK] Failed to send opt-out confirmation:', confirmError);
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, event: 'messages.upsert', action: 'opt_out', phone: phoneNumber }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // ========== CHECK BLACKLIST (skip AI for blacklisted numbers) ==========
+      const { data: blacklisted } = await supabase
+        .from('recovery_blacklist')
+        .select('id')
+        .eq('phone_number', phoneNumber)
+        .limit(1);
+
+      if (blacklisted && blacklisted.length > 0) {
+        console.log(`[EVOLUTION-WEBHOOK] Phone ${phoneNumber} is blacklisted, ignoring`);
+        return new Response(
+          JSON.stringify({ success: true, event: 'messages.upsert', ignored: 'blacklisted' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Atualizar recovery_contacts se existir contato pendente
       const { data: contacts } = await supabase
         .from('recovery_contacts')
@@ -112,7 +196,6 @@ Deno.serve(async (req) => {
 
         // Trigger AI reply for template responses
         try {
-          // Look up user_id from recovery_contacts
           const { data: contactData } = await supabase
             .from('recovery_contacts')
             .select('user_id')
@@ -160,7 +243,6 @@ Deno.serve(async (req) => {
 
         const phoneNumber = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
 
-        // Map WhatsApp status to our status
         let newStatus: string | null = null;
         if (status === 3 || status === 'DELIVERY_ACK') {
           newStatus = 'delivered';

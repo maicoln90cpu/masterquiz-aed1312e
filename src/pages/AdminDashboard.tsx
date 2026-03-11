@@ -609,7 +609,7 @@ export default function AdminDashboard() {
         />
       </Suspense>
       
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mt-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{t('admin.totalUsers')}</CardTitle>
@@ -622,11 +622,21 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin.quizzesCreated')}</CardTitle>
+            <CardTitle className="text-sm font-medium">Quizzes Express</CardTitle>
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.expressQuizzes}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Quizzes Manuais</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalQuizzes}</div>
+            <div className="text-2xl font-bold">{stats.manualQuizzes}</div>
           </CardContent>
         </Card>
 
