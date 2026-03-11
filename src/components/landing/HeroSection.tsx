@@ -195,11 +195,11 @@ export const HeroSection = () => {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={handleDemo}
+                onClick={isModeB ? () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }) : handleDemo}
                 className="text-lg group hover-scale-sm"
               >
                 <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-smooth" />
-                {c('hero_cta_secondary', 'landing.hero.ctaSecondary')}
+                {isModeB ? 'Ver planos' : c('hero_cta_secondary', 'landing.hero.ctaSecondary')}
               </Button>
             </div>
 

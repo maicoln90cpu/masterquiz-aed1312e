@@ -80,8 +80,10 @@ export default function Pricing() {
           </p>
         </div>
 
+        <GuaranteeBanner />
+
         {/* Plans Grid - using unified PricingCard */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${isModeB ? 'lg:grid-cols-3 max-w-5xl' : 'lg:grid-cols-4 max-w-7xl'} gap-6 mx-auto`}>
           {plans.map((plan, index) => {
             const isCurrentPlan = currentPlan === plan.planType;
             

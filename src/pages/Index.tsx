@@ -7,6 +7,7 @@ import { LogoCarousel } from "@/components/landing/LogoCarousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLandingPlans } from "@/hooks/useLandingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
+import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 // Lazy loaded components
 import { 

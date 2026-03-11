@@ -59,7 +59,7 @@ export const LandingHeader = () => {
         location: 'header'
       });
     }
-    navigate('/login');
+    navigate(isModeB ? '/precos' : '/login');
   };
 
   return (
