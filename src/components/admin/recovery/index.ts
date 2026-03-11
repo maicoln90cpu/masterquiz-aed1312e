@@ -6,4 +6,6 @@ export { RecoveryQueue } from './RecoveryQueue';
 export { RecoveryHistory } from './RecoveryHistory';
 export { RecoveryReports } from './RecoveryReports';
 export { RecoveryBlacklist } from './RecoveryBlacklist';
+export { WhatsAppAISettings } from './WhatsAppAISettings';
+export { WhatsAppAIConversations } from './WhatsAppAIConversations';
 export { CustomerRecovery } from './CustomerRecovery';

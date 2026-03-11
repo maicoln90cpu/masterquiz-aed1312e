@@ -1,4 +1,4 @@
-import { Smartphone, Settings, MessageSquare, Megaphone, ListOrdered, History, BarChart3, Ban } from "lucide-react";
+import { Smartphone, Settings, MessageSquare, Megaphone, ListOrdered, History, BarChart3, Ban, Bot, MessageCircle } from "lucide-react";
 import { AdminSubTabs } from "@/components/admin/AdminSubTabs";
 import { WhatsAppConnection } from "./WhatsAppConnection";
 import { RecoverySettings } from "./RecoverySettings";
@@ -8,6 +8,8 @@ import { RecoveryQueue } from "./RecoveryQueue";
 import { RecoveryHistory } from "./RecoveryHistory";
 import { RecoveryReports } from "./RecoveryReports";
 import { RecoveryBlacklist } from "./RecoveryBlacklist";
+import { WhatsAppAISettings } from "./WhatsAppAISettings";
+import { WhatsAppAIConversations } from "./WhatsAppAIConversations";
 
 export function CustomerRecovery() {
   return (
@@ -21,6 +23,8 @@ export function CustomerRecovery() {
         { id: 'history', label: 'Histórico', icon: <History className="h-4 w-4" />, color: 'cyan' },
         { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'pink' },
         { id: 'blacklist', label: 'Blacklist', icon: <Ban className="h-4 w-4" />, color: 'red' },
+        { id: 'ai-settings', label: 'Bot IA', icon: <Bot className="h-4 w-4" />, color: 'violet' },
+        { id: 'ai-conversations', label: 'Conversas IA', icon: <MessageCircle className="h-4 w-4" />, color: 'emerald' },
       ]}
       defaultTab="connection"
     >
@@ -34,6 +38,8 @@ export function CustomerRecovery() {
           {activeTab === 'history' && <RecoveryHistory />}
           {activeTab === 'reports' && <RecoveryReports />}
           {activeTab === 'blacklist' && <RecoveryBlacklist />}
+          {activeTab === 'ai-settings' && <WhatsAppAISettings />}
+          {activeTab === 'ai-conversations' && <WhatsAppAIConversations />}
         </>
       )}
     </AdminSubTabs>
