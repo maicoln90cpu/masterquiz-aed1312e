@@ -88,13 +88,20 @@ Deno.serve(async (req) => {
       rolesMap.get(r.user_id)!.push(r.role);
     }
 
-    // Build quiz count map and published count map
+    // Build quiz count map, published count map, and express/manual counts
     const quizCountMap = new Map<string, number>();
     const publishedCountMap = new Map<string, number>();
+    const expressQuizCountMap = new Map<string, number>();
+    const manualQuizCountMap = new Map<string, number>();
     for (const q of quizCountRes.data || []) {
       quizCountMap.set(q.user_id, (quizCountMap.get(q.user_id) || 0) + 1);
       if (q.is_public && q.status === "active") {
         publishedCountMap.set(q.user_id, (publishedCountMap.get(q.user_id) || 0) + 1);
+      }
+      if ((q as any).creation_source === 'express_auto') {
+        expressQuizCountMap.set(q.user_id, (expressQuizCountMap.get(q.user_id) || 0) + 1);
+      } else {
+        manualQuizCountMap.set(q.user_id, (manualQuizCountMap.get(q.user_id) || 0) + 1);
       }
     }
 
