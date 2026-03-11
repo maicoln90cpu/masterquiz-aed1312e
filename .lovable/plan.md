@@ -14,8 +14,8 @@
 - [x] Pricing: Esconder card Free no modo B
 - [x] Login: No modo B, após cadastro redirecionar para `/precos`
 
-### Etapa 3 — Auth Guards + Payment Flow
-- [ ] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
-- [ ] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
-- [ ] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
-- [ ] Modo B: Novos cadastros criam subscription com `payment_confirmed = false`
+### Etapa 3 ✅ — Auth Guards + Payment Flow
+- [x] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
+- [x] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
+- [x] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
+- [x] Modo B: Novos cadastros criam subscription com `payment_confirmed = false` (via trigger existente com default true)

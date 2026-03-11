@@ -178,7 +178,7 @@ export default function KiwifySuccess() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4 max-w-md px-4">
-          <Clock className="h-10 w-10 mx-auto text-yellow-500" />
+          <Clock className="h-10 w-10 mx-auto text-warning" />
           <h2 className="text-xl font-semibold">Pagamento em processamento</h2>
           <p className="text-muted-foreground">
             Seu pagamento está sendo processado pela Kiwify. Isso pode levar alguns minutos.
