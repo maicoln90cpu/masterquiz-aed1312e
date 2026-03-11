@@ -145,13 +145,42 @@ export function RecoveryCampaigns() {
         supabase
           .from('recovery_templates')
           .select('id, name, category, is_active')
-          // Sem filtro is_active — admin pode usar qualquer template em campanhas manuais
       ]);
 
       if (campaignsRes.error) throw campaignsRes.error;
       if (templatesRes.error) throw templatesRes.error;
 
-      setCampaigns(campaignsRes.data || []);
+      const rawCampaigns = campaignsRes.data || [];
+
+      // Fetch dynamic counters for each campaign from recovery_contacts
+      const campaignIds = rawCampaigns.map(c => c.id);
+      if (campaignIds.length > 0) {
+        const { data: contacts } = await supabase
+          .from('recovery_contacts')
+          .select('campaign_id, status')
+          .in('campaign_id', campaignIds);
+
+        if (contacts) {
+          const counters: Record<string, Record<string, number>> = {};
+          for (const c of contacts) {
+            if (!c.campaign_id) continue;
+            if (!counters[c.campaign_id]) counters[c.campaign_id] = {};
+            counters[c.campaign_id][c.status] = (counters[c.campaign_id][c.status] || 0) + 1;
+          }
+
+          for (const campaign of rawCampaigns) {
+            const c = counters[campaign.id] || {};
+            campaign.sent_count = (c.sent || 0) + (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
+            campaign.delivered_count = (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
+            campaign.responded_count = c.responded || 0;
+            campaign.failed_count = c.failed || 0;
+            campaign.queued_count = (c.pending || 0) + (c.queued || 0);
+            campaign.total_targets = Object.values(c).reduce((a, b) => a + b, 0);
+          }
+        }
+      }
+
+      setCampaigns(rawCampaigns);
       setTemplates(templatesRes.data || []);
     } catch (error) {
       console.error('Error loading campaigns:', error);

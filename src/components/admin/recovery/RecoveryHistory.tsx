@@ -88,7 +88,6 @@ export function RecoveryHistory() {
           reactivated,
           reactivated_at,
           created_at,
-          profiles:user_id (full_name),
           recovery_templates:template_id (name),
           recovery_campaigns:campaign_id (name)
         `, { count: 'exact' })
@@ -106,9 +105,29 @@ export function RecoveryHistory() {
 
       if (error) throw error;
 
-      setHistory((data as HistoryItem[]) || []);
+      // Fetch profiles separately to avoid FK join issues
+      const userIds = [...new Set((data || []).map(d => d.user_id))];
+      let profilesMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
+        if (profiles) {
+          profilesMap = Object.fromEntries(
+            profiles.map(p => [p.id, p.full_name || ''])
+          );
+        }
+      }
+
+      const enrichedData = (data || []).map(item => ({
+        ...item,
+        profiles: { full_name: profilesMap[item.user_id] || null },
+      }));
+
+      setHistory(enrichedData as HistoryItem[]);
       setTotalCount(count || 0);
-      setSelectedIds(new Set()); // Reset selection on reload
+      setSelectedIds(new Set());
     } catch (error) {
       console.error('Error loading history:', error);
       toast.error('Erro ao carregar histórico');
