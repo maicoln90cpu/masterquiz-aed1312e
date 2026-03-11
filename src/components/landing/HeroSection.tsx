@@ -209,13 +209,25 @@ export const HeroSection = () => {
                 isVisible ? 'opacity-100' : 'opacity-0'
               }`}
             >
-              <span className="flex items-center gap-2">
-                🔒 {c('hero_trust_1', 'landing.hero.trust1')}
-              </span>
-              <span className="hidden sm:inline">•</span>
-              <span>{c('hero_trust_2', 'landing.hero.trust2')}</span>
-              <span className="hidden sm:inline">•</span>
-              <span>{c('hero_trust_3', 'landing.hero.trust3')}</span>
+              {isModeB ? (
+                <>
+                  <span className="flex items-center gap-2">🛡️ 15 dias de garantia</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>⚡ Acesso imediato</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>🎯 Suporte prioritário</span>
+                </>
+              ) : (
+                <>
+                  <span className="flex items-center gap-2">
+                    🔒 {c('hero_trust_1', 'landing.hero.trust1')}
+                  </span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>{c('hero_trust_2', 'landing.hero.trust2')}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>{c('hero_trust_3', 'landing.hero.trust3')}</span>
+                </>
+              )}
             </div>
           </div>
 
