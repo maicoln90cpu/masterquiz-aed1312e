@@ -14,6 +14,7 @@ export const LandingHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
+  const { isModeB } = useSiteMode();
 
   useEffect(() => {
     const handleScroll = () => {
