@@ -69,6 +69,7 @@ export const HeroSection = () => {
   // Get CTA text - prioritize A/B test, then CMS, then fallback
   const getCtaText = () => {
     if (abTestContent?.text) return abTestContent.text;
+    if (isModeB) return 'Escolher meu plano';
     return c('hero_cta_primary', 'landing.hero.ctaPrimary');
   };
 
