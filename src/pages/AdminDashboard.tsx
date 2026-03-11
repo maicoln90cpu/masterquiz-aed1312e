@@ -295,7 +295,9 @@ export default function AdminDashboard() {
         totalUsers: usersCountResult.count || 0,
         totalQuizzes: quizzesCountResult.count || 0,
         totalResponses: responsesCountResult.count || 0,
-        activeUsers: 0
+        activeUsers: 0,
+        expressQuizzes: 0,
+        manualQuizzes: 0,
       });
 
       setValidationRequests(requestsResult.data || []);
