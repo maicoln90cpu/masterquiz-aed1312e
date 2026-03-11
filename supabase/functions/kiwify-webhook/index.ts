@@ -91,6 +91,28 @@ Deno.serve(async (req) => {
 
     await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'success', error_message: null, provider: 'kiwify' });
 
+    // Mark A/B test conversion if applicable
+    if (isActivationEvent(evento)) {
+      try {
+        // Find any landing_ab_sessions for this user's email and mark as converted
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('email', buyerEmail).maybeSingle();
+        if (profile) {
+          // Update any recent unconverted sessions (last 7 days)
+          await supabaseAdmin
+            .from('landing_ab_sessions')
+            .update({ 
+              converted: true, 
+              converted_at: new Date().toISOString(),
+              conversion_type: 'subscription'
+            })
+            .eq('converted', false)
+            .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        }
+      } catch (abError) {
+        console.error('[KIWIFY] A/B conversion tracking error (non-fatal):', abError);
+      }
+    }
+
     return new Response(JSON.stringify({ received: true, action: actionTaken, plan: newPlanType, status: newStatus }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
