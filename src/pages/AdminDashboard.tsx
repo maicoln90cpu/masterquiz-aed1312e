@@ -274,6 +274,7 @@ export default function AdminDashboard() {
         })
       ]);
 
+      // Stats are derived from allUsersData (service_role) when available, fallback to RLS-limited counts
       setStats({
         totalUsers: usersCountResult.count || 0,
         totalQuizzes: quizzesCountResult.count || 0,
