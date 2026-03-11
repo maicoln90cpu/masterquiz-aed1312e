@@ -208,11 +208,15 @@ export default function AdminDashboard() {
       const totalUsers = allUsersData.length;
       const totalQuizzes = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.quiz_count || 0), 0);
       const totalResponses = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.lead_count || 0), 0);
+      const expressQuizzes = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.express_quiz_count || 0), 0);
+      const manualQuizzes = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.manual_quiz_count || 0), 0);
       setStats(prev => ({
         ...prev,
         totalUsers,
         totalQuizzes,
         totalResponses,
+        expressQuizzes,
+        manualQuizzes,
       }));
     }
   }, [allUsersData]);
