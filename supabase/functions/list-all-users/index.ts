@@ -152,6 +152,8 @@ Deno.serve(async (req) => {
         published_count: publishedCountMap.get(u.id) || 0,
         quizzes_with_leads: quizzesWithLeadsMap.get(u.id)?.size || 0,
         lead_count: leadCountMap.get(u.id) || 0,
+        express_quiz_count: expressQuizCountMap.get(u.id) || 0,
+        manual_quiz_count: manualQuizCountMap.get(u.id) || 0,
       },
     }));
 
