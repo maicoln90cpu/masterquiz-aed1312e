@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
-import { ReactNode, lazy, Suspense, useEffect } from "react";
+import { ReactNode, lazy, Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -19,6 +19,8 @@ import { useProductionWebVitals } from "@/hooks/useWebVitals";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useAccountCreatedEvent } from "@/hooks/useAccountCreatedEvent";
 import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
+import { useSiteMode } from "@/hooks/useSiteMode";
+import { supabase } from "@/integrations/supabase/client";
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
@@ -128,6 +130,9 @@ const RequireAuth = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { t } = useTranslation();
+  const { isModeB, isLoading: modeLoading } = useSiteMode();
+  const [paymentChecked, setPaymentChecked] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(true);
   
   // ✅ ITEM 4: Limpar cache ao fazer logout
   useInvalidateOnLogout();
@@ -144,8 +149,49 @@ const RequireAuth = ({ children }: { children: ReactNode }) => {
       navigate('/login');
     }
   }, [loading, user, navigate, t]);
+
+  // ✅ ETAPA 3: No Modo B, verificar payment_confirmed
+  useEffect(() => {
+    if (!user || loading || modeLoading) return;
+    if (!isModeB) {
+      setPaymentChecked(true);
+      setPaymentConfirmed(true);
+      return;
+    }
+
+    const checkPayment = async () => {
+      const { data } = await supabase
+        .from('user_subscriptions')
+        .select('payment_confirmed, plan_type')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Admin/master_admin plans bypass payment check
+      if (data?.plan_type === 'admin') {
+        setPaymentConfirmed(true);
+      } else {
+        setPaymentConfirmed(data?.payment_confirmed ?? false);
+      }
+      setPaymentChecked(true);
+    };
+
+    checkPayment();
+  }, [user, loading, isModeB, modeLoading]);
+
+  // ✅ Redirect unpaid users to checkout in Mode B
+  useEffect(() => {
+    if (!paymentChecked || !isModeB) return;
+    if (!paymentConfirmed) {
+      // Don't redirect if already on checkout or kiwify pages
+      const path = window.location.pathname;
+      if (path !== '/checkout' && !path.startsWith('/kiwify')) {
+        toast.error(t('checkout.paymentRequired', 'Pagamento necessário para acessar a plataforma'));
+        navigate('/checkout');
+      }
+    }
+  }, [paymentChecked, paymentConfirmed, isModeB, navigate, t]);
   
-  if (loading || !user) {
+  if (loading || !user || (isModeB && !paymentChecked)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
