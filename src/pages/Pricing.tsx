@@ -111,18 +111,19 @@ export default function Pricing() {
           })}
         </div>
 
+        {/* Testimonials Section */}
+        <div className="mt-16">
+          <TestimonialsCarousel />
+        </div>
+
         {/* FAQ Section */}
-        <div className="mt-16 text-center">
-          <p className="text-muted-foreground mb-4">
-            {t('pricing.questionsAboutPlans')}
-          </p>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/faq')}
-            className="gap-2"
-          >
-            {t('pricing.viewFAQ')}
-          </Button>
+        <div className="mt-16">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-3">
+              {t('landing.faq.title')}
+            </h2>
+          </div>
+          <FAQAccordion />
         </div>
       </div>
     </main>

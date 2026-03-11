@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLandingPlans } from "@/hooks/useLandingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
+import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 // Lazy loaded components
 import { 
