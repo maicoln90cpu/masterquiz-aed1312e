@@ -134,3 +134,6 @@ verify_jwt = false
 
 [functions.regenerate-blog-asset]
 verify_jwt = false
+
+[functions.whatsapp-ai-reply]
+verify_jwt = false
