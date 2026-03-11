@@ -64,6 +64,13 @@ const DeferredSection = ({ children, className, id, fallbackHeight = "400px" }: 
 const Index = () => {
   const { t } = useTranslation();
   const { plans: dynamicPlans, isLoading: plansLoading } = useLandingPlans();
+  const { isModeB } = useSiteMode();
+
+  // Filter out free plan in Mode B
+  const plans = useMemo(() => {
+    if (!isModeB) return dynamicPlans;
+    return dynamicPlans.filter(p => p.planType !== 'free');
+  }, [dynamicPlans, isModeB]);
 
   useEffect(() => {
     document.title = "MasterQuizz - Quizzes que qualificam leads antes do checkout";
