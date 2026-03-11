@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 
 import { useTranslation } from "react-i18next";
 import { LandingHeader } from "@/components/landing/LandingHeader";
@@ -6,6 +6,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { LogoCarousel } from "@/components/landing/LogoCarousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLandingPlans } from "@/hooks/useLandingPlans";
+import { useSiteMode } from "@/hooks/useSiteMode";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 // Lazy loaded components
 import { 
