@@ -74,9 +74,15 @@ Deno.serve(async (req) => {
     const quizLimit = planData?.quiz_limit || (newPlanType === 'free' ? 3 : 10);
     const responseLimit = planData?.response_limit || (newPlanType === 'free' ? 100 : 1000);
 
-    const { error: updateError } = await supabaseAdmin.from('user_subscriptions').update({
+    // ✅ ETAPA 3: Setar payment_confirmed=true em ativações
+    const updatePayload: Record<string, any> = {
       plan_type: newPlanType, status: newStatus, quiz_limit: quizLimit, response_limit: responseLimit, updated_at: new Date().toISOString()
-    }).eq('user_id', user.id);
+    };
+    if (isActivationEvent(evento)) {
+      updatePayload.payment_confirmed = true;
+    }
+
+    const { error: updateError } = await supabaseAdmin.from('user_subscriptions').update(updatePayload).eq('user_id', user.id);
 
     if (updateError) {
       await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'error', error_message: updateError.message, provider: 'kiwify' });
