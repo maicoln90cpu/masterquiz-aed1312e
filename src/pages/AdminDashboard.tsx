@@ -67,7 +67,9 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalQuizzes: 0,
     totalResponses: 0,
-    activeUsers: 0
+    activeUsers: 0,
+    expressQuizzes: 0,
+    manualQuizzes: 0,
   });
   const [validationRequests, setValidationRequests] = useState<any[]>([]);
   const [administrators, setAdministrators] = useState<any[]>([]);
