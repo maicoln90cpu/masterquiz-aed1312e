@@ -67,7 +67,9 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalQuizzes: 0,
     totalResponses: 0,
-    activeUsers: 0
+    activeUsers: 0,
+    expressQuizzes: 0,
+    manualQuizzes: 0,
   });
   const [validationRequests, setValidationRequests] = useState<any[]>([]);
   const [administrators, setAdministrators] = useState<any[]>([]);
@@ -206,11 +208,15 @@ export default function AdminDashboard() {
       const totalUsers = allUsersData.length;
       const totalQuizzes = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.quiz_count || 0), 0);
       const totalResponses = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.lead_count || 0), 0);
+      const expressQuizzes = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.express_quiz_count || 0), 0);
+      const manualQuizzes = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.manual_quiz_count || 0), 0);
       setStats(prev => ({
         ...prev,
         totalUsers,
         totalQuizzes,
         totalResponses,
+        expressQuizzes,
+        manualQuizzes,
       }));
     }
   }, [allUsersData]);
@@ -289,7 +295,9 @@ export default function AdminDashboard() {
         totalUsers: usersCountResult.count || 0,
         totalQuizzes: quizzesCountResult.count || 0,
         totalResponses: responsesCountResult.count || 0,
-        activeUsers: 0
+        activeUsers: 0,
+        expressQuizzes: 0,
+        manualQuizzes: 0,
       });
 
       setValidationRequests(requestsResult.data || []);
@@ -603,7 +611,7 @@ export default function AdminDashboard() {
         />
       </Suspense>
       
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mt-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{t('admin.totalUsers')}</CardTitle>
@@ -616,11 +624,21 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin.quizzesCreated')}</CardTitle>
+            <CardTitle className="text-sm font-medium">Quizzes Express</CardTitle>
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.expressQuizzes}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Quizzes Manuais</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalQuizzes}</div>
+            <div className="text-2xl font-bold">{stats.manualQuizzes}</div>
           </CardContent>
         </Card>
 

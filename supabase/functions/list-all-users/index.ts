@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       adminClient.from("profiles").select("*").in("id", userIds),
       adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
       adminClient.from("user_roles").select("*").in("user_id", userIds),
-      adminClient.from("quizzes").select("user_id, id, is_public, status").in("user_id", userIds),
+      adminClient.from("quizzes").select("user_id, id, is_public, status, creation_source").in("user_id", userIds),
       adminClient.from("quiz_responses").select("quiz_id, id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
       adminClient.from("audit_logs").select("user_id, resource_id").eq("action", "quiz:deleted").in("user_id", userIds),
       adminClient.from("quiz_responses").select("quiz_id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
@@ -88,13 +88,20 @@ Deno.serve(async (req) => {
       rolesMap.get(r.user_id)!.push(r.role);
     }
 
-    // Build quiz count map and published count map
+    // Build quiz count map, published count map, and express/manual counts
     const quizCountMap = new Map<string, number>();
     const publishedCountMap = new Map<string, number>();
+    const expressQuizCountMap = new Map<string, number>();
+    const manualQuizCountMap = new Map<string, number>();
     for (const q of quizCountRes.data || []) {
       quizCountMap.set(q.user_id, (quizCountMap.get(q.user_id) || 0) + 1);
       if (q.is_public && q.status === "active") {
         publishedCountMap.set(q.user_id, (publishedCountMap.get(q.user_id) || 0) + 1);
+      }
+      if ((q as any).creation_source === 'express_auto') {
+        expressQuizCountMap.set(q.user_id, (expressQuizCountMap.get(q.user_id) || 0) + 1);
+      } else {
+        manualQuizCountMap.set(q.user_id, (manualQuizCountMap.get(q.user_id) || 0) + 1);
       }
     }
 
@@ -145,6 +152,8 @@ Deno.serve(async (req) => {
         published_count: publishedCountMap.get(u.id) || 0,
         quizzes_with_leads: quizzesWithLeadsMap.get(u.id)?.size || 0,
         lead_count: leadCountMap.get(u.id) || 0,
+        express_quiz_count: expressQuizCountMap.get(u.id) || 0,
+        manual_quiz_count: manualQuizCountMap.get(u.id) || 0,
       },
     }));
 

@@ -32,6 +32,20 @@ Deno.serve(async (req) => {
 
     console.log(`[WHATSAPP-AI] Processing message from ${phone_number}: "${message_text.substring(0, 50)}"`);
 
+    // 0. Check blacklist — skip if number is blacklisted
+    const { data: blacklisted } = await supabase
+      .from('recovery_blacklist')
+      .select('id')
+      .eq('phone_number', phone_number)
+      .limit(1);
+
+    if (blacklisted && blacklisted.length > 0) {
+      console.log(`[WHATSAPP-AI] Phone ${phone_number} is blacklisted, skipping`);
+      return new Response(
+        JSON.stringify({ success: false, reason: 'blacklisted' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     // 1. Check if AI is enabled
     const { data: aiSettings } = await supabase
       .from('whatsapp_ai_settings')
