@@ -88,7 +88,7 @@ export const HeroSection = () => {
         ab_variant: abVariant || 'none'
       });
     }
-    navigate('/login');
+    navigate(isModeB ? '/precos' : '/login');
   };
 
   const handleDemo = () => {
