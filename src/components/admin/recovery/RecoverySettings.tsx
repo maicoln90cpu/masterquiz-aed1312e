@@ -173,35 +173,20 @@ export function RecoverySettings() {
         </CardContent>
       </Card>
 
-      {/* Gatilhos */}
+      {/* Retentativas */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Gatilhos de Inatividade
+            Retentativas de Falhas
           </CardTitle>
           <CardDescription>
-            Configure quando um usuário entra na fila de recuperação
+            Configure como o sistema lida com mensagens que falharam. 
+            Os dias de inatividade são configurados individualmente em cada template.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="inactivity_days">Dias para Entrar na Fila</Label>
-              <Input
-                id="inactivity_days"
-                type="number"
-                min={1}
-                max={365}
-                value={settings.inactivity_days_trigger}
-                onChange={(e) => updateField('inactivity_days_trigger', parseInt(e.target.value) || 15)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Após X dias sem login, o usuário entra na fila de recuperação. 
-                O template usado será escolhido automaticamente baseado nos dias de inatividade configurados em cada template.
-              </p>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="retry_hours">Re-tentar Falhas Após (horas)</Label>
               <Input
@@ -216,22 +201,21 @@ export function RecoverySettings() {
                 Tempo de espera antes de reenviar mensagens que falharam
               </p>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="max_retry">Máximo de Tentativas</Label>
-            <Input
-              id="max_retry"
-              type="number"
-              min={1}
-              max={10}
-              value={settings.max_retry_attempts}
-              onChange={(e) => updateField('max_retry_attempts', parseInt(e.target.value) || 3)}
-              className="max-w-[200px]"
-            />
-            <p className="text-xs text-muted-foreground">
-              Número máximo de tentativas para mensagens que falharam
-            </p>
+            <div className="space-y-2">
+              <Label htmlFor="max_retry">Máximo de Tentativas</Label>
+              <Input
+                id="max_retry"
+                type="number"
+                min={1}
+                max={10}
+                value={settings.max_retry_attempts}
+                onChange={(e) => updateField('max_retry_attempts', parseInt(e.target.value) || 3)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Número máximo de tentativas para mensagens que falharam
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

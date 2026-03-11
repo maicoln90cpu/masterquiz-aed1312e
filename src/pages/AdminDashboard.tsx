@@ -1010,6 +1010,9 @@ export default function AdminDashboard() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{user.profile?.full_name || 'Sem nome'}</p>
                         <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          📅 {new Date(user.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        </p>
                         <div className="flex items-center gap-3 mt-2 text-sm">
                           <span><FileText className="h-3 w-3 inline mr-1" />{user.stats?.quiz_count || 0}</span>
                           <span><Users className="h-3 w-3 inline mr-1" />{user.stats?.lead_count || 0}</span>
