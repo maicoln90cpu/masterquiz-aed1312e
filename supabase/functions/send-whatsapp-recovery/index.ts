@@ -61,7 +61,6 @@ Deno.serve(async (req) => {
 
     let phone = contact.phone_number.replace(/\D/g, '');
     if (phone.startsWith('0')) phone = phone.substring(1);
-    // Se já começa com 55 e tem 12-13 dígitos, já tem DDI
     let formattedPhone = phone;
     if (phone.startsWith('55') && (phone.length === 12 || phone.length === 13)) {
       formattedPhone = phone;
@@ -86,6 +85,17 @@ Deno.serve(async (req) => {
 
     await supabase.from('recovery_contacts').update({ status: 'sent', sent_at: new Date().toISOString(), message_sent: msg, template_id: template.id, evolution_message_id: data.key?.id }).eq('id', contact.id);
     await supabase.from('recovery_templates').update({ usage_count: (template.usage_count || 0) + 1 }).eq('id', template.id);
+
+    // Increment sent_count on campaign if linked
+    if (contact.campaign_id) {
+      const { data: camp } = await supabase.from('recovery_campaigns').select('sent_count').eq('id', contact.campaign_id).single();
+      if (camp) {
+        await supabase.from('recovery_campaigns').update({ 
+          sent_count: (camp.sent_count || 0) + 1,
+          updated_at: new Date().toISOString()
+        }).eq('id', contact.campaign_id);
+      }
+    }
 
     return new Response(JSON.stringify({ message: 'Enviada', sent: 1, phone: formattedPhone, template: template.name }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
