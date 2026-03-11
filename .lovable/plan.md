@@ -1,27 +1,19 @@
+## Plano: Site Mode A/B (Fluxo Completo)
 
+### Etapa 1 ✅ — Infraestrutura Base
+- [x] Corrigir cards do AdminDashboard (remover queries redundantes de loadData)
+- [x] Criar tabela `site_settings` com `site_mode` (A ou B)
+- [x] Adicionar `payment_confirmed` em `user_subscriptions`
+- [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
+- [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-## Plano: Re-disparar AccountCreated dos últimos 5 dias
+### Etapa 2 — Frontend Condicional (Landing + Pricing + Login)
+- [ ] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
+- [ ] Pricing: Esconder card Free no modo B
+- [ ] Login: No modo B, após cadastro redirecionar para `/checkout`
 
-### Problema
-O GTM estava configurado com evento divergente e não capturou os disparos de `AccountCreated` dos últimos 5 dias.
-
-### Solução
-Resetar a flag `account_created_event_sent = false` nos perfis criados nos últimos 5 dias. O hook `useAccountCreatedEvent` já possui lógica retroativa — ao detectar `account_created_event_sent = false`, re-dispara o evento automaticamente no próximo login do usuário.
-
-### Execução
-Uma única query SQL via insert tool:
-
-```sql
-UPDATE profiles
-SET account_created_event_sent = false
-WHERE created_at >= now() - interval '5 days';
-```
-
-### Comportamento esperado
-- Cada usuário dos últimos 5 dias, ao logar novamente, terá o evento `AccountCreated` re-disparado no dataLayer
-- O hook marca `account_created_event_sent = true` após o disparo, evitando duplicação futura
-- O `sessionStorage` guard é por sessão, então basta o usuário abrir uma nova sessão
-
-### Arquivos modificados
-Nenhum arquivo de código precisa ser alterado — apenas o UPDATE no banco.
-
+### Etapa 3 — Auth Guards + Payment Flow
+- [ ] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
+- [ ] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
+- [ ] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
+- [ ] Modo B: Novos cadastros criam subscription com `payment_confirmed = false`

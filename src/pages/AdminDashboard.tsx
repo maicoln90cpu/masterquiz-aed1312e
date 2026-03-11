@@ -27,6 +27,7 @@ import { SystemHealthAlert } from "@/components/admin/SystemHealthAlert";
 import logo from "@/assets/logo.png";
 import { useQuery } from "@tanstack/react-query";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMode";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -61,6 +62,8 @@ export default function AdminDashboard() {
   const { t } = useTranslation();
   const { isAdmin } = useUserRole();
   const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
+  const { siteMode, isModeB } = useSiteMode();
+  const { updateSiteMode } = useUpdateSiteMode();
   const [loading, setLoading] = useState(true);
   const [openTicketsCount, setOpenTicketsCount] = useState(0);
   const [stats, setStats] = useState({
@@ -250,26 +253,8 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      // Run count queries in parallel for better performance
-      const [usersCountResult, quizzesCountResult, responsesCountResult, requestsResult, respondentsResult] = await Promise.all([
-        measureQuery('user-subscriptions-count', async () => {
-          const result = await supabase
-            .from('user_subscriptions')
-            .select('*', { count: 'exact', head: true });
-          return result;
-        }),
-        measureQuery('quizzes-count', async () => {
-          const result = await supabase
-            .from('quizzes')
-            .select('*', { count: 'exact', head: true });
-          return result;
-        }),
-        measureQuery('quiz-responses-count', async () => {
-          const result = await supabase
-            .from('quiz_responses')
-            .select('*', { count: 'exact', head: true });
-          return result;
-        }),
+      // Run only non-redundant queries (stats come from allUsersData via service_role)
+      const [requestsResult, respondentsResult] = await Promise.all([
         measureQuery('validation-requests', async () => {
           try {
             const result = await supabase
@@ -289,16 +274,6 @@ export default function AdminDashboard() {
           return { data: result.data?.respondents || [], error: null };
         })
       ]);
-
-      // Stats are derived from allUsersData (service_role) when available, fallback to RLS-limited counts
-      setStats({
-        totalUsers: usersCountResult.count || 0,
-        totalQuizzes: quizzesCountResult.count || 0,
-        totalResponses: responsesCountResult.count || 0,
-        activeUsers: 0,
-        expressQuizzes: 0,
-        manualQuizzes: 0,
-      });
 
       setValidationRequests(requestsResult.data || []);
 
@@ -1347,6 +1322,41 @@ export default function AdminDashboard() {
                 placeholder="Digite a mensagem que será exibida aos usuários..."
                 rows={4}
               />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Modo do Site (A/B Global)</Label>
+              <p className="text-sm text-muted-foreground">
+                <strong>Modo A:</strong> Fluxo atual (Free + Paid). <strong>Modo B:</strong> Apenas planos pagos, sem plano gratuito.
+              </p>
+            </div>
+            <Select 
+              value={siteMode} 
+              onValueChange={async (value: string) => {
+                try {
+                  await updateSiteMode(value as SiteMode);
+                  toast.success(`Modo do site alterado para ${value}`);
+                } catch (err) {
+                  toast.error('Erro ao alterar modo do site');
+                }
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="A">Modo A — Free + Paid</SelectItem>
+                <SelectItem value="B">Modo B — Apenas Pago</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isModeB && (
+            <div className="bg-accent/50 p-3 rounded-md text-sm text-accent-foreground">
+              ⚠️ <strong>Modo B ativo:</strong> O plano gratuito está oculto. Novos usuários serão direcionados ao checkout antes de acessar o dashboard.
             </div>
           )}
         </div>

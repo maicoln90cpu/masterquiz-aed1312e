@@ -1795,6 +1795,27 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          id: string
+          site_mode: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          site_mode?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          site_mode?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           ai_generations_per_month: number | null
@@ -2152,6 +2173,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          payment_confirmed: boolean | null
           plan_type: Database["public"]["Enums"]["plan_type"]
           quiz_limit: number
           response_limit: number
@@ -2162,6 +2184,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          payment_confirmed?: boolean | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
           quiz_limit?: number
           response_limit?: number
@@ -2172,6 +2195,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          payment_confirmed?: boolean | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
           quiz_limit?: number
           response_limit?: number
