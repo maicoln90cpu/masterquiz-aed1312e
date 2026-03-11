@@ -20,6 +20,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useAccountCreatedEvent } from "@/hooks/useAccountCreatedEvent";
 import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 import { useSiteMode } from "@/hooks/useSiteMode";
+import { supabase } from "@/integrations/supabase/client";
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
