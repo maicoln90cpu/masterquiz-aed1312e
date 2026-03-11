@@ -22,6 +22,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { checkRateLimit } = useRateLimit();
+  const { isModeB } = useSiteMode();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
