@@ -7,6 +7,7 @@ import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSiteMode } from '@/hooks/useSiteMode';
 
 export const LandingHeader = () => {
   const navigate = useNavigate();
