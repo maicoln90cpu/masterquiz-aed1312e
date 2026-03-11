@@ -198,10 +198,20 @@ export default function AdminDashboard() {
     refetchOnWindowFocus: false,
   });
 
-  // Update administrators when query data changes
+  // Update administrators and derive accurate stats from allUsersData (service_role)
   useEffect(() => {
     if (allUsersData) {
       setAdministrators(allUsersData);
+      // Derive accurate global stats from service_role data
+      const totalUsers = allUsersData.length;
+      const totalQuizzes = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.quiz_count || 0), 0);
+      const totalResponses = allUsersData.reduce((sum: number, u: any) => sum + (u.stats?.lead_count || 0), 0);
+      setStats(prev => ({
+        ...prev,
+        totalUsers,
+        totalQuizzes,
+        totalResponses,
+      }));
     }
   }, [allUsersData]);
 
