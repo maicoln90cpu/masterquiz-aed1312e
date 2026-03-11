@@ -574,10 +574,12 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <GuaranteeBanner />
+
+            <div className={`grid md:grid-cols-2 ${isModeB ? 'lg:grid-cols-3 max-w-5xl' : 'lg:grid-cols-4 max-w-7xl'} gap-6 mx-auto`}>
               {plansLoading ? (
                 <>
-                  {[1, 2, 3, 4].map((i) => (
+                  {(isModeB ? [1, 2, 3] : [1, 2, 3, 4]).map((i) => (
                     <Skeleton key={i} className="h-[550px] w-full" />
                   ))}
                 </>
