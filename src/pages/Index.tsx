@@ -221,8 +221,8 @@ const Index = () => {
   ];
 
   const allPlans = dynamicPlans.length > 0 ? dynamicPlans : fallbackPlans;
-  // Filter out free plan in Mode B
-  const plans = isModeB ? allPlans.filter(p => p.planType !== 'free') : allPlans;
+  // Filter out free plan in Mode B (check both planType and id)
+  const plans = isModeB ? allPlans.filter(p => (p as any).planType !== 'free' && p.id !== 'free') : allPlans;
 
   return (
     <div className="min-h-screen bg-background">
