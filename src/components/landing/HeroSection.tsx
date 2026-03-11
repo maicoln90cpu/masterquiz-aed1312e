@@ -195,11 +195,11 @@ export const HeroSection = () => {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={handleDemo}
+                onClick={isModeB ? () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }) : handleDemo}
                 className="text-lg group hover-scale-sm"
               >
                 <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-smooth" />
-                {c('hero_cta_secondary', 'landing.hero.ctaSecondary')}
+                {isModeB ? 'Ver planos' : c('hero_cta_secondary', 'landing.hero.ctaSecondary')}
               </Button>
             </div>
 
@@ -209,13 +209,25 @@ export const HeroSection = () => {
                 isVisible ? 'opacity-100' : 'opacity-0'
               }`}
             >
-              <span className="flex items-center gap-2">
-                🔒 {c('hero_trust_1', 'landing.hero.trust1')}
-              </span>
-              <span className="hidden sm:inline">•</span>
-              <span>{c('hero_trust_2', 'landing.hero.trust2')}</span>
-              <span className="hidden sm:inline">•</span>
-              <span>{c('hero_trust_3', 'landing.hero.trust3')}</span>
+              {isModeB ? (
+                <>
+                  <span className="flex items-center gap-2">🛡️ 15 dias de garantia</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>⚡ Acesso imediato</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>🎯 Suporte prioritário</span>
+                </>
+              ) : (
+                <>
+                  <span className="flex items-center gap-2">
+                    🔒 {c('hero_trust_1', 'landing.hero.trust1')}
+                  </span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>{c('hero_trust_2', 'landing.hero.trust2')}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>{c('hero_trust_3', 'landing.hero.trust3')}</span>
+                </>
+              )}
             </div>
           </div>
 

@@ -74,6 +74,26 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
       // Planos pagos -> Kiwify
       if (plan.kiwifyCheckoutUrl) {
         console.log('[PricingCard] Redirecting to Kiwify:', plan.kiwifyCheckoutUrl);
+        
+        // Save A/B context for conversion tracking
+        try {
+          const abSessionId = localStorage.getItem('ab_session_id');
+          const abVariant = localStorage.getItem('ab_variant');
+          const abTestId = localStorage.getItem('ab_test_id');
+          if (abSessionId) {
+            localStorage.setItem('ab_conversion_pending', JSON.stringify({
+              session_id: abSessionId,
+              variant: abVariant,
+              test_id: abTestId,
+              plan_id: plan.id,
+              email: user.email,
+              timestamp: Date.now()
+            }));
+          }
+        } catch (e) {
+          console.warn('[PricingCard] Failed to save AB context:', e);
+        }
+        
         window.open(plan.kiwifyCheckoutUrl, '_blank');
         toast.success('Redirecionando para Kiwify...');
       } else {

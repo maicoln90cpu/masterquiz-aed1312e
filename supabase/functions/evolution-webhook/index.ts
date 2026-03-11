@@ -171,25 +171,31 @@ Deno.serve(async (req) => {
       }
 
       // Atualizar recovery_contacts se existir contato pendente
+      // Check for contacts that responded to our messages (include 'responded' to allow continued conversations)
       const { data: contacts } = await supabase
         .from('recovery_contacts')
         .select('id, status')
         .eq('phone_number', phoneNumber)
-        .in('status', ['sent', 'delivered', 'read'])
+        .in('status', ['sent', 'delivered', 'read', 'responded'])
         .order('created_at', { ascending: false })
         .limit(1);
 
       if (contacts && contacts.length > 0) {
         const contact = contacts[0];
 
+        // Only update to 'responded' if not already responded (avoid unnecessary writes)
+        const updateData: Record<string, any> = {
+          response_text: messageText.substring(0, 1000),
+          response_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        if (contact.status !== 'responded') {
+          updateData.status = 'responded';
+        }
+
         await supabase
           .from('recovery_contacts')
-          .update({
-            status: 'responded',
-            response_text: messageText.substring(0, 1000),
-            response_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', contact.id);
 
         console.log(`[EVOLUTION-WEBHOOK] Contact ${contact.id} marked as responded`);

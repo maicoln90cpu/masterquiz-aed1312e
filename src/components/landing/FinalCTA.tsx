@@ -52,17 +52,29 @@ export const FinalCTA = () => {
           </div>
 
           <div className="flex flex-wrap justify-center items-center gap-6 pt-6 text-white/90">
-            <span className="flex items-center gap-2">
-              ✅ {t('landing.finalCTA.trust1')}
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span className="flex items-center gap-2">
-              ✅ {t('landing.finalCTA.trust2')}
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span className="flex items-center gap-2">
-              ✅ {t('landing.finalCTA.trust3')}
-            </span>
+            {isModeB ? (
+              <>
+                <span className="flex items-center gap-2">🛡️ 15 dias de garantia</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="flex items-center gap-2">⚡ Acesso imediato</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="flex items-center gap-2">🎯 Suporte prioritário</span>
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-2">
+                  ✅ {t('landing.finalCTA.trust1')}
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span className="flex items-center gap-2">
+                  ✅ {t('landing.finalCTA.trust2')}
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span className="flex items-center gap-2">
+                  ✅ {t('landing.finalCTA.trust3')}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
