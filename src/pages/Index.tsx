@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLandingPlans } from "@/hooks/useLandingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
+import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 // Lazy loaded components
 import { 
@@ -592,6 +593,13 @@ const Index = () => {
                 </Suspense>
               )}
             </div>
+          </div>
+        </DeferredSection>
+
+        {/* Testimonials Section - deferred */}
+        <DeferredSection id="testimonials" className="py-20 bg-muted/30" fallbackHeight="400px">
+          <div className="container mx-auto px-4">
+            <TestimonialsCarousel />
           </div>
         </DeferredSection>
 
