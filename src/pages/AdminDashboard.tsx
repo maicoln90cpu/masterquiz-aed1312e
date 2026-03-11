@@ -1326,6 +1326,41 @@ export default function AdminDashboard() {
           )}
         </div>
 
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Modo do Site (A/B Global)</Label>
+              <p className="text-sm text-muted-foreground">
+                <strong>Modo A:</strong> Fluxo atual (Free + Paid). <strong>Modo B:</strong> Apenas planos pagos, sem plano gratuito.
+              </p>
+            </div>
+            <Select 
+              value={siteMode} 
+              onValueChange={async (value: string) => {
+                try {
+                  await updateSiteMode(value as SiteMode);
+                  toast.success(`Modo do site alterado para ${value}`);
+                } catch (err) {
+                  toast.error('Erro ao alterar modo do site');
+                }
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="A">Modo A — Free + Paid</SelectItem>
+                <SelectItem value="B">Modo B — Apenas Pago</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isModeB && (
+            <div className="bg-accent/50 p-3 rounded-md text-sm text-accent-foreground">
+              ⚠️ <strong>Modo B ativo:</strong> O plano gratuito está oculto. Novos usuários serão direcionados ao checkout antes de acessar o dashboard.
+            </div>
+          )}
+        </div>
+
         <Button onClick={saveSettings} className="w-full">
           Salvar Configurações
         </Button>
