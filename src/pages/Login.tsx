@@ -16,11 +16,13 @@ import { fetchIPWithCache } from "@/lib/ipCache";
 import { Eye, EyeOff, ArrowLeft, Loader2, XCircle } from "lucide-react";
 import { PhoneInput, isValidPhoneForCountry } from "@/components/ui/phone-input";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useSiteMode } from "@/hooks/useSiteMode";
 
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { checkRateLimit } = useRateLimit();
+  const { isModeB } = useSiteMode();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -183,8 +185,9 @@ const Login = () => {
      // Flag para disparar evento GTM account_created no Dashboard
      localStorage.setItem('mq_just_registered', 'true');
      
-    // Novos usuários vão para /start (fast-path para criar primeiro quiz)
-    navigate('/start');
+    // No Modo B, novos usuários vão para /precos (checkout flow)
+    // No Modo A, vão para /start (fast-path para criar primeiro quiz)
+    navigate(isModeB ? '/precos' : '/start');
     setIsLoading(false);
   };
 

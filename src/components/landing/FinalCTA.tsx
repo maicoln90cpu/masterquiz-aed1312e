@@ -2,20 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Rocket, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useSiteMode } from "@/hooks/useSiteMode";
 
 export const FinalCTA = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { isModeB } = useSiteMode();
 
   const handleCTA = () => {
     if (typeof window !== 'undefined' && (window as any).dataLayer) {
       (window as any).dataLayer.push({
         event: 'cta_click',
         cta_location: 'final_cta',
-        cta_text: 'start_free_final'
+        cta_text: isModeB ? 'choose_plan_final' : 'start_free_final'
       });
     }
-    navigate('/login');
+    navigate(isModeB ? '/precos' : '/login');
   };
 
   return (

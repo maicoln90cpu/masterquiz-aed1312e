@@ -8,6 +8,7 @@ import { LandingQuizDemo } from "./LandingQuizDemo";
 import { BlockIndicators } from "./BlockIndicators";
 import { useLandingContent } from "@/hooks/useLandingContent";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
+import { useSiteMode } from "@/hooks/useSiteMode";
 
 // Fallback content for instant render (no loading state) - PARADIGMA AUTO-CONVENCIMENTO
 const FALLBACK_CONTENT = {
@@ -35,6 +36,7 @@ export const HeroSection = () => {
   
   // CMS content with instant fallback
   const { getContent, isLoading: isLoadingContent } = useLandingContent();
+  const { isModeB } = useSiteMode();
   
   // A/B Testing for CTA
   const { 
@@ -67,6 +69,7 @@ export const HeroSection = () => {
   // Get CTA text - prioritize A/B test, then CMS, then fallback
   const getCtaText = () => {
     if (abTestContent?.text) return abTestContent.text;
+    if (isModeB) return 'Escolher meu plano';
     return c('hero_cta_primary', 'landing.hero.ctaPrimary');
   };
 
@@ -85,7 +88,7 @@ export const HeroSection = () => {
         ab_variant: abVariant || 'none'
       });
     }
-    navigate('/login');
+    navigate(isModeB ? '/precos' : '/login');
   };
 
   const handleDemo = () => {

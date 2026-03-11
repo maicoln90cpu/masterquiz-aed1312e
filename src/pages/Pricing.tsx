@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,13 +7,19 @@ import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { usePricingPlans } from "@/hooks/usePricingPlans";
+import { useSiteMode } from "@/hooks/useSiteMode";
 import { PricingCard } from "@/components/landing/PricingCard";
 
 export default function Pricing() {
   
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { plans, isLoading } = usePricingPlans();
+  const { plans: allPlans, isLoading } = usePricingPlans();
+  const { isModeB } = useSiteMode();
+  const plans = useMemo(() => {
+    if (!isModeB) return allPlans;
+    return allPlans.filter(p => p.planType !== 'free');
+  }, [allPlans, isModeB]);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
 
   useEffect(() => {

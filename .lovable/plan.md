@@ -7,10 +7,12 @@
 - [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
 - [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-### Etapa 2 — Frontend Condicional (Landing + Pricing + Login)
-- [ ] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
-- [ ] Pricing: Esconder card Free no modo B
-- [ ] Login: No modo B, após cadastro redirecionar para `/checkout`
+### Etapa 2 ✅ — Frontend Condicional (Landing + Pricing + Login)
+- [x] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
+- [x] HeroSection: CTA "Escolher meu plano" + navega para `/precos` no modo B
+- [x] FinalCTA: Navega para `/precos` no modo B
+- [x] Pricing: Esconder card Free no modo B
+- [x] Login: No modo B, após cadastro redirecionar para `/precos`
 
 ### Etapa 3 — Auth Guards + Payment Flow
 - [ ] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false

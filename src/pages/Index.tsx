@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 
 import { useTranslation } from "react-i18next";
 import { LandingHeader } from "@/components/landing/LandingHeader";
@@ -6,6 +6,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { LogoCarousel } from "@/components/landing/LogoCarousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLandingPlans } from "@/hooks/useLandingPlans";
+import { useSiteMode } from "@/hooks/useSiteMode";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 // Lazy loaded components
 import { 
@@ -63,6 +64,7 @@ const DeferredSection = ({ children, className, id, fallbackHeight = "400px" }: 
 const Index = () => {
   const { t } = useTranslation();
   const { plans: dynamicPlans, isLoading: plansLoading } = useLandingPlans();
+  const { isModeB } = useSiteMode();
 
   useEffect(() => {
     document.title = "MasterQuizz - Quizzes que qualificam leads antes do checkout";
@@ -218,7 +220,9 @@ const Index = () => {
     },
   ];
 
-  const plans = dynamicPlans.length > 0 ? dynamicPlans : fallbackPlans;
+  const allPlans = dynamicPlans.length > 0 ? dynamicPlans : fallbackPlans;
+  // Filter out free plan in Mode B (check both planType and id)
+  const plans = isModeB ? allPlans.filter(p => (p as any).planType !== 'free' && p.id !== 'free') : allPlans;
 
   return (
     <div className="min-h-screen bg-background">
