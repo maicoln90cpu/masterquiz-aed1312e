@@ -61,6 +61,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   upgrade: 'Upgrade',
   educational: 'Educacional',
   feedback: 'Feedback',
+  reminder: 'Lembrete',
+  special_offer: 'Oferta Especial',
+  final_contact: 'Contato Final',
+  check_in: 'Check-in',
+  activation_reminder: 'Ativação',
+  first_contact: 'Primeiro Contato',
 };
 
 const STAGE_OPTIONS = [
