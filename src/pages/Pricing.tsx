@@ -10,6 +10,8 @@ import { usePricingPlans } from "@/hooks/usePricingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { PricingCard } from "@/components/landing/PricingCard";
 import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
+import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
+import { FAQAccordion } from "@/components/landing/FAQAccordion";
 
 export default function Pricing() {
   
