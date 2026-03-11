@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLandingContentAdmin } from "@/hooks/useLandingContent";
+import { useSiteMode, SiteMode } from "@/hooks/useSiteMode";
 import { toast } from "sonner";
 import { Save, Loader2, Globe, RefreshCw, Eye, EyeOff, CheckCircle, ArrowRight, Play } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +22,6 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
       </div>
       
       <div className="space-y-4 text-sm">
-        {/* Badge */}
         <div className="flex items-start gap-2">
           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
             hero_badge
@@ -31,7 +31,6 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
           </Badge>
         </div>
 
-        {/* Headline Main */}
         <div className="flex items-start gap-2">
           <Badge variant="outline" className="text-xs shrink-0">hero_headline_main</Badge>
           <h2 className="text-lg font-bold text-foreground">
@@ -39,7 +38,6 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
           </h2>
         </div>
 
-        {/* Headline Sub */}
         <div className="flex items-start gap-2">
           <Badge variant="outline" className="text-xs shrink-0">hero_headline_sub</Badge>
           <p className="text-base font-semibold text-primary">
@@ -47,7 +45,6 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
           </p>
         </div>
 
-        {/* Subheadline */}
         <div className="flex items-start gap-2">
           <Badge variant="outline" className="text-xs shrink-0">hero_subheadline</Badge>
           <p className="text-muted-foreground text-sm">
@@ -55,7 +52,6 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
           </p>
         </div>
 
-        {/* Bullets */}
         <div className="space-y-2 border-l-2 border-primary/20 pl-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex items-start gap-2">
@@ -68,7 +64,6 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
           ))}
         </div>
 
-        {/* CTAs */}
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="text-xs">hero_cta_primary</Badge>
           <Button size="sm" className="text-xs h-7">
@@ -81,7 +76,6 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
           </Button>
         </div>
 
-        {/* Trust badges */}
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline" className="text-xs">hero_trust_1</Badge>
           <span>🔒 {getPreviewValue('hero_trust_1') || 'Trust 1'}</span>
@@ -98,11 +92,18 @@ const HeroPreview = ({ getPreviewValue }: { getPreviewValue: (key: string) => st
 };
 
 export const LandingContentEditor = () => {
-  const { contentByCategory, allContent, isLoading, updateContent } = useLandingContentAdmin();
+  const { siteMode } = useSiteMode();
+  const [editorMode, setEditorMode] = useState<SiteMode>(siteMode || 'A');
+  const { contentByCategory, allContent, isLoading, updateContent } = useLandingContentAdmin(editorMode);
   const [editedValues, setEditedValues] = useState<Record<string, { pt?: string; en?: string; es?: string }>>({});
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const [showPreview, setShowPreview] = useState(true);
   const [selectedLang, setSelectedLang] = useState<'pt' | 'en' | 'es'>('pt');
+
+  const handleModeChange = (mode: SiteMode) => {
+    setEditorMode(mode);
+    setEditedValues({}); // Clear unsaved edits when switching modes
+  };
 
   const handleChange = (id: string, lang: 'pt' | 'en' | 'es', value: string) => {
     setEditedValues(prev => ({
@@ -128,7 +129,6 @@ export const LandingContentEditor = () => {
         value_es: edited.es !== undefined ? edited.es : (currentValues.es || undefined),
       });
 
-      // Clear edited values for this id
       setEditedValues(prev => {
         const next = { ...prev };
         delete next[id];
@@ -151,7 +151,6 @@ export const LandingContentEditor = () => {
     return editedValues[id] !== undefined;
   };
 
-  // Get preview value for a key (shows edited or current value)
   const getPreviewValue = (key: string): string => {
     const item = allContent?.find(c => c.key === key);
     if (!item) return '';
@@ -212,7 +211,7 @@ export const LandingContentEditor = () => {
               Editor de Conteúdo da Landing Page
             </CardTitle>
             <CardDescription>
-              Edite os textos da landing page em múltiplos idiomas. O preview mostra exatamente onde cada campo aparece.
+              Edite os textos da landing page em múltiplos idiomas. Selecione o modo para editar o conteúdo correspondente.
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -235,8 +234,36 @@ export const LandingContentEditor = () => {
           </div>
         </div>
 
+        {/* Mode A/B selector */}
+        <div className="flex items-center gap-3 mt-4 p-3 bg-muted/50 rounded-lg border">
+          <span className="text-sm font-medium text-muted-foreground">Editando conteúdo do:</span>
+          <div className="flex gap-1">
+            <Button
+              variant={editorMode === 'A' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleModeChange('A')}
+              className="text-xs"
+            >
+              🅰️ Modo A (Padrão)
+            </Button>
+            <Button
+              variant={editorMode === 'B' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleModeChange('B')}
+              className="text-xs"
+            >
+              🅱️ Modo B (Pagantes)
+            </Button>
+          </div>
+          {siteMode !== editorMode && (
+            <Badge variant="secondary" className="text-xs">
+              Modo ativo: {siteMode}
+            </Badge>
+          )}
+        </div>
+
         {/* Language selector for preview */}
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex items-center gap-2 mt-3">
           <span className="text-sm text-muted-foreground">Idioma do preview:</span>
           <div className="flex gap-1">
             {(['pt', 'en', 'es'] as const).map(lang => (
@@ -266,14 +293,12 @@ export const LandingContentEditor = () => {
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                {/* Description */}
                 {categoryDescriptions[category] && (
                   <p className="text-sm text-muted-foreground mb-4">
                     {categoryDescriptions[category]}
                   </p>
                 )}
 
-                {/* Show preview for hero category */}
                 {category === 'hero' && showPreview && (
                   <HeroPreview getPreviewValue={getPreviewValue} />
                 )}
@@ -348,7 +373,7 @@ export const LandingContentEditor = () => {
 
         {categories.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            Nenhum conteúdo encontrado. Adicione conteúdo via SQL.
+            Nenhum conteúdo encontrado para o Modo {editorMode}. Adicione conteúdo via SQL.
           </div>
         )}
       </CardContent>
