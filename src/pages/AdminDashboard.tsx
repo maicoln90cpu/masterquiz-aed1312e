@@ -62,6 +62,8 @@ export default function AdminDashboard() {
   const { t } = useTranslation();
   const { isAdmin } = useUserRole();
   const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
+  const { siteMode, isModeB } = useSiteMode();
+  const { updateSiteMode } = useUpdateSiteMode();
   const [loading, setLoading] = useState(true);
   const [openTicketsCount, setOpenTicketsCount] = useState(0);
   const [stats, setStats] = useState({
