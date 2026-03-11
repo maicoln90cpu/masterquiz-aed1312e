@@ -2393,6 +2393,87 @@ export type Database = {
           },
         ]
       }
+      whatsapp_ai_settings: {
+        Row: {
+          created_at: string
+          fallback_message: string | null
+          id: string
+          is_enabled: boolean
+          max_history_messages: number
+          rate_limit_per_hour: number
+          system_prompt: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fallback_message?: string | null
+          id?: string
+          is_enabled?: boolean
+          max_history_messages?: number
+          rate_limit_per_hour?: number
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fallback_message?: string | null
+          id?: string
+          is_enabled?: boolean
+          max_history_messages?: number
+          rate_limit_per_hour?: number
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_conversations: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          phone_number: string
+          role: string
+          template_context_id: string | null
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          phone_number: string
+          role: string
+          template_context_id?: string | null
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          phone_number?: string
+          role?: string
+          template_context_id?: string | null
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_conversations_template_context_id_fkey"
+            columns: ["template_context_id"]
+            isOneToOne: false
+            referencedRelation: "recovery_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
