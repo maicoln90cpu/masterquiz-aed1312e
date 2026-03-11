@@ -250,26 +250,8 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      // Run count queries in parallel for better performance
-      const [usersCountResult, quizzesCountResult, responsesCountResult, requestsResult, respondentsResult] = await Promise.all([
-        measureQuery('user-subscriptions-count', async () => {
-          const result = await supabase
-            .from('user_subscriptions')
-            .select('*', { count: 'exact', head: true });
-          return result;
-        }),
-        measureQuery('quizzes-count', async () => {
-          const result = await supabase
-            .from('quizzes')
-            .select('*', { count: 'exact', head: true });
-          return result;
-        }),
-        measureQuery('quiz-responses-count', async () => {
-          const result = await supabase
-            .from('quiz_responses')
-            .select('*', { count: 'exact', head: true });
-          return result;
-        }),
+      // Run only non-redundant queries (stats come from allUsersData via service_role)
+      const [requestsResult, respondentsResult] = await Promise.all([
         measureQuery('validation-requests', async () => {
           try {
             const result = await supabase
@@ -289,16 +271,6 @@ export default function AdminDashboard() {
           return { data: result.data?.respondents || [], error: null };
         })
       ]);
-
-      // Stats are derived from allUsersData (service_role) when available, fallback to RLS-limited counts
-      setStats({
-        totalUsers: usersCountResult.count || 0,
-        totalQuizzes: quizzesCountResult.count || 0,
-        totalResponses: responsesCountResult.count || 0,
-        activeUsers: 0,
-        expressQuizzes: 0,
-        manualQuizzes: 0,
-      });
 
       setValidationRequests(requestsResult.data || []);
 
