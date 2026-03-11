@@ -414,12 +414,27 @@ export function RecoveryQueue() {
       )}
 
       {/* Actions */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
+            <p className="text-sm font-medium">
+              Processamento automático ativo (cron a cada 5 min)
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            O sistema processa a fila automaticamente respeitando horários, limites diários/hora e delays anti-spam.
+            Não é necessário manter esta aba aberta.
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="flex flex-wrap gap-2">
         <Button onClick={processQueue} disabled={processing || stats.pending === 0}>
           {processing ? (
             <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando...</>
           ) : (
-            <><Play className="h-4 w-4 mr-2" /> Processar Fila</>
+            <><Play className="h-4 w-4 mr-2" /> Processar Agora (Manual)</>
           )}
         </Button>
         {stats.failed > 0 && (

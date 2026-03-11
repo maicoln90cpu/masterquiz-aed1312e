@@ -90,7 +90,6 @@ Deno.serve(async (req) => {
       if (messageText.trim().toUpperCase() === 'SAIR') {
         console.log(`[EVOLUTION-WEBHOOK] SAIR opt-out from ${phoneNumber}`);
 
-        // Find user_id from recovery_contacts
         const { data: contactData } = await supabase
           .from('recovery_contacts')
           .select('user_id')
@@ -99,7 +98,6 @@ Deno.serve(async (req) => {
           .limit(1)
           .maybeSingle();
 
-        // Insert into blacklist (upsert to avoid duplicates)
         await supabase
           .from('recovery_blacklist')
           .upsert({
@@ -109,7 +107,6 @@ Deno.serve(async (req) => {
             notes: 'Auto opt-out via SAIR',
           }, { onConflict: 'phone_number', ignoreDuplicates: true });
 
-        // Update all recovery_contacts for this phone to opted_out
         await supabase
           .from('recovery_contacts')
           .update({
@@ -120,7 +117,6 @@ Deno.serve(async (req) => {
           .eq('phone_number', phoneNumber)
           .in('status', ['sent', 'delivered', 'read', 'queued', 'pending'] as any[]);
 
-        // Send confirmation message via Evolution API
         try {
           const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
           const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
@@ -155,7 +151,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      // ========== CHECK BLACKLIST (skip AI for blacklisted numbers) ==========
+      // ========== CHECK BLACKLIST ==========
       const { data: blacklisted } = await supabase
         .from('recovery_blacklist')
         .select('id')
@@ -170,20 +166,24 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Atualizar recovery_contacts se existir contato pendente
-      // Check for contacts that responded to our messages (include 'responded' to allow continued conversations)
+      // ========== FIND ANY valid contact for this phone (not just the latest) ==========
       const { data: contacts } = await supabase
         .from('recovery_contacts')
-        .select('id, status')
+        .select('id, status, user_id, campaign_id')
         .eq('phone_number', phoneNumber)
         .in('status', ['sent', 'delivered', 'read', 'responded'])
         .order('created_at', { ascending: false })
         .limit(1);
 
+      let userId: string | null = null;
+      let contactId: string | null = null;
+
       if (contacts && contacts.length > 0) {
         const contact = contacts[0];
+        contactId = contact.id;
+        userId = contact.user_id;
 
-        // Only update to 'responded' if not already responded (avoid unnecessary writes)
+        // Update to 'responded'
         const updateData: Record<string, any> = {
           response_text: messageText.substring(0, 1000),
           response_at: new Date().toISOString(),
@@ -200,35 +200,55 @@ Deno.serve(async (req) => {
 
         console.log(`[EVOLUTION-WEBHOOK] Contact ${contact.id} marked as responded`);
 
-        // Trigger AI reply for template responses
-        try {
-          const { data: contactData } = await supabase
-            .from('recovery_contacts')
-            .select('user_id')
-            .eq('id', contact.id)
+        // Update campaign responded_count
+        if (contact.campaign_id) {
+          const { data: camp } = await supabase
+            .from('recovery_campaigns')
+            .select('responded_count')
+            .eq('id', contact.campaign_id)
             .single();
-
-          const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-          const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-          await fetch(`${supabaseUrl}/functions/v1/whatsapp-ai-reply`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify({
-              phone_number: phoneNumber,
-              message_text: messageText,
-              user_id: contactData?.user_id || null,
-              contact_id: contact.id,
-            }),
-          });
-
-          console.log(`[EVOLUTION-WEBHOOK] AI reply triggered for ${phoneNumber}`);
-        } catch (aiError) {
-          console.error('[EVOLUTION-WEBHOOK] Failed to trigger AI reply:', aiError);
+          if (camp) {
+            await supabase.from('recovery_campaigns').update({
+              responded_count: (camp.responded_count || 0) + 1,
+              updated_at: new Date().toISOString()
+            }).eq('id', contact.campaign_id);
+          }
         }
+      } else {
+        // No recovery contact found — try to find user_id from profiles by phone
+        const { data: profileByPhone } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('whatsapp', phoneNumber)
+          .limit(1)
+          .maybeSingle();
+        userId = profileByPhone?.id || null;
+      }
+
+      // ========== ALWAYS trigger AI reply for incoming messages ==========
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+        console.log(`[EVOLUTION-WEBHOOK] Triggering AI reply for ${phoneNumber}, userId: ${userId}`);
+
+        await fetch(`${supabaseUrl}/functions/v1/whatsapp-ai-reply`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({
+            phone_number: phoneNumber,
+            message_text: messageText,
+            user_id: userId,
+            contact_id: contactId,
+          }),
+        });
+
+        console.log(`[EVOLUTION-WEBHOOK] AI reply triggered for ${phoneNumber}`);
+      } catch (aiError) {
+        console.error('[EVOLUTION-WEBHOOK] Failed to trigger AI reply:', aiError);
       }
 
       return new Response(
@@ -257,24 +277,61 @@ Deno.serve(async (req) => {
         }
 
         if (newStatus) {
-          const updateData: Record<string, any> = {
-            status: newStatus,
-            updated_at: new Date().toISOString()
-          };
-
-          if (newStatus === 'delivered') {
-            updateData.delivered_at = new Date().toISOString();
-          } else if (newStatus === 'read') {
-            updateData.read_at = new Date().toISOString();
-          }
-
-          await supabase
+          // Find the specific contact to update
+          const { data: contactsToUpdate } = await supabase
             .from('recovery_contacts')
-            .update(updateData)
+            .select('id, campaign_id')
             .eq('phone_number', phoneNumber)
             .in('status', ['sent', 'delivered'])
             .order('created_at', { ascending: false })
             .limit(1);
+
+          if (contactsToUpdate && contactsToUpdate.length > 0) {
+            const c = contactsToUpdate[0];
+            const updateData: Record<string, any> = {
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            };
+
+            if (newStatus === 'delivered') {
+              updateData.delivered_at = new Date().toISOString();
+            } else if (newStatus === 'read') {
+              updateData.read_at = new Date().toISOString();
+            }
+
+            await supabase
+              .from('recovery_contacts')
+              .update(updateData)
+              .eq('id', c.id);
+
+            // Update campaign counters
+            if (c.campaign_id && newStatus === 'delivered') {
+              const { data: camp } = await supabase
+                .from('recovery_campaigns')
+                .select('delivered_count')
+                .eq('id', c.campaign_id)
+                .single();
+              if (camp) {
+                await supabase.from('recovery_campaigns').update({
+                  delivered_count: (camp.delivered_count || 0) + 1,
+                  updated_at: new Date().toISOString()
+                }).eq('id', c.campaign_id);
+              }
+            }
+            if (c.campaign_id && newStatus === 'read') {
+              const { data: camp } = await supabase
+                .from('recovery_campaigns')
+                .select('read_count')
+                .eq('id', c.campaign_id)
+                .single();
+              if (camp) {
+                await supabase.from('recovery_campaigns').update({
+                  read_count: (camp.read_count || 0) + 1,
+                  updated_at: new Date().toISOString()
+                }).eq('id', c.campaign_id);
+              }
+            }
+          }
 
           console.log(`[EVOLUTION-WEBHOOK] Contact ${phoneNumber} status -> ${newStatus}`);
         }
