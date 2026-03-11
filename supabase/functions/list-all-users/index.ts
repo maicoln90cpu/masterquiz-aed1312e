@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       adminClient.from("profiles").select("*").in("id", userIds),
       adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
       adminClient.from("user_roles").select("*").in("user_id", userIds),
-      adminClient.from("quizzes").select("user_id, id, is_public, status").in("user_id", userIds),
+      adminClient.from("quizzes").select("user_id, id, is_public, status, creation_source").in("user_id", userIds),
       adminClient.from("quiz_responses").select("quiz_id, id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
       adminClient.from("audit_logs").select("user_id, resource_id").eq("action", "quiz:deleted").in("user_id", userIds),
       adminClient.from("quiz_responses").select("quiz_id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
