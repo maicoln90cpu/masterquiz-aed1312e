@@ -595,6 +595,13 @@ const Index = () => {
           </div>
         </DeferredSection>
 
+        {/* Testimonials Section - deferred */}
+        <DeferredSection id="testimonials" className="py-20 bg-muted/30" fallbackHeight="400px">
+          <div className="container mx-auto px-4">
+            <TestimonialsCarousel />
+          </div>
+        </DeferredSection>
+
         {/* FAQ Section - deferred */}
         <DeferredSection id="faq" className="py-20" fallbackHeight="400px">
           <div className="container mx-auto px-4">
