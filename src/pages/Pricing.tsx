@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { usePricingPlans } from "@/hooks/usePricingPlans";
+import { useSiteMode } from "@/hooks/useSiteMode";
 import { PricingCard } from "@/components/landing/PricingCard";
 
 export default function Pricing() {
