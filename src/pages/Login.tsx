@@ -185,8 +185,9 @@ const Login = () => {
      // Flag para disparar evento GTM account_created no Dashboard
      localStorage.setItem('mq_just_registered', 'true');
      
-    // Novos usuários vão para /start (fast-path para criar primeiro quiz)
-    navigate('/start');
+    // No Modo B, novos usuários vão para /precos (checkout flow)
+    // No Modo A, vão para /start (fast-path para criar primeiro quiz)
+    navigate(isModeB ? '/precos' : '/start');
     setIsLoading(false);
   };
 

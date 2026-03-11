@@ -14,7 +14,12 @@ export default function Pricing() {
   
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { plans, isLoading } = usePricingPlans();
+  const { plans: allPlans, isLoading } = usePricingPlans();
+  const { isModeB } = useSiteMode();
+  const plans = useMemo(() => {
+    if (!isModeB) return allPlans;
+    return allPlans.filter(p => p.planType !== 'free');
+  }, [allPlans, isModeB]);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
 
   useEffect(() => {
