@@ -91,7 +91,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [resultToDeleteIndex, setResultToDeleteIndex] = useState<number | null>(null);
   const [showCalculatorWizard, setShowCalculatorWizard] = useState(false);
-  const debouncedSaveRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MAX_RESULTS = 20;
 
   const currentResult = results[currentResultIndex];

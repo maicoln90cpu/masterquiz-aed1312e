@@ -4,7 +4,7 @@ import { useVideoAnalytics } from '../useVideoAnalytics';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 // Mock environment variables
 vi.stubEnv('VITE_SUPABASE_URL', 'https://test.supabase.co');

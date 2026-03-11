@@ -44,7 +44,7 @@ export function QuizViewQuestion({
   showResults = true
 }: QuizViewQuestionProps) {
   const { t } = useTranslation();
-  const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Detect auto-advance from question block settings
   const questionBlock = question.blocks?.find((b: any) => b.type === 'question') as any;

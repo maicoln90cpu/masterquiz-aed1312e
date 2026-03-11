@@ -54,7 +54,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingDataRef = useRef<AutoSaveData | null>(null);
   const isSavingRef = useRef(false);
   const lastSavedSnapshotRef = useRef<string>('');

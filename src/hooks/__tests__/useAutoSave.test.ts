@@ -581,7 +581,7 @@ describe('useAutoSave', () => {
 
   describe('Cleanup ao desmontar', () => {
     it('deve limpar timeout ao desmontar componente', () => {
-      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
       
       const { result, unmount } = renderHook(() => useAutoSave());
       

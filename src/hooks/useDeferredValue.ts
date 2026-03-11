@@ -16,7 +16,7 @@ import { useState, useEffect, useRef, useTransition, useDeferredValue as useReac
  */
 export function useDeferredSearch<T>(value: T, delay: number = 300): T {
   const [deferredValue, setDeferredValue] = useState(value);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     // Clear previous timeout

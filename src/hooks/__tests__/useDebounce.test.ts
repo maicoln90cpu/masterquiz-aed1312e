@@ -137,7 +137,7 @@ describe('useDebounce', () => {
 
   describe('Cleanup', () => {
     it('should clear timeout on unmount', () => {
-      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
       
       const { rerender, unmount } = renderHook(
         ({ value }) => useDebounce(value, 500),
