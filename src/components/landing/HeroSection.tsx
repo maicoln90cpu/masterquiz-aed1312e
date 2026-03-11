@@ -36,6 +36,7 @@ export const HeroSection = () => {
   
   // CMS content with instant fallback
   const { getContent, isLoading: isLoadingContent } = useLandingContent();
+  const { isModeB } = useSiteMode();
   
   // A/B Testing for CTA
   const { 
