@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter } from "lucide-react";
+import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 

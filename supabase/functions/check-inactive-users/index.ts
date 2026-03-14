@@ -346,18 +346,11 @@ Deno.serve(async (req) => {
     }
 
     if (queuedContacts.length > 0) {
-      if (directCampaign) {
-        // Disparo direto: usar upsert para ignorar UNIQUE constraint (user_id, template_id)
-        const { error: insertError } = await supabase
-          .from('recovery_contacts')
-          .upsert(queuedContacts, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
-        if (insertError) throw insertError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('recovery_contacts')
-          .insert(queuedContacts);
-        if (insertError) throw insertError;
-      }
+      // Always use upsert with ignoreDuplicates to prevent 23505 UNIQUE constraint errors
+      const { error: insertError } = await supabase
+        .from('recovery_contacts')
+        .upsert(queuedContacts, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
+      if (insertError) throw insertError;
 
       if (campaignId) {
         await supabase

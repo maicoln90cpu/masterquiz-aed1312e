@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     try { data = await res.json(); } catch { data = { rawStatus: res.status, rawStatusText: res.statusText }; }
 
     if (!res.ok) {
-      const errorDetail = data?.response?.message || data?.message || data?.error || data?.reason || (typeof data === 'string' ? data : JSON.stringify(data).substring(0, 300));
+      const errorDetail = data?.response?.message || data?.message || (typeof data?.error === 'string' ? data.error : null) || data?.reason || (typeof data === 'string' ? data : JSON.stringify(data ?? {}).substring(0, 300));
       const retry = (contact.retry_count || 0) + 1;
       await supabase.from('recovery_contacts').update({ status: retry >= 3 ? 'failed' : 'pending', retry_count: retry, error_message: `HTTP ${res.status}: ${errorDetail}` }).eq('id', contact.id);
       throw new Error(`HTTP ${res.status}: ${errorDetail}`);

@@ -70,6 +70,50 @@ Deno.serve(async (req) => {
     }
 
     const successCount = results.filter((r: any) => r.sent === 1).length;
+
+    // Auto-regenerate targets for running non-direct campaigns with no pending contacts
+    try {
+      const { data: runningCampaigns } = await supabase
+        .from('recovery_campaigns')
+        .select('id, target_criteria, template_id')
+        .eq('status', 'running');
+
+      if (runningCampaigns && runningCampaigns.length > 0) {
+        for (const camp of runningCampaigns) {
+          const tc = (camp.target_criteria || {}) as Record<string, unknown>;
+          if (tc.direct_campaign) continue; // Skip direct campaigns
+
+          const { count: pendingForCampaign } = await supabase
+            .from('recovery_contacts')
+            .select('*', { count: 'exact', head: true })
+            .eq('campaign_id', camp.id)
+            .eq('status', 'pending');
+
+          if (!pendingForCampaign || pendingForCampaign === 0) {
+            // Auto-regenerate: call check-inactive-users for this campaign
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/check-inactive-users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
+                body: JSON.stringify({
+                  campaignId: camp.id,
+                  templateId: camp.template_id,
+                  ignoreCooldown: false,
+                  directCampaign: false,
+                  targetCriteria: tc,
+                }),
+              });
+              console.log(`Auto-regenerated targets for campaign ${camp.id}`);
+            } catch (e) {
+              console.error(`Failed to auto-regenerate for campaign ${camp.id}:`, e);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error in auto-regeneration:', e);
+    }
+
     return new Response(JSON.stringify({ processed: successCount, batchSize, results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Error:', error);
