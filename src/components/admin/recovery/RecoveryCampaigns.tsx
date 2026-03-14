@@ -823,6 +823,139 @@ export function RecoveryCampaigns() {
           ))}
         </div>
       )}
+
+      {/* Edit Campaign Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={(open) => {
+        setEditDialogOpen(open);
+        if (!open) {
+          setEditingCampaign(null);
+          setEditFiltersOpen(false);
+        }
+      }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Campanha</DialogTitle>
+            <DialogDescription>
+              Altere os dados da campanha (template não pode ser alterado)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome da Campanha *</Label>
+              <Input
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            {/* Template (read-only) */}
+            {editingCampaign?.template_id && (
+              <div className="space-y-2">
+                <Label>Template (não editável)</Label>
+                <div className="p-2 rounded border bg-muted text-sm text-muted-foreground">
+                  📝 {templates.find(t => t.id === editingCampaign.template_id)?.name || 'N/A'}
+                </div>
+              </div>
+            )}
+
+            {/* Audience Filters */}
+            <Collapsible open={editFiltersOpen} onOpenChange={setEditFiltersOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between" type="button">
+                  <span className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filtros de Audiência
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${editFiltersOpen ? 'rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-3">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Atividade</Label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox checked={editCriteria.no_leads} onCheckedChange={(c) => setEditCriteria({ ...editCriteria, no_leads: !!c })} />
+                      Sem leads (0 leads)
+                    </label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox checked={editCriteria.no_quizzes} onCheckedChange={(c) => setEditCriteria({ ...editCriteria, no_quizzes: !!c })} />
+                      Sem quiz publicado
+                    </label>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Plano</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PLAN_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.plans.includes(opt.value)} onCheckedChange={() => setEditCriteria({ ...editCriteria, plans: toggleArrayItem(editCriteria.plans, opt.value) })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Estágio</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {STAGE_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.stages.includes(opt.value)} onCheckedChange={() => setEditCriteria({ ...editCriteria, stages: toggleArrayItem(editCriteria.stages, opt.value) })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Objetivo</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {OBJECTIVE_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.objectives.includes(opt.value)} onCheckedChange={() => setEditCriteria({ ...editCriteria, objectives: toggleArrayItem(editCriteria.objectives, opt.value) })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Dias de Inatividade</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {INACTIVITY_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.min_inactive_days === opt.value} onCheckedChange={(c) => setEditCriteria({ ...editCriteria, min_inactive_days: c ? opt.value : null })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <div className="space-y-2">
+              <Label>Agendar Para (opcional)</Label>
+              <Input
+                type="datetime-local"
+                value={editFormData.scheduled_at}
+                onChange={(e) => setEditFormData({ ...editFormData, scheduled_at: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleEditSave}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
