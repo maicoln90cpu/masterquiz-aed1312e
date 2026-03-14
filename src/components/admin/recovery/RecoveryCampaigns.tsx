@@ -698,9 +698,9 @@ export function RecoveryCampaigns() {
                         </Button>
                       </>
                     )}
-                    {['running', 'paused'].includes(campaign.status) && (
-                      <Button size="sm" variant="outline" onClick={() => startCampaign(campaign)} title="Adicionar novos usuários que atendam aos critérios">
-                        <Users className="h-4 w-4 mr-1" /> Recarregar Alvos
+                    {['running', 'paused', 'draft'].includes(campaign.status) && (
+                      <Button size="sm" variant="outline" onClick={() => openEditDialog(campaign)} title="Editar campanha">
+                        <Pencil className="h-4 w-4 mr-1" /> Editar
                       </Button>
                     )}
                     {['draft', 'completed', 'cancelled'].includes(campaign.status) && (
