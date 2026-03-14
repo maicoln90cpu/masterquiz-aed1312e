@@ -815,6 +815,18 @@ export function RecoveryCampaigns() {
                         </Button>
                       </>
                     )}
+                    {['running', 'paused'].includes(campaign.status) && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => refreshCampaignTargets(campaign)} 
+                        disabled={refreshingCampaign === campaign.id}
+                        title="Buscar novos alvos agora"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-1 ${refreshingCampaign === campaign.id ? 'animate-spin' : ''}`} /> 
+                        {refreshingCampaign === campaign.id ? 'Buscando...' : 'Atualizar Alvos'}
+                      </Button>
+                    )}
                     {['running', 'paused', 'draft'].includes(campaign.status) && (
                       <Button size="sm" variant="outline" onClick={() => openEditDialog(campaign)} title="Editar campanha">
                         <Pencil className="h-4 w-4 mr-1" /> Editar
