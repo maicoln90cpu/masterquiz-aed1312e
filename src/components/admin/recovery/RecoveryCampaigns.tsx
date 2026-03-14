@@ -122,14 +122,23 @@ export function RecoveryCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [editFiltersOpen, setEditFiltersOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     template_id: '',
     scheduled_at: '',
   });
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    scheduled_at: '',
+  });
   const [criteria, setCriteria] = useState<TargetCriteria>({ ...defaultCriteria });
+  const [editCriteria, setEditCriteria] = useState<TargetCriteria>({ ...defaultCriteria });
 
   useEffect(() => {
     loadData();
