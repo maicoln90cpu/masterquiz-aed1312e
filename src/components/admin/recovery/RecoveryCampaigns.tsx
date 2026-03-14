@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter } from "lucide-react";
+import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -122,14 +122,23 @@ export function RecoveryCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [editFiltersOpen, setEditFiltersOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     template_id: '',
     scheduled_at: '',
   });
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    scheduled_at: '',
+  });
   const [criteria, setCriteria] = useState<TargetCriteria>({ ...defaultCriteria });
+  const [editCriteria, setEditCriteria] = useState<TargetCriteria>({ ...defaultCriteria });
 
   useEffect(() => {
     loadData();
@@ -340,6 +349,66 @@ export function RecoveryCampaigns() {
     } catch (error) {
       console.error('Error deleting campaign:', error);
       toast.error('Erro ao excluir campanha');
+    }
+  };
+
+  const openEditDialog = (campaign: Campaign) => {
+    setEditingCampaign(campaign);
+    setEditFormData({
+      name: campaign.name,
+      description: campaign.description || '',
+      scheduled_at: campaign.scheduled_at ? campaign.scheduled_at.slice(0, 16) : '',
+    });
+    const tc = (campaign.target_criteria || {}) as Record<string, unknown>;
+    setEditCriteria({
+      no_leads: !!tc.no_leads,
+      no_quizzes: !!tc.no_quizzes,
+      plans: Array.isArray(tc.plans) ? tc.plans : [],
+      stages: Array.isArray(tc.stages) ? tc.stages : [],
+      objectives: Array.isArray(tc.objectives) ? tc.objectives : [],
+      min_inactive_days: typeof tc.min_inactive_days === 'number' ? tc.min_inactive_days : null,
+      direct_campaign: !!tc.direct_campaign,
+    });
+    setEditFiltersOpen(false);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editingCampaign || !editFormData.name) {
+      toast.error('Preencha o nome da campanha');
+      return;
+    }
+
+    const tc: Record<string, unknown> = {};
+    if (editCriteria.no_leads) tc.no_leads = true;
+    if (editCriteria.no_quizzes) tc.no_quizzes = true;
+    if (editCriteria.plans.length > 0) tc.plans = editCriteria.plans;
+    if (editCriteria.stages.length > 0) tc.stages = editCriteria.stages;
+    if (editCriteria.objectives.length > 0) tc.objectives = editCriteria.objectives;
+    if (editCriteria.min_inactive_days) tc.min_inactive_days = editCriteria.min_inactive_days;
+    if (editCriteria.direct_campaign) tc.direct_campaign = true;
+
+    try {
+      const { error } = await supabase
+        .from('recovery_campaigns')
+        .update({
+          name: editFormData.name,
+          description: editFormData.description || null,
+          scheduled_at: editFormData.scheduled_at || null,
+          target_criteria: JSON.parse(JSON.stringify(tc)),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingCampaign.id);
+
+      if (error) throw error;
+
+      toast.success('Campanha atualizada!');
+      setEditDialogOpen(false);
+      setEditingCampaign(null);
+      loadData();
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      toast.error('Erro ao atualizar campanha');
     }
   };
 
@@ -629,9 +698,9 @@ export function RecoveryCampaigns() {
                         </Button>
                       </>
                     )}
-                    {['running', 'paused'].includes(campaign.status) && (
-                      <Button size="sm" variant="outline" onClick={() => startCampaign(campaign)} title="Adicionar novos usuários que atendam aos critérios">
-                        <Users className="h-4 w-4 mr-1" /> Recarregar Alvos
+                    {['running', 'paused', 'draft'].includes(campaign.status) && (
+                      <Button size="sm" variant="outline" onClick={() => openEditDialog(campaign)} title="Editar campanha">
+                        <Pencil className="h-4 w-4 mr-1" /> Editar
                       </Button>
                     )}
                     {['draft', 'completed', 'cancelled'].includes(campaign.status) && (
@@ -754,6 +823,139 @@ export function RecoveryCampaigns() {
           ))}
         </div>
       )}
+
+      {/* Edit Campaign Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={(open) => {
+        setEditDialogOpen(open);
+        if (!open) {
+          setEditingCampaign(null);
+          setEditFiltersOpen(false);
+        }
+      }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Campanha</DialogTitle>
+            <DialogDescription>
+              Altere os dados da campanha (template não pode ser alterado)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome da Campanha *</Label>
+              <Input
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            {/* Template (read-only) */}
+            {editingCampaign?.template_id && (
+              <div className="space-y-2">
+                <Label>Template (não editável)</Label>
+                <div className="p-2 rounded border bg-muted text-sm text-muted-foreground">
+                  📝 {templates.find(t => t.id === editingCampaign.template_id)?.name || 'N/A'}
+                </div>
+              </div>
+            )}
+
+            {/* Audience Filters */}
+            <Collapsible open={editFiltersOpen} onOpenChange={setEditFiltersOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between" type="button">
+                  <span className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filtros de Audiência
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${editFiltersOpen ? 'rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-3">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Atividade</Label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox checked={editCriteria.no_leads} onCheckedChange={(c) => setEditCriteria({ ...editCriteria, no_leads: !!c })} />
+                      Sem leads (0 leads)
+                    </label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox checked={editCriteria.no_quizzes} onCheckedChange={(c) => setEditCriteria({ ...editCriteria, no_quizzes: !!c })} />
+                      Sem quiz publicado
+                    </label>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Plano</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PLAN_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.plans.includes(opt.value)} onCheckedChange={() => setEditCriteria({ ...editCriteria, plans: toggleArrayItem(editCriteria.plans, opt.value) })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Estágio</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {STAGE_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.stages.includes(opt.value)} onCheckedChange={() => setEditCriteria({ ...editCriteria, stages: toggleArrayItem(editCriteria.stages, opt.value) })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Objetivo</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {OBJECTIVE_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.objectives.includes(opt.value)} onCheckedChange={() => setEditCriteria({ ...editCriteria, objectives: toggleArrayItem(editCriteria.objectives, opt.value) })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Dias de Inatividade</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {INACTIVITY_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={editCriteria.min_inactive_days === opt.value} onCheckedChange={(c) => setEditCriteria({ ...editCriteria, min_inactive_days: c ? opt.value : null })} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <div className="space-y-2">
+              <Label>Agendar Para (opcional)</Label>
+              <Input
+                type="datetime-local"
+                value={editFormData.scheduled_at}
+                onChange={(e) => setEditFormData({ ...editFormData, scheduled_at: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleEditSave}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
