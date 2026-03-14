@@ -98,9 +98,10 @@ Deno.serve(async (req) => {
                 body: JSON.stringify({
                   campaignId: camp.id,
                   templateId: camp.template_id,
-                  ignoreCooldown: false,
+                  ignoreCooldown: true,
                   directCampaign: false,
                   targetCriteria: tc,
+                  isAutoRegeneration: true,
                 }),
               });
               console.log(`Auto-regenerated targets for campaign ${camp.id}`);
