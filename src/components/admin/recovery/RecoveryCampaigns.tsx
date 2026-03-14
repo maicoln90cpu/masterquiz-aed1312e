@@ -127,6 +127,10 @@ export function RecoveryCampaigns() {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [editFiltersOpen, setEditFiltersOpen] = useState(false);
+  const [refreshingCampaign, setRefreshingCampaign] = useState<string | null>(null);
+  const [cooldownEnabled, setCooldownEnabled] = useState(true);
+  const [cooldownDays, setCooldownDays] = useState(7);
+  const [savingCooldown, setSavingCooldown] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -143,6 +147,7 @@ export function RecoveryCampaigns() {
 
   useEffect(() => {
     loadData();
+    loadCooldownSettings();
   }, []);
 
   const loadData = async () => {
