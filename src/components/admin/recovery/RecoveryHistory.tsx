@@ -139,10 +139,11 @@ export function RecoveryHistory() {
   const filteredHistory = history.filter(item => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    return (
-      item.phone_number.toLowerCase().includes(query) ||
-      item.profiles?.full_name?.toLowerCase().includes(query)
-    );
+    // Normalize: strip non-digits for phone comparison
+    const queryDigits = searchQuery.replace(/\D/g, '');
+    const matchesPhone = queryDigits.length >= 4 && item.phone_number.includes(queryDigits);
+    const matchesName = item.profiles?.full_name?.toLowerCase().includes(query);
+    return matchesPhone || matchesName;
   });
 
   const toggleSelectAll = () => {
