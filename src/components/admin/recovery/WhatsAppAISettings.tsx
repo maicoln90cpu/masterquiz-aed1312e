@@ -5,9 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Save, Bot, Shield } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Save, Bot, Shield, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { WhatsAppAIKnowledge } from "./WhatsAppAIKnowledge";
 
 interface AISettings {
   id: string;
@@ -94,118 +96,134 @@ export function WhatsAppAISettings() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            Chatbot IA WhatsApp
-          </CardTitle>
-          <CardDescription>
-            O bot responde automaticamente quando um usuário responde a uma mensagem de recuperação.
-            Usa OpenAI com contexto personalizado do usuário (plano, quizzes, leads).
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Bot Ativo</Label>
-              <p className="text-sm text-muted-foreground">
-                Quando ativo, o bot responde automaticamente às respostas dos templates
-              </p>
-            </div>
-            <Switch
-              checked={settings.is_enabled}
-              onCheckedChange={(checked) => setSettings({ ...settings, is_enabled: checked })}
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <Tabs defaultValue="settings" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="settings" className="flex items-center gap-1">
+          <Bot className="h-4 w-4" /> Configurações
+        </TabsTrigger>
+        <TabsTrigger value="knowledge" className="flex items-center gap-1">
+          <BookOpen className="h-4 w-4" /> Base de Conhecimento
+        </TabsTrigger>
+      </TabsList>
 
-      {/* System Prompt */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Prompt</CardTitle>
-          <CardDescription>
-            Instruções base para a IA. O contexto do usuário (nome, plano, stats) é adicionado automaticamente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={settings.system_prompt}
-            onChange={(e) => setSettings({ ...settings, system_prompt: e.target.value })}
-            rows={12}
-            placeholder="Defina o comportamento da IA..."
-            className="font-mono text-sm"
-          />
-        </CardContent>
-      </Card>
+      <TabsContent value="settings">
+        <div className="space-y-6">
+          {/* Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                Chatbot IA WhatsApp
+              </CardTitle>
+              <CardDescription>
+                O bot responde automaticamente quando um usuário responde a uma mensagem de recuperação.
+                Usa OpenAI com contexto personalizado do usuário e base de conhecimento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Bot Ativo</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Quando ativo, o bot responde automaticamente às respostas dos templates
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.is_enabled}
+                  onCheckedChange={(checked) => setSettings({ ...settings, is_enabled: checked })}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Limites */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Limites e Proteção
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Histórico de Mensagens (contexto)</Label>
-              <Input
-                type="number"
-                min={2}
-                max={30}
-                value={settings.max_history_messages}
-                onChange={(e) => setSettings({ ...settings, max_history_messages: parseInt(e.target.value) || 10 })}
+          {/* System Prompt */}
+          <Card>
+            <CardHeader>
+              <CardTitle>System Prompt</CardTitle>
+              <CardDescription>
+                Instruções base para a IA. O contexto do usuário e artigos da base de conhecimento são adicionados automaticamente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={settings.system_prompt}
+                onChange={(e) => setSettings({ ...settings, system_prompt: e.target.value })}
+                rows={12}
+                placeholder="Defina o comportamento da IA..."
+                className="font-mono text-sm"
               />
-              <p className="text-xs text-muted-foreground">
-                Quantas mensagens anteriores enviar como contexto para a IA
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Limite por Hora (por número)</Label>
-              <Input
-                type="number"
-                min={5}
-                max={100}
-                value={settings.rate_limit_per_hour}
-                onChange={(e) => setSettings({ ...settings, rate_limit_per_hour: parseInt(e.target.value) || 30 })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Máximo de respostas da IA por hora para cada número
-              </p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="space-y-2">
-            <Label>Mensagem de Fallback (escalação humana)</Label>
-            <Textarea
-              value={settings.fallback_message}
-              onChange={(e) => setSettings({ ...settings, fallback_message: e.target.value })}
-              rows={3}
-              placeholder="Mensagem quando a IA encaminha para suporte humano..."
-            />
-            <p className="text-xs text-muted-foreground">
-              Enviada quando a IA detecta que precisa encaminhar para suporte humano.
-              Um ticket é criado automaticamente.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Limites */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Limites e Proteção
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Histórico de Mensagens (contexto)</Label>
+                  <Input
+                    type="number"
+                    min={2}
+                    max={30}
+                    value={settings.max_history_messages}
+                    onChange={(e) => setSettings({ ...settings, max_history_messages: parseInt(e.target.value) || 10 })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Quantas mensagens anteriores enviar como contexto para a IA
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Limite por Hora (por número)</Label>
+                  <Input
+                    type="number"
+                    min={5}
+                    max={100}
+                    value={settings.rate_limit_per_hour}
+                    onChange={(e) => setSettings({ ...settings, rate_limit_per_hour: parseInt(e.target.value) || 30 })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Máximo de respostas da IA por hora para cada número
+                  </p>
+                </div>
+              </div>
 
-      {/* Salvar */}
-      <div className="flex justify-end">
-        <Button onClick={saveSettings} disabled={saving} size="lg">
-          {saving ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</>
-          ) : (
-            <><Save className="h-4 w-4 mr-2" /> Salvar Configurações</>
-          )}
-        </Button>
-      </div>
-    </div>
+              <div className="space-y-2">
+                <Label>Mensagem de Fallback (escalação humana)</Label>
+                <Textarea
+                  value={settings.fallback_message}
+                  onChange={(e) => setSettings({ ...settings, fallback_message: e.target.value })}
+                  rows={3}
+                  placeholder="Mensagem quando a IA encaminha para suporte humano..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enviada quando a IA detecta que precisa encaminhar para suporte humano.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Salvar */}
+          <div className="flex justify-end">
+            <Button onClick={saveSettings} disabled={saving} size="lg">
+              {saving ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</>
+              ) : (
+                <><Save className="h-4 w-4 mr-2" /> Salvar Configurações</>
+              )}
+            </Button>
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="knowledge">
+        <WhatsAppAIKnowledge />
+      </TabsContent>
+    </Tabs>
   );
 }

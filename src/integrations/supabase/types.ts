@@ -2420,6 +2420,39 @@ export type Database = {
           },
         ]
       }
+      whatsapp_ai_knowledge: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          keywords: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          keywords?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          keywords?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_ai_settings: {
         Row: {
           created_at: string
