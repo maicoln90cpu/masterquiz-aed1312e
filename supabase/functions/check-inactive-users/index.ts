@@ -355,16 +355,37 @@ Deno.serve(async (req) => {
       if (insertError) throw insertError;
 
       if (campaignId) {
-        await supabase
-          .from('recovery_campaigns')
-          .update({
-            total_targets: queuedContacts.length,
-            queued_count: queuedContacts.length,
-            status: 'running',
-            started_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', campaignId);
+        if (isAutoRegeneration) {
+          // Auto-regeneration: accumulate total_targets instead of overwriting
+          const { data: currentCampaign } = await supabase
+            .from('recovery_campaigns')
+            .select('total_targets, queued_count')
+            .eq('id', campaignId)
+            .single();
+
+          const existingTotal = currentCampaign?.total_targets || 0;
+          const existingQueued = currentCampaign?.queued_count || 0;
+
+          await supabase
+            .from('recovery_campaigns')
+            .update({
+              total_targets: existingTotal + queuedContacts.length,
+              queued_count: existingQueued + queuedContacts.length,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', campaignId);
+        } else {
+          await supabase
+            .from('recovery_campaigns')
+            .update({
+              total_targets: queuedContacts.length,
+              queued_count: queuedContacts.length,
+              status: 'running',
+              started_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', campaignId);
+        }
       }
     }
 
