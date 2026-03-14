@@ -12,7 +12,8 @@ import {
   Link as LinkIcon,
   Calendar,
   FileText,
-  FlaskConical
+  FlaskConical,
+  Pencil
 } from "lucide-react";
 import {
   DropdownMenu,
