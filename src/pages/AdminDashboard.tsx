@@ -160,9 +160,12 @@ export default function AdminDashboard() {
     // Filtro por pesquisa (nome ou email)
     if (userSearchQuery.trim()) {
       const query = userSearchQuery.toLowerCase();
+      const queryDigits = userSearchQuery.replace(/\D/g, '');
       result = result.filter((user: any) => 
         user.profile?.full_name?.toLowerCase().includes(query) ||
-        user.email?.toLowerCase().includes(query)
+        user.email?.toLowerCase().includes(query) ||
+        (queryDigits.length >= 4 && user.profile?.whatsapp?.includes(queryDigits)) ||
+        user.profile?.whatsapp?.includes(query)
       );
     }
     
