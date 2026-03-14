@@ -717,7 +717,53 @@ export function RecoveryCampaigns() {
         </Dialog>
       </div>
 
-      {/* Campaigns List */}
+      {/* Cooldown Global */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Shield className="h-4 w-4" />
+            Cooldown Entre Contatos
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Intervalo mínimo entre contatos ao mesmo usuário. Quando desativado, o único controle é a UNIQUE constraint (1 template por usuário).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={cooldownEnabled}
+                onCheckedChange={(checked) => {
+                  setCooldownEnabled(checked);
+                  saveCooldownSettings(checked, cooldownDays);
+                }}
+                disabled={savingCooldown}
+              />
+              <Label className="text-sm">{cooldownEnabled ? 'Ativo' : 'Desativado'}</Label>
+            </div>
+            {cooldownEnabled && (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={cooldownDays}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 7;
+                    setCooldownDays(val);
+                  }}
+                  onBlur={() => saveCooldownSettings(cooldownEnabled, cooldownDays)}
+                  className="w-20 h-8"
+                  disabled={savingCooldown}
+                />
+                <span className="text-sm text-muted-foreground">dias</span>
+              </div>
+            )}
+            {savingCooldown && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </div>
+        </CardContent>
+      </Card>
+
       {campaigns.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
