@@ -629,6 +629,11 @@ export function RecoveryCampaigns() {
                         </Button>
                       </>
                     )}
+                    {['running', 'paused'].includes(campaign.status) && (
+                      <Button size="sm" variant="outline" onClick={() => startCampaign(campaign)} title="Adicionar novos usuários que atendam aos critérios">
+                        <Users className="h-4 w-4 mr-1" /> Recarregar Alvos
+                      </Button>
+                    )}
                     {['draft', 'completed', 'cancelled'].includes(campaign.status) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
