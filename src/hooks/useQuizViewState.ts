@@ -313,6 +313,11 @@ export function useQuizViewState({
   const submitQuiz = async (overrideAnswers?: Record<string, any>, overrideScore?: number) => {
     if (!quiz) return;
     
+    // Guard: reject SyntheticEvent passed from onClick handlers
+    if (isSyntheticOrNativeEvent(overrideAnswers)) {
+      overrideAnswers = undefined;
+    }
+    
     const finalAnswers = overrideAnswers || answers;
     
     try {

@@ -85,7 +85,7 @@ export function QuizViewForm({
         </div>
       ))}
       
-      <Button onClick={onSubmit} className="w-full h-12 md:h-10 text-base md:text-sm btn-touch btn-primary">
+      <Button onClick={() => onSubmit()} className="w-full h-12 md:h-10 text-base md:text-sm btn-touch btn-primary">
         {isBeforeQuiz ? t('quizView.next') : t('quizView.finish')}
         <ArrowRight className="ml-2 h-5 w-5 md:h-4 md:w-4" />
       </Button>
