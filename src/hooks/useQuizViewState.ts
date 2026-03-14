@@ -223,9 +223,9 @@ export function useQuizViewState({
   const [autoSubmitted, setAutoSubmitted] = useState(false);
 
   const handleAnswer = (questionId: string, value: any) => {
-    // Guard: reject DOM elements and Event objects
-    if (value instanceof Element || value instanceof Event) {
-      console.warn('[handleAnswer] Rejected non-serializable value for', questionId);
+    // Guard: reject DOM elements, native Events, and React SyntheticEvents
+    if (isSyntheticOrNativeEvent(value)) {
+      console.warn('[handleAnswer] Rejected event object for', questionId);
       return;
     }
     const newAnswers = { ...answers, [questionId]: value };
