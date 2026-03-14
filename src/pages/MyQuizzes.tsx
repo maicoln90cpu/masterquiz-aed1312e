@@ -528,9 +528,9 @@ const MyQuizzes = () => {
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   {slugStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                  {slugStatus === 'available' && <Check className="h-4 w-4 text-green-500" />}
+                  {slugStatus === 'available' && <Check className="h-4 w-4 text-primary" />}
                   {slugStatus === 'taken' && <X className="h-4 w-4 text-destructive" />}
-                  {slugStatus === 'invalid' && <AlertCircle className="h-4 w-4 text-yellow-500" />}
+                  {slugStatus === 'invalid' && <AlertCircle className="h-4 w-4 text-muted-foreground" />}
                 </div>
               </div>
               {slugStatus === 'taken' && (
