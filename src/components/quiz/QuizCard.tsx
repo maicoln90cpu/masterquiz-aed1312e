@@ -49,6 +49,7 @@ interface QuizCardProps {
   onCopyLink: (slug: string) => void;
   onEmbed: (slug: string) => void;
   onPreview: (id: string) => void;
+  onEditSlug?: (quizId: string, currentSlug: string) => void;
   onGenerateTestLead?: (quizId: string) => void;
   isGeneratingTestLead?: boolean;
 }
