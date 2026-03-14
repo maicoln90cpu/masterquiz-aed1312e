@@ -537,7 +537,7 @@ const MyQuizzes = () => {
                 <p className="text-xs text-destructive">{t('dashboard.slugAlreadyTaken', 'Este slug já está em uso.')}</p>
               )}
               {slugStatus === 'invalid' && (
-                <p className="text-xs text-yellow-600">{t('dashboard.slugTooShort', 'O slug precisa ter pelo menos 3 caracteres.')}</p>
+                <p className="text-xs text-muted-foreground">{t('dashboard.slugTooShort', 'O slug precisa ter pelo menos 3 caracteres.')}</p>
               )}
               {slugStatus === 'available' && userProfile?.company_slug && (
                 <p className="text-xs text-muted-foreground">
