@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     console.log(`[WHATSAPP-AI] Processing message from ${phone_number}: "${message_text.substring(0, 50)}"`);
 
-    // 0. Check blacklist — skip if number is blacklisted
+    // 0. Check blacklist
     const { data: blacklisted } = await supabase
       .from('recovery_blacklist')
       .select('id')
@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
     // 1. Check if AI is enabled
     const { data: aiSettings } = await supabase
       .from('whatsapp_ai_settings')
@@ -61,7 +62,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 2. Rate limiting: check messages in the last hour for this phone
+    // 2. Rate limiting
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count: recentCount } = await supabase
       .from('whatsapp_conversations')
@@ -113,7 +114,46 @@ Contexto do usuário:
       }
     }
 
-    // 5. Fetch conversation history
+    // 5. Knowledge Base lookup — match keywords from user message
+    let knowledgeContext = '';
+    try {
+      const messageLower = message_text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      
+      const { data: allArticles } = await supabase
+        .from('whatsapp_ai_knowledge')
+        .select('title, content, keywords')
+        .eq('is_active', true);
+
+      if (allArticles && allArticles.length > 0) {
+        // Score each article by keyword matches
+        const scored = allArticles.map((article: any) => {
+          let score = 0;
+          const keywords: string[] = article.keywords || [];
+          for (const kw of keywords) {
+            const kwNorm = kw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            if (messageLower.includes(kwNorm)) {
+              score += kwNorm.length; // longer keyword matches = higher relevance
+            }
+          }
+          return { ...article, score };
+        });
+
+        const relevant = scored
+          .filter((a: any) => a.score > 0)
+          .sort((a: any, b: any) => b.score - a.score)
+          .slice(0, 5);
+
+        if (relevant.length > 0) {
+          knowledgeContext = '\n\nBase de Conhecimento (use estas informações para responder com precisão):\n' +
+            relevant.map((a: any) => `### ${a.title}\n${a.content}`).join('\n\n');
+          console.log(`[WHATSAPP-AI] Found ${relevant.length} relevant KB articles`);
+        }
+      }
+    } catch (kbError) {
+      console.error('[WHATSAPP-AI] KB lookup error (non-fatal):', kbError);
+    }
+
+    // 6. Fetch conversation history
     const maxHistory = aiSettings.max_history_messages || 10;
     const { data: history } = await supabase
       .from('whatsapp_conversations')
@@ -126,11 +166,12 @@ Contexto do usuário:
       .reverse()
       .map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
-    // 6. Build system prompt
+    // 7. Build system prompt with knowledge base
     const systemPrompt = (aiSettings.system_prompt || 'Você é um assistente útil.') +
-      (userContext ? `\n\n${userContext}` : '');
+      (userContext ? `\n\n${userContext}` : '') +
+      knowledgeContext;
 
-    // 7. Call OpenAI
+    // 8. Call OpenAI
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiKey) {
       console.error('[WHATSAPP-AI] OPENAI_API_KEY not configured');
@@ -145,7 +186,7 @@ Contexto do usuário:
       ...conversationHistory,
     ];
 
-    console.log(`[WHATSAPP-AI] Calling OpenAI with ${messages.length} messages`);
+    console.log(`[WHATSAPP-AI] Calling OpenAI with ${messages.length} messages, system prompt length: ${systemPrompt.length}`);
 
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -178,12 +219,12 @@ Contexto do usuário:
 
     console.log(`[WHATSAPP-AI] AI reply (${tokensUsed} tokens): "${aiReply.substring(0, 80)}..."`);
 
-    // 8. Check if AI wants to escalate to human support
+    // 9. Check if AI wants to escalate
     const shouldEscalate = aiReply.toLowerCase().includes('suporte humano') ||
                            aiReply.toLowerCase().includes('encaminhar') ||
                            aiReply.toLowerCase().includes('equipe de suporte');
 
-    // 9. Send reply via Evolution API
+    // 10. Send reply via Evolution API
     const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
     const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
 
@@ -192,7 +233,6 @@ Contexto do usuário:
       throw new Error('Evolution API not configured');
     }
 
-    // Get instance name from recovery_settings
     const { data: recoverySettings } = await supabase
       .from('recovery_settings')
       .select('instance_name')
@@ -225,7 +265,7 @@ Contexto do usuário:
 
     console.log(`[WHATSAPP-AI] Reply sent to ${phone_number}`);
 
-    // 10. Save assistant message to history
+    // 11. Save assistant message
     await supabase.from('whatsapp_conversations').insert({
       user_id: user_id || null,
       phone_number,
@@ -235,10 +275,9 @@ Contexto do usuário:
       tokens_used: tokensUsed,
     });
 
-    // 11. If escalation needed, create support ticket
+    // 12. Escalate if needed
     if (shouldEscalate && user_id) {
       console.log(`[WHATSAPP-AI] Escalating to human support for ${phone_number}`);
-
       await supabase.from('support_tickets').insert({
         user_id,
         subject: `WhatsApp: dúvida de ${phone_number}`,
@@ -262,7 +301,6 @@ Contexto do usuário:
   } catch (error) {
     console.error('[WHATSAPP-AI] Error:', error);
 
-    // Try to send fallback message
     try {
       const body = await new Response(error as any).text().catch(() => '');
       console.error('[WHATSAPP-AI] Error details:', body);
