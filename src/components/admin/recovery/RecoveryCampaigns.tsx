@@ -205,6 +205,71 @@ export function RecoveryCampaigns() {
     }
   };
 
+  const loadCooldownSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from('recovery_settings')
+        .select('user_cooldown_days')
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        const days = data.user_cooldown_days ?? 7;
+        setCooldownDays(days);
+        setCooldownEnabled(days > 0);
+      }
+    } catch (error) {
+      console.error('Error loading cooldown:', error);
+    }
+  };
+
+  const saveCooldownSettings = async (enabled: boolean, days: number) => {
+    setSavingCooldown(true);
+    try {
+      const { error } = await supabase
+        .from('recovery_settings')
+        .update({ 
+          user_cooldown_days: enabled ? days : 0,
+          updated_at: new Date().toISOString() 
+        })
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // update all rows
+      if (error) throw error;
+      toast.success(enabled ? `Cooldown definido para ${days} dias` : 'Cooldown desativado');
+    } catch (error) {
+      console.error('Error saving cooldown:', error);
+      toast.error('Erro ao salvar cooldown');
+    } finally {
+      setSavingCooldown(false);
+    }
+  };
+
+  const refreshCampaignTargets = async (campaign: Campaign) => {
+    setRefreshingCampaign(campaign.id);
+    try {
+      const tc = (campaign.target_criteria || {}) as Record<string, unknown>;
+      const { data, error } = await supabase.functions.invoke('check-inactive-users', {
+        body: {
+          campaignId: campaign.id,
+          templateId: campaign.template_id,
+          ignoreCooldown: true,
+          directCampaign: !!tc.direct_campaign,
+          targetCriteria: tc,
+          isAutoRegeneration: true,
+        }
+      });
+      if (error) throw error;
+      const newCount = data?.queued || 0;
+      toast.success(newCount > 0 
+        ? `${newCount} novos alvos adicionados à campanha!` 
+        : 'Nenhum novo alvo encontrado com os critérios atuais.');
+      loadData();
+    } catch (error) {
+      console.error('Error refreshing campaign:', error);
+      toast.error('Erro ao atualizar alvos');
+    } finally {
+      setRefreshingCampaign(null);
+    }
+  };
+
   const toggleArrayItem = (arr: string[], item: string) => {
     return arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
   };
