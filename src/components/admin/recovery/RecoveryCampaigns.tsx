@@ -660,6 +660,38 @@ export function RecoveryCampaigns() {
                 </div>
               </CardHeader>
               <CardContent>
+                {/* Campaign Rules */}
+                {campaign.target_criteria && Object.keys(campaign.target_criteria as Record<string, unknown>).length > 0 && (
+                  <div className="mb-4 p-3 rounded-lg border border-border bg-muted/30">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Regras da Campanha</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(() => {
+                        const tc = campaign.target_criteria as Record<string, unknown>;
+                        const tags: string[] = [];
+                        if (tc.direct_campaign) tags.push('🚀 Disparo Direto');
+                        if (tc.no_leads) tags.push('Sem leads');
+                        if (tc.no_quizzes) tags.push('Sem quiz');
+                        if (Array.isArray(tc.plans) && tc.plans.length > 0) tags.push(`Planos: ${(tc.plans as string[]).join(', ')}`);
+                        if (Array.isArray(tc.stages) && tc.stages.length > 0) tags.push(`Estágios: ${(tc.stages as string[]).join(', ')}`);
+                        if (Array.isArray(tc.objectives) && tc.objectives.length > 0) tags.push(`Objetivos: ${(tc.objectives as string[]).join(', ')}`);
+                        if (tc.min_inactive_days) tags.push(`${tc.min_inactive_days}+ dias inativos`);
+                        return tags.map((tag, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Template name */}
+                {campaign.template_id && (
+                  <div className="mb-4 text-sm text-muted-foreground">
+                    📝 Template: <span className="font-medium text-foreground">
+                      {templates.find(t => t.id === campaign.template_id)?.name || 'N/A'}
+                    </span>
+                  </div>
+                )}
+
                 {campaign.total_targets > 0 && (
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-1">

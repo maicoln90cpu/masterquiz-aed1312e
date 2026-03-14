@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       console.log(`[EVOLUTION-WEBHOOK] Message from: ${phoneNumber}, text: ${messageText.substring(0, 50)}`);
 
       // ========== CHECK "SAIR" OPT-OUT ==========
-      if (messageText.trim().toUpperCase() === 'SAIR') {
+      if (messageText.trim().toUpperCase().includes('SAIR')) {
         console.log(`[EVOLUTION-WEBHOOK] SAIR opt-out from ${phoneNumber}`);
 
         const { data: contactData } = await supabase
