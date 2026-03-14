@@ -203,14 +203,18 @@ const MyQuizzes = () => {
   };
 
   // Slug editing
-  const sanitizeSlug = (value: string) => 
-    value.toLowerCase().replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const sanitizeSlugInput = (value: string) =>
+    value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-');
+
+  const normalizeSlug = (value: string) =>
+    sanitizeSlugInput(value).replace(/^-+|-+$/g, '');
 
   const checkSlugAvailability = useDebouncedCallback(async (slug: string, quizId: string) => {
     if (!slug || slug.length < 3) {
       setSlugStatus('invalid');
       return;
     }
+
     setSlugStatus('checking');
     const { data } = await supabase
       .from('quizzes')
@@ -218,6 +222,7 @@ const MyQuizzes = () => {
       .eq('slug', slug)
       .neq('id', quizId)
       .maybeSingle();
+
     setSlugStatus(data ? 'taken' : 'available');
   }, 400);
 
@@ -226,6 +231,7 @@ const MyQuizzes = () => {
       toast.error(t('dashboard.slugRequiresCompanySlug', 'Você precisa configurar o slug da empresa em Configurações antes de editar o slug do quiz.'));
       return;
     }
+
     setQuizToEditSlug({ id: quizId, currentSlug });
     setNewSlug(currentSlug);
     setSlugStatus('idle');
@@ -233,24 +239,45 @@ const MyQuizzes = () => {
   };
 
   const handleSlugInputChange = (value: string) => {
-    const sanitized = sanitizeSlug(value);
-    setNewSlug(sanitized);
-    if (quizToEditSlug && sanitized !== quizToEditSlug.currentSlug) {
-      checkSlugAvailability(sanitized, quizToEditSlug.id);
-    } else {
+    const sanitizedInput = sanitizeSlugInput(value);
+    const normalizedSlug = normalizeSlug(sanitizedInput);
+
+    setNewSlug(sanitizedInput);
+
+    if (!quizToEditSlug) {
       setSlugStatus('idle');
+      return;
     }
+
+    if (!normalizedSlug || normalizedSlug.length < 3) {
+      setSlugStatus('invalid');
+      return;
+    }
+
+    if (normalizedSlug === quizToEditSlug.currentSlug) {
+      setSlugStatus('idle');
+      return;
+    }
+
+    checkSlugAvailability(normalizedSlug, quizToEditSlug.id);
   };
 
   const confirmSlugEdit = async () => {
     if (!quizToEditSlug || slugStatus !== 'available') return;
+
+    const normalizedSlug = normalizeSlug(newSlug);
+    if (!normalizedSlug || normalizedSlug.length < 3) {
+      setSlugStatus('invalid');
+      return;
+    }
+
     setSlugSaving(true);
     try {
       const { error } = await supabase
         .from('quizzes')
-        .update({ slug: newSlug })
+        .update({ slug: normalizedSlug })
         .eq('id', quizToEditSlug.id);
-      
+
       if (error) {
         if (error.code === '23505') {
           toast.error(t('dashboard.slugAlreadyTaken', 'Este slug já está em uso.'));
@@ -259,6 +286,8 @@ const MyQuizzes = () => {
         }
         return;
       }
+
+      setNewSlug(normalizedSlug);
       queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
       toast.success(t('dashboard.slugUpdated', 'Slug atualizado com sucesso!'));
       setSlugDialogOpen(false);
