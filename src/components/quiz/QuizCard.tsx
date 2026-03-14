@@ -416,6 +416,16 @@ export function QuizCard({
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <LinkIcon className="h-4 w-4 shrink-0" />
               <span className="truncate font-mono text-xs">{publicUrl}</span>
+              {onEditSlug && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 shrink-0 opacity-60 hover:opacity-100"
+                  onClick={() => onEditSlug(quiz.id, quiz.slug || '')}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Calendar className="h-4 w-4" />
