@@ -77,6 +77,13 @@ const MyQuizzes = () => {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedQuizSlug, setSelectedQuizSlug] = useState("");
   const [selectedQuizId, setSelectedQuizId] = useState("");
+  
+  // Slug editing states
+  const [slugDialogOpen, setSlugDialogOpen] = useState(false);
+  const [quizToEditSlug, setQuizToEditSlug] = useState<{ id: string; currentSlug: string } | null>(null);
+  const [newSlug, setNewSlug] = useState("");
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [slugSaving, setSlugSaving] = useState(false);
 
   // Force refetch quizzes on mount
   useEffect(() => {
