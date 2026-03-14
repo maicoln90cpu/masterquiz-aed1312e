@@ -1,10 +1,11 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Plus, Search, Tag, FileQuestion, Loader2 } from "lucide-react";
+import { Plus, Search, Tag, FileQuestion, Loader2, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useDebouncedCallback } from "use-debounce";
 
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,13 @@ const MyQuizzes = () => {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedQuizSlug, setSelectedQuizSlug] = useState("");
   const [selectedQuizId, setSelectedQuizId] = useState("");
+  
+  // Slug editing states
+  const [slugDialogOpen, setSlugDialogOpen] = useState(false);
+  const [quizToEditSlug, setQuizToEditSlug] = useState<{ id: string; currentSlug: string } | null>(null);
+  const [newSlug, setNewSlug] = useState("");
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [slugSaving, setSlugSaving] = useState(false);
 
   // Force refetch quizzes on mount
   useEffect(() => {
@@ -191,6 +199,73 @@ const MyQuizzes = () => {
     } else {
       setSelectedQuizId(id);
       setPreviewDialogOpen(true);
+    }
+  };
+
+  // Slug editing
+  const sanitizeSlug = (value: string) => 
+    value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+  const checkSlugAvailability = useDebouncedCallback(async (slug: string, quizId: string) => {
+    if (!slug || slug.length < 3) {
+      setSlugStatus('invalid');
+      return;
+    }
+    setSlugStatus('checking');
+    const { data } = await supabase
+      .from('quizzes')
+      .select('id')
+      .eq('slug', slug)
+      .neq('id', quizId)
+      .maybeSingle();
+    setSlugStatus(data ? 'taken' : 'available');
+  }, 400);
+
+  const handleEditSlug = (quizId: string, currentSlug: string) => {
+    if (!userProfile?.company_slug) {
+      toast.error(t('dashboard.slugRequiresCompanySlug', 'Você precisa configurar o slug da empresa em Configurações antes de editar o slug do quiz.'));
+      return;
+    }
+    setQuizToEditSlug({ id: quizId, currentSlug });
+    setNewSlug(currentSlug);
+    setSlugStatus('idle');
+    setSlugDialogOpen(true);
+  };
+
+  const handleSlugInputChange = (value: string) => {
+    const sanitized = sanitizeSlug(value);
+    setNewSlug(sanitized);
+    if (quizToEditSlug && sanitized !== quizToEditSlug.currentSlug) {
+      checkSlugAvailability(sanitized, quizToEditSlug.id);
+    } else {
+      setSlugStatus('idle');
+    }
+  };
+
+  const confirmSlugEdit = async () => {
+    if (!quizToEditSlug || slugStatus !== 'available') return;
+    setSlugSaving(true);
+    try {
+      const { error } = await supabase
+        .from('quizzes')
+        .update({ slug: newSlug })
+        .eq('id', quizToEditSlug.id);
+      
+      if (error) {
+        if (error.code === '23505') {
+          toast.error(t('dashboard.slugAlreadyTaken', 'Este slug já está em uso.'));
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+      toast.success(t('dashboard.slugUpdated', 'Slug atualizado com sucesso!'));
+      setSlugDialogOpen(false);
+    } catch (err) {
+      toast.error(t('dashboard.errorUpdatingSlug', 'Erro ao atualizar slug.'));
+    } finally {
+      setSlugSaving(false);
     }
   };
 
@@ -363,6 +438,7 @@ const MyQuizzes = () => {
                       onCopyLink={handleCopyLink}
                       onEmbed={handleEmbed}
                       onPreview={handlePreview}
+                      onEditSlug={handleEditSlug}
                       onGenerateTestLead={generateTestLead}
                       isGeneratingTestLead={isGeneratingTestLead}
                     />
@@ -425,6 +501,62 @@ const MyQuizzes = () => {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   t('dashboard.duplicate')
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Slug Edit Dialog */}
+        <Dialog open={slugDialogOpen} onOpenChange={setSlugDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('dashboard.editSlug', 'Editar Slug do Quiz')}</DialogTitle>
+              <DialogDescription>
+                {t('dashboard.editSlugDescription', 'O slug é a parte final da URL do seu quiz. Use apenas letras minúsculas, números e hífens.')}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-3">
+              <Label htmlFor="slug-input">Slug</Label>
+              <div className="relative">
+                <Input
+                  id="slug-input"
+                  value={newSlug}
+                  onChange={(e) => handleSlugInputChange(e.target.value)}
+                  className="pr-10"
+                  placeholder="meu-quiz"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {slugStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  {slugStatus === 'available' && <Check className="h-4 w-4 text-primary" />}
+                  {slugStatus === 'taken' && <X className="h-4 w-4 text-destructive" />}
+                  {slugStatus === 'invalid' && <AlertCircle className="h-4 w-4 text-muted-foreground" />}
+                </div>
+              </div>
+              {slugStatus === 'taken' && (
+                <p className="text-xs text-destructive">{t('dashboard.slugAlreadyTaken', 'Este slug já está em uso.')}</p>
+              )}
+              {slugStatus === 'invalid' && (
+                <p className="text-xs text-muted-foreground">{t('dashboard.slugTooShort', 'O slug precisa ter pelo menos 3 caracteres.')}</p>
+              )}
+              {slugStatus === 'available' && userProfile?.company_slug && (
+                <p className="text-xs text-muted-foreground">
+                  URL: {window.location.origin}/{userProfile.company_slug}/{newSlug}
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSlugDialogOpen(false)}>
+                {t('dashboard.cancel')}
+              </Button>
+              <Button 
+                onClick={confirmSlugEdit} 
+                disabled={slugStatus !== 'available' || slugSaving}
+              >
+                {slugSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  t('dashboard.save', 'Salvar')
                 )}
               </Button>
             </DialogFooter>

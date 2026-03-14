@@ -12,7 +12,8 @@ import {
   Link as LinkIcon,
   Calendar,
   FileText,
-  FlaskConical
+  FlaskConical,
+  Pencil
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -48,6 +49,7 @@ interface QuizCardProps {
   onCopyLink: (slug: string) => void;
   onEmbed: (slug: string) => void;
   onPreview: (id: string) => void;
+  onEditSlug?: (quizId: string, currentSlug: string) => void;
   onGenerateTestLead?: (quizId: string) => void;
   isGeneratingTestLead?: boolean;
 }
@@ -60,6 +62,7 @@ export function QuizCard({
   onCopyLink,
   onEmbed,
   onPreview,
+  onEditSlug,
   onGenerateTestLead,
   isGeneratingTestLead,
 }: QuizCardProps) {
@@ -106,11 +109,21 @@ export function QuizCard({
         )}
 
         {/* Linha 3: Link truncado */}
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-muted/50 rounded px-2 py-1">
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 rounded px-2 py-1">
           <LinkIcon className="h-3 w-3 shrink-0" />
           <span className="truncate flex-1 font-mono min-w-0 max-w-[180px]">
             {quiz.slug || 'sem-slug'}
           </span>
+          {onEditSlug && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 shrink-0 opacity-60 hover:opacity-100"
+              onClick={() => onEditSlug(quiz.id, quiz.slug || '')}
+            >
+              <Pencil className="h-2.5 w-2.5" />
+            </Button>
+          )}
         </div>
 
         {/* Linha 4: Botões em linha única - apenas ícones com tooltips */}
@@ -241,6 +254,16 @@ export function QuizCard({
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <LinkIcon className="h-4 w-4 shrink-0" />
               <span className="truncate font-mono text-xs">{publicUrl}</span>
+              {onEditSlug && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 shrink-0 opacity-60 hover:opacity-100"
+                  onClick={() => onEditSlug(quiz.id, quiz.slug || '')}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Calendar className="h-4 w-4" />
@@ -393,6 +416,16 @@ export function QuizCard({
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <LinkIcon className="h-4 w-4 shrink-0" />
               <span className="truncate font-mono text-xs">{publicUrl}</span>
+              {onEditSlug && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 shrink-0 opacity-60 hover:opacity-100"
+                  onClick={() => onEditSlug(quiz.id, quiz.slug || '')}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Calendar className="h-4 w-4" />
