@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
     let ignoreCooldown = false;
     let directCampaign = false;
     let targetCriteria: TargetCriteria = {};
+    let isAutoRegeneration = false;
 
     try {
       const body = await req.json();
@@ -74,6 +75,7 @@ Deno.serve(async (req) => {
       ignoreCooldown = body.ignoreCooldown || false;
       directCampaign = body.directCampaign || false;
       targetCriteria = body.targetCriteria || {};
+      isAutoRegeneration = body.isAutoRegeneration || false;
     } catch {
       // No body provided
     }
