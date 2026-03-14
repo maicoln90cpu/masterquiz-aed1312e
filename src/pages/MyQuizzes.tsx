@@ -438,6 +438,7 @@ const MyQuizzes = () => {
                       onCopyLink={handleCopyLink}
                       onEmbed={handleEmbed}
                       onPreview={handlePreview}
+                      onEditSlug={handleEditSlug}
                       onGenerateTestLead={generateTestLead}
                       isGeneratingTestLead={isGeneratingTestLead}
                     />
