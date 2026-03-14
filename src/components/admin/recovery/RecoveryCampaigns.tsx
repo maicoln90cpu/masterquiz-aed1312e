@@ -352,6 +352,66 @@ export function RecoveryCampaigns() {
     }
   };
 
+  const openEditDialog = (campaign: Campaign) => {
+    setEditingCampaign(campaign);
+    setEditFormData({
+      name: campaign.name,
+      description: campaign.description || '',
+      scheduled_at: campaign.scheduled_at ? campaign.scheduled_at.slice(0, 16) : '',
+    });
+    const tc = (campaign.target_criteria || {}) as Record<string, unknown>;
+    setEditCriteria({
+      no_leads: !!tc.no_leads,
+      no_quizzes: !!tc.no_quizzes,
+      plans: Array.isArray(tc.plans) ? tc.plans : [],
+      stages: Array.isArray(tc.stages) ? tc.stages : [],
+      objectives: Array.isArray(tc.objectives) ? tc.objectives : [],
+      min_inactive_days: typeof tc.min_inactive_days === 'number' ? tc.min_inactive_days : null,
+      direct_campaign: !!tc.direct_campaign,
+    });
+    setEditFiltersOpen(false);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editingCampaign || !editFormData.name) {
+      toast.error('Preencha o nome da campanha');
+      return;
+    }
+
+    const tc: Record<string, unknown> = {};
+    if (editCriteria.no_leads) tc.no_leads = true;
+    if (editCriteria.no_quizzes) tc.no_quizzes = true;
+    if (editCriteria.plans.length > 0) tc.plans = editCriteria.plans;
+    if (editCriteria.stages.length > 0) tc.stages = editCriteria.stages;
+    if (editCriteria.objectives.length > 0) tc.objectives = editCriteria.objectives;
+    if (editCriteria.min_inactive_days) tc.min_inactive_days = editCriteria.min_inactive_days;
+    if (editCriteria.direct_campaign) tc.direct_campaign = true;
+
+    try {
+      const { error } = await supabase
+        .from('recovery_campaigns')
+        .update({
+          name: editFormData.name,
+          description: editFormData.description || null,
+          scheduled_at: editFormData.scheduled_at || null,
+          target_criteria: JSON.parse(JSON.stringify(tc)),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingCampaign.id);
+
+      if (error) throw error;
+
+      toast.success('Campanha atualizada!');
+      setEditDialogOpen(false);
+      setEditingCampaign(null);
+      loadData();
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      toast.error('Erro ao atualizar campanha');
+    }
+  };
+
   const getProgress = (campaign: Campaign) => {
     if (campaign.total_targets === 0) return 0;
     return Math.round((campaign.sent_count / campaign.total_targets) * 100);
