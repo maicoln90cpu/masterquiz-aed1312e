@@ -204,7 +204,7 @@ const MyQuizzes = () => {
 
   // Slug editing
   const sanitizeSlug = (value: string) => 
-    value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    value.toLowerCase().replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
 
   const checkSlugAvailability = useDebouncedCallback(async (slug: string, quizId: string) => {
     if (!slug || slug.length < 3) {
