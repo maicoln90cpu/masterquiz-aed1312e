@@ -62,6 +62,7 @@ export function QuizCard({
   onCopyLink,
   onEmbed,
   onPreview,
+  onEditSlug,
   onGenerateTestLead,
   isGeneratingTestLead,
 }: QuizCardProps) {
