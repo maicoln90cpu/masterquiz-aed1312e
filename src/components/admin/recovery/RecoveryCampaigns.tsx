@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter, Pencil } from "lucide-react";
+import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter, Pencil, RefreshCw, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -126,6 +127,10 @@ export function RecoveryCampaigns() {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [editFiltersOpen, setEditFiltersOpen] = useState(false);
+  const [refreshingCampaign, setRefreshingCampaign] = useState<string | null>(null);
+  const [cooldownEnabled, setCooldownEnabled] = useState(true);
+  const [cooldownDays, setCooldownDays] = useState(7);
+  const [savingCooldown, setSavingCooldown] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -142,6 +147,7 @@ export function RecoveryCampaigns() {
 
   useEffect(() => {
     loadData();
+    loadCooldownSettings();
   }, []);
 
   const loadData = async () => {
@@ -196,6 +202,71 @@ export function RecoveryCampaigns() {
       toast.error('Erro ao carregar campanhas');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCooldownSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from('recovery_settings')
+        .select('user_cooldown_days')
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        const days = data.user_cooldown_days ?? 7;
+        setCooldownDays(days);
+        setCooldownEnabled(days > 0);
+      }
+    } catch (error) {
+      console.error('Error loading cooldown:', error);
+    }
+  };
+
+  const saveCooldownSettings = async (enabled: boolean, days: number) => {
+    setSavingCooldown(true);
+    try {
+      const { error } = await supabase
+        .from('recovery_settings')
+        .update({ 
+          user_cooldown_days: enabled ? days : 0,
+          updated_at: new Date().toISOString() 
+        })
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // update all rows
+      if (error) throw error;
+      toast.success(enabled ? `Cooldown definido para ${days} dias` : 'Cooldown desativado');
+    } catch (error) {
+      console.error('Error saving cooldown:', error);
+      toast.error('Erro ao salvar cooldown');
+    } finally {
+      setSavingCooldown(false);
+    }
+  };
+
+  const refreshCampaignTargets = async (campaign: Campaign) => {
+    setRefreshingCampaign(campaign.id);
+    try {
+      const tc = (campaign.target_criteria || {}) as Record<string, unknown>;
+      const { data, error } = await supabase.functions.invoke('check-inactive-users', {
+        body: {
+          campaignId: campaign.id,
+          templateId: campaign.template_id,
+          ignoreCooldown: true,
+          directCampaign: !!tc.direct_campaign,
+          targetCriteria: tc,
+          isAutoRegeneration: true,
+        }
+      });
+      if (error) throw error;
+      const newCount = data?.queued || 0;
+      toast.success(newCount > 0 
+        ? `${newCount} novos alvos adicionados à campanha!` 
+        : 'Nenhum novo alvo encontrado com os critérios atuais.');
+      loadData();
+    } catch (error) {
+      console.error('Error refreshing campaign:', error);
+      toast.error('Erro ao atualizar alvos');
+    } finally {
+      setRefreshingCampaign(null);
     }
   };
 
@@ -646,7 +717,53 @@ export function RecoveryCampaigns() {
         </Dialog>
       </div>
 
-      {/* Campaigns List */}
+      {/* Cooldown Global */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Shield className="h-4 w-4" />
+            Cooldown Entre Contatos
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Intervalo mínimo entre contatos ao mesmo usuário. Quando desativado, o único controle é a UNIQUE constraint (1 template por usuário).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={cooldownEnabled}
+                onCheckedChange={(checked) => {
+                  setCooldownEnabled(checked);
+                  saveCooldownSettings(checked, cooldownDays);
+                }}
+                disabled={savingCooldown}
+              />
+              <Label className="text-sm">{cooldownEnabled ? 'Ativo' : 'Desativado'}</Label>
+            </div>
+            {cooldownEnabled && (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={cooldownDays}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 7;
+                    setCooldownDays(val);
+                  }}
+                  onBlur={() => saveCooldownSettings(cooldownEnabled, cooldownDays)}
+                  className="w-20 h-8"
+                  disabled={savingCooldown}
+                />
+                <span className="text-sm text-muted-foreground">dias</span>
+              </div>
+            )}
+            {savingCooldown && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </div>
+        </CardContent>
+      </Card>
+
       {campaigns.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -697,6 +814,18 @@ export function RecoveryCampaigns() {
                           <Square className="h-4 w-4 mr-1" /> Cancelar
                         </Button>
                       </>
+                    )}
+                    {['running', 'paused'].includes(campaign.status) && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => refreshCampaignTargets(campaign)} 
+                        disabled={refreshingCampaign === campaign.id}
+                        title="Buscar novos alvos agora"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-1 ${refreshingCampaign === campaign.id ? 'animate-spin' : ''}`} /> 
+                        {refreshingCampaign === campaign.id ? 'Buscando...' : 'Atualizar Alvos'}
+                      </Button>
                     )}
                     {['running', 'paused', 'draft'].includes(campaign.status) && (
                       <Button size="sm" variant="outline" onClick={() => openEditDialog(campaign)} title="Editar campanha">
