@@ -40,16 +40,31 @@ interface UseQuizViewStateProps {
   previewData?: PreviewData;
 }
 
+// Detect React SyntheticEvent or native Event objects
+const isSyntheticOrNativeEvent = (obj: any): boolean => {
+  if (!obj || typeof obj !== 'object') return false;
+  if (obj instanceof Element || obj instanceof Event) return true;
+  // React SyntheticEvent has _reactName and nativeEvent properties
+  if ('_reactName' in obj || 'nativeEvent' in obj || '_targetInst' in obj) return true;
+  return false;
+};
+
 // Sanitize answers to prevent circular reference errors (DOM elements stored accidentally)
 const sanitizeAnswers = (answers: Record<string, any>): Record<string, any> => {
+  // Reject entire object if it's an event (e.g. SyntheticEvent passed as overrideAnswers)
+  if (isSyntheticOrNativeEvent(answers)) {
+    console.warn('[sanitizeAnswers] Rejected event object as answers');
+    return {};
+  }
   const clean: Record<string, any> = {};
   for (const [key, value] of Object.entries(answers)) {
     if (value === null || value === undefined) continue;
+    if (isSyntheticOrNativeEvent(value)) continue;
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
       clean[key] = value;
     } else if (Array.isArray(value)) {
       clean[key] = value.filter(v => typeof v === 'string' || typeof v === 'number');
-    } else if (typeof value === 'object' && !(value instanceof Element) && !(value instanceof Event)) {
+    } else if (typeof value === 'object') {
       try { JSON.stringify(value); clean[key] = value; } catch { /* skip non-serializable */ }
     }
   }
@@ -208,9 +223,9 @@ export function useQuizViewState({
   const [autoSubmitted, setAutoSubmitted] = useState(false);
 
   const handleAnswer = (questionId: string, value: any) => {
-    // Guard: reject DOM elements and Event objects
-    if (value instanceof Element || value instanceof Event) {
-      console.warn('[handleAnswer] Rejected non-serializable value for', questionId);
+    // Guard: reject DOM elements, native Events, and React SyntheticEvents
+    if (isSyntheticOrNativeEvent(value)) {
+      console.warn('[handleAnswer] Rejected event object for', questionId);
       return;
     }
     const newAnswers = { ...answers, [questionId]: value };
@@ -297,6 +312,11 @@ export function useQuizViewState({
 
   const submitQuiz = async (overrideAnswers?: Record<string, any>, overrideScore?: number) => {
     if (!quiz) return;
+    
+    // Guard: reject SyntheticEvent passed from onClick handlers
+    if (isSyntheticOrNativeEvent(overrideAnswers)) {
+      overrideAnswers = undefined;
+    }
     
     const finalAnswers = overrideAnswers || answers;
     
