@@ -507,6 +507,62 @@ const MyQuizzes = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Slug Edit Dialog */}
+        <Dialog open={slugDialogOpen} onOpenChange={setSlugDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('dashboard.editSlug', 'Editar Slug do Quiz')}</DialogTitle>
+              <DialogDescription>
+                {t('dashboard.editSlugDescription', 'O slug é a parte final da URL do seu quiz. Use apenas letras minúsculas, números e hífens.')}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-3">
+              <Label htmlFor="slug-input">Slug</Label>
+              <div className="relative">
+                <Input
+                  id="slug-input"
+                  value={newSlug}
+                  onChange={(e) => handleSlugInputChange(e.target.value)}
+                  className="pr-10"
+                  placeholder="meu-quiz"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {slugStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  {slugStatus === 'available' && <Check className="h-4 w-4 text-green-500" />}
+                  {slugStatus === 'taken' && <X className="h-4 w-4 text-destructive" />}
+                  {slugStatus === 'invalid' && <AlertCircle className="h-4 w-4 text-yellow-500" />}
+                </div>
+              </div>
+              {slugStatus === 'taken' && (
+                <p className="text-xs text-destructive">{t('dashboard.slugAlreadyTaken', 'Este slug já está em uso.')}</p>
+              )}
+              {slugStatus === 'invalid' && (
+                <p className="text-xs text-yellow-600">{t('dashboard.slugTooShort', 'O slug precisa ter pelo menos 3 caracteres.')}</p>
+              )}
+              {slugStatus === 'available' && userProfile?.company_slug && (
+                <p className="text-xs text-muted-foreground">
+                  URL: {window.location.origin}/{userProfile.company_slug}/{newSlug}
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSlugDialogOpen(false)}>
+                {t('dashboard.cancel')}
+              </Button>
+              <Button 
+                onClick={confirmSlugEdit} 
+                disabled={slugStatus !== 'available' || slugSaving}
+              >
+                {slugSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  t('dashboard.save', 'Salvar')
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Lazy Loaded Dialogs */}
         <Suspense fallback={null}>
           {tagManagerOpen && (
