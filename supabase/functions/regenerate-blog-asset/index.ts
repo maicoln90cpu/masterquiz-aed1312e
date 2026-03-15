@@ -61,8 +61,36 @@ Deno.serve(async (req) => {
 
     // Fetch settings
     const { data: settings } = await supabase.from('blog_settings').select('*').limit(1).maybeSingle();
-    const imagePromptTemplate = settings?.image_prompt_template || DEFAULT_IMAGE_PROMPT;
     const imageModel = settings?.image_model || 'google/gemini-2.5-flash-image';
+
+    // Fetch image prompt with rotation (exclude last used)
+    let imagePromptTemplate = settings?.image_prompt_template || DEFAULT_IMAGE_PROMPT;
+    let selectedPromptId: string | null = null;
+    try {
+      const { data: imagePrompts } = await supabase
+        .from('blog_image_prompts')
+        .select('*')
+        .eq('is_active', true)
+        .order('last_used_at', { ascending: true, nullsFirst: true });
+
+      if (imagePrompts && imagePrompts.length > 0) {
+        let candidates = imagePrompts;
+        if (imagePrompts.length > 1) {
+          const sorted = [...imagePrompts].sort((a, b) => {
+            if (!a.last_used_at) return -1;
+            if (!b.last_used_at) return 1;
+            return new Date(b.last_used_at).getTime() - new Date(a.last_used_at).getTime();
+          });
+          candidates = imagePrompts.filter(p => p.id !== sorted[0].id);
+        }
+        const selected = candidates[Math.floor(Math.random() * candidates.length)];
+        imagePromptTemplate = selected.prompt_template;
+        selectedPromptId = selected.id;
+        console.log(`${PREFIX} Using image prompt style: "${selected.name}"`);
+      }
+    } catch (e) {
+      console.warn(`${PREFIX} Image prompt rotation fallback:`, e);
+    }
 
     if (type === 'image') {
       return await regenerateImage(supabase, post, imagePromptTemplate, imageModel);
