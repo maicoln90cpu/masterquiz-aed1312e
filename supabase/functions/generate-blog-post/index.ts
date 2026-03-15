@@ -595,9 +595,10 @@ Deno.serve(async (req: Request) => {
 
                 // Update prompt usage tracking
                 if (selectedPromptId) {
+                  const { data: promptData } = await supabase.from('blog_image_prompts').select('usage_count').eq('id', selectedPromptId).single();
                   await supabase.from('blog_image_prompts').update({
                     last_used_at: new Date().toISOString(),
-                    usage_count: (await supabase.from('blog_image_prompts').select('usage_count').eq('id', selectedPromptId).single()).data?.usage_count + 1 || 1,
+                    usage_count: (promptData?.usage_count || 0) + 1,
                     updated_at: new Date().toISOString(),
                   }).eq('id', selectedPromptId);
                 }
