@@ -303,7 +303,39 @@ Deno.serve(async (req: Request) => {
     const categoriesList = (settings?.categories_list as string[]) || [];
     const topicsPool = (settings?.topics_pool as string[]) || [];
     const systemPrompt = settings?.system_prompt || DEFAULT_SYSTEM_PROMPT;
-    const imagePromptTemplate = settings?.image_prompt_template || DEFAULT_IMAGE_PROMPT;
+    const imagePromptTemplateFallback = settings?.image_prompt_template || DEFAULT_IMAGE_PROMPT;
+
+    // 2a. Fetch image prompts for rotation
+    let imagePromptTemplate = imagePromptTemplateFallback;
+    let selectedPromptId: string | null = null;
+    try {
+      const { data: imagePrompts } = await supabase
+        .from('blog_image_prompts')
+        .select('*')
+        .eq('is_active', true)
+        .order('last_used_at', { ascending: true, nullsFirst: true });
+
+      if (imagePrompts && imagePrompts.length > 0) {
+        // Pick randomly but exclude the most recently used one (if more than 1)
+        let candidates = imagePrompts;
+        if (imagePrompts.length > 1) {
+          // Find the most recently used
+          const sorted = [...imagePrompts].sort((a, b) => {
+            if (!a.last_used_at) return -1;
+            if (!b.last_used_at) return 1;
+            return new Date(b.last_used_at).getTime() - new Date(a.last_used_at).getTime();
+          });
+          const lastUsedId = sorted[0].id;
+          candidates = imagePrompts.filter(p => p.id !== lastUsedId);
+        }
+        const selected = candidates[Math.floor(Math.random() * candidates.length)];
+        imagePromptTemplate = selected.prompt_template;
+        selectedPromptId = selected.id;
+        console.log(`${PREFIX} Using image prompt style: "${selected.name}" (${selected.id})`);
+      }
+    } catch (promptErr) {
+      console.warn(`${PREFIX} Failed to load image prompts, using fallback:`, promptErr);
+    }
 
     // 2. Fetch recent posts for deduplication context
     const { data: recentPosts } = await supabase
