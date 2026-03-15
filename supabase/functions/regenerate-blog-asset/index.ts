@@ -61,11 +61,39 @@ Deno.serve(async (req) => {
 
     // Fetch settings
     const { data: settings } = await supabase.from('blog_settings').select('*').limit(1).maybeSingle();
-    const imagePromptTemplate = settings?.image_prompt_template || DEFAULT_IMAGE_PROMPT;
     const imageModel = settings?.image_model || 'google/gemini-2.5-flash-image';
 
+    // Fetch image prompt with rotation (exclude last used)
+    let imagePromptTemplate = settings?.image_prompt_template || DEFAULT_IMAGE_PROMPT;
+    let selectedPromptId: string | null = null;
+    try {
+      const { data: imagePrompts } = await supabase
+        .from('blog_image_prompts')
+        .select('*')
+        .eq('is_active', true)
+        .order('last_used_at', { ascending: true, nullsFirst: true });
+
+      if (imagePrompts && imagePrompts.length > 0) {
+        let candidates = imagePrompts;
+        if (imagePrompts.length > 1) {
+          const sorted = [...imagePrompts].sort((a, b) => {
+            if (!a.last_used_at) return -1;
+            if (!b.last_used_at) return 1;
+            return new Date(b.last_used_at).getTime() - new Date(a.last_used_at).getTime();
+          });
+          candidates = imagePrompts.filter(p => p.id !== sorted[0].id);
+        }
+        const selected = candidates[Math.floor(Math.random() * candidates.length)];
+        imagePromptTemplate = selected.prompt_template;
+        selectedPromptId = selected.id;
+        console.log(`${PREFIX} Using image prompt style: "${selected.name}"`);
+      }
+    } catch (e) {
+      console.warn(`${PREFIX} Image prompt rotation fallback:`, e);
+    }
+
     if (type === 'image') {
-      return await regenerateImage(supabase, post, imagePromptTemplate, imageModel);
+      return await regenerateImage(supabase, post, imagePromptTemplate, imageModel, selectedPromptId);
     } else if (type === 'content') {
       return await regenerateContent(supabase, post, settings);
     }
@@ -77,7 +105,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function regenerateImage(supabase: any, post: any, imagePromptTemplate: string, imageModel: string) {
+async function regenerateImage(supabase: any, post: any, imagePromptTemplate: string, imageModel: string, selectedPromptId: string | null = null) {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY');
   if (!lovableKey) {
     return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -171,6 +199,16 @@ async function regenerateImage(supabase: any, post: any, imagePromptTemplate: st
     og_image_url: featuredImageUrl,
     image_generation_cost_usd: IMAGE_COST_USD,
   }).eq('id', post.id);
+
+  // Update prompt usage tracking
+  if (selectedPromptId) {
+    const { data: promptData } = await supabase.from('blog_image_prompts').select('usage_count').eq('id', selectedPromptId).single();
+    await supabase.from('blog_image_prompts').update({
+      last_used_at: new Date().toISOString(),
+      usage_count: (promptData?.usage_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    }).eq('id', selectedPromptId);
+  }
 
   console.log(`${PREFIX} Image regenerated: ${featuredImageUrl}`);
 
