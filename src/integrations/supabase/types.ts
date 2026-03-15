@@ -198,6 +198,42 @@ export type Database = {
           },
         ]
       }
+      blog_image_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          name: string
+          prompt_template: string
+          style_description: string | null
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name: string
+          prompt_template: string
+          style_description?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name?: string
+          prompt_template?: string
+          style_description?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_name: string | null
