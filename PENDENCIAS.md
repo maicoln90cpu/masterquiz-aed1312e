@@ -4,6 +4,41 @@
 
 ---
 
+## ✅ v2.29.0 - Rotação de Prompts de Imagem do Blog + Cooldown de Campanhas (15/03/2026)
+
+### Sistema de Rotação de Prompts de Imagem
+- **Tabela `blog_image_prompts`**: 5 estilos visuais pré-cadastrados com rotação automática
+- **Estilos implementados**: Objetos 3D, Pessoa Real Pop, Flat Lay, Conceitual Hiper-Realista, Gradiente Abstrato
+- **Lógica de rotação**: Seleção aleatória excluindo o último prompt usado (`last_used_at`)
+- **Tracking de uso**: Campos `usage_count` e `last_used_at` atualizados a cada geração
+- **Fallback**: Se nenhum prompt ativo, usa `image_prompt_template` do `blog_settings`
+
+### Edge Functions Atualizadas
+- **`generate-blog-post`**: Busca prompts ativos da tabela, seleciona aleatoriamente com anti-repetição
+- **`regenerate-blog-asset`**: Mesma lógica de rotação para regeneração individual de imagens
+
+### UI Admin (BlogPromptConfig)
+- Cards por estilo com Switch de ativação, contagem de uso e data do último uso
+- Edição inline de prompts (clique para expandir)
+- CRUD completo: adicionar, editar, ativar/desativar, remover estilos
+- Prompt fallback separado abaixo da lista de rotação
+
+### Cooldown Global de Campanhas (RecoveryCampaigns)
+- Card "Cooldown Entre Contatos" com Switch + Input numérico (dias)
+- Persiste em `recovery_settings.user_cooldown_days`
+- Botão "Atualizar Alvos" por campanha ativa (chama `check-inactive-users`)
+
+### Arquivos Criados/Editados
+| Arquivo | Ação |
+|---------|------|
+| `supabase/migrations/20260315*` | NOVO — tabela `blog_image_prompts` + seed 5 estilos |
+| `src/components/admin/blog/BlogPromptConfig.tsx` | Reescrito — rotação + CRUD |
+| `supabase/functions/generate-blog-post/index.ts` | Rotação de prompts |
+| `supabase/functions/regenerate-blog-asset/index.ts` | Rotação de prompts |
+| `src/components/admin/recovery/RecoveryCampaigns.tsx` | Cooldown global + refresh |
+
+---
+
 ## ✅ v2.28.0 - Eventos GTM Completos + Dashboard de Observabilidade (09/03/2026)
 
 ### 5 Novos Eventos GTM
@@ -208,6 +243,7 @@ Consultar histórico detalhado nos commits e no ROADMAP.md.
 - [ ] Internacionalização: remover strings hardcoded restantes
 - [ ] 2FA implementation
 - [ ] Migrar eventos GTM legados para pushGTMEvent (landing, tracking, vitals)
+- [ ] Testar rotação de prompts de imagem em produção (validar variedade visual)
 
 ### Prioridade Média
 - [ ] API pública v1

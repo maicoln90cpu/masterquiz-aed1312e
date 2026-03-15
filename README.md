@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.28.0** | Última atualização: 09 de Març026
+**Versão 2.29.0** | Última atualização: 15 de Março de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -393,6 +393,10 @@ cookie_consents, scheduled_deletions, rate_limit_tracker
 -- i18n
 quiz_translations, quiz_question_translations
 
+-- Blog
+blog_posts, blog_settings, blog_image_prompts
+blog_generation_logs
+
 -- Outros
 landing_content, master_admin_emails, notification_preferences
 ai_quiz_generations, system_health_metrics, quiz_tags, quiz_tag_relations
@@ -495,6 +499,8 @@ src/
 - ✅ Configuração Kiwify, Bunny, AI prompts
 - ✅ CSP monitoring + Bundle analysis
 - ✅ Dashboard de Eventos GTM (observabilidade)
+- ✅ Blog: Rotação de prompts de imagem (5 estilos, anti-repetição)
+- ✅ Cooldown global de campanhas WhatsApp
 
 ---
 
@@ -509,6 +515,7 @@ src/
 | Erro 400 em analytics | FK `quiz_step_analytics.quiz_id` deve existir |
 | `validation_requests` 400 | Normal para não-admin; tratado graciosamente |
 | Eventos GTM não aparecem | Verificar se `pushGTMEvent` está sendo chamado e tabela `gtm_event_logs` tem RLS INSERT |
+| Imagens do blog sempre iguais | Verificar se há ≥2 prompts ativos em `blog_image_prompts` |
 
 ### Debug
 

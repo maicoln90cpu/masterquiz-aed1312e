@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 09 de Março de 2026 | Versão 2.28
+> Última atualização: 15 de Março de 2026 | Versão 2.29
 
 ---
 
@@ -410,6 +410,50 @@ Todos usam `ON CONFLICT DO NOTHING` para idempotência.
 ### Triggers Automáticos
 - `trigger_welcome_on_whatsapp_update()`: Dispara welcome quando WhatsApp é adicionado ao perfil
 - `trigger_first_quiz_message()`: Dispara mensagem quando 1º quiz é publicado
+
+---
+
+## 🖼️ Sistema de Rotação de Prompts de Imagem (Blog)
+
+### Arquitetura
+
+```
+generate-blog-post / regenerate-blog-asset
+        │
+        ▼
+  blog_image_prompts (SELECT is_active=true, ORDER BY last_used_at ASC)
+        │
+        ├── Filtra: exclui prompt com last_used_at mais recente (se >1 ativo)
+        ├── Seleciona aleatoriamente entre candidatos
+        └── UPDATE: last_used_at = now(), usage_count += 1
+        │
+        ▼
+  Gemini API (gera imagem com prompt selecionado)
+```
+
+### Tabela `blog_image_prompts`
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | uuid | PK |
+| `name` | text | Nome do estilo (ex: "Objetos 3D Vibrantes") |
+| `prompt_template` | text | Template com `{{topic}}` como variável |
+| `style_description` | text | Descrição curta para UI |
+| `is_active` | boolean | Se participa da rotação |
+| `last_used_at` | timestamp | Última vez que foi selecionado |
+| `usage_count` | integer | Total de vezes usado |
+
+### 5 Estilos Pré-cadastrados
+
+1. **Objetos 3D em Fundo Vibrante** — Modelos 3D em fundos saturados
+2. **Pessoa Real em Cenário Pop** — Editorial lifestyle com cores vibrantes
+3. **Flat Lay Temático** — Vista de cima com objetos de marketing
+4. **Conceitual Hiper-Realista** — Metáforas visuais (foguete, lupa gigante)
+5. **Gradiente Abstrato com Elemento Central** — Gradientes neon com ícone 3D
+
+### Fallback
+
+Se nenhum prompt ativo na tabela, usa `blog_settings.image_prompt_template`.
 
 ---
 
