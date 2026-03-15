@@ -2491,6 +2491,7 @@ export type Database = {
       }
       whatsapp_ai_settings: {
         Row: {
+          admin_alert_phone: string | null
           created_at: string
           fallback_message: string | null
           id: string
@@ -2501,6 +2502,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_alert_phone?: string | null
           created_at?: string
           fallback_message?: string | null
           id?: string
@@ -2511,6 +2513,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_alert_phone?: string | null
           created_at?: string
           fallback_message?: string | null
           id?: string

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Save, Bot, Shield, BookOpen } from "lucide-react";
+import { Loader2, Save, Bot, Shield, BookOpen, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { WhatsAppAIKnowledge } from "./WhatsAppAIKnowledge";
@@ -18,6 +18,7 @@ interface AISettings {
   max_history_messages: number;
   rate_limit_per_hour: number;
   fallback_message: string;
+  admin_alert_phone: string;
 }
 
 export function WhatsAppAISettings() {
@@ -59,6 +60,7 @@ export function WhatsAppAISettings() {
           max_history_messages: settings.max_history_messages,
           rate_limit_per_hour: settings.rate_limit_per_hour,
           fallback_message: settings.fallback_message,
+          admin_alert_phone: settings.admin_alert_phone || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', settings.id);
@@ -207,8 +209,32 @@ export function WhatsAppAISettings() {
               </div>
             </CardContent>
           </Card>
+          {/* Alerta Admin */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Alerta de Intervenção Humana
+              </CardTitle>
+              <CardDescription>
+                Quando você responde manualmente a um usuário, o agente IA para de responder automaticamente
+                e envia um alerta no seu número quando o usuário responder.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Label>Número do Admin (para alertas)</Label>
+              <Input
+                type="text"
+                placeholder="5511999999999"
+                value={settings.admin_alert_phone || ''}
+                onChange={(e) => setSettings({ ...settings, admin_alert_phone: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Número com DDI+DDD sem espaços. Receberá alertas quando um usuário responder após sua intervenção manual.
+              </p>
+            </CardContent>
+          </Card>
 
-          {/* Salvar */}
           <div className="flex justify-end">
             <Button onClick={saveSettings} disabled={saving} size="lg">
               {saving ? (
