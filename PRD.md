@@ -321,6 +321,8 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF11.8 | Support tickets | Média | ✅ |
 | RF11.9 | CSP monitoring | Média | ✅ |
 | RF11.10 | Dashboard de eventos GTM (observabilidade) | Média | ✅ |
+| RF11.11 | Rotação de prompts de imagem do blog (5 estilos) | Média | ✅ |
+| RF11.12 | Cooldown global de campanhas de recuperação | Média | ✅ |
 
 ---
 

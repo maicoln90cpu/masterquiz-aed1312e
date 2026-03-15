@@ -243,6 +243,7 @@ Consultar histórico detalhado nos commits e no ROADMAP.md.
 - [ ] Internacionalização: remover strings hardcoded restantes
 - [ ] 2FA implementation
 - [ ] Migrar eventos GTM legados para pushGTMEvent (landing, tracking, vitals)
+- [ ] Testar rotação de prompts de imagem em produção (validar variedade visual)
 
 ### Prioridade Média
 - [ ] API pública v1

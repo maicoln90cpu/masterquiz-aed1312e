@@ -393,6 +393,10 @@ cookie_consents, scheduled_deletions, rate_limit_tracker
 -- i18n
 quiz_translations, quiz_question_translations
 
+-- Blog
+blog_posts, blog_settings, blog_image_prompts
+blog_generation_logs
+
 -- Outros
 landing_content, master_admin_emails, notification_preferences
 ai_quiz_generations, system_health_metrics, quiz_tags, quiz_tag_relations

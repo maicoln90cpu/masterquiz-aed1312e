@@ -100,6 +100,8 @@ Q4 2025: Expansão Internacional
 - Multi-language AI
 - Agency partner program
 - Tracking GTM centralizado + Dashboard de observabilidade ✅
+- Blog AI: Rotação de prompts de imagem (5 estilos visuais) ✅
+- Campanhas WhatsApp: Cooldown global configurável ✅
 
 ### H2 2026
 - Expansão para EUA
