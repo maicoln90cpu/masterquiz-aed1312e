@@ -495,6 +495,8 @@ src/
 - ✅ Configuração Kiwify, Bunny, AI prompts
 - ✅ CSP monitoring + Bundle analysis
 - ✅ Dashboard de Eventos GTM (observabilidade)
+- ✅ Blog: Rotação de prompts de imagem (5 estilos, anti-repetição)
+- ✅ Cooldown global de campanhas WhatsApp
 
 ---
 
