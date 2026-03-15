@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 09 de Março de 2026 | Versão 2.28
+> Última atualização: 15 de Março de 2026 | Versão 2.29
 
 ---
 
