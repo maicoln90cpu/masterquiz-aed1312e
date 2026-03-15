@@ -79,7 +79,69 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3. Save user message to history
+    // 3. Check for human intervention — if last non-user message is 'human', skip AI and alert admin
+    const { data: lastNonUserMsg } = await supabase
+      .from('whatsapp_conversations')
+      .select('role, content, created_at')
+      .eq('phone_number', phone_number)
+      .in('role', ['assistant', 'human'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (lastNonUserMsg?.role === 'human') {
+      console.log(`[WHATSAPP-AI] Human intervention detected for ${phone_number}, skipping AI reply`);
+
+      // Save user message anyway for history
+      await supabase.from('whatsapp_conversations').insert({
+        user_id: user_id || null,
+        phone_number,
+        role: 'user',
+        content: message_text,
+        template_context_id: contact_id || null,
+      });
+
+      // Send alert to admin if configured
+      const adminPhone = aiSettings.admin_alert_phone;
+      if (adminPhone) {
+        try {
+          const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
+          const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
+          const { data: recoverySettings } = await supabase
+            .from('recovery_settings')
+            .select('instance_name')
+            .limit(1)
+            .maybeSingle();
+          const instanceName = recoverySettings?.instance_name || 'masterquizz';
+
+          if (evolutionUrl && evolutionKey) {
+            const alertText = `⚠️ *Alerta: Resposta após intervenção humana*\n\n📱 Número: ${phone_number}\n💬 Mensagem: "${message_text.substring(0, 200)}"\n\n_O agente IA NÃO respondeu pois detectou que você já estava conversando com este número._`;
+            
+            await fetch(`${evolutionUrl}/message/sendText/${instanceName}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': evolutionKey,
+              },
+              body: JSON.stringify({
+                number: adminPhone.replace(/\D/g, ''),
+                text: alertText,
+              }),
+            });
+            console.log(`[WHATSAPP-AI] Admin alert sent to ${adminPhone}`);
+          }
+        } catch (alertError) {
+          console.error('[WHATSAPP-AI] Failed to send admin alert:', alertError);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ success: false, reason: 'human_intervention', admin_alerted: !!adminPhone }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 4. Save user message to history
     await supabase.from('whatsapp_conversations').insert({
       user_id: user_id || null,
       phone_number,

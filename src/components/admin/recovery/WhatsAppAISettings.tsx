@@ -18,6 +18,7 @@ interface AISettings {
   max_history_messages: number;
   rate_limit_per_hour: number;
   fallback_message: string;
+  admin_alert_phone: string;
 }
 
 export function WhatsAppAISettings() {

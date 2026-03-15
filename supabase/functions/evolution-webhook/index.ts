@@ -66,10 +66,37 @@ Deno.serve(async (req) => {
                          data?.message?.conversation ||
                          '';
 
-      // Ignorar mensagens enviadas por nós
+      // Mensagens enviadas por nós (fromMe) — salvar como 'human' para detecção de intervenção
       if (fromMe) {
+        if (messageText && messageText.trim().length > 0) {
+          // Extrair número do destinatário
+          const recipientPhone = remoteJid ? remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '') : '';
+          
+          // Verificar se NÃO foi enviada pelo bot (comparar com últimas msgs de assistant)
+          const { data: lastAssistant } = await supabase
+            .from('whatsapp_conversations')
+            .select('content')
+            .eq('phone_number', recipientPhone)
+            .eq('role', 'assistant')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          // Se a mensagem NÃO é igual à última resposta do bot, é intervenção humana
+          const isHumanIntervention = !lastAssistant || lastAssistant.content !== messageText;
+
+          if (isHumanIntervention && recipientPhone) {
+            await supabase.from('whatsapp_conversations').insert({
+              phone_number: recipientPhone,
+              role: 'human',
+              content: messageText,
+            });
+            console.log(`[EVOLUTION-WEBHOOK] Human intervention recorded for ${recipientPhone}`);
+          }
+        }
+
         return new Response(
-          JSON.stringify({ success: true, event: 'messages.upsert', ignored: 'from_me' }),
+          JSON.stringify({ success: true, event: 'messages.upsert', handled: 'from_me_recorded' }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
