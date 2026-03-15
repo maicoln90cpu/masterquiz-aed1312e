@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function regenerateImage(supabase: any, post: any, imagePromptTemplate: string, imageModel: string) {
+async function regenerateImage(supabase: any, post: any, imagePromptTemplate: string, imageModel: string, selectedPromptId: string | null = null) {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY');
   if (!lovableKey) {
     return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
