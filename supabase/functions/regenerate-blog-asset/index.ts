@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     }
 
     if (type === 'image') {
-      return await regenerateImage(supabase, post, imagePromptTemplate, imageModel);
+      return await regenerateImage(supabase, post, imagePromptTemplate, imageModel, selectedPromptId);
     } else if (type === 'content') {
       return await regenerateContent(supabase, post, settings);
     }
