@@ -511,6 +511,7 @@ src/
 | Erro 400 em analytics | FK `quiz_step_analytics.quiz_id` deve existir |
 | `validation_requests` 400 | Normal para não-admin; tratado graciosamente |
 | Eventos GTM não aparecem | Verificar se `pushGTMEvent` está sendo chamado e tabela `gtm_event_logs` tem RLS INSERT |
+| Imagens do blog sempre iguais | Verificar se há ≥2 prompts ativos em `blog_image_prompts` |
 
 ### Debug
 
