@@ -209,8 +209,32 @@ export function WhatsAppAISettings() {
               </div>
             </CardContent>
           </Card>
+          {/* Alerta Admin */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Alerta de Intervenção Humana
+              </CardTitle>
+              <CardDescription>
+                Quando você responde manualmente a um usuário, o agente IA para de responder automaticamente
+                e envia um alerta no seu número quando o usuário responder.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Label>Número do Admin (para alertas)</Label>
+              <Input
+                type="text"
+                placeholder="5511999999999"
+                value={settings.admin_alert_phone || ''}
+                onChange={(e) => setSettings({ ...settings, admin_alert_phone: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Número com DDI+DDD sem espaços. Receberá alertas quando um usuário responder após sua intervenção manual.
+              </p>
+            </CardContent>
+          </Card>
 
-          {/* Salvar */}
           <div className="flex justify-end">
             <Button onClick={saveSettings} disabled={saving} size="lg">
               {saving ? (
