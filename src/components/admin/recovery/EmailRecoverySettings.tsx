@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Save, Mail, Clock, Shield } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Save, Mail, Clock, Shield, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -18,16 +19,25 @@ interface EmailSettings {
   batch_size: number;
   allowed_hours_start: string;
   allowed_hours_end: string;
-  inactivity_days_trigger: number;
   user_cooldown_days: number;
+}
+
+interface EmailTemplate {
+  id: string;
+  name: string;
+  category: string;
 }
 
 export function EmailRecoverySettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<EmailSettings | null>(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [testTemplateId, setTestTemplateId] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
 
-  useEffect(() => { loadSettings(); }, []);
+  useEffect(() => { loadSettings(); loadTemplates(); }, []);
 
   const loadSettings = async () => {
     try {
@@ -48,7 +58,6 @@ export function EmailRecoverySettings() {
           batch_size: data.batch_size ?? 10,
           allowed_hours_start: data.allowed_hours_start || '09:00',
           allowed_hours_end: data.allowed_hours_end || '18:00',
-          inactivity_days_trigger: data.inactivity_days_trigger ?? 7,
           user_cooldown_days: data.user_cooldown_days ?? 14,
         });
       }
@@ -57,6 +66,11 @@ export function EmailRecoverySettings() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadTemplates = async () => {
+    const { data } = await supabase.from('email_recovery_templates').select('id, name, category').order('priority', { ascending: false });
+    setTemplates(data || []);
   };
 
   const saveSettings = async () => {
@@ -74,7 +88,6 @@ export function EmailRecoverySettings() {
           batch_size: settings.batch_size,
           allowed_hours_start: settings.allowed_hours_start,
           allowed_hours_end: settings.allowed_hours_end,
-          inactivity_days_trigger: settings.inactivity_days_trigger,
           user_cooldown_days: settings.user_cooldown_days,
           updated_at: new Date().toISOString(),
         })
@@ -85,6 +98,24 @@ export function EmailRecoverySettings() {
       toast.error('Erro ao salvar');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const sendTestEmail = async () => {
+    if (!testEmail) { toast.error('Informe o email destinatário'); return; }
+    if (!testTemplateId) { toast.error('Selecione um template'); return; }
+    setSendingTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: { to: testEmail, template_id: testTemplateId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data.message || 'Email de teste enviado!');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao enviar teste');
+    } finally {
+      setSendingTest(false);
     }
   };
 
@@ -145,12 +176,12 @@ export function EmailRecoverySettings() {
         </CardContent>
       </Card>
 
-      {/* Horários e Segmentação */}
+      {/* Horários e Cooldown */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5" /> Horários e Segmentação</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5" /> Horários e Cooldown</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="grid gap-4 sm:grid-cols-3">
           <div>
             <Label>Início permitido</Label>
             <Input type="time" value={settings.allowed_hours_start} onChange={e => setSettings({ ...settings, allowed_hours_start: e.target.value })} />
@@ -160,12 +191,50 @@ export function EmailRecoverySettings() {
             <Input type="time" value={settings.allowed_hours_end} onChange={e => setSettings({ ...settings, allowed_hours_end: e.target.value })} />
           </div>
           <div>
-            <Label>Dias de inatividade (trigger)</Label>
-            <Input type="number" value={settings.inactivity_days_trigger} onChange={e => setSettings({ ...settings, inactivity_days_trigger: Number(e.target.value) })} />
-          </div>
-          <div>
             <Label>Cooldown entre emails (dias)</Label>
             <Input type="number" value={settings.user_cooldown_days} onChange={e => setSettings({ ...settings, user_cooldown_days: Number(e.target.value) })} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Enviar Email de Teste */}
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Send className="h-5 w-5" /> Enviar Email de Teste</CardTitle>
+          <CardDescription>Envie um email de teste com qualquer template para verificar como fica na caixa de entrada</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <Label>Email destinatário</Label>
+              <Input
+                type="email"
+                value={testEmail}
+                onChange={e => setTestEmail(e.target.value)}
+                placeholder="seu@email.com"
+              />
+            </div>
+            <div>
+              <Label>Template</Label>
+              <Select value={testTemplateId} onValueChange={setTestTemplateId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map(t => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} ({t.category})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end">
+              <Button onClick={sendTestEmail} disabled={sendingTest || !testEmail || !testTemplateId} className="w-full">
+                {sendingTest ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                Enviar Teste
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
