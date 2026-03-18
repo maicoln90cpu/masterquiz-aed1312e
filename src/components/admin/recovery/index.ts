@@ -9,4 +9,7 @@ export { RecoveryBlacklist } from './RecoveryBlacklist';
 export { WhatsAppAISettings } from './WhatsAppAISettings';
 export { WhatsAppAIKnowledge } from './WhatsAppAIKnowledge';
 export { WhatsAppAIConversations } from './WhatsAppAIConversations';
+export { EmailRecoverySettings } from './EmailRecoverySettings';
+export { EmailRecoveryTemplates } from './EmailRecoveryTemplates';
+export { EmailRecoveryQueue } from './EmailRecoveryQueue';
 export { CustomerRecovery } from './CustomerRecovery';
