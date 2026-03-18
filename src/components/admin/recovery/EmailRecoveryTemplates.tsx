@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, Pencil, Trash2, Mail, Eye } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Mail, Eye, Code, Monitor } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -53,9 +54,19 @@ export function EmailRecoveryTemplates() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
   const [editing, setEditing] = useState<EmailTemplate | null>(null);
+  const [editorTab, setEditorTab] = useState<string>('visual');
   const [form, setForm] = useState({ name: '', subject: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 });
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => { load(); }, []);
+
+  // Sync visual editor changes back to form
+  const syncFromVisual = () => {
+    if (iframeRef.current?.contentDocument?.body) {
+      const html = iframeRef.current.contentDocument.documentElement.outerHTML;
+      setForm(prev => ({ ...prev, html_content: html }));
+    }
+  };
 
   const load = async () => {
     try {
@@ -67,6 +78,9 @@ export function EmailRecoveryTemplates() {
   };
 
   const save = async () => {
+    // If on visual tab, sync content first
+    if (editorTab === 'visual') syncFromVisual();
+
     if (!form.name || !form.subject || !form.html_content) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
@@ -99,6 +113,14 @@ export function EmailRecoveryTemplates() {
   const openEdit = (t: EmailTemplate) => {
     setEditing(t);
     setForm({ name: t.name, subject: t.subject, category: t.category, html_content: t.html_content, trigger_days: t.trigger_days, is_active: t.is_active, priority: t.priority });
+    setEditorTab('visual');
+    setDialogOpen(true);
+  };
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ name: '', subject: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 });
+    setEditorTab('visual');
     setDialogOpen(true);
   };
 
@@ -110,9 +132,9 @@ export function EmailRecoveryTemplates() {
         <h3 className="text-lg font-semibold">Templates de Email</h3>
         <Dialog open={dialogOpen} onOpenChange={v => { setDialogOpen(v); if (!v) { setEditing(null); setForm({ name: '', subject: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 }); } }}>
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Novo Template</Button>
+            <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Novo Template</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing ? 'Editar' : 'Novo'} Template de Email</DialogTitle>
               <DialogDescription>Configure o template de email para recuperação</DialogDescription>
@@ -135,10 +157,57 @@ export function EmailRecoveryTemplates() {
                 <Label>Assunto do Email</Label>
                 <Input value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} placeholder="Ex: {first_name}, sentimos sua falta!" />
               </div>
+
+              {/* Dual Editor: Visual + HTML */}
               <div>
-                <Label>Conteúdo HTML</Label>
-                <Textarea value={form.html_content} onChange={e => setForm({ ...form, html_content: e.target.value })} rows={12} className="font-mono text-xs" placeholder="<html>...</html>" />
+                <Label className="mb-2 block">Conteúdo do Email</Label>
+                <Tabs value={editorTab} onValueChange={(v) => {
+                  // Sync content when switching tabs
+                  if (editorTab === 'visual' && v === 'html') syncFromVisual();
+                  setEditorTab(v);
+                }}>
+                  <TabsList className="mb-2">
+                    <TabsTrigger value="visual" className="flex items-center gap-1.5">
+                      <Monitor className="h-3.5 w-3.5" /> Visual
+                    </TabsTrigger>
+                    <TabsTrigger value="html" className="flex items-center gap-1.5">
+                      <Code className="h-3.5 w-3.5" /> HTML
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="visual" className="mt-0">
+                    <div className="border rounded-lg overflow-hidden bg-white">
+                      <iframe
+                        ref={iframeRef}
+                        srcDoc={`
+                          <!DOCTYPE html>
+                          <html>
+                          <head><meta charset="utf-8"><style>body{margin:8px;font-family:Arial,sans-serif;}</style></head>
+                          <body contenteditable="true">${form.html_content || '<p>Comece a editar aqui...</p>'}</body>
+                          </html>
+                        `}
+                        className="w-full min-h-[400px] border-0"
+                        title="Visual Editor"
+                        sandbox="allow-same-origin"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique no conteúdo para editar diretamente. Use a aba HTML para edições avançadas.
+                    </p>
+                  </TabsContent>
+
+                  <TabsContent value="html" className="mt-0">
+                    <Textarea
+                      value={form.html_content}
+                      onChange={e => setForm({ ...form, html_content: e.target.value })}
+                      rows={16}
+                      className="font-mono text-xs"
+                      placeholder="<html>...</html>"
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
+
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <Label>Dias para trigger</Label>
@@ -180,7 +249,9 @@ export function EmailRecoveryTemplates() {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader><DialogTitle>Preview do Email</DialogTitle></DialogHeader>
-          <div className="border rounded-lg overflow-auto max-h-[60vh]" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+          <div className="border rounded-lg overflow-auto max-h-[60vh]">
+            <iframe srcDoc={previewHtml} className="w-full min-h-[400px] border-0" title="Preview" />
+          </div>
         </DialogContent>
       </Dialog>
 
