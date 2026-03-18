@@ -85,6 +85,14 @@ export function RecoveryQueue() {
         .order('created_at', { ascending: true })
         .limit(100);
 
+      // Filter out permanently failed items (retry >= 3) from active queue
+      const activeQueue = (data || []).filter(item => 
+        !(item.status === 'failed' && (item.retry_count || 0) >= 3)
+      );
+      const permanentlyFailed = (data || []).filter(item => 
+        item.status === 'failed' && (item.retry_count || 0) >= 3
+      ).length;
+
       if (error) throw error;
 
       // Buscar nomes dos perfis separadamente (join direto falha sem FK formal)
