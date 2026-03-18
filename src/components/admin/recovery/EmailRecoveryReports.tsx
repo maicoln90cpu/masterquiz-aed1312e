@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, Mail } from "lucide-react";
+import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, Mail, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
@@ -47,6 +47,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
 
+function pct(num: number, den: number): string {
+  if (den === 0) return '0%';
+  return `${((num / den) * 100).toFixed(1)}%`;
+}
+
 export function EmailRecoveryReports() {
   const [contacts, setContacts] = useState<EmailContact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,9 +82,9 @@ export function EmailRecoveryReports() {
   });
 
   const total = contacts.length;
-  const sent = contacts.filter(c => c.status === 'sent').length;
-  const opened = contacts.filter(c => c.opened_at).length;
-  const clicked = contacts.filter(c => c.clicked_at).length;
+  const sent = contacts.filter(c => ['sent', 'opened', 'clicked'].includes(c.status)).length;
+  const opened = contacts.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length;
+  const clicked = contacts.filter(c => c.clicked_at || c.status === 'clicked').length;
   const failed = contacts.filter(c => c.status === 'failed').length;
   const pending = contacts.filter(c => c.status === 'pending').length;
 
@@ -89,9 +94,9 @@ export function EmailRecoveryReports() {
     const cat = c.email_recovery_templates?.category || 'unknown';
     if (!categoryMap.has(cat)) categoryMap.set(cat, { sent: 0, opened: 0, clicked: 0, failed: 0 });
     const entry = categoryMap.get(cat)!;
-    if (c.status === 'sent') entry.sent++;
-    if (c.opened_at) entry.opened++;
-    if (c.clicked_at) entry.clicked++;
+    if (['sent', 'opened', 'clicked'].includes(c.status)) entry.sent++;
+    if (c.opened_at || c.status === 'opened' || c.status === 'clicked') entry.opened++;
+    if (c.clicked_at || c.status === 'clicked') entry.clicked++;
     if (c.status === 'failed') entry.failed++;
   });
 
@@ -102,7 +107,9 @@ export function EmailRecoveryReports() {
 
   // Pie chart data
   const pieData = [
-    { name: 'Enviados', value: sent, color: '#10b981' },
+    { name: 'Enviados', value: sent - opened, color: '#10b981' },
+    { name: 'Abertos', value: opened - clicked, color: '#3b82f6' },
+    { name: 'Clicados', value: clicked, color: '#8b5cf6' },
     { name: 'Pendentes', value: pending, color: '#f59e0b' },
     { name: 'Falhas', value: failed, color: '#ef4444' },
   ].filter(d => d.value > 0);
@@ -112,7 +119,7 @@ export function EmailRecoveryReports() {
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-full bg-blue-100 text-blue-600"><Mail className="h-5 w-5" /></div>
@@ -136,7 +143,7 @@ export function EmailRecoveryReports() {
             <div className="p-2 rounded-full bg-blue-100 text-blue-600"><MailOpen className="h-5 w-5" /></div>
             <div>
               <p className="text-2xl font-bold">{opened}</p>
-              <p className="text-xs text-muted-foreground">Abertos</p>
+              <p className="text-xs text-muted-foreground">Abertos ({pct(opened, sent)})</p>
             </div>
           </CardContent>
         </Card>
@@ -145,7 +152,16 @@ export function EmailRecoveryReports() {
             <div className="p-2 rounded-full bg-purple-100 text-purple-600"><MousePointerClick className="h-5 w-5" /></div>
             <div>
               <p className="text-2xl font-bold">{clicked}</p>
-              <p className="text-xs text-muted-foreground">Clicados</p>
+              <p className="text-xs text-muted-foreground">Clicados ({pct(clicked, sent)})</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-full bg-yellow-100 text-yellow-600"><TrendingUp className="h-5 w-5" /></div>
+            <div>
+              <p className="text-2xl font-bold">{pending}</p>
+              <p className="text-xs text-muted-foreground">Pendentes</p>
             </div>
           </CardContent>
         </Card>
@@ -221,6 +237,8 @@ export function EmailRecoveryReports() {
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="sent">Enviados</SelectItem>
+                  <SelectItem value="opened">Abertos</SelectItem>
+                  <SelectItem value="clicked">Clicados</SelectItem>
                   <SelectItem value="pending">Pendentes</SelectItem>
                   <SelectItem value="failed">Falhas</SelectItem>
                 </SelectContent>
@@ -253,6 +271,8 @@ export function EmailRecoveryReports() {
                     <TableHead>Categoria</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Enviado em</TableHead>
+                    <TableHead>Aberto em</TableHead>
+                    <TableHead>Clicado em</TableHead>
                     <TableHead>Erro</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -273,6 +293,12 @@ export function EmailRecoveryReports() {
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {c.sent_at ? new Date(c.sent_at).toLocaleString('pt-BR') : '-'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {c.opened_at ? new Date(c.opened_at).toLocaleString('pt-BR') : '-'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {c.clicked_at ? new Date(c.clicked_at).toLocaleString('pt-BR') : '-'}
                       </TableCell>
                       <TableCell className="text-xs text-destructive max-w-[200px] truncate">
                         {c.error_message || '-'}
