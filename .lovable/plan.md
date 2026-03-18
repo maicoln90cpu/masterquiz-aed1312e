@@ -42,16 +42,26 @@
 - [x] Logo atualizado no Storage (novo arquivo enviado pelo usuário)
 - [x] Pie chart segmentado (enviados vs abertos vs clicados)
 
-### Etapa 4 — Planejada (Automação de Templates com IA)
+### Etapa 4a ✅ — Templates Estáticos + Triggers SQL (Etapa 1 do plano de 12 emails)
+- [x] 4 templates Milestone (10/50/100/500 leads) + trigger SQL em quiz_responses
+- [x] Template Tutorial (3 dias após 1º quiz) + trigger SQL em quizzes
+- [x] Template Pesquisa de Satisfação (30 dias após signup)
+- [x] Template Comparativo de Planos (14 dias no free)
+- [x] Template Guia de Integração (7 dias sem integrações)
+- [x] 3 templates Reengajamento Educativo (série 21/24/27 dias)
+- [x] Template Convite para Webinar (manual)
+- [x] check-inactive-users-email expandido para novas categorias
+- [x] process-email-recovery-queue respeitando scheduled_at futuro
+
+### Etapa 4b — Planejada (Templates Dinâmicos com IA)
 - [ ] Blog Digest automático (a cada 3 artigos)
 - [ ] Dica da Semana (cron semanal)
-- [ ] Marcos de Leads (trigger por milestone)
 - [ ] Caso de Sucesso (mensal)
-- [ ] Tutorial Passo-a-Passo (3 dias após 1º quiz)
 - [ ] Novidade da Plataforma (por release)
-- [ ] Pesquisa de Satisfação (30 dias)
-- [ ] Comparativo de Planos (14 dias no free)
-- [ ] Convite para Webinar/Live
-- [ ] Guia de Integração (7 dias sem integrações)
 - [ ] Resumo Mensal (1º dia do mês)
-- [ ] Reengajamento Educativo (21 dias inativo, série de 3)
+- [ ] Edge Function generate-email-content (gerador IA compartilhado)
+
+### Etapa 4c — Planejada (UI Admin + Polimento)
+- [ ] UI de Automações no painel admin
+- [ ] Unsubscribe link em todos os templates
+- [ ] Dashboard de performance por categoria
