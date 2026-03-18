@@ -5,6 +5,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ senderId: string; domain: string } | null> {
+  try {
+    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/senders', {
+      headers: { 'ApiKey': apiKey },
+    });
+    if (!res.ok) {
+      console.error('Failed to fetch senders:', res.status);
+      return null;
+    }
+    const senders = await res.json();
+    const list = Array.isArray(senders) ? senders : senders?.items || senders?.data || [];
+    
+    for (const s of list) {
+      const email = s.email || s.senderEmail || '';
+      if (email.toLowerCase() === senderEmail.toLowerCase()) {
+        return { senderId: String(s.senderId || s.id), domain: email.split('@')[1] };
+      }
+    }
+    if (list.length > 0) {
+      const first = list[0];
+      const email = first.email || first.senderEmail || senderEmail;
+      return { senderId: String(first.senderId || first.id), domain: email.split('@')[1] || senderEmail.split('@')[1] };
+    }
+    return null;
+  } catch (err) {
+    console.error('resolveSenderId error:', err);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -48,6 +78,15 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Limite hora', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Resolve sender once for all emails
+    const senderEmail = settings.sender_email || 'noreply@masterquizz.com';
+    const senderName = settings.sender_name || 'MasterQuizz';
+    const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
+    if (!senderInfo) {
+      console.error('No sender found in E-goi for:', senderEmail);
+      return new Response(JSON.stringify({ error: 'Nenhum sender configurado na E-goi' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Get pending contacts
     const batchSize = settings.batch_size || 10;
     const maxBatch = Math.min(batchSize, dailyLimit - (sentToday || 0), hourlyLimit - (sentHour || 0));
@@ -64,8 +103,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Nenhum pendente', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const senderEmail = settings.sender_email || 'noreply@masterquizz.com';
-    const senderName = settings.sender_name || 'MasterQuizz';
     let successCount = 0;
 
     for (const contact of contacts) {
@@ -80,7 +117,6 @@ Deno.serve(async (req) => {
         const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', contact.user_id).single();
         const firstName = profile?.full_name?.split(' ')[0] || 'Usuário';
 
-        // Replace variables in HTML
         const htmlContent = template.html_content
           .replace(/{name}/g, profile?.full_name || 'Usuário')
           .replace(/{first_name}/g, firstName)
@@ -97,32 +133,30 @@ Deno.serve(async (req) => {
           .replace(/{first_name}/g, firstName)
           .replace(/{days_inactive}/g, String(contact.days_inactive_at_contact || 0));
 
-        // Send via E-goi Transactional API v2
-        const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send', {
+        // Send via E-goi Transactional V2 - Single endpoint
+        const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'ApiKey': egoisApiKey,
           },
           body: JSON.stringify({
-            domain: senderEmail.split('@')[1] || 'masterquizz.com',
-            senderEmail: senderEmail,
-            senderName: senderName,
-            to: [contact.email],
-            subject: subject,
+            senderId: senderInfo.senderId,
+            senderName,
+            to: contact.email,
+            subject,
             htmlBody: htmlContent,
-            options: {
-              trackOpens: true,
-              trackClicks: true,
-            },
+            openTracking: true,
+            clickTracking: true,
           }),
         });
 
         let data: any = {};
-        try { data = await res.json(); } catch { data = { status: res.status }; }
+        const responseText = await res.text();
+        try { data = JSON.parse(responseText); } catch { data = { raw: responseText, status: res.status }; }
 
         if (!res.ok) {
-          const errorMsg = data?.detail || data?.message || JSON.stringify(data).substring(0, 300);
+          const errorMsg = data?.detail || data?.message || data?.errors?.[0]?.message || responseText.substring(0, 300);
           const retry = (contact.retry_count || 0) + 1;
           await supabase.from('email_recovery_contacts').update({
             status: retry >= 3 ? 'failed' : 'pending',
