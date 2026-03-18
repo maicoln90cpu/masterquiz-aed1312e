@@ -246,6 +246,7 @@ export type Database = {
           generation_cost_usd: number | null
           id: string
           image_generation_cost_usd: number | null
+          included_in_digest: boolean | null
           internal_links: Json | null
           is_ai_generated: boolean | null
           meta_description: string | null
@@ -273,6 +274,7 @@ export type Database = {
           generation_cost_usd?: number | null
           id?: string
           image_generation_cost_usd?: number | null
+          included_in_digest?: boolean | null
           internal_links?: Json | null
           is_ai_generated?: boolean | null
           meta_description?: string | null
@@ -300,6 +302,7 @@ export type Database = {
           generation_cost_usd?: number | null
           id?: string
           image_generation_cost_usd?: number | null
+          included_in_digest?: boolean | null
           internal_links?: Json | null
           is_ai_generated?: boolean | null
           meta_description?: string | null
@@ -680,6 +683,30 @@ export type Database = {
           trigger_days?: number | null
           updated_at?: string | null
           usage_count?: number | null
+        }
+        Relationships: []
+      }
+      email_tips: {
+        Row: {
+          created_at: string | null
+          html_content: string | null
+          id: string
+          subject: string | null
+          topic: string
+        }
+        Insert: {
+          created_at?: string | null
+          html_content?: string | null
+          id?: string
+          subject?: string | null
+          topic: string
+        }
+        Update: {
+          created_at?: string | null
+          html_content?: string | null
+          id?: string
+          subject?: string | null
+          topic?: string
         }
         Relationships: []
       }

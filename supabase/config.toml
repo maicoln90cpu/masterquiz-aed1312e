@@ -149,3 +149,21 @@ verify_jwt = false
 
 [functions.egoi-email-webhook]
 verify_jwt = false
+
+[functions.generate-email-content]
+verify_jwt = false
+
+[functions.send-blog-digest]
+verify_jwt = false
+
+[functions.send-weekly-tip]
+verify_jwt = false
+
+[functions.send-success-story]
+verify_jwt = false
+
+[functions.send-monthly-summary]
+verify_jwt = false
+
+[functions.send-platform-news]
+verify_jwt = false
