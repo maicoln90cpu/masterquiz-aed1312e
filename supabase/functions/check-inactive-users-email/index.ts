@@ -150,16 +150,8 @@ Deno.serve(async (req) => {
     eligible.sort((a, b) => b.lead_count - a.lead_count);
     const toQueue = eligible.slice(0, remainingLimit);
 
-    // Get best template
-    const { data: templates } = await supabase
-      .from('email_recovery_templates')
-      .select('id, trigger_days')
-      .eq('is_active', true)
-      .order('trigger_days', { ascending: true });
-
-    if (!templates?.length) {
-      return new Response(JSON.stringify({ message: 'Nenhum template de email ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    // Use already-fetched inactivity templates
+    const templates = inactivityTemplates;
 
     const contacts = [];
     for (const user of toQueue) {
