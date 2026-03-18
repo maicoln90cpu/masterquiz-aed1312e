@@ -18,6 +18,7 @@ interface EmailTemplate {
   id: string;
   name: string;
   subject: string;
+  subject_b?: string | null;
   category: string;
   html_content: string;
   trigger_days: number;
@@ -30,10 +31,17 @@ interface EmailTemplate {
 const CATEGORIES = [
   { value: 'welcome', label: '👋 Boas-vindas' },
   { value: 'check_in', label: '🤔 Check-in' },
+  { value: 'tutorial', label: '📖 Tutorial' },
   { value: 'recovery', label: '🔄 Recuperação' },
   { value: 'reminder', label: '⏰ Lembrete' },
+  { value: 'integration_guide', label: '🔗 Guia de Integração' },
+  { value: 'plan_compare', label: '📊 Comparativo de Planos' },
   { value: 'special_offer', label: '🎁 Oferta Especial' },
+  { value: 're_engagement', label: '💬 Reengajamento' },
   { value: 'reactivation', label: '🚀 Reativação' },
+  { value: 'milestone', label: '🏆 Marco / Milestone' },
+  { value: 'survey', label: '📋 Pesquisa NPS' },
+  { value: 'webinar', label: '🎥 Webinar' },
 ];
 
 const VARIABLES = [
@@ -47,6 +55,8 @@ const VARIABLES = [
   { var: '{company_name}', desc: 'Nome empresa' },
 ];
 
+const defaultForm = { name: '', subject: '', subject_b: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 };
+
 export function EmailRecoveryTemplates() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,12 +65,11 @@ export function EmailRecoveryTemplates() {
   const [previewHtml, setPreviewHtml] = useState('');
   const [editing, setEditing] = useState<EmailTemplate | null>(null);
   const [editorTab, setEditorTab] = useState<string>('visual');
-  const [form, setForm] = useState({ name: '', subject: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 });
+  const [form, setForm] = useState(defaultForm);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => { load(); }, []);
 
-  // Sync visual editor changes back to form
   const syncFromVisual = () => {
     if (iframeRef.current?.contentDocument?.body) {
       const html = iframeRef.current.contentDocument.documentElement.outerHTML;
@@ -78,7 +87,6 @@ export function EmailRecoveryTemplates() {
   };
 
   const save = async () => {
-    // If on visual tab, sync content first
     if (editorTab === 'visual') syncFromVisual();
 
     if (!form.name || !form.subject || !form.html_content) {
@@ -86,18 +94,29 @@ export function EmailRecoveryTemplates() {
       return;
     }
     try {
+      const payload = {
+        name: form.name,
+        subject: form.subject,
+        subject_b: form.subject_b || null,
+        category: form.category,
+        html_content: form.html_content,
+        trigger_days: form.trigger_days,
+        is_active: form.is_active,
+        priority: form.priority,
+      };
+
       if (editing) {
-        const { error } = await supabase.from('email_recovery_templates').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editing.id);
+        const { error } = await supabase.from('email_recovery_templates').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editing.id);
         if (error) throw error;
         toast.success('Template atualizado');
       } else {
-        const { error } = await supabase.from('email_recovery_templates').insert(form);
+        const { error } = await supabase.from('email_recovery_templates').insert(payload);
         if (error) throw error;
         toast.success('Template criado');
       }
       setDialogOpen(false);
       setEditing(null);
-      setForm({ name: '', subject: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 });
+      setForm(defaultForm);
       load();
     } catch { toast.error('Erro ao salvar'); }
   };
@@ -112,14 +131,23 @@ export function EmailRecoveryTemplates() {
 
   const openEdit = (t: EmailTemplate) => {
     setEditing(t);
-    setForm({ name: t.name, subject: t.subject, category: t.category, html_content: t.html_content, trigger_days: t.trigger_days, is_active: t.is_active, priority: t.priority });
+    setForm({
+      name: t.name,
+      subject: t.subject,
+      subject_b: t.subject_b || '',
+      category: t.category,
+      html_content: t.html_content,
+      trigger_days: t.trigger_days,
+      is_active: t.is_active,
+      priority: t.priority,
+    });
     setEditorTab('visual');
     setDialogOpen(true);
   };
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: '', subject: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 });
+    setForm(defaultForm);
     setEditorTab('visual');
     setDialogOpen(true);
   };
@@ -130,7 +158,7 @@ export function EmailRecoveryTemplates() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Templates de Email</h3>
-        <Dialog open={dialogOpen} onOpenChange={v => { setDialogOpen(v); if (!v) { setEditing(null); setForm({ name: '', subject: '', category: 'recovery', html_content: '', trigger_days: 7, is_active: true, priority: 0 }); } }}>
+        <Dialog open={dialogOpen} onOpenChange={v => { setDialogOpen(v); if (!v) { setEditing(null); setForm(defaultForm); } }}>
           <DialogTrigger asChild>
             <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Novo Template</Button>
           </DialogTrigger>
@@ -157,12 +185,20 @@ export function EmailRecoveryTemplates() {
                 <Label>Assunto do Email</Label>
                 <Input value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} placeholder="Ex: {first_name}, sentimos sua falta!" />
               </div>
+              <div>
+                <Label>Assunto B — Teste A/B <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                <Input
+                  value={form.subject_b}
+                  onChange={e => setForm({ ...form, subject_b: e.target.value })}
+                  placeholder="Deixe vazio para não usar teste A/B"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Se preenchido, 50% dos envios usarão este assunto alternativo para comparação de performance.</p>
+              </div>
 
               {/* Dual Editor: Visual + HTML */}
               <div>
                 <Label className="mb-2 block">Conteúdo do Email</Label>
                 <Tabs value={editorTab} onValueChange={(v) => {
-                  // Sync content when switching tabs
                   if (editorTab === 'visual' && v === 'html') syncFromVisual();
                   setEditorTab(v);
                 }}>
@@ -271,6 +307,7 @@ export function EmailRecoveryTemplates() {
                 <TableHead>Assunto</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Trigger</TableHead>
+                <TableHead>A/B</TableHead>
                 <TableHead>Usos</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -283,6 +320,7 @@ export function EmailRecoveryTemplates() {
                   <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{t.subject}</TableCell>
                   <TableCell><Badge variant="outline">{CATEGORIES.find(c => c.value === t.category)?.label || t.category}</Badge></TableCell>
                   <TableCell>{t.trigger_days}d</TableCell>
+                  <TableCell>{t.subject_b ? <Badge variant="secondary" className="text-xs">A/B</Badge> : '—'}</TableCell>
                   <TableCell>{t.usage_count}</TableCell>
                   <TableCell><Badge variant={t.is_active ? 'default' : 'secondary'}>{t.is_active ? 'Ativo' : 'Inativo'}</Badge></TableCell>
                   <TableCell className="text-right">

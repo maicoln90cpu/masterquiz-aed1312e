@@ -57,10 +57,17 @@ ${bodyHtml}
 }
 
 function makeButton(text: string, url: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;">
-<tr><td align="center" style="border-radius:8px;background-color:#0f9b6e;">
-<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${url}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" fillcolor="#0f9b6e"><center style="color:#ffffff;font-family:Arial;font-size:16px;font-weight:bold;">${text}</center></v:roundrect><![endif]-->
-<!--[if !mso]><!--><a href="${url}" style="display:inline-block;padding:14px 32px;color:#ffffff;background-color:#0f9b6e;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;">${text}</a><!--<![endif]-->
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" style="padding:24px 0;">
+<table role="presentation" cellpadding="0" cellspacing="0">
+<tr><td align="center" style="background-color:#0f9b6e;border-radius:8px;text-align:center;">
+<a href="${url}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;background-color:#0f9b6e;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;font-family:Arial,sans-serif;mso-padding-alt:0;text-underline-color:#0f9b6e;">
+<!--[if mso]><i style="mso-font-width:200%;mso-text-raise:30pt" hidden>&emsp;</i><span style="mso-text-raise:15pt;"><!--<![endif]-->
+${text}
+<!--[if mso]></span><i style="mso-font-width:200%;" hidden>&emsp;&#8203;</i><!--<![endif]-->
+</a>
+</td></tr>
+</table>
 </td></tr>
 </table>`;
 }
@@ -94,28 +101,31 @@ Deno.serve(async (req) => {
     switch (templateType) {
       case 'blog_digest': {
         const posts = (context.posts || []) as Array<{ title: string; excerpt: string; slug: string; featured_image_url?: string }>;
-        subject = `📚 ${posts.length} novos artigos no blog MasterQuizz`;
+        subject = `🔥 ${posts.length} artigos fresquinhos para turbinar seus quizzes`;
         preheader = posts.map(p => p.title).join(' | ');
 
         let cardsHtml = '';
-        for (const post of posts.slice(0, 5)) {
+        for (let i = 0; i < Math.min(posts.length, 5); i++) {
+          const post = posts[i];
           const imgHtml = post.featured_image_url
-            ? `<img src="${post.featured_image_url}" alt="${post.title}" width="520" style="width:100%;max-width:520px;height:auto;border-radius:8px;margin-bottom:12px;">`
+            ? `<img src="${post.featured_image_url}" alt="${post.title}" width="520" style="width:100%;max-width:520px;height:auto;border-radius:8px 8px 0 0;">`
             : '';
           cardsHtml += `
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;border:1px solid #e9ecef;border-radius:8px;overflow:hidden;">
-<tr><td style="padding:16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;border:1px solid #e9ecef;border-radius:8px;overflow:hidden;">
+<tr><td>
 ${imgHtml}
-<h3 style="margin:0 0 8px;color:#1a1a2e;font-size:18px;">${post.title}</h3>
-<p style="margin:0 0 12px;color:#555;font-size:14px;line-height:1.5;">${post.excerpt || ''}</p>
-<a href="${BLOG_URL}/${post.slug}" style="color:#0f9b6e;font-weight:bold;text-decoration:none;font-size:14px;">Ler artigo →</a>
+<div style="padding:20px;">
+<h3 style="margin:0 0 10px;color:#1a1a2e;font-size:18px;line-height:1.4;">${post.title}</h3>
+<p style="margin:0 0 14px;color:#666;font-size:14px;line-height:1.6;">${post.excerpt || ''}</p>
+<a href="${BLOG_URL}/${post.slug}" style="color:#0f9b6e;font-weight:bold;text-decoration:none;font-size:14px;">Ler artigo completo →</a>
+</div>
 </td></tr>
 </table>`;
         }
 
         bodyHtml = `
-<h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! 👋</h1>
-<p style="color:#555;font-size:16px;line-height:1.6;">Publicamos novos conteúdos no blog para te ajudar a captar mais leads com quizzes.</p>
+<h1 style="margin:0 0 12px;color:#1a1a2e;font-size:24px;line-height:1.3;">Olá, ${firstName}! 👋</h1>
+<p style="color:#444;font-size:16px;line-height:1.7;margin:0 0 24px;">${posts.length} artigos fresquinhos saíram do forno! 🔥 Cada um traz insights práticos que você pode aplicar <strong>hoje mesmo</strong> para turbinar seus resultados com quizzes.</p>
 ${cardsHtml}
 ${makeButton('Ver todos os artigos', BLOG_URL)}`;
         break;
@@ -128,18 +138,37 @@ ${makeButton('Ver todos os artigos', BLOG_URL)}`;
           body: JSON.stringify({
             model: 'google/gemini-3-flash-preview',
             messages: [
-              { role: 'system', content: 'Você é um especialista em marketing digital e quizzes interativos. Gere uma dica prática e acionável em português brasileiro sobre como usar quizzes para captar leads, aumentar conversões ou engajar audiência. Formato: título curto (max 60 chars) + corpo explicativo (max 200 palavras). Responda em JSON: {"title":"...","body":"...","emoji":"..."}' },
+              { role: 'system', content: `Você é um amigo especialista em marketing digital e quizzes interativos. Escreva como se estivesse conversando com um colega — tom leve, humano e empolgante. Use analogias do dia a dia, emojis naturais (sem exagero), e parágrafos curtos.
+
+Formato obrigatório (JSON):
+{
+  "title": "título curto e chamativo (max 50 chars)",
+  "intro": "1 parágrafo de abertura empolgante explicando POR QUE esse tema importa (80-120 palavras). Conecte com a dor real do leitor.",
+  "steps": [
+    {"title": "Título do passo 1", "description": "Explicação prática em 2-3 frases"},
+    {"title": "Título do passo 2", "description": "Explicação prática em 2-3 frases"},
+    {"title": "Título do passo 3", "description": "Explicação prática em 2-3 frases"}
+  ],
+  "closing": "1 frase motivacional final (max 30 palavras)",
+  "emoji": "emoji principal do tema"
+}` },
               { role: 'user', content: `Gere uma dica da semana sobre: ${(context as any).topic || 'quizzes e marketing digital'}. Evite repetir temas anteriores: ${JSON.stringify((context as any).previousTopics || [])}` },
             ],
             tools: [{
               type: 'function',
               function: {
                 name: 'generate_tip',
-                description: 'Generate a weekly tip',
+                description: 'Generate a structured weekly tip',
                 parameters: {
                   type: 'object',
-                  properties: { title: { type: 'string' }, body: { type: 'string' }, emoji: { type: 'string' } },
-                  required: ['title', 'body', 'emoji'],
+                  properties: {
+                    title: { type: 'string' },
+                    intro: { type: 'string' },
+                    steps: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, description: { type: 'string' } }, required: ['title', 'description'] } },
+                    closing: { type: 'string' },
+                    emoji: { type: 'string' },
+                  },
+                  required: ['title', 'intro', 'steps', 'closing', 'emoji'],
                 },
               },
             }],
@@ -150,21 +179,53 @@ ${makeButton('Ver todos os artigos', BLOG_URL)}`;
         if (!aiResponse.ok) throw new Error(`AI gateway error: ${aiResponse.status}`);
 
         const aiData = await aiResponse.json();
-        let tip = { title: 'Dica da Semana', body: 'Use quizzes para qualificar seus leads de forma interativa.', emoji: '💡' };
+        let tip = {
+          title: 'Dica da Semana',
+          intro: 'Use quizzes para qualificar seus leads de forma interativa e divertida.',
+          steps: [
+            { title: 'Defina o objetivo', description: 'Antes de criar, saiba o que você quer descobrir sobre seu lead.' },
+            { title: 'Crie perguntas envolventes', description: 'Use linguagem simples e opções que façam o respondente pensar.' },
+            { title: 'Otimize o resultado', description: 'Entregue valor real no resultado — isso aumenta compartilhamentos.' },
+          ],
+          closing: 'Bora colocar isso em prática? 💪',
+          emoji: '💡',
+        };
         try {
           const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
           if (toolCall) tip = JSON.parse(toolCall.function.arguments);
         } catch { /* use default */ }
 
+        const stepsHtml = (tip.steps || []).map((step, i) => `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+<tr>
+<td width="48" valign="top" style="padding-right:12px;">
+<div style="width:40px;height:40px;border-radius:50%;background:#0f9b6e;color:#fff;font-size:18px;font-weight:bold;text-align:center;line-height:40px;">${i + 1}</div>
+</td>
+<td valign="top">
+<p style="margin:0 0 4px;color:#1a1a2e;font-size:15px;font-weight:bold;line-height:1.4;">${step.title}</p>
+<p style="margin:0;color:#555;font-size:14px;line-height:1.7;">${step.description}</p>
+</td>
+</tr>
+</table>`).join('');
+
         subject = `${tip.emoji} Dica da Semana: ${tip.title}`;
         preheader = tip.title;
         bodyHtml = `
-<h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! ${tip.emoji}</h1>
-<h2 style="margin:16px 0 12px;color:#0f9b6e;font-size:20px;">${tip.title}</h2>
-<div style="background:#f0faf6;border-left:4px solid #0f9b6e;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0;">
-<p style="margin:0;color:#333;font-size:15px;line-height:1.7;">${tip.body}</p>
+<h1 style="margin:0 0 12px;color:#1a1a2e;font-size:24px;line-height:1.3;">Olá, ${firstName}! ${tip.emoji}</h1>
+<h2 style="margin:0 0 20px;color:#0f9b6e;font-size:20px;line-height:1.4;">${tip.title}</h2>
+
+<div style="background:#f8fffe;border-left:4px solid #0f9b6e;padding:20px 24px;border-radius:0 8px 8px 0;margin:0 0 28px;">
+<p style="margin:0;color:#333;font-size:15px;line-height:1.8;">${tip.intro}</p>
 </div>
-<p style="color:#555;font-size:14px;margin-top:20px;">Coloque essa dica em prática agora mesmo! 🚀</p>
+
+<h3 style="margin:0 0 20px;color:#1a1a2e;font-size:17px;">Como aplicar em 3 passos:</h3>
+${stepsHtml}
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;">
+<tr><td style="border-top:1px solid #e9ecef;padding-top:20px;">
+<p style="margin:0;color:#555;font-size:15px;line-height:1.7;text-align:center;">${tip.closing}</p>
+</td></tr>
+</table>
 ${makeButton('Acessar meu painel', LOGIN_URL)}`;
         break;
       }
@@ -214,26 +275,26 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
 
         let metricsHtml = '';
         for (const r of (caseData.results || []).slice(0, 3)) {
-          metricsHtml += `<td align="center" style="padding:12px;"><div style="font-size:28px;font-weight:bold;color:#0f9b6e;">${r.value}</div><div style="font-size:12px;color:#777;margin-top:4px;">${r.metric}</div></td>`;
+          metricsHtml += `<td align="center" style="padding:16px;"><div style="font-size:36px;font-weight:bold;color:#0f9b6e;">${r.value}</div><div style="font-size:12px;color:#777;margin-top:6px;">${r.metric}</div></td>`;
         }
 
         bodyHtml = `
-<h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! 🏆</h1>
-<p style="color:#555;font-size:16px;line-height:1.6;">Veja como <strong>${caseData.company}</strong> do setor de <strong>${caseData.industry}</strong> alcançou resultados incríveis.</p>
-<div style="background:#fff8e1;border-radius:8px;padding:16px 20px;margin:16px 0;">
+<h1 style="margin:0 0 12px;color:#1a1a2e;font-size:24px;line-height:1.3;">Olá, ${firstName}! 🏆</h1>
+<p style="color:#555;font-size:16px;line-height:1.7;">Veja como <strong>${caseData.company}</strong> do setor de <strong>${caseData.industry}</strong> alcançou resultados incríveis.</p>
+<div style="background:#fff8e1;border-radius:8px;padding:20px 24px;margin:20px 0;">
 <p style="margin:0;font-weight:bold;color:#f57c00;">⚡ Desafio:</p>
-<p style="margin:4px 0 0;color:#555;">${caseData.challenge}</p>
+<p style="margin:8px 0 0;color:#555;line-height:1.7;">${caseData.challenge}</p>
 </div>
-<div style="background:#f0faf6;border-radius:8px;padding:16px 20px;margin:16px 0;">
+<div style="background:#f0faf6;border-radius:8px;padding:20px 24px;margin:20px 0;">
 <p style="margin:0;font-weight:bold;color:#0f9b6e;">✅ Solução com MasterQuizz:</p>
-<p style="margin:4px 0 0;color:#555;">${caseData.solution}</p>
+<p style="margin:8px 0 0;color:#555;line-height:1.7;">${caseData.solution}</p>
 </div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#f8f9fa;border-radius:8px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;background:#f8f9fa;border-radius:8px;">
 <tr>${metricsHtml}</tr>
 </table>
-<div style="background:#f3e5f5;border-left:4px solid #9c27b0;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0;">
-<p style="margin:0;color:#555;font-style:italic;">"${caseData.quote}"</p>
-<p style="margin:8px 0 0;color:#9c27b0;font-weight:bold;font-size:13px;">— ${caseData.company}</p>
+<div style="background:#f3e5f5;border-left:4px solid #9c27b0;padding:20px 24px;border-radius:0 8px 8px 0;margin:20px 0;">
+<p style="margin:0;color:#555;font-style:italic;line-height:1.7;">"${caseData.quote}"</p>
+<p style="margin:10px 0 0;color:#9c27b0;font-weight:bold;font-size:13px;">— ${caseData.company}</p>
 </div>
 ${makeButton('Criar meu quiz agora', LOGIN_URL)}`;
         break;
@@ -272,25 +333,26 @@ ${makeButton('Criar meu quiz agora', LOGIN_URL)}`;
         } catch { /* use default */ }
 
         bodyHtml = `
-<h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! 📊</h1>
-<p style="color:#555;font-size:16px;">Aqui está seu resumo de <strong>${monthName}</strong>:</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
+<h1 style="margin:0 0 12px;color:#1a1a2e;font-size:24px;line-height:1.3;">Olá, ${firstName}! 📊</h1>
+<p style="color:#555;font-size:16px;line-height:1.7;">Aqui está seu resumo de <strong>${monthName}</strong>:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
 <tr>
-<td align="center" style="padding:16px;background:#f0faf6;border-radius:8px;width:33%;"><div style="font-size:32px;font-weight:bold;color:#0f9b6e;">${quizzes}</div><div style="font-size:12px;color:#777;margin-top:4px;">Quizzes ativos</div></td>
+<td align="center" style="padding:20px;background:#f0faf6;border-radius:8px;width:33%;"><div style="font-size:36px;font-weight:bold;color:#0f9b6e;">${quizzes}</div><div style="font-size:12px;color:#777;margin-top:6px;">Quizzes ativos</div></td>
 <td width="12"></td>
-<td align="center" style="padding:16px;background:#e8f5e9;border-radius:8px;width:33%;"><div style="font-size:32px;font-weight:bold;color:#2e7d32;">${leads}</div><div style="font-size:12px;color:#777;margin-top:4px;">Leads captados</div></td>
+<td align="center" style="padding:20px;background:#e8f5e9;border-radius:8px;width:33%;"><div style="font-size:36px;font-weight:bold;color:#2e7d32;">${leads}</div><div style="font-size:12px;color:#777;margin-top:6px;">Leads captados</div></td>
 <td width="12"></td>
-<td align="center" style="padding:16px;background:#e3f2fd;border-radius:8px;width:33%;"><div style="font-size:32px;font-weight:bold;color:#1565c0;">${responses}</div><div style="font-size:12px;color:#777;margin-top:4px;">Respostas</div></td>
+<td align="center" style="padding:20px;background:#e3f2fd;border-radius:8px;width:33%;"><div style="font-size:36px;font-weight:bold;color:#1565c0;">${responses}</div><div style="font-size:12px;color:#777;margin-top:6px;">Respostas</div></td>
 </tr>
 </table>
-<div style="background:#f8f9fa;border-radius:8px;padding:16px 20px;margin:16px 0;text-align:center;">
+<div style="background:#f8f9fa;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
 <span style="font-size:24px;">${growthEmoji}</span>
 <span style="font-size:16px;font-weight:bold;color:${growthPct >= 0 ? '#0f9b6e' : '#e53935'};">${growthPct >= 0 ? '+' : ''}${growthPct}%</span>
 <span style="color:#777;font-size:14px;"> vs mês anterior em leads</span>
 </div>
-<div style="background:#f0faf6;border-left:4px solid #0f9b6e;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0;">
+<p style="color:#555;font-size:15px;line-height:1.7;text-align:center;margin:20px 0 8px;">Cada quiz que você cria é uma oportunidade de conexão com seu público. Continue assim! 🚀</p>
+<div style="background:#f0faf6;border-left:4px solid #0f9b6e;padding:20px 24px;border-radius:0 8px 8px 0;margin:20px 0;">
 <p style="margin:0;font-weight:bold;color:#0f9b6e;">💡 Insight personalizado:</p>
-<p style="margin:8px 0 0;color:#333;font-size:15px;line-height:1.6;">${insight}</p>
+<p style="margin:10px 0 0;color:#333;font-size:15px;line-height:1.8;">${insight}</p>
 </div>
 ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
         break;
@@ -300,7 +362,7 @@ ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
         const updates = (context.updates || []) as string[];
         const version = (context.version || '') as string;
 
-        let formattedUpdates = updates.map(u => `<li style="margin-bottom:8px;color:#333;font-size:15px;line-height:1.5;">${u}</li>`).join('');
+        let formattedUpdates = updates.map(u => `<li style="margin-bottom:12px;color:#333;font-size:15px;line-height:1.7;">${u}</li>`).join('');
 
         try {
           const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -309,7 +371,7 @@ ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
             body: JSON.stringify({
               model: 'google/gemini-3-flash-preview',
               messages: [
-                { role: 'system', content: 'Transforme os bullet points de novidades da plataforma em uma lista HTML com emojis e descrições claras em português BR. Retorne apenas os <li> elements. Max 1 frase por item.' },
+                { role: 'system', content: 'Transforme os bullet points de novidades da plataforma em uma lista HTML com emojis e descrições claras em português BR. Retorne apenas os <li> elements. Max 1 frase por item. Use line-height:1.7 e margin-bottom:12px em cada li.' },
                 { role: 'user', content: `Novidades: ${JSON.stringify(updates)}` },
               ],
             }),
@@ -324,14 +386,14 @@ ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
         subject = `🚀 Novidades MasterQuizz${version ? ` — ${version}` : ''}`;
         preheader = `Confira o que há de novo na plataforma`;
         bodyHtml = `
-<h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! 🚀</h1>
-<p style="color:#555;font-size:16px;line-height:1.6;">Temos novidades incríveis para compartilhar com você:</p>
-<div style="background:#f0faf6;border-radius:8px;padding:20px 24px;margin:16px 0;">
+<h1 style="margin:0 0 12px;color:#1a1a2e;font-size:24px;line-height:1.3;">Olá, ${firstName}! 🚀</h1>
+<p style="color:#555;font-size:16px;line-height:1.7;">Temos novidades incríveis para compartilhar com você:</p>
+<div style="background:#f0faf6;border-radius:8px;padding:28px 28px;margin:20px 0;">
 <ul style="margin:0;padding-left:20px;">
 ${formattedUpdates}
 </ul>
 </div>
-<p style="color:#555;font-size:14px;margin-top:16px;">Acesse a plataforma para experimentar todas as novidades! 💪</p>
+<p style="color:#555;font-size:15px;line-height:1.7;margin-top:20px;">Acesse a plataforma para experimentar todas as novidades! 💪</p>
 ${makeButton('Explorar novidades', LOGIN_URL)}`;
         break;
       }

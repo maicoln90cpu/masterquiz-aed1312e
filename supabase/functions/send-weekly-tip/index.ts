@@ -19,6 +19,44 @@ async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ s
   } catch { return null; }
 }
 
+async function sendBulk(apiKey: string, batch: Array<{ senderId: string; senderName: string; to: string; subject: string; htmlBody: string }>): Promise<number> {
+  const payload = batch.map(item => ({
+    domain: 'masterquizz.com',
+    senderId: item.senderId,
+    senderName: item.senderName,
+    to: [item.to],
+    subject: item.subject,
+    htmlBody: item.htmlBody,
+    openTracking: true,
+    clickTracking: true,
+  }));
+
+  try {
+    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ApiKey: apiKey },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) return batch.length;
+    console.log('Bulk failed, falling back to single sends. Status:', res.status);
+    let sent = 0;
+    for (const item of batch) {
+      try {
+        const r = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ApiKey: apiKey },
+          body: JSON.stringify(item),
+        });
+        if (r.ok) sent++;
+        await new Promise(r => setTimeout(r, 500));
+      } catch { /* skip */ }
+    }
+    return sent;
+  } catch {
+    return 0;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -86,26 +124,32 @@ Deno.serve(async (req) => {
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('user_id');
     const blacklistedIds = new Set((blacklist || []).map(b => b.user_id));
 
-    let sentCount = 0;
+    // Build batch for bulk send
+    const emailBatch: Array<{ senderId: string; senderName: string; to: string; subject: string; htmlBody: string }> = [];
     for (const profile of (profiles || [])) {
       if (blacklistedIds.has(profile.id)) continue;
       if (unsubSet.has((profile.email || '').toLowerCase())) continue;
 
       const firstName = profile.full_name?.split(' ')[0] || 'Usuário';
-      const html = baseHtml.replace(/{first_name}/g, firstName);
-      const subject = baseSubject.replace(/{first_name}/g, firstName);
-
-      try {
-        const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
-          body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: profile.email, subject, htmlBody: html, openTracking: true, clickTracking: true }),
-        });
-        if (res.ok) { sentCount++; await new Promise(r => setTimeout(r, 1500)); }
-      } catch (e) { console.error(`Error:`, e); }
+      emailBatch.push({
+        senderId: senderInfo.senderId,
+        senderName,
+        to: profile.email!,
+        subject: baseSubject.replace(/{first_name}/g, firstName),
+        htmlBody: baseHtml.replace(/{first_name}/g, firstName),
+      });
     }
 
-    return new Response(JSON.stringify({ sent: sentCount, topic: chosenTopic }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Send in batches of 100
+    let sentCount = 0;
+    for (let i = 0; i < emailBatch.length; i += 100) {
+      const chunk = emailBatch.slice(i, i + 100);
+      const sent = await sendBulk(egoisApiKey, chunk);
+      sentCount += sent;
+      if (i + 100 < emailBatch.length) await new Promise(r => setTimeout(r, 2000));
+    }
+
+    return new Response(JSON.stringify({ sent: sentCount, topic: chosenTopic, bulk: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('send-weekly-tip error:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
