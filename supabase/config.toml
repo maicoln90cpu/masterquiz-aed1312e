@@ -167,3 +167,6 @@ verify_jwt = false
 
 [functions.send-platform-news]
 verify_jwt = false
+
+[functions.handle-email-unsubscribe]
+verify_jwt = false

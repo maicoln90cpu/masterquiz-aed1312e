@@ -12,9 +12,7 @@ async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ s
     const senders = await res.json();
     const list = Array.isArray(senders) ? senders : senders?.items || senders?.data || [];
     for (const s of list) {
-      if ((s.email || s.senderEmail || '').toLowerCase() === senderEmail.toLowerCase()) {
-        return { senderId: String(s.senderId || s.id) };
-      }
+      if ((s.email || s.senderEmail || '').toLowerCase() === senderEmail.toLowerCase()) return { senderId: String(s.senderId || s.id) };
     }
     if (list.length > 0) return { senderId: String(list[0].senderId || list[0].id) };
     return null;
@@ -29,11 +27,16 @@ Deno.serve(async (req) => {
     const egoisApiKey = Deno.env.get('EGOI_API_KEY');
     if (!egoisApiKey) throw new Error('EGOI_API_KEY missing');
 
-    // Check body for force mode
     let force = false;
-    try { const body = await req.json(); force = body?.force === true; } catch { /* no body */ }
+    let testMode = false;
+    let testEmail = '';
+    try {
+      const body = await req.json();
+      force = body?.force === true;
+      testMode = body?.test === true;
+      testEmail = body?.testEmail || '';
+    } catch { /* no body */ }
 
-    // Get published posts not yet included in digest
     const { data: posts } = await supabase
       .from('blog_posts')
       .select('title, excerpt, slug, featured_image_url')
@@ -42,45 +45,44 @@ Deno.serve(async (req) => {
       .order('published_at', { ascending: false })
       .limit(5);
 
-    if (!posts || posts.length < 3) {
-      if (!force) {
-        return new Response(JSON.stringify({ message: `Apenas ${posts?.length || 0} posts disponíveis (mínimo 3)`, sent: 0 }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
-
-    if (!posts?.length) {
-      return new Response(JSON.stringify({ message: 'Nenhum post disponível', sent: 0 }), {
+    if (!posts || (posts.length < 3 && !force && !testMode)) {
+      return new Response(JSON.stringify({ message: `Apenas ${posts?.length || 0} posts (mínimo 3)`, sent: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Generate email content via the shared generator
+    if (!posts?.length) {
+      return new Response(JSON.stringify({ message: 'Nenhum post', sent: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const genResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-email-content`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-      },
-      body: JSON.stringify({
-        templateType: 'blog_digest',
-        context: { posts },
-        recipientName: '{first_name}',
-      }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}` },
+      body: JSON.stringify({ templateType: 'blog_digest', context: { posts }, recipientName: testMode ? 'Admin' : '{first_name}' }),
     });
-
     if (!genResponse.ok) throw new Error(`Generator failed: ${await genResponse.text()}`);
     const { subject: baseSubject, html: baseHtml } = await genResponse.json();
 
-    // Get email settings
     const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
     const senderEmail = settings?.sender_email || 'noreply@masterquizz.com';
     const senderName = settings?.sender_name || 'MasterQuizz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) throw new Error('No sender in E-goi');
 
-    // Get active users with email (logged in within 60 days)
+    // Test mode: send only to testEmail
+    if (testMode && testEmail) {
+      const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
+        body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: testEmail, subject: `[TESTE] ${baseSubject}`, htmlBody: baseHtml.replace(/{first_name}/g, 'Admin'), openTracking: false, clickTracking: false }),
+      });
+      return new Response(JSON.stringify({ sent: res.ok ? 1 : 0, test: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Load unsubscribes
+    const { data: unsubscribed } = await supabase.from('email_unsubscribes').select('email');
+    const unsubSet = new Set((unsubscribed || []).map(u => u.email.toLowerCase()));
+
     const { data: authUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     const sixtyDaysAgo = Date.now() - 60 * 86400000;
     const activeUsers = (authUsers?.users || []).filter(u => {
@@ -89,64 +91,35 @@ Deno.serve(async (req) => {
     });
 
     const userIds = activeUsers.map(u => u.id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, email')
-      .in('id', userIds)
-      .not('email', 'is', null);
-
-    // Blacklist
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds).not('email', 'is', null);
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('user_id');
     const blacklistedIds = new Set((blacklist || []).map(b => b.user_id));
 
     let sentCount = 0;
     for (const profile of (profiles || [])) {
       if (blacklistedIds.has(profile.id)) continue;
+      if (unsubSet.has((profile.email || '').toLowerCase())) continue;
 
       const firstName = profile.full_name?.split(' ')[0] || 'Usuário';
-      const personalHtml = baseHtml.replace(/{first_name}/g, firstName);
-      const personalSubject = baseSubject.replace(/{first_name}/g, firstName);
+      const html = baseHtml.replace(/{first_name}/g, firstName);
+      const subject = baseSubject.replace(/{first_name}/g, firstName);
 
       try {
         const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
-          body: JSON.stringify({
-            senderId: senderInfo.senderId,
-            senderName,
-            to: profile.email,
-            subject: personalSubject,
-            htmlBody: personalHtml,
-            openTracking: true,
-            clickTracking: true,
-          }),
+          body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: profile.email, subject, htmlBody: html, openTracking: true, clickTracking: true }),
         });
-
-        if (res.ok) {
-          sentCount++;
-          // Small delay
-          await new Promise(r => setTimeout(r, 1500));
-        } else {
-          console.error(`Failed to send digest to ${profile.email}:`, res.status);
-        }
-      } catch (e) {
-        console.error(`Error sending to ${profile.email}:`, e);
-      }
+        if (res.ok) { sentCount++; await new Promise(r => setTimeout(r, 1500)); }
+      } catch (e) { console.error(`Error sending digest to ${profile.email}:`, e); }
     }
 
-    // Mark posts as included in digest
-    const slugs = posts.map(p => p.slug);
-    await supabase.from('blog_posts').update({ included_in_digest: true }).in('slug', slugs);
+    // Mark posts as included
+    await supabase.from('blog_posts').update({ included_in_digest: true }).in('slug', posts.map(p => p.slug));
 
-    console.log(`Blog digest sent to ${sentCount} users, marked ${slugs.length} posts`);
-
-    return new Response(JSON.stringify({ message: `Digest enviado para ${sentCount} usuários`, sent: sentCount, posts: slugs.length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ sent: sentCount, posts: posts.length }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('send-blog-digest error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
