@@ -1,161 +1,87 @@
+## Plano: Site Mode A/B (Fluxo Completo)
 
+### Etapa 1 ✅ — Infraestrutura Base
+- [x] Corrigir cards do AdminDashboard (remover queries redundantes de loadData)
+- [x] Criar tabela `site_settings` com `site_mode` (A ou B)
+- [x] Adicionar `payment_confirmed` em `user_subscriptions`
+- [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
+- [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-# Plano: Correcoes de Email, Subject B, Bulk API e Melhorias de Conteudo
+### Etapa 2 ✅ — Frontend Condicional (Landing + Pricing + Login)
+- [x] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
+- [x] HeroSection: CTA "Escolher meu plano" + navega para `/precos` no modo B
+- [x] FinalCTA: Navega para `/precos` no modo B
+- [x] Pricing: Esconder card Free no modo B
+- [x] Login: No modo B, após cadastro redirecionar para `/precos`
 
-## Diagnostico
-
-| Item | Status | Problema |
-|------|--------|----------|
-| `subject_b` no editor | NAO implementado | Campo nao existe no modal `EmailRecoveryTemplates.tsx` |
-| Bulk API E-goi | NAO implementado | Todos os envios usam `/send/single` — endpoint correto e `/v2/email/messages/action/send/bulk` |
-| CTA dos emails | Quebrado | VML condicional renderiza mal — botao aparece distorcido (prints 3 e 4) |
-| Blog Digest intro | Generico | "Publicamos novos conteudos..." pouco engajante |
-| Weekly Tip | Robotico | Texto compactado, sem espacamento, tom de tutorial |
-| Categorias no editor | Incompletas | Faltam milestone, tutorial, survey, plan_compare, integration_guide, re_engagement |
-
----
-
-## Mudancas
-
-### 1. Adicionar campo `subject_b` no editor de templates
-
-**Arquivo**: `src/components/admin/recovery/EmailRecoveryTemplates.tsx`
-
-- Adicionar `subject_b` ao form state (inicializado como `''`)
-- Adicionar campo de input "Assunto B (Teste A/B)" abaixo do campo de assunto principal
-- Placeholder: "Deixe vazio para nao usar teste A/B"
-- Incluir `subject_b` no `save()` e no `openEdit()`
-- Adicionar `subject_b` ao tipo `EmailTemplate`
-- Expandir array `CATEGORIES` com as 7 categorias novas (milestone, tutorial, survey, plan_compare, integration_guide, re_engagement, webinar)
-
-### 2. Corrigir CTA (botao) em todos os emails
-
-**Arquivo**: `supabase/functions/generate-email-content/index.ts`
-
-O problema esta no `makeButton()` — o VML condicional para Outlook interfere com a renderizacao em clientes modernos. Correcao:
-
-**Antes** (funcao `makeButton`):
-```html
-<table><tr><td>
-<!--[if mso]><v:roundrect...>...<![endif]-->
-<!--[if !mso]><!--><a href="..." style="display:inline-block;padding:14px 32px;...">Texto</a><!--<![endif]-->
-</td></tr></table>
-```
-
-**Depois**: Usar abordagem padding-based com fallback VML separado que nao quebra em Gmail/Apple Mail:
-```html
-<table width="100%"><tr><td align="center" style="padding:24px 0;">
-<table><tr><td style="background:#0f9b6e;border-radius:8px;text-align:center;">
-<a href="..." style="display:inline-block;padding:14px 32px;color:#fff;background:#0f9b6e;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;mso-padding-alt:0;text-underline-color:#0f9b6e;">
-<!--[if mso]><i style="mso-font-width:150%;mso-text-raise:24pt;" hidden>&emsp;</i><span style="mso-text-raise:12pt;"><!--<![endif]-->
-Texto
-<!--[if mso]></span><i style="mso-font-width:150%;" hidden>&emsp;&#8203;</i><!--<![endif]-->
-</a>
-</td></tr></table>
-</td></tr></table>
-```
-
-### 3. Melhorar conteudo dos emails dinamicos
-
-**Arquivo**: `supabase/functions/generate-email-content/index.ts`
-
-#### Blog Digest — Antes vs Depois
-
-| | Antes | Depois |
-|---|---|---|
-| Saudacao | "Ola, {name}! 👋" | "Ola, {name}! 👋" (manter) |
-| Intro | "Publicamos novos conteudos no blog para te ajudar a captar mais leads com quizzes." | "{N} artigos fresquinhos saíram do forno! 🔥 Cada um deles traz insights práticos que você pode aplicar hoje mesmo para turbinar seus resultados com quizzes." |
-| Cards | Sem separacao visual forte | Adicionar divider sutil entre cards, melhorar tipografia do excerpt |
-
-#### Weekly Tip — Antes vs Depois
-
-| | Antes | Depois |
-|---|---|---|
-| Prompt IA | "Gere uma dica pratica... max 200 palavras" | Prompt reformulado: tom conversacional, analogias do dia-a-dia, parágrafos curtos, emojis naturais, como se um amigo especialista estivesse contando. Min 250 palavras, max 400. Incluir "por que isso importa" + "como aplicar em 3 passos" |
-| Layout | Bloco unico de texto com borda esquerda | Secao "Por que isso importa" em destaque + lista numerada de passos com icones + separadores visuais |
-| Espacamento | `padding:16px 20px` compacto | Padding generoso `24px 28px`, `line-height:1.8`, `margin-bottom:16px` entre paragrafos |
-| CTA | "Coloque essa dica em pratica agora mesmo!" | "Bora colocar isso em pratica? Seu proximo quiz pode ser o melhor que voce ja fez. 💪" |
-
-#### Success Story — Ajustes finos
-
-- Aumentar padding interno das secoes Desafio/Solucao
-- Adicionar `line-height:1.7` nos paragrafos
-- Metricas: fonte maior (32px -> 36px), mais espaco entre colunas
-
-#### Monthly Summary — Ajustes finos
-
-- Cards de metricas: padding 16px -> 20px
-- Insight: `line-height:1.8`
-- Adicionar frase motivacional antes do CTA
-
-#### Platform News — Ajustes finos
-
-- Lista de novidades: `line-height:1.7`, `margin-bottom:12px` entre items
-- Padding da caixa verde: 20px -> 28px
-
-### 4. Implementar E-goi Bulk API
-
-**Arquivos**: `send-blog-digest`, `send-weekly-tip`, `send-success-story`, `send-platform-news`
-
-Endpoint correto: `POST https://slingshot.egoiapp.com/api/v2/email/messages/action/send/bulk`
-
-Payload (array de ate 100 items):
-```json
-[{
-  "domain": "masterquizz.com",
-  "senderId": "...",
-  "senderName": "MasterQuizz",
-  "to": ["user@email.com"],
-  "subject": "...",
-  "htmlBody": "...",
-  "openTracking": true,
-  "clickTracking": true
-}]
-```
-
-Logica:
-- Agrupar destinatarios em lotes de 100
-- Cada item do lote tem o HTML personalizado (first_name ja substituido)
-- Uma unica chamada API por lote vs 100 chamadas individuais
-- Manter `/send/single` para test mode e `send-monthly-summary` (conteudo unico por usuario)
-
-**Como testar**: Disparar "Blog Digest" ou "Dica da Semana" via botao teste na UI e verificar nos logs da Edge Function se a chamada usa `/send/bulk` ao inves de `/send/single`. Tambem pode verificar no painel E-goi > Logs se os envios aparecem agrupados.
-
-### 5. Redeploy de Edge Functions
-
-Apos todas as alteracoes, deploy de: `generate-email-content`, `send-blog-digest`, `send-weekly-tip`, `send-success-story`, `send-platform-news`.
+### Etapa 3 ✅ — Auth Guards + Payment Flow
+- [x] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
+- [x] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
+- [x] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
+- [x] Modo B: Novos cadastros criam subscription com `payment_confirmed = false` (via trigger existente com default true)
 
 ---
 
-## Arquivos modificados
+## Plano: Email Recovery - Melhorias
 
-| Arquivo | Mudanca |
-|---|---|
-| `src/components/admin/recovery/EmailRecoveryTemplates.tsx` | Campo subject_b + categorias novas |
-| `supabase/functions/generate-email-content/index.ts` | CTA fix + conteudo melhorado em todos os templates |
-| `supabase/functions/send-blog-digest/index.ts` | Bulk API |
-| `supabase/functions/send-weekly-tip/index.ts` | Bulk API |
-| `supabase/functions/send-success-story/index.ts` | Bulk API |
-| `supabase/functions/send-platform-news/index.ts` | Bulk API |
+### Etapa 1 ✅ — UI + Templates + Editor Visual
+- [x] Reestruturar tabs WhatsApp/Email em CustomerRecovery
+- [x] Criar dashboard EmailRecoveryReports com KPIs e gráficos
+- [x] Adicionar editor visual dual (Visual + HTML) nos templates
 
-## Checklist
+### Etapa 2 ✅ — Compatibilidade + Estabilidade
+- [x] VML/Outlook para botões CTA em todos os 6 templates
+- [x] Logo permanente no Supabase Storage
+- [x] Lógica de falha permanente (retry ≥ 3) na fila
 
-- [ ] Abrir modal de edicao de template e verificar campo "Assunto B"
-- [ ] Enviar email teste de Blog Digest e verificar CTA renderiza corretamente
-- [ ] Enviar email teste de Dica da Semana e verificar espacamento/tom
-- [ ] Verificar logs da Edge Function para confirmar uso de `/send/bulk`
-- [ ] Testar categorias novas no dropdown do editor
+### Etapa 3 ✅ — Tracking + Dashboard Real
+- [x] Webhook E-goi (`egoi-email-webhook`) para opens/clicks/bounces
+- [x] Dashboard corrigido com taxas percentuais (open rate, click rate)
+- [x] Filtros por status opened/clicked adicionados
+- [x] Colunas "Aberto em" e "Clicado em" na tabela
+- [x] Logo atualizado no Storage (novo arquivo enviado pelo usuário)
+- [x] Pie chart segmentado (enviados vs abertos vs clicados)
 
-## Vantagens
+### Etapa 4a ✅ — Templates Estáticos + Triggers SQL (Etapa 1 do plano de 12 emails)
+- [x] 4 templates Milestone (10/50/100/500 leads) + trigger SQL em quiz_responses
+- [x] Template Tutorial (3 dias após 1º quiz) + trigger SQL em quizzes
+- [x] Template Pesquisa de Satisfação (30 dias após signup)
+- [x] Template Comparativo de Planos (14 dias no free)
+- [x] Template Guia de Integração (7 dias sem integrações)
+- [x] 3 templates Reengajamento Educativo (série 21/24/27 dias)
+- [x] Template Convite para Webinar (manual)
+- [x] check-inactive-users-email expandido para novas categorias
+- [x] process-email-recovery-queue respeitando scheduled_at futuro
 
-- CTA consistente em todos os clientes de email (Gmail, Outlook, Apple Mail)
-- Emails com tom mais humano aumentam open rate e engajamento
-- Bulk API reduz tempo de envio de minutos para segundos
-- A/B testing acessivel diretamente pelo editor visual
+### Etapa 4b ✅ — Templates Dinâmicos com IA
+- [x] Edge Function generate-email-content (gerador IA compartilhado via Lovable AI)
+- [x] Blog Digest automático (send-blog-digest — a cada 3 artigos)
+- [x] Dica da Semana (send-weekly-tip — cron semanal)
+- [x] Caso de Sucesso (send-success-story — mensal)
+- [x] Resumo Mensal (send-monthly-summary — 1º dia do mês, personalizado por usuário)
+- [x] Novidade da Plataforma (send-platform-news — disparo manual admin)
+- [x] Tabela email_tips para histórico de dicas
+- [x] Coluna included_in_digest em blog_posts
 
-## Proximas fases
+### Etapa 4c ✅ — UI Admin + Polimento
+- [x] UI de Automações no painel admin (EmailAutomations.tsx)
+- [x] Toggle on/off por automação + botão "Disparar agora"
+- [x] Dialog para envio de Novidades (updates, versão, segmento)
+- [x] Histórico de execuções com status/emails enviados
+- [x] Tabelas email_automation_config + email_automation_logs
+- [x] CATEGORY_LABELS expandido com todas as 13 categorias
+- [x] Nova sub-aba "Automações" no painel Email
 
-- Webhooks E-goi para tracking de bounces em tempo real
-- MJML compiler para compatibilidade garantida
-- Segmentacao avancada por comportamento
-
+### Etapa 4d ✅ — Unsubscribe + Performance + A/B + Reorganização
+- [x] Tabela email_unsubscribes + Edge Function handle-email-unsubscribe
+- [x] Link de cancelamento no footer de todos os templates (generate-email-content)
+- [x] Header List-Unsubscribe no envio E-goi (process-email-recovery-queue)
+- [x] Verificação de unsubscribe antes de envio em todas as functions
+- [x] Dashboard de performance por categoria (tabela open/click rate)
+- [x] Teste A/B de subject lines (campo subject_b, ab_variant no envio)
+- [x] Painel A/B no EmailRecoveryReports (variante A vs B)
+- [x] Reorganização de trigger_days (mínimo 3 dias entre templates)
+- [x] Botão "Teste" em cada card de automação (envio para email específico)
+- [x] Crons automáticos criados via migration (blog_digest, weekly_tip, monthly_summary, success_story)
+- [x] Coluna ab_variant em email_recovery_contacts
+- [x] Filtro por status "cancelados" no relatório
