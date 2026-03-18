@@ -149,3 +149,6 @@ verify_jwt = false
 
 [functions.egoi-email-webhook]
 verify_jwt = false
+
+[functions.upload-brand-asset]
+verify_jwt = false
