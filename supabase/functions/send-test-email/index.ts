@@ -5,6 +5,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ senderId: string; domain: string } | null> {
+  try {
+    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/senders', {
+      headers: { 'ApiKey': apiKey },
+    });
+    if (!res.ok) {
+      console.error('Failed to fetch senders:', res.status, await res.text());
+      return null;
+    }
+    const senders = await res.json();
+    console.log('Available senders:', JSON.stringify(senders));
+
+    const list = Array.isArray(senders) ? senders : senders?.items || senders?.data || [];
+    
+    // Try exact match
+    for (const s of list) {
+      const email = s.email || s.senderEmail || '';
+      if (email.toLowerCase() === senderEmail.toLowerCase()) {
+        return { senderId: String(s.senderId || s.id), domain: email.split('@')[1] };
+      }
+    }
+    // Fallback: first available
+    if (list.length > 0) {
+      const first = list[0];
+      const email = first.email || first.senderEmail || senderEmail;
+      console.warn(`Sender ${senderEmail} not found, using fallback: ${email}`);
+      return { senderId: String(first.senderId || first.id), domain: email.split('@')[1] || senderEmail.split('@')[1] };
+    }
+    return null;
+  } catch (err) {
+    console.error('resolveSenderId error:', err);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -26,6 +61,13 @@ Deno.serve(async (req) => {
     const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
     const senderEmail = settings?.sender_email || 'noreply@masterquizz.com';
     const senderName = settings?.sender_name || 'MasterQuizz';
+
+    // Resolve senderId from E-goi
+    const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
+    if (!senderInfo) {
+      return new Response(JSON.stringify({ error: 'Nenhum sender configurado na E-goi. Configure um sender em slingshot.egoiapp.com' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    console.log(`Resolved sender: id=${senderInfo.senderId}, domain=${senderInfo.domain}`);
 
     // Load template
     const { data: template, error: tErr } = await supabase
@@ -59,36 +101,44 @@ Deno.serve(async (req) => {
       subject = subject.replaceAll(key, value);
     }
 
-    // Send via E-goi
-    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send', {
+    // Send via E-goi Transactional V2 - Single endpoint
+    const payload = {
+      domain: senderInfo.domain,
+      senderId: senderInfo.senderId,
+      senderName,
+      to,
+      subject,
+      htmlBody: htmlContent,
+      openTracking: true,
+      clickTracking: true,
+    };
+
+    console.log('Sending to E-goi single endpoint with payload keys:', Object.keys(payload));
+
+    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'ApiKey': egoisApiKey,
       },
-      body: JSON.stringify({
-        domain: senderEmail.split('@')[1] || 'masterquizz.com',
-        senderEmail,
-        senderName,
-        to: [to],
-        subject,
-        htmlBody: htmlContent,
-        options: { trackOpens: true, trackClicks: true },
-      }),
+      body: JSON.stringify(payload),
     });
 
     let data: any = {};
-    try { data = await res.json(); } catch { data = { status: res.status }; }
+    const responseText = await res.text();
+    try { data = JSON.parse(responseText); } catch { data = { raw: responseText, status: res.status }; }
+
+    console.log(`E-goi response: status=${res.status}, body=${responseText.substring(0, 500)}`);
 
     if (!res.ok) {
-      const errorMsg = data?.detail || data?.message || JSON.stringify(data).substring(0, 300);
+      const errorMsg = data?.detail || data?.message || data?.errors?.[0]?.message || responseText.substring(0, 300);
       console.error('E-goi error:', errorMsg);
       return new Response(JSON.stringify({ error: `E-goi: ${errorMsg}` }), { status: res.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     console.log(`Test email sent to ${to} using template "${template.name}"`);
 
-    return new Response(JSON.stringify({ success: true, message: `Email de teste enviado para ${to}` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, message: `Email de teste enviado para ${to}`, messageId: data.messageId || data.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Send test email error:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
