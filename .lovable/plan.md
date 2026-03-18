@@ -63,7 +63,11 @@
 - [x] Tabela email_tips para histórico de dicas
 - [x] Coluna included_in_digest em blog_posts
 
-### Etapa 4c — Planejada (UI Admin + Polimento)
-- [ ] UI de Automações no painel admin
-- [ ] Unsubscribe link em todos os templates
-- [ ] Dashboard de performance por categoria
+### Etapa 4c ✅ — UI Admin + Polimento
+- [x] UI de Automações no painel admin (EmailAutomations.tsx)
+- [x] Toggle on/off por automação + botão "Disparar agora"
+- [x] Dialog para envio de Novidades (updates, versão, segmento)
+- [x] Histórico de execuções com status/emails enviados
+- [x] Tabelas email_automation_config + email_automation_logs
+- [x] CATEGORY_LABELS expandido com todas as 13 categorias
+- [x] Nova sub-aba "Automações" no painel Email

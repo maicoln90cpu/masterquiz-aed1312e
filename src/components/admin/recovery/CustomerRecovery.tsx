@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, Settings, MessageSquare, Megaphone, ListOrdered, History, BarChart3, Ban, Bot, MessageCircle, Mail, MailOpen, MailCheck, Phone } from "lucide-react";
+import { Smartphone, Settings, MessageSquare, Megaphone, ListOrdered, History, BarChart3, Ban, Bot, MessageCircle, Mail, MailOpen, MailCheck, Phone, Zap } from "lucide-react";
 import { AdminSubTabs } from "@/components/admin/AdminSubTabs";
 import { WhatsAppConnection } from "./WhatsAppConnection";
 import { RecoverySettings } from "./RecoverySettings";
@@ -16,6 +16,7 @@ import { EmailRecoverySettings } from "./EmailRecoverySettings";
 import { EmailRecoveryTemplates } from "./EmailRecoveryTemplates";
 import { EmailRecoveryQueue } from "./EmailRecoveryQueue";
 import { EmailRecoveryReports } from "./EmailRecoveryReports";
+import { EmailAutomations } from "./EmailAutomations";
 
 export function CustomerRecovery() {
   return (
@@ -70,6 +71,7 @@ export function CustomerRecovery() {
             { id: 'email-settings', label: 'Configurações', icon: <Settings className="h-4 w-4" />, color: 'blue' },
             { id: 'email-templates', label: 'Templates', icon: <MailOpen className="h-4 w-4" />, color: 'purple' },
             { id: 'email-queue', label: 'Fila de Envio', icon: <MailCheck className="h-4 w-4" />, color: 'green' },
+            { id: 'email-automations', label: 'Automações', icon: <Zap className="h-4 w-4" />, color: 'amber' },
             { id: 'email-reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'pink' },
           ]}
           defaultTab="email-settings"
@@ -79,6 +81,7 @@ export function CustomerRecovery() {
               {activeTab === 'email-settings' && <EmailRecoverySettings />}
               {activeTab === 'email-templates' && <EmailRecoveryTemplates />}
               {activeTab === 'email-queue' && <EmailRecoveryQueue />}
+              {activeTab === 'email-automations' && <EmailAutomations />}
               {activeTab === 'email-reports' && <EmailRecoveryReports />}
             </>
           )}

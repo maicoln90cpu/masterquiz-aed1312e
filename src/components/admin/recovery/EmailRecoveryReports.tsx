@@ -43,6 +43,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   reminder: '⏰ Lembrete',
   special_offer: '🎁 Oferta Especial',
   reactivation: '🚀 Reativação',
+  milestone: '🏅 Marco de Leads',
+  tutorial: '📖 Tutorial',
+  survey: '📝 Pesquisa',
+  plan_compare: '💎 Comparativo',
+  integration_guide: '🔌 Integrações',
+  re_engagement: '🔁 Reengajamento',
+  webinar: '🎥 Webinar',
 };
 
 const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
