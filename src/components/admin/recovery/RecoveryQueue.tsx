@@ -278,6 +278,7 @@ export function RecoveryQueue() {
 
   const retryFailed = async () => {
     try {
+      // Only retry items that haven't exceeded max retries
       const { error } = await supabase
         .from('recovery_contacts')
         .update({ 
@@ -286,11 +287,12 @@ export function RecoveryQueue() {
           error_message: null,
           updated_at: new Date().toISOString()
         })
-        .eq('status', 'failed');
+        .eq('status', 'failed')
+        .lt('retry_count', 3);
 
       if (error) throw error;
 
-      toast.success('Itens com falha recolocados na fila');
+      toast.success('Itens com falha recolocados na fila (exceto falhas permanentes)');
       loadQueue();
     } catch (error) {
       console.error('Error retrying failed:', error);
