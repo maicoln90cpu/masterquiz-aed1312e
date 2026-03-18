@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     }
 
     // Send via E-goi
-    const res = await fetch('https://api.egoiapp.com/v2/email/messages/action/send', {
+    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
