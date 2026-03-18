@@ -500,6 +500,78 @@ export type Database = {
           },
         ]
       }
+      email_automation_config: {
+        Row: {
+          automation_key: string
+          created_at: string | null
+          description: string | null
+          display_name: string
+          execution_count: number | null
+          frequency: string | null
+          id: string
+          is_enabled: boolean | null
+          last_executed_at: string | null
+          last_result: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          automation_key: string
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          execution_count?: number | null
+          frequency?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_executed_at?: string | null
+          last_result?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          automation_key?: string
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          execution_count?: number | null
+          frequency?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_executed_at?: string | null
+          last_result?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      email_automation_logs: {
+        Row: {
+          automation_key: string
+          details: Json | null
+          emails_sent: number | null
+          error_message: string | null
+          executed_at: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          automation_key: string
+          details?: Json | null
+          emails_sent?: number | null
+          error_message?: string | null
+          executed_at?: string | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          automation_key?: string
+          details?: Json | null
+          emails_sent?: number | null
+          error_message?: string | null
+          executed_at?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       email_recovery_contacts: {
         Row: {
           campaign_id: string | null
