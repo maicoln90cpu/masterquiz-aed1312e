@@ -85,6 +85,14 @@ export function RecoveryQueue() {
         .order('created_at', { ascending: true })
         .limit(100);
 
+      // Filter out permanently failed items (retry >= 3) from active queue
+      const activeQueue = (data || []).filter(item => 
+        !(item.status === 'failed' && (item.retry_count || 0) >= 3)
+      );
+      const permanentlyFailed = (data || []).filter(item => 
+        item.status === 'failed' && (item.retry_count || 0) >= 3
+      ).length;
+
       if (error) throw error;
 
       // Buscar nomes dos perfis separadamente (join direto falha sem FK formal)
@@ -102,23 +110,23 @@ export function RecoveryQueue() {
         }
       }
 
-      const enrichedData = (data || []).map(item => ({
+      const enrichedData = activeQueue.map(item => ({
         ...item,
         profiles: { full_name: profilesMap[item.user_id] || null },
       }));
 
       setQueue(enrichedData as any);
-      setSelectedIds(new Set()); // Reset selection on reload
+      setSelectedIds(new Set());
 
-      // Calculate stats
-      const pending = data?.filter(q => q.status === 'pending').length || 0;
-      const queued = data?.filter(q => q.status === 'queued').length || 0;
-      const failed = data?.filter(q => q.status === 'failed').length || 0;
+      // Calculate stats - separate retryable from permanent failures
+      const pending = activeQueue.filter(q => q.status === 'pending').length;
+      const queued = activeQueue.filter(q => q.status === 'queued').length;
+      const retryableFailed = activeQueue.filter(q => q.status === 'failed').length;
 
       setStats({
         pending,
         queued,
-        failed,
+        failed: retryableFailed,
         total_today: pending + queued,
       });
     } catch (error) {
@@ -270,6 +278,7 @@ export function RecoveryQueue() {
 
   const retryFailed = async () => {
     try {
+      // Only retry items that haven't exceeded max retries
       const { error } = await supabase
         .from('recovery_contacts')
         .update({ 
@@ -278,11 +287,12 @@ export function RecoveryQueue() {
           error_message: null,
           updated_at: new Date().toISOString()
         })
-        .eq('status', 'failed');
+        .eq('status', 'failed')
+        .lt('retry_count', 3);
 
       if (error) throw error;
 
-      toast.success('Itens com falha recolocados na fila');
+      toast.success('Itens com falha recolocados na fila (exceto falhas permanentes)');
       loadQueue();
     } catch (error) {
       console.error('Error retrying failed:', error);
