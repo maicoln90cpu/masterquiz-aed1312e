@@ -497,6 +497,192 @@ export type Database = {
           },
         ]
       }
+      email_recovery_contacts: {
+        Row: {
+          campaign_id: string | null
+          clicked_at: string | null
+          created_at: string | null
+          days_inactive_at_contact: number | null
+          egoi_message_id: string | null
+          email: string
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          priority: number | null
+          retry_count: number | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          template_id: string | null
+          updated_at: string | null
+          user_id: string
+          user_lead_count: number | null
+          user_plan_at_contact: string | null
+          user_quiz_count: number | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          days_inactive_at_contact?: number | null
+          egoi_message_id?: string | null
+          email: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          priority?: number | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          user_lead_count?: number | null
+          user_plan_at_contact?: string | null
+          user_quiz_count?: number | null
+        }
+        Update: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          days_inactive_at_contact?: number | null
+          egoi_message_id?: string | null
+          email?: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          priority?: number | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          user_lead_count?: number | null
+          user_plan_at_contact?: string | null
+          user_quiz_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_recovery_contacts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_recovery_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_recovery_contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_recovery_settings: {
+        Row: {
+          allowed_hours_end: string | null
+          allowed_hours_start: string | null
+          batch_size: number | null
+          created_at: string | null
+          daily_email_limit: number | null
+          exclude_plan_types: Json | null
+          hourly_email_limit: number | null
+          id: string
+          inactivity_days_trigger: number | null
+          is_active: boolean | null
+          sender_email: string | null
+          sender_name: string | null
+          updated_at: string | null
+          user_cooldown_days: number | null
+        }
+        Insert: {
+          allowed_hours_end?: string | null
+          allowed_hours_start?: string | null
+          batch_size?: number | null
+          created_at?: string | null
+          daily_email_limit?: number | null
+          exclude_plan_types?: Json | null
+          hourly_email_limit?: number | null
+          id?: string
+          inactivity_days_trigger?: number | null
+          is_active?: boolean | null
+          sender_email?: string | null
+          sender_name?: string | null
+          updated_at?: string | null
+          user_cooldown_days?: number | null
+        }
+        Update: {
+          allowed_hours_end?: string | null
+          allowed_hours_start?: string | null
+          batch_size?: number | null
+          created_at?: string | null
+          daily_email_limit?: number | null
+          exclude_plan_types?: Json | null
+          hourly_email_limit?: number | null
+          id?: string
+          inactivity_days_trigger?: number | null
+          is_active?: boolean | null
+          sender_email?: string | null
+          sender_name?: string | null
+          updated_at?: string | null
+          user_cooldown_days?: number | null
+        }
+        Relationships: []
+      }
+      email_recovery_templates: {
+        Row: {
+          category: string
+          click_rate: number | null
+          created_at: string | null
+          created_by: string | null
+          html_content: string
+          id: string
+          is_active: boolean | null
+          name: string
+          open_rate: number | null
+          priority: number | null
+          subject: string
+          trigger_days: number | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string
+          click_rate?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          open_rate?: number | null
+          priority?: number | null
+          subject?: string
+          trigger_days?: number | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string
+          click_rate?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          open_rate?: number | null
+          priority?: number | null
+          subject?: string
+          trigger_days?: number | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       gtm_event_logs: {
         Row: {
           created_at: string
