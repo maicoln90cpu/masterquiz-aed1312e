@@ -53,13 +53,15 @@
 - [x] check-inactive-users-email expandido para novas categorias
 - [x] process-email-recovery-queue respeitando scheduled_at futuro
 
-### Etapa 4b — Planejada (Templates Dinâmicos com IA)
-- [ ] Blog Digest automático (a cada 3 artigos)
-- [ ] Dica da Semana (cron semanal)
-- [ ] Caso de Sucesso (mensal)
-- [ ] Novidade da Plataforma (por release)
-- [ ] Resumo Mensal (1º dia do mês)
-- [ ] Edge Function generate-email-content (gerador IA compartilhado)
+### Etapa 4b ✅ — Templates Dinâmicos com IA
+- [x] Edge Function generate-email-content (gerador IA compartilhado via Lovable AI)
+- [x] Blog Digest automático (send-blog-digest — a cada 3 artigos)
+- [x] Dica da Semana (send-weekly-tip — cron semanal)
+- [x] Caso de Sucesso (send-success-story — mensal)
+- [x] Resumo Mensal (send-monthly-summary — 1º dia do mês, personalizado por usuário)
+- [x] Novidade da Plataforma (send-platform-news — disparo manual admin)
+- [x] Tabela email_tips para histórico de dicas
+- [x] Coluna included_in_digest em blog_posts
 
 ### Etapa 4c — Planejada (UI Admin + Polimento)
 - [ ] UI de Automações no painel admin
