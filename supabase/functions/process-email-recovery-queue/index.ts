@@ -141,7 +141,6 @@ Deno.serve(async (req) => {
             'ApiKey': egoisApiKey,
           },
           body: JSON.stringify({
-            domain: senderInfo.domain,
             senderId: senderInfo.senderId,
             senderName,
             to: contact.email,
