@@ -50,7 +50,24 @@ Deno.serve(async (req) => {
     }
 
     // Get all users
-    const minInactiveDays = (targetCriteria.min_inactive_days as number) || settings.inactivity_days_trigger || 7;
+    // Use the minimum trigger_days from active templates (not global setting)
+    const { data: activeTemplates } = await supabase
+      .from('email_recovery_templates')
+      .select('id, trigger_days, category')
+      .eq('is_active', true)
+      .order('trigger_days', { ascending: true });
+
+    if (!activeTemplates?.length) {
+      return new Response(JSON.stringify({ message: 'Nenhum template ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Exclude welcome (trigger_days=0) from inactivity check — welcome is handled by DB trigger
+    const inactivityTemplates = activeTemplates.filter(t => t.category !== 'welcome' && t.trigger_days > 0);
+    if (!inactivityTemplates.length) {
+      return new Response(JSON.stringify({ message: 'Nenhum template de inatividade ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const minInactiveDays = (targetCriteria.min_inactive_days as number) || inactivityTemplates[0].trigger_days;
     const inactivityDate = new Date();
     inactivityDate.setDate(inactivityDate.getDate() - minInactiveDays);
 
