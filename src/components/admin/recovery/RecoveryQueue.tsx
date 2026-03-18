@@ -110,23 +110,23 @@ export function RecoveryQueue() {
         }
       }
 
-      const enrichedData = (data || []).map(item => ({
+      const enrichedData = activeQueue.map(item => ({
         ...item,
         profiles: { full_name: profilesMap[item.user_id] || null },
       }));
 
       setQueue(enrichedData as any);
-      setSelectedIds(new Set()); // Reset selection on reload
+      setSelectedIds(new Set());
 
-      // Calculate stats
-      const pending = data?.filter(q => q.status === 'pending').length || 0;
-      const queued = data?.filter(q => q.status === 'queued').length || 0;
-      const failed = data?.filter(q => q.status === 'failed').length || 0;
+      // Calculate stats - separate retryable from permanent failures
+      const pending = activeQueue.filter(q => q.status === 'pending').length;
+      const queued = activeQueue.filter(q => q.status === 'queued').length;
+      const retryableFailed = activeQueue.filter(q => q.status === 'failed').length;
 
       setStats({
         pending,
         queued,
-        failed,
+        failed: retryableFailed,
         total_today: pending + queued,
       });
     } catch (error) {
