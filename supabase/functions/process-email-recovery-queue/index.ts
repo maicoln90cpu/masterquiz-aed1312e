@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
       .from('email_recovery_contacts')
       .select('*, email_recovery_templates(*)')
       .eq('status', 'pending')
+      .lte('scheduled_at', new Date().toISOString())
       .order('priority', { ascending: false })
       .order('scheduled_at', { ascending: true })
       .limit(maxBatch);
