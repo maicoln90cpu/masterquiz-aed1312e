@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, Mail, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface EmailContact {
   id: string;
@@ -22,6 +22,7 @@ interface EmailContact {
   retry_count: number | null;
   created_at: string | null;
   template_id: string | null;
+  ab_variant: string | null;
   email_recovery_templates: {
     name: string;
     category: string;
@@ -34,6 +35,7 @@ const STATUS_COLORS: Record<string, string> = {
   failed: 'bg-red-100 text-red-700',
   opened: 'bg-blue-100 text-blue-700',
   clicked: 'bg-purple-100 text-purple-700',
+  cancelled: 'bg-gray-100 text-gray-700',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -51,8 +53,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   re_engagement: '🔁 Reengajamento',
   webinar: '🎥 Webinar',
 };
-
-const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
 
 function pct(num: number, den: number): string {
   if (den === 0) return '0%';
@@ -74,7 +74,7 @@ export function EmailRecoveryReports() {
         .select('*, email_recovery_templates(name, category)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setContacts(data || []);
+      setContacts((data || []) as unknown as EmailContact[]);
     } catch {
       toast.error('Erro ao carregar relatórios');
     } finally {
@@ -112,6 +112,24 @@ export function EmailRecoveryReports() {
     ...stats,
   }));
 
+  // Performance by category table
+  const categoryPerformance = Array.from(categoryMap.entries()).map(([cat, stats]) => ({
+    category: CATEGORY_LABELS[cat] || cat,
+    sent: stats.sent,
+    openRate: pct(stats.opened, stats.sent),
+    clickRate: pct(stats.clicked, stats.sent),
+    failRate: pct(stats.failed, stats.sent + stats.failed),
+  })).sort((a, b) => b.sent - a.sent);
+
+  // A/B test results
+  const abContacts = contacts.filter(c => c.ab_variant && ['sent', 'opened', 'clicked'].includes(c.status));
+  const abA = abContacts.filter(c => c.ab_variant === 'A');
+  const abB = abContacts.filter(c => c.ab_variant === 'B');
+  const abResults = abContacts.length > 0 ? {
+    a: { sent: abA.length, opened: abA.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length, clicked: abA.filter(c => c.clicked_at || c.status === 'clicked').length },
+    b: { sent: abB.length, opened: abB.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length, clicked: abB.filter(c => c.clicked_at || c.status === 'clicked').length },
+  } : null;
+
   // Pie chart data
   const pieData = [
     { name: 'Enviados', value: sent - opened, color: '#10b981' },
@@ -127,60 +145,12 @@ export function EmailRecoveryReports() {
     <div className="space-y-6">
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-full bg-blue-100 text-blue-600"><Mail className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{total}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-full bg-green-100 text-green-600"><Send className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{sent}</p>
-              <p className="text-xs text-muted-foreground">Enviados</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-full bg-blue-100 text-blue-600"><MailOpen className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{opened}</p>
-              <p className="text-xs text-muted-foreground">Abertos ({pct(opened, sent)})</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-full bg-purple-100 text-purple-600"><MousePointerClick className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{clicked}</p>
-              <p className="text-xs text-muted-foreground">Clicados ({pct(clicked, sent)})</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-full bg-yellow-100 text-yellow-600"><TrendingUp className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{pending}</p>
-              <p className="text-xs text-muted-foreground">Pendentes</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-full bg-red-100 text-red-600"><AlertTriangle className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{failed}</p>
-              <p className="text-xs text-muted-foreground">Falhas</p>
-            </div>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-blue-100 text-blue-600"><Mail className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{total}</p><p className="text-xs text-muted-foreground">Total</p></div></CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-green-100 text-green-600"><Send className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{sent}</p><p className="text-xs text-muted-foreground">Enviados</p></div></CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-blue-100 text-blue-600"><MailOpen className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{opened}</p><p className="text-xs text-muted-foreground">Abertos ({pct(opened, sent)})</p></div></CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-purple-100 text-purple-600"><MousePointerClick className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{clicked}</p><p className="text-xs text-muted-foreground">Clicados ({pct(clicked, sent)})</p></div></CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-yellow-100 text-yellow-600"><TrendingUp className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{pending}</p><p className="text-xs text-muted-foreground">Pendentes</p></div></CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-red-100 text-red-600"><AlertTriangle className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{failed}</p><p className="text-xs text-muted-foreground">Falhas</p></div></CardContent></Card>
       </div>
 
       {/* Charts */}
@@ -198,7 +168,6 @@ export function EmailRecoveryReports() {
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis />
                   <Tooltip />
-                  <Legend />
                   <Bar dataKey="sent" name="Enviados" fill="#10b981" />
                   <Bar dataKey="opened" name="Abertos" fill="#3b82f6" />
                   <Bar dataKey="clicked" name="Clicados" fill="#8b5cf6" />
@@ -233,6 +202,84 @@ export function EmailRecoveryReports() {
         </Card>
       </div>
 
+      {/* Performance by Category Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Performance por Categoria</CardTitle>
+          <CardDescription>Open rate e click rate por tipo de email</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {categoryPerformance.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead>Enviados</TableHead>
+                  <TableHead>Open Rate</TableHead>
+                  <TableHead>Click Rate</TableHead>
+                  <TableHead>Falhas</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categoryPerformance.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{row.category}</TableCell>
+                    <TableCell>{row.sent}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-blue-600">{row.openRate}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className="text-purple-600">{row.clickRate}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className="text-red-600">{row.failRate}</Badge></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center text-muted-foreground py-4">Sem dados</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* A/B Test Results */}
+      {abResults && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Resultado Teste A/B de Subject Lines</CardTitle>
+            <CardDescription>Comparação entre variantes A e B dos assuntos</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="font-bold text-lg mb-1">Variante A</p>
+                <p className="text-sm text-muted-foreground mb-2">{abResults.a.sent} enviados</p>
+                <div className="flex justify-center gap-6">
+                  <div>
+                    <p className="text-2xl font-bold text-blue-600">{pct(abResults.a.opened, abResults.a.sent)}</p>
+                    <p className="text-xs text-muted-foreground">Open Rate</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-purple-600">{pct(abResults.a.clicked, abResults.a.sent)}</p>
+                    <p className="text-xs text-muted-foreground">Click Rate</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="font-bold text-lg mb-1">Variante B</p>
+                <p className="text-sm text-muted-foreground mb-2">{abResults.b.sent} enviados</p>
+                <div className="flex justify-center gap-6">
+                  <div>
+                    <p className="text-2xl font-bold text-blue-600">{pct(abResults.b.opened, abResults.b.sent)}</p>
+                    <p className="text-xs text-muted-foreground">Open Rate</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-purple-600">{pct(abResults.b.clicked, abResults.b.sent)}</p>
+                    <p className="text-xs text-muted-foreground">Click Rate</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters + Table */}
       <Card>
         <CardHeader>
@@ -248,6 +295,7 @@ export function EmailRecoveryReports() {
                   <SelectItem value="clicked">Clicados</SelectItem>
                   <SelectItem value="pending">Pendentes</SelectItem>
                   <SelectItem value="failed">Falhas</SelectItem>
+                  <SelectItem value="cancelled">Cancelados</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -277,6 +325,7 @@ export function EmailRecoveryReports() {
                     <TableHead>Template</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>A/B</TableHead>
                     <TableHead>Enviado em</TableHead>
                     <TableHead>Aberto em</TableHead>
                     <TableHead>Clicado em</TableHead>
@@ -298,6 +347,7 @@ export function EmailRecoveryReports() {
                           {c.status}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-xs">{c.ab_variant || '-'}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {c.sent_at ? new Date(c.sent_at).toLocaleString('pt-BR') : '-'}
                       </TableCell>

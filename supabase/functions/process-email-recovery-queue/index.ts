@@ -5,18 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const UNSUBSCRIBE_URL = 'https://kmmdzwoidakmbekqvkmq.supabase.co/functions/v1/handle-email-unsubscribe';
+
 async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ senderId: string; domain: string } | null> {
   try {
-    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/senders', {
-      headers: { 'ApiKey': apiKey },
-    });
-    if (!res.ok) {
-      console.error('Failed to fetch senders:', res.status);
-      return null;
-    }
+    const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/senders', { headers: { 'ApiKey': apiKey } });
+    if (!res.ok) return null;
     const senders = await res.json();
     const list = Array.isArray(senders) ? senders : senders?.items || senders?.data || [];
-    
     for (const s of list) {
       const email = s.email || s.senderEmail || '';
       if (email.toLowerCase() === senderEmail.toLowerCase()) {
@@ -29,10 +25,7 @@ async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ s
       return { senderId: String(first.senderId || first.id), domain: email.split('@')[1] || senderEmail.split('@')[1] };
     }
     return null;
-  } catch (err) {
-    console.error('resolveSenderId error:', err);
-    return null;
-  }
+  } catch { return null; }
 }
 
 Deno.serve(async (req) => {
@@ -41,12 +34,10 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const egoisApiKey = Deno.env.get('EGOI_API_KEY');
-
     if (!egoisApiKey) {
       return new Response(JSON.stringify({ error: 'EGOI_API_KEY não configurada' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Load settings
     const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
     if (!settings?.is_active) {
       return new Response(JSON.stringify({ message: 'Inativo', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -57,12 +48,12 @@ Deno.serve(async (req) => {
     const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     const currentMinutes = brasilTime.getHours() * 60 + brasilTime.getMinutes();
     const [sH, sM] = (settings.allowed_hours_start || '09:00').split(':').map(Number);
-    const [eH, eM] = (settings.allowed_hours_end || '18:00').split(':').map(Number);
+    const [eH, eM] = (settings.allowed_hours_end || '22:00').split(':').map(Number);
     if (currentMinutes < sH * 60 + sM || currentMinutes > eH * 60 + eM) {
       return new Response(JSON.stringify({ message: 'Fora do horário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Daily limit
+    // Rate limits
     const today = new Date().toISOString().split('T')[0];
     const { count: sentToday } = await supabase.from('email_recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', `${today}T00:00:00`);
     const dailyLimit = settings.daily_email_limit || 100;
@@ -70,7 +61,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Limite diário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Hourly limit
     const hourAgo = new Date(now.getTime() - 3600000);
     const { count: sentHour } = await supabase.from('email_recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', hourAgo.toISOString());
     const hourlyLimit = settings.hourly_email_limit || 30;
@@ -78,14 +68,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Limite hora', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Resolve sender once for all emails
+    // Resolve sender
     const senderEmail = settings.sender_email || 'noreply@masterquizz.com';
     const senderName = settings.sender_name || 'MasterQuizz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) {
-      console.error('No sender found in E-goi for:', senderEmail);
       return new Response(JSON.stringify({ error: 'Nenhum sender configurado na E-goi' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    // Load unsubscribed emails
+    const { data: unsubscribed } = await supabase.from('email_unsubscribes').select('email');
+    const unsubSet = new Set((unsubscribed || []).map(u => u.email.toLowerCase()));
 
     // Get pending contacts
     const batchSize = settings.batch_size || 10;
@@ -108,17 +101,33 @@ Deno.serve(async (req) => {
 
     for (const contact of contacts) {
       try {
+        // Check unsubscribe
+        if (unsubSet.has(contact.email.toLowerCase())) {
+          await supabase.from('email_recovery_contacts').update({ status: 'cancelled', error_message: 'Unsubscribed' }).eq('id', contact.id);
+          continue;
+        }
+
         const template = contact.email_recovery_templates;
         if (!template) {
           await supabase.from('email_recovery_contacts').update({ status: 'failed', error_message: 'Template não encontrado' }).eq('id', contact.id);
           continue;
         }
 
-        // Get user profile for variable replacement
         const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', contact.user_id).single();
         const firstName = profile?.full_name?.split(' ')[0] || 'Usuário';
 
-        const htmlContent = template.html_content
+        // A/B test: pick subject
+        let chosenSubject = template.subject;
+        let abVariant: string | null = null;
+        if (template.subject_b) {
+          abVariant = Math.random() < 0.5 ? 'A' : 'B';
+          chosenSubject = abVariant === 'B' ? template.subject_b : template.subject;
+        }
+
+        // Build unsubscribe link
+        const unsubLink = `${UNSUBSCRIBE_URL}?email=${encodeURIComponent(contact.email)}&uid=${contact.user_id}`;
+
+        let htmlContent = template.html_content
           .replace(/{name}/g, profile?.full_name || 'Usuário')
           .replace(/{first_name}/g, firstName)
           .replace(/{days_inactive}/g, String(contact.days_inactive_at_contact || 0))
@@ -127,14 +136,22 @@ Deno.serve(async (req) => {
           .replace(/{plan_name}/g, contact.user_plan_at_contact || 'Free')
           .replace(/{company_name}/g, 'MasterQuizz')
           .replace(/{login_link}/g, 'https://masterquiz.lovable.app/login')
-          .replace(/{support_link}/g, 'https://masterquiz.lovable.app/faq');
+          .replace(/{support_link}/g, 'https://masterquiz.lovable.app/faq')
+          .replace(/{unsubscribe_link}/g, unsubLink);
 
-        const subject = template.subject
+        // Inject unsubscribe footer if not already present
+        if (!htmlContent.includes('Cancelar inscrição') && !htmlContent.includes('unsubscribe')) {
+          htmlContent = htmlContent.replace(
+            '</body>',
+            `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:16px;"><a href="${unsubLink}" style="color:#999;font-size:11px;text-decoration:underline;">Cancelar inscrição</a></td></tr></table></body>`
+          );
+        }
+
+        const subject = chosenSubject
           .replace(/{name}/g, profile?.full_name || 'Usuário')
           .replace(/{first_name}/g, firstName)
           .replace(/{days_inactive}/g, String(contact.days_inactive_at_contact || 0));
 
-        // Send via E-goi Transactional V2 - Single endpoint
         const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
           method: 'POST',
           headers: {
@@ -149,6 +166,10 @@ Deno.serve(async (req) => {
             htmlBody: htmlContent,
             openTracking: true,
             clickTracking: true,
+            customHeaders: {
+              'List-Unsubscribe': `<${unsubLink}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
           }),
         });
 
@@ -167,11 +188,11 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Success
         await supabase.from('email_recovery_contacts').update({
           status: 'sent',
           sent_at: new Date().toISOString(),
           egoi_message_id: data.messageId || data.id || null,
+          ab_variant: abVariant,
         }).eq('id', contact.id);
 
         await supabase.from('email_recovery_templates').update({
@@ -180,9 +201,8 @@ Deno.serve(async (req) => {
 
         successCount++;
 
-        // Small delay between sends
         if (contacts.indexOf(contact) < contacts.length - 1) {
-          await new Promise(r => setTimeout(r, 2000));
+          await new Promise(r => setTimeout(r, 1500));
         }
       } catch (err) {
         await supabase.from('email_recovery_contacts').update({

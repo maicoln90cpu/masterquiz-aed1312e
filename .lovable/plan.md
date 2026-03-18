@@ -71,3 +71,17 @@
 - [x] Tabelas email_automation_config + email_automation_logs
 - [x] CATEGORY_LABELS expandido com todas as 13 categorias
 - [x] Nova sub-aba "Automações" no painel Email
+
+### Etapa 4d ✅ — Unsubscribe + Performance + A/B + Reorganização
+- [x] Tabela email_unsubscribes + Edge Function handle-email-unsubscribe
+- [x] Link de cancelamento no footer de todos os templates (generate-email-content)
+- [x] Header List-Unsubscribe no envio E-goi (process-email-recovery-queue)
+- [x] Verificação de unsubscribe antes de envio em todas as functions
+- [x] Dashboard de performance por categoria (tabela open/click rate)
+- [x] Teste A/B de subject lines (campo subject_b, ab_variant no envio)
+- [x] Painel A/B no EmailRecoveryReports (variante A vs B)
+- [x] Reorganização de trigger_days (mínimo 3 dias entre templates)
+- [x] Botão "Teste" em cada card de automação (envio para email específico)
+- [x] Crons automáticos criados via migration (blog_digest, weekly_tip, monthly_summary, success_story)
+- [x] Coluna ab_variant em email_recovery_contacts
+- [x] Filtro por status "cancelados" no relatório

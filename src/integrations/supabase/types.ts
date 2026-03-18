@@ -574,6 +574,7 @@ export type Database = {
       }
       email_recovery_contacts: {
         Row: {
+          ab_variant: string | null
           campaign_id: string | null
           clicked_at: string | null
           created_at: string | null
@@ -596,6 +597,7 @@ export type Database = {
           user_quiz_count: number | null
         }
         Insert: {
+          ab_variant?: string | null
           campaign_id?: string | null
           clicked_at?: string | null
           created_at?: string | null
@@ -618,6 +620,7 @@ export type Database = {
           user_quiz_count?: number | null
         }
         Update: {
+          ab_variant?: string | null
           campaign_id?: string | null
           clicked_at?: string | null
           created_at?: string | null
@@ -720,6 +723,7 @@ export type Database = {
           open_rate: number | null
           priority: number | null
           subject: string
+          subject_b: string | null
           trigger_days: number | null
           updated_at: string | null
           usage_count: number | null
@@ -736,6 +740,7 @@ export type Database = {
           open_rate?: number | null
           priority?: number | null
           subject?: string
+          subject_b?: string | null
           trigger_days?: number | null
           updated_at?: string | null
           usage_count?: number | null
@@ -752,6 +757,7 @@ export type Database = {
           open_rate?: number | null
           priority?: number | null
           subject?: string
+          subject_b?: string | null
           trigger_days?: number | null
           updated_at?: string | null
           usage_count?: number | null
@@ -779,6 +785,30 @@ export type Database = {
           id?: string
           subject?: string | null
           topic?: string
+        }
+        Relationships: []
+      }
+      email_unsubscribes: {
+        Row: {
+          email: string
+          id: string
+          reason: string | null
+          unsubscribed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          reason?: string | null
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          reason?: string | null
+          unsubscribed_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

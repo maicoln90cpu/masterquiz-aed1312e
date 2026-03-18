@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History } from "lucide-react";
+import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -78,6 +78,10 @@ export function EmailAutomations() {
   const [newsUpdates, setNewsUpdates] = useState('');
   const [newsVersion, setNewsVersion] = useState('');
   const [newsSegment, setNewsSegment] = useState('all');
+  // Test email state
+  const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -102,12 +106,38 @@ export function EmailAutomations() {
       .from('email_automation_config')
       .update({ is_enabled: enabled })
       .eq('id', id);
-    if (error) {
-      toast.error('Erro ao atualizar');
-      return;
-    }
+    if (error) { toast.error('Erro ao atualizar'); return; }
     setAutomations(prev => prev.map(a => a.id === id ? { ...a, is_enabled: enabled } : a));
     toast.success(enabled ? 'Automação ativada' : 'Automação desativada');
+  };
+
+  const sendTestEmail = async (key: string) => {
+    if (!testEmailAddress) { toast.error('Informe o email'); return; }
+    const fnName = EDGE_FUNCTION_MAP[key];
+    if (!fnName) return;
+
+    setSendingTest(true);
+    try {
+      let body: Record<string, unknown> = { test: true, testEmail: testEmailAddress };
+
+      if (key === 'platform_news') {
+        body.updates = ['Teste de novidade da plataforma'];
+        body.version = 'v-teste';
+        body.segment = 'all';
+      } else if (key === 'blog_digest') {
+        body.force = true;
+      }
+
+      const { data, error } = await supabase.functions.invoke(fnName, { body });
+      if (error) throw error;
+      toast.success(data?.sent ? 'Email de teste enviado!' : 'Falha no envio de teste');
+      setTestDialogKey(null);
+      setTestEmailAddress('');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao enviar teste');
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   const executeAutomation = async (key: string) => {
@@ -120,32 +150,22 @@ export function EmailAutomations() {
 
       if (key === 'platform_news') {
         const updates = newsUpdates.split('\n').filter(l => l.trim());
-        if (updates.length === 0) {
-          toast.error('Adicione pelo menos uma novidade');
-          setExecuting(null);
-          return;
-        }
+        if (updates.length === 0) { toast.error('Adicione pelo menos uma novidade'); setExecuting(null); return; }
         body = { updates, version: newsVersion || undefined, segment: newsSegment };
       } else if (key === 'blog_digest') {
         body = { force: true };
       }
 
       const { data, error } = await supabase.functions.invoke(fnName, { body });
-
       if (error) throw error;
 
       const sent = data?.sent || 0;
       toast.success(`${sent} emails enviados com sucesso!`);
 
-      // Log execution
       await supabase.from('email_automation_logs').insert({
-        automation_key: key,
-        status: 'success',
-        emails_sent: sent,
-        details: data,
+        automation_key: key, status: 'success', emails_sent: sent, details: data,
       });
 
-      // Update config
       await supabase.from('email_automation_config').update({
         last_executed_at: new Date().toISOString(),
         last_result: data,
@@ -159,12 +179,8 @@ export function EmailAutomations() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao executar';
       toast.error(msg);
-
       await supabase.from('email_automation_logs').insert({
-        automation_key: key,
-        status: 'error',
-        emails_sent: 0,
-        error_message: msg,
+        automation_key: key, status: 'error', emails_sent: 0, error_message: msg,
       });
     } finally {
       setExecuting(null);
@@ -223,86 +239,113 @@ export function EmailAutomations() {
                 </div>
               )}
 
-              {auto.automation_key === 'platform_news' ? (
-                <Dialog open={newsDialogOpen} onOpenChange={setNewsDialogOpen}>
+              <div className="flex gap-2">
+                {/* Test Email Button */}
+                <Dialog open={testDialogKey === auto.automation_key} onOpenChange={(open) => { if (!open) setTestDialogKey(null); }}>
                   <DialogTrigger asChild>
                     <Button
                       size="sm"
-                      className="w-full"
-                      disabled={!auto.is_enabled || executing !== null}
+                      variant="ghost"
+                      className="flex-shrink-0"
+                      onClick={() => setTestDialogKey(auto.automation_key)}
                     >
-                      <Play className="h-3.5 w-3.5 mr-1.5" />
-                      Enviar Novidades
+                      <Mail className="h-3.5 w-3.5 mr-1" />
+                      Teste
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Enviar Novidades da Plataforma</DialogTitle>
+                      <DialogTitle>Enviar Email de Teste</DialogTitle>
                       <DialogDescription>
-                        Liste as novidades (uma por linha). A IA formatará automaticamente com emojis e descrições claras.
+                        Envie um email de teste de "{auto.display_name}" para verificar o layout e conteúdo.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Novidades (uma por linha)</Label>
-                        <Textarea
-                          value={newsUpdates}
-                          onChange={e => setNewsUpdates(e.target.value)}
-                          placeholder={"Novo editor de quizzes mais rápido\nSuporte a vídeos nas perguntas\nRelatórios avançados de leads"}
-                          rows={5}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label>Versão (opcional)</Label>
-                          <Input
-                            value={newsVersion}
-                            onChange={e => setNewsVersion(e.target.value)}
-                            placeholder="v2.5"
-                          />
-                        </div>
-                        <div>
-                          <Label>Segmento</Label>
-                          <Select value={newsSegment} onValueChange={setNewsSegment}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              <SelectItem value="active">Ativos (30d)</SelectItem>
-                              <SelectItem value="free">Plano Free</SelectItem>
-                              <SelectItem value="paid">Planos Pagos</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+                    <div>
+                      <Label>Email destinatário</Label>
+                      <Input
+                        type="email"
+                        value={testEmailAddress}
+                        onChange={e => setTestEmailAddress(e.target.value)}
+                        placeholder="seu@email.com"
+                      />
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setNewsDialogOpen(false)}>Cancelar</Button>
+                      <Button variant="outline" onClick={() => setTestDialogKey(null)}>Cancelar</Button>
                       <Button
-                        onClick={() => executeAutomation('platform_news')}
-                        disabled={executing === 'platform_news'}
+                        onClick={() => sendTestEmail(auto.automation_key)}
+                        disabled={sendingTest || !testEmailAddress}
                       >
-                        {executing === 'platform_news' ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
-                        Enviar
+                        {sendingTest ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Mail className="h-4 w-4 mr-1.5" />}
+                        Enviar Teste
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              ) : (
-                <Button
-                  size="sm"
-                  className="w-full"
-                  variant="outline"
-                  disabled={!auto.is_enabled || executing !== null}
-                  onClick={() => executeAutomation(auto.automation_key)}
-                >
-                  {executing === auto.automation_key ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                  ) : (
-                    <Play className="h-3.5 w-3.5 mr-1.5" />
-                  )}
-                  Disparar agora
-                </Button>
-              )}
+
+                {/* Main Action Button */}
+                {auto.automation_key === 'platform_news' ? (
+                  <Dialog open={newsDialogOpen} onOpenChange={setNewsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="flex-1" disabled={!auto.is_enabled || executing !== null}>
+                        <Play className="h-3.5 w-3.5 mr-1.5" />
+                        Enviar Novidades
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Enviar Novidades da Plataforma</DialogTitle>
+                        <DialogDescription>Liste as novidades (uma por linha). A IA formatará automaticamente.</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Novidades (uma por linha)</Label>
+                          <Textarea value={newsUpdates} onChange={e => setNewsUpdates(e.target.value)} placeholder={"Novo editor de quizzes\nSuporte a vídeos\nRelatórios avançados"} rows={5} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Versão (opcional)</Label>
+                            <Input value={newsVersion} onChange={e => setNewsVersion(e.target.value)} placeholder="v2.5" />
+                          </div>
+                          <div>
+                            <Label>Segmento</Label>
+                            <Select value={newsSegment} onValueChange={setNewsSegment}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                <SelectItem value="active">Ativos (30d)</SelectItem>
+                                <SelectItem value="free">Plano Free</SelectItem>
+                                <SelectItem value="paid">Planos Pagos</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setNewsDialogOpen(false)}>Cancelar</Button>
+                        <Button onClick={() => executeAutomation('platform_news')} disabled={executing === 'platform_news'}>
+                          {executing === 'platform_news' ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
+                          Enviar
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    variant="outline"
+                    disabled={!auto.is_enabled || executing !== null}
+                    onClick={() => executeAutomation(auto.automation_key)}
+                  >
+                    {executing === auto.automation_key ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    ) : (
+                      <Play className="h-3.5 w-3.5 mr-1.5" />
+                    )}
+                    Disparar agora
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}

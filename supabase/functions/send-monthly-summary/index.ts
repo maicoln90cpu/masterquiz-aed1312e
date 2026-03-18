@@ -29,21 +29,47 @@ Deno.serve(async (req) => {
     const egoisApiKey = Deno.env.get('EGOI_API_KEY');
     if (!egoisApiKey) throw new Error('EGOI_API_KEY missing');
 
-    // Calculate date ranges for current and previous months
+    let testMode = false;
+    let testEmail = '';
+    try { const body = await req.json(); testMode = body?.test === true; testEmail = body?.testEmail || ''; } catch { /* no body */ }
+
     const now = new Date();
     const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
     const monthName = MONTH_NAMES[prevMonthStart.getMonth()];
 
-    // Get settings + sender
     const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
     const senderEmail = settings?.sender_email || 'noreply@masterquizz.com';
     const senderName = settings?.sender_name || 'MasterQuizz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) throw new Error('No sender in E-goi');
 
-    // Get active users (logged in within 90 days)
+    // Test mode: generate for admin with sample stats
+    if (testMode && testEmail) {
+      const genResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-email-content`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}` },
+        body: JSON.stringify({
+          templateType: 'monthly_summary',
+          context: { monthName, userStats: { quiz_count: 5, lead_count: 120, response_count: 120, prev_lead_count: 80 } },
+          recipientName: 'Admin',
+        }),
+      });
+      if (!genResponse.ok) throw new Error(`Generator failed`);
+      const { subject, html } = await genResponse.json();
+
+      const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
+        body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: testEmail, subject: `[TESTE] ${subject}`, htmlBody: html, openTracking: false, clickTracking: false }),
+      });
+      return new Response(JSON.stringify({ sent: res.ok ? 1 : 0, test: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const { data: unsubscribed } = await supabase.from('email_unsubscribes').select('email');
+    const unsubSet = new Set((unsubscribed || []).map(u => u.email.toLowerCase()));
+
     const { data: authUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     const ninetyDaysAgo = Date.now() - 90 * 86400000;
     const activeUsers = (authUsers?.users || []).filter(u => {
@@ -60,70 +86,32 @@ Deno.serve(async (req) => {
 
     for (const profile of (profiles || [])) {
       if (blacklistedIds.has(profile.id)) continue;
+      if (unsubSet.has((profile.email || '').toLowerCase())) continue;
 
-      // Get user's stats for previous month
-      const { data: userQuizzes } = await supabase
-        .from('quizzes')
-        .select('id')
-        .eq('user_id', profile.id)
-        .eq('status', 'active');
+      const { data: userQuizzes } = await supabase.from('quizzes').select('id').eq('user_id', profile.id).eq('status', 'active');
       const quizIds = (userQuizzes || []).map(q => q.id);
 
-      let leadCount = 0;
-      let responseCount = 0;
-      let prevLeadCount = 0;
-
+      let leadCount = 0, prevLeadCount = 0;
       if (quizIds.length > 0) {
-        // Leads in previous month
-        const { count: leads } = await supabase
-          .from('quiz_responses')
-          .select('*', { count: 'exact', head: true })
-          .in('quiz_id', quizIds)
-          .gte('completed_at', prevMonthStart.toISOString())
-          .lt('completed_at', currentMonth.toISOString());
+        const { count: leads } = await supabase.from('quiz_responses').select('*', { count: 'exact', head: true }).in('quiz_id', quizIds).gte('completed_at', prevMonthStart.toISOString()).lt('completed_at', currentMonth.toISOString());
         leadCount = leads || 0;
-
-        // Total responses in previous month
-        responseCount = leadCount;
-
-        // Leads two months ago (for growth comparison)
-        const { count: prevLeads } = await supabase
-          .from('quiz_responses')
-          .select('*', { count: 'exact', head: true })
-          .in('quiz_id', quizIds)
-          .gte('completed_at', twoMonthsAgo.toISOString())
-          .lt('completed_at', prevMonthStart.toISOString());
+        const { count: prevLeads } = await supabase.from('quiz_responses').select('*', { count: 'exact', head: true }).in('quiz_id', quizIds).gte('completed_at', twoMonthsAgo.toISOString()).lt('completed_at', prevMonthStart.toISOString());
         prevLeadCount = prevLeads || 0;
       }
 
-      // Generate personalized email
       try {
         const genResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-email-content`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-          },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}` },
           body: JSON.stringify({
             templateType: 'monthly_summary',
-            context: {
-              monthName,
-              userStats: {
-                quiz_count: quizIds.length,
-                lead_count: leadCount,
-                response_count: responseCount,
-                prev_lead_count: prevLeadCount,
-              },
-            },
+            context: { monthName, userStats: { quiz_count: quizIds.length, lead_count: leadCount, response_count: leadCount, prev_lead_count: prevLeadCount } },
             recipientName: profile.full_name || 'Usuário',
+            recipientEmail: profile.email,
+            recipientUserId: profile.id,
           }),
         });
-
-        if (!genResponse.ok) {
-          console.error(`Generator failed for ${profile.email}`);
-          continue;
-        }
-
+        if (!genResponse.ok) continue;
         const { subject, html } = await genResponse.json();
 
         const res = await fetch('https://slingshot.egoiapp.com/api/v2/email/messages/action/send/single', {
@@ -131,24 +119,13 @@ Deno.serve(async (req) => {
           headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
           body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: profile.email, subject, htmlBody: html, openTracking: true, clickTracking: true }),
         });
-
-        if (res.ok) {
-          sentCount++;
-          await new Promise(r => setTimeout(r, 2000)); // Slightly longer delay for personalized content
-        }
-      } catch (e) {
-        console.error(`Error sending summary to ${profile.email}:`, e);
-      }
+        if (res.ok) { sentCount++; await new Promise(r => setTimeout(r, 2000)); }
+      } catch (e) { console.error(`Error:`, e); }
     }
 
-    console.log(`Monthly summary for ${monthName} sent to ${sentCount} users`);
-    return new Response(JSON.stringify({ sent: sentCount, month: monthName }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ sent: sentCount, month: monthName }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('send-monthly-summary error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

@@ -8,8 +8,16 @@ const corsHeaders = {
 const LOGO_URL = 'https://kmmdzwoidakmbekqvkmq.supabase.co/storage/v1/object/public/quiz-media/brand/masterquizz-logo.png';
 const LOGIN_URL = 'https://masterquiz.lovable.app/login';
 const BLOG_URL = 'https://masterquiz.lovable.app/blog';
+const SUPABASE_URL = 'https://kmmdzwoidakmbekqvkmq.supabase.co';
 
-function wrapInEmailLayout(bodyHtml: string, preheader: string = ''): string {
+function unsubscribeUrl(email: string, userId?: string): string {
+  const params = new URLSearchParams({ email });
+  if (userId) params.set('uid', userId);
+  return `${SUPABASE_URL}/functions/v1/handle-email-unsubscribe?${params.toString()}`;
+}
+
+function wrapInEmailLayout(bodyHtml: string, preheader: string = '', email: string = '', userId: string = ''): string {
+  const unsub = unsubscribeUrl(email, userId);
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -38,6 +46,7 @@ ${bodyHtml}
 <tr><td style="background-color:#f8f9fa;padding:20px 40px;text-align:center;border-top:1px solid #e9ecef;">
 <p style="margin:0;color:#6c757d;font-size:12px;">© ${new Date().getFullYear()} MasterQuizz — Todos os direitos reservados</p>
 <p style="margin:8px 0 0;color:#999;font-size:11px;">Você recebeu este email porque é usuário da plataforma MasterQuizz.</p>
+<p style="margin:8px 0 0;"><a href="${unsub}" style="color:#999;font-size:11px;text-decoration:underline;">Cancelar inscrição</a></p>
 </td></tr>
 
 </table>
@@ -60,13 +69,15 @@ interface GenerateRequest {
   templateType: 'blog_digest' | 'weekly_tip' | 'success_story' | 'monthly_summary' | 'platform_news';
   context: Record<string, unknown>;
   recipientName?: string;
+  recipientEmail?: string;
+  recipientUserId?: string;
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const { templateType, context, recipientName } = await req.json() as GenerateRequest;
+    const { templateType, context, recipientName, recipientEmail, recipientUserId } = await req.json() as GenerateRequest;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
@@ -74,11 +85,12 @@ Deno.serve(async (req) => {
     }
 
     const firstName = recipientName?.split(' ')[0] || 'Usuário';
+    const email = recipientEmail || '';
+    const userId = recipientUserId || '';
     let subject = '';
     let bodyHtml = '';
     let preheader = '';
 
-    // For some types, we generate content via AI; for others, we build directly
     switch (templateType) {
       case 'blog_digest': {
         const posts = (context.posts || []) as Array<{ title: string; excerpt: string; slug: string; featured_image_url?: string }>;
@@ -110,7 +122,6 @@ ${makeButton('Ver todos os artigos', BLOG_URL)}`;
       }
 
       case 'weekly_tip': {
-        // Generate tip via AI
         const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -127,11 +138,7 @@ ${makeButton('Ver todos os artigos', BLOG_URL)}`;
                 description: 'Generate a weekly tip',
                 parameters: {
                   type: 'object',
-                  properties: {
-                    title: { type: 'string' },
-                    body: { type: 'string' },
-                    emoji: { type: 'string' },
-                  },
+                  properties: { title: { type: 'string' }, body: { type: 'string' }, emoji: { type: 'string' } },
                   required: ['title', 'body', 'emoji'],
                 },
               },
@@ -140,11 +147,7 @@ ${makeButton('Ver todos os artigos', BLOG_URL)}`;
           }),
         });
 
-        if (!aiResponse.ok) {
-          const errText = await aiResponse.text();
-          console.error('AI error:', aiResponse.status, errText);
-          throw new Error(`AI gateway error: ${aiResponse.status}`);
-        }
+        if (!aiResponse.ok) throw new Error(`AI gateway error: ${aiResponse.status}`);
 
         const aiData = await aiResponse.json();
         let tip = { title: 'Dica da Semana', body: 'Use quizzes para qualificar seus leads de forma interativa.', emoji: '💡' };
@@ -167,7 +170,6 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
       }
 
       case 'success_story': {
-        // Generate case study via AI
         const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -185,9 +187,7 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
                 parameters: {
                   type: 'object',
                   properties: {
-                    company: { type: 'string' },
-                    industry: { type: 'string' },
-                    challenge: { type: 'string' },
+                    company: { type: 'string' }, industry: { type: 'string' }, challenge: { type: 'string' },
                     solution: { type: 'string' },
                     results: { type: 'array', items: { type: 'object', properties: { metric: { type: 'string' }, value: { type: 'string' }, improvement: { type: 'string' } } } },
                     quote: { type: 'string' },
@@ -220,26 +220,21 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
         bodyHtml = `
 <h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! 🏆</h1>
 <p style="color:#555;font-size:16px;line-height:1.6;">Veja como <strong>${caseData.company}</strong> do setor de <strong>${caseData.industry}</strong> alcançou resultados incríveis.</p>
-
 <div style="background:#fff8e1;border-radius:8px;padding:16px 20px;margin:16px 0;">
 <p style="margin:0;font-weight:bold;color:#f57c00;">⚡ Desafio:</p>
 <p style="margin:4px 0 0;color:#555;">${caseData.challenge}</p>
 </div>
-
 <div style="background:#f0faf6;border-radius:8px;padding:16px 20px;margin:16px 0;">
 <p style="margin:0;font-weight:bold;color:#0f9b6e;">✅ Solução com MasterQuizz:</p>
 <p style="margin:4px 0 0;color:#555;">${caseData.solution}</p>
 </div>
-
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#f8f9fa;border-radius:8px;">
 <tr>${metricsHtml}</tr>
 </table>
-
 <div style="background:#f3e5f5;border-left:4px solid #9c27b0;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0;">
 <p style="margin:0;color:#555;font-style:italic;">"${caseData.quote}"</p>
 <p style="margin:8px 0 0;color:#9c27b0;font-weight:bold;font-size:13px;">— ${caseData.company}</p>
 </div>
-
 ${makeButton('Criar meu quiz agora', LOGIN_URL)}`;
         break;
       }
@@ -257,7 +252,6 @@ ${makeButton('Criar meu quiz agora', LOGIN_URL)}`;
         subject = `📊 Seu resumo de ${monthName} — MasterQuizz`;
         preheader = `${leads} leads captados, ${quizzes} quizzes ativos`;
 
-        // Generate insight via AI
         let insight = 'Continue criando quizzes de qualidade para manter seus resultados!';
         try {
           const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -280,37 +274,24 @@ ${makeButton('Criar meu quiz agora', LOGIN_URL)}`;
         bodyHtml = `
 <h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! 📊</h1>
 <p style="color:#555;font-size:16px;">Aqui está seu resumo de <strong>${monthName}</strong>:</p>
-
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
 <tr>
-<td align="center" style="padding:16px;background:#f0faf6;border-radius:8px;width:33%;">
-<div style="font-size:32px;font-weight:bold;color:#0f9b6e;">${quizzes}</div>
-<div style="font-size:12px;color:#777;margin-top:4px;">Quizzes ativos</div>
-</td>
+<td align="center" style="padding:16px;background:#f0faf6;border-radius:8px;width:33%;"><div style="font-size:32px;font-weight:bold;color:#0f9b6e;">${quizzes}</div><div style="font-size:12px;color:#777;margin-top:4px;">Quizzes ativos</div></td>
 <td width="12"></td>
-<td align="center" style="padding:16px;background:#e8f5e9;border-radius:8px;width:33%;">
-<div style="font-size:32px;font-weight:bold;color:#2e7d32;">${leads}</div>
-<div style="font-size:12px;color:#777;margin-top:4px;">Leads captados</div>
-</td>
+<td align="center" style="padding:16px;background:#e8f5e9;border-radius:8px;width:33%;"><div style="font-size:32px;font-weight:bold;color:#2e7d32;">${leads}</div><div style="font-size:12px;color:#777;margin-top:4px;">Leads captados</div></td>
 <td width="12"></td>
-<td align="center" style="padding:16px;background:#e3f2fd;border-radius:8px;width:33%;">
-<div style="font-size:32px;font-weight:bold;color:#1565c0;">${responses}</div>
-<div style="font-size:12px;color:#777;margin-top:4px;">Respostas</div>
-</td>
+<td align="center" style="padding:16px;background:#e3f2fd;border-radius:8px;width:33%;"><div style="font-size:32px;font-weight:bold;color:#1565c0;">${responses}</div><div style="font-size:12px;color:#777;margin-top:4px;">Respostas</div></td>
 </tr>
 </table>
-
 <div style="background:#f8f9fa;border-radius:8px;padding:16px 20px;margin:16px 0;text-align:center;">
 <span style="font-size:24px;">${growthEmoji}</span>
 <span style="font-size:16px;font-weight:bold;color:${growthPct >= 0 ? '#0f9b6e' : '#e53935'};">${growthPct >= 0 ? '+' : ''}${growthPct}%</span>
 <span style="color:#777;font-size:14px;"> vs mês anterior em leads</span>
 </div>
-
 <div style="background:#f0faf6;border-left:4px solid #0f9b6e;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0;">
 <p style="margin:0;font-weight:bold;color:#0f9b6e;">💡 Insight personalizado:</p>
 <p style="margin:8px 0 0;color:#333;font-size:15px;line-height:1.6;">${insight}</p>
 </div>
-
 ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
         break;
       }
@@ -319,7 +300,6 @@ ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
         const updates = (context.updates || []) as string[];
         const version = (context.version || '') as string;
 
-        // Use AI to format the updates nicely
         let formattedUpdates = updates.map(u => `<li style="margin-bottom:8px;color:#333;font-size:15px;line-height:1.5;">${u}</li>`).join('');
 
         try {
@@ -346,13 +326,11 @@ ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
         bodyHtml = `
 <h1 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;">Olá, ${firstName}! 🚀</h1>
 <p style="color:#555;font-size:16px;line-height:1.6;">Temos novidades incríveis para compartilhar com você:</p>
-
 <div style="background:#f0faf6;border-radius:8px;padding:20px 24px;margin:16px 0;">
 <ul style="margin:0;padding-left:20px;">
 ${formattedUpdates}
 </ul>
 </div>
-
 <p style="color:#555;font-size:14px;margin-top:16px;">Acesse a plataforma para experimentar todas as novidades! 💪</p>
 ${makeButton('Explorar novidades', LOGIN_URL)}`;
         break;
@@ -362,7 +340,7 @@ ${makeButton('Explorar novidades', LOGIN_URL)}`;
         throw new Error(`Unknown template type: ${templateType}`);
     }
 
-    const html = wrapInEmailLayout(bodyHtml, preheader);
+    const html = wrapInEmailLayout(bodyHtml, preheader, email, userId);
 
     return new Response(JSON.stringify({ subject, html, preheader }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
