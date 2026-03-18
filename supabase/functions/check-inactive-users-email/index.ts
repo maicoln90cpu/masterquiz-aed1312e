@@ -49,11 +49,10 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Limite diário atingido', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Get all users
-    // Use the minimum trigger_days from active templates (not global setting)
+    // Get all active templates (excluding welcome — handled by DB trigger)
     const { data: activeTemplates } = await supabase
       .from('email_recovery_templates')
-      .select('id, trigger_days, category')
+      .select('id, trigger_days, category, name')
       .eq('is_active', true)
       .order('trigger_days', { ascending: true });
 
@@ -61,38 +60,39 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Nenhum template ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Exclude welcome (trigger_days=0) from inactivity check — welcome is handled by DB trigger
-    const inactivityTemplates = activeTemplates.filter(t => t.category !== 'welcome' && t.trigger_days > 0);
-    if (!inactivityTemplates.length) {
-      return new Response(JSON.stringify({ message: 'Nenhum template de inatividade ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Separate templates by type
+    // Categories handled by SQL triggers (skip here): welcome, milestone, tutorial
+    const triggerCategories = ['welcome', 'milestone', 'tutorial', 'webinar'];
+    const inactivityCategories = ['check_in', 'reminder', 'recovery', 'special_offer', 'reactivation', 're_engagement'];
+    const signupAgeCategories = ['survey']; // based on signup date, not inactivity
+    const conditionCategories = ['plan_compare', 'integration_guide']; // based on user conditions
+
+    const inactivityTemplates = activeTemplates.filter(t => inactivityCategories.includes(t.category) && t.trigger_days > 0);
+    const surveyTemplates = activeTemplates.filter(t => signupAgeCategories.includes(t.category));
+    const planCompareTemplates = activeTemplates.filter(t => t.category === 'plan_compare');
+    const integrationGuideTemplates = activeTemplates.filter(t => t.category === 'integration_guide');
+
+    if (!inactivityTemplates.length && !surveyTemplates.length && !planCompareTemplates.length && !integrationGuideTemplates.length) {
+      return new Response(JSON.stringify({ message: 'Nenhum template processável ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const minInactiveDays = (targetCriteria.min_inactive_days as number) || inactivityTemplates[0].trigger_days;
-    const inactivityDate = new Date();
-    inactivityDate.setDate(inactivityDate.getDate() - minInactiveDays);
-
+    // Get all users from auth
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     if (authError) throw authError;
 
-    const inactiveUsers = authUsers.users
-      .filter(u => {
-        const lastSignIn = u.last_sign_in_at ? new Date(u.last_sign_in_at) : null;
-        return lastSignIn && lastSignIn < inactivityDate;
-      })
-      .map(u => ({ id: u.id, last_sign_in_at: u.last_sign_in_at ?? null }));
-
-    if (!inactiveUsers.length) {
-      return new Response(JSON.stringify({ message: 'Nenhum inativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    // Get profiles WITH EMAIL
+    // Get all profiles with email
+    const allUserIds = authUsers.users.map(u => u.id);
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name, email, user_stage, user_objectives')
-      .in('id', inactiveUsers.map(u => u.id))
+      .select('id, full_name, email, user_stage, user_objectives, created_at, facebook_pixel_id, gtm_container_id, whatsapp')
+      .in('id', allUserIds)
       .not('email', 'is', null);
 
-    // Blacklist check (reuse WhatsApp blacklist user_ids)
+    if (!profiles?.length) {
+      return new Response(JSON.stringify({ message: 'Nenhum perfil com email', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Blacklist
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('user_id');
     const blacklistedIds = new Set((blacklist || []).map(b => b.user_id));
 
@@ -114,26 +114,40 @@ Deno.serve(async (req) => {
     const { data: subs } = await supabase
       .from('user_subscriptions')
       .select('user_id, plan_type')
-      .in('user_id', inactiveUsers.map(u => u.id));
+      .in('user_id', allUserIds);
     const userPlans = new Map((subs || []).map(s => [s.user_id, s.plan_type]));
 
     // Quiz stats
-    const { data: statsData } = await supabase.rpc('get_user_quiz_stats', { user_ids: inactiveUsers.map(u => u.id) });
+    const { data: statsData } = await supabase.rpc('get_user_quiz_stats', { user_ids: allUserIds });
     const statsMap = new Map((statsData || []).map((s: any) => [s.user_id, s]));
 
-    // Filter eligible
-    const eligible: Array<{ id: string; email: string; days_inactive: number; plan: string; quiz_count: number; lead_count: number }> = [];
+    // Already sent templates per user (to avoid duplicates)
+    const { data: existingContacts } = await supabase
+      .from('email_recovery_contacts')
+      .select('user_id, template_id')
+      .in('status', ['pending', 'sent', 'opened', 'clicked']);
+    const sentSet = new Set((existingContacts || []).map(c => `${c.user_id}|${c.template_id}`));
 
-    for (const profile of profiles || []) {
+    // Integrations check (for integration_guide)
+    const { data: integrations } = await supabase
+      .from('user_integrations')
+      .select('user_id')
+      .in('user_id', allUserIds);
+    const usersWithIntegrations = new Set((integrations || []).map(i => i.user_id));
+
+    const contacts: any[] = [];
+
+    for (const profile of profiles) {
       if (blacklistedIds.has(profile.id)) continue;
       if (recentlyContactedIds.has(profile.id)) continue;
 
       const plan = userPlans.get(profile.id) || 'free';
       if ((settings.exclude_plan_types || []).includes(plan)) continue;
 
-      const auth = inactiveUsers.find(u => u.id === profile.id);
+      const auth = authUsers.users.find(u => u.id === profile.id);
       const lastSignIn = auth?.last_sign_in_at ? new Date(auth.last_sign_in_at) : null;
       const daysInactive = lastSignIn ? Math.floor((Date.now() - lastSignIn.getTime()) / 86400000) : 999;
+      const daysSinceSignup = profile.created_at ? Math.floor((Date.now() - new Date(profile.created_at).getTime()) / 86400000) : 0;
 
       const stats = statsMap.get(profile.id) as any;
       const quizCount = stats?.quiz_count ?? 0;
@@ -144,44 +158,127 @@ Deno.serve(async (req) => {
       if (targetCriteria.no_quizzes && quizCount > 0) continue;
       if (targetCriteria.plans && (targetCriteria.plans as string[]).length > 0 && !(targetCriteria.plans as string[]).includes(plan)) continue;
 
-      eligible.push({ id: profile.id, email: profile.email!, days_inactive: daysInactive, plan, quiz_count: quizCount, lead_count: leadCount });
+      // --- INACTIVITY-BASED templates ---
+      if (inactivityTemplates.length > 0 && lastSignIn) {
+        const minDays = (targetCriteria.min_inactive_days as number) || inactivityTemplates[0].trigger_days;
+        if (daysInactive >= minDays) {
+          // Find best matching template
+          const sortedDesc = [...inactivityTemplates].sort((a, b) => b.trigger_days - a.trigger_days);
+          const template = sortedDesc.find(t => t.trigger_days <= daysInactive) || inactivityTemplates[0];
+          const key = `${profile.id}|${template.id}`;
+          if (!sentSet.has(key)) {
+            contacts.push({
+              user_id: profile.id,
+              email: profile.email,
+              template_id: template.id,
+              status: 'pending',
+              priority: leadCount,
+              days_inactive_at_contact: daysInactive,
+              user_plan_at_contact: plan,
+              user_quiz_count: quizCount,
+              user_lead_count: leadCount,
+              scheduled_at: new Date().toISOString(),
+            });
+            sentSet.add(key);
+          }
+        }
+      }
+
+      // --- SURVEY: 30 days after signup ---
+      for (const tmpl of surveyTemplates) {
+        if (daysSinceSignup >= (tmpl.trigger_days || 30)) {
+          const key = `${profile.id}|${tmpl.id}`;
+          if (!sentSet.has(key)) {
+            contacts.push({
+              user_id: profile.id,
+              email: profile.email,
+              template_id: tmpl.id,
+              status: 'pending',
+              priority: leadCount,
+              days_inactive_at_contact: daysInactive,
+              user_plan_at_contact: plan,
+              user_quiz_count: quizCount,
+              user_lead_count: leadCount,
+              scheduled_at: new Date().toISOString(),
+            });
+            sentSet.add(key);
+          }
+        }
+      }
+
+      // --- PLAN COMPARE: 14 days on free plan ---
+      if (plan === 'free') {
+        for (const tmpl of planCompareTemplates) {
+          if (daysSinceSignup >= (tmpl.trigger_days || 14)) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id,
+                email: profile.email,
+                template_id: tmpl.id,
+                status: 'pending',
+                priority: leadCount,
+                days_inactive_at_contact: daysInactive,
+                user_plan_at_contact: plan,
+                user_quiz_count: quizCount,
+                user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
+
+      // --- INTEGRATION GUIDE: 7 days without integrations ---
+      if (!usersWithIntegrations.has(profile.id) && !profile.facebook_pixel_id && !profile.gtm_container_id) {
+        for (const tmpl of integrationGuideTemplates) {
+          if (daysSinceSignup >= (tmpl.trigger_days || 7)) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id,
+                email: profile.email,
+                template_id: tmpl.id,
+                status: 'pending',
+                priority: leadCount,
+                days_inactive_at_contact: daysInactive,
+                user_plan_at_contact: plan,
+                user_quiz_count: quizCount,
+                user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
     }
 
-    eligible.sort((a, b) => b.lead_count - a.lead_count);
-    const toQueue = eligible.slice(0, remainingLimit);
+    // Respect daily limit
+    contacts.sort((a, b) => b.priority - a.priority);
+    const toQueue = contacts.slice(0, remainingLimit);
 
-    // Use already-fetched inactivity templates
-    const templates = inactivityTemplates;
-
-    const contacts = [];
-    for (const user of toQueue) {
-      const sortedDesc = [...templates].sort((a, b) => b.trigger_days - a.trigger_days);
-      const template = sortedDesc.find(t => t.trigger_days <= user.days_inactive) || templates[0];
-
-      contacts.push({
-        user_id: user.id,
-        email: user.email,
-        template_id: template.id,
-        status: 'pending',
-        priority: user.lead_count,
-        days_inactive_at_contact: user.days_inactive,
-        user_plan_at_contact: user.plan,
-        user_quiz_count: user.quiz_count,
-        user_lead_count: user.lead_count,
-        scheduled_at: new Date().toISOString(),
-      });
-    }
-
-    if (contacts.length > 0) {
+    if (toQueue.length > 0) {
       const { error: insertError } = await supabase
         .from('email_recovery_contacts')
-        .upsert(contacts, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
+        .upsert(toQueue, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
       if (insertError) throw insertError;
     }
 
-    console.log(`Email queue: ${contacts.length} contacts added (eligible: ${eligible.length})`);
+    console.log(`Email queue: ${toQueue.length} contacts added (eligible: ${contacts.length})`);
 
-    return new Response(JSON.stringify({ message: `${contacts.length} emails enfileirados`, queued: contacts.length, total_eligible: eligible.length }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({
+      message: `${toQueue.length} emails enfileirados`,
+      queued: toQueue.length,
+      total_eligible: contacts.length,
+      breakdown: {
+        inactivity: inactivityTemplates.length,
+        survey: surveyTemplates.length,
+        plan_compare: planCompareTemplates.length,
+        integration_guide: integrationGuideTemplates.length,
+      }
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Email check error:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
