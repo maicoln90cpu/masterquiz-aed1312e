@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
     }
 
     // Send via E-goi Transactional V2 - Single endpoint
+    // Note: omit domain to let E-goi use the default verified domain
     const payload: Record<string, any> = {
       senderId: senderInfo.senderId,
       senderName,
@@ -111,10 +112,6 @@ Deno.serve(async (req) => {
       openTracking: true,
       clickTracking: true,
     };
-    // Only include domain if available
-    if (senderInfo.domain) {
-      payload.domain = senderInfo.domain;
-    }
 
     console.log('Sending to E-goi single endpoint with payload keys:', Object.keys(payload));
 
