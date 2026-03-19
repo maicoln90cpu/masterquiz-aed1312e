@@ -13,15 +13,13 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-const toastMock = {
-  success: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
-  info: vi.fn(),
-};
-
 vi.mock('sonner', () => ({
-  toast: toastMock,
+  toast: {
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+  },
 }));
 
 vi.mock('@/hooks/useVideoStorage', () => ({
