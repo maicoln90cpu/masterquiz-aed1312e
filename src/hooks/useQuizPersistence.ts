@@ -56,6 +56,7 @@ export function useQuizPersistence({
   clearHistory,
   hasUserInteracted = false,
   isExpressMode = false,
+  editorMode = 'classic',
 }: UseQuizPersistenceOptions) {
   const { t } = useTranslation();
   const navigate = useNavigate();
