@@ -108,7 +108,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve renderizar blocos existentes', () => {
       const blocks = [createBlock('question', 0), createBlock('text', 1)];
       renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
-      expect(screen.getByText('0 blocos').textContent || screen.getByText(/2 blocos/)).toBeTruthy();
+      expect(screen.getByText(/2 blocos/)).toBeInTheDocument();
     });
 
     it('deve renderizar tabs Editar e Templates', () => {
