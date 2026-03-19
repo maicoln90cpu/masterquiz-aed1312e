@@ -136,6 +136,7 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-03-19 | **v2.30 — Email Marketing Automatizado + Bulk API + Documentação completa** |
 | 2026-03-15 | **v2.29 — Rotação Prompts de Imagem Blog (5 estilos) + Cooldown Campanhas** |
 | 2026-03-09 | **v2.28 — 5 Eventos GTM + Dashboard Observabilidade + gtmLogger centralizado** |
 | 2026-02-25 | **v2.27 — Correção useFunnelData, AdminDashboard, QuestionsList refatorado** |
