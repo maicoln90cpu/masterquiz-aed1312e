@@ -775,12 +775,7 @@ const CreateQuizModern = () => {
                           onChange={(updatedBlock) => {
                             const blocks = [...(currentQ.blocks || [])];
                             blocks[selectedIdx] = updatedBlock;
-                            const updatedQuestions = [...questions];
-                            updatedQuestions[currentQuestionIndex] = {
-                              ...currentQ,
-                              blocks,
-                            };
-                            handleQuestionsUpdate(updatedQuestions);
+                            updateCurrentQuestionBlocks(blocks);
                           }}
                         />
                       );
