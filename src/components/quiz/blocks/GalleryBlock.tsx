@@ -12,19 +12,23 @@ interface GalleryBlockProps {
 }
 
 export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
+  // Normalização defensiva
+  const images = block.images || [];
+  const safeBlock = { ...block, images };
+
   const updateBlock = (updates: Partial<GalleryBlockType>) => {
-    onChange({ ...block, ...updates });
+    onChange({ ...safeBlock, ...updates });
   };
 
-  const addImage = () => updateBlock({ images: [...block.images, { url: '', alt: '', caption: '' }] });
+  const addImage = () => updateBlock({ images: [...images, { url: '', alt: '', caption: '' }] });
 
   const updateImage = (index: number, updates: Partial<GalleryBlockType['images'][0]>) => {
-    const images = [...block.images];
-    images[index] = { ...images[index], ...updates };
-    updateBlock({ images });
+    const imgs = [...images];
+    imgs[index] = { ...imgs[index], ...updates };
+    updateBlock({ images: imgs });
   };
 
-  const removeImage = (index: number) => updateBlock({ images: block.images.filter((_, i) => i !== index) });
+  const removeImage = (index: number) => updateBlock({ images: images.filter((_, i) => i !== index) });
 
   return (
     <Card className="border-2 border-muted">
@@ -40,14 +44,14 @@ export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
         </div>
 
         {/* Content: Image list */}
-        {block.images.length === 0 ? (
+        {images.length === 0 ? (
           <div className="text-center py-8 border-2 border-dashed rounded-lg">
             <Images className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">Nenhuma imagem adicionada</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {block.images.map((image, index) => (
+            {images.map((image, index) => (
               <Card key={index} className="bg-muted/20">
                 <CardContent className="pt-4 space-y-3">
                   <div className="flex items-center justify-between">

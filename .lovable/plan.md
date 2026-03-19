@@ -1,119 +1,115 @@
+## Plano: Site Mode A/B (Fluxo Completo)
 
-Objetivo da auditoria  
-Validar por que o editor moderno (Step 3) está travando/crashando ao clicar em blocos (ex.: Acordeão FAQ), por que alguns blocos não entram no editor, e listar tudo que ainda falta implementar para estabilizar.
+### Etapa 1 ✅ — Infraestrutura Base
+- [x] Corrigir cards do AdminDashboard (remover queries redundantes de loadData)
+- [x] Criar tabela `site_settings` com `site_mode` (A ou B)
+- [x] Adicionar `payment_confirmed` em `user_subscriptions`
+- [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
+- [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-O que foi verificado (diagnóstico real)  
-- Código auditado: `CreateQuizModern`, `BlockEditor`, `CompactBlockPalette`, `BlockPropertiesPanel` e os 22 blocos.  
-- Evidência do print: Step 1 com `questionCount` alto (ex.: 6), mas Step 3 com apenas 1 pergunta.  
-- Replay/logs do preview do usuário não trouxeram eventos úteis nessa captura (sem logs), então o diagnóstico foi por código + prints + estrutura de dados.
+### Etapa 2 ✅ — Frontend Condicional (Landing + Pricing + Login)
+- [x] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
+- [x] HeroSection: CTA "Escolher meu plano" + navega para `/precos` no modo B
+- [x] FinalCTA: Navega para `/precos` no modo B
+- [x] Pricing: Esconder card Free no modo B
+- [x] Login: No modo B, após cadastro redirecionar para `/precos`
 
-O que já foi alterado/melhorado (fase anterior já existente no código)  
-- `BlockErrorBoundary` por bloco no `BlockEditor` (bom avanço de resiliência).  
-- Separação inline vs propriedades já avançada nos 22 blocos.  
-- Navegação superior e layout de 4 colunas em Step 3 já implantados.
+### Etapa 3 ✅ — Auth Guards + Payment Flow
+- [x] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
+- [x] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
+- [x] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
+- [x] Modo B: Novos cadastros criam subscription com `payment_confirmed = false` (via trigger existente com default true)
 
-Causas-raiz encontradas  
-1) Inconsistência `questionCount` vs `questions.length` (causa principal de comportamento quebrado)  
-- Hoje a inicialização só roda quando `questions.length === 0`.  
-- Se houver 1 pergunta em memória e `questionCount` for 6, o Step 3 fica inconsistente (exatamente como seu print).
+---
 
-2) Adição de bloco com falha silenciosa  
-- `onAddBlock` retorna sem feedback se a pergunta atual estiver inválida/fora de faixa (`currentQ` inexistente).  
-- Para usuário parece “cliquei e nada aconteceu”.
+## Plano: Email Recovery - Melhorias
 
-3) Fragilidade de render em blocos com arrays obrigatórios  
-- Alguns blocos usam `.map` direto sem normalização defensiva (`Accordion`, `Comparison`, `Gallery`, `Price`).  
-- Dados legados/incompletos podem quebrar renderização.
+### Etapa 1 ✅ — UI + Templates + Editor Visual
+- [x] Reestruturar tabs WhatsApp/Email em CustomerRecovery
+- [x] Criar dashboard EmailRecoveryReports com KPIs e gráficos
+- [x] Adicionar editor visual dual (Visual + HTML) nos templates
 
-4) Problema técnico grave em hooks (Video/Audio)  
-- `useVideoStorage`/`useVideoProvider` estão sendo chamados em `try/catch` no componente.  
-- Isso viola padrão seguro de hooks e pode gerar comportamento imprevisível/crash em runtime.
+### Etapa 2 ✅ — Compatibilidade + Estabilidade
+- [x] VML/Outlook para botões CTA em todos os 6 templates
+- [x] Logo permanente no Supabase Storage
+- [x] Lógica de falha permanente (retry ≥ 3) na fila
 
-5) Painel de propriedades sem boundary próprio  
-- Mesmo com boundary no bloco central, erro no `BlockPropertiesPanel` ainda pode derrubar Step 3.
+### Etapa 3 ✅ — Tracking + Dashboard Real
+- [x] Webhook E-goi (`egoi-email-webhook`) para opens/clicks/bounces
+- [x] Dashboard corrigido com taxas percentuais (open rate, click rate)
+- [x] Filtros por status opened/clicked adicionados
+- [x] Colunas "Aberto em" e "Clicado em" na tabela
+- [x] Logo atualizado no Storage (novo arquivo enviado pelo usuário)
+- [x] Pie chart segmentado (enviados vs abertos vs clicados)
 
-Plano de correção (implementação imediata, em ordem)  
-Fase A — Estabilização crítica (hotfix)  
-1. Reconciliar perguntas ao entrar no Step 3  
-   - Arquivo: `src/pages/CreateQuizModern.tsx`  
-   - Criar rotina única de reconciliação:
-     - Se `questions.length < questionCount`: completar com perguntas vazias até o total.
-     - Se `questions.length > questionCount`: truncar com confirmação/estratégia definida.
-     - Garantir `currentQuestionIndex` dentro do range.
-   - Substituir lógica “só quando length===0”.
+### Etapa 4a ✅ — Templates Estáticos + Triggers SQL (Etapa 1 do plano de 12 emails)
+- [x] 4 templates Milestone (10/50/100/500 leads) + trigger SQL em quiz_responses
+- [x] Template Tutorial (3 dias após 1º quiz) + trigger SQL em quizzes
+- [x] Template Pesquisa de Satisfação (30 dias após signup)
+- [x] Template Comparativo de Planos (14 dias no free)
+- [x] Template Guia de Integração (7 dias sem integrações)
+- [x] 3 templates Reengajamento Educativo (série 21/24/27 dias)
+- [x] Template Convite para Webinar (manual)
+- [x] check-inactive-users-email expandido para novas categorias
+- [x] process-email-recovery-queue respeitando scheduled_at futuro
 
-2. Tornar `onAddBlock`/`onAddTemplate` auto-recuperável  
-   - Arquivo: `src/pages/CreateQuizModern.tsx`  
-   - Se índice inválido: corrigir para `0` automaticamente e mostrar toast informativo.  
-   - Nunca falhar silenciosamente.
+### Etapa 4b ✅ — Templates Dinâmicos com IA
+- [x] Edge Function generate-email-content (gerador IA compartilhado via Lovable AI)
+- [x] Blog Digest automático (send-blog-digest — a cada 3 artigos)
+- [x] Dica da Semana (send-weekly-tip — cron semanal)
+- [x] Caso de Sucesso (send-success-story — mensal)
+- [x] Resumo Mensal (send-monthly-summary — 1º dia do mês, personalizado por usuário)
+- [x] Novidade da Plataforma (send-platform-news — disparo manual admin)
+- [x] Tabela email_tips para histórico de dicas
+- [x] Coluna included_in_digest em blog_posts
 
-3. Blindar dados dos blocos antes de renderizar  
-   - Arquivos: `BlockEditor.tsx` + blocos com `.map`  
-   - Normalizar arrays obrigatórios:
-     - accordion.items
-     - comparison.leftItems/rightItems
-     - gallery.images
-     - price.features
-   - Fallbacks padrão em runtime para evitar crash por shape legado.
+### Etapa 4c ✅ — UI Admin + Polimento
+- [x] UI de Automações no painel admin (EmailAutomations.tsx)
+- [x] Toggle on/off por automação + botão "Disparar agora"
+- [x] Dialog para envio de Novidades (updates, versão, segmento)
+- [x] Histórico de execuções com status/emails enviados
+- [x] Tabelas email_automation_config + email_automation_logs
+- [x] CATEGORY_LABELS expandido com todas as 13 categorias
+- [x] Nova sub-aba "Automações" no painel Email
 
-Fase B — Correção estrutural de crashes  
-4. Corrigir hooks de Video/Audio  
-   - Arquivos: `VideoBlock.tsx`, `AudioBlock.tsx`  
-   - Remover hooks dentro de `try/catch`.  
-   - Chamar hooks normalmente e tratar estado de erro/ausência no retorno (UI fallback), sem quebrar ordem de hooks.
+### Etapa 4d ✅ — Unsubscribe + Performance + A/B + Reorganização
+- [x] Tabela email_unsubscribes + Edge Function handle-email-unsubscribe
+- [x] Link de cancelamento no footer de todos os templates (generate-email-content)
+- [x] Header List-Unsubscribe no envio E-goi (process-email-recovery-queue)
+- [x] Verificação de unsubscribe antes de envio em todas as functions
+- [x] Dashboard de performance por categoria (tabela open/click rate)
+- [x] Teste A/B de subject lines (campo subject_b, ab_variant no envio)
+- [x] Painel A/B no EmailRecoveryReports (variante A vs B)
+- [x] Reorganização de trigger_days (mínimo 3 dias entre templates)
+- [x] Botão "Teste" em cada card de automação (envio para email específico)
+- [x] Crons automáticos criados via migration (blog_digest, weekly_tip, monthly_summary, success_story)
+- [x] Coluna ab_variant em email_recovery_contacts
+- [x] Filtro por status "cancelados" no relatório
 
-5. Error boundary no painel de propriedades  
-   - Arquivo: `CreateQuizModern.tsx` (coluna 4)  
-   - Envolver `BlockPropertiesPanel` em boundary dedicado para evitar queda do Step 3 inteiro.
+---
 
-Fase C — Consistência final dos 22 blocos  
-6. Matriz de compatibilidade por bloco (editor + properties + preview)  
-   - Validar add/edit/delete/reorder + persistência + reload em todos os tipos.  
-   - Marcar e corrigir qualquer bloco que ainda não reflita mudança em tempo real.
+## Plano: Editor Dual-Layout (Classic / Modern)
 
-Detalhes técnicos (resumo direto)  
-- Principal fix de lógica:
-```text
-enter_step3 -> reconcileQuestions(questionCount, questions)
-  - enforce length
-  - enforce currentQuestionIndex bounds
-  - ensure each question has at least one question block
-```
-- Principal fix de resiliência:
-```text
-normalizeBlock(block):
-  accordion.items ||= [...]
-  comparison.leftItems ||= [...]
-  comparison.rightItems ||= [...]
-  gallery.images ||= []
-  price.features ||= [...]
-```
-- Principal fix de runtime:
-```text
-VideoBlock/AudioBlock: hooks fora de try/catch + fallback de UI
-```
+### Fase 1 ✅ — Fundação
+- [x] Migration: coluna `editor_layout` em `site_settings` (default 'classic')
+- [x] Hook `useEditorLayout` + `useUpdateEditorLayout` com cache 1h
+- [x] Toggle no AdminDashboard para alternar Classic/Modern
+- [x] Condicional em `CreateQuiz.tsx` — renderiza `CreateQuizModern` se Modern
+- [x] `CreateQuizModern.tsx` com layout horizontal de steps + Step 1 com formato
+- [x] `selectedBlockIndex` adicionado ao `useQuizState`
 
-Vantagens / Desvantagens  
-Vantagens  
-- Elimina travas silenciosas e inconsistência Step 1→Step 3.  
-- Reduz crashes por dados legados/malformados.  
-- Melhora previsibilidade: clique sempre gera ação ou feedback claro.
+### Fase 2 ✅ — Painel de Propriedades dos Blocos
+- [x] Criar `BlockPropertiesPanel.tsx` com dispatch por tipo de bloco (22 blocos)
+- [x] Separar propriedades inline vs lateral para todos os 22 blocos
+- [x] Implementar seleção de bloco (click → selectedBlockIndex + highlight)
+- [x] Layout com painel de propriedades na Step 3
+- [x] Remover toggle showResults da Step 2 no Modern (hideShowResults prop)
 
-Desvantagens  
-- Reconciliação pode truncar perguntas se `questionCount` for reduzido (precisa regra clara/confirm modal).  
-- Pequeno aumento de código de normalização e validação.
+### Fase 3 — Polish + Express Mode
+- [ ] Adaptar Express mode para layout Modern
+- [ ] Mobile responsive na barra horizontal de steps
+- [ ] Evento GTM `editor_layout_switched`
 
-Checklist manual de validação (obrigatório após implementar)  
-1. Definir 5/6/10 perguntas no Step 1 e abrir Step 3: quantidade deve bater exatamente.  
-2. Clicar em cada um dos 22 blocos na paleta: todos devem adicionar sem travar.  
-3. Editar propriedades de cada bloco e verificar reflexo imediato no editor central.  
-4. Reordenar e deletar blocos com DnD ativo sem congelamento.  
-5. Salvar, recarregar e confirmar que nenhum bloco quebra ao reabrir.  
-6. Testar com dados antigos (quiz legado) para garantir normalização sem crash.  
-7. Teste end-to-end completo do fluxo 1→5 (incluindo mobile/desktop).
-
-Tudo que ainda falta implementar (próximas fases após hotfix)  
-- Fase 4: normalização/versionamento formal de schema de blocos no carregamento.  
-- Fase 5: paridade total editor vs preview para os 22 blocos (incluindo edge cases).  
-- Fase 6: suíte de testes automatizados por bloco (render + interação + persistência).  
-- Fase 7: hardening de performance no histórico (undo/redo) para quizzes grandes.
+### Fase 4 — Testes + Iteração
+- [ ] Testes A/B de conversão entre Classic e Modern
+- [ ] Ajustes baseados em feedback

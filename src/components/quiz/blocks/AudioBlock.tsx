@@ -19,20 +19,13 @@ interface AudioBlockProps {
 export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
   const [activeTab, setActiveTab] = useState<string>("url");
 
-  let allowVideoUpload = false;
-  let usedMb = 0;
-  let videoStorageLimitMb = 0;
-  let usagePercentage = 0;
-
-  try {
-    const storage = useVideoStorage();
-    allowVideoUpload = storage.allowVideoUpload;
-    usedMb = storage.usedMb;
-    videoStorageLimitMb = storage.videoStorageLimitMb;
-    usagePercentage = storage.usagePercentage;
-  } catch (err) {
-    console.warn("[AudioBlock] Hook de storage falhou:", err);
-  }
+  // Hook called unconditionally (React rules)
+  const storage = useVideoStorage();
+  
+  const allowVideoUpload = storage?.allowVideoUpload ?? false;
+  const usedMb = storage?.usedMb ?? 0;
+  const videoStorageLimitMb = storage?.videoStorageLimitMb ?? 0;
+  const usagePercentage = storage?.usagePercentage ?? 0;
 
   return (
     <TooltipProvider>

@@ -11,28 +11,33 @@ interface ComparisonBlockProps {
 }
 
 export const ComparisonBlock = ({ block, onChange }: ComparisonBlockProps) => {
+  // Normalização defensiva
+  const leftItems = block.leftItems || ['Item esquerda'];
+  const rightItems = block.rightItems || ['Item direita'];
+  const safeBlock = { ...block, leftItems, rightItems };
+
   const updateLeftItem = (index: number, value: string) => {
-    const newItems = [...block.leftItems];
+    const newItems = [...leftItems];
     newItems[index] = value;
-    onChange({ ...block, leftItems: newItems });
+    onChange({ ...safeBlock, leftItems: newItems });
   };
 
   const updateRightItem = (index: number, value: string) => {
-    const newItems = [...block.rightItems];
+    const newItems = [...rightItems];
     newItems[index] = value;
-    onChange({ ...block, rightItems: newItems });
+    onChange({ ...safeBlock, rightItems: newItems });
   };
 
   const addRow = () => {
-    onChange({ ...block, leftItems: [...block.leftItems, 'Novo item'], rightItems: [...block.rightItems, 'Novo item'] });
+    onChange({ ...safeBlock, leftItems: [...leftItems, 'Novo item'], rightItems: [...rightItems, 'Novo item'] });
   };
 
   const removeRow = (index: number) => {
-    if (block.leftItems.length <= 1) return;
+    if (leftItems.length <= 1) return;
     onChange({
-      ...block,
-      leftItems: block.leftItems.filter((_, i) => i !== index),
-      rightItems: block.rightItems.filter((_, i) => i !== index)
+      ...safeBlock,
+      leftItems: leftItems.filter((_, i) => i !== index),
+      rightItems: rightItems.filter((_, i) => i !== index)
     });
   };
 
@@ -64,11 +69,11 @@ export const ComparisonBlock = ({ block, onChange }: ComparisonBlockProps) => {
             </Button>
           </div>
 
-          {block.leftItems.map((_, index) => (
+          {leftItems.map((_, index) => (
             <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Input value={block.leftItems[index]} onChange={(e) => updateLeftItem(index, e.target.value)} className="flex-1" placeholder="Item esquerda" />
-              <Input value={block.rightItems[index]} onChange={(e) => updateRightItem(index, e.target.value)} className="flex-1" placeholder="Item direita" />
-              <Button variant="ghost" size="sm" onClick={() => removeRow(index)} disabled={block.leftItems.length <= 1} className="self-end sm:self-auto">
+              <Input value={leftItems[index]} onChange={(e) => updateLeftItem(index, e.target.value)} className="flex-1" placeholder="Item esquerda" />
+              <Input value={rightItems[index] || ''} onChange={(e) => updateRightItem(index, e.target.value)} className="flex-1" placeholder="Item direita" />
+              <Button variant="ghost" size="sm" onClick={() => removeRow(index)} disabled={leftItems.length <= 1} className="self-end sm:self-auto">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>

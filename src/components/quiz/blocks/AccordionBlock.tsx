@@ -13,19 +13,23 @@ interface AccordionBlockProps {
 }
 
 export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
+  // Normalização defensiva
+  const items = block.items || [{ question: 'Nova pergunta', answer: 'Resposta...' }];
+  const safeBlock = { ...block, items };
+
   const addItem = () => {
-    onChange({ ...block, items: [...block.items, { question: 'Nova pergunta', answer: 'Resposta...' }] });
+    onChange({ ...safeBlock, items: [...items, { question: 'Nova pergunta', answer: 'Resposta...' }] });
   };
 
   const updateItem = (index: number, field: 'question' | 'answer', value: string) => {
-    const newItems = [...block.items];
+    const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
-    onChange({ ...block, items: newItems });
+    onChange({ ...safeBlock, items: newItems });
   };
 
   const removeItem = (index: number) => {
-    if (block.items.length <= 1) return;
-    onChange({ ...block, items: block.items.filter((_, i) => i !== index) });
+    if (items.length <= 1) return;
+    onChange({ ...safeBlock, items: items.filter((_, i) => i !== index) });
   };
 
   return (
@@ -55,11 +59,11 @@ export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
             </Button>
           </div>
 
-          {block.items.map((item, index) => (
+          {items.map((item, index) => (
             <div key={index} className="p-3 border rounded-lg space-y-2 bg-muted/30">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Item {index + 1}</span>
-                <Button variant="ghost" size="sm" onClick={() => removeItem(index)} disabled={block.items.length <= 1}>
+                <Button variant="ghost" size="sm" onClick={() => removeItem(index)} disabled={items.length <= 1}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -73,8 +77,8 @@ export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
         <div className="p-4 bg-muted/50 rounded-lg space-y-3">
           <p className="text-sm font-medium text-muted-foreground">Preview:</p>
           <h3 className="font-semibold">{block.title}</h3>
-          <Accordion type={block.allowMultiple ? "multiple" : "single"} collapsible className="w-full">
-            {block.items.map((item, index) => (
+          <Accordion type={safeBlock.allowMultiple ? "multiple" : "single"} collapsible className="w-full">
+            {items.map((item, index) => (
               <AccordionItem key={index} value={`item-${index}`} className={block.style === 'bordered' ? 'border rounded-lg mb-2 px-3' : ''}>
                 <AccordionTrigger className={block.style === 'minimal' ? 'text-sm py-2' : ''}>{item.question}</AccordionTrigger>
                 <AccordionContent>{item.answer}</AccordionContent>

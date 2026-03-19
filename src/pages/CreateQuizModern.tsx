@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
 import { BlockEditor } from "@/components/quiz/blocks/BlockEditor";
 import { CompactBlockPalette } from "@/components/quiz/blocks/CompactBlockPalette";
+import { BlockErrorBoundary } from "@/components/quiz/blocks/BlockErrorBoundary";
 import { QuestionsList } from "@/components/quiz/QuestionsList";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
 import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";
@@ -233,13 +234,38 @@ const CreateQuizModern = () => {
     updateEditor({ step: newStep });
   }, [updateEditor]);
 
-  // ✅ Centralizado: inicializar perguntas ao entrar no Step 3+ sem perguntas
+  // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
-    if (editorState.step >= 3 && questions.length === 0 && !isExpressMode && !uiState.isLoadingQuiz) {
-      const emptyQuestions = initializeEmptyQuestions(editorState.questionCount);
-      setQuestions(emptyQuestions);
+    if (editorState.step >= 3 && !isExpressMode && !uiState.isLoadingQuiz) {
+      const targetCount = editorState.questionCount;
+      
+      if (questions.length === 0) {
+        // Nenhuma pergunta: inicializar todas
+        const emptyQuestions = initializeEmptyQuestions(targetCount);
+        setQuestions(emptyQuestions);
+      } else if (questions.length < targetCount) {
+        // Faltam perguntas: completar até o total
+        const timestamp = Date.now();
+        const newQuestions = Array.from({ length: targetCount - questions.length }, (_, i) => ({
+          id: `temp-${timestamp}-${questions.length + i}`,
+          question_text: '',
+          answer_format: 'single_choice' as const,
+          options: [],
+          order_number: questions.length + i,
+          blocks: [createBlock('question', 0)]
+        }));
+        setQuestions([...questions, ...newQuestions]);
+      } else if (questions.length > targetCount) {
+        // Mais perguntas que o definido: truncar (manter as primeiras)
+        setQuestions(questions.slice(0, targetCount));
+      }
+      
+      // Garantir currentQuestionIndex dentro do range
+      if (editorState.currentQuestionIndex >= targetCount) {
+        updateEditor({ currentQuestionIndex: Math.max(0, targetCount - 1) });
+      }
     }
-  }, [editorState.step, questions.length, isExpressMode, uiState.isLoadingQuiz, editorState.questionCount, initializeEmptyQuestions, setQuestions]);
+  }, [editorState.step, editorState.questionCount, isExpressMode, uiState.isLoadingQuiz]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ============================================
   // RENDERS CONDICIONAIS
@@ -651,14 +677,25 @@ const CreateQuizModern = () => {
             {/* COL 2: Block Palette */}
             {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto">
-                <CompactBlockPalette
+              <CompactBlockPalette
                   onAddBlock={(blockType) => {
-                    const currentQ = questions[currentQuestionIndex];
-                    if (!currentQ) return;
+                    let idx = currentQuestionIndex;
+                    let currentQ = questions[idx];
+                    // Auto-recuperação: se índice inválido, usar primeira pergunta
+                    if (!currentQ) {
+                      if (questions.length === 0) {
+                        toast.error('Nenhuma pergunta disponível. Adicione uma pergunta primeiro.');
+                        return;
+                      }
+                      idx = 0;
+                      currentQ = questions[0];
+                      updateEditor({ currentQuestionIndex: 0 });
+                      toast.info('Índice corrigido para a primeira pergunta.');
+                    }
                     const newBlock = createBlock(blockType, currentQ.blocks?.length || 0);
                     const updatedBlocks = [...(currentQ.blocks || []), newBlock];
                     const updatedQuestions = [...questions];
-                    updatedQuestions[currentQuestionIndex] = {
+                    updatedQuestions[idx] = {
                       ...currentQ,
                       blocks: updatedBlocks,
                     };
@@ -666,8 +703,17 @@ const CreateQuizModern = () => {
                     updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
                   }}
                   onAddTemplate={(templateBlocks) => {
-                    const currentQ = questions[currentQuestionIndex];
-                    if (!currentQ) return;
+                    let idx = currentQuestionIndex;
+                    let currentQ = questions[idx];
+                    if (!currentQ) {
+                      if (questions.length === 0) {
+                        toast.error('Nenhuma pergunta disponível.');
+                        return;
+                      }
+                      idx = 0;
+                      currentQ = questions[0];
+                      updateEditor({ currentQuestionIndex: 0 });
+                    }
                     const existingBlocks = currentQ.blocks || [];
                     const adjustedBlocks = templateBlocks.map((b, i) => ({
                       ...b,
@@ -675,7 +721,7 @@ const CreateQuizModern = () => {
                     }));
                     const updatedBlocks = [...existingBlocks, ...adjustedBlocks];
                     const updatedQuestions = [...questions];
-                    updatedQuestions[currentQuestionIndex] = {
+                    updatedQuestions[idx] = {
                       ...currentQ,
                       blocks: updatedBlocks,
                     };
@@ -737,38 +783,40 @@ const CreateQuizModern = () => {
                   </h3>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {(() => {
-                    const selectedIdx = editorState.selectedBlockIndex ?? 0;
-                    const currentQ = questions[currentQuestionIndex];
-                    const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
+                  <BlockErrorBoundary blockType="properties-panel">
+                    {(() => {
+                      const selectedIdx = editorState.selectedBlockIndex ?? 0;
+                      const currentQ = questions[currentQuestionIndex];
+                      const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
 
-                    if (!selectedBlock) {
+                      if (!selectedBlock) {
+                        return (
+                          <div className="p-4 text-center">
+                            <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                              {t('createQuiz.noBlockSelected', 'Nenhum bloco disponível')}
+                            </p>
+                          </div>
+                        );
+                      }
+
                       return (
-                        <div className="p-4 text-center">
-                          <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            {t('createQuiz.noBlockSelected', 'Nenhum bloco disponível')}
-                          </p>
-                        </div>
+                        <BlockPropertiesPanel
+                          block={selectedBlock}
+                          onChange={(updatedBlock) => {
+                            const blocks = [...(currentQ.blocks || [])];
+                            blocks[selectedIdx] = updatedBlock;
+                            const updatedQuestions = [...questions];
+                            updatedQuestions[currentQuestionIndex] = {
+                              ...currentQ,
+                              blocks,
+                            };
+                            handleQuestionsUpdate(updatedQuestions);
+                          }}
+                        />
                       );
-                    }
-
-                    return (
-                      <BlockPropertiesPanel
-                        block={selectedBlock}
-                        onChange={(updatedBlock) => {
-                          const blocks = [...(currentQ.blocks || [])];
-                          blocks[selectedIdx] = updatedBlock;
-                          const updatedQuestions = [...questions];
-                          updatedQuestions[currentQuestionIndex] = {
-                            ...currentQ,
-                            blocks,
-                          };
-                          handleQuestionsUpdate(updatedQuestions);
-                        }}
-                      />
-                    );
-                  })()}
+                    })()}
+                  </BlockErrorBoundary>
                 </div>
               </div>
             )}
