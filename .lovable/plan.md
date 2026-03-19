@@ -1,68 +1,115 @@
+## Plano: Site Mode A/B (Fluxo Completo)
 
+### Etapa 1 ✅ — Infraestrutura Base
+- [x] Corrigir cards do AdminDashboard (remover queries redundantes de loadData)
+- [x] Criar tabela `site_settings` com `site_mode` (A ou B)
+- [x] Adicionar `payment_confirmed` em `user_subscriptions`
+- [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
+- [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-# Plano: Refazer Layout Step 3 do Modern Mode — 4 Colunas Full-Width
+### Etapa 2 ✅ — Frontend Condicional (Landing + Pricing + Login)
+- [x] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
+- [x] HeroSection: CTA "Escolher meu plano" + navega para `/precos` no modo B
+- [x] FinalCTA: Navega para `/precos` no modo B
+- [x] Pricing: Esconder card Free no modo B
+- [x] Login: No modo B, após cadastro redirecionar para `/precos`
 
-## Problema Atual
+### Etapa 3 ✅ — Auth Guards + Payment Flow
+- [x] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
+- [x] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
+- [x] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
+- [x] Modo B: Novos cadastros criam subscription com `payment_confirmed = false` (via trigger existente com default true)
 
-1. **Layout não ocupa tela inteira** — Step 3 está dentro de `container mx-auto max-w-4xl px-4 py-6`, desperdiçando espaço lateral
-2. **Faltam 4 colunas** — O layout correto deve ser: Lista de Perguntas | Blocos da Pergunta (BlockEditor com botão "+ Adicionar") | Preview/Editor inline | Propriedades
-3. **Coluna de blocos ausente** — O `QuestionConfigStep` embute o `BlockEditor` dentro de um Card com header, navegação e tabs, sem separação visual. O usuário não consegue adicionar novos blocos facilmente
-4. **A coluna central duplica controles** — `QuestionConfigStep` inclui navegação entre perguntas (Anterior/Próxima) e visibilidade do quiz, que são redundantes no layout de 4 colunas
+---
 
-## Solução
+## Plano: Email Recovery - Melhorias
 
-Reescrever a seção Step 3 de `CreateQuizModern.tsx` para usar layout full-width com 4 colunas distintas, extraindo o `BlockEditor` diretamente em vez de usar `QuestionConfigStep` (que foi feito para o Classic mode).
+### Etapa 1 ✅ — UI + Templates + Editor Visual
+- [x] Reestruturar tabs WhatsApp/Email em CustomerRecovery
+- [x] Criar dashboard EmailRecoveryReports com KPIs e gráficos
+- [x] Adicionar editor visual dual (Visual + HTML) nos templates
 
-### Estrutura das 4 colunas
+### Etapa 2 ✅ — Compatibilidade + Estabilidade
+- [x] VML/Outlook para botões CTA em todos os 6 templates
+- [x] Logo permanente no Supabase Storage
+- [x] Lógica de falha permanente (retry ≥ 3) na fila
 
-```text
-┌──────────┬────────────────────────────────┬──────────────┐
-│ Perguntas│  Editor (BlockEditor direto)   │ Propriedades │
-│  (220px) │  com "+ Adicionar" bloco       │   (280px)    │
-│          │  (flex-1)                      │              │
-└──────────┴────────────────────────────────┴──────────────┘
-```
+### Etapa 3 ✅ — Tracking + Dashboard Real
+- [x] Webhook E-goi (`egoi-email-webhook`) para opens/clicks/bounces
+- [x] Dashboard corrigido com taxas percentuais (open rate, click rate)
+- [x] Filtros por status opened/clicked adicionados
+- [x] Colunas "Aberto em" e "Clicado em" na tabela
+- [x] Logo atualizado no Storage (novo arquivo enviado pelo usuário)
+- [x] Pie chart segmentado (enviados vs abertos vs clicados)
 
-Nota: serão 3 colunas visuais (não 4) pois o "editor de blocos" e o "preview" ficam como tabs dentro da coluna central, como já está no Classic. A diferença é que agora a coluna central mostra o `BlockEditor` diretamente, sem o wrapper `QuestionConfigStep`.
+### Etapa 4a ✅ — Templates Estáticos + Triggers SQL (Etapa 1 do plano de 12 emails)
+- [x] 4 templates Milestone (10/50/100/500 leads) + trigger SQL em quiz_responses
+- [x] Template Tutorial (3 dias após 1º quiz) + trigger SQL em quizzes
+- [x] Template Pesquisa de Satisfação (30 dias após signup)
+- [x] Template Comparativo de Planos (14 dias no free)
+- [x] Template Guia de Integração (7 dias sem integrações)
+- [x] 3 templates Reengajamento Educativo (série 21/24/27 dias)
+- [x] Template Convite para Webinar (manual)
+- [x] check-inactive-users-email expandido para novas categorias
+- [x] process-email-recovery-queue respeitando scheduled_at futuro
 
-### Mudanças detalhadas
+### Etapa 4b ✅ — Templates Dinâmicos com IA
+- [x] Edge Function generate-email-content (gerador IA compartilhado via Lovable AI)
+- [x] Blog Digest automático (send-blog-digest — a cada 3 artigos)
+- [x] Dica da Semana (send-weekly-tip — cron semanal)
+- [x] Caso de Sucesso (send-success-story — mensal)
+- [x] Resumo Mensal (send-monthly-summary — 1º dia do mês, personalizado por usuário)
+- [x] Novidade da Plataforma (send-platform-news — disparo manual admin)
+- [x] Tabela email_tips para histórico de dicas
+- [x] Coluna included_in_digest em blog_posts
 
-**Arquivo: `src/pages/CreateQuizModern.tsx`**
+### Etapa 4c ✅ — UI Admin + Polimento
+- [x] UI de Automações no painel admin (EmailAutomations.tsx)
+- [x] Toggle on/off por automação + botão "Disparar agora"
+- [x] Dialog para envio de Novidades (updates, versão, segmento)
+- [x] Histórico de execuções com status/emails enviados
+- [x] Tabelas email_automation_config + email_automation_logs
+- [x] CATEGORY_LABELS expandido com todas as 13 categorias
+- [x] Nova sub-aba "Automações" no painel Email
 
-1. **Step 3 full-width**: Remover `container mx-auto max-w-4xl px-4 py-6` do wrapper do Step 3 — usar `flex-1 overflow-hidden` com `h-full`
-2. **Remover `QuestionConfigStep`** do Step 3 Modern — substituir por uso direto de `BlockEditor` com as props corretas (`blocks`, `onChange`, `onBlockSelect`, `selectedBlockIndex`)
-3. **Coluna esquerda** (lista de perguntas): Manter como está, mas com altura `h-full` em vez de `sticky top-4`
-4. **Coluna central**: `BlockEditor` diretamente + tabs Edit/Preview + barra de navegação compacta (Pergunta X de Y) + visibilidade do quiz
-5. **Coluna direita** (propriedades): Manter `BlockPropertiesPanel` como está, ajustar para `h-full`
-6. **Wrapper do conteúdo**: Quando `step === 3`, usar `flex-1 overflow-hidden` no container principal em vez de `overflow-auto` com padding
+### Etapa 4d ✅ — Unsubscribe + Performance + A/B + Reorganização
+- [x] Tabela email_unsubscribes + Edge Function handle-email-unsubscribe
+- [x] Link de cancelamento no footer de todos os templates (generate-email-content)
+- [x] Header List-Unsubscribe no envio E-goi (process-email-recovery-queue)
+- [x] Verificação de unsubscribe antes de envio em todas as functions
+- [x] Dashboard de performance por categoria (tabela open/click rate)
+- [x] Teste A/B de subject lines (campo subject_b, ab_variant no envio)
+- [x] Painel A/B no EmailRecoveryReports (variante A vs B)
+- [x] Reorganização de trigger_days (mínimo 3 dias entre templates)
+- [x] Botão "Teste" em cada card de automação (envio para email específico)
+- [x] Crons automáticos criados via migration (blog_digest, weekly_tip, monthly_summary, success_story)
+- [x] Coluna ab_variant em email_recovery_contacts
+- [x] Filtro por status "cancelados" no relatório
 
-**Passagem de props para BlockEditor**:
-- `blocks={currentQuestion.blocks}`
-- `onChange={updateCurrentQuestionBlocks}` (já existe no hook)
-- `onBlockSelect={(idx) => updateEditor({ selectedBlockIndex: idx })}`
-- `selectedBlockIndex={editorState.selectedBlockIndex}`
+---
 
-Isso garante que ao clicar num bloco, o painel direito atualiza; e o botão "+ Adicionar" do BlockEditor fica acessível.
+## Plano: Editor Dual-Layout (Classic / Modern)
 
-### O que NÃO muda
-- Steps 1, 2, 4, 5 continuam com `container max-w-4xl`
-- Classic mode intacto
-- `QuestionConfigStep` continua existindo para o Classic
-- `BlockPropertiesPanel` sem alterações
-- Express mode continua sem colunas laterais
+### Fase 1 ✅ — Fundação
+- [x] Migration: coluna `editor_layout` em `site_settings` (default 'classic')
+- [x] Hook `useEditorLayout` + `useUpdateEditorLayout` com cache 1h
+- [x] Toggle no AdminDashboard para alternar Classic/Modern
+- [x] Condicional em `CreateQuiz.tsx` — renderiza `CreateQuizModern` se Modern
+- [x] `CreateQuizModern.tsx` com layout horizontal de steps + Step 1 com formato
+- [x] `selectedBlockIndex` adicionado ao `useQuizState`
 
-### Checklist pós-implementação
-- [ ] Step 3 ocupa toda a largura da tela
-- [ ] Lista de perguntas à esquerda permite navegar e adicionar
-- [ ] Centro mostra BlockEditor com botão "+ Adicionar" bloco
-- [ ] Painel de propriedades à direita atualiza ao clicar num bloco
-- [ ] Navegação entre perguntas funciona (via coluna esquerda)
-- [ ] Steps 1, 2, 4, 5 mantêm layout centralizado
-- [ ] Classic mode inalterado
-- [ ] Express mode sem colunas laterais
+### Fase 2 ✅ — Painel de Propriedades dos Blocos
+- [x] Criar `BlockPropertiesPanel.tsx` com dispatch por tipo de bloco (22 blocos)
+- [x] Separar propriedades inline vs lateral para todos os 22 blocos
+- [x] Implementar seleção de bloco (click → selectedBlockIndex + highlight)
+- [x] Layout com painel de propriedades na Step 3
+- [x] Remover toggle showResults da Step 2 no Modern (hideShowResults prop)
 
-### Itens pendentes para fases seguintes
-- **Fase 3** (blocos): Separação completa inline vs. propriedades nos 22 tipos de bloco — parcialmente feita no `BlockPropertiesPanel`, falta integrar com o editor central
-- **Fase 4**: Express mode adaptado ao Modern
-- **Fase 5**: Mobile responsivo, testes A/B
+### Fase 3 — Polish + Express Mode
+- [ ] Adaptar Express mode para layout Modern
+- [ ] Mobile responsive na barra horizontal de steps
+- [ ] Evento GTM `editor_layout_switched`
 
+### Fase 4 — Testes + Iteração
+- [ ] Testes A/B de conversão entre Classic e Modern
+- [ ] Ajustes baseados em feedback

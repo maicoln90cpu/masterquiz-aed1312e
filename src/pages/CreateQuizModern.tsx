@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { QuestionConfigStep } from "@/components/quiz/QuestionConfigStep";
 import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
+import { BlockEditor } from "@/components/quiz/blocks/BlockEditor";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
 import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";
 import { ResultsConfigStep } from "@/components/quiz/ResultsConfigStep";
@@ -414,7 +414,12 @@ const CreateQuizModern = () => {
       )}
 
       {/* ========== MAIN CONTENT ========== */}
-      <div className="flex-1 overflow-auto">
+      <div className={cn(
+        "flex-1",
+        step === 3 && !isExpressMode ? "overflow-hidden" : "overflow-auto"
+      )}>
+        {/* Steps 1,2,4,5 use centered container */}
+        {step !== 3 && !isExpressMode && (
         <div className="container mx-auto max-w-4xl px-4 py-6">
           {/* STEP 1: Quantidade e Formato */}
           {step === 1 && !isExpressMode && (
@@ -532,127 +537,6 @@ const CreateQuizModern = () => {
             />
           )}
 
-          {/* STEP 3: Perguntas — 3-column layout with properties panel */}
-          {(step === 3 || isExpressMode) && (
-            <div className="flex gap-4 max-w-7xl mx-auto">
-              {/* Left: Question List */}
-              {!isExpressMode && (
-                <div className="w-56 shrink-0 hidden lg:block">
-                  <div className="sticky top-4 border rounded-lg bg-card overflow-hidden max-h-[calc(100vh-14rem)]">
-                    <div className="p-3 border-b bg-muted/30">
-                      <h3 className="text-sm font-semibold text-foreground">
-                        {t('createQuiz.questions', 'Perguntas')} ({questions.length})
-                      </h3>
-                    </div>
-                    <div className="overflow-y-auto max-h-[calc(100vh-18rem)]">
-                      {questions.map((q, idx) => {
-                        const questionBlock = q.blocks?.find((b: any) => b.type === 'question');
-                        const questionText = questionBlock && 'questionText' in questionBlock
-                          ? questionBlock.questionText
-                          : '';
-                        return (
-                          <button
-                            key={q.id || idx}
-                            onClick={() => {
-                              updateEditor({ currentQuestionIndex: idx, selectedBlockIndex: 0 });
-                            }}
-                            className={cn(
-                              "w-full text-left px-3 py-2.5 border-b last:border-b-0 transition-colors text-sm",
-                              currentQuestionIndex === idx
-                                ? "bg-primary/10 border-l-2 border-l-primary font-medium"
-                                : "hover:bg-muted/50"
-                            )}
-                          >
-                            <span className="text-xs text-muted-foreground font-mono">
-                              {String(idx + 1).padStart(2, '0')}
-                            </span>
-                            <p className="text-foreground line-clamp-2 mt-0.5">
-                              {questionText || t('createQuiz.emptyQuestion', 'Pergunta sem título')}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="p-2 border-t">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-xs"
-                        onClick={handleAddQuestion}
-                      >
-                        + {t('createQuiz.addQuestion', 'Adicionar pergunta')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Center: Editor */}
-              <div className="flex-1 min-w-0">
-                <QuestionConfigStep
-                  questions={questions}
-                  questionCount={questionCount}
-                  isPublic={editorState.isPublic}
-                  onPublicChange={(v) => updateEditor({ isPublic: v })}
-                  quizTitle={title}
-                  quizDescription={description}
-                  quizId={quizId || undefined}
-                  onQuestionsUpdate={handleQuestionsUpdate}
-                  initialQuestionIndex={currentQuestionIndex}
-                  isExpressMode={isExpressMode}
-                  fireOnce={fireOnce}
-                  trackInteraction={trackInteraction}
-                />
-              </div>
-
-              {/* Right: Block Properties Panel */}
-              {!isExpressMode && (
-                <div className="w-72 shrink-0 hidden lg:block">
-                  <div className="sticky top-4 border rounded-lg bg-card overflow-hidden max-h-[calc(100vh-14rem)]">
-                    <div className="p-3 border-b bg-muted/30">
-                      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        <Settings2 className="h-4 w-4" />
-                        {t('createQuiz.blockProperties', 'Propriedades')}
-                      </h3>
-                    </div>
-                    {(() => {
-                      const selectedIdx = editorState.selectedBlockIndex ?? 0;
-                      const currentQ = questions[currentQuestionIndex];
-                      const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
-
-                      if (!selectedBlock) {
-                        return (
-                          <div className="p-4 text-center">
-                            <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                            <p className="text-sm text-muted-foreground">
-                              {t('createQuiz.noBlockSelected', 'Nenhum bloco disponível')}
-                            </p>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <BlockPropertiesPanel
-                          block={selectedBlock}
-                          onChange={(updatedBlock) => {
-                            const blocks = [...(currentQ.blocks || [])];
-                            blocks[selectedIdx] = updatedBlock;
-                            const updatedQuestions = [...questions];
-                            updatedQuestions[currentQuestionIndex] = {
-                              ...currentQ,
-                              blocks,
-                            };
-                            handleQuestionsUpdate(updatedQuestions);
-                          }}
-                        />
-                      );
-                    })()}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* STEP 4: Coleta de Dados */}
           {step === 4 && !isExpressMode && (
             <>
@@ -698,6 +582,152 @@ const CreateQuizModern = () => {
             </>
           )}
         </div>
+        )}
+
+        {/* ========== STEP 3: Full-width 3-column layout ========== */}
+        {(step === 3 || isExpressMode) && (
+          <div className={cn(
+            "flex h-full",
+            isExpressMode ? "container mx-auto max-w-4xl px-4 py-6" : "px-2 gap-2"
+          )}>
+            {/* LEFT: Question List */}
+            {!isExpressMode && (
+              <div className="w-52 shrink-0 hidden lg:flex flex-col border-r bg-card">
+                <div className="p-3 border-b bg-muted/30">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {t('createQuiz.questions', 'Perguntas')} ({questions.length})
+                  </h3>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {questions.map((q, idx) => {
+                    const questionBlock = q.blocks?.find((b: any) => b.type === 'question');
+                    const questionText = questionBlock && 'questionText' in questionBlock
+                      ? questionBlock.questionText
+                      : '';
+                    return (
+                      <button
+                        key={q.id || idx}
+                        onClick={() => {
+                          updateEditor({ currentQuestionIndex: idx, selectedBlockIndex: 0 });
+                        }}
+                        className={cn(
+                          "w-full text-left px-3 py-2.5 border-b last:border-b-0 transition-colors text-sm",
+                          currentQuestionIndex === idx
+                            ? "bg-primary/10 border-l-2 border-l-primary font-medium"
+                            : "hover:bg-muted/50"
+                        )}
+                      >
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {String(idx + 1).padStart(2, '0')}
+                        </span>
+                        <p className="text-foreground line-clamp-2 mt-0.5">
+                          {questionText || t('createQuiz.emptyQuestion', 'Pergunta sem título')}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="p-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={handleAddQuestion}
+                  >
+                    + {t('createQuiz.addQuestion', 'Adicionar pergunta')}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* CENTER: BlockEditor directly */}
+            <div className="flex-1 min-w-0 overflow-y-auto p-3">
+              {/* Mini header: Pergunta X de Y */}
+              {!isExpressMode && (
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Pergunta {currentQuestionIndex + 1} de {questions.length}
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{questions[currentQuestionIndex]?.blocks?.length || 0} blocos</span>
+                  </div>
+                </div>
+              )}
+              
+              {(() => {
+                const currentQ = questions[currentQuestionIndex];
+                if (!currentQ) return (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>Nenhuma pergunta selecionada</p>
+                  </div>
+                );
+                return (
+                  <BlockEditor
+                    blocks={currentQ.blocks || []}
+                    onChange={(newBlocks) => {
+                      const updatedQuestions = [...questions];
+                      updatedQuestions[currentQuestionIndex] = {
+                        ...currentQ,
+                        blocks: newBlocks,
+                      };
+                      handleQuestionsUpdate(updatedQuestions);
+                    }}
+                    onBlockSelect={(idx) => updateEditor({ selectedBlockIndex: idx })}
+                    selectedBlockIndex={editorState.selectedBlockIndex ?? 0}
+                    totalQuestions={questions.length}
+                    currentQuestionIndex={currentQuestionIndex}
+                  />
+                );
+              })()}
+            </div>
+
+            {/* RIGHT: Block Properties Panel */}
+            {!isExpressMode && (
+              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card">
+                <div className="p-3 border-b bg-muted/30">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Settings2 className="h-4 w-4" />
+                    {t('createQuiz.blockProperties', 'Propriedades')}
+                  </h3>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {(() => {
+                    const selectedIdx = editorState.selectedBlockIndex ?? 0;
+                    const currentQ = questions[currentQuestionIndex];
+                    const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
+
+                    if (!selectedBlock) {
+                      return (
+                        <div className="p-4 text-center">
+                          <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            {t('createQuiz.noBlockSelected', 'Nenhum bloco disponível')}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <BlockPropertiesPanel
+                        block={selectedBlock}
+                        onChange={(updatedBlock) => {
+                          const blocks = [...(currentQ.blocks || [])];
+                          blocks[selectedIdx] = updatedBlock;
+                          const updatedQuestions = [...questions];
+                          updatedQuestions[currentQuestionIndex] = {
+                            ...currentQ,
+                            blocks,
+                          };
+                          handleQuestionsUpdate(updatedQuestions);
+                        }}
+                      />
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ========== FOOTER NAV ========== */}
