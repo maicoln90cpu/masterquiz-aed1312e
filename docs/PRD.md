@@ -324,6 +324,29 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF11.11 | Rotação de prompts de imagem do blog (5 estilos) | Média | ✅ |
 | RF11.12 | Cooldown global de campanhas de recuperação | Média | ✅ |
 
+### RF12 - Email Marketing Automatizado
+
+| ID | Requisito | Prioridade | Status |
+|----|-----------|------------|--------|
+| RF12.1 | Templates de email estáticos (12 tipos) | Alta | ✅ |
+| RF12.2 | Templates dinâmicos com IA (5 tipos) | Alta | ✅ |
+| RF12.3 | Automações de email (blog digest, dica semanal, etc.) | Alta | ✅ |
+| RF12.4 | A/B testing de assuntos (subject_b) | Média | ✅ |
+| RF12.5 | Dashboard de performance por categoria | Média | ✅ |
+| RF12.6 | E-goi Bulk API (lotes de 100) | Alta | ✅ |
+| RF12.7 | Webhook de tracking (open/click/bounce) | Alta | ✅ |
+| RF12.8 | Envio de teste individual | Média | ✅ |
+
+### RF13 - Compliance Email (CAN-SPAM/LGPD)
+
+| ID | Requisito | Prioridade | Status |
+|----|-----------|------------|--------|
+| RF13.1 | Unsubscribe via link no email | Alta | ✅ |
+| RF13.2 | Tabela email_unsubscribes | Alta | ✅ |
+| RF13.3 | Header List-Unsubscribe | Alta | ✅ |
+| RF13.4 | Footer com opt-out obrigatório | Alta | ✅ |
+| RF13.5 | Página de confirmação de unsubscribe | Média | ✅ |
+
 ---
 
 ## 🔒 Requisitos de Segurança
