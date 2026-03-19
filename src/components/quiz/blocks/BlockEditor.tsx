@@ -56,6 +56,7 @@ import TestimonialBlock from "./TestimonialBlock";
 import CountdownBlock from "./CountdownBlock";
 import ProgressBlock from "./ProgressBlock";
 import { AnimatedCounterBlock } from "./AnimatedCounterBlock";
+import { BlockErrorBoundary } from "./BlockErrorBoundary";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
