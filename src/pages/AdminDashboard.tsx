@@ -18,7 +18,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useQueryPerformance } from "@/hooks/useQueryPerformance";
 import { motion } from "framer-motion";
-import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+// ✅ FASE 14: Recharts removido — charts extraídos para lazy loading
 import { MobileNav } from "@/components/MobileNav";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useTranslation } from "react-i18next";
@@ -50,6 +50,7 @@ const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m
 const PQLAnalytics = lazy(() => import("@/components/admin/PQLAnalytics").then(m => ({ default: m.PQLAnalytics })));
 const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
+const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -698,73 +699,10 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin.registeredUsers')}</CardTitle>
-            <CardDescription>{t('admin.last6Months')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData.usersByMonth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin.planDistribution')}</CardTitle>
-            <CardDescription>{t('admin.activeSubscriptions')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={chartData.planDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="hsl(var(--primary))"
-                  dataKey="value"
-                >
-                  {chartData.planDistribution.map((_: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 50%)`} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>{t('admin.monthlyRevenueByPlan')}</CardTitle>
-            <CardDescription>{t('admin.revenueDistribution')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData.monthlyRevenue}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="plan" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="revenue" fill="hsl(var(--primary))" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      {/* ✅ FASE 14: Charts lazy loaded */}
+      <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
+        <AdminDashboardCharts chartData={chartData} />
+      </Suspense>
     </>
   );
 
