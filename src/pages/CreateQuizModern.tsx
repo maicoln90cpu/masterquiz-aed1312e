@@ -666,10 +666,10 @@ const CreateQuizModern = () => {
               showQuestionNumber={showQuestionNumber}
               mode="fullscreen"
               formConfig={{
-                collectName: collectName,
-                collectEmail: collectEmail,
-                collectWhatsapp: collectWhatsapp,
-                collectionTiming: collectionTiming as 'before' | 'after' | 'none',
+                collect_name: collectName,
+                collect_email: collectEmail,
+                collect_whatsapp: collectWhatsapp,
+                collection_timing: collectionTiming as 'before' | 'after' | 'none',
               }}
             />
           </div>
