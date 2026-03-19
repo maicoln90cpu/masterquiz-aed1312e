@@ -597,12 +597,14 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 
 ### Documentação Relacionada
 
-- [README.md](./README.md) - Setup, stack e arquitetura
+- [../README.md](../README.md) - Setup, stack e arquitetura
 - [ROADMAP.md](./ROADMAP.md) - Planejamento estratégico
 - [PENDENCIAS.md](./PENDENCIAS.md) - Changelog e pendências
 - [STYLE_GUIDE.md](./STYLE_GUIDE.md) - Padrões de código
 - [CHECKLIST.md](./CHECKLIST.md) - Checklist de validação MVP
-- [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) - Arquitetura técnica
+- [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) - Arquitetura técnica
+- [API_DOCS.md](./API_DOCS.md) - Documentação Edge Functions
+- [COMPONENTS.md](./COMPONENTS.md) - Documentação componentes
 
 ---
 

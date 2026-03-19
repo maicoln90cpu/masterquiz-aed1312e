@@ -157,9 +157,11 @@ Q4 2025: Expansão Internacional
 
 | Documento | Descrição |
 |-----------|-----------|
-| [README.md](./README.md) | Setup, stack e arquitetura |
+| [../README.md](../README.md) | Setup, stack e arquitetura |
 | [PRD.md](./PRD.md) | Requisitos do produto e backlog |
 | [PENDENCIAS.md](./PENDENCIAS.md) | Changelog e pendências atuais |
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código |
 | [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação do MVP |
-| [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
+| [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
+| [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
+| [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
