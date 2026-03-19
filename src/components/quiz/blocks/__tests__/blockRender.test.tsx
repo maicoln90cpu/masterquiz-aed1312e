@@ -1,22 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { createBlock, normalizeBlock, type QuizBlock } from '@/types/blocks';
 
 // ============================================================
 // FASE 6 — Testes de renderização: blocos críticos
 // ============================================================
 
-// Import block components
 import { AccordionBlock } from '../AccordionBlock';
 import { ComparisonBlock } from '../ComparisonBlock';
 import { GalleryBlock } from '../GalleryBlock';
 import { PriceBlock } from '../PriceBlock';
-import { TestimonialBlock } from '../TestimonialBlock';
+import TestimonialBlock from '../TestimonialBlock';
 import { TextBlock } from '../TextBlock';
 import { SeparatorBlock } from '../SeparatorBlock';
 import { ButtonBlock } from '../ButtonBlock';
-import { CountdownBlock } from '../CountdownBlock';
+import CountdownBlock from '../CountdownBlock';
 import { SliderBlock } from '../SliderBlock';
 import { NPSBlock } from '../NPSBlock';
 import { AnimatedCounterBlock } from '../AnimatedCounterBlock';
@@ -27,7 +25,7 @@ const noop = vi.fn();
 describe('Block render tests (Fase 6)', () => {
   describe('AccordionBlock', () => {
     it('renders with default normalized data', () => {
-      const block = normalizeBlock(createBlock('accordion'));
+      const block = normalizeBlock(createBlock('accordion', 0));
       render(<AccordionBlock block={block as any} onChange={noop} />);
       expect(screen.getByText(/como funciona/i)).toBeInTheDocument();
     });
@@ -36,14 +34,13 @@ describe('Block render tests (Fase 6)', () => {
       const raw = { id: '1', type: 'accordion', order: 0, items: [] } as QuizBlock;
       const block = normalizeBlock(raw);
       render(<AccordionBlock block={block as any} onChange={noop} />);
-      // Should have default item after normalization
       expect(screen.getByDisplayValue(/nova pergunta/i)).toBeInTheDocument();
     });
   });
 
   describe('ComparisonBlock', () => {
     it('renders with default data', () => {
-      const block = normalizeBlock(createBlock('comparison'));
+      const block = normalizeBlock(createBlock('comparison', 0));
       render(<ComparisonBlock block={block as any} onChange={noop} />);
       expect(screen.getByDisplayValue('Antes')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Depois')).toBeInTheDocument();
@@ -59,16 +56,15 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('GalleryBlock', () => {
     it('renders empty state', () => {
-      const block = normalizeBlock(createBlock('gallery'));
+      const block = normalizeBlock(createBlock('gallery', 0));
       render(<GalleryBlock block={block as any} onChange={noop} />);
-      // Should render without crash
       expect(screen.getByText(/adicionar imagem/i)).toBeInTheDocument();
     });
   });
 
   describe('PriceBlock', () => {
     it('renders plan info', () => {
-      const block = normalizeBlock(createBlock('price'));
+      const block = normalizeBlock(createBlock('price', 0));
       render(<PriceBlock block={block as any} onChange={noop} />);
       expect(screen.getByDisplayValue('Plano Premium')).toBeInTheDocument();
       expect(screen.getByDisplayValue('99,90')).toBeInTheDocument();
@@ -84,7 +80,7 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('TestimonialBlock', () => {
     it('renders testimonial fields', () => {
-      const block = normalizeBlock(createBlock('testimonial'));
+      const block = normalizeBlock(createBlock('testimonial', 0));
       render(<TestimonialBlock block={block as any} onChange={noop} />);
       expect(screen.getByDisplayValue('João Silva')).toBeInTheDocument();
     });
@@ -92,16 +88,15 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('TextBlock', () => {
     it('renders without crash', () => {
-      const block = normalizeBlock(createBlock('text'));
+      const block = normalizeBlock(createBlock('text', 0));
       render(<TextBlock block={block as any} onChange={noop} />);
-      // Text block uses rich text editor
       expect(document.querySelector('[contenteditable]') || document.querySelector('.ql-editor') || true).toBeTruthy();
     });
   });
 
   describe('SeparatorBlock', () => {
     it('renders separator', () => {
-      const block = normalizeBlock(createBlock('separator'));
+      const block = normalizeBlock(createBlock('separator', 0));
       const { container } = render(<SeparatorBlock block={block as any} onChange={noop} />);
       expect(container.firstChild).toBeTruthy();
     });
@@ -109,7 +104,7 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('ButtonBlock', () => {
     it('renders button text', () => {
-      const block = normalizeBlock(createBlock('button'));
+      const block = normalizeBlock(createBlock('button', 0));
       render(<ButtonBlock block={block as any} onChange={noop} />);
       expect(screen.getByDisplayValue('Clique aqui')).toBeInTheDocument();
     });
@@ -117,7 +112,7 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('CountdownBlock', () => {
     it('renders without crash', () => {
-      const block = normalizeBlock(createBlock('countdown'));
+      const block = normalizeBlock(createBlock('countdown', 0));
       const { container } = render(<CountdownBlock block={block as any} onChange={noop} />);
       expect(container.firstChild).toBeTruthy();
     });
@@ -125,7 +120,7 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('SliderBlock', () => {
     it('renders label', () => {
-      const block = normalizeBlock(createBlock('slider'));
+      const block = normalizeBlock(createBlock('slider', 0));
       render(<SliderBlock block={block as any} onChange={noop} />);
       expect(screen.getByDisplayValue('Selecione um valor')).toBeInTheDocument();
     });
@@ -133,7 +128,7 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('NPSBlock', () => {
     it('renders question', () => {
-      const block = normalizeBlock(createBlock('nps'));
+      const block = normalizeBlock(createBlock('nps', 0));
       render(<NPSBlock block={block as any} onChange={noop} />);
       expect(screen.getByDisplayValue(/probabilidade de você recomendar/i)).toBeInTheDocument();
     });
@@ -141,7 +136,7 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('AnimatedCounterBlock', () => {
     it('renders without crash', () => {
-      const block = normalizeBlock(createBlock('animatedCounter'));
+      const block = normalizeBlock(createBlock('animatedCounter', 0));
       const { container } = render(<AnimatedCounterBlock block={block as any} onChange={noop} />);
       expect(container.firstChild).toBeTruthy();
     });
@@ -149,7 +144,7 @@ describe('Block render tests (Fase 6)', () => {
 
   describe('MetricsBlock', () => {
     it('renders title', () => {
-      const block = normalizeBlock(createBlock('metrics'));
+      const block = normalizeBlock(createBlock('metrics', 0));
       render(<MetricsBlock block={block as any} onChange={noop} />);
       expect(screen.getByDisplayValue('Estatísticas')).toBeInTheDocument();
     });
