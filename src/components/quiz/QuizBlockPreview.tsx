@@ -1316,20 +1316,47 @@ const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } }) => {
   );
 };
 
-// Accordion Block Preview
+// Accordion Block Preview - Interactive
 const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'accordion' } }) => {
+  const [openItems, setOpenItems] = useState<Set<number>>(new Set());
+  const items = block.items || [];
+
+  const toggleItem = (index: number) => {
+    setOpenItems(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        if (!block.allowMultiple) next.clear();
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">{block.title}</h3>
       <div className="space-y-2">
-        {block.items.map((item, index) => (
-          <div key={index} className="border rounded-lg">
-            <div className="p-3 font-medium bg-muted/50 flex items-center justify-between">
-              {item.question}
-              <ChevronDown className="h-4 w-4" />
+        {items.map((item, index) => {
+          const isOpen = openItems.has(index);
+          return (
+            <div key={index} className={`border rounded-lg overflow-hidden ${block.style === 'bordered' ? 'border-2' : ''}`}>
+              <button
+                onClick={() => toggleItem(index)}
+                className="w-full p-3 font-medium bg-muted/50 flex items-center justify-between text-left hover:bg-muted/70 transition-colors"
+              >
+                {item.question}
+                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isOpen && (
+                <div className="p-3 text-sm text-muted-foreground border-t animate-in slide-in-from-top-1 duration-200">
+                  {item.answer}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
