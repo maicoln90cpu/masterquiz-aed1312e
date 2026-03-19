@@ -539,4 +539,4 @@ interface WizardStep {
 
 ---
 
-*Última atualização: 04/02/2025*
+*Última atualização: 19/03/2026*
