@@ -9,7 +9,7 @@ export const useEditorLayout = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('site_settings')
-        .select('editor_layout')
+        .select('*')
         .limit(1)
         .single();
       if (error) throw error;
@@ -20,9 +20,11 @@ export const useEditorLayout = () => {
     refetchOnWindowFocus: false,
   });
 
+  const editorLayout = ((data as Record<string, unknown>)?.editor_layout as EditorLayout) || 'classic';
+
   return {
-    editorLayout: (data?.editor_layout as EditorLayout) || 'classic',
-    isModern: data?.editor_layout === 'modern',
+    editorLayout,
+    isModern: editorLayout === 'modern',
     isLoading,
   };
 };
@@ -33,10 +35,21 @@ export const useUpdateEditorLayout = () => {
   const updateEditorLayout = async (layout: EditorLayout) => {
     const { error } = await supabase
       .from('site_settings')
-      .update({ editor_layout: layout, updated_at: new Date().toISOString() })
+      .update({ updated_at: new Date().toISOString() } as Record<string, unknown>)
       .not('id', 'is', null);
 
-    if (error) throw error;
+    // Use raw SQL-like approach since types haven't synced yet
+    const { error: error2 } = await supabase.rpc('update_editor_layout' as never, { new_layout: layout } as never).throwOnError().then(() => ({ error: null })).catch((err) => ({ error: err }));
+    
+    // Fallback: direct update with type cast
+    if (error2) {
+      const { error: error3 } = await supabase
+        .from('site_settings')
+        .update({ editor_layout: layout } as never)
+        .not('id', 'is', null);
+      if (error3) throw error3;
+    }
+
     queryClient.invalidateQueries({ queryKey: ['editor-layout'] });
   };
 
