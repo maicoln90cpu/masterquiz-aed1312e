@@ -107,8 +107,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     });
 
     it('deve aceitar blocks=undefined sem crashar', () => {
-      // @ts-expect-error — teste de resiliência
-      expect(() => render(<BlockEditor blocks={undefined} onChange={mockOnChange} />)).not.toThrow();
+      expect(() => render(<BlockEditor blocks={undefined as any} onChange={mockOnChange} />)).not.toThrow();
     });
   });
 
