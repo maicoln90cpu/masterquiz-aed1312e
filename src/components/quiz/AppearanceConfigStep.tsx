@@ -226,6 +226,7 @@ export const AppearanceConfigStep = ({
 
                 <Separator className="my-2" />
 
+                {!hideShowResults && (
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="show-results">Exibir tela de resultados</Label>
@@ -239,6 +240,7 @@ export const AppearanceConfigStep = ({
                     onCheckedChange={onShowResultsChange}
                   />
                 </div>
+                )}
               </div>
             </div>
 
