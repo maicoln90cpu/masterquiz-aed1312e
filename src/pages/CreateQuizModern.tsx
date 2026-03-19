@@ -732,14 +732,7 @@ const CreateQuizModern = () => {
                 return (
                   <BlockEditor
                     blocks={currentQ.blocks || []}
-                    onChange={(newBlocks) => {
-                      const updatedQuestions = [...questions];
-                      updatedQuestions[currentQuestionIndex] = {
-                        ...currentQ,
-                        blocks: newBlocks,
-                      };
-                      handleQuestionsUpdate(updatedQuestions);
-                    }}
+                    onChange={updateCurrentQuestionBlocks}
                     onBlockSelect={(idx) => updateEditor({ selectedBlockIndex: idx })}
                     selectedBlockIndex={editorState.selectedBlockIndex ?? 0}
                     totalQuestions={questions.length}
