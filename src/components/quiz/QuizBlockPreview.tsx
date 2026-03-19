@@ -610,7 +610,7 @@ export const QuizBlockPreview = ({
                   : "grid grid-cols-2 md:grid-cols-3 gap-4"
               }
             >
-              {block.images.map((img, idx) => (
+              {(block.images || []).map((img, idx) => (
                 <div key={idx} className="space-y-1">
                   <img
                     src={img.url}
