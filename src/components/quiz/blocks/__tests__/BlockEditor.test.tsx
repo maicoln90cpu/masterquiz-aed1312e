@@ -76,7 +76,6 @@ HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
 
 describe('BlockEditor — Fase 11 Integration Tests', () => {
   const mockOnChange = vi.fn();
-  const toastMock = await import('sonner').then(m => m.toast);
 
   beforeEach(() => {
     vi.clearAllMocks();
