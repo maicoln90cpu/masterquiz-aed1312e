@@ -70,11 +70,14 @@ interface BlockEditorProps {
 
 interface SortableBlockProps {
   block: QuizBlock;
+  blockIndex: number;
   onUpdate: (block: QuizBlock) => void;
   onDelete: () => void;
   totalQuestions?: number;
   currentQuestionIndex?: number;
   t: (key: string, options?: Record<string, unknown>) => string;
+  onBlockSelect?: (index: number) => void;
+  isSelected?: boolean;
 }
 
 const SortableBlock = ({ block, onUpdate, onDelete, totalQuestions = 0, currentQuestionIndex = 0, t }: SortableBlockProps) => {
