@@ -7,9 +7,12 @@ import { createBlock, normalizeBlock, type QuizBlock } from '@/types/blocks';
 // ============================================================
 
 // Mock ResizeObserver (jsdom limitation)
-globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}));
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = MockResizeObserver as any;
 
 // Mock canvas toDataURL for ImageUploader/webP check
 HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,');
