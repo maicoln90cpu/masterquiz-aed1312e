@@ -676,14 +676,25 @@ const CreateQuizModern = () => {
             {/* COL 2: Block Palette */}
             {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto">
-                <CompactBlockPalette
+              <CompactBlockPalette
                   onAddBlock={(blockType) => {
-                    const currentQ = questions[currentQuestionIndex];
-                    if (!currentQ) return;
+                    let idx = currentQuestionIndex;
+                    let currentQ = questions[idx];
+                    // Auto-recuperação: se índice inválido, usar primeira pergunta
+                    if (!currentQ) {
+                      if (questions.length === 0) {
+                        toast.error('Nenhuma pergunta disponível. Adicione uma pergunta primeiro.');
+                        return;
+                      }
+                      idx = 0;
+                      currentQ = questions[0];
+                      updateEditor({ currentQuestionIndex: 0 });
+                      toast.info('Índice corrigido para a primeira pergunta.');
+                    }
                     const newBlock = createBlock(blockType, currentQ.blocks?.length || 0);
                     const updatedBlocks = [...(currentQ.blocks || []), newBlock];
                     const updatedQuestions = [...questions];
-                    updatedQuestions[currentQuestionIndex] = {
+                    updatedQuestions[idx] = {
                       ...currentQ,
                       blocks: updatedBlocks,
                     };
@@ -691,8 +702,17 @@ const CreateQuizModern = () => {
                     updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
                   }}
                   onAddTemplate={(templateBlocks) => {
-                    const currentQ = questions[currentQuestionIndex];
-                    if (!currentQ) return;
+                    let idx = currentQuestionIndex;
+                    let currentQ = questions[idx];
+                    if (!currentQ) {
+                      if (questions.length === 0) {
+                        toast.error('Nenhuma pergunta disponível.');
+                        return;
+                      }
+                      idx = 0;
+                      currentQ = questions[0];
+                      updateEditor({ currentQuestionIndex: 0 });
+                    }
                     const existingBlocks = currentQ.blocks || [];
                     const adjustedBlocks = templateBlocks.map((b, i) => ({
                       ...b,
@@ -700,7 +720,7 @@ const CreateQuizModern = () => {
                     }));
                     const updatedBlocks = [...existingBlocks, ...adjustedBlocks];
                     const updatedQuestions = [...questions];
-                    updatedQuestions[currentQuestionIndex] = {
+                    updatedQuestions[idx] = {
                       ...currentQ,
                       blocks: updatedBlocks,
                     };
