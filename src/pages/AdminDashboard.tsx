@@ -18,7 +18,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useQueryPerformance } from "@/hooks/useQueryPerformance";
 import { motion } from "framer-motion";
-import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+// ✅ FASE 14: Recharts removido — charts extraídos para lazy loading
 import { MobileNav } from "@/components/MobileNav";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useTranslation } from "react-i18next";
