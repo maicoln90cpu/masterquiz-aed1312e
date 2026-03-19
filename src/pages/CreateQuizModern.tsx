@@ -414,7 +414,12 @@ const CreateQuizModern = () => {
       )}
 
       {/* ========== MAIN CONTENT ========== */}
-      <div className="flex-1 overflow-auto">
+      <div className={cn(
+        "flex-1",
+        step === 3 && !isExpressMode ? "overflow-hidden" : "overflow-auto"
+      )}>
+        {/* Steps 1,2,4,5 use centered container */}
+        {step !== 3 && !isExpressMode && (
         <div className="container mx-auto max-w-4xl px-4 py-6">
           {/* STEP 1: Quantidade e Formato */}
           {step === 1 && !isExpressMode && (
