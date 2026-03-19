@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Check, Play, Pause, ChevronDown, X, User } from "lucide-react";
 import type { QuizBlock, VideoBlock } from "@/types/blocks";
-import { normalizeOption } from "@/types/blocks";
+import { normalizeOption, normalizeBlock } from "@/types/blocks";
 import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { CustomVideoPlayer } from "@/components/video/CustomVideoPlayer";
 import { sanitizeHtml, sanitizeSimpleText } from "@/lib/sanitize";
@@ -303,7 +303,8 @@ export const QuizBlockPreview = ({
     });
   }, [trackFacebookPixelEvent]);
 
-  const renderBlock = (block: QuizBlock) => {
+  const renderBlock = (rawBlock: QuizBlock) => {
+    const block = normalizeBlock(rawBlock);
     switch (block.type) {
       case "question":
         const emojis = block.emojis || [];
@@ -598,7 +599,7 @@ export const QuizBlockPreview = ({
         ) : null;
 
       case "gallery":
-        return block.images.length > 0 ? (
+        return (block.images || []).length > 0 ? (
           <div key={block.id} className="space-y-2">
             <div
               className={
@@ -609,7 +610,7 @@ export const QuizBlockPreview = ({
                   : "grid grid-cols-2 md:grid-cols-3 gap-4"
               }
             >
-              {block.images.map((img, idx) => (
+              {(block.images || []).map((img, idx) => (
                 <div key={idx} className="space-y-1">
                   <img
                     src={img.url}
@@ -717,7 +718,7 @@ export const QuizBlockPreview = ({
                   </div>
                 </div>
                 <ul className="space-y-2">
-                  {block.features.map((feature, idx) => (
+                  {(block.features || []).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                       <span>{feature}</span>
@@ -1315,20 +1316,47 @@ const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } }) => {
   );
 };
 
-// Accordion Block Preview
+// Accordion Block Preview - Interactive
 const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'accordion' } }) => {
+  const [openItems, setOpenItems] = useState<Set<number>>(new Set());
+  const items = block.items || [];
+
+  const toggleItem = (index: number) => {
+    setOpenItems(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        if (!block.allowMultiple) next.clear();
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">{block.title}</h3>
       <div className="space-y-2">
-        {block.items.map((item, index) => (
-          <div key={index} className="border rounded-lg">
-            <div className="p-3 font-medium bg-muted/50 flex items-center justify-between">
-              {item.question}
-              <ChevronDown className="h-4 w-4" />
+        {items.map((item, index) => {
+          const isOpen = openItems.has(index);
+          return (
+            <div key={index} className={`border rounded-lg overflow-hidden ${block.style === 'bordered' ? 'border-2' : ''}`}>
+              <button
+                onClick={() => toggleItem(index)}
+                className="w-full p-3 font-medium bg-muted/50 flex items-center justify-between text-left hover:bg-muted/70 transition-colors"
+              >
+                {item.question}
+                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isOpen && (
+                <div className="p-3 text-sm text-muted-foreground border-t animate-in slide-in-from-top-1 duration-200">
+                  {item.answer}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -1367,23 +1395,55 @@ const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: 'compari
   );
 };
 
-// Social Proof Block Preview
+// Social Proof Block Preview - Cycling notifications
 const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 'socialProof' } }) => {
-  const notification = (block.notifications || [])[0];
+  const notifications = block.notifications || [];
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (notifications.length <= 1) return;
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setCurrentIdx(prev => (prev + 1) % notifications.length);
+        setVisible(true);
+      }, 300);
+    }, (block.interval || 5) * 1000);
+    return () => clearInterval(interval);
+  }, [notifications.length, block.interval]);
+
+  const notification = notifications[currentIdx];
   if (!notification) return null;
+
+  const positionClasses = {
+    'bottom-left': 'justify-start',
+    'bottom-right': 'justify-end',
+    'top-left': 'justify-start',
+    'top-right': 'justify-end',
+  };
+
   return (
-    <div className="bg-background border shadow-lg rounded-lg p-3 max-w-xs">
-      <div className="flex items-center gap-3">
-        {block.showAvatar && (
-          <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-            <User className="h-5 w-5 text-primary" />
+    <div className={`flex ${positionClasses[block.position || 'bottom-left'] || 'justify-start'}`}>
+      <div className={`transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} ${
+        block.style === 'banner' 
+          ? 'bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center'
+          : block.style === 'floating'
+          ? 'bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2'
+          : 'bg-background border shadow-lg rounded-lg p-3 max-w-xs'
+      }`}>
+        <div className="flex items-center gap-3">
+          {block.showAvatar && (
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+          )}
+          <div>
+            <p className="text-sm">
+              <span className="font-semibold">{notification.name}</span> {notification.action}
+            </p>
+            <p className="text-xs text-muted-foreground">{notification.time}</p>
           </div>
-        )}
-        <div>
-          <p className="text-sm font-medium">
-            <span className="font-semibold">{notification?.name}</span> {notification?.action}
-          </p>
-          <p className="text-xs text-muted-foreground">{notification?.time}</p>
         </div>
       </div>
     </div>
