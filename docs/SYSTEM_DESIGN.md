@@ -42,7 +42,7 @@
 ├─────────────────────────────────────────────────────────────────────┤
 │  Auth            │  PostgreSQL       │  Edge Functions  │  Storage   │
 │  ────            │  ──────────       │  ──────────────  │  ───────   │
-│  JWT Sessions    │  RLS em tudo      │  39 funções      │  quiz-media│
+│  JWT Sessions    │  RLS em tudo      │  57 funções      │  quiz-media│
 │  Email/Password  │  Triggers         │  Deno runtime    │  (público) │
 │  Auto-refresh    │  DB Functions     │  _shared/        │            │
 └──────────────────┴───────────────────┴──────────────────┴────────────┘
