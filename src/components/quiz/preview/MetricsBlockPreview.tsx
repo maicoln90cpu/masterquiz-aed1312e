@@ -9,7 +9,8 @@ interface MetricsDataPoint {
 }
 
 export const MetricsBlockPreview = ({ block }: { block: QuizBlock & { type: 'metrics' } }) => {
-  const rawData = (block as Record<string, unknown>).data ?? (block as Record<string, unknown>).dataPoints ?? [];
+  const blockAny = block as unknown as Record<string, unknown>;
+  const rawData = blockAny.data ?? blockAny.dataPoints ?? [];
   const metricsData: MetricsDataPoint[] = Array.isArray(rawData) ? rawData : [];
   if (metricsData.length === 0) return null;
 
