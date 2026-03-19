@@ -100,29 +100,29 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
   // ============================================
   describe('Renderização', () => {
     it('deve renderizar estado vazio com botão de adicionar', () => {
-      render(<BlockEditor blocks={[]} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={[]} onChange={mockOnChange} />);
       expect(screen.getByText('Nenhum bloco adicionado')).toBeInTheDocument();
       expect(screen.getByText('Adicionar Primeira Pergunta')).toBeInTheDocument();
     });
 
     it('deve renderizar blocos existentes', () => {
       const blocks = [createBlock('question', 0), createBlock('text', 1)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
       expect(screen.getByText('0 blocos').textContent || screen.getByText(/2 blocos/)).toBeTruthy();
     });
 
     it('deve renderizar tabs Editar e Templates', () => {
-      render(<BlockEditor blocks={[]} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={[]} onChange={mockOnChange} />);
       expect(screen.getByRole('tab', { name: /editar/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /templates/i })).toBeInTheDocument();
     });
 
     it('deve aceitar blocks=null sem crashar (guarda defensiva)', () => {
-      expect(() => render(<BlockEditor blocks={null as any} onChange={mockOnChange} />)).not.toThrow();
+      expect(() => renderWithProviders(<BlockEditor blocks={null as any} onChange={mockOnChange} />)).not.toThrow();
     });
 
     it('deve aceitar blocks=undefined sem crashar', () => {
-      expect(() => render(<BlockEditor blocks={undefined as any} onChange={mockOnChange} />)).not.toThrow();
+      expect(() => renderWithProviders(<BlockEditor blocks={undefined as any} onChange={mockOnChange} />)).not.toThrow();
     });
   });
 
@@ -132,7 +132,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
   describe('Adicionar blocos', () => {
     it('deve adicionar bloco de pergunta ao clicar "Adicionar Primeira Pergunta"', async () => {
       const user = userEvent.setup();
-      render(<BlockEditor blocks={[]} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={[]} onChange={mockOnChange} />);
 
       await user.click(screen.getByText('Adicionar Primeira Pergunta'));
 
@@ -145,7 +145,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve adicionar bloco via menu dropdown', async () => {
       const user = userEvent.setup();
       const existingBlock = createBlock('question', 0);
-      render(<BlockEditor blocks={[existingBlock]} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={[existingBlock]} onChange={mockOnChange} />);
 
       // Abrir dropdown
       await user.click(screen.getByText('Adicionar'));
@@ -162,7 +162,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve preservar order correto ao adicionar', async () => {
       const user = userEvent.setup();
       const blocks = [createBlock('question', 0), createBlock('text', 1)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
 
       await user.click(screen.getByText('Adicionar'));
       await user.click(screen.getByText('Separador'));
@@ -173,7 +173,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
 
     it('deve mostrar toast de sucesso ao adicionar bloco', async () => {
       const user = userEvent.setup();
-      render(<BlockEditor blocks={[]} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={[]} onChange={mockOnChange} />);
 
       await user.click(screen.getByText('Adicionar Primeira Pergunta'));
       const { toast: t } = await import('sonner');
@@ -188,7 +188,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve impedir deletar último bloco', async () => {
       const user = userEvent.setup();
       const blocks = [createBlock('question', 0)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
 
       // Encontrar botão de delete
       const deleteBtn = screen.getByTitle('createQuiz.blockEditor.deleteBlock');
@@ -202,7 +202,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve deletar bloco quando há mais de um', async () => {
       const user = userEvent.setup();
       const blocks = [createBlock('question', 0), createBlock('text', 1)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
 
       // Pegar o primeiro botão de delete
       const deleteBtns = screen.getAllByTitle('createQuiz.blockEditor.deleteBlock');
@@ -220,7 +220,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
         createBlock('text', 1),
         createBlock('separator', 2),
       ];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
 
       // Deletar o segundo bloco (text)
       const deleteBtns = screen.getAllByTitle('createQuiz.blockEditor.deleteBlock');
@@ -240,7 +240,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve propagar onChange quando bloco interno é atualizado', () => {
       // Teste indireto: verificar que updateBlock chama onChange corretamente
       const blocks = [createBlock('question', 0)];
-      const { rerender } = render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      const { rerender } = renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
 
       // BlockEditor passa onUpdate para cada SortableBlock
       // A integração real depende de interação com sub-componentes
@@ -263,7 +263,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
       };
       
       expect(() => {
-        render(<BlockEditor blocks={[malformedBlock]} onChange={mockOnChange} />);
+        renderWithProviders(<BlockEditor blocks={[malformedBlock]} onChange={mockOnChange} />);
       }).not.toThrow();
     });
 
@@ -277,7 +277,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
       };
 
       expect(() => {
-        render(<BlockEditor blocks={[legacyBlock]} onChange={mockOnChange} />);
+        renderWithProviders(<BlockEditor blocks={[legacyBlock]} onChange={mockOnChange} />);
       }).not.toThrow();
     });
   });
@@ -337,19 +337,19 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
         createBlock('text', 1),
         createBlock('separator', 2),
       ];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
       expect(screen.getByText(/3 blocos/)).toBeInTheDocument();
     });
 
     it('deve exibir "1 bloco" no singular', () => {
       const blocks = [createBlock('question', 0)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
       expect(screen.getByText(/1 bloco(?!s)/)).toBeInTheDocument();
     });
 
     it('deve mostrar badge completo para separador (sempre completo)', () => {
       const blocks = [createBlock('separator', 0), createBlock('text', 1)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
       // Pelo menos um badge de "completo" deve estar presente
       const completeBadges = screen.getAllByText('createQuiz.blockEditor.complete');
       expect(completeBadges.length).toBeGreaterThanOrEqual(1);
@@ -357,7 +357,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
 
     it('deve mostrar badge incompleto para pergunta vazia', () => {
       const blocks = [createBlock('question', 0), createBlock('separator', 1)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
       // Pergunta sem questionText deve ser incompleta
       const incompleteBadges = screen.getAllByText('createQuiz.blockEditor.incomplete');
       expect(incompleteBadges.length).toBeGreaterThanOrEqual(1);
@@ -371,7 +371,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve alternar visibilidade do painel de ajuda', async () => {
       const user = userEvent.setup();
       const blocks = [createBlock('question', 0)];
-      render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+      renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
 
       // Ajuda inicialmente oculta
       expect(screen.queryByText(/como usar o editor de blocos/i)).not.toBeInTheDocument();
@@ -392,7 +392,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     it('deve funcionar com 20+ blocos sem crash', () => {
       const blocks = Array.from({ length: 22 }, (_, i) => createBlock('text', i));
       expect(() => {
-        render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+        renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
       }).not.toThrow();
       expect(screen.getByText(/22 blocos/)).toBeInTheDocument();
     });
@@ -407,7 +407,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
       const blocks = allTypes.map((type, i) => createBlock(type, i));
       
       expect(() => {
-        render(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
+        renderWithProviders(<BlockEditor blocks={blocks} onChange={mockOnChange} />);
       }).not.toThrow();
     });
   });
