@@ -13,19 +13,23 @@ interface AccordionBlockProps {
 }
 
 export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
+  // Normalização defensiva
+  const items = block.items || [{ question: 'Nova pergunta', answer: 'Resposta...' }];
+  const safeBlock = { ...block, items };
+
   const addItem = () => {
-    onChange({ ...block, items: [...block.items, { question: 'Nova pergunta', answer: 'Resposta...' }] });
+    onChange({ ...safeBlock, items: [...items, { question: 'Nova pergunta', answer: 'Resposta...' }] });
   };
 
   const updateItem = (index: number, field: 'question' | 'answer', value: string) => {
-    const newItems = [...block.items];
+    const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
-    onChange({ ...block, items: newItems });
+    onChange({ ...safeBlock, items: newItems });
   };
 
   const removeItem = (index: number) => {
-    if (block.items.length <= 1) return;
-    onChange({ ...block, items: block.items.filter((_, i) => i !== index) });
+    if (items.length <= 1) return;
+    onChange({ ...safeBlock, items: items.filter((_, i) => i !== index) });
   };
 
   return (
