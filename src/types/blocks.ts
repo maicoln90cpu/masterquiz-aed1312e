@@ -640,3 +640,93 @@ export const normalizeOption = (option: unknown): string => {
   if (option && typeof option === 'object' && 'text' in option) return String((option as any).text);
   return String(option ?? '');
 };
+
+/**
+ * Normaliza um bloco garantindo que todos os campos obrigatórios existam
+ * com valores padrão seguros. Previne crashes por dados legados/malformados.
+ */
+export const normalizeBlock = (block: QuizBlock): QuizBlock => {
+  if (!block || !block.type) return block;
+
+  switch (block.type) {
+    case 'question':
+      return {
+        ...block,
+        questionText: block.questionText || '',
+        answerFormat: block.answerFormat || 'single_choice',
+        options: Array.isArray(block.options) ? block.options : ['', ''],
+        scores: Array.isArray(block.scores) ? block.scores : [0, 0],
+        emojis: Array.isArray(block.emojis) ? block.emojis : ['', ''],
+      };
+    case 'text':
+      return { ...block, content: block.content || '', alignment: block.alignment || 'left', fontSize: block.fontSize || 'medium' };
+    case 'separator':
+      return { ...block, style: block.style || 'line', thickness: block.thickness || 'medium' };
+    case 'image':
+      return { ...block, url: block.url || '', size: block.size || 'medium' };
+    case 'video':
+      return { ...block, url: block.url || '', provider: block.provider || 'youtube', size: block.size || 'medium', aspectRatio: block.aspectRatio || '16:9' };
+    case 'audio':
+      return { ...block, url: block.url || '' };
+    case 'gallery':
+      return { ...block, images: Array.isArray(block.images) ? block.images : [], layout: block.layout || 'grid' };
+    case 'embed':
+      return { ...block, url: block.url || '' };
+    case 'button':
+      return { ...block, text: block.text || 'Clique aqui', action: block.action || 'link', variant: block.variant || 'default', size: block.size || 'default' };
+    case 'price':
+      return { ...block, planName: block.planName || 'Plano', price: block.price || '0', features: Array.isArray(block.features) ? block.features : ['Recurso 1'] };
+    case 'metrics':
+      return { ...block, title: block.title || 'Métricas', chartType: block.chartType || 'bar', data: Array.isArray(block.data) ? block.data : [] };
+    case 'loading':
+      return { ...block, duration: block.duration || 3, spinnerType: block.spinnerType || 'spinner' };
+    case 'progress':
+      return { ...block, style: block.style || 'bar', height: block.height || 'medium' };
+    case 'countdown':
+      return { ...block, mode: block.mode || 'duration', duration: block.duration || 300, style: block.style || 'default' };
+    case 'testimonial':
+      return { ...block, quote: block.quote || '', authorName: block.authorName || '', style: block.style || 'default' };
+    case 'slider':
+      return { ...block, label: block.label || '', min: block.min ?? 0, max: block.max ?? 100, step: block.step || 1 };
+    case 'textInput':
+      return { ...block, label: block.label || '', placeholder: block.placeholder || '' };
+    case 'nps':
+      return { ...block, question: block.question || '' };
+    case 'accordion':
+      return {
+        ...block,
+        title: block.title || 'FAQ',
+        items: Array.isArray(block.items) && block.items.length > 0
+          ? block.items
+          : [{ question: 'Nova pergunta', answer: 'Resposta...' }],
+        style: block.style || 'default',
+      };
+    case 'comparison':
+      return {
+        ...block,
+        leftTitle: block.leftTitle || 'Antes',
+        rightTitle: block.rightTitle || 'Depois',
+        leftItems: Array.isArray(block.leftItems) && block.leftItems.length > 0 ? block.leftItems : ['Item 1'],
+        rightItems: Array.isArray(block.rightItems) && block.rightItems.length > 0 ? block.rightItems : ['Item 1'],
+      };
+    case 'socialProof':
+      return {
+        ...block,
+        notifications: Array.isArray(block.notifications) && block.notifications.length > 0
+          ? block.notifications
+          : [{ name: 'Cliente', action: 'acabou de comprar', time: 'agora' }],
+        interval: block.interval || 5,
+      };
+    case 'animatedCounter':
+      return {
+        ...block,
+        startValue: block.startValue ?? 0,
+        endValue: block.endValue ?? 1000,
+        duration: block.duration || 2,
+        fontSize: block.fontSize || 'large',
+        easing: block.easing || 'easeOut',
+      };
+    default:
+      return block;
+  }
+};
