@@ -296,7 +296,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
   );
 };
 
-export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuestionIndex = 0 }: BlockEditorProps) => {
+export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuestionIndex = 0, onBlockSelect, selectedBlockIndex }: BlockEditorProps) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"edit" | "templates">("edit");
   const [showHelp, setShowHelp] = useState(false);
