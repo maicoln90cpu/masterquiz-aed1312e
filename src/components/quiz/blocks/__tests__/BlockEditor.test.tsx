@@ -38,13 +38,28 @@ vi.mock('@/hooks/useVideoStorage', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useVideoProvider', () => ({
+  useVideoProvider: () => ({ provider: 'direct', isLoading: false }),
+}));
+
+vi.mock('@/lib/imageOptimizer', () => ({
+  supportsWebP: () => false,
+  optimizeImage: vi.fn(),
+}));
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const renderWithProviders = (ui: React.ReactElement) =>
+  render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+
 // Mock ResizeObserver
 class ResizeObserverMock {
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();
 }
-globalThis.ResizeObserver = ResizeObserverMock as any;
 
 // Mock canvas
 HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
