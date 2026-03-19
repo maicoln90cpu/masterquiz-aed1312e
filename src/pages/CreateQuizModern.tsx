@@ -367,10 +367,23 @@ const CreateQuizModern = () => {
       {/* ========== EXPRESS PROGRESS ========== */}
       {isExpressMode && <ExpressProgressBar currentStep={1} />}
 
-      {/* ========== HORIZONTAL STEP BAR ========== */}
+      {/* ========== HORIZONTAL STEP BAR + NAV BUTTONS ========== */}
       {!isExpressMode && (
         <nav className="border-b bg-card/50 px-4 py-2 shrink-0">
-          <div className="flex items-center gap-1 max-w-4xl mx-auto">
+          <div className="flex items-center gap-1 max-w-5xl mx-auto">
+            {/* ← Anterior */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { if (step > 1) updateEditor({ step: step - 1 }); }}
+              disabled={step <= 1}
+              className="shrink-0"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">{t('common.previous', 'Anterior')}</span>
+            </Button>
+
+            {/* Steps */}
             {steps.map((s) => (
               <button
                 key={s.number}
@@ -406,7 +419,7 @@ const CreateQuizModern = () => {
             <button
               onClick={() => setShowPreviewDialog(true)}
               className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all shrink-0",
                 "bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
               title={t('createQuiz.preview', 'Preview')}
@@ -414,6 +427,28 @@ const CreateQuizModern = () => {
               <Eye className="h-4 w-4" />
               <span className="hidden lg:inline">{t('createQuiz.preview', 'Preview')}</span>
             </button>
+
+            {/* Próximo / Publicar → */}
+            {step < 5 ? (
+              <Button
+                size="sm"
+                onClick={() => updateEditor({ step: step + 1 })}
+                className="shrink-0"
+              >
+                <span className="hidden sm:inline">{t('common.next', 'Próximo')}</span>
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handlePublish}
+                disabled={isSaving}
+                className="shrink-0"
+              >
+                <Rocket className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">{t('createQuiz.publish', 'Publicar')}</span>
+              </Button>
+            )}
           </div>
         </nav>
       )}
