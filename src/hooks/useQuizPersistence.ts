@@ -34,6 +34,8 @@ interface UseQuizPersistenceOptions {
   hasUserInteracted?: boolean;
   /** Whether this is express mode (for publish_source tracking) */
   isExpressMode?: boolean;
+  /** Editor layout mode — 'modern' fires B-variant events for A/B tracking */
+  editorMode?: 'classic' | 'modern';
 }
 
 // ============================================
