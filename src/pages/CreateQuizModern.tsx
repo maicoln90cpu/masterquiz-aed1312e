@@ -527,22 +527,69 @@ const CreateQuizModern = () => {
             />
           )}
 
-          {/* STEP 3: Perguntas */}
+          {/* STEP 3: Perguntas — 3-column layout with properties panel */}
           {(step === 3 || isExpressMode) && (
-            <QuestionConfigStep
-              questions={questions}
-              questionCount={questionCount}
-              isPublic={editorState.isPublic}
-              onPublicChange={(v) => updateEditor({ isPublic: v })}
-              quizTitle={title}
-              quizDescription={description}
-              quizId={quizId || undefined}
-              onQuestionsUpdate={handleQuestionsUpdate}
-              initialQuestionIndex={currentQuestionIndex}
-              isExpressMode={isExpressMode}
-              fireOnce={fireOnce}
-              trackInteraction={trackInteraction}
-            />
+            <div className="flex gap-4 max-w-6xl mx-auto">
+              {/* Center: Editor */}
+              <div className="flex-1 min-w-0">
+                <QuestionConfigStep
+                  questions={questions}
+                  questionCount={questionCount}
+                  isPublic={editorState.isPublic}
+                  onPublicChange={(v) => updateEditor({ isPublic: v })}
+                  quizTitle={title}
+                  quizDescription={description}
+                  quizId={quizId || undefined}
+                  onQuestionsUpdate={handleQuestionsUpdate}
+                  initialQuestionIndex={currentQuestionIndex}
+                  isExpressMode={isExpressMode}
+                  fireOnce={fireOnce}
+                  trackInteraction={trackInteraction}
+                />
+              </div>
+
+              {/* Right: Block Properties Panel */}
+              {!isExpressMode && (
+                <div className="w-72 shrink-0 hidden lg:block">
+                  <div className="sticky top-4 border rounded-lg bg-card overflow-hidden max-h-[calc(100vh-14rem)]">
+                    {(() => {
+                      const selectedIdx = editorState.selectedBlockIndex;
+                      const currentQ = questions[currentQuestionIndex];
+                      const selectedBlock = selectedIdx !== null && currentQ?.blocks?.[selectedIdx]
+                        ? currentQ.blocks[selectedIdx]
+                        : null;
+
+                      if (!selectedBlock) {
+                        return (
+                          <div className="p-4 text-center">
+                            <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                              Clique em um bloco para editar suas propriedades
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <BlockPropertiesPanel
+                          block={selectedBlock}
+                          onChange={(updatedBlock) => {
+                            const blocks = [...(currentQ.blocks || [])];
+                            blocks[selectedIdx!] = updatedBlock;
+                            const updatedQuestions = [...questions];
+                            updatedQuestions[currentQuestionIndex] = {
+                              ...currentQ,
+                              blocks,
+                            };
+                            handleQuestionsUpdate(updatedQuestions);
+                          }}
+                        />
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* STEP 4: Coleta de Dados */}
