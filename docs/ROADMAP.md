@@ -102,6 +102,13 @@ Q4 2025: Expansão Internacional
 - Tracking GTM centralizado + Dashboard de observabilidade ✅
 - Blog AI: Rotação de prompts de imagem (5 estilos visuais) ✅
 - Campanhas WhatsApp: Cooldown global configurável ✅
+- **Sistema de Email Marketing Automatizado** ✅
+  - 12 templates estáticos + 5 dinâmicos com IA
+  - E-goi Bulk API (lotes de 100)
+  - A/B testing de assuntos
+  - Dashboard de performance por categoria
+  - Unsubscribe com compliance CAN-SPAM/LGPD
+  - Webhook de tracking (open/click/bounce)
 
 ### H2 2026
 - Expansão para EUA
