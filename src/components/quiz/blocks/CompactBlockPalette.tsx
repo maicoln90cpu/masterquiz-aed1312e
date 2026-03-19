@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -122,7 +122,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
   );
 };
 
-export const CompactBlockPalette = ({
+export const CompactBlockPalette = React.memo(({
   onAddBlock,
   onAddTemplate,
   currentBlockOrder,
@@ -360,4 +360,4 @@ export const CompactBlockPalette = ({
       </ScrollArea>
     </div>
   );
-};
+});

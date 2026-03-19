@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
+import type { BlockType, QuizBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 
@@ -200,6 +201,56 @@ const CreateQuizModern = () => {
       clearLocalStorage();
     }
   }, [searchParams, clearLocalStorage]);
+
+  // ✅ Refs para handlers da paleta — evita cascata de re-renders
+  const questionsRef = useRef(questions);
+  const currentQuestionIndexRef = useRef(editorState.currentQuestionIndex);
+  useEffect(() => { questionsRef.current = questions; }, [questions]);
+  useEffect(() => { currentQuestionIndexRef.current = editorState.currentQuestionIndex; }, [editorState.currentQuestionIndex]);
+
+  const handlePaletteAddBlock = useCallback((blockType: BlockType) => {
+    const qs = questionsRef.current;
+    let idx = currentQuestionIndexRef.current;
+    let currentQ = qs[idx];
+    if (!currentQ) {
+      if (qs.length === 0) {
+        toast.error('Nenhuma pergunta disponível. Adicione uma pergunta primeiro.');
+        return;
+      }
+      idx = 0;
+      currentQ = qs[0];
+      updateEditor({ currentQuestionIndex: 0 });
+      toast.info('Índice corrigido para a primeira pergunta.');
+    }
+    const newBlock = createBlock(blockType, currentQ.blocks?.length || 0);
+    const updatedBlocks = [...(currentQ.blocks || []), newBlock];
+    const updatedQuestions = [...qs];
+    updatedQuestions[idx] = { ...currentQ, blocks: updatedBlocks };
+    handleQuestionsUpdate(updatedQuestions);
+    updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
+  }, [handleQuestionsUpdate, updateEditor]);
+
+  const handlePaletteAddTemplate = useCallback((templateBlocks: QuizBlock[]) => {
+    const qs = questionsRef.current;
+    let idx = currentQuestionIndexRef.current;
+    let currentQ = qs[idx];
+    if (!currentQ) {
+      if (qs.length === 0) {
+        toast.error('Nenhuma pergunta disponível.');
+        return;
+      }
+      idx = 0;
+      currentQ = qs[0];
+      updateEditor({ currentQuestionIndex: 0 });
+    }
+    const existingBlocks = currentQ.blocks || [];
+    const adjustedBlocks = templateBlocks.map((b, i) => ({ ...b, order: existingBlocks.length + i }));
+    const updatedBlocks = [...existingBlocks, ...adjustedBlocks];
+    const updatedQuestions = [...qs];
+    updatedQuestions[idx] = { ...currentQ, blocks: updatedBlocks };
+    handleQuestionsUpdate(updatedQuestions);
+    updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
+  }, [handleQuestionsUpdate, updateEditor]);
 
   // ✅ Handler para publicar
   const handlePublish = useCallback(async () => {
@@ -678,56 +729,8 @@ const CreateQuizModern = () => {
             {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto">
               <CompactBlockPalette
-                  onAddBlock={(blockType) => {
-                    let idx = currentQuestionIndex;
-                    let currentQ = questions[idx];
-                    // Auto-recuperação: se índice inválido, usar primeira pergunta
-                    if (!currentQ) {
-                      if (questions.length === 0) {
-                        toast.error('Nenhuma pergunta disponível. Adicione uma pergunta primeiro.');
-                        return;
-                      }
-                      idx = 0;
-                      currentQ = questions[0];
-                      updateEditor({ currentQuestionIndex: 0 });
-                      toast.info('Índice corrigido para a primeira pergunta.');
-                    }
-                    const newBlock = createBlock(blockType, currentQ.blocks?.length || 0);
-                    const updatedBlocks = [...(currentQ.blocks || []), newBlock];
-                    const updatedQuestions = [...questions];
-                    updatedQuestions[idx] = {
-                      ...currentQ,
-                      blocks: updatedBlocks,
-                    };
-                    handleQuestionsUpdate(updatedQuestions);
-                    updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
-                  }}
-                  onAddTemplate={(templateBlocks) => {
-                    let idx = currentQuestionIndex;
-                    let currentQ = questions[idx];
-                    if (!currentQ) {
-                      if (questions.length === 0) {
-                        toast.error('Nenhuma pergunta disponível.');
-                        return;
-                      }
-                      idx = 0;
-                      currentQ = questions[0];
-                      updateEditor({ currentQuestionIndex: 0 });
-                    }
-                    const existingBlocks = currentQ.blocks || [];
-                    const adjustedBlocks = templateBlocks.map((b, i) => ({
-                      ...b,
-                      order: existingBlocks.length + i,
-                    }));
-                    const updatedBlocks = [...existingBlocks, ...adjustedBlocks];
-                    const updatedQuestions = [...questions];
-                    updatedQuestions[idx] = {
-                      ...currentQ,
-                      blocks: updatedBlocks,
-                    };
-                    handleQuestionsUpdate(updatedQuestions);
-                    updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
-                  }}
+                  onAddBlock={handlePaletteAddBlock}
+                  onAddTemplate={handlePaletteAddTemplate}
                   currentBlockOrder={questions[currentQuestionIndex]?.blocks?.length || 0}
                 />
               </div>
