@@ -303,7 +303,8 @@ export const QuizBlockPreview = ({
     });
   }, [trackFacebookPixelEvent]);
 
-  const renderBlock = (block: QuizBlock) => {
+  const renderBlock = (rawBlock: QuizBlock) => {
+    const block = normalizeBlock(rawBlock);
     switch (block.type) {
       case "question":
         const emojis = block.emojis || [];
