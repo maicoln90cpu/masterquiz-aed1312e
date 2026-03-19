@@ -365,15 +365,17 @@ export function useQuizPersistence({
           w.dataLayer = w.dataLayer || [];
 
           // Evento quiz_first_published — 1x ao publicar pela primeira vez
+          const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
           if (earlyStages.includes(currentStage)) {
             w.dataLayer.push({
-              event: 'quiz_first_published',
+              event: publishEventName,
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
               publish_source: isExpressMode ? 'express_auto' : 'manual',
+              editor_mode: editorMode,
             });
-            console.log('🎯 [GTM] Event pushed: quiz_first_published (UPDATE branch, source:', isExpressMode ? 'express_auto' : 'manual', ')');
+            console.log(`🎯 [GTM] Event pushed: ${publishEventName} (UPDATE branch, source:`, isExpressMode ? 'express_auto' : 'manual', ')');
           }
 
           // first_quiz_created — SOMENTE se houve interação real
