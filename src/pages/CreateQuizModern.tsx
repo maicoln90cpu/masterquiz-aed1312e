@@ -9,7 +9,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { QuestionConfigStep } from "@/components/quiz/QuestionConfigStep";
@@ -18,17 +17,11 @@ import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";
 import { ResultsConfigStep } from "@/components/quiz/ResultsConfigStep";
 import { QuizTemplateSelector } from "@/components/quiz/QuizTemplateSelector";
 import { AIQuizGenerator } from "@/components/quiz/AIQuizGenerator";
-import { FloatingTutorial } from "@/components/quiz/FloatingTutorial";
-import { QuestionsList } from "@/components/quiz/QuestionsList";
-import { CompactBlockPalette } from "@/components/quiz/blocks/CompactBlockPalette";
 import { UndoRedoControls } from "@/components/quiz/UndoRedoControls";
 import { UnifiedQuizPreview } from "@/components/quiz/UnifiedQuizPreview";
-import { QuizProgressIndicator } from "@/components/quiz/QuizProgressIndicator";
-import { QuickAddToolbar } from "@/components/quiz/QuickAddToolbar";
 import { AutoSaveIndicator } from "@/components/quiz/AutoSaveIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
@@ -49,12 +42,10 @@ import { useProfile } from "@/hooks/useProfile";
  * 
  * Diferenças do Classic:
  * - Etapas em barra horizontal abaixo do header (1-5 + Preview)
- * - Step 1: Quantidade de Perguntas + Formato (showResults movido aqui)
- * - Step 3: Painel de propriedades do bloco selecionado no lado direito
+ * - Step 1: "Quantidade e Formato" (showResults movido aqui)
+ * - Step 3: Painel de propriedades do bloco selecionado (placeholder)
  * - Sem aside direito com toggle Preview/Steps
- * 
- * Este componente será iterado independentemente do Classic.
- * Por enquanto é um placeholder funcional que renderiza o layout básico.
+ * - Preview via dialog fullscreen (botão 👁)
  */
 
 interface ModernStepInfo {
@@ -90,6 +81,7 @@ const CreateQuizModern = () => {
     w.dataLayer.push({ event, ...data });
   }, [searchParams]);
 
+  // ✅ Hook de estado principal
   const {
     uiState,
     editorState,
@@ -118,6 +110,7 @@ const CreateQuizModern = () => {
     questionsLimit: 10
   });
 
+  // ✅ Hook de persistência (same interface as Classic)
   const {
     autoSaveStatus,
     lastSavedToSupabase,
@@ -130,46 +123,99 @@ const CreateQuizModern = () => {
     clearLocalStorage,
     getStorageKey,
   } = useQuizPersistence({
-    editorState,
+    quizId: editorState.quizId,
     appearanceState,
     formConfigState,
+    editorState,
     questions,
+    updateUI,
     updateEditor,
     updateAppearance,
     updateFormConfig,
     setQuestions,
-    updateUI,
     clearHistory,
-    initializeEmptyQuestions,
+    hasUserInteracted: hasInteracted,
+    isExpressMode,
   });
 
+  // ✅ Hook de manipulação de perguntas
   const {
     handleAddQuestion,
-    handleDuplicateQuestion,
-    handleRemoveQuestion,
-    handleReorderQuestions,
+    handleDeleteQuestion,
+    confirmDeleteQuestion,
+    updateQuestion,
   } = useQuizQuestions({
     questions,
-    setQuestions: handleQuestionsUpdate,
-    editorState,
+    setQuestions,
+    questionsLimit: editorState.questionsLimit,
+    currentQuestionIndex: editorState.currentQuestionIndex,
     updateEditor,
-    trackInteraction,
-  });
-
-  const {
-    handleTemplateSelect,
-  } = useQuizTemplateSelection({
-    updateAppearance,
     updateUI,
   });
 
-  // Load quiz in edit mode
+  // ✅ Hook de seleção de template
+  const {
+    handleSelectTemplate,
+    handleCreateFromScratch,
+    handleCreateWithAI,
+    handleBackFromAI,
+  } = useQuizTemplateSelection({
+    updateUI,
+    updateAppearance,
+    updateFormConfig,
+    updateEditor,
+    setQuestions,
+  });
+
+  // ✅ Load limits
   useEffect(() => {
-    const quizId = searchParams.get('id');
-    if (isEditMode && quizId) {
-      loadExistingQuiz(quizId);
+    const loadLimit = async () => {
+      const limit = await getQuestionsPerQuizLimit();
+      updateEditor({ questionsLimit: limit });
+    };
+    loadLimit();
+  }, [getQuestionsPerQuizLimit, updateEditor]);
+
+  // ✅ Load existing quiz
+  useEffect(() => {
+    const editQuizId = searchParams.get('id');
+    if (editQuizId) {
+      loadExistingQuiz(editQuizId);
+      if (isExpressMode) {
+        updateEditor({ step: 3 });
+        updateUI({ showTemplateSelector: false });
+        fireOnce('express_started', { quiz_id: editQuizId });
+      }
     }
-  }, [isEditMode, searchParams, loadExistingQuiz]);
+  }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI, fireOnce]);
+
+  // ✅ Clear localStorage when not editing
+  useEffect(() => {
+    const editQuizId = searchParams.get('id');
+    if (!editQuizId) {
+      clearLocalStorage();
+    }
+  }, [searchParams, clearLocalStorage]);
+
+  // ✅ Handler para publicar
+  const handlePublish = useCallback(async () => {
+    const result = await saveQuiz();
+    if (result?.success && isExpressMode) {
+      const slug = result.slug;
+      const url = profile?.company_slug
+        ? `${window.location.origin}/${profile.company_slug}/${slug}`
+        : `${window.location.origin}/quiz/${slug}`;
+      setPublishedQuizUrl(url);
+      setShowCelebration(true);
+    }
+  }, [saveQuiz, isExpressMode, profile?.company_slug]);
+
+  const expressQuizUrl = useMemo(() => {
+    if (!editorState.quizSlug) return '';
+    return profile?.company_slug
+      ? `${window.location.origin}/${profile.company_slug}/${editorState.quizSlug}`
+      : `${window.location.origin}/quiz/${editorState.quizSlug}`;
+  }, [editorState.quizSlug, profile?.company_slug]);
 
   // Steps definition
   const steps: ModernStepInfo[] = useMemo(() => [
@@ -177,43 +223,95 @@ const CreateQuizModern = () => {
     { number: 2, label: t('createQuiz.step2Title', 'Aparência'), completed: editorState.step > 2 },
     { number: 3, label: t('createQuiz.step3Title', 'Perguntas'), completed: editorState.step > 3 },
     { number: 4, label: t('createQuiz.step4Title', 'Coleta de Dados'), completed: editorState.step > 4 },
-    { number: 5, label: t('createQuiz.step5Title', 'Resultados'), completed: editorState.step > 5 },
+    { number: 5, label: t('createQuiz.step5Title', 'Resultados'), completed: false },
   ], [editorState.step, t]);
 
   const handleStepClick = useCallback((step: number) => {
     updateEditor({ step });
   }, [updateEditor]);
 
-  // Template selector / AI generator
-  if (uiState.showTemplateSelector) {
+  // ============================================
+  // RENDERS CONDICIONAIS
+  // ============================================
+
+  // Express Celebration
+  if (showCelebration && isExpressMode) {
     return (
-      <QuizTemplateSelector
-        onSelect={handleTemplateSelect}
-        onBack={() => navigate('/meus-quizzes')}
-        onAIGenerate={() => updateUI({ showTemplateSelector: false, showAIGenerator: true })}
+      <ExpressCelebration
+        quizUrl={publishedQuizUrl || expressQuizUrl}
+        quizTitle={appearanceState.title || t('createQuiz.newQuiz')}
+        onGoToDashboard={() => {
+          queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+          navigate('/dashboard');
+        }}
       />
     );
   }
 
+  // AI Generator
   if (uiState.showAIGenerator) {
     return (
-      <AIQuizGenerator
-        onBack={() => updateUI({ showAIGenerator: false, showTemplateSelector: true })}
-      />
+      <main className="min-h-screen bg-background">
+        <header className="border-b bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <h1 className="text-2xl font-bold">{t('createQuiz.title')}</h1>
+          </div>
+        </header>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <AIQuizGenerator onBack={handleBackFromAI} />
+        </div>
+      </main>
     );
   }
 
+  // Loading
   if (uiState.isLoadingQuiz) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <main className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           <p className="text-muted-foreground">{t('createQuiz.loadingQuiz')}</p>
         </div>
-      </div>
+      </main>
     );
   }
 
+  // Template Selector
+  if (uiState.showTemplateSelector && !isEditMode && !isExpressMode) {
+    return (
+      <main className="min-h-screen bg-background">
+        <header className="border-b bg-card">
+          <div className="w-full max-w-full px-3 sm:px-4 py-3 sm:py-4">
+            <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('createQuiz.back')}
+            </Button>
+            <h1 className="text-xl sm:text-2xl font-bold mt-2">{t('createQuiz.title')}</h1>
+          </div>
+        </header>
+        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+          <QuizTemplateSelector
+            onSelectTemplate={handleSelectTemplate}
+            onCreateFromScratch={handleCreateFromScratch}
+            onCreateWithAI={handleCreateWithAI}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  // ============================================
+  // DESTRUCTURE STATE
+  // ============================================
+  const { step, currentQuestionIndex, questionCount, questionsLimit, quizId, quizSlug } = editorState;
+  const { title, description, template, logoUrl, showLogo, showTitle, showDescription, showQuestionNumber } = appearanceState;
+  const { collectionTiming, collectName, collectEmail, collectWhatsapp, deliveryTiming } = formConfigState;
+  const { isSaving } = uiState;
+
+  // ============================================
+  // RENDER PRINCIPAL — MODERN LAYOUT
+  // ============================================
   return (
     <main className="min-h-screen bg-background flex flex-col">
       {/* ========== HEADER ========== */}
@@ -221,12 +319,17 @@ const CreateQuizModern = () => {
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate('/meus-quizzes')}>
             <ArrowLeft className="h-4 w-4 mr-1" />
-            {t('common.back')}
+            <span className="hidden sm:inline">{t('createQuiz.back')}</span>
           </Button>
           <h1 className="text-lg font-bold truncate max-w-[200px]">
-            {appearanceState.title || t('createQuiz.newQuiz', 'Novo Quiz')}
+            {title || t('createQuiz.newQuiz', 'Novo Quiz')}
           </h1>
-          <AutoSaveIndicator status={autoSaveStatus} lastSaved={lastSavedToSupabase} />
+          <AutoSaveIndicator
+            status={!isOnline ? 'offline' : autoSaveStatus}
+            lastSavedAt={lastSavedToSupabase}
+            hasQuizId={!!quizId}
+            compact
+          />
         </div>
         <div className="flex items-center gap-2">
           <UndoRedoControls
@@ -241,104 +344,135 @@ const CreateQuizModern = () => {
           <Button
             variant="default"
             size="sm"
-            onClick={() => saveQuiz()}
-            disabled={uiState.isSaving}
+            onClick={handlePublish}
+            disabled={isSaving}
           >
             <Save className="h-4 w-4 mr-1" />
-            {t('common.save')}
+            {t('common.save', 'Salvar')}
           </Button>
         </div>
       </header>
 
-      {/* ========== HORIZONTAL STEP BAR ========== */}
-      <nav className="border-b bg-card/50 px-4 py-2 shrink-0">
-        <div className="flex items-center gap-1 max-w-4xl mx-auto">
-          {steps.map((step) => (
-            <button
-              key={step.number}
-              onClick={() => handleStepClick(step.number)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center",
-                editorState.step === step.number
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : step.completed
-                  ? "bg-primary/10 text-primary hover:bg-primary/20"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              )}
-            >
-              <span className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                editorState.step === step.number
-                  ? "bg-primary-foreground text-primary"
-                  : step.completed
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted-foreground/20 text-muted-foreground"
-              )}>
-                {step.completed && editorState.step !== step.number ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  step.number
-                )}
-              </span>
-              <span className="hidden md:inline truncate">{step.label}</span>
-            </button>
-          ))}
-          
-          {/* Preview button */}
-          <button
-            onClick={() => setShowPreviewDialog(true)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-              "bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            )}
-            title={t('createQuiz.preview', 'Preview')}
-          >
-            <Eye className="h-4 w-4" />
-            <span className="hidden md:inline">{t('createQuiz.preview', 'Preview')}</span>
-          </button>
-        </div>
-      </nav>
+      {/* ========== EXPRESS PROGRESS ========== */}
+      {isExpressMode && <ExpressProgressBar currentStep={1} />}
 
-      {/* ========== EXPRESS PROGRESS BAR ========== */}
-      {isExpressMode && (
-        <ExpressProgressBar currentStep={editorState.step} totalSteps={5} />
+      {/* ========== HORIZONTAL STEP BAR ========== */}
+      {!isExpressMode && (
+        <nav className="border-b bg-card/50 px-4 py-2 shrink-0">
+          <div className="flex items-center gap-1 max-w-4xl mx-auto">
+            {steps.map((s) => (
+              <button
+                key={s.number}
+                onClick={() => handleStepClick(s.number)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center",
+                  step === s.number
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : s.completed
+                    ? "bg-primary/10 text-primary hover:bg-primary/20"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <span className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+                  step === s.number
+                    ? "bg-primary-foreground text-primary"
+                    : s.completed
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted-foreground/20 text-muted-foreground"
+                )}>
+                  {s.completed && step !== s.number ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    s.number
+                  )}
+                </span>
+                <span className="hidden md:inline truncate">{s.label}</span>
+              </button>
+            ))}
+            
+            {/* Preview button */}
+            <button
+              onClick={() => setShowPreviewDialog(true)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                "bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+              title={t('createQuiz.preview', 'Preview')}
+            >
+              <Eye className="h-4 w-4" />
+              <span className="hidden lg:inline">{t('createQuiz.preview', 'Preview')}</span>
+            </button>
+          </div>
+        </nav>
       )}
 
       {/* ========== MAIN CONTENT ========== */}
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto max-w-4xl px-4 py-6">
           {/* STEP 1: Quantidade e Formato */}
-          {editorState.step === 1 && (
+          {step === 1 && !isExpressMode && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('createQuiz.step1Title', 'Quantidade de Perguntas e Formato')}</CardTitle>
-                <CardDescription>{t('createQuiz.step1Description', 'Defina quantas perguntas e o formato do seu quiz')}</CardDescription>
+                <CardTitle className="text-2xl">{t('createQuiz.step1.title', 'Quantidade de Perguntas e Formato')}</CardTitle>
+                <CardDescription>{t('createQuiz.step1.description', 'Defina quantas perguntas e o formato do seu quiz')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Question count slider */}
-                <div className="space-y-3">
-                  <Label>{t('createQuiz.questionCount', 'Número de perguntas')}: <strong>{editorState.questionCount}</strong></Label>
+              <CardContent className="space-y-8">
+                {/* Question count — same as Classic */}
+                <div className="text-center py-8">
+                  <div className="flex items-center justify-center gap-4">
+                    <p className="text-6xl font-bold text-primary">{questionCount}</p>
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="question-count-input" className="text-sm text-muted-foreground">
+                        {t('createQuiz.step1.questionQuantity', 'Quantidade')}
+                      </Label>
+                      <Input
+                        id="question-count-input"
+                        type="number"
+                        min={1}
+                        max={questionsLimit}
+                        value={questionCount}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value, 10);
+                          if (!isNaN(value)) {
+                            updateEditor({ questionCount: Math.min(Math.max(1, value), questionsLimit) });
+                          }
+                        }}
+                        className="w-20 h-12 text-center text-xl font-bold"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground mt-4">{t('createQuiz.step1.adjustSlider', 'Ajuste a quantidade de perguntas')}</p>
+                </div>
+
+                <div className="space-y-4">
                   <Slider
-                    value={[editorState.questionCount]}
-                    onValueChange={([val]) => updateEditor({ questionCount: val })}
+                    value={[questionCount]}
+                    onValueChange={(value) => updateEditor({ questionCount: value[0] })}
                     min={1}
-                    max={editorState.questionsLimit}
+                    max={questionsLimit}
                     step={1}
                     className="w-full"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {t('createQuiz.questionCountHint', 'Máximo: {{max}} perguntas no seu plano', { max: editorState.questionsLimit })}
-                  </p>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>1 {t('common.question', 'pergunta')}</span>
+                    <span>{questionsLimit} {t('common.questions', 'perguntas')}</span>
+                  </div>
+                  <div className="mt-3 p-2 bg-muted rounded-md">
+                    <p className="text-xs text-muted-foreground text-center">
+                      Seu plano permite até <strong>{questionsLimit}</strong> perguntas por quiz
+                    </p>
+                  </div>
                 </div>
 
-                {/* Quiz format selector — NEW in Modern */}
+                {/* ✅ NOVO: Seletor de formato do quiz (exclusivo Modern) */}
                 <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
                   <Label className="text-base font-semibold">{t('createQuiz.quizFormat', 'Formato do Quiz')}</Label>
                   <Select
                     value={appearanceState.showResults ? 'results' : 'funnel'}
                     onValueChange={(val) => {
                       updateAppearance({ showResults: val === 'results' });
-                      trackInteraction();
+                      trackInteraction('quiz_format_changed');
                     }}
                   >
                     <SelectTrigger className="w-full">
@@ -346,17 +480,17 @@ const CreateQuizModern = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="results">
-                        🏆 {t('createQuiz.formatResults', 'Com Resultados — Quiz tradicional com tela de resultado')}
+                        🏆 {t('createQuiz.formatResults', 'Com Resultados — Quiz com tela de resultado')}
                       </SelectItem>
                       <SelectItem value="funnel">
-                        🔄 {t('createQuiz.formatFunnel', 'Formato Funil — Sem tela de resultados, foco em coleta')}
+                        🔄 {t('createQuiz.formatFunnel', 'Formato Funil — Sem resultados, foco em coleta')}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
                     {appearanceState.showResults
-                      ? t('createQuiz.formatResultsHint', 'Os respondentes verão uma tela de resultado ao final do quiz.')
-                      : t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação e captura de leads.')
+                      ? t('createQuiz.formatResultsHint', 'Os respondentes verão uma tela de resultado ao final.')
+                      : t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação.')
                     }
                   </p>
                 </div>
@@ -364,191 +498,176 @@ const CreateQuizModern = () => {
             </Card>
           )}
 
-          {/* STEP 2: Aparência */}
-          {editorState.step === 2 && (
+          {/* STEP 2: Aparência — same interface as Classic */}
+          {step === 2 && !isExpressMode && (
             <AppearanceConfigStep
-              title={appearanceState.title}
-              setTitle={(v) => { updateAppearance({ title: v }); trackInteraction(); }}
-              description={appearanceState.description}
-              setDescription={(v) => { updateAppearance({ description: v }); trackInteraction(); }}
-              template={appearanceState.template}
-              setTemplate={(v) => { updateAppearance({ template: v }); trackInteraction(); }}
-              logoUrl={appearanceState.logoUrl}
-              setLogoUrl={(v) => { updateAppearance({ logoUrl: v }); trackInteraction(); }}
-              showLogo={appearanceState.showLogo}
-              setShowLogo={(v) => { updateAppearance({ showLogo: v }); trackInteraction(); }}
-              showTitle={appearanceState.showTitle}
-              setShowTitle={(v) => { updateAppearance({ showTitle: v }); trackInteraction(); }}
-              showDescription={appearanceState.showDescription}
-              setShowDescription={(v) => { updateAppearance({ showDescription: v }); trackInteraction(); }}
-              showQuestionNumber={appearanceState.showQuestionNumber}
-              setShowQuestionNumber={(v) => { updateAppearance({ showQuestionNumber: v }); trackInteraction(); }}
+              title={title}
+              description={description}
+              template={template}
+              onTitleChange={(v) => updateAppearance({ title: v })}
+              onDescriptionChange={(v) => updateAppearance({ description: v })}
+              onTemplateChange={(v) => updateAppearance({ template: v })}
+              questionCount={questionCount}
+              logoUrl={logoUrl}
+              onLogoChange={(v) => updateAppearance({ logoUrl: v })}
+              showLogo={showLogo}
+              showTitle={showTitle}
+              showDescription={showDescription}
+              showQuestionNumber={showQuestionNumber}
               showResults={appearanceState.showResults}
-              setShowResults={(v) => { updateAppearance({ showResults: v }); trackInteraction(); }}
+              onShowLogoChange={(v) => updateAppearance({ showLogo: v })}
+              onShowTitleChange={(v) => updateAppearance({ showTitle: v })}
+              onShowDescriptionChange={(v) => updateAppearance({ showDescription: v })}
+              onShowQuestionNumberChange={(v) => updateAppearance({ showQuestionNumber: v })}
+              onShowResultsChange={(v) => updateAppearance({ showResults: v })}
               progressStyle={appearanceState.progressStyle}
-              setProgressStyle={(v) => { updateAppearance({ progressStyle: v }); trackInteraction(); }}
-              quizId={editorState.quizId}
+              onProgressStyleChange={(v) => updateAppearance({ progressStyle: v })}
             />
           )}
 
-          {/* STEP 3: Perguntas — layout com 3 colunas */}
-          {editorState.step === 3 && (
-            <div className="flex gap-4 -mx-4 px-4">
-              {/* Left: Questions list */}
-              <div className="w-64 shrink-0">
-                <Card className="sticky top-4">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">{t('createQuiz.questions', 'Perguntas')}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-2">
-                    <QuestionsList
-                      questions={questions}
-                      currentIndex={editorState.currentQuestionIndex}
-                      onQuestionClick={handleQuestionClick}
-                      onAddQuestion={handleAddQuestion}
-                      onDuplicateQuestion={handleDuplicateQuestion}
-                      onRemoveQuestion={handleRemoveQuestion}
-                      onReorderQuestions={handleReorderQuestions}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Center: Editor */}
-              <div className="flex-1 min-w-0">
-                <QuestionConfigStep
-                  questions={questions}
-                  currentQuestionIndex={editorState.currentQuestionIndex}
-                  onQuestionsUpdate={handleQuestionsUpdate}
-                  onQuestionClick={handleQuestionClick}
-                  onUpdateBlocks={updateCurrentQuestionBlocks}
-                  template={appearanceState.template}
-                  onAddQuestion={handleAddQuestion}
-                  onDuplicateQuestion={handleDuplicateQuestion}
-                  onRemoveQuestion={handleRemoveQuestion}
-                  onReorderQuestions={handleReorderQuestions}
-                  trackInteraction={trackInteraction}
-                />
-              </div>
-
-              {/* Right: Block Properties Panel (placeholder) */}
-              <div className="w-72 shrink-0">
-                <Card className="sticky top-4">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">{t('createQuiz.blockProperties', 'Propriedades do Bloco')}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3">
-                    {editorState.selectedBlockIndex !== null && questions[editorState.currentQuestionIndex]?.blocks?.[editorState.selectedBlockIndex] ? (
-                      <div className="text-sm text-muted-foreground">
-                        <p className="font-medium text-foreground mb-2">
-                          {questions[editorState.currentQuestionIndex].blocks![editorState.selectedBlockIndex].type}
-                        </p>
-                        <p className="text-xs">
-                          {t('createQuiz.blockPropertiesHint', 'As propriedades deste bloco aparecerão aqui nas próximas fases.')}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">
-                        {t('createQuiz.selectBlockHint', 'Selecione um bloco para ver suas propriedades')}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+          {/* STEP 3: Perguntas */}
+          {(step === 3 || isExpressMode) && (
+            <QuestionConfigStep
+              questions={questions}
+              questionCount={questionCount}
+              isPublic={editorState.isPublic}
+              onPublicChange={(v) => updateEditor({ isPublic: v })}
+              quizTitle={title}
+              quizDescription={description}
+              quizId={quizId || undefined}
+              onQuestionsUpdate={handleQuestionsUpdate}
+              initialQuestionIndex={currentQuestionIndex}
+              isExpressMode={isExpressMode}
+              fireOnce={fireOnce}
+              trackInteraction={trackInteraction}
+            />
           )}
 
           {/* STEP 4: Coleta de Dados */}
-          {editorState.step === 4 && (
-            <VisitorFormConfigStep
-              collectionTiming={formConfigState.collectionTiming}
-              setCollectionTiming={(v) => { updateFormConfig({ collectionTiming: v }); trackInteraction(); }}
-              collectName={formConfigState.collectName}
-              setCollectName={(v) => { updateFormConfig({ collectName: v }); trackInteraction(); }}
-              collectEmail={formConfigState.collectEmail}
-              setCollectEmail={(v) => { updateFormConfig({ collectEmail: v }); trackInteraction(); }}
-              collectWhatsapp={formConfigState.collectWhatsapp}
-              setCollectWhatsapp={(v) => { updateFormConfig({ collectWhatsapp: v }); trackInteraction(); }}
-              deliveryTiming={formConfigState.deliveryTiming}
-              setDeliveryTiming={(v) => { updateFormConfig({ deliveryTiming: v }); trackInteraction(); }}
-              quizId={editorState.quizId}
-            />
+          {step === 4 && !isExpressMode && (
+            <>
+              {!appearanceState.showResults && (
+                <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-sm">
+                    <strong>Coleta de dados desativada:</strong> Você optou pelo formato funil (sem resultados). 
+                    As configurações abaixo só terão efeito se você reativar a exibição de resultados na Etapa 1.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <VisitorFormConfigStep
+                collectionTiming={collectionTiming as 'before' | 'after' | 'none'}
+                onCollectionTimingChange={(v) => updateFormConfig({ collectionTiming: v })}
+                collectName={collectName}
+                onCollectNameChange={(v) => updateFormConfig({ collectName: v })}
+                collectEmail={collectEmail}
+                onCollectEmailChange={(v) => updateFormConfig({ collectEmail: v })}
+                collectWhatsapp={collectWhatsapp}
+                onCollectWhatsappChange={(v) => updateFormConfig({ collectWhatsapp: v })}
+              />
+            </>
           )}
 
           {/* STEP 5: Resultados */}
-          {editorState.step === 5 && (
-            <ResultsConfigStep
-              quizId={editorState.quizId}
-              questions={questions}
-              showResults={appearanceState.showResults}
-            />
+          {step === 5 && !isExpressMode && (
+            <>
+              {!appearanceState.showResults && (
+                <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-sm">
+                    <strong>Resultados desativados:</strong> Você optou pelo formato funil.
+                    Para usar estas configurações, altere o formato na Etapa 1.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <ResultsConfigStep
+                quizId={quizId || undefined}
+                deliveryTiming={deliveryTiming}
+                onDeliveryTimingChange={(v) => updateFormConfig({ deliveryTiming: v })}
+              />
+            </>
           )}
         </div>
       </div>
 
       {/* ========== FOOTER NAV ========== */}
-      <footer className="border-t bg-card px-4 py-3 flex items-center justify-between shrink-0">
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (editorState.step > 1) updateEditor({ step: editorState.step - 1 });
-          }}
-          disabled={editorState.step <= 1}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          {t('common.previous', 'Anterior')}
-        </Button>
-
-        <div className="text-sm text-muted-foreground">
-          {t('createQuiz.stepOf', 'Etapa {{current}} de {{total}}', { current: editorState.step, total: 5 })}
-        </div>
-
-        {editorState.step < 5 ? (
+      {!isExpressMode && (
+        <footer className="border-t bg-card px-4 py-3 flex items-center justify-between shrink-0">
           <Button
-            onClick={() => updateEditor({ step: editorState.step + 1 })}
+            variant="outline"
+            onClick={() => {
+              if (step > 1) updateEditor({ step: step - 1 });
+            }}
+            disabled={step <= 1}
           >
-            {t('common.next', 'Próximo')}
-            <ArrowRight className="h-4 w-4 ml-1" />
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            {t('common.previous', 'Anterior')}
           </Button>
-        ) : (
+
+          <div className="text-sm text-muted-foreground">
+            {t('createQuiz.stepOf', 'Etapa {{current}} de {{total}}', { current: step, total: 5 })}
+          </div>
+
+          {step < 5 ? (
+            <Button onClick={() => updateEditor({ step: step + 1 })}>
+              {t('common.next', 'Próximo')}
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : (
+            <Button onClick={handlePublish} disabled={isSaving}>
+              <Rocket className="h-4 w-4 mr-1" />
+              {t('createQuiz.publish', 'Publicar')}
+            </Button>
+          )}
+        </footer>
+      )}
+
+      {/* Express publish button */}
+      {isExpressMode && (
+        <footer className="border-t bg-card px-4 py-3 flex justify-center shrink-0">
           <Button
-            onClick={() => saveQuiz()}
-            disabled={uiState.isSaving}
+            size="lg"
+            onClick={handlePublish}
+            disabled={isSaving}
+            className="w-full max-w-md h-14 text-lg font-bold"
           >
-            <Rocket className="h-4 w-4 mr-1" />
-            {t('createQuiz.publish', 'Publicar')}
+            {isSaving ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                {t('createQuiz.publishing', 'Publicando...')}
+              </>
+            ) : (
+              <>
+                <Rocket className="h-5 w-5 mr-2" />
+                {t('express.publishButton', 'PUBLICAR MEU QUIZ')}
+              </>
+            )}
           </Button>
-        )}
-      </footer>
+        </footer>
+      )}
 
       {/* ========== PREVIEW DIALOG ========== */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-4xl h-[80vh]">
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{t('createQuiz.preview', 'Preview')}</DialogTitle>
-            <DialogDescription>{t('createQuiz.previewDescription', 'Visualize como seu quiz ficará para os respondentes')}</DialogDescription>
+            <DialogDescription>{t('createQuiz.previewDescription', 'Visualize como seu quiz ficará')}</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-auto">
             <UnifiedQuizPreview
               questions={questions}
-              title={appearanceState.title}
-              description={appearanceState.description}
-              template={appearanceState.template}
-              logoUrl={appearanceState.logoUrl}
-              showLogo={appearanceState.showLogo}
-              showTitle={appearanceState.showTitle}
-              showDescription={appearanceState.showDescription}
-              showQuestionNumber={appearanceState.showQuestionNumber}
-              progressStyle={appearanceState.progressStyle}
+              title={title}
+              description={description}
+              template={template}
+              logoUrl={logoUrl}
+              showLogo={showLogo}
+              showTitle={showTitle}
+              showDescription={showDescription}
+              showQuestionNumber={showQuestionNumber}
             />
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Express celebration */}
-      {showCelebration && (
-        <ExpressCelebration onClose={() => setShowCelebration(false)} />
-      )}
     </main>
   );
 };
