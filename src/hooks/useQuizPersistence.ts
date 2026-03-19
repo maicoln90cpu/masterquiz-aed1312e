@@ -368,28 +368,24 @@ export function useQuizPersistence({
           // Evento quiz_first_published — 1x ao publicar pela primeira vez
           const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
           if (earlyStages.includes(currentStage)) {
-            w.dataLayer.push({
-              event: publishEventName,
+            pushGTMEvent(publishEventName, {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
               publish_source: isExpressMode ? 'express_auto' : 'manual',
               editor_mode: editorMode,
             });
-            console.log(`🎯 [GTM] Event pushed: ${publishEventName} (UPDATE branch, source:`, isExpressMode ? 'express_auto' : 'manual', ')');
           }
 
           // first_quiz_created — SOMENTE se houve interação real
           const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
           if (earlyStages.includes(currentStage) && hasUserInteracted) {
-            w.dataLayer.push({
-              event: createEventName,
+            pushGTMEvent(createEventName, {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
               editor_mode: editorMode,
             });
-            console.log(`🎯 [GTM] Event pushed: ${createEventName} (UPDATE branch, real interaction)`);
 
             // Promover para engajado se ainda não passou
             if (currentStage === 'explorador' || currentStage === 'iniciado') {
