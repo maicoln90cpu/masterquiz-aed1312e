@@ -534,7 +534,59 @@ const CreateQuizModern = () => {
 
           {/* STEP 3: Perguntas — 3-column layout with properties panel */}
           {(step === 3 || isExpressMode) && (
-            <div className="flex gap-4 max-w-6xl mx-auto">
+            <div className="flex gap-4 max-w-7xl mx-auto">
+              {/* Left: Question List */}
+              {!isExpressMode && (
+                <div className="w-56 shrink-0 hidden lg:block">
+                  <div className="sticky top-4 border rounded-lg bg-card overflow-hidden max-h-[calc(100vh-14rem)]">
+                    <div className="p-3 border-b bg-muted/30">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {t('createQuiz.questions', 'Perguntas')} ({questions.length})
+                      </h3>
+                    </div>
+                    <div className="overflow-y-auto max-h-[calc(100vh-18rem)]">
+                      {questions.map((q, idx) => {
+                        const questionBlock = q.blocks?.find((b: any) => b.type === 'question');
+                        const questionText = questionBlock && 'questionText' in questionBlock
+                          ? questionBlock.questionText
+                          : '';
+                        return (
+                          <button
+                            key={q.id || idx}
+                            onClick={() => {
+                              updateEditor({ currentQuestionIndex: idx, selectedBlockIndex: 0 });
+                            }}
+                            className={cn(
+                              "w-full text-left px-3 py-2.5 border-b last:border-b-0 transition-colors text-sm",
+                              currentQuestionIndex === idx
+                                ? "bg-primary/10 border-l-2 border-l-primary font-medium"
+                                : "hover:bg-muted/50"
+                            )}
+                          >
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {String(idx + 1).padStart(2, '0')}
+                            </span>
+                            <p className="text-foreground line-clamp-2 mt-0.5">
+                              {questionText || t('createQuiz.emptyQuestion', 'Pergunta sem título')}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="p-2 border-t">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={handleAddQuestion}
+                      >
+                        + {t('createQuiz.addQuestion', 'Adicionar pergunta')}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Center: Editor */}
               <div className="flex-1 min-w-0">
                 <QuestionConfigStep
@@ -557,19 +609,23 @@ const CreateQuizModern = () => {
               {!isExpressMode && (
                 <div className="w-72 shrink-0 hidden lg:block">
                   <div className="sticky top-4 border rounded-lg bg-card overflow-hidden max-h-[calc(100vh-14rem)]">
+                    <div className="p-3 border-b bg-muted/30">
+                      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <Settings2 className="h-4 w-4" />
+                        {t('createQuiz.blockProperties', 'Propriedades')}
+                      </h3>
+                    </div>
                     {(() => {
-                      const selectedIdx = editorState.selectedBlockIndex;
+                      const selectedIdx = editorState.selectedBlockIndex ?? 0;
                       const currentQ = questions[currentQuestionIndex];
-                      const selectedBlock = selectedIdx !== null && currentQ?.blocks?.[selectedIdx]
-                        ? currentQ.blocks[selectedIdx]
-                        : null;
+                      const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
 
                       if (!selectedBlock) {
                         return (
                           <div className="p-4 text-center">
                             <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                             <p className="text-sm text-muted-foreground">
-                              Clique em um bloco para editar suas propriedades
+                              {t('createQuiz.noBlockSelected', 'Nenhum bloco disponível')}
                             </p>
                           </div>
                         );
@@ -580,7 +636,7 @@ const CreateQuizModern = () => {
                           block={selectedBlock}
                           onChange={(updatedBlock) => {
                             const blocks = [...(currentQ.blocks || [])];
-                            blocks[selectedIdx!] = updatedBlock;
+                            blocks[selectedIdx] = updatedBlock;
                             const updatedQuestions = [...questions];
                             updatedQuestions[currentQuestionIndex] = {
                               ...currentQ,
