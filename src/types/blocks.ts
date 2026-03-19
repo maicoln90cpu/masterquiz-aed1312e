@@ -163,6 +163,8 @@ export interface LoadingBlock extends BaseBlock {
   completionMessage?: string;
   spinnerType?: 'spinner' | 'dots' | 'pulse' | 'bars';
   autoAdvance?: boolean;
+  showProgress?: boolean;
+  loadingMessages?: string[];
 }
 
 export interface ProgressBlock extends BaseBlock {
@@ -173,6 +175,7 @@ export interface ProgressBlock extends BaseBlock {
   color?: string;
   height?: 'thin' | 'medium' | 'thick';
   animated?: boolean;
+  label?: string;
 }
 
 export interface CountdownBlock extends BaseBlock {
