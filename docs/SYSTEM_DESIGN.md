@@ -170,7 +170,7 @@ Cada pergunta pode ter múltiplos blocos organizados por `order`. O bloco `quest
 
 ---
 
-## 🔌 APIs e Edge Functions (39 funções)
+## 🔌 APIs e Edge Functions (57 funções)
 
 ### Autenticação dos Endpoints
 
