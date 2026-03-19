@@ -111,7 +111,8 @@ export const AppearanceConfigStep = ({
   onShowDescriptionChange,
   onShowQuestionNumberChange,
   onShowResultsChange,
-  onProgressStyleChange
+  onProgressStyleChange,
+  hideShowResults = false,
 }: AppearanceConfigStepProps) => {
   const { t } = useTranslation();
   const { allowedTemplates, isLoading } = usePlanFeatures();
