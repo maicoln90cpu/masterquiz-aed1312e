@@ -264,8 +264,22 @@ const CreateQuiz = () => {
   }, [editorState.quizSlug, profile?.company_slug]);
 
   // ============================================
-  // RENDERS CONDICIONAIS
+  // RENDER MODERN LAYOUT (se ativo)
   // ============================================
+  if (isModern) {
+    return (
+      <Suspense fallback={
+        <main className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      }>
+        <CreateQuizModern />
+      </Suspense>
+    );
+  }
+
+  // ============================================
+  // RENDERS CONDICIONAIS (CLASSIC)
 
   // Express Celebration Screen
   if (showCelebration && isExpressMode) {
