@@ -5,7 +5,7 @@ import { Loader2, Check, X, ChevronDown, User } from "lucide-react";
 import type { QuizBlock } from "@/types/blocks";
 
 // ---- LOADING ----
-export const LoadingBlockPreview = ({ block }: { block: any }) => {
+export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loading' } }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
