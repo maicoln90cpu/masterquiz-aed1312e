@@ -71,7 +71,7 @@ export const LoadingBlockPreview = ({ block }: { block: any }) => {
 
 // ---- PROGRESS ----
 export const ProgressBlockPreview = ({ block, currentQuestion, totalQuestions }: {
-  block: QuizBlock & { type: 'progress' };
+  block: any;
   currentQuestion: number;
   totalQuestions: number;
 }) => {
