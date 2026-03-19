@@ -1,0 +1,1 @@
+ALTER TABLE site_settings ADD COLUMN editor_layout text NOT NULL DEFAULT 'classic';
