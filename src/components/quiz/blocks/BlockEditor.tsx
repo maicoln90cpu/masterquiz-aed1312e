@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, Trash2, Type, Minus, Image, Video, Music, Images, Code, HelpCircle, Eye, Blocks, CheckCircle2, AlertCircle, SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
-import { createBlock } from "@/types/blocks";
+import { createBlock, normalizeBlock } from "@/types/blocks";
 import { BlockTemplates } from "./BlockTemplates";
 import { QuestionBlock } from "./QuestionBlock";
 import { TextBlock } from "./TextBlock";
