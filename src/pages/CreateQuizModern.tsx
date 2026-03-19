@@ -141,6 +141,7 @@ const CreateQuizModern = () => {
     clearHistory,
     hasUserInteracted: hasInteracted,
     isExpressMode,
+    editorMode: 'modern',
   });
 
   // ✅ Hook de manipulação de perguntas
@@ -201,6 +202,22 @@ const CreateQuizModern = () => {
       clearLocalStorage();
     }
   }, [searchParams, clearLocalStorage]);
+
+  // ✅ EditorAbandoned: detectar saída do editor sem publicar
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && editorState.quizId && hasInteracted) {
+        pushGTMEvent('EditorAbandoned', {
+          quiz_id: editorState.quizId,
+          questions_count: questions.length,
+          had_title: !!appearanceState.title?.trim(),
+          editor_mode: 'modern',
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [editorState.quizId, appearanceState.title, hasInteracted, questions.length]);
 
   // ✅ Palette handlers — mesmo fluxo do Classic (via updateCurrentQuestionBlocks)
   const handlePaletteAddBlock = useCallback((blockType: BlockType) => {

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { logQuizAction } from "@/lib/auditLogger";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import type { QuizBlock } from "@/types/blocks";
@@ -34,6 +35,8 @@ interface UseQuizPersistenceOptions {
   hasUserInteracted?: boolean;
   /** Whether this is express mode (for publish_source tracking) */
   isExpressMode?: boolean;
+  /** Editor layout mode — 'modern' fires B-variant events for A/B tracking */
+  editorMode?: 'classic' | 'modern';
 }
 
 // ============================================
@@ -54,6 +57,7 @@ export function useQuizPersistence({
   clearHistory,
   hasUserInteracted = false,
   isExpressMode = false,
+  editorMode = 'classic',
 }: UseQuizPersistenceOptions) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -362,26 +366,26 @@ export function useQuizPersistence({
           w.dataLayer = w.dataLayer || [];
 
           // Evento quiz_first_published — 1x ao publicar pela primeira vez
+          const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
           if (earlyStages.includes(currentStage)) {
-            w.dataLayer.push({
-              event: 'quiz_first_published',
+            pushGTMEvent(publishEventName, {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
               publish_source: isExpressMode ? 'express_auto' : 'manual',
+              editor_mode: editorMode,
             });
-            console.log('🎯 [GTM] Event pushed: quiz_first_published (UPDATE branch, source:', isExpressMode ? 'express_auto' : 'manual', ')');
           }
 
           // first_quiz_created — SOMENTE se houve interação real
+          const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
           if (earlyStages.includes(currentStage) && hasUserInteracted) {
-            w.dataLayer.push({
-              event: 'first_quiz_created',
+            pushGTMEvent(createEventName, {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
+              editor_mode: editorMode,
             });
-            console.log('🎯 [GTM] Event pushed: first_quiz_created (UPDATE branch, real interaction)');
 
             // Promover para engajado se ainda não passou
             if (currentStage === 'explorador' || currentStage === 'iniciado') {
@@ -486,24 +490,24 @@ export function useQuizPersistence({
           w.dataLayer = w.dataLayer || [];
 
           // quiz_first_published — sempre ao publicar pela primeira vez
-          w.dataLayer.push({
-            event: 'quiz_first_published',
+          const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
+          pushGTMEvent(publishEventName, {
             quiz_id: quiz.id,
             quiz_title: quiz.title,
             user_id: user.id,
             publish_source: isExpressMode ? 'express_auto' : 'manual',
+            editor_mode: editorMode,
           });
-          console.log('🎯 [GTM] Event pushed: quiz_first_published (INSERT branch)');
 
           // first_quiz_created — SOMENTE se houve interação real
+          const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
           if (hasUserInteracted) {
-            w.dataLayer.push({
-              event: 'first_quiz_created',
+            pushGTMEvent(createEventName, {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
+              editor_mode: editorMode,
             });
-            console.log('🎯 [GTM] Event pushed: first_quiz_created (INSERT branch, real interaction)');
           }
 
           // Promover para construtor ao publicar

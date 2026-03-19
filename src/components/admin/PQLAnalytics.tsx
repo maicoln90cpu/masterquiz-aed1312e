@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -337,7 +338,119 @@ export function PQLAnalytics() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Tabela 3 — Classic vs Modern (A/B) */}
+      <ClassicVsModernComparison />
     </div>
+  );
+}
+
+// ============================================
+// Componente A/B Comparison
+// ============================================
+
+const AB_EVENTS = [
+  { classic: 'first_quiz_created', modern: 'first_quiz_createdB', label: 'Primeiro Quiz Criado' },
+  { classic: 'quiz_first_published', modern: 'quiz_first_publishedB', label: 'Primeiro Quiz Publicado' },
+];
+
+function ClassicVsModernComparison() {
+  const [period, setPeriod] = useState<string>("30d");
+
+  const { data: abData, isLoading } = useQuery({
+    queryKey: ["pql-ab-comparison", period],
+    queryFn: async () => {
+      const now = new Date();
+      let since: string | null = null;
+      if (period === "7d") since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      else if (period === "30d") since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const allEventNames = AB_EVENTS.flatMap(e => [e.classic, e.modern]);
+      
+      let query = supabase
+        .from("gtm_event_logs" as any)
+        .select("event_name")
+        .in("event_name", allEventNames);
+      
+      if (since) query = query.gte("created_at", since);
+
+      const { data } = await query;
+      const rows = (data || []) as any[];
+
+      return AB_EVENTS.map(ev => {
+        const classicCount = rows.filter(r => r.event_name === ev.classic).length;
+        const modernCount = rows.filter(r => r.event_name === ev.modern).length;
+        const delta = classicCount > 0 
+          ? Math.round(((modernCount - classicCount) / classicCount) * 100) 
+          : modernCount > 0 ? 100 : null;
+        return { ...ev, classicCount, modernCount, delta };
+      });
+    },
+    refetchInterval: 60000,
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-lg">Classic vs Modern (A/B)</CardTitle>
+          <CardDescription>
+            Comparação de eventos de criação entre os dois modos de editor
+          </CardDescription>
+        </div>
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="w-[120px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7d">7 dias</SelectItem>
+            <SelectItem value="30d">30 dias</SelectItem>
+            <SelectItem value="all">Todo período</SelectItem>
+          </SelectContent>
+        </Select>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Evento</TableHead>
+                <TableHead className="text-center">Classic (A)</TableHead>
+                <TableHead className="text-center">Modern (B)</TableHead>
+                <TableHead className="text-center">Δ%</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {abData?.map((row) => (
+                <TableRow key={row.classic}>
+                  <TableCell className="font-medium">{row.label}</TableCell>
+                  <TableCell className="text-center font-semibold">{row.classicCount}</TableCell>
+                  <TableCell className="text-center font-semibold">{row.modernCount}</TableCell>
+                  <TableCell className="text-center">
+                    {row.delta === null ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <Badge variant={row.delta >= 0 ? "default" : "destructive"}>
+                        {row.delta >= 0 ? '+' : ''}{row.delta}%
+                      </Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!abData || abData.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    Nenhum dado disponível
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
