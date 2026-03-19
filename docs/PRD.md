@@ -461,6 +461,16 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | Como usuário, quero tradução automática | Média | Sprint 6 |
 | Como usuário, quero lead scoring por consciência | Alta | Sprint 7 |
 
+### Épico 5: Email Marketing (H1 2026) ✅
+
+| User Story | Prioridade | Status |
+|------------|------------|--------|
+| Como admin, quero templates de email para recuperação de inativos | Alta | ✅ |
+| Como admin, quero automações de email com conteúdo gerado por IA | Alta | ✅ |
+| Como admin, quero enviar emails em massa via Bulk API | Alta | ✅ |
+| Como admin, quero dashboard de performance de emails | Média | ✅ |
+| Como usuário, quero poder fazer unsubscribe de emails | Alta | ✅ |
+
 ### Épico 4: Enterprise (Q3-Q4 2025)
 
 | User Story | Prioridade | Sprint |
