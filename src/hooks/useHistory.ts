@@ -101,9 +101,6 @@ export function useHistory<T>(
   const lastSavedState = useRef<T>(initialState);
   const lastSavedHash = useRef<number>(fastHash(initialState));
   
-  // ✅ Lock síncrono (sem setTimeout)
-  const isSavingRef = useRef(false);
-  
   // ✅ Cache de tamanhos estimados para cada entrada do histórico
   const memoryCacheRef = useRef<number[]>([]);
   const totalMemoryRef = useRef(0);
@@ -119,43 +116,34 @@ export function useHistory<T>(
 
   // ── Função interna para salvar no histórico ──
   const saveToHistory = useCallback((currentState: T, newState: T) => {
-    if (isSavingRef.current) return;
-    
     // ✅ Comparação rápida via hash (FNV-1a) em vez de JSON.stringify completo
     const newHash = fastHash(newState);
     if (newHash === lastSavedHash.current) {
-      // Hash colisão possível mas rara — para undo/redo, falso positivo é aceitável
-      // (pior caso: uma mudança minúscula não gera entrada no histórico)
       return;
     }
-
-    isSavingRef.current = true;
 
     // ✅ Estimar tamanho da nova entrada
     const entrySizeKb = estimateSizeKb(currentState);
 
     setPast(prev => {
       let newPast = [...prev, currentState];
+      const newMemCache = [...memoryCacheRef.current, entrySizeKb];
+      let newTotal = totalMemoryRef.current + entrySizeKb;
       
       // ✅ Limite por contagem
-      if (newPast.length > maxHistory) {
-        const trimCount = newPast.length - maxHistory;
-        newPast = newPast.slice(trimCount);
-        // Atualizar cache de memória
-        memoryCacheRef.current = memoryCacheRef.current.slice(trimCount);
-        const removedMemory = memoryCacheRef.current.reduce((a, b) => a + b, 0);
-        totalMemoryRef.current = Math.max(0, totalMemoryRef.current - removedMemory);
+      while (newPast.length > maxHistory) {
+        newPast.shift();
+        newTotal -= newMemCache.shift() || 0;
       }
       
       // ✅ Limite por memória — remover entradas mais antigas até caber
-      memoryCacheRef.current.push(entrySizeKb);
-      totalMemoryRef.current += entrySizeKb;
-      
-      while (totalMemoryRef.current > maxMemoryKb && newPast.length > 1) {
+      while (newTotal > maxMemoryKb && newPast.length > 1) {
         newPast.shift();
-        const removed = memoryCacheRef.current.shift() || 0;
-        totalMemoryRef.current -= removed;
+        newTotal -= newMemCache.shift() || 0;
       }
+      
+      memoryCacheRef.current = newMemCache;
+      totalMemoryRef.current = Math.max(0, newTotal);
       
       return newPast;
     });
@@ -164,9 +152,6 @@ export function useHistory<T>(
     setFuture([]);
     lastSavedState.current = newState;
     lastSavedHash.current = newHash;
-    
-    // ✅ Lock síncrono — liberado imediatamente (sem setTimeout race condition)
-    isSavingRef.current = false;
   }, [maxHistory, maxMemoryKb]);
 
   // Força salvar imediatamente (útil antes de operações importantes)
