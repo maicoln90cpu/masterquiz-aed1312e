@@ -59,14 +59,15 @@ describe('AudioBlock - FASE 9 (corrigido)', () => {
       render(<AudioBlock block={mockBlock} onChange={mockOnChange} />);
 
       const urlInput = screen.getByPlaceholderText(/https:\/\/exemplo.com\/audio.mp3/i);
-      await user.type(urlInput, 'https://example.com/my-audio.mp3');
+      await user.type(urlInput, 'x');
 
-      // userEvent.type chama onChange por caractere; verificar última chamada
-      const lastCall = mockOnChange.mock.calls[mockOnChange.mock.calls.length - 1][0];
-      expect(lastCall).toMatchObject({
-        url: 'https://example.com/my-audio.mp3',
-        provider: 'external',
-      });
+      // Componente controlado: cada keystroke chama onChange com spread do block original
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: 'x',
+          provider: 'external',
+        })
+      );
     });
   });
 
