@@ -376,8 +376,9 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
       // Ajuda inicialmente oculta
       expect(screen.queryByText(/como usar o editor de blocos/i)).not.toBeInTheDocument();
 
-      // Clicar no botão de ajuda
-      const helpBtn = screen.getByTitle?.('') || screen.getAllByRole('button').find(b => b.textContent?.includes('Ajuda'));
+      // Encontrar botão que contém o ícone de ajuda (HelpCircle)
+      const buttons = screen.getAllByRole('button');
+      const helpBtn = buttons.find(b => b.textContent?.includes('Ajuda'));
       if (helpBtn) {
         await user.click(helpBtn);
         expect(screen.getByText(/como usar o editor de blocos/i)).toBeInTheDocument();
