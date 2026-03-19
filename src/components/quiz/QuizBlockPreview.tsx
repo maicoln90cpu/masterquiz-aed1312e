@@ -718,7 +718,7 @@ export const QuizBlockPreview = ({
                   </div>
                 </div>
                 <ul className="space-y-2">
-                  {block.features.map((feature, idx) => (
+                  {(block.features || []).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                       <span>{feature}</span>
