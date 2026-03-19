@@ -1,8 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Plus, Trash2 } from "lucide-react";
 import type { MetricsBlock as MetricsBlockType } from "@/types/blocks";
@@ -22,15 +20,9 @@ export const MetricsBlock = ({ block, onChange }: MetricsBlockProps) => {
 
   const addDataPoint = () => {
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-    const data = [
-      ...safeData,
-      {
-        label: `Item ${safeData.length + 1}`,
-        value: 0,
-        color: colors[safeData.length % colors.length]
-      }
-    ];
-    updateBlock({ data });
+    updateBlock({
+      data: [...safeData, { label: `Item ${safeData.length + 1}`, value: 0, color: colors[safeData.length % colors.length] }]
+    });
   };
 
   const updateDataPoint = (index: number, field: 'label' | 'value' | 'color', value: string | number) => {
@@ -40,21 +32,15 @@ export const MetricsBlock = ({ block, onChange }: MetricsBlockProps) => {
   };
 
   const removeDataPoint = (index: number) => {
-    const data = safeData.filter((_, i) => i !== index);
-    updateBlock({ data });
+    updateBlock({ data: safeData.filter((_, i) => i !== index) });
   };
 
   const renderPreview = () => {
-    const chartData = safeData.map(d => ({
-      name: d.label,
-      value: d.value,
-      fill: d.color || '#3b82f6'
-    }));
-
+    const chartData = safeData.map(d => ({ name: d.label, value: d.value, fill: d.color || '#3b82f6' }));
     switch (block.chartType) {
       case 'bar':
         return (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={180}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -62,46 +48,29 @@ export const MetricsBlock = ({ block, onChange }: MetricsBlockProps) => {
               {block.showValues && <Tooltip />}
               {block.showLegend && <Legend />}
               <Bar dataKey="value">
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
+                {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         );
-      
       case 'line':
         return (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={180}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis dataKey="name" /><YAxis />
               {block.showValues && <Tooltip />}
               {block.showLegend && <Legend />}
               <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         );
-      
-      case 'pie':
-      case 'donut':
+      case 'pie': case 'donut':
         return (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={180}>
             <PieChart>
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={block.chartType === 'donut' ? 60 : 0}
-                outerRadius={80}
-                label={block.showValues}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
+              <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={block.chartType === 'donut' ? 50 : 0} outerRadius={70} label={block.showValues}>
+                {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
               </Pie>
               {block.showValues && <Tooltip />}
               {block.showLegend && <Legend />}
@@ -112,15 +81,16 @@ export const MetricsBlock = ({ block, onChange }: MetricsBlockProps) => {
   };
 
   return (
-    <Card className="border-2 border-purple-500/20">
+    <Card className="border-2 border-muted">
       <CardContent className="pt-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-purple-600">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <BarChart3 className="h-4 w-4" />
           <span>Métricas / Gráfico</span>
         </div>
 
+        {/* Content: Title */}
         <div className="space-y-2">
-          <Label htmlFor={`metrics-title-${block.id}`}>Título do Gráfico *</Label>
+          <Label htmlFor={`metrics-title-${block.id}`}>Título *</Label>
           <Input
             id={`metrics-title-${block.id}`}
             placeholder="Estatísticas"
@@ -129,98 +99,35 @@ export const MetricsBlock = ({ block, onChange }: MetricsBlockProps) => {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={`metrics-chart-type-${block.id}`}>Tipo de Gráfico</Label>
-          <Select 
-            value={block.chartType} 
-            onValueChange={(value: any) => updateBlock({ chartType: value })}
-          >
-            <SelectTrigger id={`metrics-chart-type-${block.id}`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bar">Barras</SelectItem>
-              <SelectItem value="line">Linha</SelectItem>
-              <SelectItem value="pie">Pizza</SelectItem>
-              <SelectItem value="donut">Rosca (Donut)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
+        {/* Content: Data points */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label>Dados do Gráfico</Label>
+            <Label>Dados</Label>
             <Button onClick={addDataPoint} size="sm" variant="outline">
-              <Plus className="h-4 w-4 mr-1" />
-              Adicionar
+              <Plus className="h-4 w-4 mr-1" /> Adicionar
             </Button>
           </div>
-          
           <div className="space-y-2">
-            {safeData.map((dataPoint, index) => (
+            {safeData.map((dp, index) => (
               <div key={index} className="flex gap-2 items-center">
-                <Input
-                  placeholder="Rótulo"
-                  value={dataPoint.label}
-                  onChange={(e) => updateDataPoint(index, 'label', e.target.value)}
-                  className="flex-1"
-                />
-                <Input
-                  type="number"
-                  placeholder="Valor"
-                  value={dataPoint.value}
-                  onChange={(e) => updateDataPoint(index, 'value', parseFloat(e.target.value) || 0)}
-                  className="w-24"
-                />
-                <Input
-                  type="color"
-                  value={dataPoint.color || '#3b82f6'}
-                  onChange={(e) => updateDataPoint(index, 'color', e.target.value)}
-                  className="w-16 h-10"
-                />
-                <Button
-                  onClick={() => removeDataPoint(index)}
-                  size="icon"
-                  variant="ghost"
-                  className="shrink-0"
-                  disabled={safeData.length <= 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <Input placeholder="Rótulo" value={dp.label} onChange={(e) => updateDataPoint(index, 'label', e.target.value)} className="flex-1" />
+                <Input type="number" placeholder="Valor" value={dp.value} onChange={(e) => updateDataPoint(index, 'value', parseFloat(e.target.value) || 0)} className="w-24" />
+                <Input type="color" value={dp.color || '#3b82f6'} onChange={(e) => updateDataPoint(index, 'color', e.target.value)} className="w-14 h-10" />
+                <Button onClick={() => removeDataPoint(index)} size="icon" variant="ghost" disabled={safeData.length <= 1}><Trash2 className="h-4 w-4" /></Button>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              id={`metrics-legend-${block.id}`}
-              checked={block.showLegend !== false}
-              onCheckedChange={(checked) => updateBlock({ showLegend: checked })}
-            />
-            <Label htmlFor={`metrics-legend-${block.id}`} className="cursor-pointer text-sm whitespace-nowrap">
-              Mostrar legenda
-            </Label>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Switch
-              id={`metrics-values-${block.id}`}
-              checked={block.showValues !== false}
-              onCheckedChange={(checked) => updateBlock({ showValues: checked })}
-            />
-            <Label htmlFor={`metrics-values-${block.id}`} className="cursor-pointer text-sm whitespace-nowrap">
-              Mostrar valores
-            </Label>
-          </div>
-        </div>
-
         {/* Preview */}
         <div className="border rounded-lg p-4 bg-muted/20">
-          <p className="text-sm font-medium mb-3 text-center">{block.title}</p>
+          <p className="text-sm font-medium mb-2 text-center">{block.title}</p>
           {renderPreview()}
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          Configure tipo de gráfico, legenda e valores no painel de propriedades →
+        </p>
       </CardContent>
     </Card>
   );

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import type { NPSBlock as NPSBlockType } from "@/types/blocks";
 
@@ -30,10 +29,11 @@ export const NPSBlock = ({ block, onChange }: NPSBlockProps) => {
   return (
     <Card>
       <CardContent className="pt-4 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-primary">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <span>⭐ Bloco NPS (Net Promoter Score)</span>
         </div>
 
+        {/* Content: Question */}
         <div className="space-y-2">
           <Label htmlFor="nps-question">Pergunta</Label>
           <Input
@@ -42,44 +42,6 @@ export const NPSBlock = ({ block, onChange }: NPSBlockProps) => {
             onChange={(e) => onChange({ ...block, question: e.target.value })}
             placeholder="Ex: De 0 a 10, qual a probabilidade de você recomendar?"
           />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="nps-low">Label esquerda (0)</Label>
-            <Input
-              id="nps-low"
-              value={block.lowLabel || ''}
-              onChange={(e) => onChange({ ...block, lowLabel: e.target.value })}
-              placeholder="Pouco provável"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="nps-high">Label direita (10)</Label>
-            <Input
-              id="nps-high"
-              value={block.highLabel || ''}
-              onChange={(e) => onChange({ ...block, highLabel: e.target.value })}
-              placeholder="Muito provável"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={block.showLabels ?? true}
-              onCheckedChange={(checked) => onChange({ ...block, showLabels: checked })}
-            />
-            <Label className="text-sm whitespace-nowrap">Mostrar labels</Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={block.required ?? true}
-              onCheckedChange={(checked) => onChange({ ...block, required: checked })}
-            />
-            <Label className="text-sm whitespace-nowrap">Obrigatório</Label>
-          </div>
         </div>
 
         {/* Preview */}
@@ -120,6 +82,10 @@ export const NPSBlock = ({ block, onChange }: NPSBlockProps) => {
             </p>
           )}
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          Configure labels, obrigatoriedade e opções no painel de propriedades →
+        </p>
       </CardContent>
     </Card>
   );
