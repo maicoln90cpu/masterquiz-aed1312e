@@ -162,7 +162,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
       render(<BlockEditor blocks={[]} onChange={mockOnChange} />);
 
       await user.click(screen.getByText('Adicionar Primeira Pergunta'));
-      expect(toast.success).toHaveBeenCalled();
+      expect(toastMock.success).toHaveBeenCalled();
     });
   });
 
