@@ -574,20 +574,23 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-4">
-                {safeBlocks.map((block, index) => (
-                  <SortableBlock
-                    key={block.id}
-                    block={block}
-                    blockIndex={index}
-                    onUpdate={(updated) => updateBlock(block.id, updated)}
-                    onDelete={() => deleteBlock(block.id)}
-                    totalQuestions={totalQuestions}
-                    currentQuestionIndex={currentQuestionIndex}
-                    t={t}
-                    onBlockSelect={onBlockSelect}
-                    isSelected={selectedBlockIndex === index}
-                  />
-                ))}
+                {safeBlocks.map((block, index) => {
+                  const normalizedBlock = normalizeBlock(block);
+                  return (
+                    <SortableBlock
+                      key={block.id}
+                      block={normalizedBlock}
+                      blockIndex={index}
+                      onUpdate={(updated) => updateBlock(block.id, updated)}
+                      onDelete={() => deleteBlock(block.id)}
+                      totalQuestions={totalQuestions}
+                      currentQuestionIndex={currentQuestionIndex}
+                      t={t}
+                      onBlockSelect={onBlockSelect}
+                      isSelected={selectedBlockIndex === index}
+                    />
+                  );
+                })}
               </div>
             </SortableContext>
           </DndContext>
