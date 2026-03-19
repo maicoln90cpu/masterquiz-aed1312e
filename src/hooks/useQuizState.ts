@@ -111,6 +111,7 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
     quizId: null,
     quizSlug: '',
     abTestActive: false,
+    selectedBlockIndex: null,
   });
 
   // ✅ Estado de aparência
