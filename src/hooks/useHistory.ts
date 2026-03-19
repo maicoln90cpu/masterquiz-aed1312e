@@ -167,6 +167,10 @@ export function useHistory<T>(
     }
   }, [saveToHistory]);
 
+  // Ref para saveToHistory para evitar closure stale em setTimeout
+  const saveToHistoryRef = useRef(saveToHistory);
+  saveToHistoryRef.current = saveToHistory;
+
   // Atualiza o estado com debounce para o histórico
   const setState = useCallback((newStateOrFn: T | ((prev: T) => T)) => {
     setStateInternal(prev => {
@@ -176,22 +180,21 @@ export function useHistory<T>(
 
       // Atualizar pending state
       pendingState.current = newState;
-
-      // Debounce para salvar no histórico
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-
-      debounceTimer.current = setTimeout(() => {
-        if (pendingState.current !== null) {
-          saveToHistory(lastSavedState.current, pendingState.current);
-          pendingState.current = null;
-        }
-      }, debounceMs);
-
       return newState;
     });
-  }, [debounceMs, saveToHistory]);
+
+    // ✅ Debounce FORA do updater do React para evitar problemas de batching
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      if (pendingState.current !== null) {
+        saveToHistoryRef.current(lastSavedState.current, pendingState.current);
+        pendingState.current = null;
+      }
+    }, debounceMs);
+  }, [debounceMs]);
 
   // Undo
   const undo = useCallback(() => {
