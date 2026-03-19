@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { QuestionConfigStep } from "@/components/quiz/QuestionConfigStep";
+import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
 import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";
 import { ResultsConfigStep } from "@/components/quiz/ResultsConfigStep";
