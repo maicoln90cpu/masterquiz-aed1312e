@@ -751,7 +751,14 @@ const CreateQuizModern = () => {
           </div>
 
           {step < 5 ? (
-            <Button onClick={() => updateEditor({ step: step + 1 })}>
+            <Button onClick={() => {
+              const nextStep = step + 1;
+              if (questions.length === 0 && nextStep >= 3) {
+                const emptyQuestions = initializeEmptyQuestions(editorState.questionCount);
+                setQuestions(emptyQuestions);
+              }
+              updateEditor({ step: nextStep });
+            }}>
               {t('common.next', 'Próximo')}
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
