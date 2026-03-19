@@ -291,7 +291,9 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
 
       {/* Block Content */}
       <div className="pt-8">
-        {renderBlock()}
+        <BlockErrorBoundary blockType={block.type} onDelete={onDelete}>
+          {renderBlock()}
+        </BlockErrorBoundary>
       </div>
     </div>
   );

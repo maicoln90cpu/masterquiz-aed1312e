@@ -1,14 +1,29 @@
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TestimonialBlock as TestimonialBlockType } from "@/types/blocks";
-import { ImageUploader } from "@/components/ImageUploader";
-import { Star } from "lucide-react";
+import { Star, AlertCircle } from "lucide-react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface TestimonialBlockProps {
   block: TestimonialBlockType;
   onChange: (block: TestimonialBlockType) => void;
 }
+
+// Safe image uploader wrapper
+const SafeImageUploader = ({ value, onChange, onRemove }: { value?: string; onChange: (url: string) => void; onRemove: () => void }) => {
+  try {
+    const { ImageUploader } = require("@/components/ImageUploader");
+    return <ImageUploader value={value} onChange={onChange} onRemove={onRemove} />;
+  } catch (err) {
+    console.warn("[TestimonialBlock] ImageUploader falhou:", err);
+    return (
+      <div className="flex items-center gap-2 p-3 border rounded-lg text-muted-foreground text-sm">
+        <AlertCircle className="h-4 w-4" />
+        <span>Upload de imagem indisponível</span>
+      </div>
+    );
+  }
+};
 
 export default function TestimonialBlock({ block, onChange }: TestimonialBlockProps) {
   return (
@@ -27,7 +42,7 @@ export default function TestimonialBlock({ block, onChange }: TestimonialBlockPr
       {/* Content: Author photo */}
       <div className="space-y-2">
         <Label>Foto do Autor</Label>
-        <ImageUploader
+        <SafeImageUploader
           value={block.authorImage}
           onChange={(url) => onChange({ ...block, authorImage: url })}
           onRemove={() => onChange({ ...block, authorImage: undefined })}
