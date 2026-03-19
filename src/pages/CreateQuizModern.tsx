@@ -230,13 +230,16 @@ const CreateQuizModern = () => {
   ], [editorState.step, t]);
 
   const handleStepClick = useCallback((newStep: number) => {
-    // Inicializar perguntas vazias ao entrar no Step 3+ sem perguntas
-    if (questions.length === 0 && newStep >= 3) {
+    updateEditor({ step: newStep });
+  }, [updateEditor]);
+
+  // ✅ Centralizado: inicializar perguntas ao entrar no Step 3+ sem perguntas
+  useEffect(() => {
+    if (editorState.step >= 3 && questions.length === 0 && !isExpressMode && !uiState.isLoadingQuiz) {
       const emptyQuestions = initializeEmptyQuestions(editorState.questionCount);
       setQuestions(emptyQuestions);
     }
-    updateEditor({ step: newStep });
-  }, [updateEditor, editorState.questionCount, questions.length, initializeEmptyQuestions, setQuestions]);
+  }, [editorState.step, questions.length, isExpressMode, uiState.isLoadingQuiz, editorState.questionCount, initializeEmptyQuestions, setQuestions]);
 
   // ============================================
   // RENDERS CONDICIONAIS
