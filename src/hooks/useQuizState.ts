@@ -42,6 +42,7 @@ export interface QuizEditorState {
   quizId: string | null;
   quizSlug: string;
   abTestActive: boolean;
+  selectedBlockIndex: number | null;
 }
 
 export interface QuizUIState {
