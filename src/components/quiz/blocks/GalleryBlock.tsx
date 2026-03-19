@@ -44,7 +44,7 @@ export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
         </div>
 
         {/* Content: Image list */}
-        {block.images.length === 0 ? (
+        {images.length === 0 ? (
           <div className="text-center py-8 border-2 border-dashed rounded-lg">
             <Images className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">Nenhuma imagem adicionada</p>
