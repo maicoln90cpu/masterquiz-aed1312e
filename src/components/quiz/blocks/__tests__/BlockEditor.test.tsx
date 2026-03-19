@@ -180,7 +180,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
       await user.click(deleteBtn);
 
       expect(mockOnChange).not.toHaveBeenCalled();
-      expect(toast.warning).toHaveBeenCalled();
+      expect(toastMock.warning).toHaveBeenCalled();
     });
 
     it('deve deletar bloco quando há mais de um', async () => {
