@@ -50,6 +50,7 @@ const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m
 const PQLAnalytics = lazy(() => import("@/components/admin/PQLAnalytics").then(m => ({ default: m.PQLAnalytics })));
 const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
+const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
