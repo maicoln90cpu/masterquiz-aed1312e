@@ -664,6 +664,13 @@ const CreateQuizModern = () => {
               showTitle={showTitle}
               showDescription={showDescription}
               showQuestionNumber={showQuestionNumber}
+              mode="fullscreen"
+              formConfig={{
+                collectName: collectName,
+                collectEmail: collectEmail,
+                collectWhatsapp: collectWhatsapp,
+                collectionTiming: collectionTiming as 'before' | 'after' | 'none',
+              }}
             />
           </div>
         </DialogContent>
