@@ -60,8 +60,12 @@ import { AnimatedCounterBlock } from "./AnimatedCounterBlock";
 interface BlockEditorProps {
   blocks: QuizBlock[];
   onChange: (blocks: QuizBlock[]) => void;
-  totalQuestions?: number; // Total de perguntas no quiz
-  currentQuestionIndex?: number; // Índice da pergunta atual (0-based)
+  totalQuestions?: number;
+  currentQuestionIndex?: number;
+  /** Callback when a block is clicked/selected (for properties panel) */
+  onBlockSelect?: (index: number) => void;
+  /** Currently selected block index (for highlight) */
+  selectedBlockIndex?: number | null;
 }
 
 interface SortableBlockProps {
