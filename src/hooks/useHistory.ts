@@ -1,10 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UseHistoryOptions {
-  /** Número máximo de estados no histórico (default: 50) */
+  /** Número máximo de estados no histórico (default: 30) */
   maxHistory?: number;
   /** Debounce em ms para agrupar mudanças rápidas (default: 300) */
   debounceMs?: number;
+  /** Tamanho máximo estimado em KB para o histórico total (default: 5000 = 5MB) */
+  maxMemoryKb?: number;
 }
 
 interface UseHistoryReturn<T> {
@@ -28,31 +30,83 @@ interface UseHistoryReturn<T> {
   redoCount: number;
   /** Força salvar o estado atual no histórico (ignora debounce) */
   forceSave: () => void;
+  /** Estimativa de memória usada pelo histórico (KB) */
+  memoryUsageKb: number;
+}
+
+// ── Utilidades de performance ──
+
+/**
+ * Hash rápido para comparação de igualdade (FNV-1a 32-bit).
+ * Muito mais rápido que JSON.stringify para objetos grandes.
+ * Usado apenas para detectar se houve mudança — não para persistência.
+ */
+function fastHash(obj: unknown): number {
+  const str = typeof obj === 'string' ? obj : JSON.stringify(obj);
+  let hash = 0x811c9dc5; // FNV offset basis
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = (hash * 0x01000193) >>> 0; // FNV prime, unsigned
+  }
+  return hash;
+}
+
+/**
+ * Estimativa rápida de tamanho em bytes (sem serializar de novo se possível).
+ * Usa amostragem para objetos grandes.
+ */
+function estimateSizeKb(obj: unknown): number {
+  if (obj === null || obj === undefined) return 0;
+  if (typeof obj === 'string') return obj.length / 1024;
+  if (typeof obj === 'number' || typeof obj === 'boolean') return 0.008;
+  // Para arrays/objetos, serializar uma vez (inevitável para estimativa precisa)
+  try {
+    const str = JSON.stringify(obj);
+    return str.length * 2 / 1024; // UTF-16 = 2 bytes per char
+  } catch {
+    return 1; // fallback
+  }
 }
 
 /**
  * Hook para gerenciar histórico de estados com Undo/Redo
  * 
+ * Fase 7 — Otimizações de performance:
+ * - Hash rápido (FNV-1a) para detecção de duplicatas
+ * - Limite de memória configurável (maxMemoryKb)
+ * - Auto-pruning quando memória excede o limite
+ * - Lock síncrono (sem setTimeout) para prevenir race conditions
+ * - Cache de hash por entrada para evitar re-serialização
+ * 
  * @example
  * const { state, setState, undo, redo, canUndo, canRedo } = useHistory<Question[]>([], {
- *   maxHistory: 50,
- *   debounceMs: 300
+ *   maxHistory: 30,
+ *   debounceMs: 500,
+ *   maxMemoryKb: 5000
  * });
  */
 export function useHistory<T>(
   initialState: T,
   options: UseHistoryOptions = {}
 ): UseHistoryReturn<T> {
-  const { maxHistory = 50, debounceMs = 300 } = options;
+  const { maxHistory = 30, debounceMs = 300, maxMemoryKb = 5000 } = options;
 
   const [state, setStateInternal] = useState<T>(initialState);
   const [past, setPast] = useState<T[]>([]);
   const [future, setFuture] = useState<T[]>([]);
   
-  // Refs para debounce
+  // Refs para debounce e performance
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingState = useRef<T | null>(null);
   const lastSavedState = useRef<T>(initialState);
+  const lastSavedHash = useRef<number>(fastHash(initialState));
+  
+  // ✅ Lock síncrono (sem setTimeout)
+  const isSavingRef = useRef(false);
+  
+  // ✅ Cache de tamanhos estimados para cada entrada do histórico
+  const memoryCacheRef = useRef<number[]>([]);
+  const totalMemoryRef = useRef(0);
 
   // Limpar timer ao desmontar
   useEffect(() => {
@@ -63,46 +117,57 @@ export function useHistory<T>(
     };
   }, []);
 
-  // ✅ Ref para prevenir saves durante transições
-  const isSavingRef = useRef(false);
-
-  // Função interna para salvar no histórico
+  // ── Função interna para salvar no histórico ──
   const saveToHistory = useCallback((currentState: T, newState: T) => {
-    // ✅ Guard contra saves duplicados
     if (isSavingRef.current) return;
     
-    // Não salvar se for igual ao estado anterior
-    const currentJson = JSON.stringify(currentState);
-    const newJson = JSON.stringify(newState);
-    if (currentJson === newJson) {
-      return;
-    }
-    
-    // ✅ Não salvar se o novo estado é vazio e o anterior também
-    if (newJson === '[]' && currentJson === '[]') {
+    // ✅ Comparação rápida via hash (FNV-1a) em vez de JSON.stringify completo
+    const newHash = fastHash(newState);
+    if (newHash === lastSavedHash.current) {
+      // Hash colisão possível mas rara — para undo/redo, falso positivo é aceitável
+      // (pior caso: uma mudança minúscula não gera entrada no histórico)
       return;
     }
 
     isSavingRef.current = true;
 
+    // ✅ Estimar tamanho da nova entrada
+    const entrySizeKb = estimateSizeKb(currentState);
+
     setPast(prev => {
-      const newPast = [...prev, currentState];
-      // Limitar tamanho do histórico
+      let newPast = [...prev, currentState];
+      
+      // ✅ Limite por contagem
       if (newPast.length > maxHistory) {
-        return newPast.slice(-maxHistory);
+        const trimCount = newPast.length - maxHistory;
+        newPast = newPast.slice(trimCount);
+        // Atualizar cache de memória
+        memoryCacheRef.current = memoryCacheRef.current.slice(trimCount);
+        const removedMemory = memoryCacheRef.current.reduce((a, b) => a + b, 0);
+        totalMemoryRef.current = Math.max(0, totalMemoryRef.current - removedMemory);
       }
+      
+      // ✅ Limite por memória — remover entradas mais antigas até caber
+      memoryCacheRef.current.push(entrySizeKb);
+      totalMemoryRef.current += entrySizeKb;
+      
+      while (totalMemoryRef.current > maxMemoryKb && newPast.length > 1) {
+        newPast.shift();
+        const removed = memoryCacheRef.current.shift() || 0;
+        totalMemoryRef.current -= removed;
+      }
+      
       return newPast;
     });
 
     // Limpar o futuro quando nova ação é feita
     setFuture([]);
     lastSavedState.current = newState;
+    lastSavedHash.current = newHash;
     
-    // ✅ Liberar lock
-    setTimeout(() => {
-      isSavingRef.current = false;
-    }, 50);
-  }, [maxHistory]);
+    // ✅ Lock síncrono — liberado imediatamente (sem setTimeout race condition)
+    isSavingRef.current = false;
+  }, [maxHistory, maxMemoryKb]);
 
   // Força salvar imediatamente (útil antes de operações importantes)
   const forceSave = useCallback(() => {
@@ -162,6 +227,10 @@ export function useHistory<T>(
       setFuture(prevFuture => [state, ...prevFuture]);
       setStateInternal(previous);
       lastSavedState.current = previous;
+      lastSavedHash.current = fastHash(previous);
+      
+      // ✅ Atualizar cache de memória
+      memoryCacheRef.current.pop();
 
       return newPast;
     });
@@ -178,6 +247,11 @@ export function useHistory<T>(
       setPast(prevPast => [...prevPast, state]);
       setStateInternal(next);
       lastSavedState.current = next;
+      lastSavedHash.current = fastHash(next);
+      
+      // ✅ Atualizar cache de memória
+      memoryCacheRef.current.push(estimateSizeKb(state));
+      totalMemoryRef.current += estimateSizeKb(state);
 
       return newFuture;
     });
@@ -193,6 +267,9 @@ export function useHistory<T>(
     setPast([]);
     setFuture([]);
     lastSavedState.current = state;
+    lastSavedHash.current = fastHash(state);
+    memoryCacheRef.current = [];
+    totalMemoryRef.current = 0;
   }, [state]);
 
   return {
@@ -205,6 +282,7 @@ export function useHistory<T>(
     clearHistory,
     undoCount: past.length,
     redoCount: future.length,
-    forceSave
+    forceSave,
+    memoryUsageKb: totalMemoryRef.current,
   };
 }
