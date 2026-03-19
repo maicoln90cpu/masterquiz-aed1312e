@@ -3,8 +3,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Music, Upload, AlertCircle, HelpCircle } from "lucide-react";
+import { AudioUploader } from "@/components/AudioUploader";
+import { useVideoStorage } from "@/hooks/useVideoStorage";
 import type { AudioBlock as AudioBlockType } from "@/types/blocks";
 import { useState } from "react";
 
@@ -13,68 +16,23 @@ interface AudioBlockProps {
   onChange: (block: AudioBlockType) => void;
 }
 
-const LazyAudioUpload = ({ block, onChange }: AudioBlockProps) => {
-  let storageData = { allowVideoUpload: false, usedMb: 0, videoStorageLimitMb: 0, usagePercentage: 0 };
-
-  try {
-    const { useVideoStorage } = require("@/hooks/useVideoStorage");
-    storageData = useVideoStorage();
-  } catch (err) {
-    console.warn("[AudioBlock] Hook de storage falhou:", err);
-    return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Upload indisponível. Use URL externa.</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const { allowVideoUpload, usedMb, videoStorageLimitMb, usagePercentage } = storageData;
-
-  if (!allowVideoUpload) {
-    return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Upload indisponível no plano atual.</AlertDescription>
-      </Alert>
-    );
-  }
-
-  try {
-    const { AudioUploader } = require("@/components/AudioUploader");
-    const { Progress } = require("@/components/ui/progress");
-
-    return (
-      <>
-        {videoStorageLimitMb > 0 && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Armazenamento</span>
-              <span>{usedMb.toFixed(1)}MB / {videoStorageLimitMb}MB</span>
-            </div>
-            <Progress value={usagePercentage} className="h-2" />
-          </div>
-        )}
-        <AudioUploader
-          value={block.provider === 'uploaded' ? block.url : undefined}
-          onChange={(url: string) => onChange({ ...block, url, provider: 'uploaded' })}
-          onRemove={() => onChange({ ...block, url: '', provider: undefined })}
-        />
-      </>
-    );
-  } catch (err) {
-    console.warn("[AudioBlock] AudioUploader falhou:", err);
-    return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Componente de upload indisponível.</AlertDescription>
-      </Alert>
-    );
-  }
-};
-
 export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
   const [activeTab, setActiveTab] = useState<string>("url");
+
+  let allowVideoUpload = false;
+  let usedMb = 0;
+  let videoStorageLimitMb = 0;
+  let usagePercentage = 0;
+
+  try {
+    const storage = useVideoStorage();
+    allowVideoUpload = storage.allowVideoUpload;
+    usedMb = storage.usedMb;
+    videoStorageLimitMb = storage.videoStorageLimitMb;
+    usagePercentage = storage.usagePercentage;
+  } catch (err) {
+    console.warn("[AudioBlock] Hook de storage falhou:", err);
+  }
 
   return (
     <TooltipProvider>
@@ -93,10 +51,20 @@ export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
             </Tooltip>
           </div>
 
+          {allowVideoUpload && videoStorageLimitMb > 0 && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Armazenamento</span>
+                <span>{usedMb.toFixed(1)}MB / {videoStorageLimitMb}MB</span>
+              </div>
+              <Progress value={usagePercentage} className="h-2" />
+            </div>
+          )}
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="url">URL Externa</TabsTrigger>
-              <TabsTrigger value="upload">
+              <TabsTrigger value="upload" disabled={!allowVideoUpload}>
                 <Upload className="h-4 w-4 mr-2" />
                 Upload
               </TabsTrigger>
@@ -116,7 +84,18 @@ export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
             </TabsContent>
 
             <TabsContent value="upload" className="space-y-4">
-              <LazyAudioUpload block={block} onChange={onChange} />
+              {allowVideoUpload ? (
+                <AudioUploader
+                  value={block.provider === 'uploaded' ? block.url : undefined}
+                  onChange={(url) => onChange({ ...block, url, provider: 'uploaded' })}
+                  onRemove={() => onChange({ ...block, url: '', provider: undefined })}
+                />
+              ) : (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>Upload indisponível no plano atual.</AlertDescription>
+                </Alert>
+              )}
             </TabsContent>
           </Tabs>
 
