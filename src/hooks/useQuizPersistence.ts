@@ -64,6 +64,15 @@ export function useQuizPersistence({
     return `quiz_${userId}_${key}`;
   }, []);
 
+  // ✅ Callbacks estáveis para AutoSave (evita cascata de re-renders)
+  const onSaveCompleteStable = useCallback(() => {
+    console.log('[AutoSave] ✅ Rascunho salvo automaticamente');
+  }, []);
+
+  const onSaveErrorStable = useCallback((error: Error) => {
+    console.error('[AutoSave] ❌ Erro ao salvar:', error);
+  }, []);
+
   // ✅ Hook de AutoSave robusto
   const {
     status: autoSaveStatus,
