@@ -11,28 +11,33 @@ interface ComparisonBlockProps {
 }
 
 export const ComparisonBlock = ({ block, onChange }: ComparisonBlockProps) => {
+  // Normalização defensiva
+  const leftItems = block.leftItems || ['Item esquerda'];
+  const rightItems = block.rightItems || ['Item direita'];
+  const safeBlock = { ...block, leftItems, rightItems };
+
   const updateLeftItem = (index: number, value: string) => {
-    const newItems = [...block.leftItems];
+    const newItems = [...leftItems];
     newItems[index] = value;
-    onChange({ ...block, leftItems: newItems });
+    onChange({ ...safeBlock, leftItems: newItems });
   };
 
   const updateRightItem = (index: number, value: string) => {
-    const newItems = [...block.rightItems];
+    const newItems = [...rightItems];
     newItems[index] = value;
-    onChange({ ...block, rightItems: newItems });
+    onChange({ ...safeBlock, rightItems: newItems });
   };
 
   const addRow = () => {
-    onChange({ ...block, leftItems: [...block.leftItems, 'Novo item'], rightItems: [...block.rightItems, 'Novo item'] });
+    onChange({ ...safeBlock, leftItems: [...leftItems, 'Novo item'], rightItems: [...rightItems, 'Novo item'] });
   };
 
   const removeRow = (index: number) => {
-    if (block.leftItems.length <= 1) return;
+    if (leftItems.length <= 1) return;
     onChange({
-      ...block,
-      leftItems: block.leftItems.filter((_, i) => i !== index),
-      rightItems: block.rightItems.filter((_, i) => i !== index)
+      ...safeBlock,
+      leftItems: leftItems.filter((_, i) => i !== index),
+      rightItems: rightItems.filter((_, i) => i !== index)
     });
   };
 
