@@ -35,6 +35,8 @@ interface AppearanceConfigStepProps {
   onShowQuestionNumberChange?: (value: boolean) => void;
   onShowResultsChange?: (value: boolean) => void;
   onProgressStyleChange?: (value: 'bar' | 'counter' | 'none') => void;
+  /** Hide showResults toggle (e.g., when already set in Step 1 Modern) */
+  hideShowResults?: boolean;
 }
 
 const getTemplates = (t: any) => [
