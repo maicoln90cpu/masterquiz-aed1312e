@@ -214,16 +214,6 @@ const CreateQuizModern = () => {
     updateCurrentQuestionBlocks([...existingBlocks, newBlock]);
   }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks]);
 
-  const handlePaletteAddTemplate = useCallback((templateBlocks: QuizBlock[]) => {
-    const currentQ = questions[editorState.currentQuestionIndex];
-    if (!currentQ) {
-      toast.error('Nenhuma pergunta disponível.');
-      return;
-    }
-    const existingBlocks = currentQ.blocks || [];
-    const adjustedBlocks = templateBlocks.map((b, i) => ({ ...b, order: existingBlocks.length + i }));
-    updateCurrentQuestionBlocks([...existingBlocks, ...adjustedBlocks]);
-  }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks]);
 
   // ✅ Handler para publicar
   const handlePublish = useCallback(async () => {
