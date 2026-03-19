@@ -498,7 +498,7 @@ const CreateQuizModern = () => {
             </Card>
           )}
 
-          {/* STEP 2: Aparência — same interface as Classic */}
+          {/* STEP 2: Aparência — hideShowResults (já configurado na Step 1) */}
           {step === 2 && !isExpressMode && (
             <AppearanceConfigStep
               title={title}
@@ -522,6 +522,7 @@ const CreateQuizModern = () => {
               onShowResultsChange={(v) => updateAppearance({ showResults: v })}
               progressStyle={appearanceState.progressStyle}
               onProgressStyleChange={(v) => updateAppearance({ progressStyle: v })}
+              hideShowResults
             />
           )}
 
