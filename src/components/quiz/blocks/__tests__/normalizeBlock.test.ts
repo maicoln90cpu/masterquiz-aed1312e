@@ -22,7 +22,7 @@ describe('createBlock', () => {
   });
 
   it('throws for unknown type', () => {
-    expect(() => createBlock('unknown' as BlockType)).toThrow();
+    expect(() => createBlock('unknown' as BlockType, 0)).toThrow();
   });
 });
 
