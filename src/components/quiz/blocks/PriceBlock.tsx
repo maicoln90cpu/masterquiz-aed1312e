@@ -11,22 +11,26 @@ interface PriceBlockProps {
 }
 
 export const PriceBlock = ({ block, onChange }: PriceBlockProps) => {
+  // Normalização defensiva
+  const features = block.features || ['Recurso 1'];
+  const safeBlock = { ...block, features };
+
   const updateBlock = (updates: Partial<PriceBlockType>) => {
-    onChange({ ...block, ...updates });
+    onChange({ ...safeBlock, ...updates });
   };
 
   const addFeature = () => {
-    updateBlock({ features: [...block.features, ''] });
+    updateBlock({ features: [...features, ''] });
   };
 
   const updateFeature = (index: number, value: string) => {
-    const features = [...block.features];
-    features[index] = value;
-    updateBlock({ features });
+    const feats = [...features];
+    feats[index] = value;
+    updateBlock({ features: feats });
   };
 
   const removeFeature = (index: number) => {
-    updateBlock({ features: block.features.filter((_, i) => i !== index) });
+    updateBlock({ features: features.filter((_, i) => i !== index) });
   };
 
   return (
