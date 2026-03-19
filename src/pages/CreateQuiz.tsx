@@ -45,7 +45,10 @@ import { useQuizTemplateSelection } from "@/hooks/useQuizTemplateSelection";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useEditorInteractionTracker } from "@/hooks/useEditorInteractionTracker";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useEditorLayout } from "@/hooks/useEditorLayout";
+import { lazy, Suspense } from "react";
 
+const CreateQuizModern = lazy(() => import("@/pages/CreateQuizModern"));
 import { useProfile } from "@/hooks/useProfile";
 
 const CreateQuiz = () => {
