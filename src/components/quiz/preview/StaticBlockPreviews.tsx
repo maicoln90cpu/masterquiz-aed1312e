@@ -5,7 +5,7 @@ import type { QuizBlock, VideoBlock } from "@/types/blocks";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { MediaPlayer } from "./MediaPreviews";
 import { CustomVideoPlayer } from "@/components/video/CustomVideoPlayer";
-import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+// ✅ FASE 12: Recharts removido - MetricsBlockPreview extraído para lazy loading
 
 // ---- TEXT ----
 export const TextBlockPreview = ({ block }: { block: QuizBlock & { type: 'text' } }) => (
