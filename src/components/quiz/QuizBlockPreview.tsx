@@ -1,6 +1,7 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, lazy, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { QuizBlock, VideoBlock } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
 
@@ -9,7 +10,7 @@ import { QuestionBlockPreview } from "./preview/QuestionBlockPreview";
 import {
   TextBlockPreview, SeparatorBlockPreview, ImageBlockPreview, VideoBlockPreview,
   AudioBlockPreview, GalleryBlockPreview, EmbedBlockPreview, ButtonBlockPreview,
-  PriceBlockPreview, MetricsBlockPreview,
+  PriceBlockPreview,
 } from "./preview/StaticBlockPreviews";
 import {
   LoadingBlockPreview, ProgressBlockPreview, CountdownBlockPreview,
@@ -17,6 +18,11 @@ import {
   NPSBlockPreview, AccordionBlockPreview, ComparisonBlockPreview,
   SocialProofBlockPreview, AnimatedCounterBlockPreview,
 } from "./preview/InteractiveBlockPreviews";
+
+// ✅ FASE 12: Lazy load MetricsBlockPreview (recharts é pesado ~200KB)
+const LazyMetricsBlockPreview = lazy(() =>
+  import("./preview/MetricsBlockPreview").then(m => ({ default: m.MetricsBlockPreview }))
+);
 
 interface QuizBlockPreviewProps {
   blocks: QuizBlock[];
@@ -90,7 +96,11 @@ export const QuizBlockPreview = ({
       case "price":
         return <PriceBlockPreview key={block.id} block={block} />;
       case "metrics":
-        return <MetricsBlockPreview key={block.id} block={block} />;
+        return (
+          <Suspense key={block.id} fallback={<Skeleton className="h-[300px] w-full rounded-lg" />}>
+            <LazyMetricsBlockPreview block={block as QuizBlock & { type: 'metrics' }} />
+          </Suspense>
+        );
       case "loading":
         return <LoadingBlockPreview key={block.id} block={block} />;
       case "progress":
