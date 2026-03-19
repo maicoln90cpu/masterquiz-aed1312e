@@ -491,27 +491,23 @@ export function useQuizPersistence({
 
           // quiz_first_published — sempre ao publicar pela primeira vez
           const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-          w.dataLayer.push({
-            event: publishEventName,
+          pushGTMEvent(publishEventName, {
             quiz_id: quiz.id,
             quiz_title: quiz.title,
             user_id: user.id,
             publish_source: isExpressMode ? 'express_auto' : 'manual',
             editor_mode: editorMode,
           });
-          console.log(`🎯 [GTM] Event pushed: ${publishEventName} (INSERT branch)`);
 
           // first_quiz_created — SOMENTE se houve interação real
           const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
           if (hasUserInteracted) {
-            w.dataLayer.push({
-              event: createEventName,
+            pushGTMEvent(createEventName, {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
               editor_mode: editorMode,
             });
-            console.log(`🎯 [GTM] Event pushed: ${createEventName} (INSERT branch, real interaction)`);
           }
 
           // Promover para construtor ao publicar
