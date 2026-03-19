@@ -122,7 +122,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
   );
 };
 
-export const CompactBlockPalette = ({
+export const CompactBlockPalette = React.memo(({
   onAddBlock,
   onAddTemplate,
   currentBlockOrder,

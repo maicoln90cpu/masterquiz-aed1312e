@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
+import type { BlockType, QuizBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 
