@@ -360,4 +360,4 @@ export const CompactBlockPalette = React.memo(({
       </ScrollArea>
     </div>
   );
-};
+});
