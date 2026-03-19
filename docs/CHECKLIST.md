@@ -2,8 +2,8 @@
 
 > Guia completo para validação manual do aplicativo antes do lançamento.
 
-**Versão:** 2.28.0  
-**Data:** 09/03/2026
+**Versão:** 2.30.0  
+**Data:** 19/03/2026
 
 ---
 
@@ -1107,6 +1107,73 @@
 | [ ] Datas formatadas por locale | | |
 | [ ] Números formatados por locale | | |
 | [ ] Moeda formatada corretamente | | |
+
+---
+
+## 📧 Sistema de Email (17)
+
+### Templates de Email
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] 12 templates estáticos existem | | |
+| [ ] 5 templates dinâmicos (IA) existem | | |
+| [ ] Editor de templates abre corretamente | | |
+| [ ] Campo subject_b (A/B testing) funciona | | |
+| [ ] 13 categorias no dropdown | | |
+| [ ] Preview de template funciona | | |
+| [ ] Salvar template funciona | | |
+
+### Automações de Email
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Dashboard de automações carrega | | |
+| [ ] Toggle ativar/desativar automação | | |
+| [ ] Botão "Teste" envia email | | |
+| [ ] Blog Digest gera conteúdo correto | | |
+| [ ] Dica da Semana gera conteúdo IA | | |
+| [ ] Case de Sucesso gera conteúdo IA | | |
+| [ ] Novidades da Plataforma funciona | | |
+| [ ] Resumo Mensal personalizado funciona | | |
+
+### CTA dos Emails
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Botão CTA renderiza corretamente no Gmail | | |
+| [ ] Botão CTA renderiza corretamente no Outlook | | |
+| [ ] Botão CTA renderiza no Apple Mail | | |
+| [ ] Link do CTA redireciona corretamente | | |
+
+### Unsubscribe & Compliance
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Link de unsubscribe aparece no footer | | |
+| [ ] Clicar em unsubscribe mostra página de confirmação | | |
+| [ ] Email é registrado em email_unsubscribes | | |
+| [ ] Emails futuros não são enviados para unsubscribed | | |
+| [ ] Header List-Unsubscribe presente | | |
+
+### E-goi Bulk API
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Envio em lotes de 100 funciona | | |
+| [ ] HTML personalizado por destinatário | | |
+| [ ] Webhook de open tracking funciona | | |
+| [ ] Webhook de click tracking funciona | | |
+| [ ] Webhook de bounce atualiza status | | |
+
+### Dashboard de Performance
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Dashboard por categoria carrega | | |
+| [ ] Métricas de open rate exibem | | |
+| [ ] Métricas de click rate exibem | | |
+| [ ] Logs de automação exibem | | |
 
 ---
 

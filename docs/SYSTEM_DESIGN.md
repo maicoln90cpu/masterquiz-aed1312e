@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 15 de Março de 2026 | Versão 2.29
+> Última atualização: 19 de Março de 2026 | Versão 2.30
 
 ---
 
@@ -42,7 +42,7 @@
 ├─────────────────────────────────────────────────────────────────────┤
 │  Auth            │  PostgreSQL       │  Edge Functions  │  Storage   │
 │  ────            │  ──────────       │  ──────────────  │  ───────   │
-│  JWT Sessions    │  RLS em tudo      │  39 funções      │  quiz-media│
+│  JWT Sessions    │  RLS em tudo      │  57 funções      │  quiz-media│
 │  Email/Password  │  Triggers         │  Deno runtime    │  (público) │
 │  Auto-refresh    │  DB Functions     │  _shared/        │            │
 └──────────────────┴───────────────────┴──────────────────┴────────────┘
@@ -170,7 +170,7 @@ Cada pergunta pode ter múltiplos blocos organizados por `order`. O bloco `quest
 
 ---
 
-## 🔌 APIs e Edge Functions (39 funções)
+## 🔌 APIs e Edge Functions (57 funções)
 
 ### Autenticação dos Endpoints
 
@@ -457,14 +457,95 @@ Se nenhum prompt ativo na tabela, usa `blog_settings.image_prompt_template`.
 
 ---
 
+## 📧 Sistema de Email Automatizado
+
+### Arquitetura
+
+```
+┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  Triggers    │────▶│ email_recovery_  │────▶│ process-email-   │
+│  (cron/admin)│     │ contacts         │     │ recovery-queue   │
+└──────────────┘     └──────────────────┘     └────────┬─────────┘
+                                                       │
+       ┌───────────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────┐     ┌──────────────┐
+│ generate-email-  │────▶│ E-goi API    │
+│ content (Gemini) │     │ (Bulk/Single)│
+└──────────────────┘     └──────┬───────┘
+                                │
+                                ▼
+                         ┌──────────────┐
+                         │ egoi-email-  │◀── Webhook (open/click/bounce)
+                         │ webhook      │
+                         └──────────────┘
+```
+
+### Tabelas
+
+| Tabela | Propósito |
+|--------|-----------|
+| `email_recovery_settings` | Configuração global (limites, horários, sender) |
+| `email_recovery_templates` | Templates de email por categoria (13 tipos) |
+| `email_recovery_contacts` | Fila de envio com status tracking |
+| `email_automation_config` | Configuração de automações (5 tipos) |
+| `email_automation_logs` | Logs de execução de automações |
+| `email_unsubscribes` | Opt-out de emails |
+| `email_tips` | Pool de dicas para weekly_tip |
+
+### Edge Functions de Email (11)
+
+| Função | Tipo | Descrição |
+|--------|------|-----------|
+| `generate-email-content` | Sob demanda | Gera HTML via Gemini |
+| `check-inactive-users-email` | Cron | Detecta inativos |
+| `process-email-recovery-queue` | Cron | Processa fila |
+| `send-blog-digest` | Cron/Bulk | Digest semanal |
+| `send-weekly-tip` | Cron/Bulk | Dica da semana (IA) |
+| `send-success-story` | Cron/Bulk | Case de sucesso (IA) |
+| `send-platform-news` | Cron/Bulk | Novidades (IA) |
+| `send-monthly-summary` | Cron/Individual | Resumo mensal |
+| `send-test-email` | Manual | Teste de envio |
+| `egoi-email-webhook` | Webhook | Tracking eventos |
+| `handle-email-unsubscribe` | Público | Unsubscribe |
+
+### E-goi Bulk API
+
+```
+Endpoint: POST https://slingshot.egoiapp.com/api/v2/email/messages/action/send
+Payload (array de até 100 itens):
+[{
+  "domain": "masterquizz.com",
+  "senderId": "...",
+  "senderName": "MasterQuizz",
+  "to": ["user@email.com"],
+  "subject": "...",
+  "htmlBody": "<html>...(personalizado por user)...</html>",
+  "openTracking": true,
+  "clickTracking": true
+}]
+```
+
+### A/B Testing de Assuntos
+
+- Campo `subject_b` nos templates
+- Seleção aleatória 50/50 no momento do envio
+- Tracking separado por variante (campo `ab_variant` em email_recovery_contacts)
+- Dashboard compara open/click rate por variante
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
 |-----------|-----------|
-| [README.md](../README.md) | Setup, stack e comandos |
-| [PRD.md](../PRD.md) | Requisitos do produto |
-| [ROADMAP.md](../ROADMAP.md) | Planejamento estratégico |
-| [PENDENCIAS.md](../PENDENCIAS.md) | Changelog |
-| [STYLE_GUIDE.md](../STYLE_GUIDE.md) | Padrões de código |
-| [CHECKLIST.md](../CHECKLIST.md) | Validação MVP |
+| [../README.md](../README.md) | Setup, stack e comandos |
+| [PRD.md](./PRD.md) | Requisitos do produto |
+| [ROADMAP.md](./ROADMAP.md) | Planejamento estratégico |
+| [PENDENCIAS.md](./PENDENCIAS.md) | Changelog |
+| [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código |
+| [CHECKLIST.md](./CHECKLIST.md) | Validação MVP |
 | [AUDIT_TEMPLATE.md](./AUDIT_TEMPLATE.md) | Template de auditoria |
+| [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
+| [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |

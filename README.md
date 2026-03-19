@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.29.0** | Última atualização: 15 de Março de 2026
+**Versão 2.30.0** | Última atualização: 19 de Março de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -59,7 +59,7 @@
 | Serviço | Propósito |
 |---------|-----------|
 | PostgreSQL | Banco de dados relacional com RLS |
-| Edge Functions (Deno) | Lógica serverless |
+| Edge Functions (Deno) | Lógica serverless (57 funções) |
 | Auth | Autenticação email/senha |
 | Storage | Bucket `quiz-media` (público) |
 | Realtime | Updates em tempo real |
@@ -77,10 +77,11 @@
 |---------|-----------|
 | Kiwify | Gateway de pagamento + webhook |
 | Bunny CDN | Armazenamento e streaming de vídeos |
-| Google Tag Manager | Tracking global |
-|(ce(centralizado via `pushGTMEvent`) ntralizado via `pushGTMEvent`)  Facebook Pixel | Tracking por quiz |
+| Google Tag Manager | Tracking global (centralizado via `pushGTMEvent`) |
+| Facebook Pixel | Tracking por quiz |
 | Lovable AI (Gemini) | Geração de quizzes com IA |
 | Evolution API | WhatsApp (recuperação de usuários) |
+| E-goi | Email marketing automatizado (Bulk API) |
 | Zapier/Make/n8n | Automações via webhook |
 | HubSpot/RD Station/Pipedrive | CRMs externos |
 | Mailchimp/ActiveCampaign | Email marketing |
@@ -93,7 +94,14 @@
 masterquizz/
 ├── docs/
 │   ├── SYSTEM_DESIGN.md      # Arquitetura e fluxos técnicos
-│   └── AUDIT_TEMPLATE.md     # Template de auditoria
+│   ├── AUDIT_TEMPLATE.md     # Template de auditoria
+│   ├── API_DOCS.md           # Documentação das 57 Edge Functions
+│   ├── COMPONENTS.md         # Documentação de componentes
+│   ├── PRD.md                # Product Requirements
+│   ├── ROADMAP.md            # Planejamento estratégico
+│   ├── PENDENCIAS.md         # Changelog e pendências
+│   ├── STYLE_GUIDE.md        # Padrões de código
+│   └── CHECKLIST.md          # Checklist de validação MVP
 ├── public/                    # Assets estáticos
 ├── scripts/                   # Scripts de automação
 ├── src/
@@ -101,7 +109,8 @@ masterquizz/
 │   ├── assets/                # Imagens importadas (ES6)
 │   ├── components/
 │   │   ├── admin/             # Painel administrativo (lazy-loaded)
-│   │   │   └── recovery/      # Sistema de recuperação WhatsApp
+│   │   │   ├── recovery/      # Sistema de recuperação WhatsApp + Email
+│   │   │   └── blog/          # Gestão de blog e prompts
 │   │   ├── analytics/         # Componentes de analytics
 │   │   ├── crm/               # Gestão de leads (kanban)
 │   │   ├── integrations/      # Gestão de integrações
@@ -118,7 +127,7 @@ masterquizz/
 │   │   ├── video/             # Player de vídeo customizado
 │   │   └── ui/                # shadcn components
 │   ├── contexts/              # React contexts (Auth)
-│   ├── hooks/   7             # Custom hooks (35+)
+│   ├── hooks/                 # Custom hooks (35+)
 │   ├── i18n/                  # Traduções (PT/EN/ES)
 │   ├── integrations/
 │   │   └── supabase/          # Cliente e tipos gerados
@@ -130,13 +139,8 @@ masterquizz/
 ├── supabase/
 │   ├── config.toml            # Configuração Supabase
 │   ├── migrations/            # SQL migrations (read-only)
-│   └── functions/             # 39 Edge Functions
+│   └── functions/             # 57 Edge Functions
 │       └── _shared/           # Código compartilhado (cors.ts, auth.ts)
-├── PENDENCIAS.md              # Changelog e pendências
-├── PRD.md                     # Product Requirements
-├── ROADMAP.md                 # Planejamento estratégico
-├── STYLE_GUIDE.md             # Padrões de código
-├── CHECKLIST.md               # Checklist de validação MVP
 └── [config files]
 ```
 
@@ -206,6 +210,7 @@ Configurados no Supabase Dashboard → Settings → Functions:
 | `BUNNY_CDN_HOSTNAME` | Hostname CDN Bunny |
 | `EVOLUTION_API_URL` | URL da Evolution API (WhatsApp) |
 | `EVOLUTION_API_KEY` | Key da Evolution API |
+| `EGOI_API_KEY` | API E-goi (email marketing) |
 | `OPENAI_API_KEY` | Fallback para IA |
 
 ### Scripts Disponíveis
@@ -287,7 +292,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 
 ---
 
-## ⚡ Edge Functions (39 funções)
+## ⚡ Edge Functions (57 funções)
 
 ### Core
 | Função | Propósito |
@@ -302,6 +307,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 |--------|-----------|
 | `kiwify-webhook` | Processamento de pagamentos Kiwify |
 | `list-all-users` | Listagem de usuários (Admin API) |
+| `list-all-respondents` | Listagem de respondentes |
 | `delete-user` / `delete-user-complete` | Exclusão de conta |
 | `export-user-data` | Exportação LGPD |
 | `update-user-profile` | Atualização de perfil |
@@ -314,15 +320,15 @@ Signup → trigger handle_new_user_profile() → cria profile
 | `track-quiz-analytics` | Tracking de eventos (views, starts, completions) |
 | `track-quiz-step` | Tracking de funil por step |
 | `track-video-analytics` | Analytics de vídeo |
+| `track-blog-view` | Views de blog posts |
 | `rate-limiter` | Controle de rate limit |
 
 ### Integrações
 | Função | Propósito |
 |--------|-----------|
 | `sync-integration` | Sincronização com CRMs externos |
-| `trigger-user-webhook` | Dispara webhooks custom |
 
-### Bunny CDN (6 funções)
+### Bunny CDN (8 funções)
 | Função | Propósito |
 |--------|-----------|
 | `bunny-upload-video` | Upload simples |
@@ -333,7 +339,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 | `bunny-delete-video` | Exclusão |
 | `bunny-generate-thumbnail` | Thumbnail |
 
-### WhatsApp Recovery (6 funções)
+### WhatsApp Recovery (8 funções)
 | Função | Propósito |
 |--------|-----------|
 | `evolution-connect` | Conexão com Evolution API |
@@ -344,6 +350,31 @@ Signup → trigger handle_new_user_profile() → cria profile
 | `process-recovery-queue` | Processamento da fila |
 | `check-inactive-users` | Detecção de inativos |
 | `check-activation-24h` | Check de ativação 24h |
+| `whatsapp-ai-reply` | Resposta IA via WhatsApp |
+
+### Email Recovery & Automações (10 funções)
+| Função | Propósito |
+|--------|-----------|
+| `generate-email-content` | Geração de conteúdo com IA |
+| `check-inactive-users-email` | Detecção de inativos para email |
+| `process-email-recovery-queue` | Processamento da fila de email |
+| `send-blog-digest` | Envio de digest do blog (Bulk API) |
+| `send-weekly-tip` | Envio de dica semanal (Bulk API) |
+| `send-success-story` | Envio de case de sucesso (Bulk API) |
+| `send-platform-news` | Envio de novidades (Bulk API) |
+| `send-monthly-summary` | Resumo mensal personalizado |
+| `send-test-email` | Teste de envio de email |
+| `egoi-email-webhook` | Webhook E-goi (open/click/bounce) |
+| `handle-email-unsubscribe` | Processamento de unsubscribe |
+
+### Blog (5 funções)
+| Função | Propósito |
+|--------|-----------|
+| `generate-blog-post` | Geração de post com IA |
+| `regenerate-blog-asset` | Regeneração de imagem |
+| `blog-cron-trigger` | Trigger de cron para blog |
+| `blog-sitemap` | Geração de sitemap |
+| `track-blog-view` | Tracking de views |
 
 ### Admin
 | Função | Propósito |
@@ -356,7 +387,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 
 ## 🗄 API e Database
 
-### Schema Principal (30+ tabelas)
+### Schema Principal (40+ tabelas)
 
 ```sql
 -- Core
@@ -386,6 +417,11 @@ landing_ab_tests, landing_ab_sessions
 -- Recovery (WhatsApp)
 recovery_settings, recovery_templates, recovery_campaigns
 recovery_contacts, recovery_blacklist
+
+-- Email Recovery & Automações
+email_recovery_settings, email_recovery_templates, email_recovery_contacts
+email_automation_config, email_automation_logs
+email_unsubscribes, email_tips
 
 -- LGPD
 cookie_consents, scheduled_deletions, rate_limit_tracker
@@ -494,6 +530,12 @@ src/
 - ✅ Gestão de templates e planos
 - ✅ Listagem de usuários (Edge Function)
 - ✅ Sistema de recuperação via WhatsApp (Evolution API)
+- ✅ Sistema de email marketing automatizado (E-goi Bulk API)
+  - 12 templates estáticos + 5 dinâmicos com IA
+  - Automações: blog digest, dica semanal, case de sucesso, novidades, resumo mensal
+  - A/B testing de assuntos (subject_b)
+  - Dashboard de performance por categoria
+  - Unsubscribe com compliance CAN-SPAM/LGPD
 - ✅ Tickets de suporte
 - ✅ Audit logs + System health
 - ✅ Configuração Kiwify, Bunny, AI prompts
@@ -516,6 +558,7 @@ src/
 | `validation_requests` 400 | Normal para não-admin; tratado graciosamente |
 | Eventos GTM não aparecem | Verificar se `pushGTMEvent` está sendo chamado e tabela `gtm_event_logs` tem RLS INSERT |
 | Imagens do blog sempre iguais | Verificar se há ≥2 prompts ativos em `blog_image_prompts` |
+| Emails não enviados | Verificar `EGOI_API_KEY` e configurações em `email_recovery_settings` |
 
 ### Debug
 
@@ -531,12 +574,14 @@ logger.api('API call', { endpoint, status });
 
 | Documento | Descrição |
 |-----------|-----------|
-| [PRD.md](./PRD.md) | Requisitos do produto e backlog |
-| [ROADMAP.md](./ROADMAP.md) | Planejamento estratégico 2025-2026 |
-| [PENDENCIAS.md](./PENDENCIAS.md) | Changelog e pendências atuais |
-| [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código e convenções |
-| [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação do MVP |
+| [docs/PRD.md](./docs/PRD.md) | Requisitos do produto e backlog |
+| [docs/ROADMAP.md](./docs/ROADMAP.md) | Planejamento estratégico 2025-2026 |
+| [docs/PENDENCIAS.md](./docs/PENDENCIAS.md) | Changelog e pendências atuais |
+| [docs/STYLE_GUIDE.md](./docs/STYLE_GUIDE.md) | Padrões de código e convenções |
+| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Checklist de validação do MVP |
 | [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
+| [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 57 Edge Functions |
+| [docs/COMPONENTS.md](./docs/COMPONENTS.md) | Documentação de componentes |
 | [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
 | [src/__tests__/README.md](./src/__tests__/README.md) | Guia de testes automatizados |
 

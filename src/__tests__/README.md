@@ -1,5 +1,7 @@
 # 🧪 Testes Automatizados - MasterQuiz
 
+> Para padrões de código, veja [docs/STYLE_GUIDE.md](../../docs/STYLE_GUIDE.md). Para arquitetura, veja [docs/SYSTEM_DESIGN.md](../../docs/SYSTEM_DESIGN.md).
+
 > Guia completo para escrever, executar e manter testes automatizados no projeto.
 
 ---

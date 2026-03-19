@@ -102,6 +102,13 @@ Q4 2025: Expansão Internacional
 - Tracking GTM centralizado + Dashboard de observabilidade ✅
 - Blog AI: Rotação de prompts de imagem (5 estilos visuais) ✅
 - Campanhas WhatsApp: Cooldown global configurável ✅
+- **Sistema de Email Marketing Automatizado** ✅
+  - 12 templates estáticos + 5 dinâmicos com IA
+  - E-goi Bulk API (lotes de 100)
+  - A/B testing de assuntos
+  - Dashboard de performance por categoria
+  - Unsubscribe com compliance CAN-SPAM/LGPD
+  - Webhook de tracking (open/click/bounce)
 
 ### H2 2026
 - Expansão para EUA
@@ -129,6 +136,7 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-03-19 | **v2.30 — Email Marketing Automatizado + Bulk API + Documentação completa** |
 | 2026-03-15 | **v2.29 — Rotação Prompts de Imagem Blog (5 estilos) + Cooldown Campanhas** |
 | 2026-03-09 | **v2.28 — 5 Eventos GTM + Dashboard Observabilidade + gtmLogger centralizado** |
 | 2026-02-25 | **v2.27 — Correção useFunnelData, AdminDashboard, QuestionsList refatorado** |
@@ -149,9 +157,11 @@ Q4 2025: Expansão Internacional
 
 | Documento | Descrição |
 |-----------|-----------|
-| [README.md](./README.md) | Setup, stack e arquitetura |
+| [../README.md](../README.md) | Setup, stack e arquitetura |
 | [PRD.md](./PRD.md) | Requisitos do produto e backlog |
 | [PENDENCIAS.md](./PENDENCIAS.md) | Changelog e pendências atuais |
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código |
 | [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação do MVP |
-| [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
+| [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
+| [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
+| [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |

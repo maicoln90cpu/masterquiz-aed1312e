@@ -383,7 +383,7 @@ expect(screen.getByRole('button')).toBeEnabled();
 ```
 
 ### Referência
-Veja [src/__tests__/README.md](./src/__tests__/README.md) para documentação completa.
+Veja [src/__tests__/README.md](../src/__tests__/README.md) para documentação completa.
 
 ---
 
@@ -528,13 +528,15 @@ interface WizardStep {
 
 | Documento | Descrição |
 |-----------|-----------|
-| [README.md](./README.md) | Setup, stack e arquitetura |
+| [../README.md](../README.md) | Setup, stack e arquitetura |
 | [PRD.md](./PRD.md) | Requisitos do produto e backlog |
 | [ROADMAP.md](./ROADMAP.md) | Planejamento estratégico |
 | [PENDENCIAS.md](./PENDENCIAS.md) | Changelog e pendências |
 | [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação |
-| [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura técnica |
+| [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
+| [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
+| [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
 
 ---
 
-*Última atualização: 04/02/2025*
+*Última atualização: 19/03/2026*
