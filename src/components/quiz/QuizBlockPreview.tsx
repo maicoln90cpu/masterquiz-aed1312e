@@ -96,7 +96,11 @@ export const QuizBlockPreview = ({
       case "price":
         return <PriceBlockPreview key={block.id} block={block} />;
       case "metrics":
-        return <MetricsBlockPreview key={block.id} block={block} />;
+        return (
+          <Suspense key={block.id} fallback={<Skeleton className="h-[300px] w-full rounded-lg" />}>
+            <LazyMetricsBlockPreview block={block as QuizBlock & { type: 'metrics' }} />
+          </Suspense>
+        );
       case "loading":
         return <LoadingBlockPreview key={block.id} block={block} />;
       case "progress":
