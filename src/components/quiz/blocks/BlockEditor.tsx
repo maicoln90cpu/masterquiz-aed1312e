@@ -60,20 +60,27 @@ import { AnimatedCounterBlock } from "./AnimatedCounterBlock";
 interface BlockEditorProps {
   blocks: QuizBlock[];
   onChange: (blocks: QuizBlock[]) => void;
-  totalQuestions?: number; // Total de perguntas no quiz
-  currentQuestionIndex?: number; // Índice da pergunta atual (0-based)
+  totalQuestions?: number;
+  currentQuestionIndex?: number;
+  /** Callback when a block is clicked/selected (for properties panel) */
+  onBlockSelect?: (index: number) => void;
+  /** Currently selected block index (for highlight) */
+  selectedBlockIndex?: number | null;
 }
 
 interface SortableBlockProps {
   block: QuizBlock;
+  blockIndex: number;
   onUpdate: (block: QuizBlock) => void;
   onDelete: () => void;
   totalQuestions?: number;
   currentQuestionIndex?: number;
   t: (key: string, options?: Record<string, unknown>) => string;
+  onBlockSelect?: (index: number) => void;
+  isSelected?: boolean;
 }
 
-const SortableBlock = ({ block, onUpdate, onDelete, totalQuestions = 0, currentQuestionIndex = 0, t }: SortableBlockProps) => {
+const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions = 0, currentQuestionIndex = 0, t, onBlockSelect, isSelected }: SortableBlockProps) => {
   const {
     attributes,
     listeners,
@@ -207,9 +214,15 @@ const SortableBlock = ({ block, onUpdate, onDelete, totalQuestions = 0, currentQ
     <div 
       ref={setNodeRef} 
       style={style} 
+      onClick={(e) => {
+        e.stopPropagation();
+        onBlockSelect?.(blockIndex);
+      }}
       className={cn(
-        "relative group border-2 rounded-lg transition-all",
-        isDragging ? "border-primary shadow-2xl ring-4 ring-primary/20 scale-105 z-50" : "border-transparent hover:border-primary/30"
+        "relative group border-2 rounded-lg transition-all cursor-pointer",
+        isDragging ? "border-primary shadow-2xl ring-4 ring-primary/20 scale-105 z-50" 
+          : isSelected ? "border-primary ring-2 ring-primary/30"
+          : "border-transparent hover:border-primary/30"
       )}
     >
       {/* Badge de Status e Controles - SEMPRE VISÍVEIS */}
@@ -283,7 +296,7 @@ const SortableBlock = ({ block, onUpdate, onDelete, totalQuestions = 0, currentQ
   );
 };
 
-export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuestionIndex = 0 }: BlockEditorProps) => {
+export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuestionIndex = 0, onBlockSelect, selectedBlockIndex }: BlockEditorProps) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"edit" | "templates">("edit");
   const [showHelp, setShowHelp] = useState(false);
@@ -558,15 +571,18 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-4">
-                {safeBlocks.map((block) => (
+                {safeBlocks.map((block, index) => (
                   <SortableBlock
                     key={block.id}
                     block={block}
+                    blockIndex={index}
                     onUpdate={(updated) => updateBlock(block.id, updated)}
                     onDelete={() => deleteBlock(block.id)}
                     totalQuestions={totalQuestions}
                     currentQuestionIndex={currentQuestionIndex}
                     t={t}
+                    onBlockSelect={onBlockSelect}
+                    isSelected={selectedBlockIndex === index}
                   />
                 ))}
               </div>

@@ -98,17 +98,17 @@
 - [x] `CreateQuizModern.tsx` com layout horizontal de steps + Step 1 com formato
 - [x] `selectedBlockIndex` adicionado ao `useQuizState`
 
-### Fase 2 — Painel de Propriedades dos Blocos
-- [ ] Criar `BlockPropertiesPanel.tsx` com dispatch por tipo de bloco
-- [ ] Separar propriedades inline vs lateral para os 22 blocos
-- [ ] Implementar seleção de bloco (click → selectedBlockIndex)
-- [ ] Layout 3 colunas na Step 3 (perguntas | editor | propriedades)
+### Fase 2 ✅ — Painel de Propriedades dos Blocos
+- [x] Criar `BlockPropertiesPanel.tsx` com dispatch por tipo de bloco (22 blocos)
+- [x] Separar propriedades inline vs lateral para todos os 22 blocos
+- [x] Implementar seleção de bloco (click → selectedBlockIndex + highlight)
+- [x] Layout com painel de propriedades na Step 3
+- [x] Remover toggle showResults da Step 2 no Modern (hideShowResults prop)
 
 ### Fase 3 — Polish + Express Mode
 - [ ] Adaptar Express mode para layout Modern
 - [ ] Mobile responsive na barra horizontal de steps
 - [ ] Evento GTM `editor_layout_switched`
-- [ ] Remover showResults da Step 2 no Modern (já está na Step 1)
 
 ### Fase 4 — Testes + Iteração
 - [ ] Testes A/B de conversão entre Classic e Modern

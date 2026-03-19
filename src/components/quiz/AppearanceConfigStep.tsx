@@ -35,6 +35,8 @@ interface AppearanceConfigStepProps {
   onShowQuestionNumberChange?: (value: boolean) => void;
   onShowResultsChange?: (value: boolean) => void;
   onProgressStyleChange?: (value: 'bar' | 'counter' | 'none') => void;
+  /** Hide showResults toggle (e.g., when already set in Step 1 Modern) */
+  hideShowResults?: boolean;
 }
 
 const getTemplates = (t: any) => [
@@ -109,7 +111,8 @@ export const AppearanceConfigStep = ({
   onShowDescriptionChange,
   onShowQuestionNumberChange,
   onShowResultsChange,
-  onProgressStyleChange
+  onProgressStyleChange,
+  hideShowResults = false,
 }: AppearanceConfigStepProps) => {
   const { t } = useTranslation();
   const { allowedTemplates, isLoading } = usePlanFeatures();
@@ -223,6 +226,7 @@ export const AppearanceConfigStep = ({
 
                 <Separator className="my-2" />
 
+                {!hideShowResults && (
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="show-results">Exibir tela de resultados</Label>
@@ -236,6 +240,7 @@ export const AppearanceConfigStep = ({
                     onCheckedChange={onShowResultsChange}
                   />
                 </div>
+                )}
               </div>
             </div>
 

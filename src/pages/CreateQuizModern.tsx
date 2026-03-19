@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { QuestionConfigStep } from "@/components/quiz/QuestionConfigStep";
+import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
 import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";
 import { ResultsConfigStep } from "@/components/quiz/ResultsConfigStep";
@@ -498,7 +499,7 @@ const CreateQuizModern = () => {
             </Card>
           )}
 
-          {/* STEP 2: Aparência — same interface as Classic */}
+          {/* STEP 2: Aparência — hideShowResults (já configurado na Step 1) */}
           {step === 2 && !isExpressMode && (
             <AppearanceConfigStep
               title={title}
@@ -522,25 +523,73 @@ const CreateQuizModern = () => {
               onShowResultsChange={(v) => updateAppearance({ showResults: v })}
               progressStyle={appearanceState.progressStyle}
               onProgressStyleChange={(v) => updateAppearance({ progressStyle: v })}
+              hideShowResults
             />
           )}
 
-          {/* STEP 3: Perguntas */}
+          {/* STEP 3: Perguntas — 3-column layout with properties panel */}
           {(step === 3 || isExpressMode) && (
-            <QuestionConfigStep
-              questions={questions}
-              questionCount={questionCount}
-              isPublic={editorState.isPublic}
-              onPublicChange={(v) => updateEditor({ isPublic: v })}
-              quizTitle={title}
-              quizDescription={description}
-              quizId={quizId || undefined}
-              onQuestionsUpdate={handleQuestionsUpdate}
-              initialQuestionIndex={currentQuestionIndex}
-              isExpressMode={isExpressMode}
-              fireOnce={fireOnce}
-              trackInteraction={trackInteraction}
-            />
+            <div className="flex gap-4 max-w-6xl mx-auto">
+              {/* Center: Editor */}
+              <div className="flex-1 min-w-0">
+                <QuestionConfigStep
+                  questions={questions}
+                  questionCount={questionCount}
+                  isPublic={editorState.isPublic}
+                  onPublicChange={(v) => updateEditor({ isPublic: v })}
+                  quizTitle={title}
+                  quizDescription={description}
+                  quizId={quizId || undefined}
+                  onQuestionsUpdate={handleQuestionsUpdate}
+                  initialQuestionIndex={currentQuestionIndex}
+                  isExpressMode={isExpressMode}
+                  fireOnce={fireOnce}
+                  trackInteraction={trackInteraction}
+                />
+              </div>
+
+              {/* Right: Block Properties Panel */}
+              {!isExpressMode && (
+                <div className="w-72 shrink-0 hidden lg:block">
+                  <div className="sticky top-4 border rounded-lg bg-card overflow-hidden max-h-[calc(100vh-14rem)]">
+                    {(() => {
+                      const selectedIdx = editorState.selectedBlockIndex;
+                      const currentQ = questions[currentQuestionIndex];
+                      const selectedBlock = selectedIdx !== null && currentQ?.blocks?.[selectedIdx]
+                        ? currentQ.blocks[selectedIdx]
+                        : null;
+
+                      if (!selectedBlock) {
+                        return (
+                          <div className="p-4 text-center">
+                            <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                              Clique em um bloco para editar suas propriedades
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <BlockPropertiesPanel
+                          block={selectedBlock}
+                          onChange={(updatedBlock) => {
+                            const blocks = [...(currentQ.blocks || [])];
+                            blocks[selectedIdx!] = updatedBlock;
+                            const updatedQuestions = [...questions];
+                            updatedQuestions[currentQuestionIndex] = {
+                              ...currentQ,
+                              blocks,
+                            };
+                            handleQuestionsUpdate(updatedQuestions);
+                          }}
+                        />
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* STEP 4: Coleta de Dados */}
