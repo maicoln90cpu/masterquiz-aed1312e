@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
 import { BlockEditor } from "@/components/quiz/blocks/BlockEditor";
-import { CompactBlockPalette } from "@/components/quiz/blocks/CompactBlockPalette";
+import { ModernBlockPalette } from "@/components/quiz/blocks/ModernBlockPalette";
 import { BlockErrorBoundary } from "@/components/quiz/blocks/BlockErrorBoundary";
 import { QuestionsList } from "@/components/quiz/QuestionsList";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
@@ -214,16 +214,6 @@ const CreateQuizModern = () => {
     updateCurrentQuestionBlocks([...existingBlocks, newBlock]);
   }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks]);
 
-  const handlePaletteAddTemplate = useCallback((templateBlocks: QuizBlock[]) => {
-    const currentQ = questions[editorState.currentQuestionIndex];
-    if (!currentQ) {
-      toast.error('Nenhuma pergunta disponível.');
-      return;
-    }
-    const existingBlocks = currentQ.blocks || [];
-    const adjustedBlocks = templateBlocks.map((b, i) => ({ ...b, order: existingBlocks.length + i }));
-    updateCurrentQuestionBlocks([...existingBlocks, ...adjustedBlocks]);
-  }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks]);
 
   // ✅ Handler para publicar
   const handlePublish = useCallback(async () => {
@@ -701,11 +691,7 @@ const CreateQuizModern = () => {
             {/* COL 2: Block Palette */}
             {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto">
-              <CompactBlockPalette
-                  onAddBlock={handlePaletteAddBlock}
-                  onAddTemplate={handlePaletteAddTemplate}
-                  currentBlockOrder={questions[currentQuestionIndex]?.blocks?.length || 0}
-                />
+              <ModernBlockPalette onAddBlock={handlePaletteAddBlock} />
               </div>
             )}
 
