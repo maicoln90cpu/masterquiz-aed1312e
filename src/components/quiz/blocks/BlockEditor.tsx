@@ -281,7 +281,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
             variant="destructive"
             size="icon"
             className="h-7 w-7 shadow-md"
-            onClick={onDelete}
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
             title={t('createQuiz.blockEditor.deleteBlock')}
           >
             <Trash2 className="h-3 w-3" />
