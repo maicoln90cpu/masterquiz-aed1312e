@@ -701,11 +701,7 @@ const CreateQuizModern = () => {
             {/* COL 2: Block Palette */}
             {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto">
-              <CompactBlockPalette
-                  onAddBlock={handlePaletteAddBlock}
-                  onAddTemplate={handlePaletteAddTemplate}
-                  currentBlockOrder={questions[currentQuestionIndex]?.blocks?.length || 0}
-                />
+              <ModernBlockPalette onAddBlock={handlePaletteAddBlock} />
               </div>
             )}
 
