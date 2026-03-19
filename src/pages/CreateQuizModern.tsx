@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
 import { BlockEditor } from "@/components/quiz/blocks/BlockEditor";
-import { CompactBlockPalette } from "@/components/quiz/blocks/CompactBlockPalette";
+import { ModernBlockPalette } from "@/components/quiz/blocks/ModernBlockPalette";
 import { BlockErrorBoundary } from "@/components/quiz/blocks/BlockErrorBoundary";
 import { QuestionsList } from "@/components/quiz/QuestionsList";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
