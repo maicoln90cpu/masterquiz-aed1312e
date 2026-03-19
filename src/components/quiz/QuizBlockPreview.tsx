@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Check, Play, Pause, ChevronDown, X, User } from "lucide-react";
 import type { QuizBlock, VideoBlock } from "@/types/blocks";
-import { normalizeOption } from "@/types/blocks";
+import { normalizeOption, normalizeBlock } from "@/types/blocks";
 import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { CustomVideoPlayer } from "@/components/video/CustomVideoPlayer";
 import { sanitizeHtml, sanitizeSimpleText } from "@/lib/sanitize";
