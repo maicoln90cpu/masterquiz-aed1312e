@@ -52,6 +52,7 @@ const CreateQuizModern = lazy(() => import("@/pages/CreateQuizModern"));
 import { useProfile } from "@/hooks/useProfile";
 
 const CreateQuiz = () => {
+  const { isModern, isLoading: isLayoutLoading } = useEditorLayout();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
