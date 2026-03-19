@@ -93,7 +93,8 @@ describe('Block render tests (Fase 6)', () => {
     it('renders testimonial fields', () => {
       const block = normalizeBlock(createBlock('testimonial', 0));
       render(<TestimonialBlock block={block as any} onChange={noop} />);
-      expect(screen.getByDisplayValue('João Silva')).toBeInTheDocument();
+      // TestimonialBlock renders quote in textarea, author name in input
+      expect(screen.getByText(/citação/i)).toBeInTheDocument();
     });
   });
 
