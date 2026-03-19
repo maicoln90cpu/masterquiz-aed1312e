@@ -233,13 +233,38 @@ const CreateQuizModern = () => {
     updateEditor({ step: newStep });
   }, [updateEditor]);
 
-  // ✅ Centralizado: inicializar perguntas ao entrar no Step 3+ sem perguntas
+  // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
-    if (editorState.step >= 3 && questions.length === 0 && !isExpressMode && !uiState.isLoadingQuiz) {
-      const emptyQuestions = initializeEmptyQuestions(editorState.questionCount);
-      setQuestions(emptyQuestions);
+    if (editorState.step >= 3 && !isExpressMode && !uiState.isLoadingQuiz) {
+      const targetCount = editorState.questionCount;
+      
+      if (questions.length === 0) {
+        // Nenhuma pergunta: inicializar todas
+        const emptyQuestions = initializeEmptyQuestions(targetCount);
+        setQuestions(emptyQuestions);
+      } else if (questions.length < targetCount) {
+        // Faltam perguntas: completar até o total
+        const timestamp = Date.now();
+        const newQuestions = Array.from({ length: targetCount - questions.length }, (_, i) => ({
+          id: `temp-${timestamp}-${questions.length + i}`,
+          question_text: '',
+          answer_format: 'single_choice' as const,
+          options: [],
+          order_number: questions.length + i,
+          blocks: [createBlock('question', 0)]
+        }));
+        setQuestions([...questions, ...newQuestions]);
+      } else if (questions.length > targetCount) {
+        // Mais perguntas que o definido: truncar (manter as primeiras)
+        setQuestions(questions.slice(0, targetCount));
+      }
+      
+      // Garantir currentQuestionIndex dentro do range
+      if (editorState.currentQuestionIndex >= targetCount) {
+        updateEditor({ currentQuestionIndex: Math.max(0, targetCount - 1) });
+      }
     }
-  }, [editorState.step, questions.length, isExpressMode, uiState.isLoadingQuiz, editorState.questionCount, initializeEmptyQuestions, setQuestions]);
+  }, [editorState.step, editorState.questionCount, isExpressMode, uiState.isLoadingQuiz]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ============================================
   // RENDERS CONDICIONAIS
