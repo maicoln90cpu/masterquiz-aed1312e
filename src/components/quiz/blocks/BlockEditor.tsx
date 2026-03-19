@@ -214,9 +214,15 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
     <div 
       ref={setNodeRef} 
       style={style} 
+      onClick={(e) => {
+        e.stopPropagation();
+        onBlockSelect?.(blockIndex);
+      }}
       className={cn(
-        "relative group border-2 rounded-lg transition-all",
-        isDragging ? "border-primary shadow-2xl ring-4 ring-primary/20 scale-105 z-50" : "border-transparent hover:border-primary/30"
+        "relative group border-2 rounded-lg transition-all cursor-pointer",
+        isDragging ? "border-primary shadow-2xl ring-4 ring-primary/20 scale-105 z-50" 
+          : isSelected ? "border-primary ring-2 ring-primary/30"
+          : "border-transparent hover:border-primary/30"
       )}
     >
       {/* Badge de Status e Controles - SEMPRE VISÍVEIS */}
