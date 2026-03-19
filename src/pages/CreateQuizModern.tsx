@@ -776,44 +776,6 @@ const CreateQuizModern = () => {
         )}
       </div>
 
-      {/* ========== FOOTER NAV ========== */}
-      {!isExpressMode && (
-        <footer className="border-t bg-card px-4 py-3 flex items-center justify-between shrink-0">
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (step > 1) updateEditor({ step: step - 1 });
-            }}
-            disabled={step <= 1}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            {t('common.previous', 'Anterior')}
-          </Button>
-
-          <div className="text-sm text-muted-foreground">
-            {t('createQuiz.stepOf', 'Etapa {{current}} de {{total}}', { current: step, total: 5 })}
-          </div>
-
-          {step < 5 ? (
-            <Button onClick={() => {
-              const nextStep = step + 1;
-              if (questions.length === 0 && nextStep >= 3) {
-                const emptyQuestions = initializeEmptyQuestions(editorState.questionCount);
-                setQuestions(emptyQuestions);
-              }
-              updateEditor({ step: nextStep });
-            }}>
-              {t('common.next', 'Próximo')}
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          ) : (
-            <Button onClick={handlePublish} disabled={isSaving}>
-              <Rocket className="h-4 w-4 mr-1" />
-              {t('createQuiz.publish', 'Publicar')}
-            </Button>
-          )}
-        </footer>
-      )}
 
       {/* Express publish button */}
       {isExpressMode && (
