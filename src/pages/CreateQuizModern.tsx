@@ -782,38 +782,40 @@ const CreateQuizModern = () => {
                   </h3>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {(() => {
-                    const selectedIdx = editorState.selectedBlockIndex ?? 0;
-                    const currentQ = questions[currentQuestionIndex];
-                    const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
+                  <BlockErrorBoundary blockType="properties-panel">
+                    {(() => {
+                      const selectedIdx = editorState.selectedBlockIndex ?? 0;
+                      const currentQ = questions[currentQuestionIndex];
+                      const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
 
-                    if (!selectedBlock) {
+                      if (!selectedBlock) {
+                        return (
+                          <div className="p-4 text-center">
+                            <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                              {t('createQuiz.noBlockSelected', 'Nenhum bloco disponível')}
+                            </p>
+                          </div>
+                        );
+                      }
+
                       return (
-                        <div className="p-4 text-center">
-                          <Settings2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            {t('createQuiz.noBlockSelected', 'Nenhum bloco disponível')}
-                          </p>
-                        </div>
+                        <BlockPropertiesPanel
+                          block={selectedBlock}
+                          onChange={(updatedBlock) => {
+                            const blocks = [...(currentQ.blocks || [])];
+                            blocks[selectedIdx] = updatedBlock;
+                            const updatedQuestions = [...questions];
+                            updatedQuestions[currentQuestionIndex] = {
+                              ...currentQ,
+                              blocks,
+                            };
+                            handleQuestionsUpdate(updatedQuestions);
+                          }}
+                        />
                       );
-                    }
-
-                    return (
-                      <BlockPropertiesPanel
-                        block={selectedBlock}
-                        onChange={(updatedBlock) => {
-                          const blocks = [...(currentQ.blocks || [])];
-                          blocks[selectedIdx] = updatedBlock;
-                          const updatedQuestions = [...questions];
-                          updatedQuestions[currentQuestionIndex] = {
-                            ...currentQ,
-                            blocks,
-                          };
-                          handleQuestionsUpdate(updatedQuestions);
-                        }}
-                      />
-                    );
-                  })()}
+                    })()}
+                  </BlockErrorBoundary>
                 </div>
               </div>
             )}
