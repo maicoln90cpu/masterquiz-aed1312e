@@ -122,7 +122,9 @@ export const MetricsBlock = ({ block, onChange }: MetricsBlockProps) => {
         {/* Preview */}
         <div className="border rounded-lg p-4 bg-muted/20">
           <p className="text-sm font-medium mb-2 text-center">{block.title}</p>
-          {renderPreview()}
+          {safeData.length > 0 ? renderPreview() : (
+            <p className="text-sm text-muted-foreground text-center py-8">Adicione dados para visualizar o gráfico</p>
+          )}
         </div>
 
         <p className="text-xs text-muted-foreground">

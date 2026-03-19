@@ -9,6 +9,7 @@ import { Music, Upload, AlertCircle, HelpCircle } from "lucide-react";
 import { AudioUploader } from "@/components/AudioUploader";
 import { useVideoStorage } from "@/hooks/useVideoStorage";
 import type { AudioBlock as AudioBlockType } from "@/types/blocks";
+import { useState } from "react";
 
 interface AudioBlockProps {
   block: AudioBlockType;
@@ -16,11 +17,22 @@ interface AudioBlockProps {
 }
 
 export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
-  const { allowVideoUpload, videoStorageLimitMb, usedMb, usagePercentage } = useVideoStorage();
+  const [activeTab, setActiveTab] = useState<string>("url");
 
-  const updateBlock = (updates: Partial<AudioBlockType>) => {
-    onChange({ ...block, ...updates });
-  };
+  let allowVideoUpload = false;
+  let usedMb = 0;
+  let videoStorageLimitMb = 0;
+  let usagePercentage = 0;
+
+  try {
+    const storage = useVideoStorage();
+    allowVideoUpload = storage.allowVideoUpload;
+    usedMb = storage.usedMb;
+    videoStorageLimitMb = storage.videoStorageLimitMb;
+    usagePercentage = storage.usagePercentage;
+  } catch (err) {
+    console.warn("[AudioBlock] Hook de storage falhou:", err);
+  }
 
   return (
     <TooltipProvider>
@@ -34,7 +46,7 @@ export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
                 <HelpCircle className="h-4 w-4 cursor-help" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Cole a URL ou faça upload. Configure legenda e autoplay no painel de propriedades.</p>
+                <p>Cole a URL ou faça upload. Configure legenda e autoplay no painel.</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -49,7 +61,7 @@ export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
             </div>
           )}
 
-          <Tabs defaultValue="url" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="url">URL Externa</TabsTrigger>
               <TabsTrigger value="upload" disabled={!allowVideoUpload}>
@@ -65,7 +77,7 @@ export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
                   id={`audio-url-${block.id}`}
                   placeholder="https://exemplo.com/audio.mp3"
                   value={block.url}
-                  onChange={(e) => updateBlock({ url: e.target.value, provider: 'external' })}
+                  onChange={(e) => onChange({ ...block, url: e.target.value, provider: 'external' })}
                 />
                 <p className="text-xs text-muted-foreground">MP3, WAV, OGG, M4A</p>
               </div>
@@ -75,8 +87,8 @@ export const AudioBlock = ({ block, onChange }: AudioBlockProps) => {
               {allowVideoUpload ? (
                 <AudioUploader
                   value={block.provider === 'uploaded' ? block.url : undefined}
-                  onChange={(url) => updateBlock({ url, provider: 'uploaded' })}
-                  onRemove={() => updateBlock({ url: '', provider: undefined })}
+                  onChange={(url) => onChange({ ...block, url, provider: 'uploaded' })}
+                  onRemove={() => onChange({ ...block, url: '', provider: undefined })}
                 />
               ) : (
                 <Alert>

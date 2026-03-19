@@ -56,6 +56,7 @@ import TestimonialBlock from "./TestimonialBlock";
 import CountdownBlock from "./CountdownBlock";
 import ProgressBlock from "./ProgressBlock";
 import { AnimatedCounterBlock } from "./AnimatedCounterBlock";
+import { BlockErrorBoundary } from "./BlockErrorBoundary";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
@@ -290,7 +291,9 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
 
       {/* Block Content */}
       <div className="pt-8">
-        {renderBlock()}
+        <BlockErrorBoundary blockType={block.type} onDelete={onDelete}>
+          {renderBlock()}
+        </BlockErrorBoundary>
       </div>
     </div>
   );

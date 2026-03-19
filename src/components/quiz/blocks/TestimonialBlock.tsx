@@ -1,5 +1,4 @@
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TestimonialBlock as TestimonialBlockType } from "@/types/blocks";
 import { ImageUploader } from "@/components/ImageUploader";

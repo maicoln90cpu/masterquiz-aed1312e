@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Video as VideoIcon, Link, Upload, HelpCircle, Cloud, Zap } from "lucide-react";
+import { Video as VideoIcon, Link, Upload, HelpCircle, Cloud, Zap, AlertCircle } from "lucide-react";
 import type { VideoBlock as VideoBlockType } from "@/types/blocks";
 import { VideoUploader } from "@/components/VideoUploader";
 import { BunnyVideoUploader } from "@/components/BunnyVideoUploader";
@@ -20,13 +20,27 @@ interface VideoBlockProps {
 }
 
 export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
-  const { allowVideoUpload, usedMb, videoStorageLimitMb, remainingMb, usagePercentage } = useVideoStorage();
-  const { provider: videoProvider, isBunny } = useVideoProvider();
   const [bunnyVideoId, setBunnyVideoId] = useState<string | undefined>(block.bunnyVideoId);
+  const [activeTab, setActiveTab] = useState<string>("url");
 
-  const updateBlock = (updates: Partial<VideoBlockType>) => {
-    onChange({ ...block, ...updates });
-  };
+  // Hooks always called — safe defaults if they fail internally
+  let allowVideoUpload = false;
+  let usedMb = 0;
+  let videoStorageLimitMb = 0;
+  let usagePercentage = 0;
+  let isBunny = false;
+
+  try {
+    const storage = useVideoStorage();
+    const provider = useVideoProvider();
+    allowVideoUpload = storage.allowVideoUpload;
+    usedMb = storage.usedMb;
+    videoStorageLimitMb = storage.videoStorageLimitMb;
+    usagePercentage = storage.usagePercentage;
+    isBunny = provider.isBunny;
+  } catch (err) {
+    console.warn("[VideoBlock] Hooks falharam:", err);
+  }
 
   const detectProvider = (url: string): VideoBlockType['provider'] => {
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
@@ -37,22 +51,21 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
   };
 
   const handleUrlChange = (url: string) => {
-    const provider = detectProvider(url);
-    updateBlock({ url, provider });
+    onChange({ ...block, url, provider: detectProvider(url) });
   };
 
   const handleVideoUpload = (url: string) => {
-    updateBlock({ url, provider: 'uploaded' });
+    onChange({ ...block, url, provider: 'uploaded' });
   };
 
   const handleBunnyVideoUpload = (url: string, videoId: string) => {
     setBunnyVideoId(videoId);
-    updateBlock({ url, provider: 'bunny_stream', bunnyVideoId: videoId });
+    onChange({ ...block, url, provider: 'bunny_stream', bunnyVideoId: videoId });
   };
 
   const handleRemoveVideo = () => {
     setBunnyVideoId(undefined);
-    updateBlock({ url: '', provider: 'direct', bunnyVideoId: undefined });
+    onChange({ ...block, url: '', provider: 'direct', bunnyVideoId: undefined });
   };
 
   return (
@@ -73,12 +86,12 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
                 <HelpCircle className="h-4 w-4 cursor-help" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Cole a URL ou faça upload. Configure reprodução, tamanho e proporção no painel de propriedades.</p>
+                <p>Cole a URL ou faça upload. Configure reprodução no painel de propriedades.</p>
               </TooltipContent>
             </Tooltip>
           </div>
 
-          <Tabs defaultValue="url" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="url" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <Link className="h-4 w-4 shrink-0" />
@@ -137,9 +150,8 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
                 </>
               ) : (
                 <Alert>
-                  <AlertDescription>
-                    Upload indisponível no plano atual. Use URL externa ou faça upgrade.
-                  </AlertDescription>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>Upload indisponível no plano atual.</AlertDescription>
                 </Alert>
               )}
             </TabsContent>
