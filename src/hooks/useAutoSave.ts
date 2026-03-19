@@ -59,6 +59,17 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const isSavingRef = useRef(false);
   const lastSavedSnapshotRef = useRef<string>('');
 
+  // ✅ Refs para callbacks — estabiliza performSave/scheduleAutoSave
+  const onSaveStartRef = useRef(onSaveStart);
+  const onSaveCompleteRef = useRef(onSaveComplete);
+  const onSaveErrorRef = useRef(onSaveError);
+  const showToastRef = useRef(showToast);
+
+  useEffect(() => { onSaveStartRef.current = onSaveStart; }, [onSaveStart]);
+  useEffect(() => { onSaveCompleteRef.current = onSaveComplete; }, [onSaveComplete]);
+  useEffect(() => { onSaveErrorRef.current = onSaveError; }, [onSaveError]);
+  useEffect(() => { showToastRef.current = showToast; }, [showToast]);
+
   // Verificar se está online
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -87,7 +98,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     };
   }, []);
 
-  // Função que efetivamente salva no Supabase
+  // Função que efetivamente salva no Supabase — deps estáveis via refs
   const performSave = useCallback(async (data: AutoSaveData): Promise<boolean> => {
     if (!data.quizId || isSavingRef.current) return false;
 
@@ -101,7 +112,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     try {
       isSavingRef.current = true;
       setStatus('saving');
-      onSaveStart?.();
+      onSaveStartRef.current?.();
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -178,9 +189,9 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
       setHasUnsavedChanges(false);
       pendingDataRef.current = null;
       lastSavedSnapshotRef.current = snapshot;
-      onSaveComplete?.();
+      onSaveCompleteRef.current?.();
 
-      if (showToast) {
+      if (showToastRef.current) {
         toast.success('Rascunho salvo automaticamente');
       }
 
@@ -188,9 +199,9 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     } catch (error: any) {
       console.error('[AutoSave] Erro ao salvar:', error);
       setStatus('error');
-      onSaveError?.(error);
+      onSaveErrorRef.current?.(error);
 
-      if (showToast) {
+      if (showToastRef.current) {
         toast.error('Erro ao salvar rascunho: ' + error.message);
       }
 
@@ -198,7 +209,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     } finally {
       isSavingRef.current = false;
     }
-  }, [onSaveStart, onSaveComplete, onSaveError, showToast]);
+  }, []);
 
   // Agendar salvamento com debounce
   const scheduleAutoSave = useCallback((data: AutoSaveData) => {

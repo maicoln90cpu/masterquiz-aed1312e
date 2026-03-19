@@ -78,12 +78,8 @@ export function useQuizPersistence({
     debounceMs: 30000,
     enabled: !!quizId,
     showToast: false,
-    onSaveComplete: () => {
-      console.log('[AutoSave] ✅ Rascunho salvo automaticamente');
-    },
-    onSaveError: (error) => {
-      console.error('[AutoSave] ❌ Erro ao salvar:', error);
-    }
+    onSaveComplete: onSaveCompleteStable,
+    onSaveError: onSaveErrorStable,
   });
 
   // ✅ Persistir estado em localStorage E agendar autosave no Supabase
