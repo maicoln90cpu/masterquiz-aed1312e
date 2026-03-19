@@ -59,11 +59,11 @@ export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
             </Button>
           </div>
 
-          {block.items.map((item, index) => (
+          {items.map((item, index) => (
             <div key={index} className="p-3 border rounded-lg space-y-2 bg-muted/30">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Item {index + 1}</span>
-                <Button variant="ghost" size="sm" onClick={() => removeItem(index)} disabled={block.items.length <= 1}>
+                <Button variant="ghost" size="sm" onClick={() => removeItem(index)} disabled={items.length <= 1}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
