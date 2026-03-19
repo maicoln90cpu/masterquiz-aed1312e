@@ -28,6 +28,7 @@ import logo from "@/assets/logo.png";
 import { useQuery } from "@tanstack/react-query";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMode";
+import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hooks/useEditorLayout";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
