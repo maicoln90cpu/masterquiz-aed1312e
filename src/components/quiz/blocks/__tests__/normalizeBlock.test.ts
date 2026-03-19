@@ -14,7 +14,7 @@ const ALL_BLOCK_TYPES: BlockType[] = [
 
 describe('createBlock', () => {
   it.each(ALL_BLOCK_TYPES)('creates valid block for type "%s"', (type) => {
-    const block = createBlock(type);
+    const block = createBlock(type, 0);
     expect(block).toBeDefined();
     expect(block.type).toBe(type);
     expect(block.id).toBeTruthy();
@@ -168,7 +168,7 @@ describe('normalizeBlock', () => {
 
   // ── Idempotency ──
   it.each(ALL_BLOCK_TYPES)('normalizeBlock is idempotent for "%s"', (type) => {
-    const block = createBlock(type);
+    const block = createBlock(type, 0);
     const once = normalizeBlock(block);
     const twice = normalizeBlock(once);
     expect(twice).toEqual(once);
