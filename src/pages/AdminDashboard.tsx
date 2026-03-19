@@ -1367,6 +1367,41 @@ export default function AdminDashboard() {
           )}
         </div>
 
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Layout do Editor de Quiz</Label>
+              <p className="text-sm text-muted-foreground">
+                <strong>Classic:</strong> Layout atual com etapas na lateral direita. <strong>Modern:</strong> Etapas horizontais + painel de propriedades.
+              </p>
+            </div>
+            <Select 
+              value={editorLayout} 
+              onValueChange={async (value: string) => {
+                try {
+                  await updateEditorLayout(value as EditorLayout);
+                  toast.success(`Layout do editor alterado para ${value === 'modern' ? 'Modern' : 'Classic'}`);
+                } catch (err) {
+                  toast.error('Erro ao alterar layout do editor');
+                }
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="classic">Classic — Layout Atual</SelectItem>
+                <SelectItem value="modern">Modern — Novo Layout</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isModern && (
+            <div className="bg-accent/50 p-3 rounded-md text-sm text-accent-foreground">
+              🎨 <strong>Layout Modern ativo:</strong> Os usuários verão o novo editor com etapas horizontais e painel de propriedades lateral.
+            </div>
+          )}
+        </div>
+
         <Button onClick={saveSettings} className="w-full">
           Salvar Configurações
         </Button>
