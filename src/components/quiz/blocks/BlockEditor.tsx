@@ -80,7 +80,7 @@ interface SortableBlockProps {
   isSelected?: boolean;
 }
 
-const SortableBlock = ({ block, onUpdate, onDelete, totalQuestions = 0, currentQuestionIndex = 0, t }: SortableBlockProps) => {
+const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions = 0, currentQuestionIndex = 0, t, onBlockSelect, isSelected }: SortableBlockProps) => {
   const {
     attributes,
     listeners,
