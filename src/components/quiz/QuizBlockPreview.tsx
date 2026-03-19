@@ -599,7 +599,7 @@ export const QuizBlockPreview = ({
         ) : null;
 
       case "gallery":
-        return block.images.length > 0 ? (
+        return (block.images || []).length > 0 ? (
           <div key={block.id} className="space-y-2">
             <div
               className={
