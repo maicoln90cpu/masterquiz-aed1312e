@@ -69,11 +69,11 @@ export const ComparisonBlock = ({ block, onChange }: ComparisonBlockProps) => {
             </Button>
           </div>
 
-          {block.leftItems.map((_, index) => (
+          {leftItems.map((_, index) => (
             <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Input value={block.leftItems[index]} onChange={(e) => updateLeftItem(index, e.target.value)} className="flex-1" placeholder="Item esquerda" />
-              <Input value={block.rightItems[index]} onChange={(e) => updateRightItem(index, e.target.value)} className="flex-1" placeholder="Item direita" />
-              <Button variant="ghost" size="sm" onClick={() => removeRow(index)} disabled={block.leftItems.length <= 1} className="self-end sm:self-auto">
+              <Input value={leftItems[index]} onChange={(e) => updateLeftItem(index, e.target.value)} className="flex-1" placeholder="Item esquerda" />
+              <Input value={rightItems[index] || ''} onChange={(e) => updateRightItem(index, e.target.value)} className="flex-1" placeholder="Item direita" />
+              <Button variant="ghost" size="sm" onClick={() => removeRow(index)} disabled={leftItems.length <= 1} className="self-end sm:self-auto">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>

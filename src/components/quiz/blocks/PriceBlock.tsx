@@ -73,7 +73,7 @@ export const PriceBlock = ({ block, onChange }: PriceBlockProps) => {
             </Button>
           </div>
           <div className="space-y-2">
-            {block.features.map((feature, index) => (
+            {features.map((feature, index) => (
               <div key={index} className="flex gap-2">
                 <Input
                   placeholder={`Recurso ${index + 1}`}
@@ -85,7 +85,7 @@ export const PriceBlock = ({ block, onChange }: PriceBlockProps) => {
                   size="icon"
                   variant="ghost"
                   className="shrink-0"
-                  disabled={block.features.length <= 1}
+                  disabled={features.length <= 1}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

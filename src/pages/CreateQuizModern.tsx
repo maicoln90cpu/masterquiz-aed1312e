@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
 import { BlockEditor } from "@/components/quiz/blocks/BlockEditor";
 import { CompactBlockPalette } from "@/components/quiz/blocks/CompactBlockPalette";
+import { BlockErrorBoundary } from "@/components/quiz/blocks/BlockErrorBoundary";
 import { QuestionsList } from "@/components/quiz/QuestionsList";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
 import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";

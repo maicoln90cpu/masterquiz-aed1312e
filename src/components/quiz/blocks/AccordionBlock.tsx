@@ -77,8 +77,8 @@ export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
         <div className="p-4 bg-muted/50 rounded-lg space-y-3">
           <p className="text-sm font-medium text-muted-foreground">Preview:</p>
           <h3 className="font-semibold">{block.title}</h3>
-          <Accordion type={block.allowMultiple ? "multiple" : "single"} collapsible className="w-full">
-            {block.items.map((item, index) => (
+          <Accordion type={safeBlock.allowMultiple ? "multiple" : "single"} collapsible className="w-full">
+            {items.map((item, index) => (
               <AccordionItem key={index} value={`item-${index}`} className={block.style === 'bordered' ? 'border rounded-lg mb-2 px-3' : ''}>
                 <AccordionTrigger className={block.style === 'minimal' ? 'text-sm py-2' : ''}>{item.question}</AccordionTrigger>
                 <AccordionContent>{item.answer}</AccordionContent>

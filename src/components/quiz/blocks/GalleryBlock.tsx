@@ -51,7 +51,7 @@ export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {block.images.map((image, index) => (
+            {images.map((image, index) => (
               <Card key={index} className="bg-muted/20">
                 <CardContent className="pt-4 space-y-3">
                   <div className="flex items-center justify-between">

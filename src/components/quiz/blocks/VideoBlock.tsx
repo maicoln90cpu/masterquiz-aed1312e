@@ -23,24 +23,15 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
   const [bunnyVideoId, setBunnyVideoId] = useState<string | undefined>(block.bunnyVideoId);
   const [activeTab, setActiveTab] = useState<string>("url");
 
-  // Hooks always called — safe defaults if they fail internally
-  let allowVideoUpload = false;
-  let usedMb = 0;
-  let videoStorageLimitMb = 0;
-  let usagePercentage = 0;
-  let isBunny = false;
-
-  try {
-    const storage = useVideoStorage();
-    const provider = useVideoProvider();
-    allowVideoUpload = storage.allowVideoUpload;
-    usedMb = storage.usedMb;
-    videoStorageLimitMb = storage.videoStorageLimitMb;
-    usagePercentage = storage.usagePercentage;
-    isBunny = provider.isBunny;
-  } catch (err) {
-    console.warn("[VideoBlock] Hooks falharam:", err);
-  }
+  // Hooks called unconditionally (React rules) — handle errors via returned state
+  const storage = useVideoStorage();
+  const provider = useVideoProvider();
+  
+  const allowVideoUpload = storage?.allowVideoUpload ?? false;
+  const usedMb = storage?.usedMb ?? 0;
+  const videoStorageLimitMb = storage?.videoStorageLimitMb ?? 0;
+  const usagePercentage = storage?.usagePercentage ?? 0;
+  const isBunny = provider?.isBunny ?? false;
 
   const detectProvider = (url: string): VideoBlockType['provider'] => {
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
