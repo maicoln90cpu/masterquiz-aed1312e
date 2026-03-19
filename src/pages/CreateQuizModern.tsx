@@ -230,11 +230,11 @@ const CreateQuizModern = () => {
   const handleStepClick = useCallback((newStep: number) => {
     // Ao sair do Step 1 pela primeira vez, inicializar perguntas vazias
     if (editorState.step === 1 && questions.length === 0) {
-      const emptyQuestions = initializeEmptyQuestions(questionCount);
+      const emptyQuestions = initializeEmptyQuestions(editorState.questionCount);
       setQuestions(emptyQuestions);
     }
     updateEditor({ step: newStep });
-  }, [updateEditor, editorState.step, questions.length, questionCount, initializeEmptyQuestions, setQuestions]);
+  }, [updateEditor, editorState.step, editorState.questionCount, questions.length, initializeEmptyQuestions, setQuestions]);
 
   // ============================================
   // RENDERS CONDICIONAIS
