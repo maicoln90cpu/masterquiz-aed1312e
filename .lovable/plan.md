@@ -1,87 +1,131 @@
-## Plano: Site Mode A/B (Fluxo Completo)
 
-### Etapa 1 ✅ — Infraestrutura Base
-- [x] Corrigir cards do AdminDashboard (remover queries redundantes de loadData)
-- [x] Criar tabela `site_settings` com `site_mode` (A ou B)
-- [x] Adicionar `payment_confirmed` em `user_subscriptions`
-- [x] Criar hook `useSiteMode` + `useUpdateSiteMode`
-- [x] Adicionar toggle de Modo A/B nas configurações do admin
 
-### Etapa 2 ✅ — Frontend Condicional (Landing + Pricing + Login)
-- [x] Landing Page: Condicional com `useSiteMode()` — modo B esconde plano free, CTAs apontam para `/precos`
-- [x] HeroSection: CTA "Escolher meu plano" + navega para `/precos` no modo B
-- [x] FinalCTA: Navega para `/precos` no modo B
-- [x] Pricing: Esconder card Free no modo B
-- [x] Login: No modo B, após cadastro redirecionar para `/precos`
+# Plano: Atualizar Documentacao Completa + Mover para docs/
 
-### Etapa 3 ✅ — Auth Guards + Payment Flow
-- [x] RequireAuth: No modo B, verificar `payment_confirmed` e redirecionar para checkout se false
-- [x] Kiwify webhook: Setar `payment_confirmed = true` após pagamento
-- [x] KiwifySuccess: Polling para verificar `payment_confirmed` antes de liberar dashboard
-- [x] Modo B: Novos cadastros criam subscription com `payment_confirmed = false` (via trigger existente com default true)
+## Escopo
 
----
+1. Mover todos os `.md` da raiz para `docs/` (exceto README.md que fica na raiz por convenção)
+2. Atualizar conteúdo de todos os docs para v2.30 (incluindo sistema de email, automações, unsubscribe, A/B, bulk API)
+3. Atualizar cross-references entre documentos
+4. Criar `docs/API_DOCS.md` (endpoints Edge Functions) e `docs/COMPONENTS.md` (componentes principais)
+5. Gerar prompt de knowledge atualizado no chat
 
-## Plano: Email Recovery - Melhorias
+## Arquivos a mover (raiz → docs/)
 
-### Etapa 1 ✅ — UI + Templates + Editor Visual
-- [x] Reestruturar tabs WhatsApp/Email em CustomerRecovery
-- [x] Criar dashboard EmailRecoveryReports com KPIs e gráficos
-- [x] Adicionar editor visual dual (Visual + HTML) nos templates
+| De | Para |
+|---|---|
+| `PENDENCIAS.md` | `docs/PENDENCIAS.md` |
+| `PRD.md` | `docs/PRD.md` |
+| `ROADMAP.md` | `docs/ROADMAP.md` |
+| `STYLE_GUIDE.md` | `docs/STYLE_GUIDE.md` |
+| `CHECKLIST.md` | `docs/CHECKLIST.md` |
 
-### Etapa 2 ✅ — Compatibilidade + Estabilidade
-- [x] VML/Outlook para botões CTA em todos os 6 templates
-- [x] Logo permanente no Supabase Storage
-- [x] Lógica de falha permanente (retry ≥ 3) na fila
+**README.md permanece na raiz** (padrão Git). Links internos do README apontarão para `docs/`.
 
-### Etapa 3 ✅ — Tracking + Dashboard Real
-- [x] Webhook E-goi (`egoi-email-webhook`) para opens/clicks/bounces
-- [x] Dashboard corrigido com taxas percentuais (open rate, click rate)
-- [x] Filtros por status opened/clicked adicionados
-- [x] Colunas "Aberto em" e "Clicado em" na tabela
-- [x] Logo atualizado no Storage (novo arquivo enviado pelo usuário)
-- [x] Pie chart segmentado (enviados vs abertos vs clicados)
+## Atualizações de conteúdo por arquivo
 
-### Etapa 4a ✅ — Templates Estáticos + Triggers SQL (Etapa 1 do plano de 12 emails)
-- [x] 4 templates Milestone (10/50/100/500 leads) + trigger SQL em quiz_responses
-- [x] Template Tutorial (3 dias após 1º quiz) + trigger SQL em quizzes
-- [x] Template Pesquisa de Satisfação (30 dias após signup)
-- [x] Template Comparativo de Planos (14 dias no free)
-- [x] Template Guia de Integração (7 dias sem integrações)
-- [x] 3 templates Reengajamento Educativo (série 21/24/27 dias)
-- [x] Template Convite para Webinar (manual)
-- [x] check-inactive-users-email expandido para novas categorias
-- [x] process-email-recovery-queue respeitando scheduled_at futuro
+### README.md (raiz)
+- Versão → 2.30.0, data → 19 Março 2026
+- Corrigir typo linha 81: `(ce(centralizado via pushGTMEvent) ntralizado...)`
+- Corrigir typo linha 121: `hooks/   7` → `hooks/`
+- Edge Functions: 39 → 57 (contar real: 57 pastas)
+- Adicionar seção "Email Recovery & Automações" nas funcionalidades admin
+- Adicionar secrets: `EGOI_API_KEY`
+- Atualizar tree de `docs/` com novos arquivos
+- Atualizar links: todos `./PENDENCIAS.md` → `./docs/PENDENCIAS.md` etc
+- Adicionar `docs/API_DOCS.md` e `docs/COMPONENTS.md` na tabela de docs
 
-### Etapa 4b ✅ — Templates Dinâmicos com IA
-- [x] Edge Function generate-email-content (gerador IA compartilhado via Lovable AI)
-- [x] Blog Digest automático (send-blog-digest — a cada 3 artigos)
-- [x] Dica da Semana (send-weekly-tip — cron semanal)
-- [x] Caso de Sucesso (send-success-story — mensal)
-- [x] Resumo Mensal (send-monthly-summary — 1º dia do mês, personalizado por usuário)
-- [x] Novidade da Plataforma (send-platform-news — disparo manual admin)
-- [x] Tabela email_tips para histórico de dicas
-- [x] Coluna included_in_digest em blog_posts
+### docs/PENDENCIAS.md
+- Adicionar v2.30.0 com todas as mudanças recentes:
+  - Etapa 4a-4d do Email Recovery (templates, triggers, automações IA, unsubscribe, A/B, bulk API)
+  - 12 templates de email estáticos + 5 dinâmicos com IA
+  - Dashboard de performance por categoria
+  - Crons automáticos via migration
+  - E-goi Bulk API
+- Atualizar pendências abertas (remover itens concluídos)
+- Atualizar links para `./` (mesma pasta docs)
 
-### Etapa 4c ✅ — UI Admin + Polimento
-- [x] UI de Automações no painel admin (EmailAutomations.tsx)
-- [x] Toggle on/off por automação + botão "Disparar agora"
-- [x] Dialog para envio de Novidades (updates, versão, segmento)
-- [x] Histórico de execuções com status/emails enviados
-- [x] Tabelas email_automation_config + email_automation_logs
-- [x] CATEGORY_LABELS expandido com todas as 13 categorias
-- [x] Nova sub-aba "Automações" no painel Email
+### docs/PRD.md
+- Versão → 2.30, data atualizada
+- Adicionar RF12 — Email Marketing Automatizado (templates, automações IA, unsubscribe, A/B)
+- Adicionar RF13 — Compliance Email (CAN-SPAM, LGPD, List-Unsubscribe)
+- Atualizar backlog: Épico 5 (Email Recovery completo ✅)
+- Atualizar links
 
-### Etapa 4d ✅ — Unsubscribe + Performance + A/B + Reorganização
-- [x] Tabela email_unsubscribes + Edge Function handle-email-unsubscribe
-- [x] Link de cancelamento no footer de todos os templates (generate-email-content)
-- [x] Header List-Unsubscribe no envio E-goi (process-email-recovery-queue)
-- [x] Verificação de unsubscribe antes de envio em todas as functions
-- [x] Dashboard de performance por categoria (tabela open/click rate)
-- [x] Teste A/B de subject lines (campo subject_b, ab_variant no envio)
-- [x] Painel A/B no EmailRecoveryReports (variante A vs B)
-- [x] Reorganização de trigger_days (mínimo 3 dias entre templates)
-- [x] Botão "Teste" em cada card de automação (envio para email específico)
-- [x] Crons automáticos criados via migration (blog_digest, weekly_tip, monthly_summary, success_story)
-- [x] Coluna ab_variant em email_recovery_contacts
-- [x] Filtro por status "cancelados" no relatório
+### docs/ROADMAP.md
+- Adicionar entrada H1 2026 com: Sistema Email completo, Bulk API, Unsubscribe, A/B
+- Atualizar histórico: v2.30.0
+- Atualizar links
+
+### docs/SYSTEM_DESIGN.md
+- Versão → 2.30
+- Adicionar seção "Sistema de Email Automatizado" com:
+  - Fluxo de dados (triggers → fila → E-goi)
+  - Tabelas (email_recovery_*, email_automation_*, email_unsubscribes, email_tips)
+  - Edge Functions de email (12 funções)
+  - Bulk API flow
+  - A/B testing logic
+- Atualizar contagem de Edge Functions (57)
+- Atualizar links
+
+### docs/STYLE_GUIDE.md
+- Atualizar data, links
+- Sem mudanças de conteúdo significativas
+
+### docs/CHECKLIST.md
+- Versão → 2.30
+- Adicionar seção "17. Sistema de Email" com checklist para:
+  - Templates, automações, unsubscribe, teste de email, crons
+- Atualizar links
+
+### docs/AUDIT_TEMPLATE.md
+- Apenas atualizar links
+
+### src/__tests__/README.md
+- Atualizar links para `../../docs/`
+
+## Novos arquivos
+
+### docs/API_DOCS.md
+Documentação das 57 Edge Functions organizadas por domínio:
+- Core (quiz, draft, PDF)
+- Auth & Users (login, delete, export, merge)
+- Analytics & Tracking (quiz, step, video, GTM)
+- Bunny CDN (6 funções)
+- WhatsApp Recovery (8 funções)
+- Email Recovery & Automações (12 funções)
+- Blog (generate, sitemap, cron, regenerate, track)
+- Payments (kiwify-webhook)
+- Admin (health, export, anonymize)
+
+Cada entrada: método, auth, payload, response, exemplo.
+
+### docs/COMPONENTS.md
+Documentação dos componentes principais sem Storybook:
+- Páginas (Index, CreateQuiz, QuizView, Dashboard, CRM, Analytics, AdminDashboard)
+- Quiz Editor (BlockEditor, QuestionsList, CalculatorWizard, UnifiedQuizPreview)
+- Admin Recovery (CustomerRecovery, EmailAutomations, EmailRecoveryReports, EmailRecoveryTemplates)
+- Landing (HeroSection, PricingSection, FeaturesSection)
+- Props, uso e dependências de cada um
+
+## Cross-references
+
+Todos os documentos terão links relativos atualizados:
+- README.md (raiz): `./docs/PRD.md`, `./docs/ROADMAP.md`, etc
+- Docs entre si: `./PRD.md`, `./ROADMAP.md` (mesma pasta)
+- `src/__tests__/README.md`: `../../docs/STYLE_GUIDE.md`, etc
+
+## Prompt de Knowledge
+
+Após implementação, enviarei no chat um prompt completo e atualizado para knowledge do projeto incluindo:
+- Resumo da plataforma e stack
+- Estrutura de pastas
+- Padrões de código
+- Regras de implementação
+- Checklist pós-implementação obrigatório
+- Formato de resposta (antes x depois, vantagens/desvantagens)
+
+## Estimativa
+
+~12 arquivos criados/modificados. Maioria é documentação pura sem impacto no runtime.
+
