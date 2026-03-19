@@ -586,73 +586,79 @@ const CreateQuizModern = () => {
         </div>
         )}
 
-        {/* ========== STEP 3: Full-width 3-column layout ========== */}
+        {/* ========== STEP 3: Full-width 4-column layout ========== */}
         {(step === 3 || isExpressMode) && (
           <div className={cn(
             "flex h-full",
-            isExpressMode ? "container mx-auto max-w-4xl px-4 py-6" : "px-2 gap-2"
+            isExpressMode ? "container mx-auto max-w-4xl px-4 py-6" : ""
           )}>
-            {/* LEFT: Question List */}
+            {/* COL 1: Question List */}
             {!isExpressMode && (
-              <div className="w-52 shrink-0 hidden lg:flex flex-col border-r bg-card">
-                <div className="p-3 border-b bg-muted/30">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    {t('createQuiz.questions', 'Perguntas')} ({questions.length})
-                  </h3>
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  {questions.map((q, idx) => {
-                    const questionBlock = q.blocks?.find((b: any) => b.type === 'question');
-                    const questionText = questionBlock && 'questionText' in questionBlock
-                      ? questionBlock.questionText
-                      : '';
-                    return (
-                      <button
-                        key={q.id || idx}
-                        onClick={() => {
-                          updateEditor({ currentQuestionIndex: idx, selectedBlockIndex: 0 });
-                        }}
-                        className={cn(
-                          "w-full text-left px-3 py-2.5 border-b last:border-b-0 transition-colors text-sm",
-                          currentQuestionIndex === idx
-                            ? "bg-primary/10 border-l-2 border-l-primary font-medium"
-                            : "hover:bg-muted/50"
-                        )}
-                      >
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {String(idx + 1).padStart(2, '0')}
-                        </span>
-                        <p className="text-foreground line-clamp-2 mt-0.5">
-                          {questionText || t('createQuiz.emptyQuestion', 'Pergunta sem título')}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="p-2 border-t">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs"
-                    onClick={handleAddQuestion}
-                  >
-                    + {t('createQuiz.addQuestion', 'Adicionar pergunta')}
-                  </Button>
-                </div>
+              <div className="w-56 shrink-0 hidden lg:flex flex-col border-r bg-card">
+                <QuestionsList
+                  questions={questions}
+                  currentStep={step}
+                  currentQuestionIndex={currentQuestionIndex}
+                  onQuestionClick={(idx) => {
+                    updateEditor({ currentQuestionIndex: idx, selectedBlockIndex: 0 });
+                  }}
+                  onAddQuestion={handleAddQuestion}
+                  onDeleteQuestion={handleDeleteQuestion}
+                  onUpdateQuestion={updateQuestion}
+                  questionsPerQuizLimit={questionsLimit}
+                />
               </div>
             )}
 
-            {/* CENTER: BlockEditor directly */}
+            {/* COL 2: Block Palette */}
+            {!isExpressMode && (
+              <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto">
+                <CompactBlockPalette
+                  onAddBlock={(blockType) => {
+                    const currentQ = questions[currentQuestionIndex];
+                    if (!currentQ) return;
+                    const newBlock = createBlock(blockType, currentQ.blocks?.length || 0);
+                    const updatedBlocks = [...(currentQ.blocks || []), newBlock];
+                    const updatedQuestions = [...questions];
+                    updatedQuestions[currentQuestionIndex] = {
+                      ...currentQ,
+                      blocks: updatedBlocks,
+                    };
+                    handleQuestionsUpdate(updatedQuestions);
+                    updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
+                  }}
+                  onAddTemplate={(templateBlocks) => {
+                    const currentQ = questions[currentQuestionIndex];
+                    if (!currentQ) return;
+                    const existingBlocks = currentQ.blocks || [];
+                    const adjustedBlocks = templateBlocks.map((b, i) => ({
+                      ...b,
+                      order: existingBlocks.length + i,
+                    }));
+                    const updatedBlocks = [...existingBlocks, ...adjustedBlocks];
+                    const updatedQuestions = [...questions];
+                    updatedQuestions[currentQuestionIndex] = {
+                      ...currentQ,
+                      blocks: updatedBlocks,
+                    };
+                    handleQuestionsUpdate(updatedQuestions);
+                    updateEditor({ selectedBlockIndex: updatedBlocks.length - 1 });
+                  }}
+                  currentBlockOrder={questions[currentQuestionIndex]?.blocks?.length || 0}
+                />
+              </div>
+            )}
+
+            {/* COL 3: BlockEditor (center) */}
             <div className="flex-1 min-w-0 overflow-y-auto p-3">
-              {/* Mini header: Pergunta X de Y */}
               {!isExpressMode && (
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3 px-1">
                   <h3 className="text-sm font-semibold text-foreground">
                     Pergunta {currentQuestionIndex + 1} de {questions.length}
                   </h3>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{questions[currentQuestionIndex]?.blocks?.length || 0} blocos</span>
-                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {questions[currentQuestionIndex]?.blocks?.length || 0} blocos
+                  </span>
                 </div>
               )}
               
@@ -683,7 +689,7 @@ const CreateQuizModern = () => {
               })()}
             </div>
 
-            {/* RIGHT: Block Properties Panel */}
+            {/* COL 4: Block Properties Panel */}
             {!isExpressMode && (
               <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card">
                 <div className="p-3 border-b bg-muted/30">
