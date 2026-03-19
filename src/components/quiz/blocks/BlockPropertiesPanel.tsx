@@ -813,7 +813,8 @@ const SwitchRow = ({ label, checked, onChange }: { label: string; checked: boole
 // MAIN PANEL COMPONENT
 // ============================================
 
-export const BlockPropertiesPanel = ({ block, onChange }: BlockPropertiesPanelProps) => {
+export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropertiesPanelProps) => {
+  const block = normalizeBlock(rawBlock);
   const icon = BLOCK_ICONS[block.type];
   const name = BLOCK_NAMES[block.type];
 
