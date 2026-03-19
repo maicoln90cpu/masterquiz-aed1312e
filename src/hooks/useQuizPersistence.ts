@@ -379,14 +379,16 @@ export function useQuizPersistence({
           }
 
           // first_quiz_created — SOMENTE se houve interação real
+          const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
           if (earlyStages.includes(currentStage) && hasUserInteracted) {
             w.dataLayer.push({
-              event: 'first_quiz_created',
+              event: createEventName,
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
+              editor_mode: editorMode,
             });
-            console.log('🎯 [GTM] Event pushed: first_quiz_created (UPDATE branch, real interaction)');
+            console.log(`🎯 [GTM] Event pushed: ${createEventName} (UPDATE branch, real interaction)`);
 
             // Promover para engajado se ainda não passou
             if (currentStage === 'explorador' || currentStage === 'iniciado') {
