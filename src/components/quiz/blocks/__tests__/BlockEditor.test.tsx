@@ -103,8 +103,7 @@ describe('BlockEditor — Fase 11 Integration Tests', () => {
     });
 
     it('deve aceitar blocks=null sem crashar (guarda defensiva)', () => {
-      // @ts-expect-error — teste de resiliência
-      expect(() => render(<BlockEditor blocks={null} onChange={mockOnChange} />)).not.toThrow();
+      expect(() => render(<BlockEditor blocks={null as any} onChange={mockOnChange} />)).not.toThrow();
     });
 
     it('deve aceitar blocks=undefined sem crashar', () => {
