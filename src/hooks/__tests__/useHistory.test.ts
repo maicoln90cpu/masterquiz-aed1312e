@@ -117,14 +117,10 @@ describe('useHistory', () => {
     it('should decrease undoCount after undo', () => {
       const { result } = renderHook(() => useHistory(0, { debounceMs: 0 }));
 
-      act(() => {
-        result.current.setState(1);
-        vi.advanceTimersByTime(10);
-      });
-      act(() => {
-        result.current.setState(2);
-        vi.advanceTimersByTime(10);
-      });
+      act(() => { result.current.setState(1); });
+      act(() => { vi.advanceTimersByTime(10); });
+      act(() => { result.current.setState(2); });
+      act(() => { vi.advanceTimersByTime(10); });
 
       expect(result.current.undoCount).toBe(2);
 
