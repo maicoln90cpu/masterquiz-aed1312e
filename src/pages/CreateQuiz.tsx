@@ -45,10 +45,14 @@ import { useQuizTemplateSelection } from "@/hooks/useQuizTemplateSelection";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useEditorInteractionTracker } from "@/hooks/useEditorInteractionTracker";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useEditorLayout } from "@/hooks/useEditorLayout";
+import { lazy, Suspense } from "react";
 
+const CreateQuizModern = lazy(() => import("@/pages/CreateQuizModern"));
 import { useProfile } from "@/hooks/useProfile";
 
 const CreateQuiz = () => {
+  const { isModern, isLoading: isLayoutLoading } = useEditorLayout();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -260,8 +264,22 @@ const CreateQuiz = () => {
   }, [editorState.quizSlug, profile?.company_slug]);
 
   // ============================================
-  // RENDERS CONDICIONAIS
+  // RENDER MODERN LAYOUT (se ativo)
   // ============================================
+  if (isModern) {
+    return (
+      <Suspense fallback={
+        <main className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      }>
+        <CreateQuizModern />
+      </Suspense>
+    );
+  }
+
+  // ============================================
+  // RENDERS CONDICIONAIS (CLASSIC)
 
   // Express Celebration Screen
   if (showCelebration && isExpressMode) {

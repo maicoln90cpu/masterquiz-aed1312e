@@ -28,6 +28,7 @@ import logo from "@/assets/logo.png";
 import { useQuery } from "@tanstack/react-query";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMode";
+import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hooks/useEditorLayout";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -64,6 +65,8 @@ export default function AdminDashboard() {
   const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
   const { siteMode, isModeB } = useSiteMode();
   const { updateSiteMode } = useUpdateSiteMode();
+  const { editorLayout, isModern } = useEditorLayout();
+  const { updateEditorLayout } = useUpdateEditorLayout();
   const [loading, setLoading] = useState(true);
   const [openTicketsCount, setOpenTicketsCount] = useState(0);
   const [stats, setStats] = useState({
@@ -1360,6 +1363,41 @@ export default function AdminDashboard() {
           {isModeB && (
             <div className="bg-accent/50 p-3 rounded-md text-sm text-accent-foreground">
               ⚠️ <strong>Modo B ativo:</strong> O plano gratuito está oculto. Novos usuários serão direcionados ao checkout antes de acessar o dashboard.
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Layout do Editor de Quiz</Label>
+              <p className="text-sm text-muted-foreground">
+                <strong>Classic:</strong> Layout atual com etapas na lateral direita. <strong>Modern:</strong> Etapas horizontais + painel de propriedades.
+              </p>
+            </div>
+            <Select 
+              value={editorLayout} 
+              onValueChange={async (value: string) => {
+                try {
+                  await updateEditorLayout(value as EditorLayout);
+                  toast.success(`Layout do editor alterado para ${value === 'modern' ? 'Modern' : 'Classic'}`);
+                } catch (err) {
+                  toast.error('Erro ao alterar layout do editor');
+                }
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="classic">Classic — Layout Atual</SelectItem>
+                <SelectItem value="modern">Modern — Novo Layout</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isModern && (
+            <div className="bg-accent/50 p-3 rounded-md text-sm text-accent-foreground">
+              🎨 <strong>Layout Modern ativo:</strong> Os usuários verão o novo editor com etapas horizontais e painel de propriedades lateral.
             </div>
           )}
         </div>

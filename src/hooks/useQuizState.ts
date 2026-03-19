@@ -42,6 +42,7 @@ export interface QuizEditorState {
   quizId: string | null;
   quizSlug: string;
   abTestActive: boolean;
+  selectedBlockIndex: number | null;
 }
 
 export interface QuizUIState {
@@ -110,6 +111,7 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
     quizId: null,
     quizSlug: '',
     abTestActive: false,
+    selectedBlockIndex: null,
   });
 
   // ✅ Estado de aparência
@@ -292,6 +294,7 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
       quizId: null,
       quizSlug: '',
       abTestActive: false,
+      selectedBlockIndex: null,
     });
     setAppearanceState({
       title: '',

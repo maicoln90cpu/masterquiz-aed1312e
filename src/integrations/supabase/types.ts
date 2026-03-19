@@ -2151,18 +2151,21 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          editor_layout: string
           id: string
           site_mode: string
           updated_at: string | null
           updated_by: string | null
         }
         Insert: {
+          editor_layout?: string
           id?: string
           site_mode?: string
           updated_at?: string | null
           updated_by?: string | null
         }
         Update: {
+          editor_layout?: string
           id?: string
           site_mode?: string
           updated_at?: string | null

@@ -85,3 +85,31 @@
 - [x] Crons automáticos criados via migration (blog_digest, weekly_tip, monthly_summary, success_story)
 - [x] Coluna ab_variant em email_recovery_contacts
 - [x] Filtro por status "cancelados" no relatório
+
+---
+
+## Plano: Editor Dual-Layout (Classic / Modern)
+
+### Fase 1 ✅ — Fundação
+- [x] Migration: coluna `editor_layout` em `site_settings` (default 'classic')
+- [x] Hook `useEditorLayout` + `useUpdateEditorLayout` com cache 1h
+- [x] Toggle no AdminDashboard para alternar Classic/Modern
+- [x] Condicional em `CreateQuiz.tsx` — renderiza `CreateQuizModern` se Modern
+- [x] `CreateQuizModern.tsx` com layout horizontal de steps + Step 1 com formato
+- [x] `selectedBlockIndex` adicionado ao `useQuizState`
+
+### Fase 2 — Painel de Propriedades dos Blocos
+- [ ] Criar `BlockPropertiesPanel.tsx` com dispatch por tipo de bloco
+- [ ] Separar propriedades inline vs lateral para os 22 blocos
+- [ ] Implementar seleção de bloco (click → selectedBlockIndex)
+- [ ] Layout 3 colunas na Step 3 (perguntas | editor | propriedades)
+
+### Fase 3 — Polish + Express Mode
+- [ ] Adaptar Express mode para layout Modern
+- [ ] Mobile responsive na barra horizontal de steps
+- [ ] Evento GTM `editor_layout_switched`
+- [ ] Remover showResults da Step 2 no Modern (já está na Step 1)
+
+### Fase 4 — Testes + Iteração
+- [ ] Testes A/B de conversão entre Classic e Modern
+- [ ] Ajustes baseados em feedback
