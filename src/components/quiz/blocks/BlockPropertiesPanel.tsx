@@ -12,6 +12,7 @@ import {
   TextCursorInput, Star, ChevronDown, Columns, Users, Hash, Settings2
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
+import { normalizeBlock } from "@/types/blocks";
 
 interface BlockPropertiesPanelProps {
   block: QuizBlock;
