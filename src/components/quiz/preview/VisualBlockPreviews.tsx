@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Info, CheckCircle, XCircle, X } from "lucide-react";
 import type { QuizBlock } from "@/types/blocks";
 
