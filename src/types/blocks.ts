@@ -859,6 +859,29 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         fallbackText: 'Ver plano personalizado',
         conditions: [],
       } as PersonalizedCTABlock;
+
+    case 'recommendation':
+      return {
+        ...baseBlock,
+        type: 'recommendation',
+        title: '🎯 Recomendação para você',
+        subtitle: 'Baseado nas suas respostas, recomendamos:',
+        recommendations: [
+          {
+            id: `rec-${Date.now()}-1`,
+            name: 'Produto Recomendado',
+            description: 'A melhor opção para o seu perfil.',
+            buttonText: 'Saiba mais',
+            buttonUrl: '',
+            badge: '⭐ Top Pick',
+            rules: [],
+          },
+        ],
+        displayMode: 'best_match',
+        style: 'card',
+        showScore: false,
+        fallbackText: 'Não encontramos uma recomendação específica para você.',
+      } as RecommendationBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
