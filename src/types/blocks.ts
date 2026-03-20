@@ -345,6 +345,7 @@ export interface QuoteBlock extends BaseBlock {
   author?: string;
   borderColor?: string;
   style?: 'default' | 'large' | 'minimal';
+  backgroundImageUrl?: string; // ✅ Etapa 2D: Imagem de fundo opcional
 }
 
 export interface BadgeRowBlock extends BaseBlock {
