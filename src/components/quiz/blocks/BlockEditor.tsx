@@ -594,6 +594,21 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 <Flag className="h-4 w-4 mr-2" />
                 Banner/Faixa
               </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Dinâmico</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => addBlock('answerSummary')}>
+                <List className="h-4 w-4 mr-2" />
+                Resumo de Respostas
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('progressMessage')}>
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Mensagem de Progresso
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('avatarGroup')}>
+                <Bell className="h-4 w-4 mr-2" />
+                Grupo de Avatares
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

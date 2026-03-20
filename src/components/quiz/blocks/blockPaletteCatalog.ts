@@ -84,4 +84,13 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'banner', icon: Flag, labelKey: 'createQuiz.blocks.banner', defaultLabel: 'Banner/Faixa' },
     ],
   },
+  {
+    titleKey: 'createQuiz.blockEditor.dynamicBlocks',
+    defaultTitle: 'Dinâmico',
+    items: [
+      { type: 'answerSummary', icon: ClipboardList, labelKey: 'createQuiz.blocks.answerSummary', defaultLabel: 'Resumo de Respostas' },
+      { type: 'progressMessage', icon: TrendingUp, labelKey: 'createQuiz.blocks.progressMessage', defaultLabel: 'Mensagem de Progresso' },
+      { type: 'avatarGroup', icon: Users, labelKey: 'createQuiz.blocks.avatarGroup', defaultLabel: 'Grupo de Avatares' },
+    ],
+  },
 ];
