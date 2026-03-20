@@ -282,6 +282,14 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
             onChange={(v) => onChange(update(block, { autoAdvance: v }))}
           />
         )}
+        {/* ✅ Etapa 2C: Randomizar opções */}
+        {block.answerFormat !== 'short_text' && (
+          <SwitchRow
+            label="Randomizar opções"
+            checked={block.randomizeOptions || false}
+            onChange={(v) => onChange(update(block, { randomizeOptions: v }))}
+          />
+        )}
       </div>
     </div>
   );
