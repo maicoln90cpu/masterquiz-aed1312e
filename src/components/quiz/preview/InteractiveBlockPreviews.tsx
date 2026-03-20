@@ -80,18 +80,30 @@ export const ProgressBlockPreview = ({ block, currentQuestion, totalQuestions }:
   const progress = totalQuestions > 0 ? (currentQuestion / totalQuestions) * 100 : 0;
   const heightClass = block.height === 'thin' ? 'h-1' : block.height === 'thick' ? 'h-4' : 'h-2';
 
+  // ✅ Etapa 2C: Cor por faixa (vermelho→amarelo→verde)
+  const getProgressColor = () => {
+    if (block.colorByRange) {
+      if (progress < 33) return '#ef4444';
+      if (progress < 66) return '#f59e0b';
+      return '#22c55e';
+    }
+    return block.color || '#3b82f6';
+  };
+  const progressColor = getProgressColor();
+  const isComplete = progress >= 100;
+
   return (
     <div className="space-y-2">
       {block.label && <p className="text-sm font-medium">{block.label}</p>}
       {block.style === 'bar' && (
         <div className={`w-full ${heightClass} bg-muted rounded-full overflow-hidden`}>
-          <div className={`${heightClass} rounded-full ${block.animated ? 'transition-all duration-500' : ''}`} style={{ width: `${progress}%`, backgroundColor: block.color }} />
+          <div className={`${heightClass} rounded-full ${block.animated ? 'transition-all duration-500' : ''}`} style={{ width: `${progress}%`, backgroundColor: progressColor }} />
         </div>
       )}
       {block.style === 'steps' && (
         <div className="flex gap-1">
           {Array.from({ length: totalQuestions }).map((_, i) => (
-            <div key={i} className={`flex-1 ${heightClass} rounded-full ${block.animated ? 'transition-all duration-300' : ''}`} style={{ backgroundColor: i < currentQuestion ? block.color : '#e5e7eb' }} />
+            <div key={i} className={`flex-1 ${heightClass} rounded-full ${block.animated ? 'transition-all duration-300' : ''}`} style={{ backgroundColor: i < currentQuestion ? progressColor : '#e5e7eb' }} />
           ))}
         </div>
       )}
@@ -99,7 +111,7 @@ export const ProgressBlockPreview = ({ block, currentQuestion, totalQuestions }:
         <div className="flex justify-center">
           <svg className="w-24 h-24 transform -rotate-90">
             <circle cx="48" cy="48" r="40" stroke="#e5e7eb" strokeWidth="8" fill="none" />
-            <circle cx="48" cy="48" r="40" stroke={block.color} strokeWidth="8" fill="none"
+            <circle cx="48" cy="48" r="40" stroke={progressColor} strokeWidth="8" fill="none"
               strokeDasharray={`${2 * Math.PI * 40}`}
               strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
               className={block.animated ? 'transition-all duration-500' : ''}
@@ -108,10 +120,16 @@ export const ProgressBlockPreview = ({ block, currentQuestion, totalQuestions }:
         </div>
       )}
       {block.style === 'percentage' && (
-        <div className="text-center text-4xl font-bold" style={{ color: block.color }}>{Math.round(progress)}%</div>
+        <div className="text-center text-4xl font-bold" style={{ color: progressColor }}>{Math.round(progress)}%</div>
+      )}
+      {/* ✅ Etapa 2C: Ícone de conclusão ao 100% */}
+      {block.showCompletionIcon && isComplete && (
+        <div className="flex justify-center">
+          <CheckCircle className="h-8 w-8 text-green-500 animate-in zoom-in duration-300" />
+        </div>
       )}
       {block.showPercentage && block.style !== 'percentage' && (
-        <p className="text-sm text-center font-medium" style={{ color: block.color }}>{Math.round(progress)}%</p>
+        <p className="text-sm text-center font-medium" style={{ color: progressColor }}>{Math.round(progress)}%</p>
       )}
       {block.showCounter && (
         <p className="text-sm text-center text-muted-foreground">Pergunta {currentQuestion} de {totalQuestions}</p>
