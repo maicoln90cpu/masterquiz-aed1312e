@@ -820,6 +820,7 @@ const CreateQuizModern = () => {
                       return (
                         <BlockPropertiesPanel
                           block={selectedBlock}
+                          questions={questions}
                           onChange={(updatedBlock) => {
                             const blocks = [...(currentQ.blocks || [])];
                             blocks[selectedIdx] = updatedBlock;

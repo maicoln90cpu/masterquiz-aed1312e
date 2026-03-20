@@ -15,10 +15,132 @@ import {
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
 
+interface QuestionInfo {
+  id: string;
+  question_text?: string;
+  custom_label?: string;
+  blocks?: any[];
+}
+
 interface BlockPropertiesPanelProps {
   block: QuizBlock;
   onChange: (block: QuizBlock) => void;
+  questions?: QuestionInfo[];
 }
+
+// ---- Reusable Question Selector (dropdown) ----
+const QuestionSelector = ({ value, onChange, questions, label = 'Pergunta-Fonte', placeholder = 'Selecione uma pergunta' }: {
+  value: string;
+  onChange: (id: string) => void;
+  questions?: QuestionInfo[];
+  label?: string;
+  placeholder?: string;
+}) => {
+  const getQuestionLabel = (q: QuestionInfo, idx: number) => {
+    const qBlock = q.blocks?.find((b: any) => b.type === 'question');
+    const text = q.custom_label || qBlock?.questionText || q.question_text || '';
+    const clean = text.replace(/<[^>]*>/g, '').trim();
+    return `P${idx + 1}: ${clean.substring(0, 40)}${clean.length > 40 ? '...' : ''}`;
+  };
+
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Cole o ID da pergunta" />
+        <p className="text-[10px] text-muted-foreground">Copie o ID na lista de perguntas à esquerda</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Select value={value || '_none'} onValueChange={(v) => onChange(v === '_none' ? '' : v)}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="_none">{placeholder}</SelectItem>
+          {questions.map((q, idx) => (
+            <SelectItem key={q.id} value={q.id}>
+              {getQuestionLabel(q, idx)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
+// ---- Multi-select for filtering questions (checkboxes) ----
+const QuestionMultiSelector = ({ selectedIds, onChange, questions, label = 'Filtrar perguntas' }: {
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+  questions?: QuestionInfo[];
+  label?: string;
+}) => {
+  const getQuestionLabel = (q: QuestionInfo, idx: number) => {
+    const qBlock = q.blocks?.find((b: any) => b.type === 'question');
+    const text = q.custom_label || qBlock?.questionText || q.question_text || '';
+    const clean = text.replace(/<[^>]*>/g, '').trim();
+    return `P${idx + 1}: ${clean.substring(0, 35)}${clean.length > 35 ? '...' : ''}`;
+  };
+
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <Input
+          placeholder="IDs separados por vírgula"
+          value={selectedIds.join(', ')}
+          onChange={(e) => onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+        />
+      </div>
+    );
+  }
+
+  const toggleId = (id: string) => {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter(i => i !== id));
+    } else {
+      onChange([...selectedIds, id]);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>{label}</Label>
+        {selectedIds.length > 0 && (
+          <button className="text-[10px] text-primary underline" onClick={() => onChange([])}>Limpar</button>
+        )}
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        {selectedIds.length === 0 ? 'Todas as perguntas serão exibidas' : `${selectedIds.length} pergunta(s) selecionada(s)`}
+      </p>
+      <div className="max-h-40 overflow-y-auto border rounded-md p-1 space-y-0.5">
+        {questions.map((q, idx) => (
+          <button
+            key={q.id}
+            type="button"
+            onClick={() => toggleId(q.id)}
+            className={`w-full text-left text-xs px-2 py-1.5 rounded flex items-center gap-2 transition-colors ${
+              selectedIds.includes(q.id) ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'
+            }`}
+          >
+            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
+              selectedIds.includes(q.id) ? 'bg-primary border-primary' : 'border-border'
+            }`}>
+              {selectedIds.includes(q.id) && <span className="text-[8px] text-primary-foreground">✓</span>}
+            </div>
+            <span className="truncate">{getQuestionLabel(q, idx)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   question: <Settings2 className="h-4 w-4" />,
