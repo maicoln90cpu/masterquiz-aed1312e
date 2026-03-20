@@ -49,6 +49,7 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'price', icon: DollarSign, labelKey: 'createQuiz.blocks.price', defaultLabel: 'Preço' },
       { type: 'metrics', icon: BarChart3, labelKey: 'createQuiz.blocks.metrics', defaultLabel: 'Métricas/Gráfico' },
       { type: 'loading', icon: Loader2, labelKey: 'createQuiz.blocks.loading', defaultLabel: 'Loading/Carregamento' },
+      { type: 'calculator', icon: Calculator, labelKey: 'createQuiz.blocks.calculator', defaultLabel: 'Calculadora' },
     ],
   },
   {
