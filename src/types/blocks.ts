@@ -315,6 +315,8 @@ export interface AnimatedCounterBlock extends BaseBlock {
   color?: string;
   label?: string;
   separator?: boolean;
+  currencyFormat?: boolean; // ✅ Etapa 2D: Formato de moeda (R$ 1.234,56)
+  decimalPlaces?: number; // ✅ Etapa 2D: Casas decimais para moeda
 }
 
 export interface CalloutBlock extends BaseBlock {
