@@ -1717,6 +1717,10 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
         <Label>Texto fallback (sem match)</Label>
         <Input value={(block as any).fallbackText || ''} onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))} />
       </div>
+      {/* ✅ Etapa 2D: Limite máximo de exibição */}
+      <PropertySection title="Máximo de resultados (0 = sem limite)">
+        <Input type="number" min={0} value={(block as any).maxDisplay || 0} onChange={(e) => onChange(update(block, { maxDisplay: Number(e.target.value) }))} />
+      </PropertySection>
       <Separator />
       <Label className="font-semibold">Recomendações ({recommendations.length})</Label>
       {recommendations.map((rec: any, idx: number) => (
