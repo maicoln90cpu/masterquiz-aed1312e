@@ -475,7 +475,7 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   );
 };
 
-const ButtonProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'button') return null;
   const dynConditions = (block as any).conditions || [];
   return (
