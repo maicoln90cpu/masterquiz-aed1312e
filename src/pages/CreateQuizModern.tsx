@@ -72,7 +72,7 @@ const CreateQuizModern = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
-
+  const [showCurrentPreviewDialog, setShowCurrentPreviewDialog] = useState(false);
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
   const firedEventsRef = useRef(new Set<string>());
