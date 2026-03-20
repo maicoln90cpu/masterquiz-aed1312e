@@ -1384,24 +1384,34 @@ const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProp
           </SelectContent>
         </Select>
       </div>
+      {/* ✅ Etapa 2D: Animação fade */}
+      <SwitchRow label="Animar transições (fade)" checked={(block as any).animateFade !== false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
       <Separator />
       <Label>Mensagens por % de progresso</Label>
       {messages.map((msg: any, idx: number) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input className="w-16" type="number" min={0} max={100} value={msg.threshold} onChange={(e) => {
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-16" type="number" min={0} max={100} value={msg.threshold} onChange={(e) => {
+              const newMsgs = [...messages];
+              newMsgs[idx] = { ...msg, threshold: Number(e.target.value) };
+              onChange(update(block, { messages: newMsgs }));
+            }} />
+            <span className="text-xs text-muted-foreground">%</span>
+            <Input className="flex-1" value={msg.text} onChange={(e) => {
+              const newMsgs = [...messages];
+              newMsgs[idx] = { ...msg, text: e.target.value };
+              onChange(update(block, { messages: newMsgs }));
+            }} />
+          </div>
+          {/* ✅ Etapa 2D: Ícone por faixa */}
+          <Input className="w-24 ml-[72px]" value={msg.icon || ''} placeholder="🔥 ícone" onChange={(e) => {
             const newMsgs = [...messages];
-            newMsgs[idx] = { ...msg, threshold: Number(e.target.value) };
-            onChange(update(block, { messages: newMsgs }));
-          }} />
-          <span className="text-xs text-muted-foreground">%</span>
-          <Input className="flex-1" value={msg.text} onChange={(e) => {
-            const newMsgs = [...messages];
-            newMsgs[idx] = { ...msg, text: e.target.value };
+            newMsgs[idx] = { ...msg, icon: e.target.value };
             onChange(update(block, { messages: newMsgs }));
           }} />
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '' }] }))}>+ Adicionar mensagem</button>
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '', icon: '' }] }))}>+ Adicionar mensagem</button>
     </div>
   );
 };
