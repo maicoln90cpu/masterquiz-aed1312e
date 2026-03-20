@@ -329,6 +329,7 @@ export interface CalloutBlock extends BaseBlock {
   backgroundColor?: string;
   borderColor?: string;
   textColor?: string;
+  dismissible?: boolean; // ✅ Etapa 2D: Callout dismissível
 }
 
 export interface IconListBlock extends BaseBlock {
