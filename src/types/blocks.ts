@@ -434,6 +434,27 @@ export interface RecommendationBlock extends BaseBlock {
   fallbackText?: string;
 }
 
+export interface CalculatorBlock extends BaseBlock {
+  type: 'calculator';
+  formula: string;
+  variables: {
+    id: string;
+    name: string;
+    sourceQuestionId?: string;
+    defaultValue?: number;
+  }[];
+  resultUnit?: string;
+  resultPrefix?: string;
+  decimalPlaces?: number;
+  resultLabel?: string;
+  ranges?: {
+    min: number;
+    max: number;
+    label: string;
+    color?: string;
+  }[];
+}
+
 export type QuizBlock =
   | QuestionBlock
   | TextBlock
