@@ -1053,6 +1053,11 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'comparison': return <ComparisonProperties block={block} onChange={onChange} />;
       case 'socialProof': return <SocialProofProperties block={block} onChange={onChange} />;
       case 'animatedCounter': return <AnimatedCounterProperties block={block} onChange={onChange} />;
+      case 'callout': return <CalloutProperties block={block} onChange={onChange} />;
+      case 'iconList': return <IconListProperties block={block} onChange={onChange} />;
+      case 'quote': return <QuoteProperties block={block} onChange={onChange} />;
+      case 'badgeRow': return <BadgeRowProperties block={block} onChange={onChange} />;
+      case 'banner': return <BannerProperties block={block} onChange={onChange} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
