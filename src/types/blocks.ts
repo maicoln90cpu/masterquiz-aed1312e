@@ -834,6 +834,38 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         fontSize: block.fontSize || 'large',
         easing: block.easing || 'easeOut',
       };
+    case 'callout':
+      return {
+        ...block,
+        variant: block.variant || 'warning',
+        title: block.title || 'Atenção',
+        items: Array.isArray(block.items) ? block.items : [],
+      };
+    case 'iconList':
+      return {
+        ...block,
+        items: Array.isArray(block.items) ? block.items : [],
+        layout: block.layout || 'vertical',
+      };
+    case 'quote':
+      return {
+        ...block,
+        text: block.text || '',
+        style: block.style || 'default',
+      };
+    case 'badgeRow':
+      return {
+        ...block,
+        badges: Array.isArray(block.badges) ? block.badges : [],
+        variant: block.variant || 'outline',
+        size: block.size || 'md',
+      };
+    case 'banner':
+      return {
+        ...block,
+        text: block.text || '',
+        variant: block.variant || 'promo',
+      };
     default:
       return block;
   }
