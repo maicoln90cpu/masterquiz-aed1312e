@@ -1141,23 +1141,31 @@ const IconListProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>Cor dos ícones</Label>
+        <Label>Cor padrão dos ícones</Label>
         <Input type="color" value={block.iconColor || '#10b981'} onChange={(e) => onChange(update(block, { iconColor: e.target.value }))} />
       </div>
       <Separator />
       <Label>Itens</Label>
       {items.map((item, idx) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input className="w-16" value={item.icon} onChange={(e) => {
-            const newItems = [...items];
-            newItems[idx] = { ...item, icon: e.target.value };
-            onChange(update(block, { items: newItems }));
-          }} placeholder="✅" />
-          <Input className="flex-1" value={item.text} onChange={(e) => {
-            const newItems = [...items];
-            newItems[idx] = { ...item, text: e.target.value };
-            onChange(update(block, { items: newItems }));
-          }} placeholder="Texto do item" />
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-16" value={item.icon} onChange={(e) => {
+              const newItems = [...items];
+              newItems[idx] = { ...item, icon: e.target.value };
+              onChange(update(block, { items: newItems }));
+            }} placeholder="✅" />
+            <Input className="flex-1" value={item.text} onChange={(e) => {
+              const newItems = [...items];
+              newItems[idx] = { ...item, text: e.target.value };
+              onChange(update(block, { items: newItems }));
+            }} placeholder="Texto do item" />
+            {/* ✅ Etapa 2D: Cor individual por item */}
+            <Input className="w-12" type="color" value={(item as any).color || block.iconColor || '#10b981'} onChange={(e) => {
+              const newItems = [...items];
+              newItems[idx] = { ...item, color: e.target.value };
+              onChange(update(block, { items: newItems }));
+            }} />
+          </div>
         </div>
       ))}
       <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { items: [...items, { icon: '✅', text: '' }] }))}>+ Adicionar item</button>
