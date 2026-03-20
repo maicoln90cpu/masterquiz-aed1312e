@@ -630,6 +630,9 @@ const ProgressProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <SwitchRow label="Mostrar percentual" checked={block.showPercentage || false} onChange={(v) => onChange(update(block, { showPercentage: v }))} />
         <SwitchRow label="Mostrar contador" checked={block.showCounter || false} onChange={(v) => onChange(update(block, { showCounter: v }))} />
         <SwitchRow label="Animado" checked={block.animated || false} onChange={(v) => onChange(update(block, { animated: v }))} />
+        {/* ✅ Etapa 2C: Cor por faixa + ícone de conclusão */}
+        <SwitchRow label="Cor por faixa (🔴→🟡→🟢)" checked={block.colorByRange || false} onChange={(v) => onChange(update(block, { colorByRange: v }))} />
+        <SwitchRow label="Ícone de conclusão ✅" checked={block.showCompletionIcon || false} onChange={(v) => onChange(update(block, { showCompletionIcon: v }))} />
       </div>
     </div>
   );
