@@ -1331,20 +1331,18 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
 };
 
 // ---- CONDITIONAL TEXT ----
-const ConditionalTextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const ConditionalTextProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'conditionalText') return null;
   const conditions = (block as any).conditions || [];
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>ID da Pergunta-Fonte</Label>
-        <Input
-          placeholder="Cole o ID da pergunta aqui"
-          value={(block as any).sourceQuestionId || ''}
-          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
-        />
-        <p className="text-xs text-muted-foreground">O ID aparece no editor ao selecionar uma pergunta</p>
-      </div>
+      <QuestionSelector
+        value={(block as any).sourceQuestionId || ''}
+        onChange={(id) => onChange(update(block, { sourceQuestionId: id }))}
+        questions={questions}
+        label="Pergunta-Fonte"
+        placeholder="Selecione a pergunta"
+      />
       <div className="space-y-2">
         <Label>Estilo</Label>
         <Select value={(block as any).style || 'default'} onValueChange={(v) => onChange(update(block, { style: v }))}>
