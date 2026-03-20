@@ -4,6 +4,26 @@
 
 ---
 
+## ✅ v2.33.0 - Etapa 3: 3 Novos Blocos Dinâmicos com Respostas (20/03/2026)
+
+### 3 Novos Blocos Dependentes de Respostas
+- **Texto Condicional (conditionalText)**: Exibe texto diferente baseado na resposta de uma pergunta específica. Configurável com múltiplas condições (resposta → texto) e fallback. 3 estilos (default/highlighted/card).
+- **Comparação Dinâmica (comparisonResult)**: Antes/depois personalizado com placeholders {resposta1}, {resposta2} substituídos por respostas reais. Grid lado a lado com ícones ✅/❌.
+- **CTA Personalizado (personalizedCTA)**: Botão com texto dinâmico usando template {resposta}. Suporta condições avançadas (resposta → texto + URL), 4 variantes visuais, 3 tamanhos, abrir em nova aba.
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/types/blocks.ts` | +3 interfaces, +3 createBlock, +3 normalizeBlock |
+| `src/components/quiz/preview/DynamicBlockPreviews.tsx` | +3 componentes (ConditionalText, ComparisonResult, PersonalizedCTA) |
+| `src/components/quiz/QuizBlockPreview.tsx` | +3 cases no switch |
+| `src/components/quiz/blocks/blockPaletteCatalog.ts` | +3 itens na seção "Dinâmico" |
+| `src/components/quiz/blocks/BlockEditor.tsx` | +3 dropdown, blockTypeNames, isBlockComplete, renderBlock |
+| `src/components/quiz/blocks/BlockPropertiesPanel.tsx` | +3 painéis de propriedades completos |
+| `src/components/quiz/blocks/CompactBlockPalette.tsx` | +3 itens |
+
+---
+
 ## ✅ v2.32.0 - Etapa 2: 3 Novos Blocos Dinâmicos (20/03/2026)
 
 ### 3 Novos Blocos Dinâmicos (dependem de dados em runtime)
