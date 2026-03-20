@@ -4,6 +4,31 @@
 
 ---
 
+## ✅ v2.35.0 - Seletor Inteligente de Perguntas nos Blocos (20/03/2026)
+
+### Melhoria: Dropdown de Perguntas no Painel de Propriedades
+- **QuestionSelector**: Dropdown reutilizável que lista todas as perguntas do quiz (P1, P2, P3...) com texto truncado. Substitui o campo manual "Cole o ID da pergunta".
+- **QuestionMultiSelector**: Checkboxes para selecionar múltiplas perguntas (usado no Resumo de Respostas e Comparação Dinâmica). Mostra contagem de selecionadas, botão limpar.
+- **Fallback automático**: Se `questions` não for passado (ex: editor Classic), mantém o input de texto manual.
+
+### Blocos Atualizados
+| Bloco | Antes | Depois |
+|-------|-------|--------|
+| Botão (personalização dinâmica) | Input "Cole o ID" | Select dropdown com perguntas |
+| Texto Condicional | Input "Cole o ID" | Select dropdown com perguntas |
+| CTA Personalizado | Input "Cole o ID" | Select dropdown com perguntas |
+| Comparação Dinâmica | Input "IDs separados por vírgula" | Multi-select com checkboxes |
+| Resumo de Respostas | Input "IDs separados por vírgula" | Multi-select com checkboxes |
+| Recomendação (regras) | Input "ID pergunta" tiny | Select dropdown inline por regra |
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/quiz/blocks/BlockPropertiesPanel.tsx` | +2 componentes (QuestionSelector, QuestionMultiSelector), +`questions` prop, 6 blocos atualizados |
+| `src/pages/CreateQuizModern.tsx` | Passa `questions` para BlockPropertiesPanel |
+
+---
+
 ## ✅ v2.34.0 - Etapa 4: Motor de Recomendação (20/03/2026)
 
 ### Novo Bloco: Recommendation Engine
