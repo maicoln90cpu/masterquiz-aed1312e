@@ -149,6 +149,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'comparisonResult':
       case 'personalizedCTA':
       case 'recommendation':
+      case 'calculator':
         return true;
       default:
         return false;
