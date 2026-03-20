@@ -33,7 +33,8 @@ export type BlockType =
   | 'avatarGroup'
   | 'conditionalText'
   | 'comparisonResult'
-  | 'personalizedCTA';
+  | 'personalizedCTA'
+  | 'recommendation';
 
 export interface BaseBlock {
   id: string;
