@@ -30,7 +30,10 @@ export type BlockType =
   | 'banner'
   | 'answerSummary'
   | 'progressMessage'
-  | 'avatarGroup';
+  | 'avatarGroup'
+  | 'conditionalText'
+  | 'comparisonResult'
+  | 'personalizedCTA';
 
 export interface BaseBlock {
   id: string;
