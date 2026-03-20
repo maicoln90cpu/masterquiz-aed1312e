@@ -17,6 +17,7 @@ import { useResourceLimits } from "@/hooks/useResourceLimits";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 interface AIQuizGeneratorProps {
   onBack: () => void;
