@@ -127,6 +127,16 @@ export const QuizBlockPreview = ({
         return <SocialProofBlockPreview key={block.id} block={block} />;
       case "animatedCounter":
         return <AnimatedCounterBlockPreview key={block.id} block={block} />;
+      case "callout":
+        return <CalloutBlockPreview key={block.id} block={block as QuizBlock & { type: 'callout' }} />;
+      case "iconList":
+        return <IconListBlockPreview key={block.id} block={block as QuizBlock & { type: 'iconList' }} />;
+      case "quote":
+        return <QuoteBlockPreview key={block.id} block={block as QuizBlock & { type: 'quote' }} />;
+      case "badgeRow":
+        return <BadgeRowBlockPreview key={block.id} block={block as QuizBlock & { type: 'badgeRow' }} />;
+      case "banner":
+        return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} />;
       default:
         return null;
     }
