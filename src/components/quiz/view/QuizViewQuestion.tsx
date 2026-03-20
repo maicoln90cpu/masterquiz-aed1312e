@@ -163,6 +163,10 @@ export function QuizViewQuestion({
                 onNavigateNext={handleNextClick}
                 onNavigateToQuestion={() => {}}
                 wrapInCard={false}
+                answers={answers}
+                questions={quiz.questions?.slice(0, currentStep) || []}
+                currentStep={currentStep}
+                totalQuestions={totalQuestions}
               />
             );
           })}
