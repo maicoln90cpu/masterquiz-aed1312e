@@ -370,7 +370,39 @@ export interface AvatarGroupBlock extends BaseBlock {
   avatarStyle?: 'circle' | 'square';
 }
 
-export type QuizBlock = 
+export interface ConditionalTextBlock extends BaseBlock {
+  type: 'conditionalText';
+  sourceQuestionId?: string;
+  conditions: { answer: string; text: string }[];
+  fallbackText?: string;
+  style?: 'default' | 'highlighted' | 'card';
+}
+
+export interface ComparisonResultBlock extends BaseBlock {
+  type: 'comparisonResult';
+  sourceQuestionIds?: string[];
+  beforeTitle?: string;
+  afterTitle?: string;
+  beforeTemplate?: string;
+  afterTemplate?: string;
+  beforeItems?: string[];
+  afterItems?: string[];
+  showIcons?: boolean;
+}
+
+export interface PersonalizedCTABlock extends BaseBlock {
+  type: 'personalizedCTA';
+  sourceQuestionId?: string;
+  textTemplate: string;
+  url?: string;
+  variant?: 'default' | 'outline' | 'secondary' | 'ghost';
+  size?: 'sm' | 'default' | 'lg';
+  openInNewTab?: boolean;
+  conditions?: { answer: string; text: string; url?: string }[];
+  fallbackText?: string;
+}
+
+export type QuizBlock =
   | QuestionBlock
   | TextBlock
   | SeparatorBlock
