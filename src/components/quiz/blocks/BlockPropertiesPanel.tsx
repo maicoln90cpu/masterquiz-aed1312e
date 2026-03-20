@@ -1610,14 +1610,42 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
           <Separator />
           <Label className="text-xs">Regras de match</Label>
           {(rec.rules || []).map((rule: any, rIdx: number) => (
-            <div key={rIdx} className="flex gap-1 items-center text-xs">
-              <Input className="w-24 text-xs h-7" value={rule.questionId} placeholder="ID pergunta" onChange={(e) => {
-                const newRecs = [...recommendations];
-                const newRules = [...(rec.rules || [])];
-                newRules[rIdx] = { ...rule, questionId: e.target.value };
-                newRecs[idx] = { ...rec, rules: newRules };
-                onChange(update(block, { recommendations: newRecs }));
-              }} />
+            <div key={rIdx} className="space-y-1">
+              <div className="flex gap-1 items-center text-xs">
+                {questions && questions.length > 0 ? (
+                  <Select value={rule.questionId || '_none'} onValueChange={(v) => {
+                    const newRecs = [...recommendations];
+                    const newRules = [...(rec.rules || [])];
+                    newRules[rIdx] = { ...rule, questionId: v === '_none' ? '' : v };
+                    newRecs[idx] = { ...rec, rules: newRules };
+                    onChange(update(block, { recommendations: newRecs }));
+                  }}>
+                    <SelectTrigger className="w-32 h-7 text-xs">
+                      <SelectValue placeholder="Pergunta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Selecione</SelectItem>
+                      {questions.map((q, qIdx) => {
+                        const qBlock = q.blocks?.find((b: any) => b.type === 'question');
+                        const text = q.custom_label || qBlock?.questionText || q.question_text || '';
+                        const clean = text.replace(/<[^>]*>/g, '').trim();
+                        return (
+                          <SelectItem key={q.id} value={q.id}>
+                            P{qIdx + 1}: {clean.substring(0, 25)}{clean.length > 25 ? '...' : ''}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input className="w-24 text-xs h-7" value={rule.questionId} placeholder="ID pergunta" onChange={(e) => {
+                    const newRecs = [...recommendations];
+                    const newRules = [...(rec.rules || [])];
+                    newRules[rIdx] = { ...rule, questionId: e.target.value };
+                    newRecs[idx] = { ...rec, rules: newRules };
+                    onChange(update(block, { recommendations: newRecs }));
+                  }} />
+                )
               <Input className="flex-1 text-xs h-7" value={(rule.answers || []).join(', ')} placeholder="Respostas (separadas por vírgula)" onChange={(e) => {
                 const newRecs = [...recommendations];
                 const newRules = [...(rec.rules || [])];
