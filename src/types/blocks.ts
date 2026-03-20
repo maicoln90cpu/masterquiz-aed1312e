@@ -238,6 +238,9 @@ export interface SliderBlock extends BaseBlock {
   unit?: string;
   showValue?: boolean;
   required?: boolean;
+  minLabel?: string; // ✅ Etapa 2C: Label no extremo mínimo
+  maxLabel?: string; // ✅ Etapa 2C: Label no extremo máximo
+  showDots?: boolean; // ✅ Etapa 2C: Steps visuais com dots
 }
 
 export interface TextInputBlock extends BaseBlock {
