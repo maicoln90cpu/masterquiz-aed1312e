@@ -75,6 +75,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       case 'conditionalText': return <Type className="h-3 w-3" />;
       case 'comparisonResult': return <Columns className="h-3 w-3" />;
       case 'personalizedCTA': return <Bell className="h-3 w-3" />;
+      case 'recommendation': return <Star className="h-3 w-3" />;
     }
   };
 
