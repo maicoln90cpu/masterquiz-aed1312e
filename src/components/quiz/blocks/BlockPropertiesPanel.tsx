@@ -1448,9 +1448,13 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center justify-between">
-        <Label>Mostrar contador</Label>
-        <Switch checked={(block as any).showCount !== false} onCheckedChange={(v) => onChange(update(block, { showCount: v }))} />
+      <SwitchRow label="Mostrar contador" checked={(block as any).showCount !== false} onChange={(v) => onChange(update(block, { showCount: v }))} />
+      {/* ✅ Etapa 2D: Link para perfil ao clicar */}
+      <Separator />
+      <div className="space-y-2">
+        <Label>URL do perfil (opcional)</Label>
+        <Input value={(block as any).profileUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { profileUrl: e.target.value }))} />
+        <p className="text-[10px] text-muted-foreground">Se preenchido, clicar no grupo redireciona para esta URL.</p>
       </div>
     </div>
   );
