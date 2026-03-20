@@ -401,6 +401,7 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       comparisonResult: 'Comparação Dinâmica',
       personalizedCTA: 'CTA Personalizado',
       recommendation: 'Recomendação',
+      calculator: 'Calculadora',
     };
     
     toast.success(
