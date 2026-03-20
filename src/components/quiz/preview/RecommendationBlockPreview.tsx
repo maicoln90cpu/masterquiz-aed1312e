@@ -55,6 +55,7 @@ export const RecommendationBlockPreview = ({ block, answers, questions }: Recomm
   const style = (block as any).style || 'card';
   const showScore = (block as any).showScore || false;
   const fallbackText = (block as any).fallbackText || 'Não encontramos uma recomendação específica para você.';
+  const maxDisplay = (block as any).maxDisplay || 0; // ✅ Etapa 2D: Limite máximo
   const hasRuntimeData = answers && Object.keys(answers).length > 0;
 
   // Calculate scores
