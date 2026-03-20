@@ -753,9 +753,20 @@ const CreateQuizModern = () => {
                   <h3 className="text-sm font-semibold text-foreground">
                     Pergunta {currentQuestionIndex + 1} de {questions.length}
                   </h3>
-                  <span className="text-xs text-muted-foreground">
-                    {questions[currentQuestionIndex]?.blocks?.length || 0} blocos
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                      onClick={() => setShowCurrentPreviewDialog(true)}
+                    >
+                      <Eye className="h-3 w-3" />
+                      Preview Atual
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {questions[currentQuestionIndex]?.blocks?.length || 0} blocos
+                    </span>
+                  </div>
                 </div>
               )}
               
