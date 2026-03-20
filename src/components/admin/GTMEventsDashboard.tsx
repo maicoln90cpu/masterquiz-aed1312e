@@ -23,6 +23,9 @@ const EVENT_CATEGORIES: Record<string, { label: string; color: string }> = {
   quiz_start: { label: "Respondente", color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200" },
   quiz_complete: { label: "Respondente", color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200" },
   lead_captured: { label: "Respondente", color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200" },
+  quiz_ia_form: { label: "IA - Formulário", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
+  quiz_ia_pdf: { label: "IA - PDF", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
+  quiz_ia_edu: { label: "IA - Educacional", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200" },
 };
 
 export const GTMEventsDashboard = () => {

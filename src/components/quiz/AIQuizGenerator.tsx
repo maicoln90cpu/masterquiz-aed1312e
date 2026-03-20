@@ -17,6 +17,7 @@ import { useResourceLimits } from "@/hooks/useResourceLimits";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 interface AIQuizGeneratorProps {
   onBack: () => void;
@@ -540,6 +541,14 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
       queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       
+      // Disparar evento GTM por tipo de criação IA
+      const iaEventMap: Record<string, string> = { form: 'quiz_ia_form', pdf: 'quiz_ia_pdf', educational: 'quiz_ia_edu' };
+      pushGTMEvent(iaEventMap[uploadMode] || 'quiz_ia_form', {
+        quiz_id: quiz.id,
+        questions_count: quizData.questions.length,
+        upload_mode: uploadMode,
+      });
+
       toast.success(t('components.aiGenerator.quizCreated'));
       navigate('/meus-quizzes');
 
