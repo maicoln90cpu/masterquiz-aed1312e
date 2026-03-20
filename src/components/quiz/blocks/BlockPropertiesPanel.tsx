@@ -1565,6 +1565,24 @@ const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropert
         label="Perguntas-fonte (para placeholders)"
       />
       <p className="text-[10px] text-muted-foreground">Use {'{resposta1}'}, {'{resposta2}'} nos itens para substituir com respostas</p>
+      {/* ✅ Etapa 2D: Cores e ícones personalizados */}
+      <Separator />
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Cor 'Antes'">
+          <Input type="color" value={(block as any).beforeColor || '#ef4444'} onChange={(e) => onChange(update(block, { beforeColor: e.target.value }))} />
+        </PropertySection>
+        <PropertySection title="Cor 'Depois'">
+          <Input type="color" value={(block as any).afterColor || '#22c55e'} onChange={(e) => onChange(update(block, { afterColor: e.target.value }))} />
+        </PropertySection>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Ícone 'Antes'">
+          <Input value={(block as any).beforeIcon || ''} placeholder="❌" onChange={(e) => onChange(update(block, { beforeIcon: e.target.value }))} />
+        </PropertySection>
+        <PropertySection title="Ícone 'Depois'">
+          <Input value={(block as any).afterIcon || ''} placeholder="✅" onChange={(e) => onChange(update(block, { afterIcon: e.target.value }))} />
+        </PropertySection>
+      </div>
     </div>
   );
 };
