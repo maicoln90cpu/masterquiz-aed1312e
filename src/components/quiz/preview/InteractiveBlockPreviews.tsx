@@ -512,7 +512,9 @@ export const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { ty
           const animate = (now: number) => {
             const elapsed = now - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            setDisplayValue(Math.round(start + (end - start) * easing(progress)));
+            const rawValue = start + (end - start) * easing(progress);
+            // ✅ Etapa 2D: Se currencyFormat, não arredondar durante animação
+            setDisplayValue((block as any).currencyFormat ? parseFloat(rawValue.toFixed((block as any).decimalPlaces || 2)) : Math.round(rawValue));
             if (progress < 1) requestAnimationFrame(animate);
           };
           requestAnimationFrame(animate);
@@ -524,13 +526,23 @@ export const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { ty
     return () => observer.disconnect();
   }, [hasAnimated, block.startValue, block.endValue, block.duration, block.easing]);
 
-  const formatted = block.separator ? displayValue.toLocaleString('pt-BR') : displayValue.toString();
+  // ✅ Etapa 2D: Formato de moeda
+  const formatValue = (val: number) => {
+    if ((block as any).currencyFormat) {
+      return val.toLocaleString('pt-BR', {
+        minimumFractionDigits: (block as any).decimalPlaces || 2,
+        maximumFractionDigits: (block as any).decimalPlaces || 2,
+      });
+    }
+    return block.separator ? val.toLocaleString('pt-BR') : val.toString();
+  };
+
   const fontSizeClass = block.fontSize === 'xlarge' ? 'text-6xl' : block.fontSize === 'large' ? 'text-5xl' : block.fontSize === 'medium' ? 'text-3xl' : 'text-2xl';
 
   return (
     <div ref={ref} className="text-center py-6 space-y-2">
       <p className={`font-black tabular-nums ${fontSizeClass}`} style={{ color: block.color || 'hsl(var(--primary))' }}>
-        {block.prefix}{formatted}{block.suffix}
+        {block.prefix}{formatValue(displayValue)}{block.suffix}
       </p>
       {block.label && <p className="text-muted-foreground text-sm font-medium">{block.label}</p>}
     </div>

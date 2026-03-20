@@ -174,13 +174,26 @@ export const BannerBlockPreview = ({ block }: { block: QuizBlock & { type: 'bann
 
   const style = BANNER_STYLES[block.variant || 'promo'];
 
+  // ✅ Etapa 2D: Banner clicável com link
+  const handleClick = () => {
+    if ((block as any).linkUrl) {
+      window.open((block as any).linkUrl, (block as any).linkTarget || '_blank');
+    }
+  };
+
+  const hasLink = !!(block as any).linkUrl;
+
   return (
-    <div className={`rounded-lg px-4 py-3 text-center font-semibold text-sm relative ${style}`}>
+    <div
+      className={`rounded-lg px-4 py-3 text-center font-semibold text-sm relative ${style} ${hasLink ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+      onClick={hasLink ? handleClick : undefined}
+    >
       <span>{block.text}</span>
+      {hasLink && <span className="ml-1 text-xs opacity-75">→</span>}
       {block.dismissible && (
         <button
           className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
-          onClick={() => setDismissed(true)}
+          onClick={(e) => { e.stopPropagation(); setDismissed(true); }}
         >
           <X className="h-4 w-4" />
         </button>
