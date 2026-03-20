@@ -1,12 +1,13 @@
 import React, { useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { FileQuestion, Plus, Trash2, AlertCircle, Edit3 } from "lucide-react";
+import { FileQuestion, Plus, Trash2, AlertCircle, Edit3, Copy } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface QuestionsListProps {
   questions: any[];
@@ -178,9 +179,26 @@ export const QuestionsList = memo(({
                           placeholder={cleanText || t('createQuiz.emptyQuestion')}
                         />
                       ) : (
-                        <p className="text-xs font-medium text-left line-clamp-2 break-words">
-                          {displayText}
-                        </p>
+                        <>
+                          <p className="text-xs font-medium text-left line-clamp-2 break-words">
+                            {displayText}
+                          </p>
+                          {q.id && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(q.id);
+                                toast.success('ID copiado!');
+                              }}
+                              className="flex items-center gap-1 mt-0.5 text-[10px] text-muted-foreground/60 hover:text-primary transition-colors group/id"
+                              title={`ID: ${q.id}`}
+                            >
+                              <Copy className="h-2.5 w-2.5" />
+                              <span className="font-mono truncate max-w-[100px]">{q.id.substring(0, 12)}...</span>
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
 

@@ -72,7 +72,7 @@ const CreateQuizModern = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
-
+  const [showCurrentPreviewDialog, setShowCurrentPreviewDialog] = useState(false);
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
   const firedEventsRef = useRef(new Set<string>());
@@ -472,17 +472,14 @@ const CreateQuizModern = () => {
               </button>
             ))}
             
-            {/* Preview button */}
+            {/* Preview Completo button — always purple */}
             <button
               onClick={() => setShowPreviewDialog(true)}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all shrink-0",
-                "bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-              title={t('createQuiz.preview', 'Preview')}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all shrink-0 bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
+              title={t('createQuiz.preview', 'Preview Completo')}
             >
               <Eye className="h-4 w-4" />
-              <span className="hidden lg:inline">{t('createQuiz.preview', 'Preview')}</span>
+              <span className="hidden lg:inline">Preview Completo</span>
             </button>
 
             {/* Próximo / Publicar → */}
@@ -573,34 +570,71 @@ const CreateQuizModern = () => {
                   </div>
                 </div>
 
-                {/* ✅ NOVO: Seletor de formato do quiz (exclusivo Modern) */}
-                <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-                  <Label className="text-base font-semibold">{t('createQuiz.quizFormat', 'Formato do Quiz')}</Label>
-                  <Select
-                    value={appearanceState.showResults ? 'results' : 'funnel'}
-                    onValueChange={(val) => {
-                      updateAppearance({ showResults: val === 'results' });
-                      trackInteraction('quiz_format_changed');
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="results">
-                        🏆 {t('createQuiz.formatResults', 'Com Resultados — Quiz com tela de resultado')}
-                      </SelectItem>
-                      <SelectItem value="funnel">
-                        🔄 {t('createQuiz.formatFunnel', 'Formato Funil — Sem resultados, foco em coleta')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    {appearanceState.showResults
-                      ? t('createQuiz.formatResultsHint', 'Os respondentes verão uma tela de resultado ao final.')
-                      : t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação.')
-                    }
-                  </p>
+                {/* ✅ Seletor de formato do quiz — cards visuais destacados */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-bold">{t('createQuiz.quizFormat', 'Formato do Quiz')}</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Card: Com Resultados */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateAppearance({ showResults: true });
+                        trackInteraction('quiz_format_changed');
+                      }}
+                      className={cn(
+                        "relative p-6 rounded-xl border-2 text-left transition-all hover:shadow-md",
+                        appearanceState.showResults
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm"
+                          : "border-border bg-card hover:border-primary/40"
+                      )}
+                    >
+                      {appearanceState.showResults && (
+                        <div className="absolute top-3 right-3">
+                          <Check className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
+                      <div className="text-3xl mb-3">🏆</div>
+                      <h3 className="font-bold text-base mb-1">{t('createQuiz.formatResults', 'Com Resultados')}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('createQuiz.formatResultsHint', 'Os respondentes verão uma tela de resultado ao final.')}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Pontuação</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Tela de Resultado</span>
+                      </div>
+                    </button>
+
+                    {/* Card: Formato Funil */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateAppearance({ showResults: false });
+                        updateFormConfig({ collectionTiming: 'none' });
+                        trackInteraction('quiz_format_changed');
+                      }}
+                      className={cn(
+                        "relative p-6 rounded-xl border-2 text-left transition-all hover:shadow-md",
+                        !appearanceState.showResults
+                          ? "border-blue-500 bg-blue-500/5 ring-2 ring-blue-500/20 shadow-sm"
+                          : "border-border bg-card hover:border-blue-500/40"
+                      )}
+                    >
+                      {!appearanceState.showResults && (
+                        <div className="absolute top-3 right-3">
+                          <Check className="h-5 w-5 text-blue-500" />
+                        </div>
+                      )}
+                      <div className="text-3xl mb-3">🔄</div>
+                      <h3 className="font-bold text-base mb-1">{t('createQuiz.formatFunnel', 'Formato Funil')}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação.')}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 font-medium">Qualificação</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 font-medium">Sem coleta obrigatória</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -638,11 +672,11 @@ const CreateQuizModern = () => {
           {step === 4 && !isExpressMode && (
             <>
               {!appearanceState.showResults && (
-                <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <Alert className="mb-4 border-blue-500/50 bg-blue-500/10">
+                  <AlertTriangle className="h-4 w-4 text-blue-500" />
                   <AlertDescription className="text-sm">
-                    <strong>Coleta de dados desativada:</strong> Você optou pelo formato funil (sem resultados). 
-                    As configurações abaixo só terão efeito se você reativar a exibição de resultados na Etapa 1.
+                    <strong>Coleta automática desativada:</strong> Você optou pelo formato funil (sem resultados). 
+                    A coleta de dados foi automaticamente desativada. Caso queira coletar dados, altere o formato na Etapa 1.
                   </AlertDescription>
                 </Alert>
               )}
@@ -719,9 +753,20 @@ const CreateQuizModern = () => {
                   <h3 className="text-sm font-semibold text-foreground">
                     Pergunta {currentQuestionIndex + 1} de {questions.length}
                   </h3>
-                  <span className="text-xs text-muted-foreground">
-                    {questions[currentQuestionIndex]?.blocks?.length || 0} blocos
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                      onClick={() => setShowCurrentPreviewDialog(true)}
+                    >
+                      <Eye className="h-3 w-3" />
+                      Preview Atual
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {questions[currentQuestionIndex]?.blocks?.length || 0} blocos
+                    </span>
+                  </div>
                 </div>
               )}
               
@@ -816,11 +861,11 @@ const CreateQuizModern = () => {
         </footer>
       )}
 
-      {/* ========== PREVIEW DIALOG ========== */}
+      {/* ========== PREVIEW COMPLETO DIALOG ========== */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
         <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>{t('createQuiz.preview', 'Preview')}</DialogTitle>
+            <DialogTitle>Preview Completo</DialogTitle>
             <DialogDescription>{t('createQuiz.previewDescription', 'Visualize como seu quiz ficará')}</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-auto">
@@ -835,6 +880,37 @@ const CreateQuizModern = () => {
               showDescription={showDescription}
               showQuestionNumber={showQuestionNumber}
               mode="fullscreen"
+              formConfig={{
+                collect_name: collectName,
+                collect_email: collectEmail,
+                collect_whatsapp: collectWhatsapp,
+                collection_timing: collectionTiming as 'before' | 'after' | 'none',
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========== PREVIEW ATUAL DIALOG ========== */}
+      <Dialog open={showCurrentPreviewDialog} onOpenChange={setShowCurrentPreviewDialog}>
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Preview Atual — Pergunta {currentQuestionIndex + 1}</DialogTitle>
+            <DialogDescription>Navegue entre as perguntas do quiz usando os botões abaixo</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto">
+            <UnifiedQuizPreview
+              questions={questions}
+              title={title}
+              description={description}
+              template={template}
+              logoUrl={logoUrl}
+              showLogo={showLogo}
+              showTitle={showTitle}
+              showDescription={showDescription}
+              showQuestionNumber={showQuestionNumber}
+              mode="fullscreen"
+              externalQuestionIndex={currentQuestionIndex}
               formConfig={{
                 collect_name: collectName,
                 collect_email: collectEmail,

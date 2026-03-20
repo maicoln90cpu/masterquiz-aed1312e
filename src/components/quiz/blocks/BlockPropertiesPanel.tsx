@@ -355,6 +355,7 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 
 const ButtonProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'button') return null;
+  const dynConditions = (block as any).conditions || [];
   return (
     <div className="space-y-4">
       <PropertySection title="Ação">
@@ -389,6 +390,51 @@ const ButtonProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
       <SwitchRow label="Abrir em nova aba" checked={block.openInNewTab || false} onChange={(v) => onChange(update(block, { openInNewTab: v }))} />
+      
+      <Separator />
+      <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+        <p className="text-xs text-purple-800 dark:text-purple-200 font-medium mb-1">🎯 Personalização Dinâmica (opcional)</p>
+        <p className="text-[10px] text-purple-700 dark:text-purple-300">
+          Personalize o texto e URL do botão baseado em respostas do usuário. Use {'{resposta}'} no template.
+        </p>
+      </div>
+      <PropertySection title="ID da Pergunta-Fonte">
+        <Input
+          value={(block as any).sourceQuestionId || ''}
+          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
+          placeholder="Cole o ID da pergunta"
+        />
+      </PropertySection>
+      <PropertySection title="Template do texto">
+        <Input
+          value={(block as any).textTemplate || ''}
+          onChange={(e) => onChange(update(block, { textTemplate: e.target.value }))}
+          placeholder="Ver plano para {resposta}"
+        />
+      </PropertySection>
+      <PropertySection title="Texto fallback">
+        <Input
+          value={(block as any).fallbackText || ''}
+          onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))}
+          placeholder="Ver plano personalizado"
+        />
+      </PropertySection>
+      <Label className="text-xs">Condições avançadas</Label>
+      {dynConditions.map((c: any, idx: number) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <Input className="w-1/3" value={c.answer} placeholder="Resposta" onChange={(e) => {
+            const newConds = [...dynConditions];
+            newConds[idx] = { ...c, answer: e.target.value };
+            onChange(update(block, { conditions: newConds }));
+          }} />
+          <Input className="flex-1" value={c.text} placeholder="Texto do botão" onChange={(e) => {
+            const newConds = [...dynConditions];
+            newConds[idx] = { ...c, text: e.target.value };
+            onChange(update(block, { conditions: newConds }));
+          }} />
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...dynConditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
     </div>
   );
 };
@@ -1039,6 +1085,11 @@ const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps)
   if (block.type !== 'answerSummary') return null;
   return (
     <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
+          📋 Exibe um resumo das respostas do usuário. Você pode filtrar quais perguntas mostrar usando os IDs (copie na lista de perguntas).
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Título</Label>
         <Input value={block.title || ''} onChange={(e) => onChange(update(block, { title: e.target.value }))} />
@@ -1047,6 +1098,17 @@ const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps)
         <Label>Subtítulo</Label>
         <Input value={block.subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
       </div>
+      <Separator />
+      <div className="space-y-2">
+        <Label>Filtrar perguntas (IDs separados por vírgula)</Label>
+        <Input
+          placeholder="Deixe vazio para mostrar todas"
+          value={((block as any).selectedQuestionIds || []).join(', ')}
+          onChange={(e) => onChange(update(block, { selectedQuestionIds: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
+        />
+        <p className="text-xs text-muted-foreground">Copie os IDs das perguntas na lista à esquerda (clique no ID abaixo do nome)</p>
+      </div>
+      <Separator />
       <div className="space-y-2">
         <Label>Estilo</Label>
         <Select value={block.style || 'card'} onValueChange={(v) => onChange(update(block, { style: v }))}>
@@ -1114,13 +1176,18 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
   if (block.type !== 'avatarGroup') return null;
   return (
     <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
+          👥 <strong>Prova Social Visual</strong> — Mostra um grupo de avatares com contador para criar credibilidade (ex: "+1.234 pessoas já fizeram este quiz"). Use para aumentar conversão.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Número de pessoas</Label>
         <Input type="number" value={(block as any).count || 1234} onChange={(e) => onChange(update(block, { count: Number(e.target.value) }))} />
       </div>
       <div className="space-y-2">
         <Label>Texto/Label</Label>
-        <Input value={(block as any).label || ''} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
+        <Input value={(block as any).label || ''} placeholder="pessoas já responderam" onChange={(e) => onChange(update(block, { label: e.target.value }))} />
       </div>
       <div className="space-y-2">
         <Label>Avatares visíveis</Label>
@@ -1206,6 +1273,11 @@ const ComparisonResultProperties = ({ block, onChange }: BlockPropertiesPanelPro
   const afterItems = (block as any).afterItems || [];
   return (
     <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
+          ⚖️ <strong>Comparação Dinâmica</strong> — Exibe uma tabela "Antes vs Depois" personalizada. Use {'{resposta1}'}, {'{resposta2}'} nos textos dos itens para substituir automaticamente pelas respostas do usuário. Copie os IDs das perguntas na lista à esquerda.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Título "Antes"</Label>
         <Input value={(block as any).beforeTitle || ''} onChange={(e) => onChange(update(block, { beforeTitle: e.target.value }))} />
@@ -1340,6 +1412,11 @@ const RecommendationProperties = ({ block, onChange }: BlockPropertiesPanelProps
   const recommendations = (block as any).recommendations || [];
   return (
     <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
+          🎯 <strong>Motor de Recomendação</strong> — Configure produtos/serviços com regras baseadas em respostas. O sistema calcula automaticamente qual recomendar usando pesos. Copie os IDs das perguntas na lista à esquerda para usar nas regras.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Título</Label>
         <Input value={(block as any).title || ''} onChange={(e) => onChange(update(block, { title: e.target.value }))} />

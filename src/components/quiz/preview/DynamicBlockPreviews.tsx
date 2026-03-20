@@ -35,7 +35,16 @@ export const AnswerSummaryBlockPreview = ({ block, answers, questions }: AnswerS
 
       {hasRuntimeData ? (
         <div className="space-y-2">
-          {questions!.map((q) => {
+          {questions!
+            .filter((q) => {
+              // Filter by selectedQuestionIds if defined
+              const selectedIds = (block as any).selectedQuestionIds;
+              if (selectedIds && selectedIds.length > 0) {
+                return selectedIds.includes(q.id);
+              }
+              return true;
+            })
+            .map((q) => {
             const answer = answers![q.id];
             if (!answer) return null;
             const questionBlock = q.blocks?.find((b: any) => b.type === 'question') as any;

@@ -57,6 +57,9 @@ import CountdownBlock from "./CountdownBlock";
 import ProgressBlock from "./ProgressBlock";
 import { AnimatedCounterBlock } from "./AnimatedCounterBlock";
 import { BlockErrorBoundary } from "./BlockErrorBoundary";
+import { CalloutBlockPreview as CalloutBlockPreviewInline, IconListBlockPreview as IconListBlockPreviewInline, QuoteBlockPreview as QuoteBlockPreviewInline, BadgeRowBlockPreview as BadgeRowBlockPreviewInline, BannerBlockPreview as BannerBlockPreviewInline } from "../preview/VisualBlockPreviews";
+import { AnswerSummaryBlockPreview as AnswerSummaryBlockPreviewInline, ProgressMessageBlockPreview as ProgressMessageBlockPreviewInline, AvatarGroupBlockPreview as AvatarGroupBlockPreviewInline, ConditionalTextBlockPreview as ConditionalTextBlockPreviewInline, ComparisonResultBlockPreview as ComparisonResultBlockPreviewInline, PersonalizedCTABlockPreview as PersonalizedCTABlockPreviewInline } from "../preview/DynamicBlockPreviews";
+import { RecommendationBlockPreview as RecommendationBlockPreviewInline } from "../preview/RecommendationBlockPreview";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
@@ -201,37 +204,29 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'animatedCounter':
         return <AnimatedCounterBlock block={block} onChange={onUpdate} />;
       case 'callout':
+        return <CalloutBlockPreviewInline block={block as any} />;
       case 'iconList':
+        return <IconListBlockPreviewInline block={block as any} />;
       case 'quote':
+        return <QuoteBlockPreviewInline block={block as any} />;
       case 'badgeRow':
+        return <BadgeRowBlockPreviewInline block={block as any} />;
       case 'banner':
+        return <BannerBlockPreviewInline block={block as any} />;
       case 'answerSummary':
+        return <AnswerSummaryBlockPreviewInline block={block as any} />;
       case 'progressMessage':
+        return <ProgressMessageBlockPreviewInline block={block as any} />;
       case 'avatarGroup':
+        return <AvatarGroupBlockPreviewInline block={block as any} />;
       case 'conditionalText':
+        return <ConditionalTextBlockPreviewInline block={block as any} />;
       case 'comparisonResult':
+        return <ComparisonResultBlockPreviewInline block={block as any} />;
       case 'personalizedCTA':
+        return <PersonalizedCTABlockPreviewInline block={block as any} />;
       case 'recommendation':
-        return (
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground mb-1 font-medium">
-              {block.type === 'callout' ? '⚠️ Callout/Alerta' :
-               block.type === 'iconList' ? '📋 Lista com Ícones' :
-               block.type === 'quote' ? '💬 Citação/Destaque' :
-               block.type === 'badgeRow' ? '🏅 Selos/Badges' :
-               block.type === 'banner' ? '🚩 Banner/Faixa' :
-               block.type === 'answerSummary' ? '📋 Resumo de Respostas' :
-               block.type === 'progressMessage' ? '💬 Mensagem de Progresso' :
-               block.type === 'avatarGroup' ? '👥 Grupo de Avatares' :
-               block.type === 'conditionalText' ? '🔀 Texto Condicional' :
-               block.type === 'comparisonResult' ? '⚖️ Comparação Dinâmica' :
-               block.type === 'personalizedCTA' ? '🎯 CTA Personalizado' :
-               block.type === 'recommendation' ? '🎯 Motor de Recomendação' :
-               '👥 Grupo de Avatares'}
-            </p>
-            <p className="text-sm text-muted-foreground">Configure no painel de propriedades →</p>
-          </div>
-        );
+        return <RecommendationBlockPreviewInline block={block as any} />;
       default:
         return null;
     }
@@ -633,10 +628,6 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               <DropdownMenuItem onClick={() => addBlock('comparisonResult')}>
                 <Columns className="h-4 w-4 mr-2" />
                 Comparação Dinâmica
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('personalizedCTA')}>
-                <MousePointerClick className="h-4 w-4 mr-2" />
-                CTA Personalizado
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => addBlock('recommendation')}>
                 <Star className="h-4 w-4 mr-2" />
