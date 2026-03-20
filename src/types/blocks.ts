@@ -195,6 +195,8 @@ export interface ProgressBlock extends BaseBlock {
   height?: 'thin' | 'medium' | 'thick';
   animated?: boolean;
   label?: string;
+  colorByRange?: boolean; // ✅ Etapa 2C: Cor por faixa (vermelho→amarelo→verde)
+  showCompletionIcon?: boolean; // ✅ Etapa 2C: Ícone de conclusão ao 100%
 }
 
 export interface CountdownBlock extends BaseBlock {
