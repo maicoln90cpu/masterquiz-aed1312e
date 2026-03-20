@@ -869,6 +869,31 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
         </Select>
       </PropertySection>
       <SwitchRow label="Mostrar ícones" checked={block.showIcons || false} onChange={(v) => onChange(update(block, { showIcons: v }))} />
+      {/* ✅ Etapa 2D: Highlight da coluna vencedora */}
+      <PropertySection title="Destacar coluna">
+        <Select value={(block as any).highlightWinner || 'none'} onValueChange={(v) => onChange(update(block, { highlightWinner: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="left">Esquerda</SelectItem>
+            <SelectItem value="right">Direita</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      {/* ✅ Etapa 2D: Ícones por coluna */}
+      {block.showIcons && (
+        <>
+          <Separator />
+          <div className="grid grid-cols-2 gap-2">
+            <PropertySection title="Ícone Esquerda">
+              <Input value={(block as any).itemIcons?.left || ''} placeholder="✗" onChange={(e) => onChange(update(block, { itemIcons: { ...((block as any).itemIcons || {}), left: e.target.value } }))} />
+            </PropertySection>
+            <PropertySection title="Ícone Direita">
+              <Input value={(block as any).itemIcons?.right || ''} placeholder="✓" onChange={(e) => onChange(update(block, { itemIcons: { ...((block as any).itemIcons || {}), right: e.target.value } }))} />
+            </PropertySection>
+          </div>
+        </>
+      )}
     </div>
   );
 };
