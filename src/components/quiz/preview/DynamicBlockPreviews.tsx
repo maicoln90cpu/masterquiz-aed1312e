@@ -108,6 +108,8 @@ export const ProgressMessageBlockPreview = ({ block, currentStep = 0, totalQuest
     .find(m => percent >= m.threshold);
 
   const displayText = activeMessage?.text || messages[0]?.text || '💪 Continue respondendo!';
+  const displayIcon = (activeMessage as any)?.icon || block.icon; // ✅ Etapa 2D: Ícone por faixa
+  const shouldAnimate = (block as any).animateFade !== false; // ✅ Etapa 2D: Fade entre mensagens
 
   const styleClass = block.style === 'inline'
     ? 'text-sm text-muted-foreground'
@@ -115,15 +117,33 @@ export const ProgressMessageBlockPreview = ({ block, currentStep = 0, totalQuest
       ? 'px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium inline-flex items-center gap-2'
       : 'p-4 rounded-xl border bg-card shadow-sm';
 
-  return (
-    <div className={styleClass}>
+  const content = (
+    <>
       {block.style === 'card' && (
         <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className="h-4 w-4 text-primary" />
+          {displayIcon ? <span className="text-sm">{displayIcon}</span> : <TrendingUp className="h-4 w-4 text-primary" />}
           <span className="text-xs font-semibold text-primary">{percent}% completo</span>
         </div>
       )}
       <p className={block.style === 'card' ? 'text-sm font-medium' : ''}>{displayText}</p>
+    </>
+  );
+
+  return (
+    <div className={styleClass}>
+      {shouldAnimate ? (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={displayText}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            {content}
+          </motion.div>
+        </AnimatePresence>
+      ) : content}
     </div>
   );
 };
