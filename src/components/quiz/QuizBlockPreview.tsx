@@ -25,6 +25,7 @@ import {
 } from "./preview/VisualBlockPreviews";
 import {
   AnswerSummaryBlockPreview, ProgressMessageBlockPreview, AvatarGroupBlockPreview,
+  ConditionalTextBlockPreview, ComparisonResultBlockPreview, PersonalizedCTABlockPreview,
 } from "./preview/DynamicBlockPreviews";
 
 // ✅ FASE 12: Lazy load MetricsBlockPreview (recharts é pesado ~200KB)
@@ -156,6 +157,12 @@ export const QuizBlockPreview = ({
         return <ProgressMessageBlockPreview key={block.id} block={block as QuizBlock & { type: 'progressMessage' }} currentStep={currentStep} totalQuestions={totalQuestions} />;
       case "avatarGroup":
         return <AvatarGroupBlockPreview key={block.id} block={block as QuizBlock & { type: 'avatarGroup' }} />;
+      case "conditionalText":
+        return <ConditionalTextBlockPreview key={block.id} block={block as QuizBlock & { type: 'conditionalText' }} answers={answers} questions={questions} />;
+      case "comparisonResult":
+        return <ComparisonResultBlockPreview key={block.id} block={block as QuizBlock & { type: 'comparisonResult' }} answers={answers} />;
+      case "personalizedCTA":
+        return <PersonalizedCTABlockPreview key={block.id} block={block as QuizBlock & { type: 'personalizedCTA' }} answers={answers} />;
       default:
         return null;
     }

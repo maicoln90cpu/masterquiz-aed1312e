@@ -142,6 +142,9 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'answerSummary':
       case 'progressMessage':
       case 'avatarGroup':
+      case 'conditionalText':
+      case 'comparisonResult':
+      case 'personalizedCTA':
         return true;
       default:
         return false;
@@ -204,6 +207,9 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'answerSummary':
       case 'progressMessage':
       case 'avatarGroup':
+      case 'conditionalText':
+      case 'comparisonResult':
+      case 'personalizedCTA':
         return (
           <div className="p-3 border rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground mb-1 font-medium">
@@ -214,6 +220,10 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
                block.type === 'banner' ? '🚩 Banner/Faixa' :
                block.type === 'answerSummary' ? '📋 Resumo de Respostas' :
                block.type === 'progressMessage' ? '💬 Mensagem de Progresso' :
+               block.type === 'avatarGroup' ? '👥 Grupo de Avatares' :
+               block.type === 'conditionalText' ? '🔀 Texto Condicional' :
+               block.type === 'comparisonResult' ? '⚖️ Comparação Dinâmica' :
+               block.type === 'personalizedCTA' ? '🎯 CTA Personalizado' :
                '👥 Grupo de Avatares'}
             </p>
             <p className="text-sm text-muted-foreground">Configure no painel de propriedades →</p>
@@ -389,6 +399,9 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       answerSummary: 'Resumo de Respostas',
       progressMessage: 'Mensagem de Progresso',
       avatarGroup: 'Grupo de Avatares',
+      conditionalText: 'Texto Condicional',
+      comparisonResult: 'Comparação Dinâmica',
+      personalizedCTA: 'CTA Personalizado',
     };
     
     toast.success(
@@ -608,6 +621,18 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               <DropdownMenuItem onClick={() => addBlock('avatarGroup')}>
                 <Bell className="h-4 w-4 mr-2" />
                 Grupo de Avatares
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('conditionalText')}>
+                <Type className="h-4 w-4 mr-2" />
+                Texto Condicional
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('comparisonResult')}>
+                <Columns className="h-4 w-4 mr-2" />
+                Comparação Dinâmica
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('personalizedCTA')}>
+                <MousePointerClick className="h-4 w-4 mr-2" />
+                CTA Personalizado
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -30,7 +30,10 @@ export type BlockType =
   | 'banner'
   | 'answerSummary'
   | 'progressMessage'
-  | 'avatarGroup';
+  | 'avatarGroup'
+  | 'conditionalText'
+  | 'comparisonResult'
+  | 'personalizedCTA';
 
 export interface BaseBlock {
   id: string;
@@ -367,7 +370,39 @@ export interface AvatarGroupBlock extends BaseBlock {
   avatarStyle?: 'circle' | 'square';
 }
 
-export type QuizBlock = 
+export interface ConditionalTextBlock extends BaseBlock {
+  type: 'conditionalText';
+  sourceQuestionId?: string;
+  conditions: { answer: string; text: string }[];
+  fallbackText?: string;
+  style?: 'default' | 'highlighted' | 'card';
+}
+
+export interface ComparisonResultBlock extends BaseBlock {
+  type: 'comparisonResult';
+  sourceQuestionIds?: string[];
+  beforeTitle?: string;
+  afterTitle?: string;
+  beforeTemplate?: string;
+  afterTemplate?: string;
+  beforeItems?: string[];
+  afterItems?: string[];
+  showIcons?: boolean;
+}
+
+export interface PersonalizedCTABlock extends BaseBlock {
+  type: 'personalizedCTA';
+  sourceQuestionId?: string;
+  textTemplate: string;
+  url?: string;
+  variant?: 'default' | 'outline' | 'secondary' | 'ghost';
+  size?: 'sm' | 'default' | 'lg';
+  openInNewTab?: boolean;
+  conditions?: { answer: string; text: string; url?: string }[];
+  fallbackText?: string;
+}
+
+export type QuizBlock =
   | QuestionBlock
   | TextBlock
   | SeparatorBlock
@@ -397,7 +432,10 @@ export type QuizBlock =
   | BannerBlock
   | AnswerSummaryBlock
   | ProgressMessageBlock
-  | AvatarGroupBlock;
+  | AvatarGroupBlock
+  | ConditionalTextBlock
+  | ComparisonResultBlock
+  | PersonalizedCTABlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
@@ -759,6 +797,42 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         showCount: true,
         avatarStyle: 'circle',
       } as AvatarGroupBlock;
+
+    case 'conditionalText':
+      return {
+        ...baseBlock,
+        type: 'conditionalText',
+        conditions: [
+          { answer: 'Opção A', text: 'Texto quando o usuário escolher Opção A' },
+          { answer: 'Opção B', text: 'Texto quando o usuário escolher Opção B' },
+        ],
+        fallbackText: 'Texto padrão quando nenhuma condição corresponder.',
+        style: 'default',
+      } as ConditionalTextBlock;
+
+    case 'comparisonResult':
+      return {
+        ...baseBlock,
+        type: 'comparisonResult',
+        beforeTitle: 'Sem nosso produto',
+        afterTitle: 'Com nosso produto',
+        beforeItems: ['Problema 1', 'Problema 2', 'Problema 3'],
+        afterItems: ['Solução personalizada 1', 'Solução personalizada 2', 'Solução personalizada 3'],
+        showIcons: true,
+      } as ComparisonResultBlock;
+
+    case 'personalizedCTA':
+      return {
+        ...baseBlock,
+        type: 'personalizedCTA',
+        textTemplate: 'Ver plano para {resposta}',
+        url: '',
+        variant: 'default',
+        size: 'lg',
+        openInNewTab: false,
+        fallbackText: 'Ver plano personalizado',
+        conditions: [],
+      } as PersonalizedCTABlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
@@ -959,6 +1033,31 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         maxVisible: block.maxVisible ?? 5,
         showCount: block.showCount !== false,
         avatarStyle: block.avatarStyle || 'circle',
+      };
+    case 'conditionalText':
+      return {
+        ...block,
+        conditions: Array.isArray(block.conditions) ? block.conditions : [],
+        fallbackText: block.fallbackText || '',
+        style: block.style || 'default',
+      };
+    case 'comparisonResult':
+      return {
+        ...block,
+        beforeTitle: block.beforeTitle || 'Antes',
+        afterTitle: block.afterTitle || 'Depois',
+        beforeItems: Array.isArray(block.beforeItems) ? block.beforeItems : ['Item 1'],
+        afterItems: Array.isArray(block.afterItems) ? block.afterItems : ['Item 1'],
+        showIcons: block.showIcons !== false,
+      };
+    case 'personalizedCTA':
+      return {
+        ...block,
+        textTemplate: block.textTemplate || 'Clique aqui',
+        variant: block.variant || 'default',
+        size: block.size || 'lg',
+        conditions: Array.isArray(block.conditions) ? block.conditions : [],
+        fallbackText: block.fallbackText || 'Ver mais',
       };
     default:
       return block;

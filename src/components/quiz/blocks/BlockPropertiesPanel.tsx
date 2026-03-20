@@ -51,6 +51,9 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   answerSummary: <List className="h-4 w-4" />,
   progressMessage: <TrendingUp className="h-4 w-4" />,
   avatarGroup: <Users className="h-4 w-4" />,
+  conditionalText: <Type className="h-4 w-4" />,
+  comparisonResult: <Columns className="h-4 w-4" />,
+  personalizedCTA: <MousePointer className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
@@ -84,6 +87,9 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   answerSummary: 'Resumo de Respostas',
   progressMessage: 'Mensagem de Progresso',
   avatarGroup: 'Grupo de Avatares',
+  conditionalText: 'Texto Condicional',
+  comparisonResult: 'Comparação Dinâmica',
+  personalizedCTA: 'CTA Personalizado',
 };
 
 // Helper to update block with type safety
@@ -1136,6 +1142,196 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
   );
 };
 
+// ---- CONDITIONAL TEXT ----
+const ConditionalTextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'conditionalText') return null;
+  const conditions = (block as any).conditions || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>ID da Pergunta-Fonte</Label>
+        <Input
+          placeholder="Cole o ID da pergunta aqui"
+          value={(block as any).sourceQuestionId || ''}
+          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
+        />
+        <p className="text-xs text-muted-foreground">O ID aparece no editor ao selecionar uma pergunta</p>
+      </div>
+      <div className="space-y-2">
+        <Label>Estilo</Label>
+        <Select value={(block as any).style || 'default'} onValueChange={(v) => onChange(update(block, { style: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Texto simples</SelectItem>
+            <SelectItem value="highlighted">Destacado</SelectItem>
+            <SelectItem value="card">Card</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Separator />
+      <Label>Condições (resposta → texto)</Label>
+      {conditions.map((c: any, idx: number) => (
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-1/3" value={c.answer} placeholder="Se resposta contém..." onChange={(e) => {
+              const newConds = [...conditions];
+              newConds[idx] = { ...c, answer: e.target.value };
+              onChange(update(block, { conditions: newConds }));
+            }} />
+            <span className="text-xs text-muted-foreground">→</span>
+            <Input className="flex-1" value={c.text} placeholder="Exibir este texto" onChange={(e) => {
+              const newConds = [...conditions];
+              newConds[idx] = { ...c, text: e.target.value };
+              onChange(update(block, { conditions: newConds }));
+            }} />
+          </div>
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...conditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
+      <Separator />
+      <div className="space-y-2">
+        <Label>Texto padrão (fallback)</Label>
+        <Input value={(block as any).fallbackText || ''} onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))} placeholder="Texto quando nenhuma condição corresponder" />
+      </div>
+    </div>
+  );
+};
+
+// ---- COMPARISON RESULT ----
+const ComparisonResultProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'comparisonResult') return null;
+  const beforeItems = (block as any).beforeItems || [];
+  const afterItems = (block as any).afterItems || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Título "Antes"</Label>
+        <Input value={(block as any).beforeTitle || ''} onChange={(e) => onChange(update(block, { beforeTitle: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Título "Depois"</Label>
+        <Input value={(block as any).afterTitle || ''} onChange={(e) => onChange(update(block, { afterTitle: e.target.value }))} />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar ícones</Label>
+        <Switch checked={(block as any).showIcons !== false} onCheckedChange={(v) => onChange(update(block, { showIcons: v }))} />
+      </div>
+      <Separator />
+      <Label>Itens "Antes" (❌)</Label>
+      {beforeItems.map((item: string, idx: number) => (
+        <Input key={idx} value={item} onChange={(e) => {
+          const newItems = [...beforeItems];
+          newItems[idx] = e.target.value;
+          onChange(update(block, { beforeItems: newItems }));
+        }} placeholder={`Problema ${idx + 1}`} />
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { beforeItems: [...beforeItems, ''] }))}>+ Adicionar item</button>
+      <Separator />
+      <Label>Itens "Depois" (✅)</Label>
+      {afterItems.map((item: string, idx: number) => (
+        <Input key={idx} value={item} onChange={(e) => {
+          const newItems = [...afterItems];
+          newItems[idx] = e.target.value;
+          onChange(update(block, { afterItems: newItems }));
+        }} placeholder={`Solução ${idx + 1}`} />
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { afterItems: [...afterItems, ''] }))}>+ Adicionar item</button>
+      <Separator />
+      <div className="space-y-2">
+        <Label>IDs das perguntas-fonte (opcional, separados por vírgula)</Label>
+        <Input
+          placeholder="id1, id2"
+          value={((block as any).sourceQuestionIds || []).join(', ')}
+          onChange={(e) => onChange(update(block, { sourceQuestionIds: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
+        />
+        <p className="text-xs text-muted-foreground">Use {'{resposta1}'}, {'{resposta2}'} nos itens para substituir com respostas</p>
+      </div>
+    </div>
+  );
+};
+
+// ---- PERSONALIZED CTA ----
+const PersonalizedCTAProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'personalizedCTA') return null;
+  const conditions = (block as any).conditions || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Template do texto</Label>
+        <Input
+          value={(block as any).textTemplate || ''}
+          onChange={(e) => onChange(update(block, { textTemplate: e.target.value }))}
+          placeholder="Ver plano para {resposta}"
+        />
+        <p className="text-xs text-muted-foreground">Use {'{resposta}'} para inserir a resposta do usuário</p>
+      </div>
+      <div className="space-y-2">
+        <Label>ID da Pergunta-Fonte</Label>
+        <Input
+          value={(block as any).sourceQuestionId || ''}
+          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
+          placeholder="Cole o ID da pergunta"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>URL do botão</Label>
+        <Input value={(block as any).url || ''} onChange={(e) => onChange(update(block, { url: e.target.value }))} placeholder="https://..." />
+      </div>
+      <div className="space-y-2">
+        <Label>Variante</Label>
+        <Select value={(block as any).variant || 'default'} onValueChange={(v) => onChange(update(block, { variant: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Primário</SelectItem>
+            <SelectItem value="outline">Contorno</SelectItem>
+            <SelectItem value="secondary">Secundário</SelectItem>
+            <SelectItem value="ghost">Ghost</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Tamanho</Label>
+        <Select value={(block as any).size || 'lg'} onValueChange={(v) => onChange(update(block, { size: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sm">Pequeno</SelectItem>
+            <SelectItem value="default">Médio</SelectItem>
+            <SelectItem value="lg">Grande</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Abrir em nova aba</Label>
+        <Switch checked={(block as any).openInNewTab || false} onCheckedChange={(v) => onChange(update(block, { openInNewTab: v }))} />
+      </div>
+      <Separator />
+      <div className="space-y-2">
+        <Label>Texto fallback</Label>
+        <Input value={(block as any).fallbackText || ''} onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))} placeholder="Ver plano personalizado" />
+      </div>
+      <Separator />
+      <Label>Condições avançadas (opcional)</Label>
+      {conditions.map((c: any, idx: number) => (
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-1/3" value={c.answer} placeholder="Resposta" onChange={(e) => {
+              const newConds = [...conditions];
+              newConds[idx] = { ...c, answer: e.target.value };
+              onChange(update(block, { conditions: newConds }));
+            }} />
+            <Input className="flex-1" value={c.text} placeholder="Texto do botão" onChange={(e) => {
+              const newConds = [...conditions];
+              newConds[idx] = { ...c, text: e.target.value };
+              onChange(update(block, { conditions: newConds }));
+            }} />
+          </div>
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...conditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
+    </div>
+  );
+};
+
 // ============================================
 // MAIN PANEL COMPONENT
 // ============================================
@@ -1177,6 +1373,9 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} />;
       case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
       case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
+      case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} />;
+      case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} />;
+      case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
