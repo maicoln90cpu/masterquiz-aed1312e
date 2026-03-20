@@ -629,10 +629,6 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 <Columns className="h-4 w-4 mr-2" />
                 Comparação Dinâmica
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('personalizedCTA')}>
-                <MousePointerClick className="h-4 w-4 mr-2" />
-                CTA Personalizado
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => addBlock('recommendation')}>
                 <Star className="h-4 w-4 mr-2" />
                 Recomendação

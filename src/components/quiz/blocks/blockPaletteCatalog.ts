@@ -93,7 +93,6 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'avatarGroup', icon: Users, labelKey: 'createQuiz.blocks.avatarGroup', defaultLabel: 'Grupo de Avatares' },
       { type: 'conditionalText', icon: GitBranch, labelKey: 'createQuiz.blocks.conditionalText', defaultLabel: 'Texto Condicional' },
       { type: 'comparisonResult', icon: ArrowRightLeft, labelKey: 'createQuiz.blocks.comparisonResult', defaultLabel: 'Comparação Dinâmica' },
-      { type: 'personalizedCTA', icon: MousePointerClick, labelKey: 'createQuiz.blocks.personalizedCTA', defaultLabel: 'CTA Personalizado' },
       { type: 'recommendation', icon: Award, labelKey: 'createQuiz.blocks.recommendation', defaultLabel: 'Recomendação' },
     ],
   },

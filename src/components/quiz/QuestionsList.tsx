@@ -179,9 +179,26 @@ export const QuestionsList = memo(({
                           placeholder={cleanText || t('createQuiz.emptyQuestion')}
                         />
                       ) : (
-                        <p className="text-xs font-medium text-left line-clamp-2 break-words">
-                          {displayText}
-                        </p>
+                        <>
+                          <p className="text-xs font-medium text-left line-clamp-2 break-words">
+                            {displayText}
+                          </p>
+                          {q.id && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(q.id);
+                                toast.success('ID copiado!');
+                              }}
+                              className="flex items-center gap-1 mt-0.5 text-[10px] text-muted-foreground/60 hover:text-primary transition-colors group/id"
+                              title={`ID: ${q.id}`}
+                            >
+                              <Copy className="h-2.5 w-2.5" />
+                              <span className="font-mono truncate max-w-[100px]">{q.id.substring(0, 12)}...</span>
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
 

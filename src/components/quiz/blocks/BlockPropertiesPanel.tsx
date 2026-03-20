@@ -355,6 +355,7 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 
 const ButtonProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'button') return null;
+  const dynConditions = (block as any).conditions || [];
   return (
     <div className="space-y-4">
       <PropertySection title="Ação">
@@ -389,6 +390,51 @@ const ButtonProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
       <SwitchRow label="Abrir em nova aba" checked={block.openInNewTab || false} onChange={(v) => onChange(update(block, { openInNewTab: v }))} />
+      
+      <Separator />
+      <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+        <p className="text-xs text-purple-800 dark:text-purple-200 font-medium mb-1">🎯 Personalização Dinâmica (opcional)</p>
+        <p className="text-[10px] text-purple-700 dark:text-purple-300">
+          Personalize o texto e URL do botão baseado em respostas do usuário. Use {'{resposta}'} no template.
+        </p>
+      </div>
+      <PropertySection title="ID da Pergunta-Fonte">
+        <Input
+          value={(block as any).sourceQuestionId || ''}
+          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
+          placeholder="Cole o ID da pergunta"
+        />
+      </PropertySection>
+      <PropertySection title="Template do texto">
+        <Input
+          value={(block as any).textTemplate || ''}
+          onChange={(e) => onChange(update(block, { textTemplate: e.target.value }))}
+          placeholder="Ver plano para {resposta}"
+        />
+      </PropertySection>
+      <PropertySection title="Texto fallback">
+        <Input
+          value={(block as any).fallbackText || ''}
+          onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))}
+          placeholder="Ver plano personalizado"
+        />
+      </PropertySection>
+      <Label className="text-xs">Condições avançadas</Label>
+      {dynConditions.map((c: any, idx: number) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <Input className="w-1/3" value={c.answer} placeholder="Resposta" onChange={(e) => {
+            const newConds = [...dynConditions];
+            newConds[idx] = { ...c, answer: e.target.value };
+            onChange(update(block, { conditions: newConds }));
+          }} />
+          <Input className="flex-1" value={c.text} placeholder="Texto do botão" onChange={(e) => {
+            const newConds = [...dynConditions];
+            newConds[idx] = { ...c, text: e.target.value };
+            onChange(update(block, { conditions: newConds }));
+          }} />
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...dynConditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
     </div>
   );
 };

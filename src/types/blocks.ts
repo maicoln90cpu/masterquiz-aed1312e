@@ -357,6 +357,7 @@ export interface AnswerSummaryBlock extends BaseBlock {
   showQuestionText?: boolean;
   showIcon?: boolean;
   accentColor?: string;
+  selectedQuestionIds?: string[];
 }
 
 export interface ProgressMessageBlock extends BaseBlock {
