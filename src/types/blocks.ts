@@ -413,6 +413,10 @@ export interface ComparisonResultBlock extends BaseBlock {
   beforeItems?: string[];
   afterItems?: string[];
   showIcons?: boolean;
+  beforeColor?: string; // ✅ Etapa 2D: Cor configurável coluna antes
+  afterColor?: string; // ✅ Etapa 2D: Cor configurável coluna depois
+  beforeIcon?: string; // ✅ Etapa 2D: Ícone personalizado antes
+  afterIcon?: string; // ✅ Etapa 2D: Ícone personalizado depois
 }
 
 export interface PersonalizedCTABlock extends BaseBlock {
