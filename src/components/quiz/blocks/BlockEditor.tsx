@@ -211,6 +211,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'conditionalText':
       case 'comparisonResult':
       case 'personalizedCTA':
+      case 'recommendation':
         return (
           <div className="p-3 border rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground mb-1 font-medium">
@@ -225,6 +226,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
                block.type === 'conditionalText' ? '🔀 Texto Condicional' :
                block.type === 'comparisonResult' ? '⚖️ Comparação Dinâmica' :
                block.type === 'personalizedCTA' ? '🎯 CTA Personalizado' :
+               block.type === 'recommendation' ? '🎯 Motor de Recomendação' :
                '👥 Grupo de Avatares'}
             </p>
             <p className="text-sm text-muted-foreground">Configure no painel de propriedades →</p>
