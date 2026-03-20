@@ -4,6 +4,32 @@
 
 ---
 
+## ✅ v2.32.0 - Etapa 2: 3 Novos Blocos Dinâmicos (20/03/2026)
+
+### 3 Novos Blocos Dinâmicos (dependem de dados em runtime)
+- **Resumo de Respostas (answerSummary)**: Exibe todas as respostas anteriores do usuário inline no quiz. No editor mostra preview placeholder; no quiz publicado mostra dados reais. 3 estilos (card/list/minimal), ícones opcionais.
+- **Mensagem de Progresso (progressMessage)**: Mensagem motivacional que muda conforme % do quiz completado. Configurável com múltiplos thresholds. 3 estilos (card/inline/toast).
+- **Grupo de Avatares (avatarGroup)**: Prova social visual com avatares + contador ("+1.234 pessoas já fizeram este quiz"). Avatares circulares ou quadrados, quantidade configurável.
+
+### Fluxo de dados runtime
+- `QuizBlockPreview` agora aceita props opcionais: `answers`, `questions`, `currentStep`, `totalQuestions`
+- `QuizViewQuestion` passa dados runtime para blocos dinâmicos via `QuizBlockPreview`
+- Blocos dinâmicos funcionam tanto no editor (com dados placeholder) quanto no quiz publicado (com dados reais)
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/types/blocks.ts` | +3 interfaces (AnswerSummaryBlock, ProgressMessageBlock, AvatarGroupBlock), createBlock, normalizeBlock |
+| `src/components/quiz/preview/DynamicBlockPreviews.tsx` | NOVO — 3 componentes de preview dinâmicos |
+| `src/components/quiz/QuizBlockPreview.tsx` | +4 props opcionais, +3 cases no switch, import DynamicBlockPreviews |
+| `src/components/quiz/view/QuizViewQuestion.tsx` | Passa answers/questions/currentStep/totalQuestions para QuizBlockPreview |
+| `src/components/quiz/blocks/blockPaletteCatalog.ts` | +3 itens na nova seção "Dinâmico" |
+| `src/components/quiz/blocks/BlockEditor.tsx` | +3 no dropdown, blockTypeNames, isBlockComplete, renderBlock |
+| `src/components/quiz/blocks/BlockPropertiesPanel.tsx` | +3 painéis de propriedades, BLOCK_ICONS, BLOCK_NAMES |
+| `src/components/quiz/blocks/CompactBlockPalette.tsx` | +3 itens no blockTypes, getBlockIcon, getBlockLabel |
+
+---
+
 ## ✅ v2.31.0 - Etapa 1: Paridade de Blocos + 5 Novos Blocos Visuais (20/03/2026)
 
 ### Paridade de Blocos (6 blocos existentes adicionados ao catálogo e dropdown)
