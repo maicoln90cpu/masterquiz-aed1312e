@@ -73,6 +73,11 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   comparison: 'Comparação',
   socialProof: 'Prova Social',
   animatedCounter: 'Contador Animado',
+  callout: 'Callout/Alerta',
+  iconList: 'Lista com Ícones',
+  quote: 'Citação',
+  badgeRow: 'Selos/Badges',
+  banner: 'Banner/Faixa',
 };
 
 // Helper to update block with type safety

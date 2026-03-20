@@ -480,6 +480,22 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 <Code className="h-4 w-4 mr-2" />
                 Conteúdo Incorporado
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('button')}>
+                <MousePointerClick className="h-4 w-4 mr-2" />
+                Botão
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('price')}>
+                <DollarSign className="h-4 w-4 mr-2" />
+                Preço
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('metrics')}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Métricas/Gráfico
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('loading')}>
+                <Loader2 className="h-4 w-4 mr-2" />
+                Loading/Carregamento
+              </DropdownMenuItem>
               
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Captura de Dados</DropdownMenuLabel>
@@ -517,6 +533,37 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               <DropdownMenuItem onClick={() => addBlock('animatedCounter')}>
                 <SlidersHorizontal className="h-4 w-4 mr-2" />
                 Contador Animado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('progress')}>
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Barra de Progresso
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('countdown')}>
+                <Timer className="h-4 w-4 mr-2" />
+                Countdown/Timer
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Visual</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => addBlock('callout')}>
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Callout/Alerta
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('iconList')}>
+                <List className="h-4 w-4 mr-2" />
+                Lista com Ícones
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('quote')}>
+                <Quote className="h-4 w-4 mr-2" />
+                Citação/Destaque
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('badgeRow')}>
+                <Award className="h-4 w-4 mr-2" />
+                Selos/Badges
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('banner')}>
+                <Flag className="h-4 w-4 mr-2" />
+                Banner/Faixa
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
