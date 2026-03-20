@@ -401,6 +401,7 @@ const VideoProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           <SelectContent>
             <SelectItem value="youtube">YouTube</SelectItem>
             <SelectItem value="vimeo">Vimeo</SelectItem>
+            <SelectItem value="loom">Loom</SelectItem>
             <SelectItem value="direct">Direto</SelectItem>
             <SelectItem value="uploaded">Upload</SelectItem>
             <SelectItem value="bunny_stream">Bunny Stream</SelectItem>
