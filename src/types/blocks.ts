@@ -285,14 +285,56 @@ export interface AnimatedCounterBlock extends BaseBlock {
   type: 'animatedCounter';
   startValue: number;
   endValue: number;
-  duration: number; // em segundos
+  duration: number;
   prefix?: string;
   suffix?: string;
   easing?: 'linear' | 'easeOut' | 'easeInOut';
   fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
   color?: string;
   label?: string;
-  separator?: boolean; // usar separador de milhar
+  separator?: boolean;
+}
+
+export interface CalloutBlock extends BaseBlock {
+  type: 'callout';
+  variant: 'warning' | 'info' | 'success' | 'error';
+  title: string;
+  items: string[];
+  footnote?: string;
+  icon?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  textColor?: string;
+}
+
+export interface IconListBlock extends BaseBlock {
+  type: 'iconList';
+  items: { icon: string; text: string }[];
+  iconColor?: string;
+  layout?: 'vertical' | 'horizontal';
+}
+
+export interface QuoteBlock extends BaseBlock {
+  type: 'quote';
+  text: string;
+  author?: string;
+  borderColor?: string;
+  style?: 'default' | 'large' | 'minimal';
+}
+
+export interface BadgeRowBlock extends BaseBlock {
+  type: 'badgeRow';
+  badges: { icon: string; text: string }[];
+  variant?: 'outline' | 'filled';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export interface BannerBlock extends BaseBlock {
+  type: 'banner';
+  text: string;
+  variant?: 'warning' | 'success' | 'info' | 'promo';
+  icon?: string;
+  dismissible?: boolean;
 }
 
 export type QuizBlock = 
@@ -317,7 +359,12 @@ export type QuizBlock =
   | AccordionBlock
   | ComparisonBlock
   | SocialProofBlock
-  | AnimatedCounterBlock;
+  | AnimatedCounterBlock
+  | CalloutBlock
+  | IconListBlock
+  | QuoteBlock
+  | BadgeRowBlock
+  | BannerBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
