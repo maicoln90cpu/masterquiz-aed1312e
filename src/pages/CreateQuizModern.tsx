@@ -911,6 +911,7 @@ const CreateQuizModern = () => {
               showDescription={showDescription}
               showQuestionNumber={showQuestionNumber}
               mode="fullscreen"
+              showIntroScreen={false}
               externalQuestionIndex={currentQuestionIndex}
               formConfig={{
                 collect_name: collectName,
