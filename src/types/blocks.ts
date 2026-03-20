@@ -139,6 +139,11 @@ export interface ButtonBlock extends BaseBlock {
   size?: 'sm' | 'default' | 'lg';
   openInNewTab?: boolean;
   icon?: string;
+  // Personalização dinâmica (unificado do antigo personalizedCTA)
+  sourceQuestionId?: string;
+  textTemplate?: string;
+  conditions?: { answer: string; text: string; url?: string }[];
+  fallbackText?: string;
 }
 
 export interface PriceBlock extends BaseBlock {
