@@ -1203,13 +1203,13 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 };
 
 // ---- ANSWER SUMMARY ----
-const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const AnswerSummaryProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'answerSummary') return null;
   return (
     <div className="space-y-4">
       <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
         <p className="text-xs text-blue-800 dark:text-blue-200">
-          📋 Exibe um resumo das respostas do usuário. Você pode filtrar quais perguntas mostrar usando os IDs (copie na lista de perguntas).
+          📋 Exibe um resumo das respostas do usuário. Selecione quais perguntas mostrar abaixo.
         </p>
       </div>
       <div className="space-y-2">
@@ -1221,15 +1221,12 @@ const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps)
         <Input value={block.subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
       </div>
       <Separator />
-      <div className="space-y-2">
-        <Label>Filtrar perguntas (IDs separados por vírgula)</Label>
-        <Input
-          placeholder="Deixe vazio para mostrar todas"
-          value={((block as any).selectedQuestionIds || []).join(', ')}
-          onChange={(e) => onChange(update(block, { selectedQuestionIds: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
-        />
-        <p className="text-xs text-muted-foreground">Copie os IDs das perguntas na lista à esquerda (clique no ID abaixo do nome)</p>
-      </div>
+      <QuestionMultiSelector
+        selectedIds={(block as any).selectedQuestionIds || []}
+        onChange={(ids) => onChange(update(block, { selectedQuestionIds: ids }))}
+        questions={questions}
+        label="Perguntas a exibir"
+      />
       <Separator />
       <div className="space-y-2">
         <Label>Estilo</Label>
