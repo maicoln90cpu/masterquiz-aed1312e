@@ -723,6 +723,42 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         variant: 'promo',
         dismissible: false,
       } as BannerBlock;
+
+    case 'answerSummary':
+      return {
+        ...baseBlock,
+        type: 'answerSummary',
+        title: '📋 Resumo das suas respostas',
+        subtitle: 'De acordo com suas respostas, preparamos algo personalizado para você!',
+        style: 'card',
+        showQuestionText: true,
+        showIcon: true,
+      } as AnswerSummaryBlock;
+
+    case 'progressMessage':
+      return {
+        ...baseBlock,
+        type: 'progressMessage',
+        messages: [
+          { threshold: 25, text: '🚀 Ótimo começo! Continue assim.' },
+          { threshold: 50, text: '💪 Você já está na metade! Falta pouco.' },
+          { threshold: 75, text: '🔥 Quase lá! Só mais algumas perguntas.' },
+          { threshold: 100, text: '🎉 Parabéns! Você completou tudo!' },
+        ],
+        style: 'card',
+        icon: '💬',
+      } as ProgressMessageBlock;
+
+    case 'avatarGroup':
+      return {
+        ...baseBlock,
+        type: 'avatarGroup',
+        count: 1234,
+        label: 'pessoas já fizeram este quiz',
+        maxVisible: 5,
+        showCount: true,
+        avatarStyle: 'circle',
+      } as AvatarGroupBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
