@@ -220,6 +220,10 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
                block.type === 'banner' ? '🚩 Banner/Faixa' :
                block.type === 'answerSummary' ? '📋 Resumo de Respostas' :
                block.type === 'progressMessage' ? '💬 Mensagem de Progresso' :
+               block.type === 'avatarGroup' ? '👥 Grupo de Avatares' :
+               block.type === 'conditionalText' ? '🔀 Texto Condicional' :
+               block.type === 'comparisonResult' ? '⚖️ Comparação Dinâmica' :
+               block.type === 'personalizedCTA' ? '🎯 CTA Personalizado' :
                '👥 Grupo de Avatares'}
             </p>
             <p className="text-sm text-muted-foreground">Configure no painel de propriedades →</p>
