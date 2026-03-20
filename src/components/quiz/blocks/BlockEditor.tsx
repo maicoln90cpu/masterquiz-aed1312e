@@ -30,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Trash2, Type, Minus, Image, Video, Music, Images, Code, HelpCircle, Eye, Blocks, CheckCircle2, AlertCircle, SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell } from "lucide-react";
+import { Plus, Trash2, Type, Minus, Image, Video, Music, Images, Code, HelpCircle, Eye, Blocks, CheckCircle2, AlertCircle, SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell, MousePointerClick, DollarSign, BarChart3, Loader2, TrendingUp, Timer, AlertTriangle, List, Quote, Award, Flag } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { createBlock, normalizeBlock } from "@/types/blocks";
 import { BlockTemplates } from "./BlockTemplates";
