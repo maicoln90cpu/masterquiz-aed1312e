@@ -72,6 +72,9 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       case 'answerSummary': return <Type className="h-3 w-3" />;
       case 'progressMessage': return <TrendingUp className="h-3 w-3" />;
       case 'avatarGroup': return <Bell className="h-3 w-3" />;
+      case 'conditionalText': return <Type className="h-3 w-3" />;
+      case 'comparisonResult': return <Columns className="h-3 w-3" />;
+      case 'personalizedCTA': return <Bell className="h-3 w-3" />;
     }
   };
 
