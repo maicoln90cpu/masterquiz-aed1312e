@@ -18,6 +18,10 @@ import {
   NPSBlockPreview, AccordionBlockPreview, ComparisonBlockPreview,
   SocialProofBlockPreview, AnimatedCounterBlockPreview,
 } from "./preview/InteractiveBlockPreviews";
+import {
+  CalloutBlockPreview, IconListBlockPreview, QuoteBlockPreview,
+  BadgeRowBlockPreview, BannerBlockPreview,
+} from "./preview/VisualBlockPreviews";
 
 // ✅ FASE 12: Lazy load MetricsBlockPreview (recharts é pesado ~200KB)
 const LazyMetricsBlockPreview = lazy(() =>
