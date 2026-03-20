@@ -377,6 +377,9 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       quote: 'Citação',
       badgeRow: 'Selos/Badges',
       banner: 'Banner/Faixa',
+      answerSummary: 'Resumo de Respostas',
+      progressMessage: 'Mensagem de Progresso',
+      avatarGroup: 'Grupo de Avatares',
     };
     
     toast.success(

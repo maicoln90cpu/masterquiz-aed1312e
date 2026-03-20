@@ -81,6 +81,9 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   quote: 'Citação',
   badgeRow: 'Selos/Badges',
   banner: 'Banner/Faixa',
+  answerSummary: 'Resumo de Respostas',
+  progressMessage: 'Mensagem de Progresso',
+  avatarGroup: 'Grupo de Avatares',
 };
 
 // Helper to update block with type safety

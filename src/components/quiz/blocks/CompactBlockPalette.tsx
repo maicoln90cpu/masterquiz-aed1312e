@@ -101,6 +101,9 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       quote: 'Citação',
       badgeRow: 'Selos/Badges',
       banner: 'Banner/Faixa',
+      answerSummary: 'Resumo de Respostas',
+      progressMessage: 'Mensagem de Progresso',
+      avatarGroup: 'Grupo de Avatares',
     };
     return labels[type];
   };
