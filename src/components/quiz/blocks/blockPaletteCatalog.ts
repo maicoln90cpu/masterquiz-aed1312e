@@ -2,7 +2,7 @@ import {
   HelpCircle, Type, Minus, Image, Video, Music, Images, Code,
   SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell,
   MousePointerClick, DollarSign, BarChart3, Loader2, TrendingUp, Timer,
-  AlertTriangle, List, Quote, Award, Flag, ClipboardList, Users, GitBranch, ArrowRightLeft
+  AlertTriangle, List, Quote, Award, Flag, ClipboardList, Users, GitBranch, ArrowRightLeft, Calculator
 } from "lucide-react";
 import type { BlockType } from "@/types/blocks";
 import type { LucideIcon } from "lucide-react";
@@ -49,6 +49,7 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'price', icon: DollarSign, labelKey: 'createQuiz.blocks.price', defaultLabel: 'Preço' },
       { type: 'metrics', icon: BarChart3, labelKey: 'createQuiz.blocks.metrics', defaultLabel: 'Métricas/Gráfico' },
       { type: 'loading', icon: Loader2, labelKey: 'createQuiz.blocks.loading', defaultLabel: 'Loading/Carregamento' },
+      { type: 'calculator', icon: Calculator, labelKey: 'createQuiz.blocks.calculator', defaultLabel: 'Calculadora' },
     ],
   },
   {

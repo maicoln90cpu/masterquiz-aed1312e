@@ -34,7 +34,8 @@ export type BlockType =
   | 'conditionalText'
   | 'comparisonResult'
   | 'personalizedCTA'
-  | 'recommendation';
+  | 'recommendation'
+  | 'calculator';
 
 export interface BaseBlock {
   id: string;
@@ -433,6 +434,27 @@ export interface RecommendationBlock extends BaseBlock {
   fallbackText?: string;
 }
 
+export interface CalculatorBlock extends BaseBlock {
+  type: 'calculator';
+  formula: string;
+  variables: {
+    id: string;
+    name: string;
+    sourceQuestionId?: string;
+    defaultValue?: number;
+  }[];
+  resultUnit?: string;
+  resultPrefix?: string;
+  decimalPlaces?: number;
+  resultLabel?: string;
+  ranges?: {
+    min: number;
+    max: number;
+    label: string;
+    color?: string;
+  }[];
+}
+
 export type QuizBlock =
   | QuestionBlock
   | TextBlock
@@ -467,7 +489,8 @@ export type QuizBlock =
   | ConditionalTextBlock
   | ComparisonResultBlock
   | PersonalizedCTABlock
-  | RecommendationBlock;
+  | RecommendationBlock
+  | CalculatorBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
@@ -888,6 +911,19 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         showScore: false,
         fallbackText: 'Não encontramos uma recomendação específica para você.',
       } as RecommendationBlock;
+
+    case 'calculator':
+      return {
+        ...baseBlock,
+        type: 'calculator',
+        formula: '',
+        variables: [],
+        resultUnit: '',
+        resultPrefix: '',
+        decimalPlaces: 2,
+        resultLabel: 'Resultado',
+        ranges: [],
+      } as CalculatorBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
@@ -1123,6 +1159,16 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         style: block.style || 'card',
         showScore: block.showScore || false,
         fallbackText: block.fallbackText || 'Nenhuma recomendação encontrada.',
+      };
+    case 'calculator':
+      return {
+        ...block,
+        formula: block.formula || '',
+        variables: Array.isArray(block.variables) ? block.variables : [],
+        resultUnit: block.resultUnit || '',
+        decimalPlaces: block.decimalPlaces ?? 2,
+        resultLabel: block.resultLabel || 'Resultado',
+        ranges: Array.isArray(block.ranges) ? block.ranges : [],
       };
     default:
       return block;

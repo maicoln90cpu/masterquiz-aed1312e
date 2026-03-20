@@ -177,6 +177,7 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   comparisonResult: <Columns className="h-4 w-4" />,
   personalizedCTA: <MousePointer className="h-4 w-4" />,
   recommendation: <Star className="h-4 w-4" />,
+  calculator: <BarChart3 className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
@@ -214,6 +215,7 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   comparisonResult: 'Comparação Dinâmica',
   personalizedCTA: 'CTA Personalizado',
   recommendation: 'Recomendação',
+  calculator: 'Calculadora',
 };
 
 // Helper to update block with type safety
@@ -1679,9 +1681,158 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
   );
 };
 
-// ============================================
-// MAIN PANEL COMPONENT
-// ============================================
+// ---- Calculator Properties ----
+const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'calculator') return null;
+  
+  const addVariable = () => {
+    const vars = [...(block.variables || [])];
+    vars.push({ id: `var-${Date.now()}`, name: `var${vars.length + 1}`, defaultValue: 0 });
+    onChange(update(block, { variables: vars }));
+  };
+
+  const updateVariable = (idx: number, field: string, value: any) => {
+    const vars = [...(block.variables || [])];
+    vars[idx] = { ...vars[idx], [field]: value };
+    onChange(update(block, { variables: vars }));
+  };
+
+  const removeVariable = (idx: number) => {
+    const vars = (block.variables || []).filter((_: any, i: number) => i !== idx);
+    onChange(update(block, { variables: vars }));
+  };
+
+  const addRange = () => {
+    const ranges = [...(block.ranges || [])];
+    ranges.push({ min: 0, max: 100, label: 'Faixa', color: '#3b82f6' });
+    onChange(update(block, { ranges: ranges }));
+  };
+
+  const updateRange = (idx: number, field: string, value: any) => {
+    const ranges = [...(block.ranges || [])];
+    ranges[idx] = { ...ranges[idx], [field]: value };
+    onChange(update(block, { ranges: ranges }));
+  };
+
+  const removeRange = (idx: number) => {
+    const ranges = (block.ranges || []).filter((_: any, i: number) => i !== idx);
+    onChange(update(block, { ranges: ranges }));
+  };
+
+  return (
+    <div className="space-y-4">
+      <PropertySection title="Fórmula">
+        <Input
+          value={block.formula || ''}
+          placeholder="Ex: (var1 * var2) / 100"
+          onChange={(e) => onChange(update(block, { formula: e.target.value }))}
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">Use nomes das variáveis definidas abaixo</p>
+      </PropertySection>
+
+      <PropertySection title="Label do Resultado">
+        <Input
+          value={block.resultLabel || ''}
+          placeholder="Resultado"
+          onChange={(e) => onChange(update(block, { resultLabel: e.target.value }))}
+        />
+      </PropertySection>
+
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Prefixo">
+          <Input
+            value={block.resultPrefix || ''}
+            placeholder="R$"
+            onChange={(e) => onChange(update(block, { resultPrefix: e.target.value }))}
+          />
+        </PropertySection>
+        <PropertySection title="Unidade">
+          <Input
+            value={block.resultUnit || ''}
+            placeholder="kg, %, etc."
+            onChange={(e) => onChange(update(block, { resultUnit: e.target.value }))}
+          />
+        </PropertySection>
+      </div>
+
+      <PropertySection title="Casas Decimais">
+        <Select value={String(block.decimalPlaces ?? 2)} onValueChange={(v) => onChange(update(block, { decimalPlaces: Number(v) }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="0">0</SelectItem>
+            <SelectItem value="1">1</SelectItem>
+            <SelectItem value="2">2</SelectItem>
+            <SelectItem value="3">3</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+
+      <Separator />
+
+      {/* Variables */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-semibold">Variáveis</Label>
+          <button type="button" className="text-xs text-primary underline" onClick={addVariable}>+ Adicionar</button>
+        </div>
+        {(block.variables || []).map((v: any, idx: number) => (
+          <div key={v.id} className="border rounded-md p-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">Var {idx + 1}</span>
+              <button type="button" className="text-xs text-destructive" onClick={() => removeVariable(idx)}>✕</button>
+            </div>
+            <Input
+              placeholder="Nome (ex: peso)"
+              value={v.name || ''}
+              onChange={(e) => updateVariable(idx, 'name', e.target.value)}
+              className="h-7 text-xs"
+            />
+            <QuestionSelector
+              value={v.sourceQuestionId || ''}
+              onChange={(id) => updateVariable(idx, 'sourceQuestionId', id)}
+              questions={questions}
+              label="Pergunta-Fonte"
+              placeholder="Opcional"
+            />
+            <Input
+              type="number"
+              placeholder="Valor padrão"
+              value={v.defaultValue ?? ''}
+              onChange={(e) => updateVariable(idx, 'defaultValue', Number(e.target.value))}
+              className="h-7 text-xs"
+            />
+          </div>
+        ))}
+      </div>
+
+      <Separator />
+
+      {/* Ranges */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-semibold">Faixas de Resultado</Label>
+          <button type="button" className="text-xs text-primary underline" onClick={addRange}>+ Adicionar</button>
+        </div>
+        {(block.ranges || []).map((r: any, idx: number) => (
+          <div key={idx} className="border rounded-md p-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">Faixa {idx + 1}</span>
+              <button type="button" className="text-xs text-destructive" onClick={() => removeRange(idx)}>✕</button>
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              <Input type="number" placeholder="Mín" value={r.min ?? ''} onChange={(e) => updateRange(idx, 'min', Number(e.target.value))} className="h-7 text-xs" />
+              <Input type="number" placeholder="Máx" value={r.max ?? ''} onChange={(e) => updateRange(idx, 'max', Number(e.target.value))} className="h-7 text-xs" />
+            </div>
+            <Input placeholder="Label (ex: Baixo)" value={r.label || ''} onChange={(e) => updateRange(idx, 'label', e.target.value)} className="h-7 text-xs" />
+            <Input type="color" value={r.color || '#3b82f6'} onChange={(e) => updateRange(idx, 'color', e.target.value)} className="h-7" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
 
 export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: BlockPropertiesPanelProps) => {
   const block = normalizeBlock(rawBlock);
@@ -1724,6 +1875,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
       case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} questions={questions} />;
       case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} questions={questions} />;
       case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} questions={questions} />;
+      case 'calculator': return <CalculatorProperties block={block} onChange={onChange} questions={questions} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };

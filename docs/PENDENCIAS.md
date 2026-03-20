@@ -4,6 +4,31 @@
 
 ---
 
+## ✅ v2.36.0 - Fix Preview Atual + Bloco Calculadora (20/03/2026)
+
+### Bug Fix: Preview Atual sempre mostrava pergunta 1
+- **Causa**: `useQuizPreviewState` inicializava `internalQuestionIndex = 0` e o `useEffect` com ref não detectava mudança no mount.
+- **Correção**: Inicializa com `externalQuestionIndex ?? 0`, força `currentStep = 'quiz'` quando `externalQuestionIndex` é fornecido, e `showIntroScreen={false}` no Preview Atual.
+
+### Feature: Bloco Calculadora
+- Novo tipo `calculator` registrado em `BlockType` com interface `CalculatorBlock`.
+- Campos: fórmula, variáveis (com pergunta-fonte), unidade, prefixo, casas decimais, faixas de resultado.
+- Adicionado ao catálogo (`blockPaletteCatalog.ts`), dropdown do editor, painel de propriedades, e preview.
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/hooks/useQuizPreviewState.ts` | Fix init index + force quiz step |
+| `src/pages/CreateQuizModern.tsx` | `showIntroScreen={false}` no Preview Atual |
+| `src/types/blocks.ts` | +`calculator` type, +`CalculatorBlock` interface, +createBlock, +normalizeBlock |
+| `src/components/quiz/blocks/blockPaletteCatalog.ts` | +Calculadora na seção Avançado |
+| `src/components/quiz/blocks/BlockEditor.tsx` | +calculator no dropdown, renderBlock, isBlockComplete |
+| `src/components/quiz/blocks/BlockPropertiesPanel.tsx` | +CalculatorProperties panel completo |
+| `src/components/quiz/blocks/CompactBlockPalette.tsx` | +calculator icon e label |
+| `src/components/quiz/QuizBlockPreview.tsx` | +calculator case no preview |
+
+---
+
 ## ✅ v2.35.0 - Seletor Inteligente de Perguntas nos Blocos (20/03/2026)
 
 ### Melhoria: Dropdown de Perguntas no Painel de Propriedades

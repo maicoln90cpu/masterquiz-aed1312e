@@ -149,6 +149,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'comparisonResult':
       case 'personalizedCTA':
       case 'recommendation':
+      case 'calculator':
         return true;
       default:
         return false;
@@ -227,6 +228,15 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
         return <PersonalizedCTABlockPreviewInline block={block as any} />;
       case 'recommendation':
         return <RecommendationBlockPreviewInline block={block as any} />;
+      case 'calculator':
+        return (
+          <div className="p-4 bg-muted/50 rounded-lg border text-center">
+            <p className="text-sm font-medium">🧮 Calculadora</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {(block as any).formula ? `Fórmula: ${(block as any).formula}` : 'Configure a fórmula nas propriedades'}
+            </p>
+          </div>
+        );
       default:
         return null;
     }
@@ -401,6 +411,7 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       comparisonResult: 'Comparação Dinâmica',
       personalizedCTA: 'CTA Personalizado',
       recommendation: 'Recomendação',
+      calculator: 'Calculadora',
     };
     
     toast.success(
@@ -632,6 +643,10 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               <DropdownMenuItem onClick={() => addBlock('recommendation')}>
                 <Star className="h-4 w-4 mr-2" />
                 Recomendação
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('calculator')}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Calculadora
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
