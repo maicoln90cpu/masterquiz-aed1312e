@@ -271,6 +271,7 @@ export interface AccordionBlock extends BaseBlock {
   }[];
   style?: 'default' | 'minimal' | 'bordered';
   allowMultiple?: boolean;
+  iconType?: 'chevron' | 'plus'; // ✅ Etapa 2C: Ícone customizável
 }
 
 export interface ComparisonBlock extends BaseBlock {
