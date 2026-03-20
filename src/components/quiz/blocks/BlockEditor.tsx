@@ -139,6 +139,9 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'quote':
       case 'badgeRow':
       case 'banner':
+      case 'answerSummary':
+      case 'progressMessage':
+      case 'avatarGroup':
         return true;
       default:
         return false;
