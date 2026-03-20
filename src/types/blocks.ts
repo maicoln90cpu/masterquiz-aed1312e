@@ -342,7 +342,7 @@ export interface QuoteBlock extends BaseBlock {
 
 export interface BadgeRowBlock extends BaseBlock {
   type: 'badgeRow';
-  badges: { icon: string; text: string }[];
+  badges: { icon: string; text: string; tooltip?: string; color?: string }[]; // ✅ Etapa 2C: Tooltip + cor individual
   variant?: 'outline' | 'filled';
   size?: 'sm' | 'md' | 'lg';
 }
