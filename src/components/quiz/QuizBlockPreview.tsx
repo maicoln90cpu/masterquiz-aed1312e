@@ -25,6 +25,7 @@ import {
 } from "./preview/VisualBlockPreviews";
 import {
   AnswerSummaryBlockPreview, ProgressMessageBlockPreview, AvatarGroupBlockPreview,
+  ConditionalTextBlockPreview, ComparisonResultBlockPreview, PersonalizedCTABlockPreview,
 } from "./preview/DynamicBlockPreviews";
 
 // ✅ FASE 12: Lazy load MetricsBlockPreview (recharts é pesado ~200KB)
