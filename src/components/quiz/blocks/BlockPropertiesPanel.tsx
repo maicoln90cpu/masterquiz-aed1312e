@@ -821,6 +821,16 @@ const AccordionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
           </SelectContent>
         </Select>
       </PropertySection>
+      {/* ✅ Etapa 2C: Ícone customizável */}
+      <PropertySection title="Ícone">
+        <Select value={block.iconType || 'chevron'} onValueChange={(v) => onChange(update(block, { iconType: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="chevron">▼ Seta</SelectItem>
+            <SelectItem value="plus">＋/－ Plus/Minus</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
       <SwitchRow label="Permitir múltiplos abertos" checked={block.allowMultiple || false} onChange={(v) => onChange(update(block, { allowMultiple: v }))} />
     </div>
   );
