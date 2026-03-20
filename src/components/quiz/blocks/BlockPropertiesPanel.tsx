@@ -51,6 +51,9 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   answerSummary: <List className="h-4 w-4" />,
   progressMessage: <TrendingUp className="h-4 w-4" />,
   avatarGroup: <Users className="h-4 w-4" />,
+  conditionalText: <Type className="h-4 w-4" />,
+  comparisonResult: <Columns className="h-4 w-4" />,
+  personalizedCTA: <MousePointer className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
