@@ -453,6 +453,7 @@ export interface RecommendationBlock extends BaseBlock {
   style?: 'card' | 'list' | 'grid';
   showScore?: boolean;
   fallbackText?: string;
+  maxDisplay?: number; // ✅ Etapa 2D: Limite máximo de exibição
 }
 
 export interface CalculatorBlock extends BaseBlock {
