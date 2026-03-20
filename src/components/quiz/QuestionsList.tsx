@@ -1,12 +1,13 @@
 import React, { useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { FileQuestion, Plus, Trash2, AlertCircle, Edit3 } from "lucide-react";
+import { FileQuestion, Plus, Trash2, AlertCircle, Edit3, Copy } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface QuestionsListProps {
   questions: any[];
