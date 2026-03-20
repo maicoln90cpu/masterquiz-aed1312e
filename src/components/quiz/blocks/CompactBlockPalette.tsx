@@ -107,6 +107,9 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       answerSummary: 'Resumo de Respostas',
       progressMessage: 'Mensagem de Progresso',
       avatarGroup: 'Grupo de Avatares',
+      conditionalText: 'Texto Condicional',
+      comparisonResult: 'Comparação Dinâmica',
+      personalizedCTA: 'CTA Personalizado',
     };
     return labels[type];
   };

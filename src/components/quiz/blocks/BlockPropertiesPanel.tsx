@@ -87,6 +87,9 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   answerSummary: 'Resumo de Respostas',
   progressMessage: 'Mensagem de Progresso',
   avatarGroup: 'Grupo de Avatares',
+  conditionalText: 'Texto Condicional',
+  comparisonResult: 'Comparação Dinâmica',
+  personalizedCTA: 'CTA Personalizado',
 };
 
 // Helper to update block with type safety

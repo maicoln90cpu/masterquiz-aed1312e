@@ -389,6 +389,9 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       answerSummary: 'Resumo de Respostas',
       progressMessage: 'Mensagem de Progresso',
       avatarGroup: 'Grupo de Avatares',
+      conditionalText: 'Texto Condicional',
+      comparisonResult: 'Comparação Dinâmica',
+      personalizedCTA: 'CTA Personalizado',
     };
     
     toast.success(

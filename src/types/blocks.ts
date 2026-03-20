@@ -1034,6 +1034,31 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         showCount: block.showCount !== false,
         avatarStyle: block.avatarStyle || 'circle',
       };
+    case 'conditionalText':
+      return {
+        ...block,
+        conditions: Array.isArray(block.conditions) ? block.conditions : [],
+        fallbackText: block.fallbackText || '',
+        style: block.style || 'default',
+      };
+    case 'comparisonResult':
+      return {
+        ...block,
+        beforeTitle: block.beforeTitle || 'Antes',
+        afterTitle: block.afterTitle || 'Depois',
+        beforeItems: Array.isArray(block.beforeItems) ? block.beforeItems : ['Item 1'],
+        afterItems: Array.isArray(block.afterItems) ? block.afterItems : ['Item 1'],
+        showIcons: block.showIcons !== false,
+      };
+    case 'personalizedCTA':
+      return {
+        ...block,
+        textTemplate: block.textTemplate || 'Clique aqui',
+        variant: block.variant || 'default',
+        size: block.size || 'lg',
+        conditions: Array.isArray(block.conditions) ? block.conditions : [],
+        fallbackText: block.fallbackText || 'Ver mais',
+      };
     default:
       return block;
   }
