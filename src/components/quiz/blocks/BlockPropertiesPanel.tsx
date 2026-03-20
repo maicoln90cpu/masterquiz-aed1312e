@@ -1026,6 +1026,116 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   );
 };
 
+// ---- ANSWER SUMMARY ----
+const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'answerSummary') return null;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Título</Label>
+        <Input value={block.title || ''} onChange={(e) => onChange(update(block, { title: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Subtítulo</Label>
+        <Input value={block.subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Estilo</Label>
+        <Select value={block.style || 'card'} onValueChange={(v) => onChange(update(block, { style: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="card">Card</SelectItem>
+            <SelectItem value="list">Lista</SelectItem>
+            <SelectItem value="minimal">Minimalista</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar texto da pergunta</Label>
+        <Switch checked={block.showQuestionText !== false} onCheckedChange={(v) => onChange(update(block, { showQuestionText: v }))} />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar ícones</Label>
+        <Switch checked={block.showIcon !== false} onCheckedChange={(v) => onChange(update(block, { showIcon: v }))} />
+      </div>
+    </div>
+  );
+};
+
+// ---- PROGRESS MESSAGE ----
+const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'progressMessage') return null;
+  const messages = (block as any).messages || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Estilo</Label>
+        <Select value={(block as any).style || 'card'} onValueChange={(v) => onChange(update(block, { style: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="card">Card</SelectItem>
+            <SelectItem value="inline">Inline</SelectItem>
+            <SelectItem value="toast">Toast/Pill</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Separator />
+      <Label>Mensagens por % de progresso</Label>
+      {messages.map((msg: any, idx: number) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <Input className="w-16" type="number" min={0} max={100} value={msg.threshold} onChange={(e) => {
+            const newMsgs = [...messages];
+            newMsgs[idx] = { ...msg, threshold: Number(e.target.value) };
+            onChange(update(block, { messages: newMsgs }));
+          }} />
+          <span className="text-xs text-muted-foreground">%</span>
+          <Input className="flex-1" value={msg.text} onChange={(e) => {
+            const newMsgs = [...messages];
+            newMsgs[idx] = { ...msg, text: e.target.value };
+            onChange(update(block, { messages: newMsgs }));
+          }} />
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '' }] }))}>+ Adicionar mensagem</button>
+    </div>
+  );
+};
+
+// ---- AVATAR GROUP ----
+const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'avatarGroup') return null;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Número de pessoas</Label>
+        <Input type="number" value={(block as any).count || 1234} onChange={(e) => onChange(update(block, { count: Number(e.target.value) }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Texto/Label</Label>
+        <Input value={(block as any).label || ''} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Avatares visíveis</Label>
+        <Input type="number" min={1} max={8} value={(block as any).maxVisible || 5} onChange={(e) => onChange(update(block, { maxVisible: Number(e.target.value) }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Formato</Label>
+        <Select value={(block as any).avatarStyle || 'circle'} onValueChange={(v) => onChange(update(block, { avatarStyle: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="circle">Circular</SelectItem>
+            <SelectItem value="square">Quadrado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar contador</Label>
+        <Switch checked={(block as any).showCount !== false} onCheckedChange={(v) => onChange(update(block, { showCount: v }))} />
+      </div>
+    </div>
+  );
+};
+
 // ============================================
 // MAIN PANEL COMPONENT
 // ============================================
