@@ -164,7 +164,7 @@ export function QuizViewQuestion({
                 onNavigateToQuestion={() => {}}
                 wrapInCard={false}
                 answers={answers}
-                questions={quiz.questions?.slice(0, currentStep) || []}
+                questions={(quiz as any).questions?.slice(0, currentStep) || []}
                 currentStep={currentStep}
                 totalQuestions={totalQuestions}
               />
