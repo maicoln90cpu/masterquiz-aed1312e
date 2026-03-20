@@ -91,6 +91,7 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   conditionalText: 'Texto Condicional',
   comparisonResult: 'Comparação Dinâmica',
   personalizedCTA: 'CTA Personalizado',
+  recommendation: 'Recomendação',
 };
 
 // Helper to update block with type safety
