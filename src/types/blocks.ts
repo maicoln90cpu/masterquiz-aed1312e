@@ -394,7 +394,10 @@ export type QuizBlock =
   | IconListBlock
   | QuoteBlock
   | BadgeRowBlock
-  | BannerBlock;
+  | BannerBlock
+  | AnswerSummaryBlock
+  | ProgressMessageBlock
+  | AvatarGroupBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
