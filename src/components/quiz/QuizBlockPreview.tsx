@@ -150,6 +150,12 @@ export const QuizBlockPreview = ({
         return <BadgeRowBlockPreview key={block.id} block={block as QuizBlock & { type: 'badgeRow' }} />;
       case "banner":
         return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} />;
+      case "answerSummary":
+        return <AnswerSummaryBlockPreview key={block.id} block={block as QuizBlock & { type: 'answerSummary' }} answers={answers} questions={questions} />;
+      case "progressMessage":
+        return <ProgressMessageBlockPreview key={block.id} block={block as QuizBlock & { type: 'progressMessage' }} currentStep={currentStep} totalQuestions={totalQuestions} />;
+      case "avatarGroup":
+        return <AvatarGroupBlockPreview key={block.id} block={block as QuizBlock & { type: 'avatarGroup' }} />;
       default:
         return null;
     }
