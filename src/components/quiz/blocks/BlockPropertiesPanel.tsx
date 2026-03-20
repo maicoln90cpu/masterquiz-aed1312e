@@ -54,6 +54,7 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   conditionalText: <Type className="h-4 w-4" />,
   comparisonResult: <Columns className="h-4 w-4" />,
   personalizedCTA: <MousePointer className="h-4 w-4" />,
+  recommendation: <Star className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
