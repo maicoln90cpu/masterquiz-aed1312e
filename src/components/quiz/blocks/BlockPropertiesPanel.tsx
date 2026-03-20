@@ -1875,6 +1875,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
       case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} questions={questions} />;
       case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} questions={questions} />;
       case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} questions={questions} />;
+      case 'calculator': return <CalculatorProperties block={block} onChange={onChange} questions={questions} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
