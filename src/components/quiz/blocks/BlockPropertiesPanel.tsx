@@ -982,6 +982,13 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
         <Input type="color" value={block.color || '#3b82f6'} onChange={(e) => onChange(update(block, { color: e.target.value }))} />
       </PropertySection>
       <SwitchRow label="Separador de milhar" checked={block.separator || false} onChange={(v) => onChange(update(block, { separator: v }))} />
+      {/* ✅ Etapa 2D: Formato de moeda */}
+      <SwitchRow label="Formato moeda (R$)" checked={(block as any).currencyFormat || false} onChange={(v) => onChange(update(block, { currencyFormat: v }))} />
+      {(block as any).currencyFormat && (
+        <PropertySection title="Casas decimais">
+          <Input type="number" min={0} max={4} value={(block as any).decimalPlaces || 2} onChange={(e) => onChange(update(block, { decimalPlaces: Number(e.target.value) }))} />
+        </PropertySection>
+      )}
     </div>
   );
 };
