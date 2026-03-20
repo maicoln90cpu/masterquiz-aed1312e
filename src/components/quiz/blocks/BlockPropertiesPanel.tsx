@@ -15,10 +15,132 @@ import {
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
 
+interface QuestionInfo {
+  id: string;
+  question_text?: string;
+  custom_label?: string;
+  blocks?: any[];
+}
+
 interface BlockPropertiesPanelProps {
   block: QuizBlock;
   onChange: (block: QuizBlock) => void;
+  questions?: QuestionInfo[];
 }
+
+// ---- Reusable Question Selector (dropdown) ----
+const QuestionSelector = ({ value, onChange, questions, label = 'Pergunta-Fonte', placeholder = 'Selecione uma pergunta' }: {
+  value: string;
+  onChange: (id: string) => void;
+  questions?: QuestionInfo[];
+  label?: string;
+  placeholder?: string;
+}) => {
+  const getQuestionLabel = (q: QuestionInfo, idx: number) => {
+    const qBlock = q.blocks?.find((b: any) => b.type === 'question');
+    const text = q.custom_label || qBlock?.questionText || q.question_text || '';
+    const clean = text.replace(/<[^>]*>/g, '').trim();
+    return `P${idx + 1}: ${clean.substring(0, 40)}${clean.length > 40 ? '...' : ''}`;
+  };
+
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Cole o ID da pergunta" />
+        <p className="text-[10px] text-muted-foreground">Copie o ID na lista de perguntas à esquerda</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Select value={value || '_none'} onValueChange={(v) => onChange(v === '_none' ? '' : v)}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="_none">{placeholder}</SelectItem>
+          {questions.map((q, idx) => (
+            <SelectItem key={q.id} value={q.id}>
+              {getQuestionLabel(q, idx)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
+// ---- Multi-select for filtering questions (checkboxes) ----
+const QuestionMultiSelector = ({ selectedIds, onChange, questions, label = 'Filtrar perguntas' }: {
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+  questions?: QuestionInfo[];
+  label?: string;
+}) => {
+  const getQuestionLabel = (q: QuestionInfo, idx: number) => {
+    const qBlock = q.blocks?.find((b: any) => b.type === 'question');
+    const text = q.custom_label || qBlock?.questionText || q.question_text || '';
+    const clean = text.replace(/<[^>]*>/g, '').trim();
+    return `P${idx + 1}: ${clean.substring(0, 35)}${clean.length > 35 ? '...' : ''}`;
+  };
+
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <Input
+          placeholder="IDs separados por vírgula"
+          value={selectedIds.join(', ')}
+          onChange={(e) => onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+        />
+      </div>
+    );
+  }
+
+  const toggleId = (id: string) => {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter(i => i !== id));
+    } else {
+      onChange([...selectedIds, id]);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>{label}</Label>
+        {selectedIds.length > 0 && (
+          <button className="text-[10px] text-primary underline" onClick={() => onChange([])}>Limpar</button>
+        )}
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        {selectedIds.length === 0 ? 'Todas as perguntas serão exibidas' : `${selectedIds.length} pergunta(s) selecionada(s)`}
+      </p>
+      <div className="max-h-40 overflow-y-auto border rounded-md p-1 space-y-0.5">
+        {questions.map((q, idx) => (
+          <button
+            key={q.id}
+            type="button"
+            onClick={() => toggleId(q.id)}
+            className={`w-full text-left text-xs px-2 py-1.5 rounded flex items-center gap-2 transition-colors ${
+              selectedIds.includes(q.id) ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'
+            }`}
+          >
+            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
+              selectedIds.includes(q.id) ? 'bg-primary border-primary' : 'border-border'
+            }`}>
+              {selectedIds.includes(q.id) && <span className="text-[8px] text-primary-foreground">✓</span>}
+            </div>
+            <span className="truncate">{getQuestionLabel(q, idx)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   question: <Settings2 className="h-4 w-4" />,
@@ -353,7 +475,7 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   );
 };
 
-const ButtonProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'button') return null;
   const dynConditions = (block as any).conditions || [];
   return (
@@ -398,13 +520,13 @@ const ButtonProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           Personalize o texto e URL do botão baseado em respostas do usuário. Use {'{resposta}'} no template.
         </p>
       </div>
-      <PropertySection title="ID da Pergunta-Fonte">
-        <Input
-          value={(block as any).sourceQuestionId || ''}
-          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
-          placeholder="Cole o ID da pergunta"
-        />
-      </PropertySection>
+      <QuestionSelector
+        value={(block as any).sourceQuestionId || ''}
+        onChange={(id) => onChange(update(block, { sourceQuestionId: id }))}
+        questions={questions}
+        label="Pergunta-Fonte (opcional)"
+        placeholder="Selecione uma pergunta"
+      />
       <PropertySection title="Template do texto">
         <Input
           value={(block as any).textTemplate || ''}
@@ -1081,13 +1203,13 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 };
 
 // ---- ANSWER SUMMARY ----
-const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const AnswerSummaryProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'answerSummary') return null;
   return (
     <div className="space-y-4">
       <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
         <p className="text-xs text-blue-800 dark:text-blue-200">
-          📋 Exibe um resumo das respostas do usuário. Você pode filtrar quais perguntas mostrar usando os IDs (copie na lista de perguntas).
+          📋 Exibe um resumo das respostas do usuário. Selecione quais perguntas mostrar abaixo.
         </p>
       </div>
       <div className="space-y-2">
@@ -1099,15 +1221,12 @@ const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps)
         <Input value={block.subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
       </div>
       <Separator />
-      <div className="space-y-2">
-        <Label>Filtrar perguntas (IDs separados por vírgula)</Label>
-        <Input
-          placeholder="Deixe vazio para mostrar todas"
-          value={((block as any).selectedQuestionIds || []).join(', ')}
-          onChange={(e) => onChange(update(block, { selectedQuestionIds: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
-        />
-        <p className="text-xs text-muted-foreground">Copie os IDs das perguntas na lista à esquerda (clique no ID abaixo do nome)</p>
-      </div>
+      <QuestionMultiSelector
+        selectedIds={(block as any).selectedQuestionIds || []}
+        onChange={(ids) => onChange(update(block, { selectedQuestionIds: ids }))}
+        questions={questions}
+        label="Perguntas a exibir"
+      />
       <Separator />
       <div className="space-y-2">
         <Label>Estilo</Label>
@@ -1212,20 +1331,18 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
 };
 
 // ---- CONDITIONAL TEXT ----
-const ConditionalTextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const ConditionalTextProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'conditionalText') return null;
   const conditions = (block as any).conditions || [];
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>ID da Pergunta-Fonte</Label>
-        <Input
-          placeholder="Cole o ID da pergunta aqui"
-          value={(block as any).sourceQuestionId || ''}
-          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
-        />
-        <p className="text-xs text-muted-foreground">O ID aparece no editor ao selecionar uma pergunta</p>
-      </div>
+      <QuestionSelector
+        value={(block as any).sourceQuestionId || ''}
+        onChange={(id) => onChange(update(block, { sourceQuestionId: id }))}
+        questions={questions}
+        label="Pergunta-Fonte"
+        placeholder="Selecione a pergunta"
+      />
       <div className="space-y-2">
         <Label>Estilo</Label>
         <Select value={(block as any).style || 'default'} onValueChange={(v) => onChange(update(block, { style: v }))}>
@@ -1267,7 +1384,7 @@ const ConditionalTextProperties = ({ block, onChange }: BlockPropertiesPanelProp
 };
 
 // ---- COMPARISON RESULT ----
-const ComparisonResultProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'comparisonResult') return null;
   const beforeItems = (block as any).beforeItems || [];
   const afterItems = (block as any).afterItems || [];
@@ -1311,21 +1428,19 @@ const ComparisonResultProperties = ({ block, onChange }: BlockPropertiesPanelPro
       ))}
       <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { afterItems: [...afterItems, ''] }))}>+ Adicionar item</button>
       <Separator />
-      <div className="space-y-2">
-        <Label>IDs das perguntas-fonte (opcional, separados por vírgula)</Label>
-        <Input
-          placeholder="id1, id2"
-          value={((block as any).sourceQuestionIds || []).join(', ')}
-          onChange={(e) => onChange(update(block, { sourceQuestionIds: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
-        />
-        <p className="text-xs text-muted-foreground">Use {'{resposta1}'}, {'{resposta2}'} nos itens para substituir com respostas</p>
-      </div>
+      <QuestionMultiSelector
+        selectedIds={(block as any).sourceQuestionIds || []}
+        onChange={(ids) => onChange(update(block, { sourceQuestionIds: ids }))}
+        questions={questions}
+        label="Perguntas-fonte (para placeholders)"
+      />
+      <p className="text-[10px] text-muted-foreground">Use {'{resposta1}'}, {'{resposta2}'} nos itens para substituir com respostas</p>
     </div>
   );
 };
 
 // ---- PERSONALIZED CTA ----
-const PersonalizedCTAProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const PersonalizedCTAProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'personalizedCTA') return null;
   const conditions = (block as any).conditions || [];
   return (
@@ -1339,14 +1454,13 @@ const PersonalizedCTAProperties = ({ block, onChange }: BlockPropertiesPanelProp
         />
         <p className="text-xs text-muted-foreground">Use {'{resposta}'} para inserir a resposta do usuário</p>
       </div>
-      <div className="space-y-2">
-        <Label>ID da Pergunta-Fonte</Label>
-        <Input
-          value={(block as any).sourceQuestionId || ''}
-          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
-          placeholder="Cole o ID da pergunta"
-        />
-      </div>
+      <QuestionSelector
+        value={(block as any).sourceQuestionId || ''}
+        onChange={(id) => onChange(update(block, { sourceQuestionId: id }))}
+        questions={questions}
+        label="Pergunta-Fonte"
+        placeholder="Selecione a pergunta"
+      />
       <div className="space-y-2">
         <Label>URL do botão</Label>
         <Input value={(block as any).url || ''} onChange={(e) => onChange(update(block, { url: e.target.value }))} placeholder="https://..." />
@@ -1407,7 +1521,7 @@ const PersonalizedCTAProperties = ({ block, onChange }: BlockPropertiesPanelProp
 };
 
 // ---- RECOMMENDATION ----
-const RecommendationProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const RecommendationProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'recommendation') return null;
   const recommendations = (block as any).recommendations || [];
   return (
@@ -1496,28 +1610,57 @@ const RecommendationProperties = ({ block, onChange }: BlockPropertiesPanelProps
           <Separator />
           <Label className="text-xs">Regras de match</Label>
           {(rec.rules || []).map((rule: any, rIdx: number) => (
-            <div key={rIdx} className="flex gap-1 items-center text-xs">
-              <Input className="w-24 text-xs h-7" value={rule.questionId} placeholder="ID pergunta" onChange={(e) => {
-                const newRecs = [...recommendations];
-                const newRules = [...(rec.rules || [])];
-                newRules[rIdx] = { ...rule, questionId: e.target.value };
-                newRecs[idx] = { ...rec, rules: newRules };
-                onChange(update(block, { recommendations: newRecs }));
-              }} />
-              <Input className="flex-1 text-xs h-7" value={(rule.answers || []).join(', ')} placeholder="Respostas (separadas por vírgula)" onChange={(e) => {
-                const newRecs = [...recommendations];
-                const newRules = [...(rec.rules || [])];
-                newRules[rIdx] = { ...rule, answers: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) };
-                newRecs[idx] = { ...rec, rules: newRules };
-                onChange(update(block, { recommendations: newRecs }));
-              }} />
-              <Input className="w-14 text-xs h-7" type="number" value={rule.weight} placeholder="Peso" onChange={(e) => {
-                const newRecs = [...recommendations];
-                const newRules = [...(rec.rules || [])];
-                newRules[rIdx] = { ...rule, weight: Number(e.target.value) };
-                newRecs[idx] = { ...rec, rules: newRules };
-                onChange(update(block, { recommendations: newRecs }));
-              }} />
+            <div key={rIdx} className="space-y-1">
+              <div className="flex gap-1 items-center text-xs">
+                {questions && questions.length > 0 ? (
+                  <Select value={rule.questionId || '_none'} onValueChange={(v) => {
+                    const newRecs = [...recommendations];
+                    const newRules = [...(rec.rules || [])];
+                    newRules[rIdx] = { ...rule, questionId: v === '_none' ? '' : v };
+                    newRecs[idx] = { ...rec, rules: newRules };
+                    onChange(update(block, { recommendations: newRecs }));
+                  }}>
+                    <SelectTrigger className="w-32 h-7 text-xs">
+                      <SelectValue placeholder="Pergunta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Selecione</SelectItem>
+                      {questions.map((q, qIdx) => {
+                        const qBlock = q.blocks?.find((b: any) => b.type === 'question');
+                        const text = q.custom_label || qBlock?.questionText || q.question_text || '';
+                        const clean = text.replace(/<[^>]*>/g, '').trim();
+                        return (
+                          <SelectItem key={q.id} value={q.id}>
+                            P{qIdx + 1}: {clean.substring(0, 25)}{clean.length > 25 ? '...' : ''}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input className="w-24 text-xs h-7" value={rule.questionId} placeholder="ID pergunta" onChange={(e) => {
+                    const newRecs = [...recommendations];
+                    const newRules = [...(rec.rules || [])];
+                    newRules[rIdx] = { ...rule, questionId: e.target.value };
+                    newRecs[idx] = { ...rec, rules: newRules };
+                    onChange(update(block, { recommendations: newRecs }));
+                  }} />
+                )}
+                <Input className="flex-1 text-xs h-7" value={(rule.answers || []).join(', ')} placeholder="Respostas (separadas por vírgula)" onChange={(e) => {
+                  const newRecs = [...recommendations];
+                  const newRules = [...(rec.rules || [])];
+                  newRules[rIdx] = { ...rule, answers: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) };
+                  newRecs[idx] = { ...rec, rules: newRules };
+                  onChange(update(block, { recommendations: newRecs }));
+                }} />
+                <Input className="w-14 text-xs h-7" type="number" value={rule.weight} placeholder="Peso" onChange={(e) => {
+                  const newRecs = [...recommendations];
+                  const newRules = [...(rec.rules || [])];
+                  newRules[rIdx] = { ...rule, weight: Number(e.target.value) };
+                  newRecs[idx] = { ...rec, rules: newRules };
+                  onChange(update(block, { recommendations: newRecs }));
+                }} />
+              </div>
             </div>
           ))}
           <button className="text-[10px] text-primary underline" onClick={() => {
@@ -1540,7 +1683,7 @@ const RecommendationProperties = ({ block, onChange }: BlockPropertiesPanelProps
 // MAIN PANEL COMPONENT
 // ============================================
 
-export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropertiesPanelProps) => {
+export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: BlockPropertiesPanelProps) => {
   const block = normalizeBlock(rawBlock);
   const icon = BLOCK_ICONS[block.type];
   const name = BLOCK_NAMES[block.type];
@@ -1555,7 +1698,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'audio': return <AudioProperties block={block} onChange={onChange} />;
       case 'gallery': return <GalleryProperties block={block} onChange={onChange} />;
       case 'embed': return <EmbedProperties block={block} onChange={onChange} />;
-      case 'button': return <ButtonProperties block={block} onChange={onChange} />;
+      case 'button': return <ButtonProperties block={block} onChange={onChange} questions={questions} />;
       case 'price': return <PriceProperties block={block} onChange={onChange} />;
       case 'metrics': return <MetricsProperties block={block} onChange={onChange} />;
       case 'loading': return <LoadingProperties block={block} onChange={onChange} />;
@@ -1574,13 +1717,13 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'quote': return <QuoteProperties block={block} onChange={onChange} />;
       case 'badgeRow': return <BadgeRowProperties block={block} onChange={onChange} />;
       case 'banner': return <BannerProperties block={block} onChange={onChange} />;
-      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} />;
+      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} questions={questions} />;
       case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
       case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
-      case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} />;
-      case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} />;
-      case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} />;
-      case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} />;
+      case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} questions={questions} />;
+      case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} questions={questions} />;
+      case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} questions={questions} />;
+      case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} questions={questions} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
