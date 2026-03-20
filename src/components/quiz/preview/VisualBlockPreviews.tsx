@@ -78,20 +78,31 @@ export const QuoteBlockPreview = ({ block }: { block: QuizBlock & { type: 'quote
   const borderColor = block.borderColor || 'hsl(var(--primary))';
   const isLarge = block.style === 'large';
   const isMinimal = block.style === 'minimal';
+  const hasBgImage = !!(block as any).backgroundImageUrl;
 
   return (
     <div
-      className={`${isMinimal ? 'py-2' : 'py-4'}`}
-      style={{ borderLeft: `${isLarge ? '6px' : '4px'} solid ${borderColor}`, paddingLeft: '1rem' }}
+      className={`${isMinimal ? 'py-2' : 'py-4'} relative overflow-hidden rounded-lg`}
+      style={{
+        borderLeft: `${isLarge ? '6px' : '4px'} solid ${borderColor}`,
+        paddingLeft: '1rem',
+        ...(hasBgImage ? {
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${(block as any).backgroundImageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: '#ffffff',
+          padding: '1.5rem',
+        } : {}),
+      }}
     >
       {!isMinimal && (
-        <span className="text-4xl font-serif leading-none opacity-20 select-none" style={{ color: borderColor }}>"</span>
+        <span className="text-4xl font-serif leading-none opacity-20 select-none" style={{ color: hasBgImage ? '#fff' : borderColor }}>"</span>
       )}
-      <p className={`${isLarge ? 'text-xl font-medium' : isMinimal ? 'text-sm' : 'text-base'} italic text-foreground leading-relaxed`}>
+      <p className={`${isLarge ? 'text-xl font-medium' : isMinimal ? 'text-sm' : 'text-base'} italic ${hasBgImage ? '' : 'text-foreground'} leading-relaxed`}>
         {block.text}
       </p>
       {block.author && (
-        <p className="text-sm text-muted-foreground mt-2">— {block.author}</p>
+        <p className={`text-sm ${hasBgImage ? 'text-white/80' : 'text-muted-foreground'} mt-2`}>— {block.author}</p>
       )}
     </div>
   );
