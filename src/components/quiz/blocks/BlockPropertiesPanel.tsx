@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Type, Minus, Image, Film, Music, LayoutGrid, Code, MousePointer,
   DollarSign, BarChart3, Loader2, TrendingUp, Timer, Quote, SlidersHorizontal,
-  TextCursorInput, Star, ChevronDown, Columns, Users, Hash, Settings2
+  TextCursorInput, Star, ChevronDown, Columns, Users, Hash, Settings2,
+  AlertTriangle, List, Award, Flag
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
@@ -42,6 +43,11 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   comparison: <Columns className="h-4 w-4" />,
   socialProof: <Users className="h-4 w-4" />,
   animatedCounter: <Hash className="h-4 w-4" />,
+  callout: <AlertTriangle className="h-4 w-4" />,
+  iconList: <List className="h-4 w-4" />,
+  quote: <Quote className="h-4 w-4" />,
+  badgeRow: <Award className="h-4 w-4" />,
+  banner: <Flag className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
