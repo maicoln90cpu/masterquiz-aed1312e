@@ -62,7 +62,8 @@ export const IconListBlockPreview = ({ block }: { block: QuizBlock & { type: 'ic
     <div className={`${isHorizontal ? 'flex flex-wrap gap-4' : 'space-y-2'}`}>
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center gap-2">
-          <span className="text-lg shrink-0" style={{ color: block.iconColor || 'hsl(var(--primary))' }}>
+          {/* ✅ Etapa 2D: Cor individual por item */}
+          <span className="text-lg shrink-0" style={{ color: item.color || block.iconColor || 'hsl(var(--primary))' }}>
             {item.icon}
           </span>
           <span className="text-sm">{item.text}</span>
