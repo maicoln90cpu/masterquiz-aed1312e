@@ -1105,6 +1105,8 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Label>Nota de rodapé</Label>
         <Input value={block.footnote || ''} onChange={(e) => onChange(update(block, { footnote: e.target.value }))} />
       </div>
+      {/* ✅ Etapa 2D: Callout dismissível */}
+      <SwitchRow label="Dispensável (botão X)" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
       <Separator />
       <div className="space-y-2">
         <Label>Cor de fundo</Label>
