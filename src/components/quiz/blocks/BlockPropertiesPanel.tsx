@@ -1174,6 +1174,9 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'quote': return <QuoteProperties block={block} onChange={onChange} />;
       case 'badgeRow': return <BadgeRowProperties block={block} onChange={onChange} />;
       case 'banner': return <BannerProperties block={block} onChange={onChange} />;
+      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} />;
+      case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
+      case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
