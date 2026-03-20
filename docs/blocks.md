@@ -414,3 +414,60 @@ blockPaletteCatalog.ts → BlockEditor.tsx (dropdown/palette)
 - `normalizeBlock()` garante valores padrão para todos os campos, prevenindo crashes por dados legados/malformados
 - `BlockErrorBoundary` isola falhas por bloco individual
 - 130+ testes automatizados validam integridade do sistema
+
+---
+
+## Melhorias Sugeridas — Fase 2B (Blocos 1–14)
+
+> 2 melhorias por bloco. Priorizadas por impacto na UX e viabilidade técnica.
+
+| # | Bloco | Melhoria 1 | Descrição | Melhoria 2 | Descrição |
+|---|-------|-----------|-----------|-----------|-----------|
+| 1 | `question` | Imagem por opção de resposta | Permitir associar uma imagem a cada opção, exibindo cards visuais em vez de radio buttons simples. Aumenta engajamento em quizzes visuais (moda, decoração, food). | Randomizar ordem das opções | Switch no painel de propriedades para embaralhar a ordem das opções a cada render, eliminando viés de posição. |
+| 2 | `text` | Editor rich-text inline | Substituir textarea por editor com toolbar (negrito, itálico, link, lista) usando react-quill já instalado. | Variáveis dinâmicas `{nome}` | Suportar placeholders como `{nome}`, `{email}`, `{resposta_P1}` que são substituídos em runtime pelos dados do respondente. |
+| 3 | `separator` | Preview da cor no editor | Mostrar a cor configurada diretamente no bloco inline do editor, não apenas no preview publicado. | Animação de entrada (fade) | Opção de fade-in ao separador quando aparece na tela, usando framer-motion. |
+| 4 | `image` | Crop/resize integrado | Ao colar URL ou fazer upload, abrir modal de crop com proporções pré-definidas (1:1, 16:9, 4:3). | Galeria de imagens stock | Integrar busca de imagens gratuitas (Unsplash/Pexels API) direto no painel, sem sair do editor. |
+| 5 | `video` | Preview thumbnail no editor | Mostrar thumbnail do YouTube/Vimeo automaticamente no bloco inline, em vez de apenas o input de URL. | Suporte a Loom embed | Detectar URLs do Loom e renderizar com player nativo Loom (já usa iframe, só precisa de pattern matching). |
+| 6 | `audio` | Waveform visual no player | Exibir waveform estilizado no player de áudio em vez do player nativo do browser. | Gravação de áudio inline | Botão "Gravar" que usa `MediaRecorder` API para gravar áudio direto no editor e fazer upload. |
+| 7 | `gallery` | Lightbox ao clicar | Ao clicar em uma imagem da galeria, abrir em tela cheia com navegação (setas) entre as imagens. | Legendas individuais por imagem | Cada imagem já tem campo `caption` no tipo, mas o editor não expõe. Adicionar input de legenda por imagem. |
+| 8 | `embed` | Preview do conteúdo incorporado | Mostrar iframe preview no editor (mesmo em tamanho reduzido) em vez de apenas exibir a URL. | Whitelist de domínios | Lista configurável de domínios permitidos para segurança (evitar XSS via iframe malicioso). |
+| 9 | `button` | Picker visual de ícones Lucide | Substituir input de texto `icon` por grid visual com busca dos 1000+ ícones Lucide disponíveis. | Animação hover configurável | Opções de efeito no hover: scale, glow, shake, slide. Configurável no painel de propriedades. |
+| 10 | `price` | Múltiplos planos lado a lado | Permitir adicionar 2-3 planos em um único bloco, exibidos em colunas com highlight no plano recomendado. | Toggle mensal/anual automático | Switch visual que alterna entre preço mensal e anual, com cálculo automático do desconto. |
+| 11 | `metrics` | Animação de entrada | Animar o gráfico ao entrar na viewport (barras crescendo, pizza girando), usando framer-motion. | Dados de fonte externa (API) | Permitir configurar uma URL de API que retorna os dados do gráfico em runtime. |
+| 12 | `loading` | Mensagens rotativas com fade | Exibir sequência de mensagens com transição suave (fade) durante o loading, em vez de mensagem estática. | Barra de progresso customizável | Além do spinner, mostrar barra de progresso com cor e velocidade configuráveis. |
+| 13 | `calculator` | Templates de fórmula prontos | Biblioteca de fórmulas pré-configuradas: IMC, ROI, Economia mensal, Tempo de retorno. Usuário seleciona e adapta. | Gráfico visual do resultado | Exibir o resultado em formato visual (gauge/velocímetro) com as faixas coloridas configuradas. |
+| 14 | `progress` | Cor por faixa de progresso | Mudar cor da barra conforme avança: vermelho (0-33%), amarelo (34-66%), verde (67-100%). | Ícone de conclusão | Exibir ícone/emoji customizável ao atingir 100% (ex: 🎉, ✅, 🏆). |
+
+---
+
+## Melhorias Sugeridas — Fase 2C (Blocos 15–28)
+
+> Será documentada e implementada na próxima etapa.
+
+| # | Bloco | Melhoria 1 | Descrição | Melhoria 2 | Descrição |
+|---|-------|-----------|-----------|-----------|-----------|
+| 15 | `countdown` | Ação ao expirar (redirect) | Quando o timer chega a zero, redirecionar automaticamente para URL configurada. Campo `redirectUrl` já existe no tipo mas não está implementado no runtime. | Estilo flip-clock | Novo estilo visual com animação de flip (como relógios de aeroporto), usando CSS 3D transforms. |
+| 16 | `testimonial` | Carrossel de depoimentos | Permitir múltiplos depoimentos em um único bloco, com auto-slide e dots de navegação. | Integração com Google Reviews | Puxar reviews reais via Google Places API e exibir com rating nativo. |
+| 17 | `slider` | Labels nos extremos (min/max) | Exibir labels customizáveis nas pontas do slider (ex: "Nada" ↔ "Muito"), além do valor numérico. | Steps visuais com dots | Mostrar dots/marcadores nos steps do slider para valores discretos (ex: 1-5). |
+| 18 | `textInput` | Máscara de input (CPF, telefone) | Aplicar máscara automática conforme o tipo de validação (ex: 000.000.000-00 para CPF). | Validação em tempo real | Exibir feedback visual (borda verde/vermelha + mensagem) enquanto o usuário digita. |
+| 19 | `nps` | Cores por faixa (detrator/neutro/promotor) | Colorir botões 0-6 em vermelho, 7-8 em amarelo, 9-10 em verde automaticamente. | Comentário opcional após nota | Exibir textarea condicional após seleção da nota para capturar feedback qualitativo. |
+| 20 | `accordion` | Ícone customizável (seta/plus) | Escolher entre ícone de seta (chevron) ou plus/minus para o toggle do accordion. | Animação suave de abertura | Adicionar transição suave com height animation ao abrir/fechar itens. |
+| 21 | `comparison` | Highlight da coluna vencedora | Aplicar borda/sombra destacada na coluna "positiva" para guiar visualmente o usuário. | Ícones por item | Permitir associar ícone/emoji a cada item da comparação (além do ✅/❌ padrão). |
+| 22 | `socialProof` | Dados reais do banco | Puxar contagem real de leads/respostas do quiz e usar nas notificações (ex: "1.234 pessoas já fizeram"). | Animação de entrada (slide-in) | Notificações entram com animação slide-in lateral, como toast real. |
+| 23 | `animatedCounter` | Formato de moeda (R$ 1.234) | Opção de formatar o número como moeda brasileira com separador de milhar e decimal. | Trigger ao scroll | Iniciar a animação apenas quando o bloco entra na viewport (Intersection Observer). |
+| 24 | `callout` | Picker visual de ícones | Grid de ícones para substituir input de texto do campo `icon`. | Callout dismissível | Botão X para fechar o callout, com estado persistido na sessão. |
+| 25 | `iconList` | Picker de ícones Lucide integrado | Substituir input de emoji por grid visual de ícones Lucide com busca. | Cores individuais por item | Permitir cor diferente para o ícone de cada item da lista. |
+| 26 | `quote` | Fonte tipográfica customizável | Dropdown com 5-6 fontes decorativas para a citação (serif, script, etc). | Imagem de fundo opcional | Upload de imagem de fundo com overlay escuro para efeito editorial. |
+| 27 | `badgeRow` | Tooltip por badge | Ao passar o mouse, exibir tooltip com descrição expandida do selo. | Cores individuais por selo | Permitir cor de fundo/borda diferente para cada badge. |
+| 28 | `banner` | Countdown integrado | Adicionar timer regressivo dentro do banner (ex: "🔥 Oferta expira em 04:59"). | Link clicável no banner | Tornar o banner inteiro clicável com URL de destino configurável. |
+
+### Blocos Dinâmicos (continuação)
+
+| # | Bloco | Melhoria 1 | Descrição | Melhoria 2 | Descrição |
+|---|-------|-----------|-----------|-----------|-----------|
+| 29 | `answerSummary` | Editar resposta inline | Ao clicar em uma resposta no resumo, voltar à pergunta correspondente para alterar. | Exportar respostas como texto | Botão "Copiar resumo" que gera texto formatado com todas as respostas. |
+| 30 | `progressMessage` | Animação de transição | Fade/slide entre mensagens ao mudar de faixa de progresso. | Ícone por faixa | Associar emoji/ícone diferente a cada threshold (🚀, 💪, 🔥, 🎉). |
+| 31 | `avatarGroup` | Upload de avatares reais | Substituir avatares genéricos por uploads reais de fotos de clientes. | Link para perfil ao clicar | Cada avatar pode ter URL de destino (ex: LinkedIn, perfil de cliente). |
+| 32 | `conditionalText` | Preview da condição ativa | No editor, mostrar qual texto será exibido baseado em um "modo simulação" com resposta selecionável. | Múltiplas perguntas-fonte (AND) | Suportar condições compostas: "Se P1=A E P2=B então texto X". |
+| 33 | `comparisonResult` | Cores configuráveis por coluna | Customizar as cores de antes (vermelho) e depois (verde) no painel. | Ícones personalizados | Escolher ícones diferentes de ❌/✅ para os itens. |
+| 34 | `recommendation` | Ordenação manual de prioridade | Drag & drop para definir ordem de exibição quando scores são iguais. | Limite máximo de exibição | Configurar "mostrar no máximo N recomendações" independente do displayMode. |
