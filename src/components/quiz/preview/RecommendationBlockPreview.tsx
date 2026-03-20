@@ -72,9 +72,12 @@ export const RecommendationBlockPreview = ({ block, answers, questions }: Recomm
     } else if (displayMode === 'top_3') {
       visible = scored.filter(s => s.score > 0).slice(0, 3);
     }
-    // 'all_scored' shows all with score > 0
     if (displayMode === 'all_scored') {
       visible = scored.filter(s => s.score > 0);
+    }
+    // ✅ Etapa 2D: Aplicar limite máximo
+    if (maxDisplay > 0) {
+      visible = visible.slice(0, maxDisplay);
     }
   }
 
