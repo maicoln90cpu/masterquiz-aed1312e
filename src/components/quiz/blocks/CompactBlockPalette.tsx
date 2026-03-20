@@ -69,6 +69,9 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       case 'quote': return <Type className="h-3 w-3" />;
       case 'badgeRow': return <Star className="h-3 w-3" />;
       case 'banner': return <Bell className="h-3 w-3" />;
+      case 'answerSummary': return <Type className="h-3 w-3" />;
+      case 'progressMessage': return <TrendingUp className="h-3 w-3" />;
+      case 'avatarGroup': return <Bell className="h-3 w-3" />;
     }
   };
 
