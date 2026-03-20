@@ -520,13 +520,13 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
           Personalize o texto e URL do botão baseado em respostas do usuário. Use {'{resposta}'} no template.
         </p>
       </div>
-      <PropertySection title="ID da Pergunta-Fonte">
-        <Input
-          value={(block as any).sourceQuestionId || ''}
-          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
-          placeholder="Cole o ID da pergunta"
-        />
-      </PropertySection>
+      <QuestionSelector
+        value={(block as any).sourceQuestionId || ''}
+        onChange={(id) => onChange(update(block, { sourceQuestionId: id }))}
+        questions={questions}
+        label="Pergunta-Fonte (opcional)"
+        placeholder="Selecione uma pergunta"
+      />
       <PropertySection title="Template do texto">
         <Input
           value={(block as any).textTemplate || ''}
