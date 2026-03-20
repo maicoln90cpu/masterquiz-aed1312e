@@ -182,6 +182,9 @@ export const CompactBlockPalette = React.memo(({
     { type: "answerSummary" as BlockType, icon: Type, name: "Resumo de Respostas", tooltip: "Exibe respostas anteriores do usuário" },
     { type: "progressMessage" as BlockType, icon: TrendingUp, name: "Mensagem de Progresso", tooltip: "Mensagem motivacional baseada no progresso" },
     { type: "avatarGroup" as BlockType, icon: Bell, name: "Grupo de Avatares", tooltip: "Prova social com avatares e contador" },
+    { type: "conditionalText" as BlockType, icon: Type, name: "Texto Condicional", tooltip: "Texto que muda conforme resposta anterior" },
+    { type: "comparisonResult" as BlockType, icon: Columns, name: "Comparação Dinâmica", tooltip: "Antes/depois personalizado com respostas" },
+    { type: "personalizedCTA" as BlockType, icon: Bell, name: "CTA Personalizado", tooltip: "Botão com texto dinâmico baseado em respostas" },
   ];
 
   const templates = [

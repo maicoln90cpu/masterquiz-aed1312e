@@ -622,6 +622,18 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 <Bell className="h-4 w-4 mr-2" />
                 Grupo de Avatares
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('conditionalText')}>
+                <Type className="h-4 w-4 mr-2" />
+                Texto Condicional
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('comparisonResult')}>
+                <Columns className="h-4 w-4 mr-2" />
+                Comparação Dinâmica
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('personalizedCTA')}>
+                <MousePointerClick className="h-4 w-4 mr-2" />
+                CTA Personalizado
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
