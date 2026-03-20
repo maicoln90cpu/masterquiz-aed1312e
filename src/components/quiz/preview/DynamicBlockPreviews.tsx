@@ -1,4 +1,5 @@
 import { ClipboardList, TrendingUp, Users, CheckCircle2, X, Check, ArrowRight, ExternalLink } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { QuizBlock } from "@/types/blocks";
 import type { QuizQuestion } from "@/types/quiz";
