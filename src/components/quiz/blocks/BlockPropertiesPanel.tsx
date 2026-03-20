@@ -1440,7 +1440,7 @@ const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropert
 };
 
 // ---- PERSONALIZED CTA ----
-const PersonalizedCTAProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const PersonalizedCTAProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'personalizedCTA') return null;
   const conditions = (block as any).conditions || [];
   return (
@@ -1454,14 +1454,13 @@ const PersonalizedCTAProperties = ({ block, onChange }: BlockPropertiesPanelProp
         />
         <p className="text-xs text-muted-foreground">Use {'{resposta}'} para inserir a resposta do usuário</p>
       </div>
-      <div className="space-y-2">
-        <Label>ID da Pergunta-Fonte</Label>
-        <Input
-          value={(block as any).sourceQuestionId || ''}
-          onChange={(e) => onChange(update(block, { sourceQuestionId: e.target.value }))}
-          placeholder="Cole o ID da pergunta"
-        />
-      </div>
+      <QuestionSelector
+        value={(block as any).sourceQuestionId || ''}
+        onChange={(id) => onChange(update(block, { sourceQuestionId: id }))}
+        questions={questions}
+        label="Pergunta-Fonte"
+        placeholder="Selecione a pergunta"
+      />
       <div className="space-y-2">
         <Label>URL do botão</Label>
         <Input value={(block as any).url || ''} onChange={(e) => onChange(update(block, { url: e.target.value }))} placeholder="https://..." />
