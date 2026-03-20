@@ -638,6 +638,10 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 <MousePointerClick className="h-4 w-4 mr-2" />
                 CTA Personalizado
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('recommendation')}>
+                <Star className="h-4 w-4 mr-2" />
+                Recomendação
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

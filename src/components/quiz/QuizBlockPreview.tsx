@@ -164,6 +164,8 @@ export const QuizBlockPreview = ({
         return <ComparisonResultBlockPreview key={block.id} block={block as QuizBlock & { type: 'comparisonResult' }} answers={answers} />;
       case "personalizedCTA":
         return <PersonalizedCTABlockPreview key={block.id} block={block as QuizBlock & { type: 'personalizedCTA' }} answers={answers} />;
+      case "recommendation":
+        return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} />;
       default:
         return null;
     }

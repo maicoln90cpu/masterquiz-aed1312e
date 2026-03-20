@@ -187,6 +187,7 @@ export const CompactBlockPalette = React.memo(({
     { type: "conditionalText" as BlockType, icon: Type, name: "Texto Condicional", tooltip: "Texto que muda conforme resposta anterior" },
     { type: "comparisonResult" as BlockType, icon: Columns, name: "Comparação Dinâmica", tooltip: "Antes/depois personalizado com respostas" },
     { type: "personalizedCTA" as BlockType, icon: Bell, name: "CTA Personalizado", tooltip: "Botão com texto dinâmico baseado em respostas" },
+    { type: "recommendation" as BlockType, icon: Star, name: "Recomendação", tooltip: "Motor de recomendação com regras baseadas em respostas" },
   ];
 
   const templates = [

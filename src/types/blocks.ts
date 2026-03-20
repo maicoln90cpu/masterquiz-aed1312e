@@ -1108,6 +1108,16 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         conditions: Array.isArray(block.conditions) ? block.conditions : [],
         fallbackText: block.fallbackText || 'Ver mais',
       };
+    case 'recommendation':
+      return {
+        ...block,
+        title: block.title || '🎯 Recomendação',
+        recommendations: Array.isArray(block.recommendations) ? block.recommendations : [],
+        displayMode: block.displayMode || 'best_match',
+        style: block.style || 'card',
+        showScore: block.showScore || false,
+        fallbackText: block.fallbackText || 'Nenhuma recomendação encontrada.',
+      };
     default:
       return block;
   }
