@@ -361,6 +361,8 @@ export interface BannerBlock extends BaseBlock {
   variant?: 'warning' | 'success' | 'info' | 'promo';
   icon?: string;
   dismissible?: boolean;
+  linkUrl?: string; // ✅ Etapa 2D: Link clicável
+  linkTarget?: '_blank' | '_self'; // ✅ Etapa 2D: Abrir em nova aba
 }
 
 export interface AnswerSummaryBlock extends BaseBlock {
