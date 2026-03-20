@@ -2,7 +2,7 @@ import {
   HelpCircle, Type, Minus, Image, Video, Music, Images, Code,
   SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell,
   MousePointerClick, DollarSign, BarChart3, Loader2, TrendingUp, Timer,
-  AlertTriangle, List, Quote, Award, Flag, ClipboardList, Users
+  AlertTriangle, List, Quote, Award, Flag, ClipboardList, Users, GitBranch, ArrowRightLeft
 } from "lucide-react";
 import type { BlockType } from "@/types/blocks";
 import type { LucideIcon } from "lucide-react";
