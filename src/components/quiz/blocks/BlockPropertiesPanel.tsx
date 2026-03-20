@@ -1384,7 +1384,7 @@ const ConditionalTextProperties = ({ block, onChange, questions }: BlockProperti
 };
 
 // ---- COMPARISON RESULT ----
-const ComparisonResultProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'comparisonResult') return null;
   const beforeItems = (block as any).beforeItems || [];
   const afterItems = (block as any).afterItems || [];
