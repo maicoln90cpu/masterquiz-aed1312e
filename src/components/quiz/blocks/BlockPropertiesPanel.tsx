@@ -1227,6 +1227,11 @@ const ComparisonResultProperties = ({ block, onChange }: BlockPropertiesPanelPro
   const afterItems = (block as any).afterItems || [];
   return (
     <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
+          ⚖️ <strong>Comparação Dinâmica</strong> — Exibe uma tabela "Antes vs Depois" personalizada. Use {'{resposta1}'}, {'{resposta2}'} nos textos dos itens para substituir automaticamente pelas respostas do usuário. Copie os IDs das perguntas na lista à esquerda.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Título "Antes"</Label>
         <Input value={(block as any).beforeTitle || ''} onChange={(e) => onChange(update(block, { beforeTitle: e.target.value }))} />
