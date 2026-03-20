@@ -207,6 +207,9 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'answerSummary':
       case 'progressMessage':
       case 'avatarGroup':
+      case 'conditionalText':
+      case 'comparisonResult':
+      case 'personalizedCTA':
         return (
           <div className="p-3 border rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground mb-1 font-medium">
