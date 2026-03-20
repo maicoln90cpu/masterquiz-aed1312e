@@ -48,6 +48,9 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   quote: <Quote className="h-4 w-4" />,
   badgeRow: <Award className="h-4 w-4" />,
   banner: <Flag className="h-4 w-4" />,
+  answerSummary: <List className="h-4 w-4" />,
+  progressMessage: <TrendingUp className="h-4 w-4" />,
+  avatarGroup: <Users className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
