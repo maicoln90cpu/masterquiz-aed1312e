@@ -27,7 +27,10 @@ export type BlockType =
   | 'iconList'
   | 'quote'
   | 'badgeRow'
-  | 'banner';
+  | 'banner'
+  | 'answerSummary'
+  | 'progressMessage'
+  | 'avatarGroup';
 
 export interface BaseBlock {
   id: string;
