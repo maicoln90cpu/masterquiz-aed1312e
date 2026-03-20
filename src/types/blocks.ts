@@ -392,6 +392,7 @@ export interface AvatarGroupBlock extends BaseBlock {
   maxVisible?: number;
   showCount?: boolean;
   avatarStyle?: 'circle' | 'square';
+  profileUrl?: string; // ✅ Etapa 2D: Link para perfil ao clicar
 }
 
 export interface ConditionalTextBlock extends BaseBlock {
