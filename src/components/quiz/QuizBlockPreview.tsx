@@ -18,6 +18,10 @@ import {
   NPSBlockPreview, AccordionBlockPreview, ComparisonBlockPreview,
   SocialProofBlockPreview, AnimatedCounterBlockPreview,
 } from "./preview/InteractiveBlockPreviews";
+import {
+  CalloutBlockPreview, IconListBlockPreview, QuoteBlockPreview,
+  BadgeRowBlockPreview, BannerBlockPreview,
+} from "./preview/VisualBlockPreviews";
 
 // ✅ FASE 12: Lazy load MetricsBlockPreview (recharts é pesado ~200KB)
 const LazyMetricsBlockPreview = lazy(() =>
@@ -123,6 +127,16 @@ export const QuizBlockPreview = ({
         return <SocialProofBlockPreview key={block.id} block={block} />;
       case "animatedCounter":
         return <AnimatedCounterBlockPreview key={block.id} block={block} />;
+      case "callout":
+        return <CalloutBlockPreview key={block.id} block={block as QuizBlock & { type: 'callout' }} />;
+      case "iconList":
+        return <IconListBlockPreview key={block.id} block={block as QuizBlock & { type: 'iconList' }} />;
+      case "quote":
+        return <QuoteBlockPreview key={block.id} block={block as QuizBlock & { type: 'quote' }} />;
+      case "badgeRow":
+        return <BadgeRowBlockPreview key={block.id} block={block as QuizBlock & { type: 'badgeRow' }} />;
+      case "banner":
+        return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} />;
       default:
         return null;
     }

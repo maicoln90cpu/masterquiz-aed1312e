@@ -30,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Trash2, Type, Minus, Image, Video, Music, Images, Code, HelpCircle, Eye, Blocks, CheckCircle2, AlertCircle, SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell } from "lucide-react";
+import { Plus, Trash2, Type, Minus, Image, Video, Music, Images, Code, HelpCircle, Eye, Blocks, CheckCircle2, AlertCircle, SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell, MousePointerClick, DollarSign, BarChart3, Loader2, TrendingUp, Timer, AlertTriangle, List, Quote, Award, Flag } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { createBlock, normalizeBlock } from "@/types/blocks";
 import { BlockTemplates } from "./BlockTemplates";
@@ -111,47 +111,34 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'audio':
         return block.url && block.url.trim().length > 0;
       case 'button':
-        // Botão com ação de navegação ou link preenchido é considerado completo
         const action = block.action || 'link';
-        if (action === 'link') {
-          return block.text && block.url;
-        } else if (action === 'next_question') {
-          return !!block.text;
-        } else if (action === 'go_to_question') {
-          return block.text && block.targetQuestionIndex !== undefined;
-        }
+        if (action === 'link') return block.text && block.url;
+        else if (action === 'next_question') return !!block.text;
+        else if (action === 'go_to_question') return block.text && block.targetQuestionIndex !== undefined;
         return !!block.text;
-      case 'separator':
-        return true; // Separador sempre completo
-      case 'countdown':
-        return true; // Countdown com valores default é completo
-      case 'progress':
-        return true; // Progress com valores default é completo
-      case 'testimonial':
-        return true; // Testimonial com valores default é completo
       case 'gallery':
         return block.images && block.images.length > 0;
       case 'embed':
         return block.url && block.url.trim().length > 0;
+      case 'separator':
+      case 'countdown':
+      case 'progress':
+      case 'testimonial':
       case 'price':
-        return true; // Price com valores default é completo
       case 'metrics':
-        return true; // Metrics com valores default é completo
       case 'loading':
-        return true; // Loading com valores default é completo
       case 'slider':
-        return true;
       case 'textInput':
-        return true;
       case 'nps':
-        return true;
       case 'accordion':
-        return true;
       case 'comparison':
-        return true;
       case 'socialProof':
-        return true;
       case 'animatedCounter':
+      case 'callout':
+      case 'iconList':
+      case 'quote':
+      case 'badgeRow':
+      case 'banner':
         return true;
       default:
         return false;
@@ -206,6 +193,23 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
         return <ProgressBlock block={block} onChange={onUpdate} />;
       case 'animatedCounter':
         return <AnimatedCounterBlock block={block} onChange={onUpdate} />;
+      case 'callout':
+      case 'iconList':
+      case 'quote':
+      case 'badgeRow':
+      case 'banner':
+        return (
+          <div className="p-3 border rounded-lg bg-muted/30">
+            <p className="text-xs text-muted-foreground mb-1 font-medium">
+              {block.type === 'callout' ? '⚠️ Callout/Alerta' :
+               block.type === 'iconList' ? '📋 Lista com Ícones' :
+               block.type === 'quote' ? '💬 Citação/Destaque' :
+               block.type === 'badgeRow' ? '🏅 Selos/Badges' :
+               '🚩 Banner/Faixa'}
+            </p>
+            <p className="text-sm text-muted-foreground">Configure no painel de propriedades →</p>
+          </div>
+        );
       default:
         return null;
     }
@@ -367,7 +371,12 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       accordion: t('createQuiz.blocks.accordion'),
       comparison: t('createQuiz.blocks.comparison'),
       socialProof: t('createQuiz.blocks.socialProof'),
-      animatedCounter: t('createQuiz.blocks.animatedCounter', { defaultValue: 'Contador Animado' })
+      animatedCounter: t('createQuiz.blocks.animatedCounter', { defaultValue: 'Contador Animado' }),
+      callout: 'Callout/Alerta',
+      iconList: 'Lista com Ícones',
+      quote: 'Citação',
+      badgeRow: 'Selos/Badges',
+      banner: 'Banner/Faixa',
     };
     
     toast.success(
@@ -488,6 +497,22 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 <Code className="h-4 w-4 mr-2" />
                 Conteúdo Incorporado
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('button')}>
+                <MousePointerClick className="h-4 w-4 mr-2" />
+                Botão
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('price')}>
+                <DollarSign className="h-4 w-4 mr-2" />
+                Preço
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('metrics')}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Métricas/Gráfico
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('loading')}>
+                <Loader2 className="h-4 w-4 mr-2" />
+                Loading/Carregamento
+              </DropdownMenuItem>
               
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Captura de Dados</DropdownMenuLabel>
@@ -525,6 +550,37 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               <DropdownMenuItem onClick={() => addBlock('animatedCounter')}>
                 <SlidersHorizontal className="h-4 w-4 mr-2" />
                 Contador Animado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('progress')}>
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Barra de Progresso
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('countdown')}>
+                <Timer className="h-4 w-4 mr-2" />
+                Countdown/Timer
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Visual</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => addBlock('callout')}>
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Callout/Alerta
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('iconList')}>
+                <List className="h-4 w-4 mr-2" />
+                Lista com Ícones
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('quote')}>
+                <Quote className="h-4 w-4 mr-2" />
+                Citação/Destaque
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('badgeRow')}>
+                <Award className="h-4 w-4 mr-2" />
+                Selos/Badges
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('banner')}>
+                <Flag className="h-4 w-4 mr-2" />
+                Banner/Faixa
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -64,6 +64,11 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       case 'comparison': return <Columns className="h-3 w-3" />;
       case 'socialProof': return <Bell className="h-3 w-3" />;
       case 'animatedCounter': return <TrendingUp className="h-3 w-3" />;
+      case 'callout': return <Bell className="h-3 w-3" />;
+      case 'iconList': return <Type className="h-3 w-3" />;
+      case 'quote': return <Type className="h-3 w-3" />;
+      case 'badgeRow': return <Star className="h-3 w-3" />;
+      case 'banner': return <Bell className="h-3 w-3" />;
     }
   };
 
@@ -90,7 +95,12 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       accordion: 'Acordeão FAQ',
       comparison: 'Comparação',
       socialProof: 'Prova Social',
-      animatedCounter: 'Contador Animado'
+      animatedCounter: 'Contador Animado',
+      callout: 'Callout/Alerta',
+      iconList: 'Lista com Ícones',
+      quote: 'Citação',
+      badgeRow: 'Selos/Badges',
+      banner: 'Banner/Faixa',
     };
     return labels[type];
   };

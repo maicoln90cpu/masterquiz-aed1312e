@@ -22,7 +22,12 @@ export type BlockType =
   | 'accordion'
   | 'comparison'
   | 'socialProof'
-  | 'animatedCounter';
+  | 'animatedCounter'
+  | 'callout'
+  | 'iconList'
+  | 'quote'
+  | 'badgeRow'
+  | 'banner';
 
 export interface BaseBlock {
   id: string;
@@ -280,14 +285,56 @@ export interface AnimatedCounterBlock extends BaseBlock {
   type: 'animatedCounter';
   startValue: number;
   endValue: number;
-  duration: number; // em segundos
+  duration: number;
   prefix?: string;
   suffix?: string;
   easing?: 'linear' | 'easeOut' | 'easeInOut';
   fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
   color?: string;
   label?: string;
-  separator?: boolean; // usar separador de milhar
+  separator?: boolean;
+}
+
+export interface CalloutBlock extends BaseBlock {
+  type: 'callout';
+  variant: 'warning' | 'info' | 'success' | 'error';
+  title: string;
+  items: string[];
+  footnote?: string;
+  icon?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  textColor?: string;
+}
+
+export interface IconListBlock extends BaseBlock {
+  type: 'iconList';
+  items: { icon: string; text: string }[];
+  iconColor?: string;
+  layout?: 'vertical' | 'horizontal';
+}
+
+export interface QuoteBlock extends BaseBlock {
+  type: 'quote';
+  text: string;
+  author?: string;
+  borderColor?: string;
+  style?: 'default' | 'large' | 'minimal';
+}
+
+export interface BadgeRowBlock extends BaseBlock {
+  type: 'badgeRow';
+  badges: { icon: string; text: string }[];
+  variant?: 'outline' | 'filled';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export interface BannerBlock extends BaseBlock {
+  type: 'banner';
+  text: string;
+  variant?: 'warning' | 'success' | 'info' | 'promo';
+  icon?: string;
+  dismissible?: boolean;
 }
 
 export type QuizBlock = 
@@ -312,7 +359,12 @@ export type QuizBlock =
   | AccordionBlock
   | ComparisonBlock
   | SocialProofBlock
-  | AnimatedCounterBlock;
+  | AnimatedCounterBlock
+  | CalloutBlock
+  | IconListBlock
+  | QuoteBlock
+  | BadgeRowBlock
+  | BannerBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
@@ -586,6 +638,59 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         separator: true,
       } as AnimatedCounterBlock;
     
+    case 'callout':
+      return {
+        ...baseBlock,
+        type: 'callout',
+        variant: 'warning',
+        title: 'Atenção',
+        items: ['Item importante 1', 'Item importante 2'],
+        footnote: '',
+      } as CalloutBlock;
+
+    case 'iconList':
+      return {
+        ...baseBlock,
+        type: 'iconList',
+        items: [
+          { icon: '✅', text: 'Benefício 1' },
+          { icon: '✅', text: 'Benefício 2' },
+          { icon: '✅', text: 'Benefício 3' },
+        ],
+        layout: 'vertical',
+      } as IconListBlock;
+
+    case 'quote':
+      return {
+        ...baseBlock,
+        type: 'quote',
+        text: 'Uma citação inspiradora ou destaque importante.',
+        author: '',
+        style: 'default',
+      } as QuoteBlock;
+
+    case 'badgeRow':
+      return {
+        ...baseBlock,
+        type: 'badgeRow',
+        badges: [
+          { icon: '🔒', text: 'Seguro' },
+          { icon: '⚡', text: 'Rápido' },
+          { icon: '✅', text: 'Garantido' },
+        ],
+        variant: 'outline',
+        size: 'md',
+      } as BadgeRowBlock;
+
+    case 'banner':
+      return {
+        ...baseBlock,
+        type: 'banner',
+        text: '🔥 Oferta por tempo limitado!',
+        variant: 'promo',
+        dismissible: false,
+      } as BannerBlock;
+    
     default:
       throw new Error(`Unknown block type: ${type}`);
   }
@@ -728,6 +833,38 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         duration: block.duration || 2,
         fontSize: block.fontSize || 'large',
         easing: block.easing || 'easeOut',
+      };
+    case 'callout':
+      return {
+        ...block,
+        variant: block.variant || 'warning',
+        title: block.title || 'Atenção',
+        items: Array.isArray(block.items) ? block.items : [],
+      };
+    case 'iconList':
+      return {
+        ...block,
+        items: Array.isArray(block.items) ? block.items : [],
+        layout: block.layout || 'vertical',
+      };
+    case 'quote':
+      return {
+        ...block,
+        text: block.text || '',
+        style: block.style || 'default',
+      };
+    case 'badgeRow':
+      return {
+        ...block,
+        badges: Array.isArray(block.badges) ? block.badges : [],
+        variant: block.variant || 'outline',
+        size: block.size || 'md',
+      };
+    case 'banner':
+      return {
+        ...block,
+        text: block.text || '',
+        variant: block.variant || 'promo',
       };
     default:
       return block;

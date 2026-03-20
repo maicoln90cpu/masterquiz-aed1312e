@@ -1,6 +1,8 @@
 import {
   HelpCircle, Type, Minus, Image, Video, Music, Images, Code,
-  SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell
+  SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell,
+  MousePointerClick, DollarSign, BarChart3, Loader2, TrendingUp, Timer,
+  AlertTriangle, List, Quote, Award, Flag
 } from "lucide-react";
 import type { BlockType } from "@/types/blocks";
 import type { LucideIcon } from "lucide-react";
@@ -43,6 +45,10 @@ export const blockCatalogSections: BlockCatalogSection[] = [
     defaultTitle: 'Avançado',
     items: [
       { type: 'embed', icon: Code, labelKey: 'createQuiz.blocks.embed', defaultLabel: 'Conteúdo Incorporado' },
+      { type: 'button', icon: MousePointerClick, labelKey: 'createQuiz.blocks.button', defaultLabel: 'Botão' },
+      { type: 'price', icon: DollarSign, labelKey: 'createQuiz.blocks.price', defaultLabel: 'Preço' },
+      { type: 'metrics', icon: BarChart3, labelKey: 'createQuiz.blocks.metrics', defaultLabel: 'Métricas/Gráfico' },
+      { type: 'loading', icon: Loader2, labelKey: 'createQuiz.blocks.loading', defaultLabel: 'Loading/Carregamento' },
     ],
   },
   {
@@ -63,6 +69,19 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'socialProof', icon: Bell, labelKey: 'createQuiz.blocks.socialProof', defaultLabel: 'Prova Social' },
       { type: 'testimonial', icon: Star, labelKey: 'createQuiz.blocks.testimonial', defaultLabel: 'Depoimento' },
       { type: 'animatedCounter', icon: SlidersHorizontal, labelKey: 'createQuiz.blocks.animatedCounter', defaultLabel: 'Contador Animado' },
+      { type: 'progress', icon: TrendingUp, labelKey: 'createQuiz.blocks.progress', defaultLabel: 'Barra de Progresso' },
+      { type: 'countdown', icon: Timer, labelKey: 'createQuiz.blocks.countdown', defaultLabel: 'Countdown/Timer' },
+    ],
+  },
+  {
+    titleKey: 'createQuiz.blockEditor.visualBlocks',
+    defaultTitle: 'Visual',
+    items: [
+      { type: 'callout', icon: AlertTriangle, labelKey: 'createQuiz.blocks.callout', defaultLabel: 'Callout/Alerta' },
+      { type: 'iconList', icon: List, labelKey: 'createQuiz.blocks.iconList', defaultLabel: 'Lista com Ícones' },
+      { type: 'quote', icon: Quote, labelKey: 'createQuiz.blocks.quote', defaultLabel: 'Citação/Destaque' },
+      { type: 'badgeRow', icon: Award, labelKey: 'createQuiz.blocks.badgeRow', defaultLabel: 'Selos/Badges' },
+      { type: 'banner', icon: Flag, labelKey: 'createQuiz.blocks.banner', defaultLabel: 'Banner/Faixa' },
     ],
   },
 ];

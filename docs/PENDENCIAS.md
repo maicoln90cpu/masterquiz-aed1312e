@@ -4,6 +4,30 @@
 
 ---
 
+## ✅ v2.31.0 - Etapa 1: Paridade de Blocos + 5 Novos Blocos Visuais (20/03/2026)
+
+### Paridade de Blocos (6 blocos existentes adicionados ao catálogo e dropdown)
+- `button`, `price`, `metrics`, `loading`, `progress`, `countdown` agora disponíveis no dropdown Classic e na paleta Modern
+- Antes só existiam na sidebar Classic (CompactBlockPalette)
+
+### 5 Novos Blocos Visuais
+- **Callout/Alerta**: Caixa colorida com ícone, título, lista de itens e nota de rodapé (4 variantes: warning/info/success/error)
+- **Lista com Ícones**: Lista com emojis/ícones customizáveis e texto (layout vertical ou horizontal)
+- **Citação/Destaque**: Citação com aspas, borda lateral colorida e autor opcional (3 estilos)
+- **Selos/Badges**: Linha de selos com ícone + texto (outline ou filled, 3 tamanhos)
+- **Banner/Faixa**: Faixa colorida para destaque (4 variantes: promo/warning/success/info, dispensável)
+
+### Arquivos Alterados
+- `src/types/blocks.ts` — 5 novos tipos + interfaces + createBlock + normalizeBlock
+- `src/components/quiz/blocks/blockPaletteCatalog.ts` — +11 itens (6 paridade + 5 novos) + nova seção "Visual"
+- `src/components/quiz/blocks/BlockEditor.tsx` — dropdown com todos os 27 blocos + isBlockComplete + renderBlock
+- `src/components/quiz/blocks/CompactBlockPalette.tsx` — labels e ícones dos 5 novos
+- `src/components/quiz/blocks/BlockPropertiesPanel.tsx` — 5 novos painéis de propriedades
+- `src/components/quiz/preview/VisualBlockPreviews.tsx` — 5 novos componentes de preview
+- `src/components/quiz/QuizBlockPreview.tsx` — 5 novos cases no switch
+
+---
+
 ## ✅ v2.29.0 - Rotação de Prompts de Imagem do Blog + Cooldown de Campanhas (15/03/2026)
 
 ### Sistema de Rotação de Prompts de Imagem
