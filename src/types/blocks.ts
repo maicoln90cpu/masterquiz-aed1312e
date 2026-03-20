@@ -55,6 +55,7 @@ export interface QuestionBlock extends BaseBlock {
   hint?: string;
   autoAdvance?: boolean;
   nextButtonText?: string; // Texto personalizado do botão "Próxima Pergunta"
+  randomizeOptions?: boolean; // ✅ Etapa 2C: Randomizar ordem das opções
 }
 
 export interface TextBlock extends BaseBlock {
@@ -82,7 +83,7 @@ export interface ImageBlock extends BaseBlock {
 export interface VideoBlock extends BaseBlock {
   type: 'video';
   url: string;
-  provider?: 'youtube' | 'vimeo' | 'direct' | 'uploaded' | 'bunny_stream';
+  provider?: 'youtube' | 'vimeo' | 'direct' | 'uploaded' | 'bunny_stream' | 'loom'; // ✅ Etapa 2C: Loom support
   caption?: string;
   size?: 'small' | 'medium' | 'large' | 'full';
   // Configurações de reprodução
@@ -194,6 +195,8 @@ export interface ProgressBlock extends BaseBlock {
   height?: 'thin' | 'medium' | 'thick';
   animated?: boolean;
   label?: string;
+  colorByRange?: boolean; // ✅ Etapa 2C: Cor por faixa (vermelho→amarelo→verde)
+  showCompletionIcon?: boolean; // ✅ Etapa 2C: Ícone de conclusão ao 100%
 }
 
 export interface CountdownBlock extends BaseBlock {
@@ -237,6 +240,9 @@ export interface SliderBlock extends BaseBlock {
   unit?: string;
   showValue?: boolean;
   required?: boolean;
+  minLabel?: string; // ✅ Etapa 2C: Label no extremo mínimo
+  maxLabel?: string; // ✅ Etapa 2C: Label no extremo máximo
+  showDots?: boolean; // ✅ Etapa 2C: Steps visuais com dots
 }
 
 export interface TextInputBlock extends BaseBlock {
@@ -267,6 +273,7 @@ export interface AccordionBlock extends BaseBlock {
   }[];
   style?: 'default' | 'minimal' | 'bordered';
   allowMultiple?: boolean;
+  iconType?: 'chevron' | 'plus'; // ✅ Etapa 2C: Ícone customizável
 }
 
 export interface ComparisonBlock extends BaseBlock {
@@ -337,7 +344,7 @@ export interface QuoteBlock extends BaseBlock {
 
 export interface BadgeRowBlock extends BaseBlock {
   type: 'badgeRow';
-  badges: { icon: string; text: string }[];
+  badges: { icon: string; text: string; tooltip?: string; color?: string }[]; // ✅ Etapa 2C: Tooltip + cor individual
   variant?: 'outline' | 'filled';
   size?: 'sm' | 'md' | 'lg';
 }

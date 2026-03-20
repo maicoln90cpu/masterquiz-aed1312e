@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Check, X, ChevronDown, User } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, Check, X, ChevronDown, Plus, Minus, User, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { QuizBlock } from "@/types/blocks";
 
 // ---- LOADING ----
@@ -78,18 +80,30 @@ export const ProgressBlockPreview = ({ block, currentQuestion, totalQuestions }:
   const progress = totalQuestions > 0 ? (currentQuestion / totalQuestions) * 100 : 0;
   const heightClass = block.height === 'thin' ? 'h-1' : block.height === 'thick' ? 'h-4' : 'h-2';
 
+  // ✅ Etapa 2C: Cor por faixa (vermelho→amarelo→verde)
+  const getProgressColor = () => {
+    if (block.colorByRange) {
+      if (progress < 33) return '#ef4444';
+      if (progress < 66) return '#f59e0b';
+      return '#22c55e';
+    }
+    return block.color || '#3b82f6';
+  };
+  const progressColor = getProgressColor();
+  const isComplete = progress >= 100;
+
   return (
     <div className="space-y-2">
       {block.label && <p className="text-sm font-medium">{block.label}</p>}
       {block.style === 'bar' && (
         <div className={`w-full ${heightClass} bg-muted rounded-full overflow-hidden`}>
-          <div className={`${heightClass} rounded-full ${block.animated ? 'transition-all duration-500' : ''}`} style={{ width: `${progress}%`, backgroundColor: block.color }} />
+          <div className={`${heightClass} rounded-full ${block.animated ? 'transition-all duration-500' : ''}`} style={{ width: `${progress}%`, backgroundColor: progressColor }} />
         </div>
       )}
       {block.style === 'steps' && (
         <div className="flex gap-1">
           {Array.from({ length: totalQuestions }).map((_, i) => (
-            <div key={i} className={`flex-1 ${heightClass} rounded-full ${block.animated ? 'transition-all duration-300' : ''}`} style={{ backgroundColor: i < currentQuestion ? block.color : '#e5e7eb' }} />
+            <div key={i} className={`flex-1 ${heightClass} rounded-full ${block.animated ? 'transition-all duration-300' : ''}`} style={{ backgroundColor: i < currentQuestion ? progressColor : '#e5e7eb' }} />
           ))}
         </div>
       )}
@@ -97,7 +111,7 @@ export const ProgressBlockPreview = ({ block, currentQuestion, totalQuestions }:
         <div className="flex justify-center">
           <svg className="w-24 h-24 transform -rotate-90">
             <circle cx="48" cy="48" r="40" stroke="#e5e7eb" strokeWidth="8" fill="none" />
-            <circle cx="48" cy="48" r="40" stroke={block.color} strokeWidth="8" fill="none"
+            <circle cx="48" cy="48" r="40" stroke={progressColor} strokeWidth="8" fill="none"
               strokeDasharray={`${2 * Math.PI * 40}`}
               strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
               className={block.animated ? 'transition-all duration-500' : ''}
@@ -106,10 +120,16 @@ export const ProgressBlockPreview = ({ block, currentQuestion, totalQuestions }:
         </div>
       )}
       {block.style === 'percentage' && (
-        <div className="text-center text-4xl font-bold" style={{ color: block.color }}>{Math.round(progress)}%</div>
+        <div className="text-center text-4xl font-bold" style={{ color: progressColor }}>{Math.round(progress)}%</div>
+      )}
+      {/* ✅ Etapa 2C: Ícone de conclusão ao 100% */}
+      {block.showCompletionIcon && isComplete && (
+        <div className="flex justify-center">
+          <CheckCircle className="h-8 w-8 text-green-500 animate-in zoom-in duration-300" />
+        </div>
       )}
       {block.showPercentage && block.style !== 'percentage' && (
-        <p className="text-sm text-center font-medium" style={{ color: block.color }}>{Math.round(progress)}%</p>
+        <p className="text-sm text-center font-medium" style={{ color: progressColor }}>{Math.round(progress)}%</p>
       )}
       {block.showCounter && (
         <p className="text-sm text-center text-muted-foreground">Pergunta {currentQuestion} de {totalQuestions}</p>
@@ -235,18 +255,38 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
       <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
       <div className="px-2">
         <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground font-medium tabular-nums min-w-[40px] text-right">{block.min}{block.unit}</span>
+          <div className="min-w-[40px] text-right">
+            <span className="text-sm text-muted-foreground font-medium tabular-nums">{block.min}{block.unit}</span>
+            {/* ✅ Etapa 2C: Labels nos extremos */}
+            {block.minLabel && <p className="text-[10px] text-muted-foreground/70">{block.minLabel}</p>}
+          </div>
           <Slider value={[value]} min={block.min} max={block.max} step={block.step} onValueChange={(v) => setValue(v[0])} className="flex-1" />
-          <span className="text-sm text-muted-foreground font-medium tabular-nums min-w-[40px]">{block.max}{block.unit}</span>
+          <div className="min-w-[40px]">
+            <span className="text-sm text-muted-foreground font-medium tabular-nums">{block.max}{block.unit}</span>
+            {/* ✅ Etapa 2C: Labels nos extremos */}
+            {block.maxLabel && <p className="text-[10px] text-muted-foreground/70">{block.maxLabel}</p>}
+          </div>
         </div>
-        <div className="flex justify-between px-[20px] mt-1">
-          {ticks.map((tick, i) => (
-            <div key={i} className="flex flex-col items-center">
-              <div className="w-px h-2 bg-muted-foreground/30" />
-              <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">{tick}</span>
-            </div>
-          ))}
-        </div>
+        {/* ✅ Etapa 2C: Steps visuais com dots */}
+        {block.showDots ? (
+          <div className="flex justify-between px-[20px] mt-2">
+            {ticks.map((tick, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className={`w-2 h-2 rounded-full transition-colors ${value >= tick ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-1">{tick}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-between px-[20px] mt-1">
+            {ticks.map((tick, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="w-px h-2 bg-muted-foreground/30" />
+                <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">{tick}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {block.showValue && (
         <div className="text-center">
@@ -313,6 +353,16 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
     });
   };
 
+  // ✅ Etapa 2C: Ícone customizável (chevron ou plus/minus)
+  const renderIcon = (isOpen: boolean) => {
+    if (block.iconType === 'plus') {
+      return isOpen
+        ? <Minus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+        : <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />;
+    }
+    return <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />;
+  };
+
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">{block.title}</h3>
@@ -323,11 +373,22 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
             <div key={index} className={`border rounded-lg overflow-hidden ${block.style === 'bordered' ? 'border-2' : ''}`}>
               <button onClick={() => toggleItem(index)} className="w-full p-3 font-medium bg-muted/50 flex items-center justify-between text-left hover:bg-muted/70 transition-colors">
                 {item.question}
-                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                {renderIcon(isOpen)}
               </button>
-              {isOpen && (
-                <div className="p-3 text-sm text-muted-foreground border-t animate-in slide-in-from-top-1 duration-200">{item.answer}</div>
-              )}
+              {/* ✅ Etapa 2C: Animação suave de abertura */}
+              <AnimatePresence>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-3 text-sm text-muted-foreground border-t">{item.answer}</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}

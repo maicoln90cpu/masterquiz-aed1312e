@@ -282,6 +282,14 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
             onChange={(v) => onChange(update(block, { autoAdvance: v }))}
           />
         )}
+        {/* ✅ Etapa 2C: Randomizar opções */}
+        {block.answerFormat !== 'short_text' && (
+          <SwitchRow
+            label="Randomizar opções"
+            checked={block.randomizeOptions || false}
+            onChange={(v) => onChange(update(block, { randomizeOptions: v }))}
+          />
+        )}
       </div>
     </div>
   );
@@ -393,6 +401,7 @@ const VideoProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           <SelectContent>
             <SelectItem value="youtube">YouTube</SelectItem>
             <SelectItem value="vimeo">Vimeo</SelectItem>
+            <SelectItem value="loom">Loom</SelectItem>
             <SelectItem value="direct">Direto</SelectItem>
             <SelectItem value="uploaded">Upload</SelectItem>
             <SelectItem value="bunny_stream">Bunny Stream</SelectItem>
@@ -621,6 +630,9 @@ const ProgressProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <SwitchRow label="Mostrar percentual" checked={block.showPercentage || false} onChange={(v) => onChange(update(block, { showPercentage: v }))} />
         <SwitchRow label="Mostrar contador" checked={block.showCounter || false} onChange={(v) => onChange(update(block, { showCounter: v }))} />
         <SwitchRow label="Animado" checked={block.animated || false} onChange={(v) => onChange(update(block, { animated: v }))} />
+        {/* ✅ Etapa 2C: Cor por faixa + ícone de conclusão */}
+        <SwitchRow label="Cor por faixa (🔴→🟡→🟢)" checked={block.colorByRange || false} onChange={(v) => onChange(update(block, { colorByRange: v }))} />
+        <SwitchRow label="Ícone de conclusão ✅" checked={block.showCompletionIcon || false} onChange={(v) => onChange(update(block, { showCompletionIcon: v }))} />
       </div>
     </div>
   );
@@ -730,7 +742,17 @@ const SliderProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <div className="space-y-3">
         <SwitchRow label="Mostrar valor" checked={block.showValue || false} onChange={(v) => onChange(update(block, { showValue: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        {/* ✅ Etapa 2C: Steps visuais com dots */}
+        <SwitchRow label="Steps com dots" checked={block.showDots || false} onChange={(v) => onChange(update(block, { showDots: v }))} />
       </div>
+      {/* ✅ Etapa 2C: Labels nos extremos */}
+      <Separator />
+      <PropertySection title="Label Mínimo">
+        <Input value={block.minLabel || ''} placeholder="Ex: Nada" onChange={(e) => onChange(update(block, { minLabel: e.target.value }))} />
+      </PropertySection>
+      <PropertySection title="Label Máximo">
+        <Input value={block.maxLabel || ''} placeholder="Ex: Muito" onChange={(e) => onChange(update(block, { maxLabel: e.target.value }))} />
+      </PropertySection>
     </div>
   );
 };
@@ -781,6 +803,10 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <SwitchRow label="Mostrar labels" checked={block.showLabels || false} onChange={(v) => onChange(update(block, { showLabels: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
       </div>
+      <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground space-y-1">
+        <p>🔴 0-6 = Detrator | 🟡 7-8 = Neutro | 🟢 9-10 = Promotor</p>
+        <p>As cores são aplicadas automaticamente no preview.</p>
+      </div>
     </div>
   );
 };
@@ -796,6 +822,16 @@ const AccordionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
             <SelectItem value="default">Padrão</SelectItem>
             <SelectItem value="minimal">Minimal</SelectItem>
             <SelectItem value="bordered">Bordas</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      {/* ✅ Etapa 2C: Ícone customizável */}
+      <PropertySection title="Ícone">
+        <Select value={block.iconType || 'chevron'} onValueChange={(v) => onChange(update(block, { iconType: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="chevron">▼ Seta</SelectItem>
+            <SelectItem value="plus">＋/－ Plus/Minus</SelectItem>
           </SelectContent>
         </Select>
       </PropertySection>
@@ -1157,17 +1193,32 @@ const BadgeRowProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <Separator />
       <Label>Badges</Label>
       {badges.map((badge, idx) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input className="w-16" value={badge.icon} onChange={(e) => {
-            const newBadges = [...badges];
-            newBadges[idx] = { ...badge, icon: e.target.value };
-            onChange(update(block, { badges: newBadges }));
-          }} placeholder="🔒" />
-          <Input className="flex-1" value={badge.text} onChange={(e) => {
-            const newBadges = [...badges];
-            newBadges[idx] = { ...badge, text: e.target.value };
-            onChange(update(block, { badges: newBadges }));
-          }} placeholder="Texto" />
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-16" value={badge.icon} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, icon: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} placeholder="🔒" />
+            <Input className="flex-1" value={badge.text} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, text: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} placeholder="Texto" />
+          </div>
+          {/* ✅ Etapa 2C: Tooltip + cor individual */}
+          <div className="flex gap-2 items-center ml-1">
+            <Input className="flex-1" value={badge.tooltip || ''} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, tooltip: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} placeholder="Tooltip (hover)" />
+            <Input className="w-12" type="color" value={badge.color || '#000000'} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, color: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} />
+          </div>
         </div>
       ))}
       <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { badges: [...badges, { icon: '✅', text: '' }] }))}>+ Adicionar badge</button>
