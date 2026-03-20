@@ -489,7 +489,8 @@ export type QuizBlock =
   | ConditionalTextBlock
   | ComparisonResultBlock
   | PersonalizedCTABlock
-  | RecommendationBlock;
+  | RecommendationBlock
+  | CalculatorBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {

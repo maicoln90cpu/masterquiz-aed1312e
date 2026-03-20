@@ -52,8 +52,11 @@ export const useQuizPreviewState = ({
 }: UseQuizPreviewStateOptions) => {
   // State
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('mobile');
-  const [currentStep, setCurrentStep] = useState<PreviewStep>(showIntroScreen ? 'intro' : 'quiz');
-  const [internalQuestionIndex, setInternalQuestionIndex] = useState(0);
+  // When externalQuestionIndex is provided, skip intro and go directly to quiz step
+  const [currentStep, setCurrentStep] = useState<PreviewStep>(
+    externalQuestionIndex !== undefined ? 'quiz' : (showIntroScreen ? 'intro' : 'quiz')
+  );
+  const [internalQuestionIndex, setInternalQuestionIndex] = useState(externalQuestionIndex ?? 0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string | string[]>>({});
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', whatsapp: '' });
   const [totalScore, setTotalScore] = useState(0);
@@ -63,6 +66,7 @@ export const useQuizPreviewState = ({
   useEffect(() => {
     if (externalQuestionIndex !== undefined && externalQuestionIndex !== prevExternalIndex.current) {
       setInternalQuestionIndex(externalQuestionIndex);
+      setCurrentStep('quiz');
       prevExternalIndex.current = externalQuestionIndex;
     }
   }, [externalQuestionIndex]);
