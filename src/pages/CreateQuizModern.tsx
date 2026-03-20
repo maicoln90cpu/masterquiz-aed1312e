@@ -675,11 +675,11 @@ const CreateQuizModern = () => {
           {step === 4 && !isExpressMode && (
             <>
               {!appearanceState.showResults && (
-                <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <Alert className="mb-4 border-blue-500/50 bg-blue-500/10">
+                  <AlertTriangle className="h-4 w-4 text-blue-500" />
                   <AlertDescription className="text-sm">
-                    <strong>Coleta de dados desativada:</strong> Você optou pelo formato funil (sem resultados). 
-                    As configurações abaixo só terão efeito se você reativar a exibição de resultados na Etapa 1.
+                    <strong>Coleta automática desativada:</strong> Você optou pelo formato funil (sem resultados). 
+                    A coleta de dados foi automaticamente desativada. Caso queira coletar dados, altere o formato na Etapa 1.
                   </AlertDescription>
                 </Alert>
               )}
