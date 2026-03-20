@@ -1130,13 +1130,18 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
   if (block.type !== 'avatarGroup') return null;
   return (
     <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
+          👥 <strong>Prova Social Visual</strong> — Mostra um grupo de avatares com contador para criar credibilidade (ex: "+1.234 pessoas já fizeram este quiz"). Use para aumentar conversão.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Número de pessoas</Label>
         <Input type="number" value={(block as any).count || 1234} onChange={(e) => onChange(update(block, { count: Number(e.target.value) }))} />
       </div>
       <div className="space-y-2">
         <Label>Texto/Label</Label>
-        <Input value={(block as any).label || ''} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
+        <Input value={(block as any).label || ''} placeholder="pessoas já responderam" onChange={(e) => onChange(update(block, { label: e.target.value }))} />
       </div>
       <div className="space-y-2">
         <Label>Avatares visíveis</Label>
