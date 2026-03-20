@@ -12,6 +12,9 @@ const CALLOUT_DEFAULTS = {
 };
 
 export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'callout' } }) => {
+  const [dismissed, setDismissed] = useState(false); // ✅ Etapa 2D: Dismissível
+  if (dismissed) return null;
+
   const defaults = CALLOUT_DEFAULTS[block.variant || 'warning'];
   const Icon = defaults.icon;
   const bg = block.backgroundColor || defaults.bg;
@@ -20,12 +23,18 @@ export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'cal
 
   return (
     <div
-      className="rounded-lg p-4 space-y-2"
+      className="rounded-lg p-4 space-y-2 relative"
       style={{ backgroundColor: bg, borderLeft: `4px solid ${border}`, color: text }}
     >
       <div className="flex items-center gap-2 font-bold text-sm">
         <Icon className="h-5 w-5 shrink-0" style={{ color: border }} />
-        <span>{block.title}</span>
+        <span className="flex-1">{block.title}</span>
+        {/* ✅ Etapa 2D: Botão X para callout dismissível */}
+        {block.dismissible && (
+          <button onClick={() => setDismissed(true)} className="opacity-60 hover:opacity-100 transition-opacity">
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
       {block.items && block.items.length > 0 && (
         <ul className="space-y-1 ml-7">
