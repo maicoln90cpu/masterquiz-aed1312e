@@ -1189,17 +1189,32 @@ const BadgeRowProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <Separator />
       <Label>Badges</Label>
       {badges.map((badge, idx) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input className="w-16" value={badge.icon} onChange={(e) => {
-            const newBadges = [...badges];
-            newBadges[idx] = { ...badge, icon: e.target.value };
-            onChange(update(block, { badges: newBadges }));
-          }} placeholder="🔒" />
-          <Input className="flex-1" value={badge.text} onChange={(e) => {
-            const newBadges = [...badges];
-            newBadges[idx] = { ...badge, text: e.target.value };
-            onChange(update(block, { badges: newBadges }));
-          }} placeholder="Texto" />
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-16" value={badge.icon} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, icon: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} placeholder="🔒" />
+            <Input className="flex-1" value={badge.text} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, text: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} placeholder="Texto" />
+          </div>
+          {/* ✅ Etapa 2C: Tooltip + cor individual */}
+          <div className="flex gap-2 items-center ml-1">
+            <Input className="flex-1" value={badge.tooltip || ''} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, tooltip: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} placeholder="Tooltip (hover)" />
+            <Input className="w-12" type="color" value={badge.color || '#000000'} onChange={(e) => {
+              const newBadges = [...badges];
+              newBadges[idx] = { ...badge, color: e.target.value };
+              onChange(update(block, { badges: newBadges }));
+            }} />
+          </div>
         </div>
       ))}
       <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { badges: [...badges, { icon: '✅', text: '' }] }))}>+ Adicionar badge</button>
