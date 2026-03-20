@@ -22,7 +22,12 @@ export type BlockType =
   | 'accordion'
   | 'comparison'
   | 'socialProof'
-  | 'animatedCounter';
+  | 'animatedCounter'
+  | 'callout'
+  | 'iconList'
+  | 'quote'
+  | 'badgeRow'
+  | 'banner';
 
 export interface BaseBlock {
   id: string;
