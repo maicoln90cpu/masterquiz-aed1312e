@@ -1683,7 +1683,7 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
 // MAIN PANEL COMPONENT
 // ============================================
 
-export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropertiesPanelProps) => {
+export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: BlockPropertiesPanelProps) => {
   const block = normalizeBlock(rawBlock);
   const icon = BLOCK_ICONS[block.type];
   const name = BLOCK_NAMES[block.type];
@@ -1698,7 +1698,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'audio': return <AudioProperties block={block} onChange={onChange} />;
       case 'gallery': return <GalleryProperties block={block} onChange={onChange} />;
       case 'embed': return <EmbedProperties block={block} onChange={onChange} />;
-      case 'button': return <ButtonProperties block={block} onChange={onChange} />;
+      case 'button': return <ButtonProperties block={block} onChange={onChange} questions={questions} />;
       case 'price': return <PriceProperties block={block} onChange={onChange} />;
       case 'metrics': return <MetricsProperties block={block} onChange={onChange} />;
       case 'loading': return <LoadingProperties block={block} onChange={onChange} />;
@@ -1717,13 +1717,13 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'quote': return <QuoteProperties block={block} onChange={onChange} />;
       case 'badgeRow': return <BadgeRowProperties block={block} onChange={onChange} />;
       case 'banner': return <BannerProperties block={block} onChange={onChange} />;
-      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} />;
+      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} questions={questions} />;
       case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
       case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
-      case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} />;
-      case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} />;
-      case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} />;
-      case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} />;
+      case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} questions={questions} />;
+      case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} questions={questions} />;
+      case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} questions={questions} />;
+      case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} questions={questions} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
