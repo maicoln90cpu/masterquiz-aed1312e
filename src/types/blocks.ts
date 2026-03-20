@@ -403,6 +403,30 @@ export interface PersonalizedCTABlock extends BaseBlock {
   fallbackText?: string;
 }
 
+export interface RecommendationBlock extends BaseBlock {
+  type: 'recommendation';
+  title?: string;
+  subtitle?: string;
+  recommendations: {
+    id: string;
+    name: string;
+    description?: string;
+    imageUrl?: string;
+    buttonText?: string;
+    buttonUrl?: string;
+    badge?: string;
+    rules: {
+      questionId: string;
+      answers: string[];
+      weight: number;
+    }[];
+  }[];
+  displayMode?: 'best_match' | 'top_3' | 'all_scored';
+  style?: 'card' | 'list' | 'grid';
+  showScore?: boolean;
+  fallbackText?: string;
+}
+
 export type QuizBlock =
   | QuestionBlock
   | TextBlock
@@ -436,7 +460,8 @@ export type QuizBlock =
   | AvatarGroupBlock
   | ConditionalTextBlock
   | ComparisonResultBlock
-  | PersonalizedCTABlock;
+  | PersonalizedCTABlock
+  | RecommendationBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
