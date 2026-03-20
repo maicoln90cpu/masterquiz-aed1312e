@@ -861,11 +861,11 @@ const CreateQuizModern = () => {
         </footer>
       )}
 
-      {/* ========== PREVIEW DIALOG ========== */}
+      {/* ========== PREVIEW COMPLETO DIALOG ========== */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
         <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>{t('createQuiz.preview', 'Preview')}</DialogTitle>
+            <DialogTitle>Preview Completo</DialogTitle>
             <DialogDescription>{t('createQuiz.previewDescription', 'Visualize como seu quiz ficará')}</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-auto">
@@ -880,6 +880,37 @@ const CreateQuizModern = () => {
               showDescription={showDescription}
               showQuestionNumber={showQuestionNumber}
               mode="fullscreen"
+              formConfig={{
+                collect_name: collectName,
+                collect_email: collectEmail,
+                collect_whatsapp: collectWhatsapp,
+                collection_timing: collectionTiming as 'before' | 'after' | 'none',
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========== PREVIEW ATUAL DIALOG ========== */}
+      <Dialog open={showCurrentPreviewDialog} onOpenChange={setShowCurrentPreviewDialog}>
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Preview Atual — Pergunta {currentQuestionIndex + 1}</DialogTitle>
+            <DialogDescription>Navegue entre as perguntas do quiz usando os botões abaixo</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto">
+            <UnifiedQuizPreview
+              questions={questions}
+              title={title}
+              description={description}
+              template={template}
+              logoUrl={logoUrl}
+              showLogo={showLogo}
+              showTitle={showTitle}
+              showDescription={showDescription}
+              showQuestionNumber={showQuestionNumber}
+              mode="fullscreen"
+              externalQuestionIndex={currentQuestionIndex}
               formConfig={{
                 collect_name: collectName,
                 collect_email: collectEmail,
