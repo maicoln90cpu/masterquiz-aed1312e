@@ -911,6 +911,19 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         showScore: false,
         fallbackText: 'Não encontramos uma recomendação específica para você.',
       } as RecommendationBlock;
+
+    case 'calculator':
+      return {
+        ...baseBlock,
+        type: 'calculator',
+        formula: '',
+        variables: [],
+        resultUnit: '',
+        resultPrefix: '',
+        decimalPlaces: 2,
+        resultLabel: 'Resultado',
+        ranges: [],
+      } as CalculatorBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
