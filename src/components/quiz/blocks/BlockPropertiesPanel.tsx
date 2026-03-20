@@ -1645,21 +1645,22 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
                     newRecs[idx] = { ...rec, rules: newRules };
                     onChange(update(block, { recommendations: newRecs }));
                   }} />
-                )
-              <Input className="flex-1 text-xs h-7" value={(rule.answers || []).join(', ')} placeholder="Respostas (separadas por vírgula)" onChange={(e) => {
-                const newRecs = [...recommendations];
-                const newRules = [...(rec.rules || [])];
-                newRules[rIdx] = { ...rule, answers: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) };
-                newRecs[idx] = { ...rec, rules: newRules };
-                onChange(update(block, { recommendations: newRecs }));
-              }} />
-              <Input className="w-14 text-xs h-7" type="number" value={rule.weight} placeholder="Peso" onChange={(e) => {
-                const newRecs = [...recommendations];
-                const newRules = [...(rec.rules || [])];
-                newRules[rIdx] = { ...rule, weight: Number(e.target.value) };
-                newRecs[idx] = { ...rec, rules: newRules };
-                onChange(update(block, { recommendations: newRecs }));
-              }} />
+                )}
+                <Input className="flex-1 text-xs h-7" value={(rule.answers || []).join(', ')} placeholder="Respostas (separadas por vírgula)" onChange={(e) => {
+                  const newRecs = [...recommendations];
+                  const newRules = [...(rec.rules || [])];
+                  newRules[rIdx] = { ...rule, answers: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) };
+                  newRecs[idx] = { ...rec, rules: newRules };
+                  onChange(update(block, { recommendations: newRecs }));
+                }} />
+                <Input className="w-14 text-xs h-7" type="number" value={rule.weight} placeholder="Peso" onChange={(e) => {
+                  const newRecs = [...recommendations];
+                  const newRules = [...(rec.rules || [])];
+                  newRules[rIdx] = { ...rule, weight: Number(e.target.value) };
+                  newRecs[idx] = { ...rec, rules: newRules };
+                  onChange(update(block, { recommendations: newRecs }));
+                }} />
+              </div>
             </div>
           ))}
           <button className="text-[10px] text-primary underline" onClick={() => {
