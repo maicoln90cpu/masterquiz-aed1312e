@@ -354,7 +354,12 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       accordion: t('createQuiz.blocks.accordion'),
       comparison: t('createQuiz.blocks.comparison'),
       socialProof: t('createQuiz.blocks.socialProof'),
-      animatedCounter: t('createQuiz.blocks.animatedCounter', { defaultValue: 'Contador Animado' })
+      animatedCounter: t('createQuiz.blocks.animatedCounter', { defaultValue: 'Contador Animado' }),
+      callout: 'Callout/Alerta',
+      iconList: 'Lista com Ícones',
+      quote: 'Citação',
+      badgeRow: 'Selos/Badges',
+      banner: 'Banner/Faixa',
     };
     
     toast.success(
