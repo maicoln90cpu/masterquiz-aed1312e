@@ -644,6 +644,10 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 <Star className="h-4 w-4 mr-2" />
                 Recomendação
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('calculator')}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Calculadora
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

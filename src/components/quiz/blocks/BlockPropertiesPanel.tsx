@@ -215,6 +215,7 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   comparisonResult: 'Comparação Dinâmica',
   personalizedCTA: 'CTA Personalizado',
   recommendation: 'Recomendação',
+  calculator: 'Calculadora',
 };
 
 // Helper to update block with type safety
