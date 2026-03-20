@@ -48,6 +48,9 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   quote: <Quote className="h-4 w-4" />,
   badgeRow: <Award className="h-4 w-4" />,
   banner: <Flag className="h-4 w-4" />,
+  answerSummary: <List className="h-4 w-4" />,
+  progressMessage: <TrendingUp className="h-4 w-4" />,
+  avatarGroup: <Users className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
@@ -78,6 +81,9 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   quote: 'Citação',
   badgeRow: 'Selos/Badges',
   banner: 'Banner/Faixa',
+  answerSummary: 'Resumo de Respostas',
+  progressMessage: 'Mensagem de Progresso',
+  avatarGroup: 'Grupo de Avatares',
 };
 
 // Helper to update block with type safety
@@ -1020,6 +1026,116 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   );
 };
 
+// ---- ANSWER SUMMARY ----
+const AnswerSummaryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'answerSummary') return null;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Título</Label>
+        <Input value={block.title || ''} onChange={(e) => onChange(update(block, { title: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Subtítulo</Label>
+        <Input value={block.subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Estilo</Label>
+        <Select value={block.style || 'card'} onValueChange={(v) => onChange(update(block, { style: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="card">Card</SelectItem>
+            <SelectItem value="list">Lista</SelectItem>
+            <SelectItem value="minimal">Minimalista</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar texto da pergunta</Label>
+        <Switch checked={block.showQuestionText !== false} onCheckedChange={(v) => onChange(update(block, { showQuestionText: v }))} />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar ícones</Label>
+        <Switch checked={block.showIcon !== false} onCheckedChange={(v) => onChange(update(block, { showIcon: v }))} />
+      </div>
+    </div>
+  );
+};
+
+// ---- PROGRESS MESSAGE ----
+const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'progressMessage') return null;
+  const messages = (block as any).messages || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Estilo</Label>
+        <Select value={(block as any).style || 'card'} onValueChange={(v) => onChange(update(block, { style: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="card">Card</SelectItem>
+            <SelectItem value="inline">Inline</SelectItem>
+            <SelectItem value="toast">Toast/Pill</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Separator />
+      <Label>Mensagens por % de progresso</Label>
+      {messages.map((msg: any, idx: number) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <Input className="w-16" type="number" min={0} max={100} value={msg.threshold} onChange={(e) => {
+            const newMsgs = [...messages];
+            newMsgs[idx] = { ...msg, threshold: Number(e.target.value) };
+            onChange(update(block, { messages: newMsgs }));
+          }} />
+          <span className="text-xs text-muted-foreground">%</span>
+          <Input className="flex-1" value={msg.text} onChange={(e) => {
+            const newMsgs = [...messages];
+            newMsgs[idx] = { ...msg, text: e.target.value };
+            onChange(update(block, { messages: newMsgs }));
+          }} />
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '' }] }))}>+ Adicionar mensagem</button>
+    </div>
+  );
+};
+
+// ---- AVATAR GROUP ----
+const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'avatarGroup') return null;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Número de pessoas</Label>
+        <Input type="number" value={(block as any).count || 1234} onChange={(e) => onChange(update(block, { count: Number(e.target.value) }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Texto/Label</Label>
+        <Input value={(block as any).label || ''} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Avatares visíveis</Label>
+        <Input type="number" min={1} max={8} value={(block as any).maxVisible || 5} onChange={(e) => onChange(update(block, { maxVisible: Number(e.target.value) }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Formato</Label>
+        <Select value={(block as any).avatarStyle || 'circle'} onValueChange={(v) => onChange(update(block, { avatarStyle: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="circle">Circular</SelectItem>
+            <SelectItem value="square">Quadrado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar contador</Label>
+        <Switch checked={(block as any).showCount !== false} onCheckedChange={(v) => onChange(update(block, { showCount: v }))} />
+      </div>
+    </div>
+  );
+};
+
 // ============================================
 // MAIN PANEL COMPONENT
 // ============================================
@@ -1058,6 +1174,9 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'quote': return <QuoteProperties block={block} onChange={onChange} />;
       case 'badgeRow': return <BadgeRowProperties block={block} onChange={onChange} />;
       case 'banner': return <BannerProperties block={block} onChange={onChange} />;
+      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} />;
+      case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
+      case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };

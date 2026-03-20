@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { QuizBlock, VideoBlock } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
+import type { QuizQuestion } from "@/types/quiz";
 
 // ✅ Fase 8: Sub-componentes modulares
 import { QuestionBlockPreview } from "./preview/QuestionBlockPreview";
@@ -22,6 +23,9 @@ import {
   CalloutBlockPreview, IconListBlockPreview, QuoteBlockPreview,
   BadgeRowBlockPreview, BannerBlockPreview,
 } from "./preview/VisualBlockPreviews";
+import {
+  AnswerSummaryBlockPreview, ProgressMessageBlockPreview, AvatarGroupBlockPreview,
+} from "./preview/DynamicBlockPreviews";
 
 // ✅ FASE 12: Lazy load MetricsBlockPreview (recharts é pesado ~200KB)
 const LazyMetricsBlockPreview = lazy(() =>
@@ -38,6 +42,11 @@ interface QuizBlockPreviewProps {
   selectedAnswer?: string | string[];
   onAnswerSelect?: (value: string, isMultiple: boolean) => void;
   onTextChange?: (text: string) => void;
+  // Runtime data for dynamic blocks
+  answers?: Record<string, any>;
+  questions?: QuizQuestion[];
+  currentStep?: number;
+  totalQuestions?: number;
 }
 
 export const QuizBlockPreview = ({
@@ -50,6 +59,10 @@ export const QuizBlockPreview = ({
   selectedAnswer,
   onAnswerSelect,
   onTextChange,
+  answers,
+  questions,
+  currentStep,
+  totalQuestions,
 }: QuizBlockPreviewProps) => {
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
@@ -137,6 +150,12 @@ export const QuizBlockPreview = ({
         return <BadgeRowBlockPreview key={block.id} block={block as QuizBlock & { type: 'badgeRow' }} />;
       case "banner":
         return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} />;
+      case "answerSummary":
+        return <AnswerSummaryBlockPreview key={block.id} block={block as QuizBlock & { type: 'answerSummary' }} answers={answers} questions={questions} />;
+      case "progressMessage":
+        return <ProgressMessageBlockPreview key={block.id} block={block as QuizBlock & { type: 'progressMessage' }} currentStep={currentStep} totalQuestions={totalQuestions} />;
+      case "avatarGroup":
+        return <AvatarGroupBlockPreview key={block.id} block={block as QuizBlock & { type: 'avatarGroup' }} />;
       default:
         return null;
     }

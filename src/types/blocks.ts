@@ -27,7 +27,10 @@ export type BlockType =
   | 'iconList'
   | 'quote'
   | 'badgeRow'
-  | 'banner';
+  | 'banner'
+  | 'answerSummary'
+  | 'progressMessage'
+  | 'avatarGroup';
 
 export interface BaseBlock {
   id: string;
@@ -337,6 +340,33 @@ export interface BannerBlock extends BaseBlock {
   dismissible?: boolean;
 }
 
+export interface AnswerSummaryBlock extends BaseBlock {
+  type: 'answerSummary';
+  title?: string;
+  subtitle?: string;
+  style?: 'card' | 'list' | 'minimal';
+  showQuestionText?: boolean;
+  showIcon?: boolean;
+  accentColor?: string;
+}
+
+export interface ProgressMessageBlock extends BaseBlock {
+  type: 'progressMessage';
+  messages: { threshold: number; text: string }[];
+  style?: 'card' | 'inline' | 'toast';
+  icon?: string;
+  accentColor?: string;
+}
+
+export interface AvatarGroupBlock extends BaseBlock {
+  type: 'avatarGroup';
+  count: number;
+  label?: string;
+  maxVisible?: number;
+  showCount?: boolean;
+  avatarStyle?: 'circle' | 'square';
+}
+
 export type QuizBlock = 
   | QuestionBlock
   | TextBlock
@@ -364,7 +394,10 @@ export type QuizBlock =
   | IconListBlock
   | QuoteBlock
   | BadgeRowBlock
-  | BannerBlock;
+  | BannerBlock
+  | AnswerSummaryBlock
+  | ProgressMessageBlock
+  | AvatarGroupBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
@@ -690,6 +723,42 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         variant: 'promo',
         dismissible: false,
       } as BannerBlock;
+
+    case 'answerSummary':
+      return {
+        ...baseBlock,
+        type: 'answerSummary',
+        title: '📋 Resumo das suas respostas',
+        subtitle: 'De acordo com suas respostas, preparamos algo personalizado para você!',
+        style: 'card',
+        showQuestionText: true,
+        showIcon: true,
+      } as AnswerSummaryBlock;
+
+    case 'progressMessage':
+      return {
+        ...baseBlock,
+        type: 'progressMessage',
+        messages: [
+          { threshold: 25, text: '🚀 Ótimo começo! Continue assim.' },
+          { threshold: 50, text: '💪 Você já está na metade! Falta pouco.' },
+          { threshold: 75, text: '🔥 Quase lá! Só mais algumas perguntas.' },
+          { threshold: 100, text: '🎉 Parabéns! Você completou tudo!' },
+        ],
+        style: 'card',
+        icon: '💬',
+      } as ProgressMessageBlock;
+
+    case 'avatarGroup':
+      return {
+        ...baseBlock,
+        type: 'avatarGroup',
+        count: 1234,
+        label: 'pessoas já fizeram este quiz',
+        maxVisible: 5,
+        showCount: true,
+        avatarStyle: 'circle',
+      } as AvatarGroupBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
@@ -865,6 +934,31 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         ...block,
         text: block.text || '',
         variant: block.variant || 'promo',
+      };
+    case 'answerSummary':
+      return {
+        ...block,
+        title: block.title || '📋 Resumo das suas respostas',
+        style: block.style || 'card',
+        showQuestionText: block.showQuestionText !== false,
+        showIcon: block.showIcon !== false,
+      };
+    case 'progressMessage':
+      return {
+        ...block,
+        messages: Array.isArray(block.messages) && block.messages.length > 0
+          ? block.messages
+          : [{ threshold: 50, text: 'Você está indo bem!' }],
+        style: block.style || 'card',
+      };
+    case 'avatarGroup':
+      return {
+        ...block,
+        count: block.count ?? 1234,
+        label: block.label || 'pessoas já fizeram este quiz',
+        maxVisible: block.maxVisible ?? 5,
+        showCount: block.showCount !== false,
+        avatarStyle: block.avatarStyle || 'circle',
       };
     default:
       return block;

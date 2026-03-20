@@ -2,7 +2,7 @@ import {
   HelpCircle, Type, Minus, Image, Video, Music, Images, Code,
   SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell,
   MousePointerClick, DollarSign, BarChart3, Loader2, TrendingUp, Timer,
-  AlertTriangle, List, Quote, Award, Flag
+  AlertTriangle, List, Quote, Award, Flag, ClipboardList, Users
 } from "lucide-react";
 import type { BlockType } from "@/types/blocks";
 import type { LucideIcon } from "lucide-react";
@@ -82,6 +82,15 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'quote', icon: Quote, labelKey: 'createQuiz.blocks.quote', defaultLabel: 'Citação/Destaque' },
       { type: 'badgeRow', icon: Award, labelKey: 'createQuiz.blocks.badgeRow', defaultLabel: 'Selos/Badges' },
       { type: 'banner', icon: Flag, labelKey: 'createQuiz.blocks.banner', defaultLabel: 'Banner/Faixa' },
+    ],
+  },
+  {
+    titleKey: 'createQuiz.blockEditor.dynamicBlocks',
+    defaultTitle: 'Dinâmico',
+    items: [
+      { type: 'answerSummary', icon: ClipboardList, labelKey: 'createQuiz.blocks.answerSummary', defaultLabel: 'Resumo de Respostas' },
+      { type: 'progressMessage', icon: TrendingUp, labelKey: 'createQuiz.blocks.progressMessage', defaultLabel: 'Mensagem de Progresso' },
+      { type: 'avatarGroup', icon: Users, labelKey: 'createQuiz.blocks.avatarGroup', defaultLabel: 'Grupo de Avatares' },
     ],
   },
 ];

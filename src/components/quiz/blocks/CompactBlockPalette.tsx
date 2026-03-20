@@ -69,6 +69,9 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       case 'quote': return <Type className="h-3 w-3" />;
       case 'badgeRow': return <Star className="h-3 w-3" />;
       case 'banner': return <Bell className="h-3 w-3" />;
+      case 'answerSummary': return <Type className="h-3 w-3" />;
+      case 'progressMessage': return <TrendingUp className="h-3 w-3" />;
+      case 'avatarGroup': return <Bell className="h-3 w-3" />;
     }
   };
 
@@ -101,6 +104,9 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       quote: 'Citação',
       badgeRow: 'Selos/Badges',
       banner: 'Banner/Faixa',
+      answerSummary: 'Resumo de Respostas',
+      progressMessage: 'Mensagem de Progresso',
+      avatarGroup: 'Grupo de Avatares',
     };
     return labels[type];
   };
@@ -166,6 +172,10 @@ export const CompactBlockPalette = React.memo(({
     { type: "comparison" as BlockType, icon: Columns, name: "Comparação", tooltip: "Antes vs Depois, A vs B" },
     { type: "socialProof" as BlockType, icon: Bell, name: "Prova Social", tooltip: "Notificações animadas" },
     { type: "animatedCounter" as BlockType, icon: TrendingUp, name: "Contador Animado", tooltip: "Contador numérico com animação progressiva" },
+    // Blocos dinâmicos
+    { type: "answerSummary" as BlockType, icon: Type, name: "Resumo de Respostas", tooltip: "Exibe respostas anteriores do usuário" },
+    { type: "progressMessage" as BlockType, icon: TrendingUp, name: "Mensagem de Progresso", tooltip: "Mensagem motivacional baseada no progresso" },
+    { type: "avatarGroup" as BlockType, icon: Bell, name: "Grupo de Avatares", tooltip: "Prova social com avatares e contador" },
   ];
 
   const templates = [
