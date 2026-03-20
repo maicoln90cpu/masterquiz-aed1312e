@@ -142,6 +142,9 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'answerSummary':
       case 'progressMessage':
       case 'avatarGroup':
+      case 'conditionalText':
+      case 'comparisonResult':
+      case 'personalizedCTA':
         return true;
       default:
         return false;
