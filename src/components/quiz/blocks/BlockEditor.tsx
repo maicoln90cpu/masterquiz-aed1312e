@@ -193,6 +193,23 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
         return <ProgressBlock block={block} onChange={onUpdate} />;
       case 'animatedCounter':
         return <AnimatedCounterBlock block={block} onChange={onUpdate} />;
+      case 'callout':
+      case 'iconList':
+      case 'quote':
+      case 'badgeRow':
+      case 'banner':
+        return (
+          <div className="p-3 border rounded-lg bg-muted/30">
+            <p className="text-xs text-muted-foreground mb-1 font-medium">
+              {block.type === 'callout' ? '⚠️ Callout/Alerta' :
+               block.type === 'iconList' ? '📋 Lista com Ícones' :
+               block.type === 'quote' ? '💬 Citação/Destaque' :
+               block.type === 'badgeRow' ? '🏅 Selos/Badges' :
+               '🚩 Banner/Faixa'}
+            </p>
+            <p className="text-sm text-muted-foreground">Configure no painel de propriedades →</p>
+          </div>
+        );
       default:
         return null;
     }
