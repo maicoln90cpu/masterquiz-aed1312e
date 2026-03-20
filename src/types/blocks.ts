@@ -285,6 +285,8 @@ export interface ComparisonBlock extends BaseBlock {
   leftStyle?: 'negative' | 'neutral';
   rightStyle?: 'positive' | 'neutral';
   showIcons?: boolean;
+  highlightWinner?: 'left' | 'right' | 'none'; // ✅ Etapa 2D: Highlight da coluna vencedora
+  itemIcons?: { left?: string; right?: string }; // ✅ Etapa 2D: Ícones customizados por coluna
 }
 
 export interface SocialProofBlock extends BaseBlock {
