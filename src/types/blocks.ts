@@ -797,6 +797,42 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         showCount: true,
         avatarStyle: 'circle',
       } as AvatarGroupBlock;
+
+    case 'conditionalText':
+      return {
+        ...baseBlock,
+        type: 'conditionalText',
+        conditions: [
+          { answer: 'Opção A', text: 'Texto quando o usuário escolher Opção A' },
+          { answer: 'Opção B', text: 'Texto quando o usuário escolher Opção B' },
+        ],
+        fallbackText: 'Texto padrão quando nenhuma condição corresponder.',
+        style: 'default',
+      } as ConditionalTextBlock;
+
+    case 'comparisonResult':
+      return {
+        ...baseBlock,
+        type: 'comparisonResult',
+        beforeTitle: 'Sem nosso produto',
+        afterTitle: 'Com nosso produto',
+        beforeItems: ['Problema 1', 'Problema 2', 'Problema 3'],
+        afterItems: ['Solução personalizada 1', 'Solução personalizada 2', 'Solução personalizada 3'],
+        showIcons: true,
+      } as ComparisonResultBlock;
+
+    case 'personalizedCTA':
+      return {
+        ...baseBlock,
+        type: 'personalizedCTA',
+        textTemplate: 'Ver plano para {resposta}',
+        url: '',
+        variant: 'default',
+        size: 'lg',
+        openInNewTab: false,
+        fallbackText: 'Ver plano personalizado',
+        conditions: [],
+      } as PersonalizedCTABlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
