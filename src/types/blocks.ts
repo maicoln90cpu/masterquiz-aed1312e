@@ -935,6 +935,31 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         text: block.text || '',
         variant: block.variant || 'promo',
       };
+    case 'answerSummary':
+      return {
+        ...block,
+        title: block.title || '📋 Resumo das suas respostas',
+        style: block.style || 'card',
+        showQuestionText: block.showQuestionText !== false,
+        showIcon: block.showIcon !== false,
+      };
+    case 'progressMessage':
+      return {
+        ...block,
+        messages: Array.isArray(block.messages) && block.messages.length > 0
+          ? block.messages
+          : [{ threshold: 50, text: 'Você está indo bem!' }],
+        style: block.style || 'card',
+      };
+    case 'avatarGroup':
+      return {
+        ...block,
+        count: block.count ?? 1234,
+        label: block.label || 'pessoas já fizeram este quiz',
+        maxVisible: block.maxVisible ?? 5,
+        showCount: block.showCount !== false,
+        avatarStyle: block.avatarStyle || 'circle',
+      };
     default:
       return block;
   }
