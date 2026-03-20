@@ -1366,6 +1366,11 @@ const RecommendationProperties = ({ block, onChange }: BlockPropertiesPanelProps
   const recommendations = (block as any).recommendations || [];
   return (
     <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
+          🎯 <strong>Motor de Recomendação</strong> — Configure produtos/serviços com regras baseadas em respostas. O sistema calcula automaticamente qual recomendar usando pesos. Copie os IDs das perguntas na lista à esquerda para usar nas regras.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Título</Label>
         <Input value={(block as any).title || ''} onChange={(e) => onChange(update(block, { title: e.target.value }))} />
