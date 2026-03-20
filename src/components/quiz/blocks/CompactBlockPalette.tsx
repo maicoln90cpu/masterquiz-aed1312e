@@ -114,6 +114,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       conditionalText: 'Texto Condicional',
       comparisonResult: 'Comparação Dinâmica',
       personalizedCTA: 'CTA Personalizado',
+      recommendation: 'Recomendação',
     };
     return labels[type];
   };
