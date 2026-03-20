@@ -285,6 +285,8 @@ export interface ComparisonBlock extends BaseBlock {
   leftStyle?: 'negative' | 'neutral';
   rightStyle?: 'positive' | 'neutral';
   showIcons?: boolean;
+  highlightWinner?: 'left' | 'right' | 'none'; // ✅ Etapa 2D: Highlight da coluna vencedora
+  itemIcons?: { left?: string; right?: string }; // ✅ Etapa 2D: Ícones customizados por coluna
 }
 
 export interface SocialProofBlock extends BaseBlock {
@@ -313,6 +315,8 @@ export interface AnimatedCounterBlock extends BaseBlock {
   color?: string;
   label?: string;
   separator?: boolean;
+  currencyFormat?: boolean; // ✅ Etapa 2D: Formato de moeda (R$ 1.234,56)
+  decimalPlaces?: number; // ✅ Etapa 2D: Casas decimais para moeda
 }
 
 export interface CalloutBlock extends BaseBlock {
@@ -325,11 +329,12 @@ export interface CalloutBlock extends BaseBlock {
   backgroundColor?: string;
   borderColor?: string;
   textColor?: string;
+  dismissible?: boolean; // ✅ Etapa 2D: Callout dismissível
 }
 
 export interface IconListBlock extends BaseBlock {
   type: 'iconList';
-  items: { icon: string; text: string }[];
+  items: { icon: string; text: string; color?: string }[]; // ✅ Etapa 2D: Cor individual por item
   iconColor?: string;
   layout?: 'vertical' | 'horizontal';
 }
@@ -340,6 +345,7 @@ export interface QuoteBlock extends BaseBlock {
   author?: string;
   borderColor?: string;
   style?: 'default' | 'large' | 'minimal';
+  backgroundImageUrl?: string; // ✅ Etapa 2D: Imagem de fundo opcional
 }
 
 export interface BadgeRowBlock extends BaseBlock {
@@ -355,6 +361,8 @@ export interface BannerBlock extends BaseBlock {
   variant?: 'warning' | 'success' | 'info' | 'promo';
   icon?: string;
   dismissible?: boolean;
+  linkUrl?: string; // ✅ Etapa 2D: Link clicável
+  linkTarget?: '_blank' | '_self'; // ✅ Etapa 2D: Abrir em nova aba
 }
 
 export interface AnswerSummaryBlock extends BaseBlock {
@@ -370,10 +378,11 @@ export interface AnswerSummaryBlock extends BaseBlock {
 
 export interface ProgressMessageBlock extends BaseBlock {
   type: 'progressMessage';
-  messages: { threshold: number; text: string }[];
+  messages: { threshold: number; text: string; icon?: string }[]; // ✅ Etapa 2D: Ícone por faixa
   style?: 'card' | 'inline' | 'toast';
   icon?: string;
   accentColor?: string;
+  animateFade?: boolean; // ✅ Etapa 2D: Animação fade entre mensagens
 }
 
 export interface AvatarGroupBlock extends BaseBlock {
@@ -383,6 +392,7 @@ export interface AvatarGroupBlock extends BaseBlock {
   maxVisible?: number;
   showCount?: boolean;
   avatarStyle?: 'circle' | 'square';
+  profileUrl?: string; // ✅ Etapa 2D: Link para perfil ao clicar
 }
 
 export interface ConditionalTextBlock extends BaseBlock {
@@ -403,6 +413,10 @@ export interface ComparisonResultBlock extends BaseBlock {
   beforeItems?: string[];
   afterItems?: string[];
   showIcons?: boolean;
+  beforeColor?: string; // ✅ Etapa 2D: Cor configurável coluna antes
+  afterColor?: string; // ✅ Etapa 2D: Cor configurável coluna depois
+  beforeIcon?: string; // ✅ Etapa 2D: Ícone personalizado antes
+  afterIcon?: string; // ✅ Etapa 2D: Ícone personalizado depois
 }
 
 export interface PersonalizedCTABlock extends BaseBlock {
@@ -439,6 +453,7 @@ export interface RecommendationBlock extends BaseBlock {
   style?: 'card' | 'list' | 'grid';
   showScore?: boolean;
   fallbackText?: string;
+  maxDisplay?: number; // ✅ Etapa 2D: Limite máximo de exibição
 }
 
 export interface CalculatorBlock extends BaseBlock {

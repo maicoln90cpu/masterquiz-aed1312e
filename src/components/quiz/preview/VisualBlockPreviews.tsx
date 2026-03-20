@@ -12,6 +12,9 @@ const CALLOUT_DEFAULTS = {
 };
 
 export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'callout' } }) => {
+  const [dismissed, setDismissed] = useState(false); // ✅ Etapa 2D: Dismissível
+  if (dismissed) return null;
+
   const defaults = CALLOUT_DEFAULTS[block.variant || 'warning'];
   const Icon = defaults.icon;
   const bg = block.backgroundColor || defaults.bg;
@@ -20,12 +23,18 @@ export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'cal
 
   return (
     <div
-      className="rounded-lg p-4 space-y-2"
+      className="rounded-lg p-4 space-y-2 relative"
       style={{ backgroundColor: bg, borderLeft: `4px solid ${border}`, color: text }}
     >
       <div className="flex items-center gap-2 font-bold text-sm">
         <Icon className="h-5 w-5 shrink-0" style={{ color: border }} />
-        <span>{block.title}</span>
+        <span className="flex-1">{block.title}</span>
+        {/* ✅ Etapa 2D: Botão X para callout dismissível */}
+        {block.dismissible && (
+          <button onClick={() => setDismissed(true)} className="opacity-60 hover:opacity-100 transition-opacity">
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
       {block.items && block.items.length > 0 && (
         <ul className="space-y-1 ml-7">
@@ -53,7 +62,8 @@ export const IconListBlockPreview = ({ block }: { block: QuizBlock & { type: 'ic
     <div className={`${isHorizontal ? 'flex flex-wrap gap-4' : 'space-y-2'}`}>
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center gap-2">
-          <span className="text-lg shrink-0" style={{ color: block.iconColor || 'hsl(var(--primary))' }}>
+          {/* ✅ Etapa 2D: Cor individual por item */}
+          <span className="text-lg shrink-0" style={{ color: item.color || block.iconColor || 'hsl(var(--primary))' }}>
             {item.icon}
           </span>
           <span className="text-sm">{item.text}</span>
@@ -68,20 +78,31 @@ export const QuoteBlockPreview = ({ block }: { block: QuizBlock & { type: 'quote
   const borderColor = block.borderColor || 'hsl(var(--primary))';
   const isLarge = block.style === 'large';
   const isMinimal = block.style === 'minimal';
+  const hasBgImage = !!(block as any).backgroundImageUrl;
 
   return (
     <div
-      className={`${isMinimal ? 'py-2' : 'py-4'}`}
-      style={{ borderLeft: `${isLarge ? '6px' : '4px'} solid ${borderColor}`, paddingLeft: '1rem' }}
+      className={`${isMinimal ? 'py-2' : 'py-4'} relative overflow-hidden rounded-lg`}
+      style={{
+        borderLeft: `${isLarge ? '6px' : '4px'} solid ${borderColor}`,
+        paddingLeft: '1rem',
+        ...(hasBgImage ? {
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${(block as any).backgroundImageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: '#ffffff',
+          padding: '1.5rem',
+        } : {}),
+      }}
     >
       {!isMinimal && (
-        <span className="text-4xl font-serif leading-none opacity-20 select-none" style={{ color: borderColor }}>"</span>
+        <span className="text-4xl font-serif leading-none opacity-20 select-none" style={{ color: hasBgImage ? '#fff' : borderColor }}>"</span>
       )}
-      <p className={`${isLarge ? 'text-xl font-medium' : isMinimal ? 'text-sm' : 'text-base'} italic text-foreground leading-relaxed`}>
+      <p className={`${isLarge ? 'text-xl font-medium' : isMinimal ? 'text-sm' : 'text-base'} italic ${hasBgImage ? '' : 'text-foreground'} leading-relaxed`}>
         {block.text}
       </p>
       {block.author && (
-        <p className="text-sm text-muted-foreground mt-2">— {block.author}</p>
+        <p className={`text-sm ${hasBgImage ? 'text-white/80' : 'text-muted-foreground'} mt-2`}>— {block.author}</p>
       )}
     </div>
   );
@@ -153,13 +174,26 @@ export const BannerBlockPreview = ({ block }: { block: QuizBlock & { type: 'bann
 
   const style = BANNER_STYLES[block.variant || 'promo'];
 
+  // ✅ Etapa 2D: Banner clicável com link
+  const handleClick = () => {
+    if ((block as any).linkUrl) {
+      window.open((block as any).linkUrl, (block as any).linkTarget || '_blank');
+    }
+  };
+
+  const hasLink = !!(block as any).linkUrl;
+
   return (
-    <div className={`rounded-lg px-4 py-3 text-center font-semibold text-sm relative ${style}`}>
+    <div
+      className={`rounded-lg px-4 py-3 text-center font-semibold text-sm relative ${style} ${hasLink ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+      onClick={hasLink ? handleClick : undefined}
+    >
       <span>{block.text}</span>
+      {hasLink && <span className="ml-1 text-xs opacity-75">→</span>}
       {block.dismissible && (
         <button
           className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
-          onClick={() => setDismissed(true)}
+          onClick={(e) => { e.stopPropagation(); setDismissed(true); }}
         >
           <X className="h-4 w-4" />
         </button>

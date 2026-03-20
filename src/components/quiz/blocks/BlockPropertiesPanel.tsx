@@ -869,6 +869,31 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
         </Select>
       </PropertySection>
       <SwitchRow label="Mostrar ícones" checked={block.showIcons || false} onChange={(v) => onChange(update(block, { showIcons: v }))} />
+      {/* ✅ Etapa 2D: Highlight da coluna vencedora */}
+      <PropertySection title="Destacar coluna">
+        <Select value={(block as any).highlightWinner || 'none'} onValueChange={(v) => onChange(update(block, { highlightWinner: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="left">Esquerda</SelectItem>
+            <SelectItem value="right">Direita</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      {/* ✅ Etapa 2D: Ícones por coluna */}
+      {block.showIcons && (
+        <>
+          <Separator />
+          <div className="grid grid-cols-2 gap-2">
+            <PropertySection title="Ícone Esquerda">
+              <Input value={(block as any).itemIcons?.left || ''} placeholder="✗" onChange={(e) => onChange(update(block, { itemIcons: { ...((block as any).itemIcons || {}), left: e.target.value } }))} />
+            </PropertySection>
+            <PropertySection title="Ícone Direita">
+              <Input value={(block as any).itemIcons?.right || ''} placeholder="✓" onChange={(e) => onChange(update(block, { itemIcons: { ...((block as any).itemIcons || {}), right: e.target.value } }))} />
+            </PropertySection>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -957,6 +982,13 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
         <Input type="color" value={block.color || '#3b82f6'} onChange={(e) => onChange(update(block, { color: e.target.value }))} />
       </PropertySection>
       <SwitchRow label="Separador de milhar" checked={block.separator || false} onChange={(v) => onChange(update(block, { separator: v }))} />
+      {/* ✅ Etapa 2D: Formato de moeda */}
+      <SwitchRow label="Formato moeda (R$)" checked={(block as any).currencyFormat || false} onChange={(v) => onChange(update(block, { currencyFormat: v }))} />
+      {(block as any).currencyFormat && (
+        <PropertySection title="Casas decimais">
+          <Input type="number" min={0} max={4} value={(block as any).decimalPlaces || 2} onChange={(e) => onChange(update(block, { decimalPlaces: Number(e.target.value) }))} />
+        </PropertySection>
+      )}
     </div>
   );
 };
@@ -1073,6 +1105,8 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Label>Nota de rodapé</Label>
         <Input value={block.footnote || ''} onChange={(e) => onChange(update(block, { footnote: e.target.value }))} />
       </div>
+      {/* ✅ Etapa 2D: Callout dismissível */}
+      <SwitchRow label="Dispensável (botão X)" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
       <Separator />
       <div className="space-y-2">
         <Label>Cor de fundo</Label>
@@ -1107,23 +1141,31 @@ const IconListProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>Cor dos ícones</Label>
+        <Label>Cor padrão dos ícones</Label>
         <Input type="color" value={block.iconColor || '#10b981'} onChange={(e) => onChange(update(block, { iconColor: e.target.value }))} />
       </div>
       <Separator />
       <Label>Itens</Label>
       {items.map((item, idx) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input className="w-16" value={item.icon} onChange={(e) => {
-            const newItems = [...items];
-            newItems[idx] = { ...item, icon: e.target.value };
-            onChange(update(block, { items: newItems }));
-          }} placeholder="✅" />
-          <Input className="flex-1" value={item.text} onChange={(e) => {
-            const newItems = [...items];
-            newItems[idx] = { ...item, text: e.target.value };
-            onChange(update(block, { items: newItems }));
-          }} placeholder="Texto do item" />
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-16" value={item.icon} onChange={(e) => {
+              const newItems = [...items];
+              newItems[idx] = { ...item, icon: e.target.value };
+              onChange(update(block, { items: newItems }));
+            }} placeholder="✅" />
+            <Input className="flex-1" value={item.text} onChange={(e) => {
+              const newItems = [...items];
+              newItems[idx] = { ...item, text: e.target.value };
+              onChange(update(block, { items: newItems }));
+            }} placeholder="Texto do item" />
+            {/* ✅ Etapa 2D: Cor individual por item */}
+            <Input className="w-12" type="color" value={(item as any).color || block.iconColor || '#10b981'} onChange={(e) => {
+              const newItems = [...items];
+              newItems[idx] = { ...item, color: e.target.value };
+              onChange(update(block, { items: newItems }));
+            }} />
+          </div>
         </div>
       ))}
       <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { items: [...items, { icon: '✅', text: '' }] }))}>+ Adicionar item</button>
@@ -1158,6 +1200,12 @@ const QuoteProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <div className="space-y-2">
         <Label>Cor da borda</Label>
         <Input type="color" value={block.borderColor || '#3b82f6'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
+      </div>
+      {/* ✅ Etapa 2D: Imagem de fundo opcional */}
+      <div className="space-y-2">
+        <Label>Imagem de fundo (URL)</Label>
+        <Input value={(block as any).backgroundImageUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { backgroundImageUrl: e.target.value }))} />
+        <p className="text-[10px] text-muted-foreground">Opcional. Aplica overlay escuro sobre a imagem.</p>
       </div>
     </div>
   );
@@ -1247,10 +1295,25 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center justify-between">
-        <Label>Dispensável</Label>
-        <Switch checked={block.dismissible || false} onCheckedChange={(v) => onChange(update(block, { dismissible: v }))} />
+      <SwitchRow label="Dispensável" checked={block.dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
+      {/* ✅ Etapa 2D: Link clicável */}
+      <Separator />
+      <div className="space-y-2">
+        <Label>URL do link (opcional)</Label>
+        <Input value={(block as any).linkUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { linkUrl: e.target.value }))} />
       </div>
+      {(block as any).linkUrl && (
+        <div className="space-y-2">
+          <Label>Abrir em</Label>
+          <Select value={(block as any).linkTarget || '_blank'} onValueChange={(v) => onChange(update(block, { linkTarget: v }))}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_blank">Nova aba</SelectItem>
+              <SelectItem value="_self">Mesma aba</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 };
@@ -1321,24 +1384,34 @@ const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProp
           </SelectContent>
         </Select>
       </div>
+      {/* ✅ Etapa 2D: Animação fade */}
+      <SwitchRow label="Animar transições (fade)" checked={(block as any).animateFade !== false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
       <Separator />
       <Label>Mensagens por % de progresso</Label>
       {messages.map((msg: any, idx: number) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input className="w-16" type="number" min={0} max={100} value={msg.threshold} onChange={(e) => {
+        <div key={idx} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <Input className="w-16" type="number" min={0} max={100} value={msg.threshold} onChange={(e) => {
+              const newMsgs = [...messages];
+              newMsgs[idx] = { ...msg, threshold: Number(e.target.value) };
+              onChange(update(block, { messages: newMsgs }));
+            }} />
+            <span className="text-xs text-muted-foreground">%</span>
+            <Input className="flex-1" value={msg.text} onChange={(e) => {
+              const newMsgs = [...messages];
+              newMsgs[idx] = { ...msg, text: e.target.value };
+              onChange(update(block, { messages: newMsgs }));
+            }} />
+          </div>
+          {/* ✅ Etapa 2D: Ícone por faixa */}
+          <Input className="w-24 ml-[72px]" value={msg.icon || ''} placeholder="🔥 ícone" onChange={(e) => {
             const newMsgs = [...messages];
-            newMsgs[idx] = { ...msg, threshold: Number(e.target.value) };
-            onChange(update(block, { messages: newMsgs }));
-          }} />
-          <span className="text-xs text-muted-foreground">%</span>
-          <Input className="flex-1" value={msg.text} onChange={(e) => {
-            const newMsgs = [...messages];
-            newMsgs[idx] = { ...msg, text: e.target.value };
+            newMsgs[idx] = { ...msg, icon: e.target.value };
             onChange(update(block, { messages: newMsgs }));
           }} />
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '' }] }))}>+ Adicionar mensagem</button>
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '', icon: '' }] }))}>+ Adicionar mensagem</button>
     </div>
   );
 };
@@ -1375,9 +1448,13 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center justify-between">
-        <Label>Mostrar contador</Label>
-        <Switch checked={(block as any).showCount !== false} onCheckedChange={(v) => onChange(update(block, { showCount: v }))} />
+      <SwitchRow label="Mostrar contador" checked={(block as any).showCount !== false} onChange={(v) => onChange(update(block, { showCount: v }))} />
+      {/* ✅ Etapa 2D: Link para perfil ao clicar */}
+      <Separator />
+      <div className="space-y-2">
+        <Label>URL do perfil (opcional)</Label>
+        <Input value={(block as any).profileUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { profileUrl: e.target.value }))} />
+        <p className="text-[10px] text-muted-foreground">Se preenchido, clicar no grupo redireciona para esta URL.</p>
       </div>
     </div>
   );
@@ -1488,6 +1565,24 @@ const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropert
         label="Perguntas-fonte (para placeholders)"
       />
       <p className="text-[10px] text-muted-foreground">Use {'{resposta1}'}, {'{resposta2}'} nos itens para substituir com respostas</p>
+      {/* ✅ Etapa 2D: Cores e ícones personalizados */}
+      <Separator />
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Cor 'Antes'">
+          <Input type="color" value={(block as any).beforeColor || '#ef4444'} onChange={(e) => onChange(update(block, { beforeColor: e.target.value }))} />
+        </PropertySection>
+        <PropertySection title="Cor 'Depois'">
+          <Input type="color" value={(block as any).afterColor || '#22c55e'} onChange={(e) => onChange(update(block, { afterColor: e.target.value }))} />
+        </PropertySection>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Ícone 'Antes'">
+          <Input value={(block as any).beforeIcon || ''} placeholder="❌" onChange={(e) => onChange(update(block, { beforeIcon: e.target.value }))} />
+        </PropertySection>
+        <PropertySection title="Ícone 'Depois'">
+          <Input value={(block as any).afterIcon || ''} placeholder="✅" onChange={(e) => onChange(update(block, { afterIcon: e.target.value }))} />
+        </PropertySection>
+      </div>
     </div>
   );
 };
@@ -1622,6 +1717,10 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
         <Label>Texto fallback (sem match)</Label>
         <Input value={(block as any).fallbackText || ''} onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))} />
       </div>
+      {/* ✅ Etapa 2D: Limite máximo de exibição */}
+      <PropertySection title="Máximo de resultados (0 = sem limite)">
+        <Input type="number" min={0} value={(block as any).maxDisplay || 0} onChange={(e) => onChange(update(block, { maxDisplay: Number(e.target.value) }))} />
+      </PropertySection>
       <Separator />
       <Label className="font-semibold">Recomendações ({recommendations.length})</Label>
       {recommendations.map((rec: any, idx: number) => (

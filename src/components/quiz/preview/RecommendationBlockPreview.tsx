@@ -55,6 +55,7 @@ export const RecommendationBlockPreview = ({ block, answers, questions }: Recomm
   const style = (block as any).style || 'card';
   const showScore = (block as any).showScore || false;
   const fallbackText = (block as any).fallbackText || 'Não encontramos uma recomendação específica para você.';
+  const maxDisplay = (block as any).maxDisplay || 0; // ✅ Etapa 2D: Limite máximo
   const hasRuntimeData = answers && Object.keys(answers).length > 0;
 
   // Calculate scores
@@ -71,9 +72,12 @@ export const RecommendationBlockPreview = ({ block, answers, questions }: Recomm
     } else if (displayMode === 'top_3') {
       visible = scored.filter(s => s.score > 0).slice(0, 3);
     }
-    // 'all_scored' shows all with score > 0
     if (displayMode === 'all_scored') {
       visible = scored.filter(s => s.score > 0);
+    }
+    // ✅ Etapa 2D: Aplicar limite máximo
+    if (maxDisplay > 0) {
+      visible = visible.slice(0, maxDisplay);
     }
   }
 

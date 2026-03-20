@@ -401,24 +401,29 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
 export const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: 'comparison' } }) => {
   const leftItems = block.leftItems || [];
   const rightItems = block.rightItems || [];
+  const highlightWinner = (block as any).highlightWinner || 'none';
+  const itemIcons = (block as any).itemIcons || {};
+  const leftIcon = itemIcons.left || '✗';
+  const rightIcon = itemIcons.right || '✓';
+
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className={`p-4 rounded-lg ${block.leftStyle === 'negative' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-muted'}`}>
+      <div className={`p-4 rounded-lg transition-all ${block.leftStyle === 'negative' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-muted'} ${highlightWinner === 'left' ? 'ring-2 ring-primary shadow-md' : ''}`}>
         <h4 className={`font-semibold mb-3 ${block.leftStyle === 'negative' ? 'text-red-600' : ''}`}>{block.leftTitle || ''}</h4>
         <ul className="space-y-2">
           {leftItems.map((item, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
-              {block.showIcons && <X className="h-4 w-4 text-red-500" />}<span>{item}</span>
+              {block.showIcons && <span className="text-red-500 shrink-0">{leftIcon}</span>}<span>{item}</span>
             </li>
           ))}
         </ul>
       </div>
-      <div className={`p-4 rounded-lg ${block.rightStyle === 'positive' ? 'bg-green-50 dark:bg-green-950/30' : 'bg-muted'}`}>
+      <div className={`p-4 rounded-lg transition-all ${block.rightStyle === 'positive' ? 'bg-green-50 dark:bg-green-950/30' : 'bg-muted'} ${highlightWinner === 'right' ? 'ring-2 ring-primary shadow-md' : ''}`}>
         <h4 className={`font-semibold mb-3 ${block.rightStyle === 'positive' ? 'text-green-600' : ''}`}>{block.rightTitle || ''}</h4>
         <ul className="space-y-2">
           {rightItems.map((item, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
-              {block.showIcons && <Check className="h-4 w-4 text-green-500" />}<span>{item}</span>
+              {block.showIcons && <span className="text-green-500 shrink-0">{rightIcon}</span>}<span>{item}</span>
             </li>
           ))}
         </ul>
@@ -431,16 +436,11 @@ export const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: '
 export const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 'socialProof' } }) => {
   const notifications = block.notifications || [];
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (notifications.length <= 1) return;
     const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setCurrentIdx(prev => (prev + 1) % notifications.length);
-        setVisible(true);
-      }, 300);
+      setCurrentIdx(prev => (prev + 1) % notifications.length);
     }, (block.interval || 5) * 1000);
     return () => clearInterval(interval);
   }, [notifications.length, block.interval]);
@@ -455,23 +455,33 @@ export const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 
 
   return (
     <div className={`flex ${positionClasses[block.position || 'bottom-left'] || 'justify-start'}`}>
-      <div className={`transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} ${
-        block.style === 'banner' ? 'bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center'
-          : block.style === 'floating' ? 'bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2'
-          : 'bg-background border shadow-lg rounded-lg p-3 max-w-xs'
-      }`}>
-        <div className="flex items-center gap-3">
-          {block.showAvatar && (
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <User className="h-5 w-5 text-primary" />
+      {/* ✅ Etapa 2D: Animação slide-in com framer-motion */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIdx}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className={`${
+            block.style === 'banner' ? 'bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center'
+              : block.style === 'floating' ? 'bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2'
+              : 'bg-background border shadow-lg rounded-lg p-3 max-w-xs'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {block.showAvatar && (
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+            )}
+            <div>
+              <p className="text-sm"><span className="font-semibold">{notification.name}</span> {notification.action}</p>
+              <p className="text-xs text-muted-foreground">{notification.time}</p>
             </div>
-          )}
-          <div>
-            <p className="text-sm"><span className="font-semibold">{notification.name}</span> {notification.action}</p>
-            <p className="text-xs text-muted-foreground">{notification.time}</p>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
@@ -502,7 +512,9 @@ export const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { ty
           const animate = (now: number) => {
             const elapsed = now - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            setDisplayValue(Math.round(start + (end - start) * easing(progress)));
+            const rawValue = start + (end - start) * easing(progress);
+            // ✅ Etapa 2D: Se currencyFormat, não arredondar durante animação
+            setDisplayValue((block as any).currencyFormat ? parseFloat(rawValue.toFixed((block as any).decimalPlaces || 2)) : Math.round(rawValue));
             if (progress < 1) requestAnimationFrame(animate);
           };
           requestAnimationFrame(animate);
@@ -514,13 +526,23 @@ export const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { ty
     return () => observer.disconnect();
   }, [hasAnimated, block.startValue, block.endValue, block.duration, block.easing]);
 
-  const formatted = block.separator ? displayValue.toLocaleString('pt-BR') : displayValue.toString();
+  // ✅ Etapa 2D: Formato de moeda
+  const formatValue = (val: number) => {
+    if ((block as any).currencyFormat) {
+      return val.toLocaleString('pt-BR', {
+        minimumFractionDigits: (block as any).decimalPlaces || 2,
+        maximumFractionDigits: (block as any).decimalPlaces || 2,
+      });
+    }
+    return block.separator ? val.toLocaleString('pt-BR') : val.toString();
+  };
+
   const fontSizeClass = block.fontSize === 'xlarge' ? 'text-6xl' : block.fontSize === 'large' ? 'text-5xl' : block.fontSize === 'medium' ? 'text-3xl' : 'text-2xl';
 
   return (
     <div ref={ref} className="text-center py-6 space-y-2">
       <p className={`font-black tabular-nums ${fontSizeClass}`} style={{ color: block.color || 'hsl(var(--primary))' }}>
-        {block.prefix}{formatted}{block.suffix}
+        {block.prefix}{formatValue(displayValue)}{block.suffix}
       </p>
       {block.label && <p className="text-muted-foreground text-sm font-medium">{block.label}</p>}
     </div>
