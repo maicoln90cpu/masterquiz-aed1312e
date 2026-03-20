@@ -153,6 +153,7 @@ export const AvatarGroupBlockPreview = ({ block }: { block: QuizBlock & { type: 
   const maxVisible = block.maxVisible || 5;
   const count = block.count || 1234;
   const isCircle = block.avatarStyle !== 'square';
+  const profileUrl = (block as any).profileUrl; // ✅ Etapa 2D: Link para perfil
   
   const colors = [
     'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 
@@ -161,8 +162,11 @@ export const AvatarGroupBlockPreview = ({ block }: { block: QuizBlock & { type: 
 
   const initials = ['AS', 'MR', 'JP', 'LF', 'CO', 'RB', 'TM', 'VN'];
 
+  const Wrapper = profileUrl ? 'a' : 'div';
+  const wrapperProps = profileUrl ? { href: profileUrl, target: '_blank' as const, rel: 'noopener noreferrer', className: 'flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer' } : { className: 'flex items-center gap-3' };
+
   return (
-    <div className="flex items-center gap-3">
+    <Wrapper {...wrapperProps}>
       <div className="flex -space-x-2">
         {Array.from({ length: Math.min(maxVisible, 8) }).map((_, i) => (
           <div
@@ -179,7 +183,7 @@ export const AvatarGroupBlockPreview = ({ block }: { block: QuizBlock & { type: 
           {block.label && <span className="text-muted-foreground ml-1">{block.label}</span>}
         </div>
       )}
-    </div>
+    </Wrapper>
   );
 };
 
