@@ -1201,6 +1201,12 @@ const QuoteProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Label>Cor da borda</Label>
         <Input type="color" value={block.borderColor || '#3b82f6'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
       </div>
+      {/* ✅ Etapa 2D: Imagem de fundo opcional */}
+      <div className="space-y-2">
+        <Label>Imagem de fundo (URL)</Label>
+        <Input value={(block as any).backgroundImageUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { backgroundImageUrl: e.target.value }))} />
+        <p className="text-[10px] text-muted-foreground">Opcional. Aplica overlay escuro sobre a imagem.</p>
+      </div>
     </div>
   );
 };
