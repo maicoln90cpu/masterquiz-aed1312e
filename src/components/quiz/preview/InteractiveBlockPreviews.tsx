@@ -255,18 +255,38 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
       <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
       <div className="px-2">
         <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground font-medium tabular-nums min-w-[40px] text-right">{block.min}{block.unit}</span>
+          <div className="min-w-[40px] text-right">
+            <span className="text-sm text-muted-foreground font-medium tabular-nums">{block.min}{block.unit}</span>
+            {/* ✅ Etapa 2C: Labels nos extremos */}
+            {block.minLabel && <p className="text-[10px] text-muted-foreground/70">{block.minLabel}</p>}
+          </div>
           <Slider value={[value]} min={block.min} max={block.max} step={block.step} onValueChange={(v) => setValue(v[0])} className="flex-1" />
-          <span className="text-sm text-muted-foreground font-medium tabular-nums min-w-[40px]">{block.max}{block.unit}</span>
+          <div className="min-w-[40px]">
+            <span className="text-sm text-muted-foreground font-medium tabular-nums">{block.max}{block.unit}</span>
+            {/* ✅ Etapa 2C: Labels nos extremos */}
+            {block.maxLabel && <p className="text-[10px] text-muted-foreground/70">{block.maxLabel}</p>}
+          </div>
         </div>
-        <div className="flex justify-between px-[20px] mt-1">
-          {ticks.map((tick, i) => (
-            <div key={i} className="flex flex-col items-center">
-              <div className="w-px h-2 bg-muted-foreground/30" />
-              <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">{tick}</span>
-            </div>
-          ))}
-        </div>
+        {/* ✅ Etapa 2C: Steps visuais com dots */}
+        {block.showDots ? (
+          <div className="flex justify-between px-[20px] mt-2">
+            {ticks.map((tick, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className={`w-2 h-2 rounded-full transition-colors ${value >= tick ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-1">{tick}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-between px-[20px] mt-1">
+            {ticks.map((tick, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="w-px h-2 bg-muted-foreground/30" />
+                <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">{tick}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {block.showValue && (
         <div className="text-center">
