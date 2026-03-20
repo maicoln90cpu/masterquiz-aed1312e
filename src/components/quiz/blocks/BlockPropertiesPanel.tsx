@@ -742,7 +742,17 @@ const SliderProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <div className="space-y-3">
         <SwitchRow label="Mostrar valor" checked={block.showValue || false} onChange={(v) => onChange(update(block, { showValue: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        {/* ✅ Etapa 2C: Steps visuais com dots */}
+        <SwitchRow label="Steps com dots" checked={block.showDots || false} onChange={(v) => onChange(update(block, { showDots: v }))} />
       </div>
+      {/* ✅ Etapa 2C: Labels nos extremos */}
+      <Separator />
+      <PropertySection title="Label Mínimo">
+        <Input value={block.minLabel || ''} placeholder="Ex: Nada" onChange={(e) => onChange(update(block, { minLabel: e.target.value }))} />
+      </PropertySection>
+      <PropertySection title="Label Máximo">
+        <Input value={block.maxLabel || ''} placeholder="Ex: Muito" onChange={(e) => onChange(update(block, { maxLabel: e.target.value }))} />
+      </PropertySection>
     </div>
   );
 };
