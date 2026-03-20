@@ -803,6 +803,10 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <SwitchRow label="Mostrar labels" checked={block.showLabels || false} onChange={(v) => onChange(update(block, { showLabels: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
       </div>
+      <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground space-y-1">
+        <p>🔴 0-6 = Detrator | 🟡 7-8 = Neutro | 🟢 9-10 = Promotor</p>
+        <p>As cores são aplicadas automaticamente no preview.</p>
+      </div>
     </div>
   );
 };
