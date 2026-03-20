@@ -405,6 +405,7 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       conditionalText: 'Texto Condicional',
       comparisonResult: 'Comparação Dinâmica',
       personalizedCTA: 'CTA Personalizado',
+      recommendation: 'Recomendação',
     };
     
     toast.success(
