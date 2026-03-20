@@ -340,6 +340,33 @@ export interface BannerBlock extends BaseBlock {
   dismissible?: boolean;
 }
 
+export interface AnswerSummaryBlock extends BaseBlock {
+  type: 'answerSummary';
+  title?: string;
+  subtitle?: string;
+  style?: 'card' | 'list' | 'minimal';
+  showQuestionText?: boolean;
+  showIcon?: boolean;
+  accentColor?: string;
+}
+
+export interface ProgressMessageBlock extends BaseBlock {
+  type: 'progressMessage';
+  messages: { threshold: number; text: string }[];
+  style?: 'card' | 'inline' | 'toast';
+  icon?: string;
+  accentColor?: string;
+}
+
+export interface AvatarGroupBlock extends BaseBlock {
+  type: 'avatarGroup';
+  count: number;
+  label?: string;
+  maxVisible?: number;
+  showCount?: boolean;
+  avatarStyle?: 'circle' | 'square';
+}
+
 export type QuizBlock = 
   | QuestionBlock
   | TextBlock
