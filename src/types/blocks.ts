@@ -378,10 +378,11 @@ export interface AnswerSummaryBlock extends BaseBlock {
 
 export interface ProgressMessageBlock extends BaseBlock {
   type: 'progressMessage';
-  messages: { threshold: number; text: string }[];
+  messages: { threshold: number; text: string; icon?: string }[]; // ✅ Etapa 2D: Ícone por faixa
   style?: 'card' | 'inline' | 'toast';
   icon?: string;
   accentColor?: string;
+  animateFade?: boolean; // ✅ Etapa 2D: Animação fade entre mensagens
 }
 
 export interface AvatarGroupBlock extends BaseBlock {
