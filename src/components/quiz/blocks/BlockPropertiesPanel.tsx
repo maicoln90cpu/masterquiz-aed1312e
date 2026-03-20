@@ -54,6 +54,7 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   conditionalText: <Type className="h-4 w-4" />,
   comparisonResult: <Columns className="h-4 w-4" />,
   personalizedCTA: <MousePointer className="h-4 w-4" />,
+  recommendation: <Star className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
@@ -90,6 +91,7 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   conditionalText: 'Texto Condicional',
   comparisonResult: 'Comparação Dinâmica',
   personalizedCTA: 'CTA Personalizado',
+  recommendation: 'Recomendação',
 };
 
 // Helper to update block with type safety
@@ -1332,6 +1334,131 @@ const PersonalizedCTAProperties = ({ block, onChange }: BlockPropertiesPanelProp
   );
 };
 
+// ---- RECOMMENDATION ----
+const RecommendationProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'recommendation') return null;
+  const recommendations = (block as any).recommendations || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Título</Label>
+        <Input value={(block as any).title || ''} onChange={(e) => onChange(update(block, { title: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Subtítulo</Label>
+        <Input value={(block as any).subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Modo de exibição</Label>
+        <Select value={(block as any).displayMode || 'best_match'} onValueChange={(v) => onChange(update(block, { displayMode: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="best_match">Melhor match (1 resultado)</SelectItem>
+            <SelectItem value="top_3">Top 3 resultados</SelectItem>
+            <SelectItem value="all_scored">Todos com pontuação</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Estilo visual</Label>
+        <Select value={(block as any).style || 'card'} onValueChange={(v) => onChange(update(block, { style: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="card">Cards</SelectItem>
+            <SelectItem value="list">Lista</SelectItem>
+            <SelectItem value="grid">Grid (2 colunas)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Mostrar pontuação</Label>
+        <Switch checked={(block as any).showScore || false} onCheckedChange={(v) => onChange(update(block, { showScore: v }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Texto fallback (sem match)</Label>
+        <Input value={(block as any).fallbackText || ''} onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))} />
+      </div>
+      <Separator />
+      <Label className="font-semibold">Recomendações ({recommendations.length})</Label>
+      {recommendations.map((rec: any, idx: number) => (
+        <div key={rec.id || idx} className="p-3 border rounded-lg space-y-2 bg-muted/30">
+          <div className="flex items-center justify-between">
+            <Badge variant="secondary" className="text-[10px]">#{idx + 1}</Badge>
+            <button className="text-xs text-destructive hover:underline" onClick={() => {
+              const newRecs = recommendations.filter((_: any, i: number) => i !== idx);
+              onChange(update(block, { recommendations: newRecs }));
+            }}>Remover</button>
+          </div>
+          <Input value={rec.name} placeholder="Nome do produto" onChange={(e) => {
+            const newRecs = [...recommendations];
+            newRecs[idx] = { ...rec, name: e.target.value };
+            onChange(update(block, { recommendations: newRecs }));
+          }} />
+          <Input value={rec.description || ''} placeholder="Descrição curta" onChange={(e) => {
+            const newRecs = [...recommendations];
+            newRecs[idx] = { ...rec, description: e.target.value };
+            onChange(update(block, { recommendations: newRecs }));
+          }} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input value={rec.buttonText || ''} placeholder="Texto do botão" onChange={(e) => {
+              const newRecs = [...recommendations];
+              newRecs[idx] = { ...rec, buttonText: e.target.value };
+              onChange(update(block, { recommendations: newRecs }));
+            }} />
+            <Input value={rec.buttonUrl || ''} placeholder="URL" onChange={(e) => {
+              const newRecs = [...recommendations];
+              newRecs[idx] = { ...rec, buttonUrl: e.target.value };
+              onChange(update(block, { recommendations: newRecs }));
+            }} />
+          </div>
+          <Input value={rec.badge || ''} placeholder="Badge (ex: ⭐ Top Pick)" onChange={(e) => {
+            const newRecs = [...recommendations];
+            newRecs[idx] = { ...rec, badge: e.target.value };
+            onChange(update(block, { recommendations: newRecs }));
+          }} />
+          <Separator />
+          <Label className="text-xs">Regras de match</Label>
+          {(rec.rules || []).map((rule: any, rIdx: number) => (
+            <div key={rIdx} className="flex gap-1 items-center text-xs">
+              <Input className="w-24 text-xs h-7" value={rule.questionId} placeholder="ID pergunta" onChange={(e) => {
+                const newRecs = [...recommendations];
+                const newRules = [...(rec.rules || [])];
+                newRules[rIdx] = { ...rule, questionId: e.target.value };
+                newRecs[idx] = { ...rec, rules: newRules };
+                onChange(update(block, { recommendations: newRecs }));
+              }} />
+              <Input className="flex-1 text-xs h-7" value={(rule.answers || []).join(', ')} placeholder="Respostas (separadas por vírgula)" onChange={(e) => {
+                const newRecs = [...recommendations];
+                const newRules = [...(rec.rules || [])];
+                newRules[rIdx] = { ...rule, answers: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) };
+                newRecs[idx] = { ...rec, rules: newRules };
+                onChange(update(block, { recommendations: newRecs }));
+              }} />
+              <Input className="w-14 text-xs h-7" type="number" value={rule.weight} placeholder="Peso" onChange={(e) => {
+                const newRecs = [...recommendations];
+                const newRules = [...(rec.rules || [])];
+                newRules[rIdx] = { ...rule, weight: Number(e.target.value) };
+                newRecs[idx] = { ...rec, rules: newRules };
+                onChange(update(block, { recommendations: newRecs }));
+              }} />
+            </div>
+          ))}
+          <button className="text-[10px] text-primary underline" onClick={() => {
+            const newRecs = [...recommendations];
+            const newRules = [...(rec.rules || []), { questionId: '', answers: [], weight: 1 }];
+            newRecs[idx] = { ...rec, rules: newRules };
+            onChange(update(block, { recommendations: newRecs }));
+          }}>+ Regra</button>
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => {
+        const newRec = { id: `rec-${Date.now()}`, name: '', description: '', buttonText: '', buttonUrl: '', badge: '', rules: [] };
+        onChange(update(block, { recommendations: [...recommendations, newRec] }));
+      }}>+ Adicionar recomendação</button>
+    </div>
+  );
+};
+
 // ============================================
 // MAIN PANEL COMPONENT
 // ============================================
@@ -1376,6 +1503,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} />;
       case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} />;
       case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} />;
+      case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };

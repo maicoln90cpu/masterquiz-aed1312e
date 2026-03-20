@@ -33,7 +33,8 @@ export type BlockType =
   | 'avatarGroup'
   | 'conditionalText'
   | 'comparisonResult'
-  | 'personalizedCTA';
+  | 'personalizedCTA'
+  | 'recommendation';
 
 export interface BaseBlock {
   id: string;
@@ -402,6 +403,30 @@ export interface PersonalizedCTABlock extends BaseBlock {
   fallbackText?: string;
 }
 
+export interface RecommendationBlock extends BaseBlock {
+  type: 'recommendation';
+  title?: string;
+  subtitle?: string;
+  recommendations: {
+    id: string;
+    name: string;
+    description?: string;
+    imageUrl?: string;
+    buttonText?: string;
+    buttonUrl?: string;
+    badge?: string;
+    rules: {
+      questionId: string;
+      answers: string[];
+      weight: number;
+    }[];
+  }[];
+  displayMode?: 'best_match' | 'top_3' | 'all_scored';
+  style?: 'card' | 'list' | 'grid';
+  showScore?: boolean;
+  fallbackText?: string;
+}
+
 export type QuizBlock =
   | QuestionBlock
   | TextBlock
@@ -435,7 +460,8 @@ export type QuizBlock =
   | AvatarGroupBlock
   | ConditionalTextBlock
   | ComparisonResultBlock
-  | PersonalizedCTABlock;
+  | PersonalizedCTABlock
+  | RecommendationBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
@@ -833,6 +859,29 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         fallbackText: 'Ver plano personalizado',
         conditions: [],
       } as PersonalizedCTABlock;
+
+    case 'recommendation':
+      return {
+        ...baseBlock,
+        type: 'recommendation',
+        title: '🎯 Recomendação para você',
+        subtitle: 'Baseado nas suas respostas, recomendamos:',
+        recommendations: [
+          {
+            id: `rec-${Date.now()}-1`,
+            name: 'Produto Recomendado',
+            description: 'A melhor opção para o seu perfil.',
+            buttonText: 'Saiba mais',
+            buttonUrl: '',
+            badge: '⭐ Top Pick',
+            rules: [],
+          },
+        ],
+        displayMode: 'best_match',
+        style: 'card',
+        showScore: false,
+        fallbackText: 'Não encontramos uma recomendação específica para você.',
+      } as RecommendationBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);
@@ -1058,6 +1107,16 @@ export const normalizeBlock = (block: QuizBlock): QuizBlock => {
         size: block.size || 'lg',
         conditions: Array.isArray(block.conditions) ? block.conditions : [],
         fallbackText: block.fallbackText || 'Ver mais',
+      };
+    case 'recommendation':
+      return {
+        ...block,
+        title: block.title || '🎯 Recomendação',
+        recommendations: Array.isArray(block.recommendations) ? block.recommendations : [],
+        displayMode: block.displayMode || 'best_match',
+        style: block.style || 'card',
+        showScore: block.showScore || false,
+        fallbackText: block.fallbackText || 'Nenhuma recomendação encontrada.',
       };
     default:
       return block;

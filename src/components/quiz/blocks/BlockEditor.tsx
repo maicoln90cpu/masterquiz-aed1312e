@@ -145,6 +145,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'conditionalText':
       case 'comparisonResult':
       case 'personalizedCTA':
+      case 'recommendation':
         return true;
       default:
         return false;
@@ -210,6 +211,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'conditionalText':
       case 'comparisonResult':
       case 'personalizedCTA':
+      case 'recommendation':
         return (
           <div className="p-3 border rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground mb-1 font-medium">
@@ -224,6 +226,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
                block.type === 'conditionalText' ? '🔀 Texto Condicional' :
                block.type === 'comparisonResult' ? '⚖️ Comparação Dinâmica' :
                block.type === 'personalizedCTA' ? '🎯 CTA Personalizado' :
+               block.type === 'recommendation' ? '🎯 Motor de Recomendação' :
                '👥 Grupo de Avatares'}
             </p>
             <p className="text-sm text-muted-foreground">Configure no painel de propriedades →</p>
@@ -402,6 +405,7 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
       conditionalText: 'Texto Condicional',
       comparisonResult: 'Comparação Dinâmica',
       personalizedCTA: 'CTA Personalizado',
+      recommendation: 'Recomendação',
     };
     
     toast.success(
@@ -633,6 +637,10 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               <DropdownMenuItem onClick={() => addBlock('personalizedCTA')}>
                 <MousePointerClick className="h-4 w-4 mr-2" />
                 CTA Personalizado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addBlock('recommendation')}>
+                <Star className="h-4 w-4 mr-2" />
+                Recomendação
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -4,6 +4,24 @@
 
 ---
 
+## ✅ v2.34.0 - Etapa 4: Motor de Recomendação (20/03/2026)
+
+### Novo Bloco: Recommendation Engine
+- **Recomendação (recommendation)**: Motor de recomendação baseado em regras que sugere produtos/serviços conforme respostas do quiz. Cada recomendação tem nome, descrição, imagem, badge, botão com URL, e regras de match (pergunta + respostas + peso). Sistema de pontuação automático com 3 modos: melhor match, top 3 ou todos com score. 3 estilos visuais (card/list/grid). Exibe pontuação de compatibilidade opcionalmente.
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/types/blocks.ts` | +1 interface (RecommendationBlock), +1 createBlock, +1 normalizeBlock, +1 union type |
+| `src/components/quiz/preview/RecommendationBlockPreview.tsx` | NOVO — motor de recomendação com scoring e 3 estilos |
+| `src/components/quiz/QuizBlockPreview.tsx` | +1 case no switch, +1 import |
+| `src/components/quiz/blocks/blockPaletteCatalog.ts` | +1 item na seção "Dinâmico" |
+| `src/components/quiz/blocks/BlockEditor.tsx` | +1 dropdown, blockTypeNames, isBlockComplete, renderBlock |
+| `src/components/quiz/blocks/BlockPropertiesPanel.tsx` | +1 painel de propriedades completo com editor de regras |
+| `src/components/quiz/blocks/CompactBlockPalette.tsx` | +1 item |
+
+---
+
 ## ✅ v2.33.0 - Etapa 3: 3 Novos Blocos Dinâmicos com Respostas (20/03/2026)
 
 ### 3 Novos Blocos Dependentes de Respostas
