@@ -1428,15 +1428,13 @@ const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropert
       ))}
       <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { afterItems: [...afterItems, ''] }))}>+ Adicionar item</button>
       <Separator />
-      <div className="space-y-2">
-        <Label>IDs das perguntas-fonte (opcional, separados por vírgula)</Label>
-        <Input
-          placeholder="id1, id2"
-          value={((block as any).sourceQuestionIds || []).join(', ')}
-          onChange={(e) => onChange(update(block, { sourceQuestionIds: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
-        />
-        <p className="text-xs text-muted-foreground">Use {'{resposta1}'}, {'{resposta2}'} nos itens para substituir com respostas</p>
-      </div>
+      <QuestionMultiSelector
+        selectedIds={(block as any).sourceQuestionIds || []}
+        onChange={(ids) => onChange(update(block, { sourceQuestionIds: ids }))}
+        questions={questions}
+        label="Perguntas-fonte (para placeholders)"
+      />
+      <p className="text-[10px] text-muted-foreground">Use {'{resposta1}'}, {'{resposta2}'} nos itens para substituir com respostas</p>
     </div>
   );
 };
