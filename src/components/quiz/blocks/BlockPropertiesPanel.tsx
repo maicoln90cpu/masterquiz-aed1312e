@@ -820,6 +820,206 @@ const SwitchRow = ({ label, checked, onChange }: { label: string; checked: boole
   </div>
 );
 
+// ---- CALLOUT ----
+const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'callout') return null;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Variante</Label>
+        <Select value={block.variant} onValueChange={(v) => onChange(update(block, { variant: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="warning">⚠️ Aviso</SelectItem>
+            <SelectItem value="info">ℹ️ Informação</SelectItem>
+            <SelectItem value="success">✅ Sucesso</SelectItem>
+            <SelectItem value="error">❌ Erro</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Título</Label>
+        <Input value={block.title} onChange={(e) => onChange(update(block, { title: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Itens (um por linha)</Label>
+        <textarea
+          className="w-full min-h-[100px] px-3 py-2 border rounded-md bg-background text-sm"
+          value={(block.items || []).join('\n')}
+          onChange={(e) => onChange(update(block, { items: e.target.value.split('\n').filter(Boolean) }))}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Nota de rodapé</Label>
+        <Input value={block.footnote || ''} onChange={(e) => onChange(update(block, { footnote: e.target.value }))} />
+      </div>
+      <Separator />
+      <div className="space-y-2">
+        <Label>Cor de fundo</Label>
+        <Input type="color" value={block.backgroundColor || '#fef3c7'} onChange={(e) => onChange(update(block, { backgroundColor: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Cor da borda</Label>
+        <Input type="color" value={block.borderColor || '#f59e0b'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Cor do texto</Label>
+        <Input type="color" value={block.textColor || '#92400e'} onChange={(e) => onChange(update(block, { textColor: e.target.value }))} />
+      </div>
+    </div>
+  );
+};
+
+// ---- ICON LIST ----
+const IconListProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'iconList') return null;
+  const items = block.items || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Layout</Label>
+        <Select value={block.layout || 'vertical'} onValueChange={(v) => onChange(update(block, { layout: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="vertical">Vertical</SelectItem>
+            <SelectItem value="horizontal">Horizontal</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Cor dos ícones</Label>
+        <Input type="color" value={block.iconColor || '#10b981'} onChange={(e) => onChange(update(block, { iconColor: e.target.value }))} />
+      </div>
+      <Separator />
+      <Label>Itens</Label>
+      {items.map((item, idx) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <Input className="w-16" value={item.icon} onChange={(e) => {
+            const newItems = [...items];
+            newItems[idx] = { ...item, icon: e.target.value };
+            onChange(update(block, { items: newItems }));
+          }} placeholder="✅" />
+          <Input className="flex-1" value={item.text} onChange={(e) => {
+            const newItems = [...items];
+            newItems[idx] = { ...item, text: e.target.value };
+            onChange(update(block, { items: newItems }));
+          }} placeholder="Texto do item" />
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { items: [...items, { icon: '✅', text: '' }] }))}>+ Adicionar item</button>
+    </div>
+  );
+};
+
+// ---- QUOTE ----
+const QuoteProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'quote') return null;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Texto da citação</Label>
+        <textarea className="w-full min-h-[80px] px-3 py-2 border rounded-md bg-background text-sm" value={block.text} onChange={(e) => onChange(update(block, { text: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Autor (opcional)</Label>
+        <Input value={block.author || ''} onChange={(e) => onChange(update(block, { author: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Estilo</Label>
+        <Select value={block.style || 'default'} onValueChange={(v) => onChange(update(block, { style: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Padrão</SelectItem>
+            <SelectItem value="large">Grande</SelectItem>
+            <SelectItem value="minimal">Minimalista</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Cor da borda</Label>
+        <Input type="color" value={block.borderColor || '#3b82f6'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
+      </div>
+    </div>
+  );
+};
+
+// ---- BADGE ROW ----
+const BadgeRowProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'badgeRow') return null;
+  const badges = block.badges || [];
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Variante</Label>
+        <Select value={block.variant || 'outline'} onValueChange={(v) => onChange(update(block, { variant: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="outline">Contorno</SelectItem>
+            <SelectItem value="filled">Preenchido</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Tamanho</Label>
+        <Select value={block.size || 'md'} onValueChange={(v) => onChange(update(block, { size: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sm">Pequeno</SelectItem>
+            <SelectItem value="md">Médio</SelectItem>
+            <SelectItem value="lg">Grande</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Separator />
+      <Label>Badges</Label>
+      {badges.map((badge, idx) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <Input className="w-16" value={badge.icon} onChange={(e) => {
+            const newBadges = [...badges];
+            newBadges[idx] = { ...badge, icon: e.target.value };
+            onChange(update(block, { badges: newBadges }));
+          }} placeholder="🔒" />
+          <Input className="flex-1" value={badge.text} onChange={(e) => {
+            const newBadges = [...badges];
+            newBadges[idx] = { ...badge, text: e.target.value };
+            onChange(update(block, { badges: newBadges }));
+          }} placeholder="Texto" />
+        </div>
+      ))}
+      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { badges: [...badges, { icon: '✅', text: '' }] }))}>+ Adicionar badge</button>
+    </div>
+  );
+};
+
+// ---- BANNER ----
+const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'banner') return null;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Texto</Label>
+        <Input value={block.text} onChange={(e) => onChange(update(block, { text: e.target.value }))} />
+      </div>
+      <div className="space-y-2">
+        <Label>Variante</Label>
+        <Select value={block.variant || 'promo'} onValueChange={(v) => onChange(update(block, { variant: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="promo">🔥 Promoção</SelectItem>
+            <SelectItem value="warning">⚠️ Aviso</SelectItem>
+            <SelectItem value="success">✅ Sucesso</SelectItem>
+            <SelectItem value="info">ℹ️ Informação</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Dispensável</Label>
+        <Switch checked={block.dismissible || false} onCheckedChange={(v) => onChange(update(block, { dismissible: v }))} />
+      </div>
+    </div>
+  );
+};
+
 // ============================================
 // MAIN PANEL COMPONENT
 // ============================================
