@@ -34,7 +34,8 @@ export type BlockType =
   | 'conditionalText'
   | 'comparisonResult'
   | 'personalizedCTA'
-  | 'recommendation';
+  | 'recommendation'
+  | 'calculator';
 
 export interface BaseBlock {
   id: string;
