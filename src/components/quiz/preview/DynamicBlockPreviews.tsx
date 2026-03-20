@@ -247,6 +247,10 @@ export const ComparisonResultBlockPreview = ({ block, answers }: ComparisonResul
   const afterItems = block.afterItems || [];
   const showIcons = block.showIcons !== false;
   const sourceIds = (block as any).sourceQuestionIds || [];
+  const beforeColor = (block as any).beforeColor || undefined; // ✅ Etapa 2D
+  const afterColor = (block as any).afterColor || undefined;
+  const beforeIconCustom = (block as any).beforeIcon; // ✅ Etapa 2D
+  const afterIconCustom = (block as any).afterIcon;
 
   // Replace {resposta} placeholders with actual answers
   const replaceVars = (text: string): string => {
@@ -264,25 +268,25 @@ export const ComparisonResultBlockPreview = ({ block, answers }: ComparisonResul
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-2">
-        <h5 className="text-sm font-semibold text-destructive flex items-center gap-1">
-          {showIcons && <X className="h-4 w-4" />}
+        <h5 className="text-sm font-semibold flex items-center gap-1" style={beforeColor ? { color: beforeColor } : undefined}>
+          {showIcons && (beforeIconCustom ? <span>{beforeIconCustom}</span> : <X className="h-4 w-4 text-destructive" />)}
           {block.beforeTitle || 'Antes'}
         </h5>
         {beforeItems.map((item, i) => (
           <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-            {showIcons && <X className="h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0" />}
+            {showIcons && (beforeIconCustom ? <span className="shrink-0 mt-0.5">{beforeIconCustom}</span> : <X className="h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0" />)}
             <span>{replaceVars(item)}</span>
           </div>
         ))}
       </div>
       <div className="space-y-2">
-        <h5 className="text-sm font-semibold text-primary flex items-center gap-1">
-          {showIcons && <Check className="h-4 w-4" />}
+        <h5 className="text-sm font-semibold flex items-center gap-1" style={afterColor ? { color: afterColor } : undefined}>
+          {showIcons && (afterIconCustom ? <span>{afterIconCustom}</span> : <Check className="h-4 w-4 text-primary" />)}
           {block.afterTitle || 'Depois'}
         </h5>
         {afterItems.map((item, i) => (
           <div key={i} className="flex items-start gap-2 text-sm">
-            {showIcons && <Check className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />}
+            {showIcons && (afterIconCustom ? <span className="shrink-0 mt-0.5">{afterIconCustom}</span> : <Check className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />)}
             <span className="font-medium">{replaceVars(item)}</span>
           </div>
         ))}
