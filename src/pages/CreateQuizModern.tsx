@@ -472,17 +472,14 @@ const CreateQuizModern = () => {
               </button>
             ))}
             
-            {/* Preview button */}
+            {/* Preview Completo button — always purple */}
             <button
               onClick={() => setShowPreviewDialog(true)}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all shrink-0",
-                "bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-              title={t('createQuiz.preview', 'Preview')}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all shrink-0 bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
+              title={t('createQuiz.preview', 'Preview Completo')}
             >
               <Eye className="h-4 w-4" />
-              <span className="hidden lg:inline">{t('createQuiz.preview', 'Preview')}</span>
+              <span className="hidden lg:inline">Preview Completo</span>
             </button>
 
             {/* Próximo / Publicar → */}
