@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { QuizBlock, VideoBlock } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
+import type { QuizQuestion } from "@/types/quiz";
 
 // ✅ Fase 8: Sub-componentes modulares
 import { QuestionBlockPreview } from "./preview/QuestionBlockPreview";
@@ -22,6 +23,9 @@ import {
   CalloutBlockPreview, IconListBlockPreview, QuoteBlockPreview,
   BadgeRowBlockPreview, BannerBlockPreview,
 } from "./preview/VisualBlockPreviews";
+import {
+  AnswerSummaryBlockPreview, ProgressMessageBlockPreview, AvatarGroupBlockPreview,
+} from "./preview/DynamicBlockPreviews";
 
 // ✅ FASE 12: Lazy load MetricsBlockPreview (recharts é pesado ~200KB)
 const LazyMetricsBlockPreview = lazy(() =>
@@ -38,6 +42,11 @@ interface QuizBlockPreviewProps {
   selectedAnswer?: string | string[];
   onAnswerSelect?: (value: string, isMultiple: boolean) => void;
   onTextChange?: (text: string) => void;
+  // Runtime data for dynamic blocks
+  answers?: Record<string, any>;
+  questions?: QuizQuestion[];
+  currentStep?: number;
+  totalQuestions?: number;
 }
 
 export const QuizBlockPreview = ({
