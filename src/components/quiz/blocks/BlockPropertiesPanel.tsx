@@ -1295,10 +1295,25 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center justify-between">
-        <Label>Dispensável</Label>
-        <Switch checked={block.dismissible || false} onCheckedChange={(v) => onChange(update(block, { dismissible: v }))} />
+      <SwitchRow label="Dispensável" checked={block.dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
+      {/* ✅ Etapa 2D: Link clicável */}
+      <Separator />
+      <div className="space-y-2">
+        <Label>URL do link (opcional)</Label>
+        <Input value={(block as any).linkUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { linkUrl: e.target.value }))} />
       </div>
+      {(block as any).linkUrl && (
+        <div className="space-y-2">
+          <Label>Abrir em</Label>
+          <Select value={(block as any).linkTarget || '_blank'} onValueChange={(v) => onChange(update(block, { linkTarget: v }))}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_blank">Nova aba</SelectItem>
+              <SelectItem value="_self">Mesma aba</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 };
