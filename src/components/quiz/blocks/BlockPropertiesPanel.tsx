@@ -1373,6 +1373,9 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange }: BlockPropert
       case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} />;
       case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
       case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
+      case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} />;
+      case 'comparisonResult': return <ComparisonResultProperties block={block} onChange={onChange} />;
+      case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
