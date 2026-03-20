@@ -111,47 +111,34 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'audio':
         return block.url && block.url.trim().length > 0;
       case 'button':
-        // Botão com ação de navegação ou link preenchido é considerado completo
         const action = block.action || 'link';
-        if (action === 'link') {
-          return block.text && block.url;
-        } else if (action === 'next_question') {
-          return !!block.text;
-        } else if (action === 'go_to_question') {
-          return block.text && block.targetQuestionIndex !== undefined;
-        }
+        if (action === 'link') return block.text && block.url;
+        else if (action === 'next_question') return !!block.text;
+        else if (action === 'go_to_question') return block.text && block.targetQuestionIndex !== undefined;
         return !!block.text;
-      case 'separator':
-        return true; // Separador sempre completo
-      case 'countdown':
-        return true; // Countdown com valores default é completo
-      case 'progress':
-        return true; // Progress com valores default é completo
-      case 'testimonial':
-        return true; // Testimonial com valores default é completo
       case 'gallery':
         return block.images && block.images.length > 0;
       case 'embed':
         return block.url && block.url.trim().length > 0;
+      case 'separator':
+      case 'countdown':
+      case 'progress':
+      case 'testimonial':
       case 'price':
-        return true; // Price com valores default é completo
       case 'metrics':
-        return true; // Metrics com valores default é completo
       case 'loading':
-        return true; // Loading com valores default é completo
       case 'slider':
-        return true;
       case 'textInput':
-        return true;
       case 'nps':
-        return true;
       case 'accordion':
-        return true;
       case 'comparison':
-        return true;
       case 'socialProof':
-        return true;
       case 'animatedCounter':
+      case 'callout':
+      case 'iconList':
+      case 'quote':
+      case 'badgeRow':
+      case 'banner':
         return true;
       default:
         return false;
