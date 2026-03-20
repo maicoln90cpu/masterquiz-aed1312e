@@ -573,34 +573,71 @@ const CreateQuizModern = () => {
                   </div>
                 </div>
 
-                {/* ✅ NOVO: Seletor de formato do quiz (exclusivo Modern) */}
-                <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-                  <Label className="text-base font-semibold">{t('createQuiz.quizFormat', 'Formato do Quiz')}</Label>
-                  <Select
-                    value={appearanceState.showResults ? 'results' : 'funnel'}
-                    onValueChange={(val) => {
-                      updateAppearance({ showResults: val === 'results' });
-                      trackInteraction('quiz_format_changed');
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="results">
-                        🏆 {t('createQuiz.formatResults', 'Com Resultados — Quiz com tela de resultado')}
-                      </SelectItem>
-                      <SelectItem value="funnel">
-                        🔄 {t('createQuiz.formatFunnel', 'Formato Funil — Sem resultados, foco em coleta')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    {appearanceState.showResults
-                      ? t('createQuiz.formatResultsHint', 'Os respondentes verão uma tela de resultado ao final.')
-                      : t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação.')
-                    }
-                  </p>
+                {/* ✅ Seletor de formato do quiz — cards visuais destacados */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-bold">{t('createQuiz.quizFormat', 'Formato do Quiz')}</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Card: Com Resultados */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateAppearance({ showResults: true });
+                        trackInteraction('quiz_format_changed');
+                      }}
+                      className={cn(
+                        "relative p-6 rounded-xl border-2 text-left transition-all hover:shadow-md",
+                        appearanceState.showResults
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm"
+                          : "border-border bg-card hover:border-primary/40"
+                      )}
+                    >
+                      {appearanceState.showResults && (
+                        <div className="absolute top-3 right-3">
+                          <Check className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
+                      <div className="text-3xl mb-3">🏆</div>
+                      <h3 className="font-bold text-base mb-1">{t('createQuiz.formatResults', 'Com Resultados')}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('createQuiz.formatResultsHint', 'Os respondentes verão uma tela de resultado ao final.')}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Pontuação</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Tela de Resultado</span>
+                      </div>
+                    </button>
+
+                    {/* Card: Formato Funil */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateAppearance({ showResults: false });
+                        updateFormConfig({ collectionTiming: 'none' });
+                        trackInteraction('quiz_format_changed');
+                      }}
+                      className={cn(
+                        "relative p-6 rounded-xl border-2 text-left transition-all hover:shadow-md",
+                        !appearanceState.showResults
+                          ? "border-blue-500 bg-blue-500/5 ring-2 ring-blue-500/20 shadow-sm"
+                          : "border-border bg-card hover:border-blue-500/40"
+                      )}
+                    >
+                      {!appearanceState.showResults && (
+                        <div className="absolute top-3 right-3">
+                          <Check className="h-5 w-5 text-blue-500" />
+                        </div>
+                      )}
+                      <div className="text-3xl mb-3">🔄</div>
+                      <h3 className="font-bold text-base mb-1">{t('createQuiz.formatFunnel', 'Formato Funil')}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação.')}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 font-medium">Qualificação</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 font-medium">Sem coleta obrigatória</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
