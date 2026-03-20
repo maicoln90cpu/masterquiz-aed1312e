@@ -638,6 +638,59 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         separator: true,
       } as AnimatedCounterBlock;
     
+    case 'callout':
+      return {
+        ...baseBlock,
+        type: 'callout',
+        variant: 'warning',
+        title: 'Atenção',
+        items: ['Item importante 1', 'Item importante 2'],
+        footnote: '',
+      } as CalloutBlock;
+
+    case 'iconList':
+      return {
+        ...baseBlock,
+        type: 'iconList',
+        items: [
+          { icon: '✅', text: 'Benefício 1' },
+          { icon: '✅', text: 'Benefício 2' },
+          { icon: '✅', text: 'Benefício 3' },
+        ],
+        layout: 'vertical',
+      } as IconListBlock;
+
+    case 'quote':
+      return {
+        ...baseBlock,
+        type: 'quote',
+        text: 'Uma citação inspiradora ou destaque importante.',
+        author: '',
+        style: 'default',
+      } as QuoteBlock;
+
+    case 'badgeRow':
+      return {
+        ...baseBlock,
+        type: 'badgeRow',
+        badges: [
+          { icon: '🔒', text: 'Seguro' },
+          { icon: '⚡', text: 'Rápido' },
+          { icon: '✅', text: 'Garantido' },
+        ],
+        variant: 'outline',
+        size: 'md',
+      } as BadgeRowBlock;
+
+    case 'banner':
+      return {
+        ...baseBlock,
+        type: 'banner',
+        text: '🔥 Oferta por tempo limitado!',
+        variant: 'promo',
+        dismissible: false,
+      } as BannerBlock;
+    
     default:
       throw new Error(`Unknown block type: ${type}`);
   }
