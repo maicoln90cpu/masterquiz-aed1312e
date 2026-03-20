@@ -432,7 +432,10 @@ export type QuizBlock =
   | BannerBlock
   | AnswerSummaryBlock
   | ProgressMessageBlock
-  | AvatarGroupBlock;
+  | AvatarGroupBlock
+  | ConditionalTextBlock
+  | ComparisonResultBlock
+  | PersonalizedCTABlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
