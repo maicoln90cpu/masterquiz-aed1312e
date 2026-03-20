@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -14,11 +15,42 @@ interface QuestionBlockPreviewProps {
   onTextChange?: (text: string) => void;
 }
 
+// ✅ Etapa 2C: Fisher-Yates shuffle determinístico por block.id
+const shuffleArray = <T,>(arr: T[], seed: string): T[] => {
+  const result = [...arr];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  for (let i = result.length - 1; i > 0; i--) {
+    hash = ((hash << 5) - hash) + i;
+    hash |= 0;
+    const j = Math.abs(hash) % (i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+};
+
 export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, onTextChange }: QuestionBlockPreviewProps) => {
   const emojis = block.emojis || [];
   const isInteractive = !!onAnswerSelect;
   const currentSelection = selectedAnswer || [];
   const selectedArray = Array.isArray(currentSelection) ? currentSelection : [currentSelection];
+
+  // ✅ Etapa 2C: Randomizar opções (mantém emojis sincronizados)
+  const { displayOptions, displayEmojis } = useMemo(() => {
+    const opts = block.options || (block.answerFormat === 'yes_no' ? ['Sim', 'Não'] : []);
+    if (!block.randomizeOptions || opts.length <= 1) {
+      return { displayOptions: opts, displayEmojis: emojis };
+    }
+    const indices = opts.map((_, i) => i);
+    const shuffled = shuffleArray(indices, block.id);
+    return {
+      displayOptions: shuffled.map(i => opts[i]),
+      displayEmojis: shuffled.map(i => emojis[i] || ''),
+    };
+  }, [block.options, block.randomizeOptions, block.id, block.answerFormat, emojis]);
 
   const handleOptionClick = (option: string, isMultiple: boolean) => {
     if (onAnswerSelect) onAnswerSelect(option, isMultiple);
@@ -36,7 +68,7 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
         onClick={isInteractive ? () => handleOptionClick(option, isMultiple) : undefined}
       >
         <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-lg">
-          {emojis[idx] || (block.answerFormat === 'yes_no' ? (idx === 0 ? '✅' : '❌') : String.fromCharCode(65 + idx))}
+          {displayEmojis[idx] || (block.answerFormat === 'yes_no' ? (idx === 0 ? '✅' : '❌') : String.fromCharCode(65 + idx))}
         </div>
         {isMultiple ? (
           <Checkbox id={`${block.id}-${idx}`} checked={isSelected} className="sr-only" />
@@ -73,23 +105,23 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
           onValueChange={isInteractive ? (v) => handleOptionClick(v, false) : undefined}
           className="space-y-2"
         >
-          {(block.options || ['Sim', 'Não']).map((rawOption, idx) => renderOption(rawOption, idx, false))}
+          {displayOptions.map((rawOption, idx) => renderOption(rawOption, idx, false))}
         </RadioGroup>
       )}
 
-      {block.answerFormat === "single_choice" && block.options && (
+      {block.answerFormat === "single_choice" && displayOptions.length > 0 && (
         <RadioGroup
           value={selectedArray[0] || ''}
           onValueChange={isInteractive ? (v) => handleOptionClick(v, false) : undefined}
           className="space-y-2"
         >
-          {block.options.map((rawOption, idx) => renderOption(rawOption, idx, false))}
+          {displayOptions.map((rawOption, idx) => renderOption(rawOption, idx, false))}
         </RadioGroup>
       )}
 
-      {block.answerFormat === "multiple_choice" && block.options && (
+      {block.answerFormat === "multiple_choice" && displayOptions.length > 0 && (
         <div className="space-y-2">
-          {block.options.map((rawOption, idx) => renderOption(rawOption, idx, true))}
+          {displayOptions.map((rawOption, idx) => renderOption(rawOption, idx, true))}
         </div>
       )}
 

@@ -58,8 +58,29 @@ interface VideoBlockPreviewProps {
   handleIframeLoad: (block: VideoBlock) => void;
 }
 
-export const VideoBlockPreview = ({ block, trackFacebookPixelEvent, handleIframeLoad }: VideoBlockPreviewProps) =>
-  block.url ? (
+export const VideoBlockPreview = ({ block, trackFacebookPixelEvent, handleIframeLoad }: VideoBlockPreviewProps) => {
+  // ✅ Etapa 2C: Auto-detect Loom URLs
+  const detectProvider = () => {
+    if (block.provider && block.provider !== 'direct') return block.provider;
+    const url = block.url || '';
+    if (url.includes('loom.com')) return 'loom' as const;
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube' as const;
+    if (url.includes('vimeo.com')) return 'vimeo' as const;
+    return block.provider || 'direct';
+  };
+  const provider = detectProvider();
+
+  // ✅ Etapa 2C: Extract Loom embed URL
+  const getLoomEmbedUrl = (url: string) => {
+    const match = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
+    if (match) return `https://www.loom.com/embed/${match[1]}`;
+    if (url.includes('/embed/')) return url;
+    return url;
+  };
+
+  if (!block.url) return null;
+
+  return (
     <div className="space-y-2">
       <div className={`rounded-lg overflow-hidden ${
         block.size === "small" ? "max-w-xs mx-auto"
@@ -67,7 +88,7 @@ export const VideoBlockPreview = ({ block, trackFacebookPixelEvent, handleIframe
           : block.size === "full" ? "w-full"
           : "max-w-md mx-auto"
       }`}>
-        {block.provider === "youtube" && (
+        {provider === "youtube" && (
           <div className="aspect-video">
             <iframe
               src={`${block.url.replace("watch?v=", "embed/")}${block.autoplay ? '?autoplay=1' : ''}${block.muted ? '&mute=1' : ''}${block.loop ? '&loop=1' : ''}${block.startTime ? `&start=${block.startTime}` : ''}${block.endTime ? `&end=${block.endTime}` : ''}`}
@@ -78,7 +99,7 @@ export const VideoBlockPreview = ({ block, trackFacebookPixelEvent, handleIframe
             />
           </div>
         )}
-        {block.provider === "vimeo" && (
+        {provider === "vimeo" && (
           <div className="aspect-video">
             <iframe
               src={`${block.url.replace("vimeo.com/", "player.vimeo.com/video/")}${block.autoplay ? '?autoplay=1' : ''}${block.muted ? '&muted=1' : ''}${block.loop ? '&loop=1' : ''}`}
@@ -89,7 +110,19 @@ export const VideoBlockPreview = ({ block, trackFacebookPixelEvent, handleIframe
             />
           </div>
         )}
-        {(block.provider === "direct" || block.provider === "uploaded" || block.provider === "bunny_stream") && (
+        {/* ✅ Etapa 2C: Loom embed support */}
+        {provider === "loom" && (
+          <div className="aspect-video">
+            <iframe
+              src={getLoomEmbedUrl(block.url)}
+              className="w-full h-full"
+              allowFullScreen
+              allow="autoplay"
+              onLoad={() => handleIframeLoad(block)}
+            />
+          </div>
+        )}
+        {(provider === "direct" || provider === "uploaded" || provider === "bunny_stream") && (
           <CustomVideoPlayer
             src={block.url}
             poster={block.thumbnailUrl}
@@ -135,7 +168,8 @@ export const VideoBlockPreview = ({ block, trackFacebookPixelEvent, handleIframe
       </div>
       {block.caption && <p className="text-sm text-center text-muted-foreground">{block.caption}</p>}
     </div>
-  ) : null;
+  );
+};
 
 // ---- AUDIO ----
 export const AudioBlockPreview = ({ block }: { block: QuizBlock & { type: 'audio' } }) =>

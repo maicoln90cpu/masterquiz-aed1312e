@@ -353,6 +353,16 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
     });
   };
 
+  // ✅ Etapa 2C: Ícone customizável (chevron ou plus/minus)
+  const renderIcon = (isOpen: boolean) => {
+    if (block.iconType === 'plus') {
+      return isOpen
+        ? <Minus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+        : <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />;
+    }
+    return <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />;
+  };
+
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">{block.title}</h3>
@@ -363,11 +373,22 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
             <div key={index} className={`border rounded-lg overflow-hidden ${block.style === 'bordered' ? 'border-2' : ''}`}>
               <button onClick={() => toggleItem(index)} className="w-full p-3 font-medium bg-muted/50 flex items-center justify-between text-left hover:bg-muted/70 transition-colors">
                 {item.question}
-                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                {renderIcon(isOpen)}
               </button>
-              {isOpen && (
-                <div className="p-3 text-sm text-muted-foreground border-t animate-in slide-in-from-top-1 duration-200">{item.answer}</div>
-              )}
+              {/* ✅ Etapa 2C: Animação suave de abertura */}
+              <AnimatePresence>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-3 text-sm text-muted-foreground border-t">{item.answer}</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}

@@ -93,21 +93,48 @@ export const BadgeRowBlockPreview = ({ block }: { block: QuizBlock & { type: 'ba
   const isFilled = block.variant === 'filled';
   const sizeClass = block.size === 'sm' ? 'text-xs px-2 py-1' : block.size === 'lg' ? 'text-base px-4 py-2' : 'text-sm px-3 py-1.5';
 
+  const renderBadge = (badge: { icon: string; text: string; tooltip?: string; color?: string }, idx: number) => {
+    const badgeColor = badge.color;
+    const badgeEl = (
+      <span
+        key={idx}
+        className={`inline-flex items-center gap-1.5 rounded-full font-medium ${sizeClass} ${
+          isFilled
+            ? 'text-white'
+            : 'border-2 text-foreground'
+        }`}
+        style={
+          badgeColor
+            ? isFilled
+              ? { backgroundColor: badgeColor }
+              : { borderColor: `${badgeColor}50`, color: badgeColor }
+            : isFilled
+              ? { backgroundColor: 'hsl(var(--primary))' }
+              : { borderColor: 'hsl(var(--primary) / 0.3)' }
+        }
+      >
+        <span>{badge.icon}</span>
+        <span>{badge.text}</span>
+      </span>
+    );
+
+    // ✅ Etapa 2C: Tooltip por badge
+    if (badge.tooltip) {
+      return (
+        <TooltipProvider key={idx}>
+          <Tooltip>
+            <TooltipTrigger asChild>{badgeEl}</TooltipTrigger>
+            <TooltipContent><p className="text-xs">{badge.tooltip}</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    return badgeEl;
+  };
+
   return (
     <div className="flex flex-wrap gap-2 justify-center">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className={`inline-flex items-center gap-1.5 rounded-full font-medium ${sizeClass} ${
-            isFilled
-              ? 'bg-primary text-primary-foreground'
-              : 'border-2 border-primary/30 text-foreground'
-          }`}
-        >
-          <span>{badge.icon}</span>
-          <span>{badge.text}</span>
-        </span>
-      ))}
+      {badges.map((badge, idx) => renderBadge(badge, idx))}
     </div>
   );
 };
