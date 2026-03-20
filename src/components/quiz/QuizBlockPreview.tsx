@@ -59,6 +59,10 @@ export const QuizBlockPreview = ({
   selectedAnswer,
   onAnswerSelect,
   onTextChange,
+  answers,
+  questions,
+  currentStep,
+  totalQuestions,
 }: QuizBlockPreviewProps) => {
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
