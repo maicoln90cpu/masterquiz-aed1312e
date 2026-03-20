@@ -1521,7 +1521,7 @@ const PersonalizedCTAProperties = ({ block, onChange, questions }: BlockProperti
 };
 
 // ---- RECOMMENDATION ----
-const RecommendationProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+const RecommendationProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
   if (block.type !== 'recommendation') return null;
   const recommendations = (block as any).recommendations || [];
   return (
