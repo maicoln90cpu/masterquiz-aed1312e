@@ -436,16 +436,11 @@ export const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: '
 export const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 'socialProof' } }) => {
   const notifications = block.notifications || [];
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (notifications.length <= 1) return;
     const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setCurrentIdx(prev => (prev + 1) % notifications.length);
-        setVisible(true);
-      }, 300);
+      setCurrentIdx(prev => (prev + 1) % notifications.length);
     }, (block.interval || 5) * 1000);
     return () => clearInterval(interval);
   }, [notifications.length, block.interval]);
@@ -460,23 +455,33 @@ export const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 
 
   return (
     <div className={`flex ${positionClasses[block.position || 'bottom-left'] || 'justify-start'}`}>
-      <div className={`transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} ${
-        block.style === 'banner' ? 'bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center'
-          : block.style === 'floating' ? 'bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2'
-          : 'bg-background border shadow-lg rounded-lg p-3 max-w-xs'
-      }`}>
-        <div className="flex items-center gap-3">
-          {block.showAvatar && (
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <User className="h-5 w-5 text-primary" />
+      {/* ✅ Etapa 2D: Animação slide-in com framer-motion */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIdx}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className={`${
+            block.style === 'banner' ? 'bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center'
+              : block.style === 'floating' ? 'bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2'
+              : 'bg-background border shadow-lg rounded-lg p-3 max-w-xs'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {block.showAvatar && (
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+            )}
+            <div>
+              <p className="text-sm"><span className="font-semibold">{notification.name}</span> {notification.action}</p>
+              <p className="text-xs text-muted-foreground">{notification.time}</p>
             </div>
-          )}
-          <div>
-            <p className="text-sm"><span className="font-semibold">{notification.name}</span> {notification.action}</p>
-            <p className="text-xs text-muted-foreground">{notification.time}</p>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
