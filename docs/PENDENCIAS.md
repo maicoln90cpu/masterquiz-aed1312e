@@ -452,9 +452,11 @@ Consultar histórico detalhado nos commits e no ROADMAP.md.
 
 | Documento | Descrição |
 |-----------|-----------|
-| [README.md](./README.md) | Setup, stack e arquitetura |
+| [../README.md](../README.md) | Setup, stack e arquitetura |
 | [PRD.md](./PRD.md) | Requisitos do produto e backlog |
 | [ROADMAP.md](./ROADMAP.md) | Planejamento estratégico |
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código |
 | [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação MVP |
-| [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura técnica |
+| [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |

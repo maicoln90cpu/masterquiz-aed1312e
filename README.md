@@ -585,7 +585,8 @@ logger.api('API call', { endpoint, status });
 | [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 57 Edge Functions |
 | [docs/COMPONENTS.md](./docs/COMPONENTS.md) | Documentação de componentes |
 | [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
-| [src/__tests__/README.md](./src/__tests__/README.md) | Guia de testes automatizados |
+| [docs/BLOCKS.md](./docs/BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [docs/TESTING.md](./docs/TESTING.md) | Guia de testes automatizados |
 
 ---
 

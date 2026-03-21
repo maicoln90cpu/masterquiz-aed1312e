@@ -172,3 +172,5 @@ Q4 2025: Expansão Internacional
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
 | [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
 | [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |

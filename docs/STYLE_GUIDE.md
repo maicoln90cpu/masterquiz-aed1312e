@@ -524,6 +524,26 @@ interface WizardStep {
 
 ---
 
+## 🏗 Padrão: Thin Router para Páginas Pesadas
+
+Para páginas com múltiplas variantes ou lógica pesada, use o padrão **thin router**:
+
+```typescript
+// src/pages/CreateQuiz.tsx — THIN ROUTER (nenhum hook pesado aqui)
+const CreateQuizModern = lazy(() => import("@/pages/CreateQuizModern"));
+const CreateQuizClassic = lazy(() => import("@/pages/CreateQuizClassic"));
+
+const CreateQuiz = () => {
+  const { isModern, isLoading } = useEditorLayout(); // único hook
+  if (isLoading) return <Loader />;
+  return isModern ? <CreateQuizModern /> : <CreateQuizClassic />;
+};
+```
+
+**Por quê:** Evita hooks duplicados em re-renders e reduz o bundle carregado inicialmente.
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
@@ -536,7 +556,9 @@ interface WizardStep {
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
 | [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
 | [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |
 
 ---
 
-*Última atualização: 19/03/2026*
+*Última atualização: 21/03/2026*

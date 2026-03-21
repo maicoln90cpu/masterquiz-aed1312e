@@ -608,6 +608,8 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 - [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) - Arquitetura técnica
 - [API_DOCS.md](./API_DOCS.md) - Documentação Edge Functions
 - [COMPONENTS.md](./COMPONENTS.md) - Documentação componentes
+- [BLOCKS.md](./BLOCKS.md) - Catálogo dos 34 tipos de blocos
+- [TESTING.md](./TESTING.md) - Guia de testes
 
 ---
 

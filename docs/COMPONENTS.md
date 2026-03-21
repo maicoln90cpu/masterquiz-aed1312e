@@ -210,3 +210,5 @@
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
 | [API_DOCS.md](./API_DOCS.md) | Edge Functions |
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |

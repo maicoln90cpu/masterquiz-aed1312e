@@ -327,3 +327,5 @@ const corsHeaders = {
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
 | [COMPONENTS.md](./COMPONENTS.md) | Componentes frontend |
 | [PENDENCIAS.md](./PENDENCIAS.md) | Changelog |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |

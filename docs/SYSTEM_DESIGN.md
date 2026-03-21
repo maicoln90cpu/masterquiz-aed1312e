@@ -554,3 +554,5 @@ Payload (array de até 100 itens):
 | [AUDIT_TEMPLATE.md](./AUDIT_TEMPLATE.md) | Template de auditoria |
 | [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
 | [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |

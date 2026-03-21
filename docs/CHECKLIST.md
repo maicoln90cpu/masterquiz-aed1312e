@@ -250,6 +250,8 @@
 | [ ] Editar texto da opção | | |
 | [ ] Score por opção funciona | | |
 | [ ] Imagem por opção (se houver) | | |
+| [ ] Layout de imagem (acima/lado/somente) | | |
+| [ ] Tamanho de imagem (small/medium/large) | | |
 
 #### Blocos de Conteúdo
 
