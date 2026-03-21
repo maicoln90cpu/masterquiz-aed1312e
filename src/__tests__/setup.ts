@@ -6,7 +6,8 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn(), id: 'test-sub' } } })),
     },
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
@@ -30,6 +31,9 @@ vi.mock('@/integrations/supabase/client', () => ({
         upload: vi.fn().mockResolvedValue({ data: { path: 'test.webp' }, error: null }),
         getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://test.com/test.webp' } }),
       })),
+    },
+    functions: {
+      invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
     },
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   },
