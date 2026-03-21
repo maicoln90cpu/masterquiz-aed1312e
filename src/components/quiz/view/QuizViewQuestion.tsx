@@ -387,6 +387,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
 interface OptionsProps {
   options: any[];
   emojis: string[];
+  optionImages?: string[];
+  optionImageLayout?: string;
+  optionImageSize?: string;
   questionId: string;
   answers: Record<string, any>;
   onAnswer: (questionId: string, value: any) => void;
@@ -395,8 +398,27 @@ interface OptionsProps {
   answered?: boolean;
 }
 
-function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
+const getImageLayoutClass = (layout?: string, hasImages?: boolean) => {
+  if (!hasImages) return 'space-y-2';
+  switch (layout) {
+    case '2x2': return 'grid grid-cols-2 gap-3';
+    case '4x1': return 'grid grid-cols-4 gap-3';
+    default: return 'space-y-2';
+  }
+};
+
+const getImageSizeClass = (size?: string) => {
+  switch (size) {
+    case 'tiny': return 'max-h-[60px]';
+    case 'small': return 'max-h-[80px]';
+    case 'large': return 'max-h-[180px]';
+    default: return 'max-h-[120px]';
+  }
+};
+
+function MultipleChoiceOptions({ options, emojis, optionImages, optionImageLayout, optionImageSize, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
   const currentAnswers = Array.isArray(answers[questionId]) ? answers[questionId] : [];
+  const hasImages = optionImages && optionImages.some(img => img);
 
   const getOptionStyle = (optionText: string) => {
     if (!answered || !correctAnswer) {
