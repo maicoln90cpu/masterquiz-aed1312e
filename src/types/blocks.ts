@@ -185,6 +185,8 @@ export interface LoadingBlock extends BaseBlock {
   autoAdvance?: boolean;
   showProgress?: boolean;
   loadingMessages?: string[];
+  progressColor?: string; // ✅ Etapa 2E: Cor customizável da barra de progresso
+  rotateMessages?: boolean; // ✅ Etapa 2E: Mensagens rotativas com fade
 }
 
 export interface ProgressBlock extends BaseBlock {
