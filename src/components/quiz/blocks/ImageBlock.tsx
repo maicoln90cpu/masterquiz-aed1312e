@@ -36,6 +36,26 @@ export const ImageBlock = ({ block, onChange }: ImageBlockProps) => {
             />
           </div>
 
+          {/* ✅ Etapa 3: Preview real com tamanho respeitado */}
+          {block.url && (
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-2">Preview ({block.size || 'medium'})</p>
+              <div className={`mx-auto ${
+                block.size === 'small' ? 'max-w-xs' :
+                block.size === 'large' ? 'max-w-2xl' :
+                block.size === 'full' ? 'w-full' :
+                'max-w-md'
+              }`}>
+                <img
+                  src={block.url}
+                  alt={block.alt || 'Quiz image'}
+                  className="rounded-lg w-full h-auto object-contain"
+                />
+              </div>
+              {block.caption && <p className="text-xs text-center text-muted-foreground mt-1">{block.caption}</p>}
+            </div>
+          )}
+
           {block.url && (
             <p className="text-xs text-muted-foreground">
               ✅ Imagem carregada • Configure alt, legenda e tamanho no painel →

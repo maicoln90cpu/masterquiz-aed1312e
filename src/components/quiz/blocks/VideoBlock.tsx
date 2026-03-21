@@ -148,6 +148,33 @@ export const VideoBlock = ({ block, onChange }: VideoBlockProps) => {
             </TabsContent>
           </Tabs>
 
+          {/* ✅ Etapa 3: Preview real com tamanho respeitado */}
+          {block.url && (
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-2">Preview ({block.size || 'medium'} • {block.aspectRatio || '16:9'})</p>
+              <div className={`mx-auto overflow-hidden rounded-lg ${
+                block.size === 'small' ? 'max-w-xs' :
+                block.size === 'large' ? 'max-w-2xl' :
+                block.size === 'full' ? 'w-full' :
+                'max-w-md'
+              }`}>
+                <div className={`w-full bg-muted/80 flex items-center justify-center ${
+                  block.aspectRatio === '1:1' ? 'aspect-square' :
+                  block.aspectRatio === '4:3' ? 'aspect-[4/3]' :
+                  block.aspectRatio === '9:16' ? 'aspect-[9/16] max-h-[300px]' :
+                  'aspect-video'
+                }`}>
+                  <div className="text-center text-muted-foreground">
+                    <VideoIcon className="h-8 w-8 mx-auto mb-1 opacity-50" />
+                    <p className="text-xs">Vídeo configurado</p>
+                    <p className="text-[10px] opacity-70">{block.provider || 'direct'}</p>
+                  </div>
+                </div>
+              </div>
+              {block.caption && <p className="text-xs text-center text-muted-foreground mt-1">{block.caption}</p>}
+            </div>
+          )}
+
           {block.url && (
             <p className="text-xs text-muted-foreground">
               ✅ Vídeo configurado • Ajuste reprodução, tamanho e proporção no painel →
