@@ -306,6 +306,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
           <MultipleChoiceOptions
             options={options}
             emojis={emojis}
+            optionImages={optionImages}
+            optionImageLayout={optionImageLayout}
+            optionImageSize={optionImageSize}
             questionId={questionId}
             answers={answers}
             correctAnswer={correctAnswer}
@@ -325,6 +328,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
         <SingleChoiceOptions
           options={options}
           emojis={emojis}
+          optionImages={optionImages}
+          optionImageLayout={optionImageLayout}
+          optionImageSize={optionImageSize}
           questionId={questionId}
           answers={answers}
           correctAnswer={correctAnswer}
@@ -335,7 +341,6 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
               if (explanation && explanationMode !== 'end_of_quiz') {
                 setAnswered(true);
               } else if (onAutoAdvance) {
-                // Auto-advance for single choice when no explanation
                 onAutoAdvance();
               }
             }
