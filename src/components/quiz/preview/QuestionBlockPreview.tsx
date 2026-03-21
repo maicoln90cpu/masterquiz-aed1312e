@@ -123,7 +123,11 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
   };
 
   // ✅ Etapa 2E: Grid layout when images are present
-  const optionContainerClass = hasImages ? 'grid grid-cols-2 gap-3' : 'space-y-2';
+  const optionContainerClass = hasImages
+    ? optionImageLayout === '1x4' ? 'space-y-2'
+    : optionImageLayout === '4x1' ? 'grid grid-cols-4 gap-3'
+    : 'grid grid-cols-2 gap-3'
+    : 'space-y-2';
 
   return (
     <div className="space-y-4">
