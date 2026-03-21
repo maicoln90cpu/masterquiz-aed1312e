@@ -64,10 +64,16 @@ vi.mock('@/hooks/useUserRole', () => ({
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: any) => opts?.defaultValue || key,
+    t: (key: string, opts?: any) => {
+      if (typeof opts === 'string') return opts;
+      if (opts?.defaultValue && typeof opts.defaultValue === 'string') return opts.defaultValue;
+      return key;
+    },
     i18n: {
       language: 'pt',
       changeLanguage: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn(),
+      off: vi.fn(),
     },
   }),
   Trans: ({ children }: any) => children,
