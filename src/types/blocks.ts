@@ -499,6 +499,8 @@ export interface CalculatorBlock extends BaseBlock {
     label: string;
     color?: string;
   }[];
+  formulaTemplate?: string; // ✅ Etapa 2F: Template de fórmula pré-configurada
+  showGauge?: boolean; // ✅ Etapa 2F: Exibir resultado como gauge visual
 }
 
 export type QuizBlock =
