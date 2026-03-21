@@ -62,8 +62,8 @@ const OPERATORS = [
 // Gerar ID único para regras
 const generateRuleId = () => `rule-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-// Migrar regras antigas sem id
-const migrateRules = (rules: any[]): ConditionRule[] =>
+// Migrar regras antigas sem id — garante que todas tenham id
+const migrateRules = (rules: any[]): (ConditionRule & { id: string })[] =>
   rules.map(r => ({ ...r, id: r.id || generateRuleId() }));
 
 // ========== Sortable Rule Card ==========
