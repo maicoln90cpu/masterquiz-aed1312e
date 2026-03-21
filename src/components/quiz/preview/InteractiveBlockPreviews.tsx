@@ -578,7 +578,7 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
       )}
       <div className="flex justify-center gap-1 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => (
-          <button key={i} onClick={() => setValue(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
+          <button key={i} onClick={() => handleSelect(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
             value === i ? `${getNPSColor(i)} text-white scale-110 shadow-lg` : "bg-muted hover:bg-muted/80 text-foreground"
           }`}>{i}</button>
         ))}
