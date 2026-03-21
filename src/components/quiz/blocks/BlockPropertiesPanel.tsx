@@ -533,6 +533,7 @@ const VideoProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Select value={block.size || 'medium'} onValueChange={(v) => onChange(update(block, { size: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
+            <SelectItem value="tiny">Mini</SelectItem>
             <SelectItem value="small">Pequeno</SelectItem>
             <SelectItem value="medium">Médio</SelectItem>
             <SelectItem value="large">Grande</SelectItem>
