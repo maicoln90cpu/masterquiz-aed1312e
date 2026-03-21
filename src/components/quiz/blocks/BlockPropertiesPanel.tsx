@@ -625,6 +625,14 @@ const LoadingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
       <SwitchRow label="Avançar automaticamente" checked={block.autoAdvance || false} onChange={(v) => onChange(update(block, { autoAdvance: v }))} />
+      <SwitchRow label="Mostrar barra de progresso" checked={block.showProgress || false} onChange={(v) => onChange(update(block, { showProgress: v }))} />
+      {/* ✅ Etapa 2E: Cor da barra + mensagens rotativas */}
+      {block.showProgress && (
+        <PropertySection title="Cor da barra">
+          <Input type="color" value={block.progressColor || '#3b82f6'} onChange={(e) => onChange(update(block, { progressColor: e.target.value }))} />
+        </PropertySection>
+      )}
+      <SwitchRow label="Mensagens rotativas (fade)" checked={block.rotateMessages || false} onChange={(v) => onChange(update(block, { rotateMessages: v }))} />
     </div>
   );
 };
