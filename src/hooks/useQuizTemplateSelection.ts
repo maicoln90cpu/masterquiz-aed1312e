@@ -78,20 +78,35 @@ export function useQuizTemplateSelection({
       
       // ✅ Processar perguntas com validação robusta
       const templateQuestions = template.config.questions || [];
-      const processedQuestions: EditorQuestion[] = templateQuestions.map((q: any, index: number) => ({
-        id: q.id || `temp-${Date.now()}-${index}`,
-        question_text: q.question_text || q.questionText || '',
-        answer_format: (q.answer_format || q.answerFormat || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
-        options: Array.isArray(q.options)
-          ? q.options.map((opt: any) => typeof opt === 'object' && opt?.text ? String(opt.text) : String(opt))
-          : [],
-        scores: Array.isArray(q.options)
-          ? q.options.map((opt: any) => typeof opt === 'object' && typeof opt?.score === 'number' ? opt.score : 0)
-          : [],
-        order_number: index,
-        custom_label: q.custom_label || '',
-        blocks: Array.isArray(q.blocks) ? (q.blocks as EditorQuestion['blocks']) : [createBlock('question', 0)]
-      }));
+      const processedQuestions: EditorQuestion[] = templateQuestions.map((q: any, index: number) => {
+        // ✅ Sanitizar blocos: remover imageBlocks com URLs inexistentes (/templates/...)
+        const sanitizedBlocks = Array.isArray(q.blocks)
+          ? (q.blocks as any[]).filter((b: any) => {
+              if (b?.type === 'image' && typeof b?.url === 'string' && b.url.startsWith('/templates/')) {
+                console.info(`[useQuizTemplateSelection] Stripped invalid imageBlock: ${b.url}`);
+                return false;
+              }
+              return true;
+            })
+          : null;
+
+        return {
+          id: q.id || `temp-${Date.now()}-${index}`,
+          question_text: q.question_text || q.questionText || '',
+          answer_format: (q.answer_format || q.answerFormat || 'single_choice') as 'yes_no' | 'single_choice' | 'multiple_choice' | 'short_text',
+          options: Array.isArray(q.options)
+            ? q.options.map((opt: any) => typeof opt === 'object' && opt?.text ? String(opt.text) : String(opt))
+            : [],
+          scores: Array.isArray(q.options)
+            ? q.options.map((opt: any) => typeof opt === 'object' && typeof opt?.score === 'number' ? opt.score : 0)
+            : [],
+          order_number: index,
+          custom_label: q.custom_label || '',
+          blocks: sanitizedBlocks && sanitizedBlocks.length > 0
+            ? (sanitizedBlocks as EditorQuestion['blocks'])
+            : [createBlock('question', 0)],
+        };
+      });
       
       setQuestions(processedQuestions);
       toast.success(t('createQuiz.templateLoaded', { name: template.name || 'Template' }));

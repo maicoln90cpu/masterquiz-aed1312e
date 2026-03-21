@@ -627,7 +627,7 @@ const CreateQuizModern = () => {
                       <div className="text-3xl mb-3">🔄</div>
                       <h3 className="font-bold text-base mb-1">{t('createQuiz.formatFunnel', 'Formato Funil')}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação.')}
+                        {t('createQuiz.formatFunnelHint', 'Sem tela de resultado. Ideal para funis de qualificação e vendas.')}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-1">
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 font-medium">Qualificação</span>
