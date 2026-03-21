@@ -8,6 +8,8 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
       getUser: vi.fn(),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -21,13 +23,16 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// Override useUserRole
+const mockUseUserRole = vi.fn();
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => mockUseUserRole(),
+}));
+
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
+      queries: { retry: false, gcTime: 0 },
     },
   });
   const Wrapper = ({ children }: { children: ReactNode }) => {
@@ -39,6 +44,14 @@ const createWrapper = () => {
 describe('usePlanFeatures', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseUserRole.mockReturnValue({
+      roles: [],
+      loading: false,
+      hasRole: () => false,
+      isMasterAdmin: false,
+      isAdmin: false,
+      isUser: false,
+    });
   });
 
   it('should return default features when no user is authenticated', async () => {
@@ -57,40 +70,25 @@ describe('usePlanFeatures', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Should return free plan defaults
     expect(result.current.allowFacebookPixel).toBe(false);
     expect(result.current.allowGTM).toBe(false);
   });
 
   it('should return true for all features when user is master_admin', async () => {
     const { supabase } = await import('@/integrations/supabase/client');
+
+    mockUseUserRole.mockReturnValue({
+      roles: ['master_admin'],
+      loading: false,
+      hasRole: (r: string) => r === 'master_admin',
+      isMasterAdmin: true,
+      isAdmin: true,
+      isUser: true,
+    });
     
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: { id: 'test-user-id', email: 'admin@test.com' } as any },
       error: null,
-    });
-
-    // Mock user_roles query to return master_admin
-    vi.mocked(supabase.from).mockImplementation((table: string) => {
-      if (table === 'user_roles') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: { role: 'master_admin' },
-                error: null,
-              }),
-            })),
-          })),
-        } as any;
-      }
-      return {
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      } as any;
     });
 
     const { usePlanFeatures } = await import('../usePlanFeatures');
@@ -102,7 +100,8 @@ describe('usePlanFeatures', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Master admin should have all features
     expect(result.current.isMasterAdmin).toBe(true);
+    expect(result.current.allowFacebookPixel).toBe(true);
+    expect(result.current.allowGTM).toBe(true);
   });
 });
