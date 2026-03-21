@@ -517,6 +517,8 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
+      {/* ✅ Etapa 2F: Lightbox ao clicar */}
+      <SwitchRow label="Lightbox ao clicar" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
     </div>
   );
 };
