@@ -146,10 +146,12 @@ UI Action → pushGTMEvent() → dataLayer.push() + gtm_event_logs INSERT
 
 | Componente | Propósito |
 |------------|-----------|
-| `CreateQuiz` | Orquestra editor 5 steps |
+| `CreateQuiz` | Thin router: delega para `CreateQuizClassic` ou `CreateQuizModern` via `useEditorLayout` |
+| `CreateQuizClassic` | Editor Classic 5 steps (lazy-loaded) |
+| `CreateQuizModern` | Editor Modern com sidebar de blocos (lazy-loaded) |
 | `QuizView` | Renderiza quiz público |
 | `UnifiedQuizPreview` | Preview em tempo real |
-| `BlockEditor` | Edição dos 22 tipos de blocos |
+| `BlockEditor` | Edição dos 34 tipos de blocos |
 | `QuestionsList` | Sidebar de perguntas (cards compactos) |
 | `CalculatorWizard` | Wizard de calculadoras (3 steps) |
 | `ProtectedRoute` | Guard de rotas por role |
