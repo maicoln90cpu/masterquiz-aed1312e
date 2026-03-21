@@ -9,7 +9,10 @@ import type { BlockType } from '@/types/blocks';
 // ✅ Mocks necessários para o ambiente de teste
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: any) => opts?.defaultValue || key,
+    t: (key: string, opts?: any) => {
+      if (typeof opts === 'string') return opts; // t(key, defaultValue)
+      return opts?.defaultValue || key;
+    },
     i18n: { language: 'pt', changeLanguage: vi.fn() },
   }),
 }));
