@@ -372,6 +372,20 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
   const tickStep = tickCount > 0 ? range / tickCount : range;
   const ticks = Array.from({ length: tickCount + 1 }, (_, i) => Math.round(block.min + i * tickStep));
 
+  // ✅ Etapa 4: Webhook ao soltar slider (onValueCommit)
+  const handleCommit = useCallback((v: number[]) => {
+    if ((block as any).webhookOnSubmit && (block as any).webhookUrl) {
+      fireBlockWebhook((block as any).webhookUrl, {
+        blockType: 'slider',
+        blockId: block.id,
+        label: block.label,
+        value: v[0],
+        timestamp: new Date().toISOString(),
+        metadata: { min: block.min, max: block.max, unit: block.unit },
+      });
+    }
+  }, [block]);
+
   return (
     <div className="space-y-4">
       <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
