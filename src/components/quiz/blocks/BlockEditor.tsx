@@ -494,161 +494,21 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
-              <DropdownMenuLabel>Blocos de Conteúdo</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => addBlock('question')}>
-                <HelpCircle className="h-4 w-4 mr-2" />
-                Pergunta
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('text')}>
-                <Type className="h-4 w-4 mr-2" />
-                Texto
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('separator')}>
-                <Minus className="h-4 w-4 mr-2" />
-                Separador
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Mídia</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => addBlock('image')}>
-                <Image className="h-4 w-4 mr-2" />
-                Imagem
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('video')}>
-                <Video className="h-4 w-4 mr-2" />
-                Vídeo
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('audio')}>
-                <Music className="h-4 w-4 mr-2" />
-                Áudio
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('gallery')}>
-                <Images className="h-4 w-4 mr-2" />
-                Galeria
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Avançado</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => addBlock('embed')}>
-                <Code className="h-4 w-4 mr-2" />
-                Conteúdo Incorporado
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('button')}>
-                <MousePointerClick className="h-4 w-4 mr-2" />
-                Botão
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('price')}>
-                <DollarSign className="h-4 w-4 mr-2" />
-                Preço
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('metrics')}>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Métricas/Gráfico
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('loading')}>
-                <Loader2 className="h-4 w-4 mr-2" />
-                Loading/Carregamento
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Captura de Dados</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => addBlock('slider')}>
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Slider/Range
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('textInput')}>
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Input de Texto
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('nps')}>
-                <Star className="h-4 w-4 mr-2" />
-                NPS (Satisfação)
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Apresentação</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => addBlock('accordion')}>
-                <ChevronDown className="h-4 w-4 mr-2" />
-                Acordeão FAQ
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('comparison')}>
-                <Columns className="h-4 w-4 mr-2" />
-                Comparação
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('socialProof')}>
-                <Bell className="h-4 w-4 mr-2" />
-                Prova Social
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('testimonial')}>
-                <Star className="h-4 w-4 mr-2" />
-                Depoimento
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('animatedCounter')}>
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Contador Animado
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('progress')}>
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Barra de Progresso
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('countdown')}>
-                <Timer className="h-4 w-4 mr-2" />
-                Countdown/Timer
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Visual</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => addBlock('callout')}>
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Callout/Alerta
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('iconList')}>
-                <List className="h-4 w-4 mr-2" />
-                Lista com Ícones
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('quote')}>
-                <Quote className="h-4 w-4 mr-2" />
-                Citação/Destaque
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('badgeRow')}>
-                <Award className="h-4 w-4 mr-2" />
-                Selos/Badges
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('banner')}>
-                <Flag className="h-4 w-4 mr-2" />
-                Banner/Faixa
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Dinâmico</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => addBlock('answerSummary')}>
-                <List className="h-4 w-4 mr-2" />
-                Resumo de Respostas
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('progressMessage')}>
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Mensagem de Progresso
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('avatarGroup')}>
-                <Bell className="h-4 w-4 mr-2" />
-                Grupo de Avatares
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('conditionalText')}>
-                <Type className="h-4 w-4 mr-2" />
-                Texto Condicional
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('comparisonResult')}>
-                <Columns className="h-4 w-4 mr-2" />
-                Comparação Dinâmica
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('recommendation')}>
-                <Star className="h-4 w-4 mr-2" />
-                Recomendação
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addBlock('calculator')}>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Calculadora
-              </DropdownMenuItem>
+              {blockCatalogSections.map((section, sIdx) => (
+                <div key={section.titleKey}>
+                  {sIdx > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuLabel>{section.defaultTitle}</DropdownMenuLabel>
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <DropdownMenuItem key={item.type} onClick={() => addBlock(item.type)}>
+                        <Icon className="h-4 w-4 mr-2" />
+                        {t(item.labelKey, item.defaultLabel)}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
