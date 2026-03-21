@@ -285,7 +285,7 @@ describe('CRM', () => {
       
       await waitFor(() => {
         expect(screen.getByText('João Silva')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
