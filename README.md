@@ -101,7 +101,9 @@ masterquizz/
 │   ├── ROADMAP.md            # Planejamento estratégico
 │   ├── PENDENCIAS.md         # Changelog e pendências
 │   ├── STYLE_GUIDE.md        # Padrões de código
-│   └── CHECKLIST.md          # Checklist de validação MVP
+│   ├── CHECKLIST.md          # Checklist de validação MVP
+│   ├── BLOCKS.md             # Catálogo dos 34 tipos de blocos
+│   └── TESTING.md            # Guia de testes automatizados
 ├── public/                    # Assets estáticos
 ├── scripts/                   # Scripts de automação
 ├── src/
