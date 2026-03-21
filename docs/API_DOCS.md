@@ -1,7 +1,7 @@
 # 🔌 API Docs - Edge Functions (57 funções)
 
 > MasterQuiz — Documentação das Edge Functions (Supabase/Deno)
-> Versão 2.30 | 19 de Março de 2026
+> Versão 2.37 | 21 de Março de 2026
 
 ---
 
