@@ -124,6 +124,7 @@ export interface GalleryBlock extends BaseBlock {
     caption?: string;
   }[];
   layout?: 'grid' | 'carousel' | 'masonry';
+  enableLightbox?: boolean; // ✅ Etapa 2F: Lightbox ao clicar
 }
 
 export interface EmbedBlock extends BaseBlock {
