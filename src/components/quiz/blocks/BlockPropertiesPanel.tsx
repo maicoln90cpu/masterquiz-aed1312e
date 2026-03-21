@@ -861,7 +861,14 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <div className="space-y-3">
         <SwitchRow label="Mostrar labels" checked={block.showLabels || false} onChange={(v) => onChange(update(block, { showLabels: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        {/* ✅ Etapa 2E: Comentário opcional */}
+        <SwitchRow label="Campo de comentário" checked={block.showComment || false} onChange={(v) => onChange(update(block, { showComment: v }))} />
       </div>
+      {block.showComment && (
+        <PropertySection title="Placeholder do comentário">
+          <Input value={block.commentPlaceholder || ''} placeholder="Conte-nos mais sobre sua nota..." onChange={(e) => onChange(update(block, { commentPlaceholder: e.target.value }))} />
+        </PropertySection>
+      )}
       <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground space-y-1">
         <p>🔴 0-6 = Detrator | 🟡 7-8 = Neutro | 🟢 9-10 = Promotor</p>
         <p>As cores são aplicadas automaticamente no preview.</p>
