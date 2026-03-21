@@ -402,6 +402,7 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
 // ---- NPS ----
 export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } }) => {
   const [value, setValue] = useState<number | null>(null);
+  const [comment, setComment] = useState('');
   const getNPSColor = (v: number) => v <= 6 ? "bg-red-500" : v <= 8 ? "bg-yellow-500" : "bg-green-500";
 
   return (
@@ -423,6 +424,21 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
         <p className={`text-center text-sm font-medium ${value <= 6 ? "text-red-600" : value <= 8 ? "text-yellow-600" : "text-green-600"}`}>
           {value <= 6 ? "Detrator" : value <= 8 ? "Neutro" : "Promotor"} ({value})
         </p>
+      )}
+      {/* ✅ Etapa 2E: Comentário opcional após nota */}
+      {block.showComment && value !== null && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          transition={{ duration: 0.3 }}
+        >
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={block.commentPlaceholder || 'Conte-nos mais sobre sua nota...'}
+            className="w-full min-h-[80px] px-3 py-2 border rounded-md resize-none bg-background text-sm mt-2"
+          />
+        </motion.div>
       )}
     </div>
   );
