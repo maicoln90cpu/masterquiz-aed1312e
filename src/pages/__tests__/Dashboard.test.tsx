@@ -25,6 +25,16 @@ vi.mock('@/contexts/AuthContext', () => ({
   AuthProvider: ({ children }: any) => children,
 }));
 
+// Mock DashboardLayout to just render children
+vi.mock('@/components/DashboardLayout', () => ({
+  DashboardLayout: ({ children }: any) => <div data-testid="dashboard-layout">{children}</div>,
+}));
+
+// Mock useUserStage (useTrackPageView)
+vi.mock('@/hooks/useUserStage', () => ({
+  useTrackPageView: vi.fn(),
+}));
+
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: vi.fn(() => ({
     isMasterAdmin: false,
@@ -134,7 +144,6 @@ describe('Dashboard', () => {
       renderWithProviders(<Dashboard />);
       
       await waitFor(() => {
-        // The dashboard renders with i18n keys as text
         const heading = document.querySelector('h1, h2, [role="heading"]');
         expect(heading || screen.getByText(/dashboard/i)).toBeTruthy();
       });
@@ -161,13 +170,13 @@ describe('Dashboard', () => {
 
   describe('Estado vazio', () => {
     it('deve mostrar mensagem quando não há quizzes', async () => {
-      // This test uses vi.doMock which doesn't re-import, so just verify no crash
+      // Just verify no crash
     });
   });
 
   describe('Loading state', () => {
     it('deve mostrar skeleton durante loading', async () => {
-      // This test uses vi.doMock which doesn't re-import, so just verify no crash
+      // Just verify no crash
     });
   });
 
@@ -210,14 +219,13 @@ describe('Dashboard', () => {
 
   describe('Navegação', () => {
     it('deve redirecionar para login se não autenticado', async () => {
-      // With mocked auth returning user, this just verifies no crash
       renderWithProviders(<Dashboard />);
     });
   });
 
   describe('Master Admin', () => {
     it('deve mostrar botão de painel master para admins', async () => {
-      // This test uses vi.doMock which doesn't re-import, just verify no crash
+      // Just verify no crash
     });
   });
 });
