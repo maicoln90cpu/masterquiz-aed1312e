@@ -263,6 +263,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
   const answerFormat = questionBlock.answerFormat;
   const options = questionBlock.options || [];
   const emojis = questionBlock.emojis || [];
+  const optionImages = questionBlock.optionImages || [];
+  const optionImageLayout = questionBlock.optionImageLayout || '1x4';
+  const optionImageSize = questionBlock.optionImageSize || 'medium';
   const explanation = questionBlock.explanation;
   const correctAnswer = questionBlock.correct_answer;
   const explanationMode = questionBlock.explanationMode;

@@ -55,14 +55,27 @@ export const useQuizTemplates = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // ✅ IDs de templates desativados (causam freeze por blocos pesados + setInterval)
-  const disabledTemplateIds = new Set([
-    'funil-captacao-leads',
-    'funil-vsl-conversao',
-    'funil-trafego-pago',
-    'funil-validacao-oferta',
-    'funil-educacional',
-    'funil-saude-bemestar',
+  // ✅ Mesclar hardcoded + banco, priorizando hardcoded por ID
+  const mergedTemplates = (() => {
+    const allHardcoded = [...hardcodedTemplates, ...hardcodedPremiumTemplates];
+
+    if (!dbTemplates || dbTemplates.length === 0) {
+      return allHardcoded;
+    }
+
+    const templateMap = new Map<string, QuizTemplate>();
+    allHardcoded.forEach(t => {
+      templateMap.set(t.id, t);
+    });
+
+    dbTemplates.forEach(dt => {
+      if (!templateMap.has(dt.id)) {
+        templateMap.set(dt.id, convertDBTemplateToQuizTemplate(dt));
+      }
+    });
+
+    return Array.from(templateMap.values());
+  })();
     'funil-renda-extra',
     'funil-diagnostico-avaliacao',
     'funil-onboarding-curso',
