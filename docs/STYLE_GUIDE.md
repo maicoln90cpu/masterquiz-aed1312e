@@ -383,7 +383,7 @@ expect(screen.getByRole('button')).toBeEnabled();
 ```
 
 ### Referência
-Veja [src/__tests__/README.md](../src/__tests__/README.md) para documentação completa.
+Veja [TESTING.md](./TESTING.md) para documentação completa de testes.
 
 ---
 
