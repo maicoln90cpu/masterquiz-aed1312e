@@ -266,6 +266,8 @@ export interface NPSBlock extends BaseBlock {
   highLabel?: string;
   showLabels?: boolean;
   required?: boolean;
+  showComment?: boolean; // ✅ Etapa 2E: Comentário opcional após nota
+  commentPlaceholder?: string; // ✅ Etapa 2E: Placeholder do campo de comentário
 }
 
 export interface AccordionBlock extends BaseBlock {
