@@ -216,6 +216,9 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF02.10 | Undo/Redo no editor | Média | ✅ |
 | RF02.11 | Quiz branching (lógica condicional) | Alta | ✅ |
 | RF02.12 | Otimização automática de imagens (WebP) | Média | ✅ |
+| RF02.13 | Imagens por opção de resposta (optionImages, optionImageLayout) | Média | ✅ |
+| RF02.14 | Editor Classic/Modern com thin router | Alta | ✅ |
+| RF02.15 | 34 tipos de blocos no editor | Alta | ✅ |
 
 ### RF03 - Resultados e Condições
 
