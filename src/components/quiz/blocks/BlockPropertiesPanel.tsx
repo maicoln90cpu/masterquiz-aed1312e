@@ -2013,6 +2013,33 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
 
   return (
     <div className="space-y-4">
+      {/* ✅ Etapa 2F: Templates de fórmula prontos */}
+      <PropertySection title="Template de fórmula">
+        <Select value={(block as any).formulaTemplate || '_custom'} onValueChange={(v) => {
+          const templates: Record<string, { formula: string; vars: any[]; unit: string; label: string }> = {
+            imc: { formula: 'peso / (altura * altura)', vars: [{ id: 'v-peso', name: 'peso', defaultValue: 70 }, { id: 'v-altura', name: 'altura', defaultValue: 1.75 }], unit: 'kg/m²', label: 'IMC' },
+            roi: { formula: '((ganho - investimento) / investimento) * 100', vars: [{ id: 'v-ganho', name: 'ganho', defaultValue: 10000 }, { id: 'v-investimento', name: 'investimento', defaultValue: 5000 }], unit: '%', label: 'ROI' },
+            economia: { formula: '(valorAtual - valorNovo) * 12', vars: [{ id: 'v-atual', name: 'valorAtual', defaultValue: 500 }, { id: 'v-novo', name: 'valorNovo', defaultValue: 300 }], unit: 'R$/ano', label: 'Economia Anual' },
+            retorno: { formula: 'investimento / economiaMensal', vars: [{ id: 'v-invest', name: 'investimento', defaultValue: 10000 }, { id: 'v-econ', name: 'economiaMensal', defaultValue: 2000 }], unit: 'meses', label: 'Tempo de Retorno' },
+          };
+          if (v !== '_custom' && templates[v]) {
+            const t = templates[v];
+            onChange(update(block, { formulaTemplate: v, formula: t.formula, variables: t.vars, resultUnit: t.unit, resultLabel: t.label }));
+          } else {
+            onChange(update(block, { formulaTemplate: v }));
+          }
+        }}>
+          <SelectTrigger><SelectValue placeholder="Personalizada" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_custom">Personalizada</SelectItem>
+            <SelectItem value="imc">📊 IMC (peso/altura²)</SelectItem>
+            <SelectItem value="roi">💰 ROI (%)</SelectItem>
+            <SelectItem value="economia">💵 Economia Anual</SelectItem>
+            <SelectItem value="retorno">⏱️ Tempo de Retorno</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+
       <PropertySection title="Fórmula">
         <Input
           value={block.formula || ''}
