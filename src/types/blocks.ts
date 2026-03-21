@@ -256,6 +256,7 @@ export interface TextInputBlock extends BaseBlock {
   maxLength?: number;
   required?: boolean;
   validation?: 'none' | 'email' | 'phone' | 'number';
+  showValidationFeedback?: boolean; // ✅ Etapa 2E: Validação visual em tempo real (borda verde/vermelha)
 }
 
 export interface NPSBlock extends BaseBlock {
