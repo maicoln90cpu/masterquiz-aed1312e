@@ -2,15 +2,17 @@ import { useTranslation } from "react-i18next";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { ImageUploader } from "@/components/ImageUploader";
 import {
   Type, Minus, Image, Film, Music, LayoutGrid, Code, MousePointer,
   DollarSign, BarChart3, Loader2, TrendingUp, Timer, Quote, SlidersHorizontal,
   TextCursorInput, Star, ChevronDown, Columns, Users, Hash, Settings2,
-  AlertTriangle, List, Award, Flag
+  AlertTriangle, List, Award, Flag, X
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";

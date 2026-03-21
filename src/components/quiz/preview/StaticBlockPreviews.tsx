@@ -46,11 +46,17 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
     full: 'w-full',
   }[(block as any).imageSize || 'medium'];
 
+  const imageAlignClass = {
+    left: 'mr-auto',
+    center: 'mx-auto',
+    right: 'ml-auto',
+  }[(block as any).imageAlignment || 'center'];
+
   const imageElement = (block as any).imageUrl ? (
     <img
       src={(block as any).imageUrl}
       alt="Imagem ilustrativa"
-      className={`rounded-lg object-cover ${imageSizeClass}`}
+      className={`rounded-lg object-cover ${imageSizeClass} ${imageAlignClass}`}
     />
   ) : null;
 
