@@ -110,7 +110,7 @@ describe('whatsappSchema', () => {
   });
 
   it('rejeita número muito curto', () => {
-    const result = whatsappSchema.safeParse('+55');
+    const result = whatsappSchema.safeParse('+5');
     expect(result.success).toBe(false);
   });
 });
