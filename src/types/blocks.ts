@@ -236,6 +236,17 @@ export interface TestimonialBlock extends BaseBlock {
   style?: 'default' | 'minimal' | 'card' | 'quote';
   primaryColor?: string;
   secondaryColor?: string;
+  // ✅ Etapa 2F: Carrossel de depoimentos
+  additionalTestimonials?: {
+    quote: string;
+    authorName: string;
+    authorRole?: string;
+    authorCompany?: string;
+    authorImage?: string;
+    rating?: number;
+  }[];
+  autoSlide?: boolean;
+  slideInterval?: number; // em segundos
 }
 
 export interface SliderBlock extends BaseBlock {
