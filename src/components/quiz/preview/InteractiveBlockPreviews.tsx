@@ -344,17 +344,60 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
 };
 
 // ---- TEXT INPUT ----
-export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => (
-  <div className="space-y-2">
-    <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
-    {block.multiline ? (
-      <textarea placeholder={block.placeholder} maxLength={block.maxLength} className="w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background" />
-    ) : (
-      <Input placeholder={block.placeholder} maxLength={block.maxLength} type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'} />
-    )}
-    {block.maxLength && <p className="text-xs text-muted-foreground text-right">Máximo: {block.maxLength} caracteres</p>}
-  </div>
-);
+export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => {
+  const [value, setValue] = useState('');
+  const [touched, setTouched] = useState(false);
+
+  // ✅ Etapa 2E: Validação em tempo real
+  const validate = (val: string): boolean | null => {
+    if (!val || !block.showValidationFeedback) return null;
+    if (block.validation === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    if (block.validation === 'phone') return /^[\d\s\-\+\(\)]{8,}$/.test(val);
+    if (block.validation === 'number') return !isNaN(Number(val)) && val.trim() !== '';
+    return null;
+  };
+
+  const isValid = validate(value);
+  const borderClass = touched && isValid !== null
+    ? isValid
+      ? 'border-green-500 focus-visible:ring-green-500/30'
+      : 'border-red-500 focus-visible:ring-red-500/30'
+    : '';
+
+  return (
+    <div className="space-y-2">
+      <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
+      {block.multiline ? (
+        <textarea
+          placeholder={block.placeholder}
+          maxLength={block.maxLength}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => setTouched(true)}
+          className={`w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background transition-colors ${borderClass}`}
+        />
+      ) : (
+        <Input
+          placeholder={block.placeholder}
+          maxLength={block.maxLength}
+          type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => setTouched(true)}
+          className={borderClass}
+        />
+      )}
+      <div className="flex items-center justify-between">
+        {touched && isValid !== null && (
+          <p className={`text-xs ${isValid ? 'text-green-600' : 'text-red-600'}`}>
+            {isValid ? '✅ Formato válido' : '❌ Formato inválido'}
+          </p>
+        )}
+        {block.maxLength && <p className="text-xs text-muted-foreground text-right ml-auto">{value.length}/{block.maxLength}</p>}
+      </div>
+    </div>
+  );
+};
 
 // ---- NPS ----
 export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } }) => {
