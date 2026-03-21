@@ -14,6 +14,7 @@ interface TextBlockProps {
 
 export const TextBlock = ({ block, onChange }: TextBlockProps) => {
   const imageSizeClass = {
+    tiny: 'max-w-[120px]',
     small: 'max-w-[200px]',
     medium: 'max-w-[400px]',
     large: 'max-w-[600px]',
