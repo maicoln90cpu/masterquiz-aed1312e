@@ -7,12 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ImageUploader } from "@/components/ImageUploader";
 import {
   Type, Minus, Image, Film, Music, LayoutGrid, Code, MousePointer,
   DollarSign, BarChart3, Loader2, TrendingUp, Timer, Quote, SlidersHorizontal,
   TextCursorInput, Star, ChevronDown, Columns, Users, Hash, Settings2,
-  AlertTriangle, List, Award, Flag, X
+  AlertTriangle, List, Award, Flag, X, HelpCircle
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
