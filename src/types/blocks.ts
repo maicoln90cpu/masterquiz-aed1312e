@@ -57,6 +57,8 @@ export interface QuestionBlock extends BaseBlock {
   nextButtonText?: string; // Texto personalizado do botão "Próxima Pergunta"
   randomizeOptions?: boolean; // ✅ Etapa 2C: Randomizar ordem das opções
   optionImages?: string[]; // ✅ Etapa 2E: Imagem por opção de resposta (cards visuais)
+  optionImageLayout?: '1x4' | '2x2' | '4x1'; // Layout dos cards com imagem
+  optionImageSize?: 'tiny' | 'small' | 'medium' | 'large'; // Tamanho das imagens nas opções
 }
 
 export interface TextBlock extends BaseBlock {
