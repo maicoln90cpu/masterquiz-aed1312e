@@ -107,7 +107,7 @@ describe('QuizViewQuestion', () => {
       />
     );
     
-    expect(screen.queryByText('Questão 1 de 3')).not.toBeInTheDocument();
+    expect(screen.queryByText(/1 \/ 3/)).not.toBeInTheDocument();
   });
 
   it('should render question text from blocks', () => {
