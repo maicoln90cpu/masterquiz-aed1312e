@@ -9,6 +9,7 @@ import type { QuestionBlock as QuestionBlockType } from "@/types/blocks";
 import { normalizeOption } from "@/types/blocks";
 import { RichTextEditor } from "./RichTextEditor";
 import { EmojiPicker } from "./EmojiPicker";
+import { OptionAutocomplete } from "./OptionAutocomplete";
 
 interface QuestionBlockProps {
   block: QuestionBlockType;
