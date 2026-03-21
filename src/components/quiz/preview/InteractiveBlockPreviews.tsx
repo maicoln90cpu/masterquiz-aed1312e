@@ -549,7 +549,24 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
 export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } }) => {
   const [value, setValue] = useState<number | null>(null);
   const [comment, setComment] = useState('');
+  const [webhookFired, setWebhookFired] = useState(false);
   const getNPSColor = (v: number) => v <= 6 ? "bg-red-500" : v <= 8 ? "bg-yellow-500" : "bg-green-500";
+
+  // ✅ Etapa 4: Webhook ao selecionar nota NPS
+  const handleSelect = useCallback((i: number) => {
+    setValue(i);
+    if ((block as any).webhookOnSubmit && (block as any).webhookUrl && !webhookFired) {
+      fireBlockWebhook((block as any).webhookUrl, {
+        blockType: 'nps',
+        blockId: block.id,
+        label: block.question,
+        value: i,
+        timestamp: new Date().toISOString(),
+        metadata: { category: i <= 6 ? 'detractor' : i <= 8 ? 'passive' : 'promoter' },
+      });
+      setWebhookFired(true);
+    }
+  }, [block, webhookFired]);
 
   return (
     <div className="space-y-4">
