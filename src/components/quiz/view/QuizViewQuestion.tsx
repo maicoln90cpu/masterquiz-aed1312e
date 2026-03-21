@@ -263,6 +263,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
   const answerFormat = questionBlock.answerFormat;
   const options = questionBlock.options || [];
   const emojis = questionBlock.emojis || [];
+  const optionImages = questionBlock.optionImages || [];
+  const optionImageLayout = questionBlock.optionImageLayout || '1x4';
+  const optionImageSize = questionBlock.optionImageSize || 'medium';
   const explanation = questionBlock.explanation;
   const correctAnswer = questionBlock.correct_answer;
   const explanationMode = questionBlock.explanationMode;
@@ -303,6 +306,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
           <MultipleChoiceOptions
             options={options}
             emojis={emojis}
+            optionImages={optionImages}
+            optionImageLayout={optionImageLayout}
+            optionImageSize={optionImageSize}
             questionId={questionId}
             answers={answers}
             correctAnswer={correctAnswer}
@@ -322,6 +328,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
         <SingleChoiceOptions
           options={options}
           emojis={emojis}
+          optionImages={optionImages}
+          optionImageLayout={optionImageLayout}
+          optionImageSize={optionImageSize}
           questionId={questionId}
           answers={answers}
           correctAnswer={correctAnswer}
@@ -332,7 +341,6 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
               if (explanation && explanationMode !== 'end_of_quiz') {
                 setAnswered(true);
               } else if (onAutoAdvance) {
-                // Auto-advance for single choice when no explanation
                 onAutoAdvance();
               }
             }
@@ -379,6 +387,9 @@ function QuestionBlockRenderer({ block, questionId, answers, onAnswer, onAutoAdv
 interface OptionsProps {
   options: any[];
   emojis: string[];
+  optionImages?: string[];
+  optionImageLayout?: string;
+  optionImageSize?: string;
   questionId: string;
   answers: Record<string, any>;
   onAnswer: (questionId: string, value: any) => void;
@@ -387,8 +398,27 @@ interface OptionsProps {
   answered?: boolean;
 }
 
-function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
+const getImageLayoutClass = (layout?: string, hasImages?: boolean) => {
+  if (!hasImages) return 'space-y-2';
+  switch (layout) {
+    case '2x2': return 'grid grid-cols-2 gap-3';
+    case '4x1': return 'grid grid-cols-4 gap-3';
+    default: return 'space-y-2';
+  }
+};
+
+const getImageSizeClass = (size?: string) => {
+  switch (size) {
+    case 'tiny': return 'max-h-[60px]';
+    case 'small': return 'max-h-[80px]';
+    case 'large': return 'max-h-[180px]';
+    default: return 'max-h-[120px]';
+  }
+};
+
+function MultipleChoiceOptions({ options, emojis, optionImages, optionImageLayout, optionImageSize, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
   const currentAnswers = Array.isArray(answers[questionId]) ? answers[questionId] : [];
+  const hasImages = optionImages && optionImages.some(img => img);
 
   const getOptionStyle = (optionText: string) => {
     if (!answered || !correctAnswer) {
@@ -406,17 +436,18 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
   };
 
   return (
-    <div className="space-y-2">
+    <div className={getImageLayoutClass(optionImageLayout, hasImages)}>
       {options.map((option: any, idx: number) => {
         const optionText = typeof option === 'string' ? option : option.text || option.value || `Opção ${idx + 1}`;
         const emoji = emojis[idx];
+        const image = optionImages?.[idx];
         const isSelected = currentAnswers.includes(optionText);
         const isCorrect = answered && correctAnswer && optionText === correctAnswer;
         
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] select-none min-h-[44px] ${getOptionStyle(optionText)}`}
+            className={`flex ${hasImages && optionImageLayout !== '1x4' ? 'flex-col items-center text-center' : 'items-center'} gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] select-none min-h-[44px] ${getOptionStyle(optionText)}`}
             onClick={() => {
               if (disabled) return;
               const newValue = isSelected 
@@ -425,14 +456,18 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
               onAnswer(questionId, newValue);
             }}
           >
-            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
-              answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
-              answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
-              'bg-primary/10'
-            }`}>
-              {emoji || String.fromCharCode(65 + idx)}
-            </div>
-            <span className="flex-1 text-base">
+            {image ? (
+              <img src={image} alt={optionText} className={`${getImageSizeClass(optionImageSize)} w-full object-cover rounded-lg`} />
+            ) : (
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+                answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
+                answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
+                'bg-primary/10'
+              }`}>
+                {emoji || String.fromCharCode(65 + idx)}
+              </div>
+            )}
+            <span className={`${hasImages && optionImageLayout !== '1x4' ? '' : 'flex-1'} text-base`}>
               {optionText}
             </span>
             <Checkbox 
@@ -450,7 +485,9 @@ function MultipleChoiceOptions({ options, emojis, questionId, answers, onAnswer,
   );
 }
 
-function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
+function SingleChoiceOptions({ options, emojis, optionImages, optionImageLayout, optionImageSize, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
+  const hasImages = optionImages && optionImages.some(img => img);
+
   const getOptionStyle = (optionText: string) => {
     const isSelected = answers[questionId] === optionText;
     if (!answered || !correctAnswer) {
@@ -469,29 +506,34 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, d
     <RadioGroup
       value={answers[questionId]}
       onValueChange={(value) => onAnswer(questionId, value)}
-      className="space-y-2"
+      className={getImageLayoutClass(optionImageLayout, hasImages)}
     >
       {options.map((option: any, idx: number) => {
         const optionText = typeof option === 'string' ? option : option.text || option.value || `Opção ${idx + 1}`;
         const emoji = emojis[idx];
+        const image = optionImages?.[idx];
         const isSelected = answers[questionId] === optionText;
         const isCorrect = answered && correctAnswer && optionText === correctAnswer;
         
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] min-h-[44px] ${getOptionStyle(optionText)}`}
+            className={`flex ${hasImages && optionImageLayout !== '1x4' ? 'flex-col items-center text-center' : 'items-center'} gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] min-h-[44px] ${getOptionStyle(optionText)}`}
             onClick={() => { if (!disabled) onAnswer(questionId, optionText); }}
           >
-            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
-              answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
-              answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
-              'bg-primary/10'
-            }`}>
-              {emoji || String.fromCharCode(65 + idx)}
-            </div>
+            {image ? (
+              <img src={image} alt={optionText} className={`${getImageSizeClass(optionImageSize)} w-full object-cover rounded-lg`} />
+            ) : (
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+                answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
+                answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
+                'bg-primary/10'
+              }`}>
+                {emoji || String.fromCharCode(65 + idx)}
+              </div>
+            )}
             <RadioGroupItem value={optionText} id={`option-${questionId}-${idx}`} className="sr-only" />
-            <Label htmlFor={`option-${questionId}-${idx}`} className="flex-1 cursor-pointer text-base">
+            <Label htmlFor={`option-${questionId}-${idx}`} className={`${hasImages && optionImageLayout !== '1x4' ? '' : 'flex-1'} cursor-pointer text-base`}>
               {optionText}
             </Label>
             {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}

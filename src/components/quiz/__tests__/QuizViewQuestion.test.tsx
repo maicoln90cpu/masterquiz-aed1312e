@@ -95,7 +95,8 @@ describe('QuizViewQuestion', () => {
   it('should render question number when show_question_number is true', () => {
     render(<QuizViewQuestion {...defaultProps} />);
     
-    expect(screen.getByText('Questão 1 de 3')).toBeInTheDocument();
+    // Counter format: "1 / 3"
+    expect(screen.getByText(/1 \/ 3/)).toBeInTheDocument();
   });
 
   it('should not render question number when show_question_number is false', () => {
@@ -106,7 +107,7 @@ describe('QuizViewQuestion', () => {
       />
     );
     
-    expect(screen.queryByText('Questão 1 de 3')).not.toBeInTheDocument();
+    expect(screen.queryByText(/1 \/ 3/)).not.toBeInTheDocument();
   });
 
   it('should render question text from blocks', () => {

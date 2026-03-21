@@ -55,50 +55,29 @@ export const useQuizTemplates = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // ✅ IDs de templates desativados (causam freeze por blocos pesados + setInterval)
-  const disabledTemplateIds = new Set([
-    'funil-captacao-leads',
-    'funil-vsl-conversao',
-    'funil-trafego-pago',
-    'funil-validacao-oferta',
-    'funil-educacional',
-    'funil-saude-bemestar',
-    'funil-renda-extra',
-    'funil-diagnostico-avaliacao',
-    'funil-onboarding-curso',
-    'executivo-corporativo',
-    'coach-vida-premium',
-    'ecommerce-premium',
-    'saas-onboarding-premium',
-    'nutricionista-premium',
-  ]);
-
-  // ✅ CORREÇÃO: Mesclar hardcoded + banco, priorizando hardcoded por ID
-  // Isso garante que os templates de funil aparecem no selector mesmo com banco populado
+  // ✅ Mesclar hardcoded + banco, priorizando hardcoded por ID
   const mergedTemplates = (() => {
     const allHardcoded = [...hardcodedTemplates, ...hardcodedPremiumTemplates];
 
     if (!dbTemplates || dbTemplates.length === 0) {
-      return allHardcoded.filter(t => !disabledTemplateIds.has(t.id));
+      return allHardcoded;
     }
 
-    // Começar com todos os hardcoded
     const templateMap = new Map<string, QuizTemplate>();
     allHardcoded.forEach(t => {
-      if (!disabledTemplateIds.has(t.id)) {
-        templateMap.set(t.id, t);
-      }
+      templateMap.set(t.id, t);
     });
 
-    // Adicionar do banco os que NÃO existem no hardcoded e NÃO estão desativados
     dbTemplates.forEach(dt => {
-      if (!templateMap.has(dt.id) && !disabledTemplateIds.has(dt.id)) {
+      if (!templateMap.has(dt.id)) {
         templateMap.set(dt.id, convertDBTemplateToQuizTemplate(dt));
       }
     });
 
     return Array.from(templateMap.values());
   })();
+
+
 
   // ✅ Separar normais e premium
   // Premium: se veio do banco, usar is_premium do banco; se hardcoded premium, marcar como premium
