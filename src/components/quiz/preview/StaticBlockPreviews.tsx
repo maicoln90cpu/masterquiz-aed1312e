@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, ZoomIn } from "lucide-react";
+import { motion } from "framer-motion";
 import type { QuizBlock, VideoBlock } from "@/types/blocks";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { MediaPlayer } from "./MediaPreviews";
 import { CustomVideoPlayer } from "@/components/video/CustomVideoPlayer";
+import { GalleryLightbox } from "./GalleryLightbox";
 // ✅ FASE 12: Recharts removido - MetricsBlockPreview extraído para lazy loading
 
 // ---- TEXT ----
