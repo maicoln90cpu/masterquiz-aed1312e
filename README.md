@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.30.0** | Última atualização: 19 de Março de 2026
+**Versão 2.37.0** | Última atualização: 21 de Março de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
