@@ -709,6 +709,22 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
       <PropertySection title="Mensagem ao expirar">
         <Input value={block.expiryMessage || ''} onChange={(e) => onChange(update(block, { expiryMessage: e.target.value }))} />
       </PropertySection>
+      {/* ✅ Etapa 2E: Ação ao expirar */}
+      <PropertySection title="Ação ao expirar">
+        <Select value={block.expiryAction || 'none'} onValueChange={(v) => onChange(update(block, { expiryAction: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Apenas mensagem</SelectItem>
+            <SelectItem value="hide">Esconder bloco</SelectItem>
+            <SelectItem value="redirect">Redirecionar para URL</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      {block.expiryAction === 'redirect' && (
+        <PropertySection title="URL de redirecionamento">
+          <Input value={block.redirectUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { redirectUrl: e.target.value }))} />
+        </PropertySection>
+      )}
       <PropertySection title="Cor Principal">
         <Input type="color" value={block.primaryColor || '#ef4444'} onChange={(e) => onChange(update(block, { primaryColor: e.target.value }))} />
       </PropertySection>
