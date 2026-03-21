@@ -30,9 +30,14 @@ vi.mock('@/components/DashboardLayout', () => ({
   DashboardLayout: ({ children }: any) => <div data-testid="dashboard-layout">{children}</div>,
 }));
 
-// Mock useUserStage (useTrackPageView)
+// Mock useUserStage
 vi.mock('@/hooks/useUserStage', () => ({
   useTrackPageView: vi.fn(),
+  useUserStage: vi.fn(() => ({
+    stage: null,
+    loading: false,
+    updateStage: vi.fn(),
+  })),
 }));
 
 vi.mock('@/hooks/useUserRole', () => ({
