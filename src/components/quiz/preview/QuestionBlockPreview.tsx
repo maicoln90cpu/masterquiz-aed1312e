@@ -81,7 +81,7 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
           }`}
           onClick={isInteractive ? () => handleOptionClick(option, isMultiple) : undefined}
         >
-          <div className="aspect-[4/3] overflow-hidden">
+          <div className={`${imageAspect} overflow-hidden`}>
             <img src={image} alt={option} className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="p-3 flex items-center gap-2">
