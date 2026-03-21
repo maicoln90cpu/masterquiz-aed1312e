@@ -141,6 +141,8 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-03-21 | **v2.37 — Doc Overhaul + Thin Router + Test Fixes + 34 Blocos + Image Options** |
+| 2026-03-20 | **v2.31–v2.36 — 12 novos blocos + calculadora + seletor de perguntas + preview fix** |
 | 2026-03-19 | **v2.30 — Email Marketing Automatizado + Bulk API + Documentação completa** |
 | 2026-03-15 | **v2.29 — Rotação Prompts de Imagem Blog (5 estilos) + Cooldown Campanhas** |
 | 2026-03-09 | **v2.28 — 5 Eventos GTM + Dashboard Observabilidade + gtmLogger centralizado** |
