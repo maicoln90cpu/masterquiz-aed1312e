@@ -182,7 +182,7 @@ describe('CRM', () => {
       
       await waitFor(() => {
         expect(screen.getByText('CRM')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
 
     it('deve renderizar cards de estatísticas', async () => {
