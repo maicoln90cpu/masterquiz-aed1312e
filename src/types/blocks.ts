@@ -276,9 +276,11 @@ export interface TextInputBlock extends BaseBlock {
   multiline?: boolean;
   maxLength?: number;
   required?: boolean;
-  validation?: 'none' | 'email' | 'phone' | 'number' | 'cpf' | 'cnpj'; // ✅ Etapa 2F: +CPF/CNPJ
-  showValidationFeedback?: boolean; // ✅ Etapa 2E: Validação visual em tempo real (borda verde/vermelha)
-  useMask?: boolean; // ✅ Etapa 2F: Máscara automática de input
+  validation?: 'none' | 'email' | 'phone' | 'number' | 'cpf' | 'cnpj';
+  showValidationFeedback?: boolean;
+  useMask?: boolean;
+  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter valor
+  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
 }
 
 export interface NPSBlock extends BaseBlock {
