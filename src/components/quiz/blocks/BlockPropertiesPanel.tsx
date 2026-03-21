@@ -291,6 +291,37 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           />
         )}
       </div>
+
+      {/* ✅ Etapa 2E: Imagens por opção */}
+      {(block.answerFormat === 'single_choice' || block.answerFormat === 'multiple_choice') && (
+        <>
+          <Separator />
+          <PropertySection title="🖼️ Imagens por Opção">
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Cole URLs de imagens para criar cards visuais. Deixe em branco para exibir opções normais.
+            </p>
+            {(block.options || []).map((opt, idx) => {
+              const optText = typeof opt === 'string' ? opt : (opt as any)?.text || `Opção ${idx + 1}`;
+              return (
+                <div key={idx} className="flex gap-2 items-center mb-1">
+                  <span className="text-xs text-muted-foreground w-20 truncate">{optText}</span>
+                  <Input
+                    className="flex-1 text-xs h-7"
+                    placeholder="https://... (URL da imagem)"
+                    value={(block.optionImages || [])[idx] || ''}
+                    onChange={(e) => {
+                      const imgs = [...(block.optionImages || [])];
+                      while (imgs.length <= idx) imgs.push('');
+                      imgs[idx] = e.target.value;
+                      onChange(update(block, { optionImages: imgs }));
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </PropertySection>
+        </>
+      )}
     </div>
   );
 };
