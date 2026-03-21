@@ -132,6 +132,8 @@ export interface EmbedBlock extends BaseBlock {
   url: string;
   html?: string;
   provider?: string;
+  allowedDomains?: string[]; // ✅ Etapa 2F: Whitelist de domínios permitidos
+  showPreview?: boolean; // ✅ Etapa 2F: Preview inline no editor
 }
 
 export interface ButtonBlock extends BaseBlock {
