@@ -101,10 +101,12 @@ describe('AudioUploader - FASE 5', () => {
       const file = new File(['text'], 'test.txt', { type: 'text/plain' });
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
 
-      await userEvent.upload(input, file);
+      // Use fireEvent to bypass the accept attribute filtering
+      fireEvent.change(input, { target: { files: [file] } });
 
-      // toast.error is called with i18n key
-      expect(toast.error).toHaveBeenCalledWith('components.uploaders.audio.formatNotSupported');
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('components.uploaders.audio.formatNotSupported');
+      });
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 
