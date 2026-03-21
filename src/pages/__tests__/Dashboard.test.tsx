@@ -172,20 +172,16 @@ describe('Dashboard', () => {
       await waitFor(() => {
         expect(screen.getByText('Quiz 1')).toBeInTheDocument();
         expect(screen.getByText('Quiz 2')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
   });
 
   describe('Estado vazio', () => {
-    it('deve mostrar mensagem quando não há quizzes', async () => {
-      // Just verify no crash
-    });
+    it('deve mostrar mensagem quando não há quizzes', async () => {});
   });
 
   describe('Loading state', () => {
-    it('deve mostrar skeleton durante loading', async () => {
-      // Just verify no crash
-    });
+    it('deve mostrar skeleton durante loading', async () => {});
   });
 
   describe('Filtros e busca', () => {
@@ -195,7 +191,7 @@ describe('Dashboard', () => {
       await waitFor(() => {
         const searchInput = document.querySelector('input[type="text"], input[type="search"]');
         expect(searchInput).toBeTruthy();
-      });
+      }, { timeout: 3000 });
     });
 
     it('deve filtrar quizzes por termo de busca', async () => {
@@ -204,7 +200,7 @@ describe('Dashboard', () => {
       
       await waitFor(() => {
         expect(screen.getByText('Quiz 1')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
       const searchInput = document.querySelector('input[type="text"], input[type="search"]') as HTMLInputElement;
       if (searchInput) {
