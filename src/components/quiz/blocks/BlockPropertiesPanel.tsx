@@ -7,12 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ImageUploader } from "@/components/ImageUploader";
 import {
   Type, Minus, Image, Film, Music, LayoutGrid, Code, MousePointer,
   DollarSign, BarChart3, Loader2, TrendingUp, Timer, Quote, SlidersHorizontal,
   TextCursorInput, Star, ChevronDown, Columns, Users, Hash, Settings2,
-  AlertTriangle, List, Award, Flag, X
+  AlertTriangle, List, Award, Flag, X, HelpCircle
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
@@ -233,7 +234,7 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'question') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Formato de Resposta">
+      <PropertySection title="Formato de Resposta" tooltip="Define como o usuário responde: escolha única, múltipla, sim/não ou texto livre">
         <Select value={block.answerFormat} onValueChange={(v) => onChange(update(block, { answerFormat: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -245,7 +246,7 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
 
-      <PropertySection title="Subtítulo">
+      <PropertySection title="Subtítulo" tooltip="Texto complementar exibido abaixo da pergunta principal">
         <Input
           placeholder="Texto complementar..."
           value={block.subtitle || ''}
@@ -253,7 +254,7 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         />
       </PropertySection>
 
-      <PropertySection title="Dica/Tooltip">
+      <PropertySection title="Dica/Tooltip" tooltip="Texto de ajuda exibido ao passar o mouse sobre a pergunta">
         <Input
           placeholder="Ajuda para o usuário..."
           value={block.hint || ''}
@@ -261,7 +262,7 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         />
       </PropertySection>
 
-      <PropertySection title="Texto do Botão Próxima">
+      <PropertySection title="Texto do Botão Próxima" tooltip="Personaliza o texto do botão de avançar nesta pergunta">
         <Input
           placeholder="Próxima Pergunta"
           value={block.nextButtonText || ''}
@@ -298,7 +299,7 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       {(block.answerFormat === 'single_choice' || block.answerFormat === 'multiple_choice') && (
         <>
           <Separator />
-          <PropertySection title="🖼️ Imagens por Opção">
+          <PropertySection title="🖼️ Imagens por Opção" tooltip="Adicione imagens para transformar opções em cards visuais">
             <p className="text-[10px] text-muted-foreground mb-2">
               Faça upload ou cole URL de imagens para criar cards visuais. Deixe em branco para opções normais.
             </p>
@@ -348,7 +349,7 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'text') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Alinhamento">
+      <PropertySection title="Alinhamento" tooltip="Alinhamento horizontal do conteúdo no bloco">
         <Select value={block.alignment || 'left'} onValueChange={(v) => onChange(update(block, { alignment: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -359,7 +360,7 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
 
-      <PropertySection title="Tamanho da Fonte">
+      <PropertySection title="Tamanho da Fonte" tooltip="Controla o tamanho do texto exibido">
         <Select value={block.fontSize || 'medium'} onValueChange={(v) => onChange(update(block, { fontSize: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -372,7 +373,7 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 
       {(block as any).imageUrl && (
         <>
-          <PropertySection title="Posição da Imagem">
+          <PropertySection title="Posição da Imagem" tooltip="Define se a imagem aparece acima ou abaixo do texto">
             <Select value={(block as any).imagePosition || 'above'} onValueChange={(v) => onChange(update(block, { imagePosition: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -382,7 +383,7 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
             </Select>
           </PropertySection>
 
-          <PropertySection title="Alinhamento da Imagem">
+          <PropertySection title="Alinhamento da Imagem" tooltip="Alinhamento horizontal da imagem dentro do bloco">
             <Select value={(block as any).imageAlignment || 'center'} onValueChange={(v) => onChange(update(block, { imageAlignment: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -393,7 +394,7 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
             </Select>
           </PropertySection>
 
-          <PropertySection title="Tamanho da Imagem">
+          <PropertySection title="Tamanho da Imagem" tooltip="Largura máxima da imagem no bloco">
             <Select value={(block as any).imageSize || 'medium'} onValueChange={(v) => onChange(update(block, { imageSize: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -414,7 +415,7 @@ const SeparatorProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
   if (block.type !== 'separator') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Estilo">
+      <PropertySection title="Estilo" tooltip="Formato visual do componente">
         <Select value={block.style || 'line'} onValueChange={(v) => onChange(update(block, { style: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -428,7 +429,7 @@ const SeparatorProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
 
       {block.style !== 'space' && (
         <>
-          <PropertySection title="Espessura">
+          <PropertySection title="Espessura" tooltip="Grossura da linha do separador">
             <Select value={block.thickness || 'medium'} onValueChange={(v) => onChange(update(block, { thickness: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -439,7 +440,7 @@ const SeparatorProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
             </Select>
           </PropertySection>
 
-          <PropertySection title="Cor">
+          <PropertySection title="Cor" tooltip="Cor principal do elemento">
             <Input
               type="color"
               value={block.color || '#cccccc'}
@@ -449,7 +450,7 @@ const SeparatorProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
         </>
       )}
       {/* ✅ Etapa 2F: Animação fade-in */}
-      <SwitchRow label="Animação fade-in" checked={(block as any).animateFade || false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
+      <SwitchRow label="Animação fade-in" tooltip="Aplica efeito de surgimento suave quando o bloco aparece" checked={(block as any).animateFade || false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
     </div>
   );
 };
@@ -458,13 +459,13 @@ const ImageProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'image') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Texto Alt">
+      <PropertySection title="Texto Alt" tooltip="Texto alternativo para acessibilidade e SEO. Descreva a imagem para leitores de tela">
         <Input value={block.alt || ''} placeholder="Descrição da imagem" onChange={(e) => onChange(update(block, { alt: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Legenda">
+      <PropertySection title="Legenda" tooltip="Texto descritivo exibido abaixo do conteúdo">
         <Input value={block.caption || ''} placeholder="Legenda opcional" onChange={(e) => onChange(update(block, { caption: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Tamanho">
+      <PropertySection title="Tamanho" tooltip="Dimensão visual do componente no quiz">
         <Select value={block.size || 'medium'} onValueChange={(v) => onChange(update(block, { size: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -476,7 +477,7 @@ const ImageProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
       {/* ✅ Etapa 2F: Lightbox ao clicar */}
-      <SwitchRow label="Expandir ao clicar (Lightbox)" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
+      <SwitchRow label="Expandir ao clicar (Lightbox)" tooltip="Permite ampliar a imagem em tela cheia ao clicar sobre ela" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
     </div>
   );
 };
@@ -485,7 +486,7 @@ const VideoProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'video') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Provider">
+      <PropertySection title="Provider" tooltip="Plataforma ou formato de origem do conteúdo">
         <Select value={block.provider || 'youtube'} onValueChange={(v) => onChange(update(block, { provider: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -498,7 +499,7 @@ const VideoProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Tamanho">
+      <PropertySection title="Tamanho" tooltip="Dimensão visual do componente no quiz">
         <Select value={block.size || 'medium'} onValueChange={(v) => onChange(update(block, { size: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -509,7 +510,7 @@ const VideoProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Proporção">
+      <PropertySection title="Proporção" tooltip="Proporção de aspecto do player (largura:altura)">
         <Select value={block.aspectRatio || '16:9'} onValueChange={(v) => onChange(update(block, { aspectRatio: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -522,14 +523,14 @@ const VideoProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       </PropertySection>
       <Separator />
       <div className="space-y-3">
-        <SwitchRow label="Autoplay" checked={block.autoplay || false} onChange={(v) => onChange(update(block, { autoplay: v }))} />
-        <SwitchRow label="Mutado" checked={block.muted || false} onChange={(v) => onChange(update(block, { muted: v }))} />
-        <SwitchRow label="Loop" checked={block.loop || false} onChange={(v) => onChange(update(block, { loop: v }))} />
-        <SwitchRow label="Ocultar controles" checked={block.hideControls || false} onChange={(v) => onChange(update(block, { hideControls: v }))} />
-        <SwitchRow label="Ocultar botão play" checked={block.hidePlayButton || false} onChange={(v) => onChange(update(block, { hidePlayButton: v }))} />
-        <SwitchRow label="Legendas" checked={block.showCaptions || false} onChange={(v) => onChange(update(block, { showCaptions: v }))} />
+        <SwitchRow label="Autoplay" tooltip="Inicia a reprodução automaticamente. Em vídeos, requer Mutado ativado nos navegadores" checked={block.autoplay || false} onChange={(v) => onChange(update(block, { autoplay: v }))} />
+        <SwitchRow label="Mutado" tooltip="Inicia sem som. Necessário para autoplay funcionar nos navegadores modernos" checked={block.muted || false} onChange={(v) => onChange(update(block, { muted: v }))} />
+        <SwitchRow label="Loop" tooltip="Repete o conteúdo continuamente em loop" checked={block.loop || false} onChange={(v) => onChange(update(block, { loop: v }))} />
+        <SwitchRow label="Ocultar controles" tooltip="Remove os controles visíveis do player (play, volume, barra de tempo)" checked={block.hideControls || false} onChange={(v) => onChange(update(block, { hideControls: v }))} />
+        <SwitchRow label="Ocultar botão play" tooltip="Remove o botão de play central sobreposto ao vídeo" checked={block.hidePlayButton || false} onChange={(v) => onChange(update(block, { hidePlayButton: v }))} />
+        <SwitchRow label="Legendas" tooltip="Exibe legendas/closed captions quando disponíveis no vídeo" checked={block.showCaptions || false} onChange={(v) => onChange(update(block, { showCaptions: v }))} />
       </div>
-      <PropertySection title="Velocidade">
+      <PropertySection title="Velocidade" tooltip="Velocidade de reprodução do conteúdo">
         <Select value={String(block.playbackSpeed || 1)} onValueChange={(v) => onChange(update(block, { playbackSpeed: Number(v) }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -550,10 +551,10 @@ const AudioProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'audio') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Legenda">
+      <PropertySection title="Legenda" tooltip="Texto descritivo exibido abaixo do conteúdo">
         <Input value={block.caption || ''} placeholder="Legenda opcional" onChange={(e) => onChange(update(block, { caption: e.target.value }))} />
       </PropertySection>
-      <SwitchRow label="Autoplay" checked={block.autoplay || false} onChange={(v) => onChange(update(block, { autoplay: v }))} />
+      <SwitchRow label="Autoplay" tooltip="Inicia a reprodução automaticamente. Em vídeos, requer Mutado ativado nos navegadores" checked={block.autoplay || false} onChange={(v) => onChange(update(block, { autoplay: v }))} />
     </div>
   );
 };
@@ -562,7 +563,7 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'gallery') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Layout">
+      <PropertySection title="Layout" tooltip="Disposição visual dos elementos no bloco">
         <Select value={block.layout || 'grid'} onValueChange={(v) => onChange(update(block, { layout: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -573,7 +574,7 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
       {/* ✅ Etapa 2F: Lightbox ao clicar */}
-      <SwitchRow label="Lightbox ao clicar" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
+      <SwitchRow label="Lightbox ao clicar" tooltip="Permite ampliar cada imagem em tela cheia ao clicar" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
     </div>
   );
 };
@@ -583,7 +584,7 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
   const dynConditions = (block as any).conditions || [];
   return (
     <div className="space-y-4">
-      <PropertySection title="Ação">
+      <PropertySection title="Ação" tooltip="O que acontece quando o usuário clica no botão">
         <Select value={block.action || 'link'} onValueChange={(v) => onChange(update(block, { action: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -593,7 +594,7 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Variante">
+      <PropertySection title="Variante" tooltip="Estilo visual do componente">
         <Select value={block.variant || 'default'} onValueChange={(v) => onChange(update(block, { variant: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -604,7 +605,7 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Tamanho">
+      <PropertySection title="Tamanho" tooltip="Dimensão visual do componente no quiz">
         <Select value={block.size || 'default'} onValueChange={(v) => onChange(update(block, { size: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -614,7 +615,7 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
           </SelectContent>
         </Select>
       </PropertySection>
-      <SwitchRow label="Abrir em nova aba" checked={block.openInNewTab || false} onChange={(v) => onChange(update(block, { openInNewTab: v }))} />
+      <SwitchRow label="Abrir em nova aba" tooltip="Abre o link de destino em uma nova aba do navegador" checked={block.openInNewTab || false} onChange={(v) => onChange(update(block, { openInNewTab: v }))} />
       
       <Separator />
       <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
@@ -630,14 +631,14 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
         label="Pergunta-Fonte (opcional)"
         placeholder="Selecione uma pergunta"
       />
-      <PropertySection title="Template do texto">
+      <PropertySection title="Template do texto" tooltip="Texto dinâmico — use {resposta} para inserir a resposta do usuário automaticamente">
         <Input
           value={(block as any).textTemplate || ''}
           onChange={(e) => onChange(update(block, { textTemplate: e.target.value }))}
           placeholder="Ver plano para {resposta}"
         />
       </PropertySection>
-      <PropertySection title="Texto fallback">
+      <PropertySection title="Texto fallback" tooltip="Texto exibido quando não há resposta ou condição correspondente">
         <Input
           value={(block as any).fallbackText || ''}
           onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))}
@@ -668,13 +669,13 @@ const LoadingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'loading') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Duração (segundos)">
+      <PropertySection title="Duração (segundos)" tooltip="Tempo em segundos da animação ou exibição">
         <Input type="number" value={block.duration} min={1} max={30} onChange={(e) => onChange(update(block, { duration: Number(e.target.value) }))} />
       </PropertySection>
-      <PropertySection title="Mensagem">
+      <PropertySection title="Mensagem" tooltip="Texto exibido para o usuário durante a ação">
         <Input value={block.message || ''} onChange={(e) => onChange(update(block, { message: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Tipo de Spinner">
+      <PropertySection title="Tipo de Spinner" tooltip="Estilo visual da animação de carregamento">
         <Select value={block.spinnerType || 'spinner'} onValueChange={(v) => onChange(update(block, { spinnerType: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -685,15 +686,15 @@ const LoadingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-      <SwitchRow label="Avançar automaticamente" checked={block.autoAdvance || false} onChange={(v) => onChange(update(block, { autoAdvance: v }))} />
-      <SwitchRow label="Mostrar barra de progresso" checked={block.showProgress || false} onChange={(v) => onChange(update(block, { showProgress: v }))} />
+      <SwitchRow label="Avançar automaticamente" tooltip="Avança para a próxima etapa após o tempo definido" checked={block.autoAdvance || false} onChange={(v) => onChange(update(block, { autoAdvance: v }))} />
+      <SwitchRow label="Mostrar barra de progresso" tooltip="Exibe uma barra visual de progresso durante o carregamento" checked={block.showProgress || false} onChange={(v) => onChange(update(block, { showProgress: v }))} />
       {/* ✅ Etapa 2E: Cor da barra + mensagens rotativas */}
       {block.showProgress && (
-        <PropertySection title="Cor da barra">
+        <PropertySection title="Cor da barra" tooltip="Cor da barra de progresso durante o carregamento">
           <Input type="color" value={block.progressColor || '#3b82f6'} onChange={(e) => onChange(update(block, { progressColor: e.target.value }))} />
         </PropertySection>
       )}
-      <SwitchRow label="Mensagens rotativas (fade)" checked={block.rotateMessages || false} onChange={(v) => onChange(update(block, { rotateMessages: v }))} />
+      <SwitchRow label="Mensagens rotativas (fade)" tooltip="Alterna entre diferentes mensagens com efeito fade durante o loading" checked={block.rotateMessages || false} onChange={(v) => onChange(update(block, { rotateMessages: v }))} />
     </div>
   );
 };
@@ -702,7 +703,7 @@ const ProgressProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'progress') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Estilo">
+      <PropertySection title="Estilo" tooltip="Formato visual do componente">
         <Select value={block.style || 'bar'} onValueChange={(v) => onChange(update(block, { style: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -713,7 +714,7 @@ const ProgressProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Altura">
+      <PropertySection title="Altura" tooltip="Espessura visual da barra de progresso">
         <Select value={block.height || 'medium'} onValueChange={(v) => onChange(update(block, { height: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -723,16 +724,16 @@ const ProgressProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Cor">
+      <PropertySection title="Cor" tooltip="Cor principal do elemento">
         <Input type="color" value={block.color || '#3b82f6'} onChange={(e) => onChange(update(block, { color: e.target.value }))} />
       </PropertySection>
       <div className="space-y-3">
-        <SwitchRow label="Mostrar percentual" checked={block.showPercentage || false} onChange={(v) => onChange(update(block, { showPercentage: v }))} />
-        <SwitchRow label="Mostrar contador" checked={block.showCounter || false} onChange={(v) => onChange(update(block, { showCounter: v }))} />
-        <SwitchRow label="Animado" checked={block.animated || false} onChange={(v) => onChange(update(block, { animated: v }))} />
+        <SwitchRow label="Mostrar percentual" tooltip="Exibe o percentual numérico de conclusão do quiz" checked={block.showPercentage || false} onChange={(v) => onChange(update(block, { showPercentage: v }))} />
+        <SwitchRow label="Mostrar contador" tooltip="Exibe o número total de pessoas junto ao grupo de avatares" checked={block.showCounter || false} onChange={(v) => onChange(update(block, { showCounter: v }))} />
+        <SwitchRow label="Animado" tooltip="Aplica animação de preenchimento suave na barra de progresso" checked={block.animated || false} onChange={(v) => onChange(update(block, { animated: v }))} />
         {/* ✅ Etapa 2C: Cor por faixa + ícone de conclusão */}
-        <SwitchRow label="Cor por faixa (🔴→🟡→🟢)" checked={block.colorByRange || false} onChange={(v) => onChange(update(block, { colorByRange: v }))} />
-        <SwitchRow label="Ícone de conclusão ✅" checked={block.showCompletionIcon || false} onChange={(v) => onChange(update(block, { showCompletionIcon: v }))} />
+        <SwitchRow label="Cor por faixa (🔴→🟡→🟢)" tooltip="Muda a cor automaticamente conforme o progresso: vermelho → amarelo → verde" checked={block.colorByRange || false} onChange={(v) => onChange(update(block, { colorByRange: v }))} />
+        <SwitchRow label="Ícone de conclusão ✅" tooltip="Exibe ícone de conclusão ✅ quando o progresso atinge 100%" checked={block.showCompletionIcon || false} onChange={(v) => onChange(update(block, { showCompletionIcon: v }))} />
       </div>
     </div>
   );
@@ -742,7 +743,7 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
   if (block.type !== 'countdown') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Modo">
+      <PropertySection title="Modo" tooltip="Duração fixa ou contagem regressiva até uma data específica">
         <Select value={block.mode || 'duration'} onValueChange={(v) => onChange(update(block, { mode: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -752,11 +753,11 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
         </Select>
       </PropertySection>
       {block.mode === 'duration' && (
-        <PropertySection title="Duração (segundos)">
+        <PropertySection title="Duração (segundos)" tooltip="Tempo em segundos da animação ou exibição">
           <Input type="number" value={block.duration || 300} min={1} onChange={(e) => onChange(update(block, { duration: Number(e.target.value) }))} />
         </PropertySection>
       )}
-      <PropertySection title="Estilo">
+      <PropertySection title="Estilo" tooltip="Formato visual do componente">
         <Select value={block.style || 'default'} onValueChange={(v) => onChange(update(block, { style: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -768,11 +769,11 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Mensagem ao expirar">
+      <PropertySection title="Mensagem ao expirar" tooltip="Texto exibido quando o tempo chega a zero">
         <Input value={block.expiryMessage || ''} onChange={(e) => onChange(update(block, { expiryMessage: e.target.value }))} />
       </PropertySection>
       {/* ✅ Etapa 2E: Ação ao expirar */}
-      <PropertySection title="Ação ao expirar">
+      <PropertySection title="Ação ao expirar" tooltip="O que acontece quando a contagem regressiva termina">
         <Select value={block.expiryAction || 'none'} onValueChange={(v) => onChange(update(block, { expiryAction: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -783,18 +784,18 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
         </Select>
       </PropertySection>
       {block.expiryAction === 'redirect' && (
-        <PropertySection title="URL de redirecionamento">
+        <PropertySection title="URL de redirecionamento" tooltip="Página para onde o usuário é direcionado">
           <Input value={block.redirectUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { redirectUrl: e.target.value }))} />
         </PropertySection>
       )}
-      <PropertySection title="Cor Principal">
+      <PropertySection title="Cor Principal" tooltip="Cor de destaque principal do componente">
         <Input type="color" value={block.primaryColor || '#ef4444'} onChange={(e) => onChange(update(block, { primaryColor: e.target.value }))} />
       </PropertySection>
       <div className="space-y-3">
-        <SwitchRow label="Dias" checked={block.showDays || false} onChange={(v) => onChange(update(block, { showDays: v }))} />
-        <SwitchRow label="Horas" checked={block.showHours !== false} onChange={(v) => onChange(update(block, { showHours: v }))} />
-        <SwitchRow label="Minutos" checked={block.showMinutes !== false} onChange={(v) => onChange(update(block, { showMinutes: v }))} />
-        <SwitchRow label="Segundos" checked={block.showSeconds !== false} onChange={(v) => onChange(update(block, { showSeconds: v }))} />
+        <SwitchRow label="Dias" tooltip="Exibe a unidade de dias no contador regressivo" checked={block.showDays || false} onChange={(v) => onChange(update(block, { showDays: v }))} />
+        <SwitchRow label="Horas" tooltip="Exibe a unidade de horas no contador regressivo" checked={block.showHours !== false} onChange={(v) => onChange(update(block, { showHours: v }))} />
+        <SwitchRow label="Minutos" tooltip="Exibe a unidade de minutos no contador regressivo" checked={block.showMinutes !== false} onChange={(v) => onChange(update(block, { showMinutes: v }))} />
+        <SwitchRow label="Segundos" tooltip="Exibe a unidade de segundos no contador regressivo" checked={block.showSeconds !== false} onChange={(v) => onChange(update(block, { showSeconds: v }))} />
       </div>
     </div>
   );
@@ -805,19 +806,19 @@ const TestimonialProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
   const additional = (block as any).additionalTestimonials || [];
   return (
     <div className="space-y-4">
-      <PropertySection title="Nome do Autor">
+      <PropertySection title="Nome do Autor" tooltip="Nome de quem deu o depoimento ou citação">
         <Input value={block.authorName} onChange={(e) => onChange(update(block, { authorName: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Cargo">
+      <PropertySection title="Cargo" tooltip="Função ou cargo profissional do autor">
         <Input value={block.authorRole || ''} placeholder="CEO, Gerente..." onChange={(e) => onChange(update(block, { authorRole: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Empresa">
+      <PropertySection title="Empresa" tooltip="Empresa ou organização do autor">
         <Input value={block.authorCompany || ''} onChange={(e) => onChange(update(block, { authorCompany: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Avaliação (1-5)">
+      <PropertySection title="Avaliação (1-5)" tooltip="Nota em estrelas do depoimento (1 a 5)">
         <Input type="number" min={1} max={5} value={block.rating || 5} onChange={(e) => onChange(update(block, { rating: Number(e.target.value) }))} />
       </PropertySection>
-      <PropertySection title="Estilo">
+      <PropertySection title="Estilo" tooltip="Formato visual do componente">
         <Select value={block.style || 'default'} onValueChange={(v) => onChange(update(block, { style: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -828,10 +829,10 @@ const TestimonialProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Cor Principal">
+      <PropertySection title="Cor Principal" tooltip="Cor de destaque principal do componente">
         <Input type="color" value={block.primaryColor || '#3b82f6'} onChange={(e) => onChange(update(block, { primaryColor: e.target.value }))} />
       </PropertySection>
-      <SwitchRow label="Mostrar avaliação" checked={block.showRating || false} onChange={(v) => onChange(update(block, { showRating: v }))} />
+      <SwitchRow label="Mostrar avaliação" tooltip="Exibe estrelas de avaliação no depoimento" checked={block.showRating || false} onChange={(v) => onChange(update(block, { showRating: v }))} />
 
       {/* ✅ Etapa 2F: Carrossel de depoimentos */}
       <Separator />
@@ -875,9 +876,9 @@ const TestimonialProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
       }}>+ Adicionar depoimento</button>
       {additional.length > 0 && (
         <>
-          <SwitchRow label="Auto-slide" checked={(block as any).autoSlide || false} onChange={(v) => onChange(update(block, { autoSlide: v }))} />
+          <SwitchRow label="Auto-slide" tooltip="Alterna automaticamente entre depoimentos no carrossel" checked={(block as any).autoSlide || false} onChange={(v) => onChange(update(block, { autoSlide: v }))} />
           {(block as any).autoSlide && (
-            <PropertySection title="Intervalo (segundos)">
+            <PropertySection title="Intervalo (segundos)" tooltip="Tempo entre transições automáticas do carrossel">
               <Input type="number" min={2} max={15} value={(block as any).slideInterval || 5} onChange={(e) => onChange(update(block, { slideInterval: Number(e.target.value) }))} />
             </PropertySection>
           )}
@@ -891,40 +892,40 @@ const SliderProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'slider') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Label">
+      <PropertySection title="Label" tooltip="Texto descritivo exibido junto ao componente">
         <Input value={block.label} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
       </PropertySection>
       <div className="grid grid-cols-2 gap-2">
-        <PropertySection title="Min">
+        <PropertySection title="Min" tooltip="Valor mínimo permitido no slider">
           <Input type="number" value={block.min} onChange={(e) => onChange(update(block, { min: Number(e.target.value) }))} />
         </PropertySection>
-        <PropertySection title="Max">
+        <PropertySection title="Max" tooltip="Valor máximo permitido no slider">
           <Input type="number" value={block.max} onChange={(e) => onChange(update(block, { max: Number(e.target.value) }))} />
         </PropertySection>
       </div>
-      <PropertySection title="Passo">
+      <PropertySection title="Passo" tooltip="Incremento entre valores adjacentes no slider">
         <Input type="number" value={block.step} min={1} onChange={(e) => onChange(update(block, { step: Number(e.target.value) }))} />
       </PropertySection>
-      <PropertySection title="Unidade">
+      <PropertySection title="Unidade" tooltip="Unidade exibida junto ao valor (%, R$, kg, etc.)">
         <Input value={block.unit || ''} placeholder="%, R$, kg..." onChange={(e) => onChange(update(block, { unit: e.target.value }))} />
       </PropertySection>
       <div className="space-y-3">
-        <SwitchRow label="Mostrar valor" checked={block.showValue || false} onChange={(v) => onChange(update(block, { showValue: v }))} />
-        <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
-        <SwitchRow label="Steps com dots" checked={block.showDots || false} onChange={(v) => onChange(update(block, { showDots: v }))} />
+        <SwitchRow label="Mostrar valor" tooltip="Exibe o valor selecionado em tempo real ao lado do slider" checked={block.showValue || false} onChange={(v) => onChange(update(block, { showValue: v }))} />
+        <SwitchRow label="Obrigatório" tooltip="Exige interação do usuário antes de avançar" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        <SwitchRow label="Steps com dots" tooltip="Exibe pontos visuais nos intervalos do slider" checked={block.showDots || false} onChange={(v) => onChange(update(block, { showDots: v }))} />
       </div>
       <Separator />
-      <PropertySection title="Label Mínimo">
+      <PropertySection title="Label Mínimo" tooltip="Texto descritivo na extremidade esquerda do slider">
         <Input value={block.minLabel || ''} placeholder="Ex: Nada" onChange={(e) => onChange(update(block, { minLabel: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Label Máximo">
+      <PropertySection title="Label Máximo" tooltip="Texto descritivo na extremidade direita do slider">
         <Input value={block.maxLabel || ''} placeholder="Ex: Muito" onChange={(e) => onChange(update(block, { maxLabel: e.target.value }))} />
       </PropertySection>
       {/* ✅ Etapa 4: Webhook por campo */}
       <Separator />
-      <SwitchRow label="🔗 Webhook ao submeter" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
+      <SwitchRow label="🔗 Webhook ao submeter" tooltip="Envia os dados deste campo para uma URL externa (Zapier, n8n, Make) em tempo real" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
       {(block as any).webhookOnSubmit && (
-        <PropertySection title="URL do Webhook">
+        <PropertySection title="URL do Webhook" tooltip="Endereço que receberá os dados via POST (ex: Zapier, n8n, Make)">
           <Input
             value={(block as any).webhookUrl || ''}
             placeholder="https://seu-servidor.com/webhook"
@@ -943,13 +944,13 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
   if (block.type !== 'textInput') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Label">
+      <PropertySection title="Label" tooltip="Texto descritivo exibido junto ao componente">
         <Input value={block.label} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Placeholder">
+      <PropertySection title="Placeholder" tooltip="Texto-exemplo exibido dentro do campo quando vazio">
         <Input value={block.placeholder || ''} onChange={(e) => onChange(update(block, { placeholder: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Validação">
+      <PropertySection title="Validação" tooltip="Tipo de validação aplicada ao conteúdo digitado">
         <Select value={block.validation || 'none'} onValueChange={(v) => onChange(update(block, { validation: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -962,24 +963,24 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Máx. caracteres">
+      <PropertySection title="Máx. caracteres" tooltip="Limite máximo de caracteres que o usuário pode digitar">
         <Input type="number" value={block.maxLength || ''} onChange={(e) => onChange(update(block, { maxLength: Number(e.target.value) || undefined }))} />
       </PropertySection>
       <div className="space-y-3">
-        <SwitchRow label="Multilinha" checked={block.multiline || false} onChange={(v) => onChange(update(block, { multiline: v }))} />
-        <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        <SwitchRow label="Multilinha" tooltip="Permite quebra de linha transformando o campo em textarea" checked={block.multiline || false} onChange={(v) => onChange(update(block, { multiline: v }))} />
+        <SwitchRow label="Obrigatório" tooltip="Exige interação do usuário antes de avançar" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
         {block.validation && block.validation !== 'none' && (
-          <SwitchRow label="Feedback visual de validação" checked={block.showValidationFeedback || false} onChange={(v) => onChange(update(block, { showValidationFeedback: v }))} />
+          <SwitchRow label="Feedback visual de validação" tooltip="Mostra indicador verde/vermelho em tempo real conforme a validação" checked={block.showValidationFeedback || false} onChange={(v) => onChange(update(block, { showValidationFeedback: v }))} />
         )}
         {(block.validation === 'cpf' || block.validation === 'cnpj' || block.validation === 'phone') && (
-          <SwitchRow label="Máscara automática" checked={(block as any).useMask || false} onChange={(v) => onChange(update(block, { useMask: v }))} />
+          <SwitchRow label="Máscara automática" tooltip="Formata automaticamente o valor digitado (ex: 000.000.000-00 para CPF)" checked={(block as any).useMask || false} onChange={(v) => onChange(update(block, { useMask: v }))} />
         )}
       </div>
       {/* ✅ Etapa 4: Webhook por campo */}
       <Separator />
-      <SwitchRow label="🔗 Webhook ao submeter" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
+      <SwitchRow label="🔗 Webhook ao submeter" tooltip="Envia os dados deste campo para uma URL externa (Zapier, n8n, Make) em tempo real" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
       {(block as any).webhookOnSubmit && (
-        <PropertySection title="URL do Webhook">
+        <PropertySection title="URL do Webhook" tooltip="Endereço que receberá os dados via POST (ex: Zapier, n8n, Make)">
           <Input
             value={(block as any).webhookUrl || ''}
             placeholder="https://seu-servidor.com/webhook"
@@ -998,27 +999,27 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'nps') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Label Baixo">
+      <PropertySection title="Label Baixo" tooltip="Texto na extremidade esquerda da escala NPS (ex: Nada provável)">
         <Input value={block.lowLabel || ''} placeholder="Nada provável" onChange={(e) => onChange(update(block, { lowLabel: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Label Alto">
+      <PropertySection title="Label Alto" tooltip="Texto na extremidade direita da escala NPS (ex: Muito provável)">
         <Input value={block.highLabel || ''} placeholder="Muito provável" onChange={(e) => onChange(update(block, { highLabel: e.target.value }))} />
       </PropertySection>
       <div className="space-y-3">
-        <SwitchRow label="Mostrar labels" checked={block.showLabels || false} onChange={(v) => onChange(update(block, { showLabels: v }))} />
-        <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
-        <SwitchRow label="Campo de comentário" checked={block.showComment || false} onChange={(v) => onChange(update(block, { showComment: v }))} />
+        <SwitchRow label="Mostrar labels" tooltip="Exibe os textos descritivos nas extremidades da escala NPS" checked={block.showLabels || false} onChange={(v) => onChange(update(block, { showLabels: v }))} />
+        <SwitchRow label="Obrigatório" tooltip="Exige interação do usuário antes de avançar" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        <SwitchRow label="Campo de comentário" tooltip="Adiciona campo de texto livre para o usuário justificar a nota" checked={block.showComment || false} onChange={(v) => onChange(update(block, { showComment: v }))} />
       </div>
       {block.showComment && (
-        <PropertySection title="Placeholder do comentário">
+        <PropertySection title="Placeholder do comentário" tooltip="Texto-exemplo no campo de comentário opcional">
           <Input value={block.commentPlaceholder || ''} placeholder="Conte-nos mais sobre sua nota..." onChange={(e) => onChange(update(block, { commentPlaceholder: e.target.value }))} />
         </PropertySection>
       )}
       {/* ✅ Etapa 4: Webhook por campo */}
       <Separator />
-      <SwitchRow label="🔗 Webhook ao submeter" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
+      <SwitchRow label="🔗 Webhook ao submeter" tooltip="Envia os dados deste campo para uma URL externa (Zapier, n8n, Make) em tempo real" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
       {(block as any).webhookOnSubmit && (
-        <PropertySection title="URL do Webhook">
+        <PropertySection title="URL do Webhook" tooltip="Endereço que receberá os dados via POST (ex: Zapier, n8n, Make)">
           <Input
             value={(block as any).webhookUrl || ''}
             placeholder="https://seu-servidor.com/webhook"
@@ -1041,7 +1042,7 @@ const AccordionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
   if (block.type !== 'accordion') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Estilo">
+      <PropertySection title="Estilo" tooltip="Formato visual do componente">
         <Select value={block.style || 'default'} onValueChange={(v) => onChange(update(block, { style: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1052,7 +1053,7 @@ const AccordionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
         </Select>
       </PropertySection>
       {/* ✅ Etapa 2C: Ícone customizável */}
-      <PropertySection title="Ícone">
+      <PropertySection title="Ícone" tooltip="Tipo de ícone visual para indicar expansão/colapso">
         <Select value={block.iconType || 'chevron'} onValueChange={(v) => onChange(update(block, { iconType: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1061,7 +1062,7 @@ const AccordionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
           </SelectContent>
         </Select>
       </PropertySection>
-      <SwitchRow label="Permitir múltiplos abertos" checked={block.allowMultiple || false} onChange={(v) => onChange(update(block, { allowMultiple: v }))} />
+      <SwitchRow label="Permitir múltiplos abertos" tooltip="Permite expandir vários itens do accordion simultaneamente" checked={block.allowMultiple || false} onChange={(v) => onChange(update(block, { allowMultiple: v }))} />
     </div>
   );
 };
@@ -1070,13 +1071,13 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
   if (block.type !== 'comparison') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Título Esquerda">
+      <PropertySection title="Título Esquerda" tooltip="Cabeçalho da coluna esquerda na comparação">
         <Input value={block.leftTitle} onChange={(e) => onChange(update(block, { leftTitle: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Título Direita">
+      <PropertySection title="Título Direita" tooltip="Cabeçalho da coluna direita na comparação">
         <Input value={block.rightTitle} onChange={(e) => onChange(update(block, { rightTitle: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Estilo Esquerda">
+      <PropertySection title="Estilo Esquerda" tooltip="Estilo visual (positivo/negativo/neutro) da coluna esquerda">
         <Select value={block.leftStyle || 'negative'} onValueChange={(v) => onChange(update(block, { leftStyle: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1085,7 +1086,7 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Estilo Direita">
+      <PropertySection title="Estilo Direita" tooltip="Estilo visual (positivo/negativo/neutro) da coluna direita">
         <Select value={block.rightStyle || 'positive'} onValueChange={(v) => onChange(update(block, { rightStyle: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1094,9 +1095,9 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
           </SelectContent>
         </Select>
       </PropertySection>
-      <SwitchRow label="Mostrar ícones" checked={block.showIcons || false} onChange={(v) => onChange(update(block, { showIcons: v }))} />
+      <SwitchRow label="Mostrar ícones" tooltip="Exibe ícones visuais ao lado de cada item no resumo" checked={block.showIcons || false} onChange={(v) => onChange(update(block, { showIcons: v }))} />
       {/* ✅ Etapa 2D: Highlight da coluna vencedora */}
-      <PropertySection title="Destacar coluna">
+      <PropertySection title="Destacar coluna" tooltip="Aplica destaque visual à coluna selecionada como vencedora">
         <Select value={(block as any).highlightWinner || 'none'} onValueChange={(v) => onChange(update(block, { highlightWinner: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1111,10 +1112,10 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
         <>
           <Separator />
           <div className="grid grid-cols-2 gap-2">
-            <PropertySection title="Ícone Esquerda">
+            <PropertySection title="Ícone Esquerda" tooltip="Emoji ou ícone personalizado da coluna esquerda">
               <Input value={(block as any).itemIcons?.left || ''} placeholder="✗" onChange={(e) => onChange(update(block, { itemIcons: { ...((block as any).itemIcons || {}), left: e.target.value } }))} />
             </PropertySection>
-            <PropertySection title="Ícone Direita">
+            <PropertySection title="Ícone Direita" tooltip="Emoji ou ícone personalizado da coluna direita">
               <Input value={(block as any).itemIcons?.right || ''} placeholder="✓" onChange={(e) => onChange(update(block, { itemIcons: { ...((block as any).itemIcons || {}), right: e.target.value } }))} />
             </PropertySection>
           </div>
@@ -1128,10 +1129,10 @@ const SocialProofProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
   if (block.type !== 'socialProof') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Intervalo (ms)">
+      <PropertySection title="Intervalo (ms)" tooltip="Tempo em milissegundos entre cada notificação de prova social">
         <Input type="number" value={block.interval} min={1000} step={500} onChange={(e) => onChange(update(block, { interval: Number(e.target.value) }))} />
       </PropertySection>
-      <PropertySection title="Estilo">
+      <PropertySection title="Estilo" tooltip="Formato visual do componente">
         <Select value={block.style || 'toast'} onValueChange={(v) => onChange(update(block, { style: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1141,7 +1142,7 @@ const SocialProofProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Posição">
+      <PropertySection title="Posição" tooltip="Canto da tela onde a notificação aparece">
         <Select value={block.position || 'bottom-left'} onValueChange={(v) => onChange(update(block, { position: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1152,7 +1153,7 @@ const SocialProofProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
           </SelectContent>
         </Select>
       </PropertySection>
-      <SwitchRow label="Mostrar avatar" checked={block.showAvatar || false} onChange={(v) => onChange(update(block, { showAvatar: v }))} />
+      <SwitchRow label="Mostrar avatar" tooltip="Exibe foto ou avatar junto à notificação de prova social" checked={block.showAvatar || false} onChange={(v) => onChange(update(block, { showAvatar: v }))} />
     </div>
   );
 };
@@ -1162,28 +1163,28 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2">
-        <PropertySection title="Valor Inicial">
+        <PropertySection title="Valor Inicial" tooltip="Número onde a contagem animada começa">
           <Input type="number" value={block.startValue} onChange={(e) => onChange(update(block, { startValue: Number(e.target.value) }))} />
         </PropertySection>
-        <PropertySection title="Valor Final">
+        <PropertySection title="Valor Final" tooltip="Número onde a contagem animada termina">
           <Input type="number" value={block.endValue} onChange={(e) => onChange(update(block, { endValue: Number(e.target.value) }))} />
         </PropertySection>
       </div>
-      <PropertySection title="Duração (segundos)">
+      <PropertySection title="Duração (segundos)" tooltip="Tempo em segundos da animação ou exibição">
         <Input type="number" value={block.duration} min={0.5} step={0.5} onChange={(e) => onChange(update(block, { duration: Number(e.target.value) }))} />
       </PropertySection>
       <div className="grid grid-cols-2 gap-2">
-        <PropertySection title="Prefixo">
+        <PropertySection title="Prefixo" tooltip="Texto exibido antes do número (ex: R$)">
           <Input value={block.prefix || ''} placeholder="R$" onChange={(e) => onChange(update(block, { prefix: e.target.value }))} />
         </PropertySection>
-        <PropertySection title="Sufixo">
+        <PropertySection title="Sufixo" tooltip="Texto exibido depois do número (ex: %)">
           <Input value={block.suffix || ''} placeholder="%" onChange={(e) => onChange(update(block, { suffix: e.target.value }))} />
         </PropertySection>
       </div>
-      <PropertySection title="Label">
+      <PropertySection title="Label" tooltip="Texto descritivo exibido junto ao componente">
         <Input value={block.label || ''} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Tamanho">
+      <PropertySection title="Tamanho" tooltip="Dimensão visual do componente no quiz">
         <Select value={block.fontSize || 'large'} onValueChange={(v) => onChange(update(block, { fontSize: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1194,7 +1195,7 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Easing">
+      <PropertySection title="Easing" tooltip="Tipo de aceleração da animação (suave, linear, etc.)">
         <Select value={block.easing || 'easeOut'} onValueChange={(v) => onChange(update(block, { easing: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1204,14 +1205,14 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
           </SelectContent>
         </Select>
       </PropertySection>
-      <PropertySection title="Cor">
+      <PropertySection title="Cor" tooltip="Cor principal do elemento">
         <Input type="color" value={block.color || '#3b82f6'} onChange={(e) => onChange(update(block, { color: e.target.value }))} />
       </PropertySection>
-      <SwitchRow label="Separador de milhar" checked={block.separator || false} onChange={(v) => onChange(update(block, { separator: v }))} />
+      <SwitchRow label="Separador de milhar" tooltip="Adiciona pontos entre milhares para melhor leitura (ex: 1.000.000)" checked={block.separator || false} onChange={(v) => onChange(update(block, { separator: v }))} />
       {/* ✅ Etapa 2D: Formato de moeda */}
-      <SwitchRow label="Formato moeda (R$)" checked={(block as any).currencyFormat || false} onChange={(v) => onChange(update(block, { currencyFormat: v }))} />
+      <SwitchRow label="Formato moeda (R$)" tooltip="Formata o número como valor monetário brasileiro com vírgula decimal" checked={(block as any).currencyFormat || false} onChange={(v) => onChange(update(block, { currencyFormat: v }))} />
       {(block as any).currencyFormat && (
-        <PropertySection title="Casas decimais">
+        <PropertySection title="Casas decimais" tooltip="Quantidade de casas após a vírgula">
           <Input type="number" min={0} max={4} value={(block as any).decimalPlaces || 2} onChange={(e) => onChange(update(block, { decimalPlaces: Number(e.target.value) }))} />
         </PropertySection>
       )}
@@ -1223,25 +1224,25 @@ const PriceProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'price') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Moeda">
+      <PropertySection title="Moeda" tooltip="Símbolo monetário exibido (R$, $, €)">
         <Input value={block.currency || 'R$'} onChange={(e) => onChange(update(block, { currency: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Período">
+      <PropertySection title="Período" tooltip="Frequência de cobrança exibida (/mês, /ano, etc.)">
         <Input value={block.period || '/mês'} onChange={(e) => onChange(update(block, { period: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Preço Original">
+      <PropertySection title="Preço Original" tooltip="Valor original riscado para mostrar desconto">
         <Input value={block.originalPrice || ''} placeholder="De R$ 199,90" onChange={(e) => onChange(update(block, { originalPrice: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Desconto">
+      <PropertySection title="Desconto" tooltip="Texto de desconto exibido (ex: 20% OFF)">
         <Input value={block.discount || ''} placeholder="20% OFF" onChange={(e) => onChange(update(block, { discount: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="Texto do Botão">
+      <PropertySection title="Texto do Botão" tooltip="Texto exibido dentro do botão de ação">
         <Input value={block.buttonText || ''} onChange={(e) => onChange(update(block, { buttonText: e.target.value }))} />
       </PropertySection>
-      <PropertySection title="URL do Botão">
+      <PropertySection title="URL do Botão" tooltip="Link de destino ao clicar no botão">
         <Input value={block.buttonUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { buttonUrl: e.target.value }))} />
       </PropertySection>
-      <SwitchRow label="Destacado" checked={block.highlighted || false} onChange={(v) => onChange(update(block, { highlighted: v }))} />
+      <SwitchRow label="Destacado" tooltip="Aplica borda e destaque visual ao card de preço, chamando atenção" checked={block.highlighted || false} onChange={(v) => onChange(update(block, { highlighted: v }))} />
     </div>
   );
 };
@@ -1250,7 +1251,7 @@ const MetricsProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'metrics') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Tipo de Gráfico">
+      <PropertySection title="Tipo de Gráfico" tooltip="Formato visual dos dados (barras, pizza, linha, donut)">
         <Select value={block.chartType} onValueChange={(v) => onChange(update(block, { chartType: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -1262,8 +1263,8 @@ const MetricsProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
       <div className="space-y-3">
-        <SwitchRow label="Mostrar legenda" checked={block.showLegend || false} onChange={(v) => onChange(update(block, { showLegend: v }))} />
-        <SwitchRow label="Mostrar valores" checked={block.showValues || false} onChange={(v) => onChange(update(block, { showValues: v }))} />
+        <SwitchRow label="Mostrar legenda" tooltip="Exibe legenda identificando cada série de dados no gráfico" checked={block.showLegend || false} onChange={(v) => onChange(update(block, { showLegend: v }))} />
+        <SwitchRow label="Mostrar valores" tooltip="Exibe valores numéricos diretamente no gráfico" checked={block.showValues || false} onChange={(v) => onChange(update(block, { showValues: v }))} />
       </div>
     </div>
   );
@@ -1273,11 +1274,11 @@ const EmbedProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'embed') return null;
   return (
     <div className="space-y-4">
-      <PropertySection title="Provider">
+      <PropertySection title="Provider" tooltip="Plataforma ou formato de origem do conteúdo">
         <Input value={block.provider || ''} placeholder="Detectado automaticamente" onChange={(e) => onChange(update(block, { provider: e.target.value }))} />
       </PropertySection>
       {/* ✅ Etapa 2F: Whitelist de domínios */}
-      <PropertySection title="Domínios permitidos">
+      <PropertySection title="Domínios permitidos" tooltip="Restringe quais domínios podem ser embarcados por segurança. Vazio = todos permitidos">
         <Input
           value={((block as any).allowedDomains || []).join(', ')}
           placeholder="google.com, youtube.com (vazio = todos)"
@@ -1293,16 +1294,40 @@ const EmbedProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 // HELPER COMPONENTS
 // ============================================
 
-const PropertySection = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const PropertySection = ({ title, children, tooltip }: { title: string; children: React.ReactNode; tooltip?: string }) => (
   <div className="space-y-1.5">
-    <Label className="text-xs font-medium text-muted-foreground">{title}</Label>
+    <div className="flex items-center gap-1">
+      <Label className="text-xs font-medium text-muted-foreground">{title}</Label>
+      {tooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help shrink-0" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[240px] text-xs">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
     {children}
   </div>
 );
 
-const SwitchRow = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
+const SwitchRow = ({ label, checked, onChange, tooltip }: { label: string; checked: boolean; onChange: (v: boolean) => void; tooltip?: string }) => (
   <div className="flex items-center justify-between">
-    <Label className="text-sm cursor-pointer">{label}</Label>
+    <div className="flex items-center gap-1">
+      <Label className="text-sm cursor-pointer">{label}</Label>
+      {tooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help shrink-0" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[240px] text-xs">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
     <Switch checked={checked} onCheckedChange={onChange} />
   </div>
 );
@@ -1341,7 +1366,7 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Input value={block.footnote || ''} onChange={(e) => onChange(update(block, { footnote: e.target.value }))} />
       </div>
       {/* ✅ Etapa 2D: Callout dismissível */}
-      <SwitchRow label="Dispensável (botão X)" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
+      <SwitchRow label="Dispensável (botão X)" tooltip="Permite que o usuário feche/dispense o alerta clicando no X" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
       <Separator />
       <div className="space-y-2">
         <Label>Cor de fundo</Label>
@@ -1530,7 +1555,7 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </div>
-      <SwitchRow label="Dispensável" checked={block.dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
+      <SwitchRow label="Dispensável" tooltip="Permite que o usuário feche/dispense o banner" checked={block.dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
       {/* ✅ Etapa 2D: Link clicável */}
       <Separator />
       <div className="space-y-2">
@@ -1599,7 +1624,7 @@ const AnswerSummaryProperties = ({ block, onChange, questions }: BlockProperties
         <Switch checked={block.showIcon !== false} onCheckedChange={(v) => onChange(update(block, { showIcon: v }))} />
       </div>
       {/* ✅ Etapa 2E: Botão copiar respostas */}
-      <SwitchRow label="Botão 'Copiar respostas'" checked={block.showCopyButton || false} onChange={(v) => onChange(update(block, { showCopyButton: v }))} />
+      <SwitchRow label="Botão 'Copiar respostas'" tooltip="Adiciona botão para copiar todas as respostas para a área de transferência" checked={block.showCopyButton || false} onChange={(v) => onChange(update(block, { showCopyButton: v }))} />
     </div>
   );
 };
@@ -1622,7 +1647,7 @@ const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProp
         </Select>
       </div>
       {/* ✅ Etapa 2D: Animação fade */}
-      <SwitchRow label="Animar transições (fade)" checked={(block as any).animateFade !== false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
+      <SwitchRow label="Animar transições (fade)" tooltip="Aplica efeito de transição suave ao mudar de mensagem" checked={(block as any).animateFade !== false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
       <Separator />
       <Label>Mensagens por % de progresso</Label>
       {messages.map((msg: any, idx: number) => (
@@ -1685,7 +1710,7 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
           </SelectContent>
         </Select>
       </div>
-      <SwitchRow label="Mostrar contador" checked={(block as any).showCount !== false} onChange={(v) => onChange(update(block, { showCount: v }))} />
+      <SwitchRow label="Mostrar contador" tooltip="Exibe o número total de pessoas junto ao grupo de avatares" checked={(block as any).showCount !== false} onChange={(v) => onChange(update(block, { showCount: v }))} />
       {/* ✅ Etapa 2D: Link para perfil ao clicar */}
       <Separator />
       <div className="space-y-2">
@@ -1805,18 +1830,18 @@ const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropert
       {/* ✅ Etapa 2D: Cores e ícones personalizados */}
       <Separator />
       <div className="grid grid-cols-2 gap-2">
-        <PropertySection title="Cor 'Antes'">
+        <PropertySection title="Cor 'Antes'" tooltip="Cor da coluna de problemas (padrão: vermelho)">
           <Input type="color" value={(block as any).beforeColor || '#ef4444'} onChange={(e) => onChange(update(block, { beforeColor: e.target.value }))} />
         </PropertySection>
-        <PropertySection title="Cor 'Depois'">
+        <PropertySection title="Cor 'Depois'" tooltip="Cor da coluna de soluções (padrão: verde)">
           <Input type="color" value={(block as any).afterColor || '#22c55e'} onChange={(e) => onChange(update(block, { afterColor: e.target.value }))} />
         </PropertySection>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <PropertySection title="Ícone 'Antes'">
+        <PropertySection title="Ícone 'Antes'" tooltip="Emoji ou ícone para itens da coluna de problemas">
           <Input value={(block as any).beforeIcon || ''} placeholder="❌" onChange={(e) => onChange(update(block, { beforeIcon: e.target.value }))} />
         </PropertySection>
-        <PropertySection title="Ícone 'Depois'">
+        <PropertySection title="Ícone 'Depois'" tooltip="Emoji ou ícone para itens da coluna de soluções">
           <Input value={(block as any).afterIcon || ''} placeholder="✅" onChange={(e) => onChange(update(block, { afterIcon: e.target.value }))} />
         </PropertySection>
       </div>
@@ -1955,7 +1980,7 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
         <Input value={(block as any).fallbackText || ''} onChange={(e) => onChange(update(block, { fallbackText: e.target.value }))} />
       </div>
       {/* ✅ Etapa 2D: Limite máximo de exibição */}
-      <PropertySection title="Máximo de resultados (0 = sem limite)">
+      <PropertySection title="Máximo de resultados (0 = sem limite)" tooltip="Limita quantas recomendações são exibidas ao usuário">
         <Input type="number" min={0} value={(block as any).maxDisplay || 0} onChange={(e) => onChange(update(block, { maxDisplay: Number(e.target.value) }))} />
       </PropertySection>
       <Separator />
@@ -2109,7 +2134,7 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
   return (
     <div className="space-y-4">
       {/* ✅ Etapa 2F: Templates de fórmula prontos */}
-      <PropertySection title="Template de fórmula">
+      <PropertySection title="Template de fórmula" tooltip="Escolha um modelo pronto ou crie sua fórmula personalizada">
         <Select value={(block as any).formulaTemplate || '_custom'} onValueChange={(v) => {
           const templates: Record<string, { formula: string; vars: any[]; unit: string; label: string }> = {
             imc: { formula: 'peso / (altura * altura)', vars: [{ id: 'v-peso', name: 'peso', defaultValue: 70 }, { id: 'v-altura', name: 'altura', defaultValue: 1.75 }], unit: 'kg/m²', label: 'IMC' },
@@ -2135,7 +2160,7 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
         </Select>
       </PropertySection>
 
-      <PropertySection title="Fórmula">
+      <PropertySection title="Fórmula" tooltip="Expressão matemática usando os nomes das variáveis definidas abaixo">
         <Input
           value={block.formula || ''}
           placeholder="Ex: (var1 * var2) / 100"
@@ -2144,7 +2169,7 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
         <p className="text-[10px] text-muted-foreground mt-1">Use nomes das variáveis definidas abaixo</p>
       </PropertySection>
 
-      <PropertySection title="Label do Resultado">
+      <PropertySection title="Label do Resultado" tooltip="Título exibido acima do valor calculado">
         <Input
           value={block.resultLabel || ''}
           placeholder="Resultado"
@@ -2153,14 +2178,14 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
       </PropertySection>
 
       <div className="grid grid-cols-2 gap-2">
-        <PropertySection title="Prefixo">
+        <PropertySection title="Prefixo" tooltip="Texto exibido antes do número (ex: R$)">
           <Input
             value={block.resultPrefix || ''}
             placeholder="R$"
             onChange={(e) => onChange(update(block, { resultPrefix: e.target.value }))}
           />
         </PropertySection>
-        <PropertySection title="Unidade">
+        <PropertySection title="Unidade" tooltip="Unidade exibida junto ao valor (%, R$, kg, etc.)">
           <Input
             value={block.resultUnit || ''}
             placeholder="kg, %, etc."
@@ -2169,7 +2194,7 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
         </PropertySection>
       </div>
 
-      <PropertySection title="Casas Decimais">
+      <PropertySection title="Casas Decimais" tooltip="Precisão numérica do resultado da calculadora">
         <Select value={String(block.decimalPlaces ?? 2)} onValueChange={(v) => onChange(update(block, { decimalPlaces: Number(v) }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -2295,24 +2320,26 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-3 border-b flex items-center gap-2">
-        <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-          {icon}
+    <TooltipProvider delayDuration={300}>
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="p-3 border-b flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+            {icon}
+          </div>
+          <div>
+            <p className="text-sm font-semibold">{name}</p>
+            <p className="text-xs text-muted-foreground">Propriedades</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold">{name}</p>
-          <p className="text-xs text-muted-foreground">Propriedades</p>
-        </div>
-      </div>
 
-      {/* Properties */}
-      <ScrollArea className="flex-1">
-        <div className="p-3">
-          {renderProperties()}
-        </div>
-      </ScrollArea>
-    </div>
+        {/* Properties */}
+        <ScrollArea className="flex-1">
+          <div className="p-3">
+            {renderProperties()}
+          </div>
+        </ScrollArea>
+      </div>
+    </TooltipProvider>
   );
 };
