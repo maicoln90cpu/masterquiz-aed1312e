@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Loader2, Check, X, ChevronDown, Plus, Minus, User, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { QuizBlock } from "@/types/blocks";
+import { fireBlockWebhook } from "@/lib/blockWebhook";
 
 // ---- LOADING ----
 export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loading' } }) => {
@@ -371,6 +372,20 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
   const tickStep = tickCount > 0 ? range / tickCount : range;
   const ticks = Array.from({ length: tickCount + 1 }, (_, i) => Math.round(block.min + i * tickStep));
 
+  // ✅ Etapa 4: Webhook ao soltar slider (onValueCommit)
+  const handleCommit = useCallback((v: number[]) => {
+    if ((block as any).webhookOnSubmit && (block as any).webhookUrl) {
+      fireBlockWebhook((block as any).webhookUrl, {
+        blockType: 'slider',
+        blockId: block.id,
+        label: block.label,
+        value: v[0],
+        timestamp: new Date().toISOString(),
+        metadata: { min: block.min, max: block.max, unit: block.unit },
+      });
+    }
+  }, [block]);
+
   return (
     <div className="space-y-4">
       <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
@@ -381,7 +396,7 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
             {/* ✅ Etapa 2C: Labels nos extremos */}
             {block.minLabel && <p className="text-[10px] text-muted-foreground/70">{block.minLabel}</p>}
           </div>
-          <Slider value={[value]} min={block.min} max={block.max} step={block.step} onValueChange={(v) => setValue(v[0])} className="flex-1" />
+          <Slider value={[value]} min={block.min} max={block.max} step={block.step} onValueChange={(v) => setValue(v[0])} onValueCommit={handleCommit} className="flex-1" />
           <div className="min-w-[40px]">
             <span className="text-sm text-muted-foreground font-medium tabular-nums">{block.max}{block.unit}</span>
             {/* ✅ Etapa 2C: Labels nos extremos */}
@@ -454,6 +469,7 @@ const applyMask = (value: string, type?: string): string => {
 export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => {
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
+  const [webhookFired, setWebhookFired] = useState(false);
   const useMask = (block as any).useMask;
 
   const handleChange = (rawValue: string) => {
@@ -464,7 +480,22 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
     }
   };
 
-  // ✅ Etapa 2E + 2F: Validação em tempo real (com CPF/CNPJ)
+  // ✅ Etapa 4: Webhook ao sair do campo (blur)
+  const handleBlur = useCallback(() => {
+    setTouched(true);
+    if ((block as any).webhookOnSubmit && (block as any).webhookUrl && value && !webhookFired) {
+      fireBlockWebhook((block as any).webhookUrl, {
+        blockType: 'textInput',
+        blockId: block.id,
+        label: block.label,
+        value,
+        timestamp: new Date().toISOString(),
+        metadata: { validation: block.validation },
+      });
+      setWebhookFired(true);
+    }
+  }, [block, value, webhookFired]);
+
   const validate = (val: string): boolean | null => {
     if (!val || !block.showValidationFeedback) return null;
     const digits = val.replace(/\D/g, '');
@@ -502,7 +533,7 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
           maxLength={block.maxLength}
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => setTouched(true)}
+          onBlur={handleBlur}
           className={`w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background transition-colors ${borderClass}`}
         />
       ) : (
@@ -512,7 +543,7 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
           type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'}
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => setTouched(true)}
+          onBlur={handleBlur}
           className={borderClass}
         />
       )}
@@ -532,7 +563,24 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
 export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } }) => {
   const [value, setValue] = useState<number | null>(null);
   const [comment, setComment] = useState('');
+  const [webhookFired, setWebhookFired] = useState(false);
   const getNPSColor = (v: number) => v <= 6 ? "bg-red-500" : v <= 8 ? "bg-yellow-500" : "bg-green-500";
+
+  // ✅ Etapa 4: Webhook ao selecionar nota NPS
+  const handleSelect = useCallback((i: number) => {
+    setValue(i);
+    if ((block as any).webhookOnSubmit && (block as any).webhookUrl && !webhookFired) {
+      fireBlockWebhook((block as any).webhookUrl, {
+        blockType: 'nps',
+        blockId: block.id,
+        label: block.question,
+        value: i,
+        timestamp: new Date().toISOString(),
+        metadata: { category: i <= 6 ? 'detractor' : i <= 8 ? 'passive' : 'promoter' },
+      });
+      setWebhookFired(true);
+    }
+  }, [block, webhookFired]);
 
   return (
     <div className="space-y-4">
@@ -544,7 +592,7 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
       )}
       <div className="flex justify-center gap-1 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => (
-          <button key={i} onClick={() => setValue(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
+          <button key={i} onClick={() => handleSelect(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
             value === i ? `${getNPSColor(i)} text-white scale-110 shadow-lg` : "bg-muted hover:bg-muted/80 text-foreground"
           }`}>{i}</button>
         ))}

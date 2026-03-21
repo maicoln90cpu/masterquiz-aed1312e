@@ -262,9 +262,11 @@ export interface SliderBlock extends BaseBlock {
   unit?: string;
   showValue?: boolean;
   required?: boolean;
-  minLabel?: string; // ✅ Etapa 2C: Label no extremo mínimo
-  maxLabel?: string; // ✅ Etapa 2C: Label no extremo máximo
-  showDots?: boolean; // ✅ Etapa 2C: Steps visuais com dots
+  minLabel?: string;
+  maxLabel?: string;
+  showDots?: boolean;
+  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter valor
+  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
 }
 
 export interface TextInputBlock extends BaseBlock {
@@ -274,9 +276,11 @@ export interface TextInputBlock extends BaseBlock {
   multiline?: boolean;
   maxLength?: number;
   required?: boolean;
-  validation?: 'none' | 'email' | 'phone' | 'number' | 'cpf' | 'cnpj'; // ✅ Etapa 2F: +CPF/CNPJ
-  showValidationFeedback?: boolean; // ✅ Etapa 2E: Validação visual em tempo real (borda verde/vermelha)
-  useMask?: boolean; // ✅ Etapa 2F: Máscara automática de input
+  validation?: 'none' | 'email' | 'phone' | 'number' | 'cpf' | 'cnpj';
+  showValidationFeedback?: boolean;
+  useMask?: boolean;
+  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter valor
+  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
 }
 
 export interface NPSBlock extends BaseBlock {
@@ -286,8 +290,10 @@ export interface NPSBlock extends BaseBlock {
   highLabel?: string;
   showLabels?: boolean;
   required?: boolean;
-  showComment?: boolean; // ✅ Etapa 2E: Comentário opcional após nota
-  commentPlaceholder?: string; // ✅ Etapa 2E: Placeholder do campo de comentário
+  showComment?: boolean;
+  commentPlaceholder?: string;
+  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter nota
+  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
 }
 
 export interface AccordionBlock extends BaseBlock {
