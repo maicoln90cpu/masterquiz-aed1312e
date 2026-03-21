@@ -839,6 +839,10 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
       <div className="space-y-3">
         <SwitchRow label="Multilinha" checked={block.multiline || false} onChange={(v) => onChange(update(block, { multiline: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        {/* ✅ Etapa 2E: Validação visual em tempo real */}
+        {block.validation && block.validation !== 'none' && (
+          <SwitchRow label="Feedback visual de validação" checked={block.showValidationFeedback || false} onChange={(v) => onChange(update(block, { showValidationFeedback: v }))} />
+        )}
       </div>
     </div>
   );
