@@ -8,14 +8,43 @@ import { CustomVideoPlayer } from "@/components/video/CustomVideoPlayer";
 // ✅ FASE 12: Recharts removido - MetricsBlockPreview extraído para lazy loading
 
 // ---- TEXT ----
-export const TextBlockPreview = ({ block }: { block: QuizBlock & { type: 'text' } }) => (
-  <div
-    className={`prose prose-sm max-w-none text-${block.alignment || "left"} ${
-      block.fontSize === "small" ? "text-sm" : block.fontSize === "large" ? "text-lg" : "text-base"
-    }`}
-    dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.content) }}
-  />
-);
+// ✅ Etapa 2E: Suporte a variáveis dinâmicas {nome}, {resposta_P1}, etc.
+interface TextBlockPreviewProps {
+  block: QuizBlock & { type: 'text' };
+  answers?: Record<string, any>;
+  questions?: Array<{ id: string; question_text?: string; blocks?: any[] }>;
+  respondentName?: string;
+}
+
+export const TextBlockPreview = ({ block, answers, questions, respondentName }: TextBlockPreviewProps) => {
+  let content = block.content;
+  
+  // Replace {nome} with respondent name
+  if (respondentName) {
+    content = content.replace(/\{nome\}/gi, respondentName);
+  }
+  
+  // Replace {resposta_P1}, {resposta_P2}, etc. with actual answers
+  if (answers && questions) {
+    questions.forEach((q, idx) => {
+      const answer = answers[q.id];
+      if (answer) {
+        const answerStr = Array.isArray(answer) ? answer.join(', ') : String(answer);
+        content = content.replace(new RegExp(`\\{resposta_P${idx + 1}\\}`, 'gi'), answerStr);
+        content = content.replace(new RegExp(`\\{resposta\\}`, 'i'), answerStr); // first match only
+      }
+    });
+  }
+
+  return (
+    <div
+      className={`prose prose-sm max-w-none text-${block.alignment || "left"} ${
+        block.fontSize === "small" ? "text-sm" : block.fontSize === "large" ? "text-lg" : "text-base"
+      }`}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+    />
+  );
+};
 
 // ---- SEPARATOR ----
 export const SeparatorBlockPreview = ({ block }: { block: QuizBlock & { type: 'separator' } }) =>
