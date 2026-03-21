@@ -113,3 +113,30 @@
 ### Fase 4 — Testes + Iteração
 - [ ] Testes A/B de conversão entre Classic e Modern
 - [ ] Ajustes baseados em feedback
+
+---
+
+## Plano: 6 Melhorias do Editor (Stage 2F)
+
+### Etapa 1 ✅ — Fix template freeze + rename texto
+- [x] Sanitizar imageBlocks com URLs inexistentes (`/templates/...`) durante carregamento de templates
+- [x] Renomear "funis de qualificação" → "funis de qualificação e vendas" no CreateQuizModern
+
+### Etapa 2 — Image upload no TextBlock + tipo blocks.ts
+- [ ] Adicionar `imageUrl` e `imagePosition` ao tipo `TextBlock` em blocks.ts
+- [ ] Adicionar `ImageUploader` no componente `TextBlock.tsx` editor
+- [ ] Renderizar imagem no preview (`StaticBlockPreviews.tsx`)
+- [ ] Adicionar toggle de posição no `BlockPropertiesPanel`
+
+### Etapa 3 — Paridade Editor vs Preview (blocos prioritários)
+- [ ] Countdown: usar componente real do preview no editor
+- [ ] Image: respeitar `size` no editor
+- [ ] Video: respeitar `size` e `aspectRatio` no editor
+- [ ] Testimonial: usar carrossel real no editor
+- [ ] Comparison: usar estilo real com ícones no editor
+
+### Etapa 4 — Webhook por campo + relatório de testes
+- [ ] Adicionar `webhookUrl` a TextInputBlock, NPSBlock, SliderBlock
+- [ ] UI de webhook no BlockPropertiesPanel (campos email/telefone)
+- [ ] Dispatch de webhook no runtime do quiz (onBlur/submit)
+- [ ] Relatório dos 152 erros de teste (categorizado)
