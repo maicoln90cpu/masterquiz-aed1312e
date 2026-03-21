@@ -74,17 +74,15 @@ vi.mock('react-router-dom', async (importOriginal) => {
 // Mock framer-motion to avoid jsdom animation issues
 vi.mock('framer-motion', async (importOriginal) => {
   const actual = await importOriginal<any>();
+  const React = await import('react');
   return {
     ...actual,
     motion: new Proxy(actual.motion || {}, {
       get: (_target: any, prop: string) => {
-        // Return a simple forwardRef component for any HTML element
         if (typeof prop === 'string' && /^[a-z]/.test(prop)) {
-          const { forwardRef } = require('react');
-          return forwardRef((props: any, ref: any) => {
+          return React.forwardRef((props: any, ref: any) => {
             const { initial, animate, exit, transition, variants, whileHover, whileTap, whileFocus, whileInView, layout, layoutId, ...rest } = props;
-            const Component = prop;
-            return require('react').createElement(Component, { ...rest, ref });
+            return React.createElement(prop, { ...rest, ref });
           });
         }
         return _target[prop];
