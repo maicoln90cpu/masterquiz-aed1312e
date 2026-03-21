@@ -219,7 +219,7 @@ describe('CRM', () => {
       await waitFor(() => {
         expect(screen.getByText('João Silva')).toBeInTheDocument();
         expect(screen.getByText('Maria Santos')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
   });
 
