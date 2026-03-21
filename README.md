@@ -509,7 +509,7 @@ src/
 ## ✨ Funcionalidades
 
 ### Para Usuários
-- ✅ Editor visual de blocos (22 tipos)
+- ✅ Editor visual de blocos (34 tipos) com modo Classic e Modern
 - ✅ Geração de quiz com IA (auto-convencimento)
 - ✅ Upload de PDF para geração
 - ✅ 8 templates visuais
