@@ -54,6 +54,10 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
     };
   }, [block.options, block.randomizeOptions, block.id, block.answerFormat, emojis, optionImages]);
 
+  // ✅ Layout and size from block properties
+  const optionImageLayout = (block as any).optionImageLayout || '2x2';
+  const optionImageSize = (block as any).optionImageSize || 'medium';
+
   const handleOptionClick = (option: string, isMultiple: boolean) => {
     if (onAnswerSelect) onAnswerSelect(option, isMultiple);
   };
