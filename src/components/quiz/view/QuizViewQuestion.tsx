@@ -436,17 +436,18 @@ function MultipleChoiceOptions({ options, emojis, optionImages, optionImageLayou
   };
 
   return (
-    <div className="space-y-2">
+    <div className={getImageLayoutClass(optionImageLayout, hasImages)}>
       {options.map((option: any, idx: number) => {
         const optionText = typeof option === 'string' ? option : option.text || option.value || `Opção ${idx + 1}`;
         const emoji = emojis[idx];
+        const image = optionImages?.[idx];
         const isSelected = currentAnswers.includes(optionText);
         const isCorrect = answered && correctAnswer && optionText === correctAnswer;
         
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] select-none min-h-[44px] ${getOptionStyle(optionText)}`}
+            className={`flex ${hasImages && optionImageLayout !== '1x4' ? 'flex-col items-center text-center' : 'items-center'} gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] select-none min-h-[44px] ${getOptionStyle(optionText)}`}
             onClick={() => {
               if (disabled) return;
               const newValue = isSelected 
@@ -455,14 +456,18 @@ function MultipleChoiceOptions({ options, emojis, optionImages, optionImageLayou
               onAnswer(questionId, newValue);
             }}
           >
-            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
-              answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
-              answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
-              'bg-primary/10'
-            }`}>
-              {emoji || String.fromCharCode(65 + idx)}
-            </div>
-            <span className="flex-1 text-base">
+            {image ? (
+              <img src={image} alt={optionText} className={`${getImageSizeClass(optionImageSize)} w-full object-cover rounded-lg`} />
+            ) : (
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+                answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
+                answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
+                'bg-primary/10'
+              }`}>
+                {emoji || String.fromCharCode(65 + idx)}
+              </div>
+            )}
+            <span className={`${hasImages && optionImageLayout !== '1x4' ? '' : 'flex-1'} text-base`}>
               {optionText}
             </span>
             <Checkbox 
@@ -480,7 +485,9 @@ function MultipleChoiceOptions({ options, emojis, optionImages, optionImageLayou
   );
 }
 
-function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
+function SingleChoiceOptions({ options, emojis, optionImages, optionImageLayout, optionImageSize, questionId, answers, onAnswer, disabled, correctAnswer, answered }: OptionsProps) {
+  const hasImages = optionImages && optionImages.some(img => img);
+
   const getOptionStyle = (optionText: string) => {
     const isSelected = answers[questionId] === optionText;
     if (!answered || !correctAnswer) {
@@ -499,29 +506,34 @@ function SingleChoiceOptions({ options, emojis, questionId, answers, onAnswer, d
     <RadioGroup
       value={answers[questionId]}
       onValueChange={(value) => onAnswer(questionId, value)}
-      className="space-y-2"
+      className={getImageLayoutClass(optionImageLayout, hasImages)}
     >
       {options.map((option: any, idx: number) => {
         const optionText = typeof option === 'string' ? option : option.text || option.value || `Opção ${idx + 1}`;
         const emoji = emojis[idx];
+        const image = optionImages?.[idx];
         const isSelected = answers[questionId] === optionText;
         const isCorrect = answered && correctAnswer && optionText === correctAnswer;
         
         return (
           <div 
             key={idx} 
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] min-h-[44px] ${getOptionStyle(optionText)}`}
+            className={`flex ${hasImages && optionImageLayout !== '1x4' ? 'flex-col items-center text-center' : 'items-center'} gap-3 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] min-h-[44px] ${getOptionStyle(optionText)}`}
             onClick={() => { if (!disabled) onAnswer(questionId, optionText); }}
           >
-            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
-              answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
-              answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
-              'bg-primary/10'
-            }`}>
-              {emoji || String.fromCharCode(65 + idx)}
-            </div>
+            {image ? (
+              <img src={image} alt={optionText} className={`${getImageSizeClass(optionImageSize)} w-full object-cover rounded-lg`} />
+            ) : (
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+                answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
+                answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
+                'bg-primary/10'
+              }`}>
+                {emoji || String.fromCharCode(65 + idx)}
+              </div>
+            )}
             <RadioGroupItem value={optionText} id={`option-${questionId}-${idx}`} className="sr-only" />
-            <Label htmlFor={`option-${questionId}-${idx}`} className="flex-1 cursor-pointer text-base">
+            <Label htmlFor={`option-${questionId}-${idx}`} className={`${hasImages && optionImageLayout !== '1x4' ? '' : 'flex-1'} cursor-pointer text-base`}>
               {optionText}
             </Label>
             {answered && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
