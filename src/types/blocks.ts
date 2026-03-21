@@ -71,6 +71,7 @@ export interface SeparatorBlock extends BaseBlock {
   style?: 'line' | 'dots' | 'dashes' | 'space';
   color?: string;
   thickness?: 'thin' | 'medium' | 'thick';
+  animateFade?: boolean; // ✅ Etapa 2F: Animação fade-in ao aparecer
 }
 
 export interface ImageBlock extends BaseBlock {
