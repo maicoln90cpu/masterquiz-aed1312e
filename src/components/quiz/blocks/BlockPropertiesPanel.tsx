@@ -1122,6 +1122,15 @@ const EmbedProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <PropertySection title="Provider">
         <Input value={block.provider || ''} placeholder="Detectado automaticamente" onChange={(e) => onChange(update(block, { provider: e.target.value }))} />
       </PropertySection>
+      {/* ✅ Etapa 2F: Whitelist de domínios */}
+      <PropertySection title="Domínios permitidos">
+        <Input
+          value={((block as any).allowedDomains || []).join(', ')}
+          placeholder="google.com, youtube.com (vazio = todos)"
+          onChange={(e) => onChange(update(block, { allowedDomains: e.target.value ? e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [] }))}
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">Separe domínios por vírgula. Vazio = aceitar todos.</p>
+      </PropertySection>
     </div>
   );
 };
