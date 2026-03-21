@@ -380,6 +380,7 @@ export interface AnswerSummaryBlock extends BaseBlock {
   showIcon?: boolean;
   accentColor?: string;
   selectedQuestionIds?: string[];
+  showCopyButton?: boolean; // ✅ Etapa 2E: Botão copiar respostas como texto
 }
 
 export interface ProgressMessageBlock extends BaseBlock {
