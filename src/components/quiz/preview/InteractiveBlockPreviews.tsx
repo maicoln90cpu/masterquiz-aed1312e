@@ -9,6 +9,7 @@ import type { QuizBlock } from "@/types/blocks";
 // ---- LOADING ----
 export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loading' } }) => {
   const [progress, setProgress] = useState(0);
+  const [msgIndex, setMsgIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,6 +20,15 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
     }, 100);
     return () => clearInterval(interval);
   }, [block.duration]);
+
+  // ✅ Etapa 2E: Mensagens rotativas com fade
+  useEffect(() => {
+    if (!block.loadingMessages?.length || !block.rotateMessages) return;
+    const interval = setInterval(() => {
+      setMsgIndex(prev => (prev + 1) % block.loadingMessages!.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [block.loadingMessages, block.rotateMessages]);
 
   const renderSpinner = () => {
     switch (block.spinnerType) {
@@ -51,21 +61,36 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
     }
   };
 
+  const progressColor = block.progressColor || 'hsl(var(--primary))';
+  const messages = block.loadingMessages || [];
+  const currentMsg = block.rotateMessages
+    ? messages[msgIndex]
+    : messages[Math.min(Math.floor(progress / (100 / Math.max(messages.length, 1))), messages.length - 1)];
+
   return (
     <div className="flex flex-col items-center justify-center py-12 space-y-6">
       {renderSpinner()}
       {block.showProgress && (
         <div className="w-full max-w-xs">
           <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
+            <div className="h-full rounded-full transition-all duration-100" style={{ width: `${progress}%`, backgroundColor: progressColor }} />
           </div>
           <p className="text-sm text-center text-muted-foreground mt-2">{Math.round(progress)}%</p>
         </div>
       )}
-      {block.loadingMessages && block.loadingMessages.length > 0 && (
-        <p className="text-sm text-muted-foreground animate-pulse text-center">
-          {block.loadingMessages[Math.min(Math.floor(progress / (100 / block.loadingMessages.length)), block.loadingMessages.length - 1)]}
-        </p>
+      {messages.length > 0 && currentMsg && (
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={block.rotateMessages ? msgIndex : Math.floor(progress)}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="text-sm text-muted-foreground text-center"
+          >
+            {currentMsg}
+          </motion.p>
+        </AnimatePresence>
       )}
     </div>
   );
@@ -148,6 +173,7 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
     return block.duration || 300;
   });
   const [pulse, setPulse] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -159,15 +185,35 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
     return () => clearInterval(interval);
   }, [timeLeft]);
 
+  // ✅ Etapa 2E: Ação ao expirar (redirect)
+  useEffect(() => {
+    if (timeLeft === 0 && !hasRedirected) {
+      if (block.expiryAction === 'redirect' && block.redirectUrl) {
+        setHasRedirected(true);
+        window.open(block.redirectUrl, '_blank');
+      }
+    }
+  }, [timeLeft, hasRedirected, block.expiryAction, block.redirectUrl]);
+
   const days = Math.floor(timeLeft / 86400);
   const hours = Math.floor((timeLeft % 86400) / 3600);
   const minutes = Math.floor((timeLeft % 3600) / 60);
   const seconds = timeLeft % 60;
 
+  // ✅ Etapa 2E: Ação 'hide' esconde o bloco
+  if (timeLeft === 0 && block.expiryAction === 'hide') {
+    return null;
+  }
+
   if (timeLeft === 0 && block.expiryMessage) {
     return (
       <div className="text-center p-8 rounded-xl border-2 border-dashed" style={{ borderColor: block.primaryColor, backgroundColor: block.secondaryColor }}>
         <p className="text-2xl font-bold" style={{ color: block.primaryColor }}>{block.expiryMessage}</p>
+        {block.expiryAction === 'redirect' && block.redirectUrl && (
+          <p className="text-sm text-muted-foreground mt-2">
+            🔗 Redirecionando para {block.redirectUrl}...
+          </p>
+        )}
       </div>
     );
   }
@@ -298,21 +344,65 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
 };
 
 // ---- TEXT INPUT ----
-export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => (
-  <div className="space-y-2">
-    <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
-    {block.multiline ? (
-      <textarea placeholder={block.placeholder} maxLength={block.maxLength} className="w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background" />
-    ) : (
-      <Input placeholder={block.placeholder} maxLength={block.maxLength} type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'} />
-    )}
-    {block.maxLength && <p className="text-xs text-muted-foreground text-right">Máximo: {block.maxLength} caracteres</p>}
-  </div>
-);
+export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => {
+  const [value, setValue] = useState('');
+  const [touched, setTouched] = useState(false);
+
+  // ✅ Etapa 2E: Validação em tempo real
+  const validate = (val: string): boolean | null => {
+    if (!val || !block.showValidationFeedback) return null;
+    if (block.validation === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    if (block.validation === 'phone') return /^[\d\s\-\+\(\)]{8,}$/.test(val);
+    if (block.validation === 'number') return !isNaN(Number(val)) && val.trim() !== '';
+    return null;
+  };
+
+  const isValid = validate(value);
+  const borderClass = touched && isValid !== null
+    ? isValid
+      ? 'border-green-500 focus-visible:ring-green-500/30'
+      : 'border-red-500 focus-visible:ring-red-500/30'
+    : '';
+
+  return (
+    <div className="space-y-2">
+      <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
+      {block.multiline ? (
+        <textarea
+          placeholder={block.placeholder}
+          maxLength={block.maxLength}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => setTouched(true)}
+          className={`w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background transition-colors ${borderClass}`}
+        />
+      ) : (
+        <Input
+          placeholder={block.placeholder}
+          maxLength={block.maxLength}
+          type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => setTouched(true)}
+          className={borderClass}
+        />
+      )}
+      <div className="flex items-center justify-between">
+        {touched && isValid !== null && (
+          <p className={`text-xs ${isValid ? 'text-green-600' : 'text-red-600'}`}>
+            {isValid ? '✅ Formato válido' : '❌ Formato inválido'}
+          </p>
+        )}
+        {block.maxLength && <p className="text-xs text-muted-foreground text-right ml-auto">{value.length}/{block.maxLength}</p>}
+      </div>
+    </div>
+  );
+};
 
 // ---- NPS ----
 export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } }) => {
   const [value, setValue] = useState<number | null>(null);
+  const [comment, setComment] = useState('');
   const getNPSColor = (v: number) => v <= 6 ? "bg-red-500" : v <= 8 ? "bg-yellow-500" : "bg-green-500";
 
   return (
@@ -334,6 +424,21 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
         <p className={`text-center text-sm font-medium ${value <= 6 ? "text-red-600" : value <= 8 ? "text-yellow-600" : "text-green-600"}`}>
           {value <= 6 ? "Detrator" : value <= 8 ? "Neutro" : "Promotor"} ({value})
         </p>
+      )}
+      {/* ✅ Etapa 2E: Comentário opcional após nota */}
+      {block.showComment && value !== null && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          transition={{ duration: 0.3 }}
+        >
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={block.commentPlaceholder || 'Conte-nos mais sobre sua nota...'}
+            className="w-full min-h-[80px] px-3 py-2 border rounded-md resize-none bg-background text-sm mt-2"
+          />
+        </motion.div>
       )}
     </div>
   );

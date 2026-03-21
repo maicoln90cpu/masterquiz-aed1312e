@@ -291,6 +291,37 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           />
         )}
       </div>
+
+      {/* ✅ Etapa 2E: Imagens por opção */}
+      {(block.answerFormat === 'single_choice' || block.answerFormat === 'multiple_choice') && (
+        <>
+          <Separator />
+          <PropertySection title="🖼️ Imagens por Opção">
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Cole URLs de imagens para criar cards visuais. Deixe em branco para exibir opções normais.
+            </p>
+            {(block.options || []).map((opt, idx) => {
+              const optText = typeof opt === 'string' ? opt : (opt as any)?.text || `Opção ${idx + 1}`;
+              return (
+                <div key={idx} className="flex gap-2 items-center mb-1">
+                  <span className="text-xs text-muted-foreground w-20 truncate">{optText}</span>
+                  <Input
+                    className="flex-1 text-xs h-7"
+                    placeholder="https://... (URL da imagem)"
+                    value={(block.optionImages || [])[idx] || ''}
+                    onChange={(e) => {
+                      const imgs = [...(block.optionImages || [])];
+                      while (imgs.length <= idx) imgs.push('');
+                      imgs[idx] = e.target.value;
+                      onChange(update(block, { optionImages: imgs }));
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </PropertySection>
+        </>
+      )}
     </div>
   );
 };
@@ -594,6 +625,14 @@ const LoadingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
       <SwitchRow label="Avançar automaticamente" checked={block.autoAdvance || false} onChange={(v) => onChange(update(block, { autoAdvance: v }))} />
+      <SwitchRow label="Mostrar barra de progresso" checked={block.showProgress || false} onChange={(v) => onChange(update(block, { showProgress: v }))} />
+      {/* ✅ Etapa 2E: Cor da barra + mensagens rotativas */}
+      {block.showProgress && (
+        <PropertySection title="Cor da barra">
+          <Input type="color" value={block.progressColor || '#3b82f6'} onChange={(e) => onChange(update(block, { progressColor: e.target.value }))} />
+        </PropertySection>
+      )}
+      <SwitchRow label="Mensagens rotativas (fade)" checked={block.rotateMessages || false} onChange={(v) => onChange(update(block, { rotateMessages: v }))} />
     </div>
   );
 };
@@ -670,6 +709,22 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
       <PropertySection title="Mensagem ao expirar">
         <Input value={block.expiryMessage || ''} onChange={(e) => onChange(update(block, { expiryMessage: e.target.value }))} />
       </PropertySection>
+      {/* ✅ Etapa 2E: Ação ao expirar */}
+      <PropertySection title="Ação ao expirar">
+        <Select value={block.expiryAction || 'none'} onValueChange={(v) => onChange(update(block, { expiryAction: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Apenas mensagem</SelectItem>
+            <SelectItem value="hide">Esconder bloco</SelectItem>
+            <SelectItem value="redirect">Redirecionar para URL</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      {block.expiryAction === 'redirect' && (
+        <PropertySection title="URL de redirecionamento">
+          <Input value={block.redirectUrl || ''} placeholder="https://..." onChange={(e) => onChange(update(block, { redirectUrl: e.target.value }))} />
+        </PropertySection>
+      )}
       <PropertySection title="Cor Principal">
         <Input type="color" value={block.primaryColor || '#ef4444'} onChange={(e) => onChange(update(block, { primaryColor: e.target.value }))} />
       </PropertySection>
@@ -784,6 +839,10 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
       <div className="space-y-3">
         <SwitchRow label="Multilinha" checked={block.multiline || false} onChange={(v) => onChange(update(block, { multiline: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        {/* ✅ Etapa 2E: Validação visual em tempo real */}
+        {block.validation && block.validation !== 'none' && (
+          <SwitchRow label="Feedback visual de validação" checked={block.showValidationFeedback || false} onChange={(v) => onChange(update(block, { showValidationFeedback: v }))} />
+        )}
       </div>
     </div>
   );
@@ -802,7 +861,14 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <div className="space-y-3">
         <SwitchRow label="Mostrar labels" checked={block.showLabels || false} onChange={(v) => onChange(update(block, { showLabels: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+        {/* ✅ Etapa 2E: Comentário opcional */}
+        <SwitchRow label="Campo de comentário" checked={block.showComment || false} onChange={(v) => onChange(update(block, { showComment: v }))} />
       </div>
+      {block.showComment && (
+        <PropertySection title="Placeholder do comentário">
+          <Input value={block.commentPlaceholder || ''} placeholder="Conte-nos mais sobre sua nota..." onChange={(e) => onChange(update(block, { commentPlaceholder: e.target.value }))} />
+        </PropertySection>
+      )}
       <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground space-y-1">
         <p>🔴 0-6 = Detrator | 🟡 7-8 = Neutro | 🟢 9-10 = Promotor</p>
         <p>As cores são aplicadas automaticamente no preview.</p>
@@ -1363,6 +1429,8 @@ const AnswerSummaryProperties = ({ block, onChange, questions }: BlockProperties
         <Label>Mostrar ícones</Label>
         <Switch checked={block.showIcon !== false} onCheckedChange={(v) => onChange(update(block, { showIcon: v }))} />
       </div>
+      {/* ✅ Etapa 2E: Botão copiar respostas */}
+      <SwitchRow label="Botão 'Copiar respostas'" checked={block.showCopyButton || false} onChange={(v) => onChange(update(block, { showCopyButton: v }))} />
     </div>
   );
 };

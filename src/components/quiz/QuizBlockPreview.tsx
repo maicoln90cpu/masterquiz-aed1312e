@@ -97,7 +97,7 @@ export const QuizBlockPreview = ({
       case "question":
         return <QuestionBlockPreview key={block.id} block={block} selectedAnswer={selectedAnswer} onAnswerSelect={onAnswerSelect} onTextChange={onTextChange} />;
       case "text":
-        return <TextBlockPreview key={block.id} block={block} />;
+        return <TextBlockPreview key={block.id} block={block} answers={answers} questions={questions} />;
       case "separator":
         return <SeparatorBlockPreview key={block.id} block={block} />;
       case "image":

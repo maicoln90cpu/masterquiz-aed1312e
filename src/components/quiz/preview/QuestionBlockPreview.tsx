@@ -34,31 +34,67 @@ const shuffleArray = <T,>(arr: T[], seed: string): T[] => {
 
 export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, onTextChange }: QuestionBlockPreviewProps) => {
   const emojis = block.emojis || [];
+  const optionImages = block.optionImages || []; // ✅ Etapa 2E
   const isInteractive = !!onAnswerSelect;
   const currentSelection = selectedAnswer || [];
   const selectedArray = Array.isArray(currentSelection) ? currentSelection : [currentSelection];
 
-  // ✅ Etapa 2C: Randomizar opções (mantém emojis sincronizados)
-  const { displayOptions, displayEmojis } = useMemo(() => {
+  // ✅ Etapa 2C: Randomizar opções (mantém emojis e imagens sincronizados)
+  const { displayOptions, displayEmojis, displayImages } = useMemo(() => {
     const opts = block.options || (block.answerFormat === 'yes_no' ? ['Sim', 'Não'] : []);
     if (!block.randomizeOptions || opts.length <= 1) {
-      return { displayOptions: opts, displayEmojis: emojis };
+      return { displayOptions: opts, displayEmojis: emojis, displayImages: optionImages };
     }
     const indices = opts.map((_, i) => i);
     const shuffled = shuffleArray(indices, block.id);
     return {
       displayOptions: shuffled.map(i => opts[i]),
       displayEmojis: shuffled.map(i => emojis[i] || ''),
+      displayImages: shuffled.map(i => optionImages[i] || ''),
     };
-  }, [block.options, block.randomizeOptions, block.id, block.answerFormat, emojis]);
+  }, [block.options, block.randomizeOptions, block.id, block.answerFormat, emojis, optionImages]);
 
   const handleOptionClick = (option: string, isMultiple: boolean) => {
     if (onAnswerSelect) onAnswerSelect(option, isMultiple);
   };
 
+  // ✅ Etapa 2E: Detectar se tem imagens para renderizar cards visuais
+  const hasImages = displayImages.some(img => img && img.trim() !== '');
+
   const renderOption = (rawOption: any, idx: number, isMultiple: boolean) => {
     const option = normalizeOption(rawOption);
     const isSelected = selectedArray.includes(option);
+    const image = displayImages[idx];
+
+    // ✅ Etapa 2E: Card visual com imagem
+    if (hasImages && image) {
+      return (
+        <div
+          key={idx}
+          className={`relative overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
+            isSelected ? 'border-primary ring-2 ring-primary/30 shadow-lg' : 'border-muted-foreground/20 hover:border-primary/50 hover:shadow-md'
+          }`}
+          onClick={isInteractive ? () => handleOptionClick(option, isMultiple) : undefined}
+        >
+          <div className="aspect-[4/3] overflow-hidden">
+            <img src={image} alt={option} className="w-full h-full object-cover" loading="lazy" />
+          </div>
+          <div className="p-3 flex items-center gap-2">
+            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-sm">
+              {displayEmojis[idx] || String.fromCharCode(65 + idx)}
+            </div>
+            <span className="font-medium text-sm flex-1">{option}</span>
+            {isSelected && <Check className="h-4 w-4 text-primary" />}
+          </div>
+          {isMultiple ? (
+            <Checkbox id={`${block.id}-${idx}`} checked={isSelected} className="sr-only" />
+          ) : (
+            <RadioGroupItem value={option} id={`${block.id}-${idx}`} className="sr-only" />
+          )}
+        </div>
+      );
+    }
+
     return (
       <div
         key={idx}
@@ -80,6 +116,9 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
       </div>
     );
   };
+
+  // ✅ Etapa 2E: Grid layout when images are present
+  const optionContainerClass = hasImages ? 'grid grid-cols-2 gap-3' : 'space-y-2';
 
   return (
     <div className="space-y-4">
@@ -103,7 +142,7 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
         <RadioGroup
           value={selectedArray[0] || ''}
           onValueChange={isInteractive ? (v) => handleOptionClick(v, false) : undefined}
-          className="space-y-2"
+          className={optionContainerClass}
         >
           {displayOptions.map((rawOption, idx) => renderOption(rawOption, idx, false))}
         </RadioGroup>
@@ -113,14 +152,14 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
         <RadioGroup
           value={selectedArray[0] || ''}
           onValueChange={isInteractive ? (v) => handleOptionClick(v, false) : undefined}
-          className="space-y-2"
+          className={optionContainerClass}
         >
           {displayOptions.map((rawOption, idx) => renderOption(rawOption, idx, false))}
         </RadioGroup>
       )}
 
       {block.answerFormat === "multiple_choice" && displayOptions.length > 0 && (
-        <div className="space-y-2">
+        <div className={optionContainerClass}>
           {displayOptions.map((rawOption, idx) => renderOption(rawOption, idx, true))}
         </div>
       )}

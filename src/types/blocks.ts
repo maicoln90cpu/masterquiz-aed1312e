@@ -56,6 +56,7 @@ export interface QuestionBlock extends BaseBlock {
   autoAdvance?: boolean;
   nextButtonText?: string; // Texto personalizado do botão "Próxima Pergunta"
   randomizeOptions?: boolean; // ✅ Etapa 2C: Randomizar ordem das opções
+  optionImages?: string[]; // ✅ Etapa 2E: Imagem por opção de resposta (cards visuais)
 }
 
 export interface TextBlock extends BaseBlock {
@@ -184,6 +185,8 @@ export interface LoadingBlock extends BaseBlock {
   autoAdvance?: boolean;
   showProgress?: boolean;
   loadingMessages?: string[];
+  progressColor?: string; // ✅ Etapa 2E: Cor customizável da barra de progresso
+  rotateMessages?: boolean; // ✅ Etapa 2E: Mensagens rotativas com fade
 }
 
 export interface ProgressBlock extends BaseBlock {
@@ -253,6 +256,7 @@ export interface TextInputBlock extends BaseBlock {
   maxLength?: number;
   required?: boolean;
   validation?: 'none' | 'email' | 'phone' | 'number';
+  showValidationFeedback?: boolean; // ✅ Etapa 2E: Validação visual em tempo real (borda verde/vermelha)
 }
 
 export interface NPSBlock extends BaseBlock {
@@ -262,6 +266,8 @@ export interface NPSBlock extends BaseBlock {
   highLabel?: string;
   showLabels?: boolean;
   required?: boolean;
+  showComment?: boolean; // ✅ Etapa 2E: Comentário opcional após nota
+  commentPlaceholder?: string; // ✅ Etapa 2E: Placeholder do campo de comentário
 }
 
 export interface AccordionBlock extends BaseBlock {
@@ -374,6 +380,7 @@ export interface AnswerSummaryBlock extends BaseBlock {
   showIcon?: boolean;
   accentColor?: string;
   selectedQuestionIds?: string[];
+  showCopyButton?: boolean; // ✅ Etapa 2E: Botão copiar respostas como texto
 }
 
 export interface ProgressMessageBlock extends BaseBlock {

@@ -1,4 +1,5 @@
-import { ClipboardList, TrendingUp, Users, CheckCircle2, X, Check, ArrowRight, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { ClipboardList, TrendingUp, Users, CheckCircle2, X, Check, ArrowRight, ExternalLink, Copy, CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { QuizBlock } from "@/types/blocks";
@@ -12,6 +13,7 @@ interface AnswerSummaryPreviewProps {
 }
 
 export const AnswerSummaryBlockPreview = ({ block, answers, questions }: AnswerSummaryPreviewProps) => {
+  const [copied, setCopied] = useState(false);
   const hasRuntimeData = answers && questions && Object.keys(answers).length > 0;
 
   const styleClass = block.style === 'minimal' 
@@ -25,20 +27,52 @@ export const AnswerSummaryBlockPreview = ({ block, answers, questions }: AnswerS
     return String(val || '');
   };
 
+  // ✅ Etapa 2E: Copiar respostas como texto
+  const handleCopy = () => {
+    if (!hasRuntimeData) return;
+    const lines = questions!
+      .filter((q) => {
+        const selectedIds = (block as any).selectedQuestionIds;
+        if (selectedIds && selectedIds.length > 0) return selectedIds.includes(q.id);
+        return true;
+      })
+      .map((q) => {
+        const answer = answers![q.id];
+        if (!answer) return null;
+        const questionBlock = q.blocks?.find((b: any) => b.type === 'question') as any;
+        const qText = stripHtml(questionBlock?.questionText || q.question_text);
+        return `${qText}: ${formatAnswer(answer)}`;
+      })
+      .filter(Boolean);
+    
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <div className={styleClass}>
-      {block.title && (
-        <h4 className="text-base font-semibold flex items-center gap-2">
-          {block.showIcon !== false && <ClipboardList className="h-5 w-5 text-primary" />}
-          {block.title}
-        </h4>
-      )}
+      <div className="flex items-center justify-between">
+        {block.title && (
+          <h4 className="text-base font-semibold flex items-center gap-2">
+            {block.showIcon !== false && <ClipboardList className="h-5 w-5 text-primary" />}
+            {block.title}
+          </h4>
+        )}
+        {/* ✅ Etapa 2E: Botão copiar */}
+        {block.showCopyButton && hasRuntimeData && (
+          <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 gap-1 text-xs">
+            {copied ? <CheckCheck className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? 'Copiado!' : 'Copiar'}
+          </Button>
+        )}
+      </div>
 
       {hasRuntimeData ? (
         <div className="space-y-2">
           {questions!
             .filter((q) => {
-              // Filter by selectedQuestionIds if defined
               const selectedIds = (block as any).selectedQuestionIds;
               if (selectedIds && selectedIds.length > 0) {
                 return selectedIds.includes(q.id);
