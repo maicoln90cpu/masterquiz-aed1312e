@@ -57,6 +57,8 @@ export interface QuestionBlock extends BaseBlock {
   nextButtonText?: string; // Texto personalizado do botão "Próxima Pergunta"
   randomizeOptions?: boolean; // ✅ Etapa 2C: Randomizar ordem das opções
   optionImages?: string[]; // ✅ Etapa 2E: Imagem por opção de resposta (cards visuais)
+  optionImageLayout?: '1x4' | '2x2' | '4x1'; // Layout dos cards com imagem
+  optionImageSize?: 'tiny' | 'small' | 'medium' | 'large'; // Tamanho das imagens nas opções
 }
 
 export interface TextBlock extends BaseBlock {
@@ -66,7 +68,7 @@ export interface TextBlock extends BaseBlock {
   fontSize?: 'small' | 'medium' | 'large';
   imageUrl?: string;
   imagePosition?: 'above' | 'below';
-  imageSize?: 'small' | 'medium' | 'large' | 'full';
+  imageSize?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
   imageAlignment?: 'left' | 'center' | 'right';
 }
 
@@ -83,7 +85,7 @@ export interface ImageBlock extends BaseBlock {
   url: string;
   alt?: string;
   caption?: string;
-  size?: 'small' | 'medium' | 'large' | 'full';
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
   enableLightbox?: boolean; // ✅ Etapa 2F: Clicar para expandir em tela cheia
 }
 
@@ -92,7 +94,7 @@ export interface VideoBlock extends BaseBlock {
   url: string;
   provider?: 'youtube' | 'vimeo' | 'direct' | 'uploaded' | 'bunny_stream' | 'loom'; // ✅ Etapa 2C: Loom support
   caption?: string;
-  size?: 'small' | 'medium' | 'large' | 'full';
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
   // Configurações de reprodução
   autoplay?: boolean;           // Iniciar automaticamente
   muted?: boolean;              // Iniciar mutado (necessário para autoplay)

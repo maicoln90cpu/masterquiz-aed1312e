@@ -35,6 +35,28 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// Mock AuthContext - used by useUserRole and many components
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: null,
+    session: null,
+    loading: false,
+  }),
+  AuthProvider: ({ children }: any) => children,
+}));
+
+// Mock useUserRole - used by usePlanFeatures, useSubscriptionLimits, etc.
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => ({
+    roles: [],
+    loading: false,
+    hasRole: () => false,
+    isMasterAdmin: false,
+    isAdmin: false,
+    isUser: false,
+  }),
+}));
+
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

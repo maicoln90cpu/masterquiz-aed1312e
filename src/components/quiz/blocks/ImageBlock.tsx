@@ -13,6 +13,7 @@ interface ImageBlockProps {
 
 export const ImageBlock = ({ block, onChange }: ImageBlockProps) => {
   const sizeClass =
+    block.size === 'tiny' ? 'max-w-[120px]' :
     block.size === 'small' ? 'max-w-xs' :
     block.size === 'large' ? 'max-w-2xl' :
     block.size === 'full' ? 'w-full' :

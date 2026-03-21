@@ -40,6 +40,7 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
   }
 
   const imageSizeClass = {
+    tiny: 'max-w-[120px]',
     small: 'max-w-[200px]',
     medium: 'max-w-[400px]',
     large: 'max-w-[600px]',
@@ -116,7 +117,8 @@ export const ImageBlockPreview = ({ block }: { block: QuizBlock & { type: 'image
 
   if (!block.url) return null;
 
-  const sizeClass = block.size === "small" ? "max-w-xs"
+  const sizeClass = block.size === "tiny" ? "max-w-[120px]"
+    : block.size === "small" ? "max-w-xs"
     : block.size === "large" ? "max-w-2xl"
     : block.size === "full" ? "w-full"
     : "max-w-md";

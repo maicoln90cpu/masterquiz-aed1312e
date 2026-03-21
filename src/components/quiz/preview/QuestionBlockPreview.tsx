@@ -54,6 +54,10 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
     };
   }, [block.options, block.randomizeOptions, block.id, block.answerFormat, emojis, optionImages]);
 
+  // ✅ Layout and size from block properties
+  const optionImageLayout = (block as any).optionImageLayout || '2x2';
+  const optionImageSize = (block as any).optionImageSize || 'medium';
+
   const handleOptionClick = (option: string, isMultiple: boolean) => {
     if (onAnswerSelect) onAnswerSelect(option, isMultiple);
   };
@@ -65,6 +69,7 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
     const option = normalizeOption(rawOption);
     const isSelected = selectedArray.includes(option);
     const image = displayImages[idx];
+    const imageAspect = optionImageSize === 'tiny' ? 'aspect-[4/2]' : optionImageSize === 'small' ? 'aspect-[4/2.5]' : optionImageSize === 'large' ? 'aspect-[4/4]' : 'aspect-[4/3]';
 
     // ✅ Etapa 2E: Card visual com imagem
     if (hasImages && image) {
@@ -76,7 +81,7 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
           }`}
           onClick={isInteractive ? () => handleOptionClick(option, isMultiple) : undefined}
         >
-          <div className="aspect-[4/3] overflow-hidden">
+          <div className={`${imageAspect} overflow-hidden`}>
             <img src={image} alt={option} className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="p-3 flex items-center gap-2">
@@ -118,7 +123,11 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
   };
 
   // ✅ Etapa 2E: Grid layout when images are present
-  const optionContainerClass = hasImages ? 'grid grid-cols-2 gap-3' : 'space-y-2';
+  const optionContainerClass = hasImages
+    ? optionImageLayout === '1x4' ? 'space-y-2'
+    : optionImageLayout === '4x1' ? 'grid grid-cols-4 gap-3'
+    : 'grid grid-cols-2 gap-3'
+    : 'space-y-2';
 
   return (
     <div className="space-y-4">
