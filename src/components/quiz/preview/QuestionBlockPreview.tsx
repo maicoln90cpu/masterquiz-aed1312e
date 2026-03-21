@@ -69,6 +69,7 @@ export const QuestionBlockPreview = ({ block, selectedAnswer, onAnswerSelect, on
     const option = normalizeOption(rawOption);
     const isSelected = selectedArray.includes(option);
     const image = displayImages[idx];
+    const imageAspect = optionImageSize === 'tiny' ? 'aspect-[4/2]' : optionImageSize === 'small' ? 'aspect-[4/2.5]' : optionImageSize === 'large' ? 'aspect-[4/4]' : 'aspect-[4/3]';
 
     // ✅ Etapa 2E: Card visual com imagem
     if (hasImages && image) {
