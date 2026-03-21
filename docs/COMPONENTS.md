@@ -38,10 +38,20 @@
 
 ### `CreateQuiz` — `/create` e `/edit/:id`
 - **Arquivo:** `src/pages/CreateQuiz.tsx`
-- **Descrição:** Orquestra o editor de quiz em 5 steps (template, aparência, perguntas, formulário, resultados)
+- **Descrição:** Thin router que delega para `CreateQuizClassic` ou `CreateQuizModern` baseado em `useEditorLayout`
+- **Padrão:** Lazy loading via `React.lazy` + `Suspense` — nenhum hook pesado neste arquivo
+- **Dependências:** useEditorLayout
+
+### `CreateQuizClassic` — Editor clássico 5 steps
+- **Arquivo:** `src/pages/CreateQuizClassic.tsx`
+- **Descrição:** Editor original com 5 steps (template, aparência, perguntas, formulário, resultados)
 - **Hooks:** useQuizState, useQuizPersistence, useHistory, useAutoSave
 - **Eventos GTM:** QuizShared, EditorAbandoned
-- **Dependências:** @dnd-kit, react-quill
+
+### `CreateQuizModern` — Editor moderno com sidebar
+- **Arquivo:** `src/pages/CreateQuizModern.tsx`
+- **Descrição:** Editor com sidebar de blocos, preview lateral e paleta compacta
+- **Hooks:** useQuizState, useQuizPersistence, useHistory, useAutoSave
 
 ### `QuizView` — `/:company/:slug`
 - **Arquivo:** `src/pages/QuizView.tsx`
