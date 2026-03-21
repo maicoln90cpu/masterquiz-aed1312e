@@ -94,7 +94,7 @@ export interface VideoBlock extends BaseBlock {
   url: string;
   provider?: 'youtube' | 'vimeo' | 'direct' | 'uploaded' | 'bunny_stream' | 'loom'; // ✅ Etapa 2C: Loom support
   caption?: string;
-  size?: 'small' | 'medium' | 'large' | 'full';
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
   // Configurações de reprodução
   autoplay?: boolean;           // Iniciar automaticamente
   muted?: boolean;              // Iniciar mutado (necessário para autoplay)
