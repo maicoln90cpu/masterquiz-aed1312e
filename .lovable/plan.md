@@ -1,81 +1,124 @@
 
 
-## Plan: Fix All Remaining Test Failures
+## Plan: Documentation Overhaul v2.37 + Knowledge Prompt
 
-The remaining failures fall into clear categories. Here's the fix strategy for each.
+### Summary
 
----
-
-### Category 1: `useUserRole.test.tsx` — Global mock conflict
-
-**Problem**: The test file uses `vi.unmock` pattern with `AuthProvider` but the global `setup.ts` mocks `@/contexts/AuthContext`. The test already defines its own supabase mock but needs to explicitly unmock `useUserRole` (since `setup.ts` mocks it globally) and `AuthContext`.
-
-**Fix**: Add `vi.unmock('@/hooks/useUserRole')` and `vi.unmock('@/contexts/AuthContext')` at the top of `useUserRole.test.tsx`, similar to how `AuthContext.test.tsx` does it. Also need to add `supabase.functions` and `supabase.rpc` to the local supabase mock so `AuthProvider` doesn't crash.
+Update all 10 markdown files to reflect current state (v2.37, 34 block types, thin router pattern, image options in published quiz, re-enabled templates, test suite fixes). Move `README.md` reference to `docs/`, rename `blocks.md` to `BLOCKS.md`, create a new `TESTING.md`, and generate a knowledge prompt.
 
 ---
 
-### Category 2: `Analytics.test.tsx` — Missing `DashboardLayout` and hook mocks
+### Answer: "0 criados, 1 publicado" Paradox
 
-**Problem**: `Analytics` imports `DashboardLayout`, `useTrackPageView`, `useOnboarding`, and other components that use `useAuth` internally. The global mock provides `useAuth` with `user: null`, so authenticated-only UI doesn't render.
+This is **by design** in the code, not a bug. The two events have **different conditions**:
 
-**Fix**: 
-- Add `vi.mock('@/contexts/AuthContext')` override with authenticated user (like CRM/Dashboard already do)
-- Add `vi.mock('@/components/DashboardLayout')` to render children directly
-- Add `vi.mock('@/hooks/useUserStage')` to stub `useTrackPageView`
+- `quiz_first_published` fires **always** when publishing for the first time (line 370: `if (earlyStages.includes(currentStage))`)
+- `first_quiz_created` fires **only if** `hasUserInteracted === true` (line 382: `if (earlyStages.includes(currentStage) && hasUserInteracted)`)
 
----
+So if someone used AI generation or Express mode (auto-generated quiz published without manual editing), the `hasUserInteracted` flag stays `false`, and `first_quiz_created` never fires. The published event fires regardless. This means a user can publish without "creating" in the tracking sense. The naming is misleading — `first_quiz_created` actually means "first quiz manually edited", not "first quiz record created in DB".
 
-### Category 3: `CRM.test.tsx` — Missing `DashboardLayout` and `useTrackPageView` mocks
-
-**Problem**: Same as Analytics. `CRM` uses `DashboardLayout` which has `DashboardSidebar` → complex component tree needing auth.
-
-**Fix**: Add `vi.mock('@/components/DashboardLayout')` and `vi.mock('@/hooks/useUserStage')` mocks.
+**Recommendation**: Rename the event label in `PQLAnalytics.tsx` from "Primeiro Quiz Criado" to "Primeiro Quiz Editado Manualmente" to avoid confusion, or change the A/B table to clarify this distinction.
 
 ---
 
-### Category 4: `Dashboard.test.tsx` — Missing `DashboardLayout` mock
+### File Changes
 
-**Problem**: Same pattern. The Dashboard component renders `DashboardLayout` which crashes without proper sidebar/auth context.
+#### 1. Rename `docs/blocks.md` → `docs/BLOCKS.md`
+- Delete `docs/blocks.md`, create `docs/BLOCKS.md` with same content updated to 34 block types (add `calculator` if missing from catalog)
 
-**Fix**: Add `vi.mock('@/components/DashboardLayout')` and `vi.mock('@/hooks/useUserStage')`.
+#### 2. Update `README.md`
+- Version bump to 2.37.0, date to 21/03/2026
+- Update "22 tipos de blocos" → "34 tipos de blocos" throughout
+- Update "57 funções" Edge Functions count if changed
+- Add `docs/BLOCKS.md` to documentation table
+- Update features list: add "Image options in published quiz", "34 block types", "Classic/Modern editor modes"
+- Add `CreateQuizClassic` and `CreateQuizModern` to architecture tree
+- Update test count references
+
+#### 3. Update `docs/PENDENCIAS.md`
+- Add v2.37.0 entry with all recent changes:
+  - Image options support in published quiz (optionImages, optionImageLayout, optionImageSize)
+  - Re-enabled 14 templates (removed disabledTemplateIds)
+  - CreateQuiz thin router pattern (Classic/Modern split)
+  - Test suite stabilization (~22 fixes across 10 suites)
+  - New block types: calculator, recommendation, conditionalText, comparisonResult, personalizedCTA, answerSummary, progressMessage, avatarGroup, callout, iconList, quote, badgeRow, banner
+- Update pending items list
+
+#### 4. Update `docs/ROADMAP.md`
+- Version bump to 2.37
+- Add H1 2026 completed items: 34 block types, Classic/Modern editor, image options in quiz view, test stabilization
+- Update KPIs if needed
+
+#### 5. Update `docs/PRD.md`
+- Version bump to 2.37
+- Add RF02.13: Image options per answer (optionImages, optionImageLayout)
+- Add RF02.14: Classic/Modern editor modes
+- Update block count from 22 to 34
+- Update test suite table with current counts
+
+#### 6. Update `docs/SYSTEM_DESIGN.md`
+- Version bump to 2.37
+- Update "Sistema de Blocos (22 tipos)" → "Sistema de Blocos (34 tipos)"
+- Update BlockType union to include all 34 types
+- Add CreateQuiz thin router architecture diagram
+- Add image options data flow in published quiz
+
+#### 7. Update `docs/COMPONENTS.md`
+- Version bump to 2.37
+- Add `CreateQuizClassic` and `CreateQuizModern` entries
+- Update BlockEditor from "22 tipos" to "34 tipos"
+- Add new block preview components (VisualBlockPreviews, DynamicBlockPreviews, RecommendationBlockPreview)
+
+#### 8. Update `docs/API_DOCS.md`
+- Version bump to 2.37 (content likely unchanged unless new edge functions added)
+
+#### 9. Update `docs/STYLE_GUIDE.md`
+- Version bump to 2.37
+- Add pattern: thin router for heavy pages (CreateQuiz example)
+
+#### 10. Update `docs/CHECKLIST.md`
+- Add checklist items for image options in quiz answers
+- Add checklist for Classic vs Modern editor mode selection
+- Add checklist for new block types
+
+#### 11. Update `docs/BLOCKS.md` (renamed from blocks.md)
+- Ensure all 34 block types documented
+- Update version to 2.37
+
+#### 12. Create `docs/TESTING.md` (NEW)
+- Document test infrastructure: setup.ts global mocks, test-utils.tsx wrappers
+- Patterns: vi.unmock for real provider tests, DashboardLayout mock pattern
+- Known mock requirements per component type
+- How to run tests, coverage thresholds
+
+#### 13. Update `docs/AUDIT_TEMPLATE.md`
+- Minor: add "Block type coverage" audit item
+
+#### 14. Fix cross-references
+- `PENDENCIAS.md` line 407 has broken link `./docs/SYSTEM_DESIGN.md` (should be `./SYSTEM_DESIGN.md` since it's already in docs/)
+- `README.md` links to `./docs/` paths (correct since it's in root)
+- All docs/* files should reference siblings with `./` not `../docs/`
+
+#### 15. Fix A/B label in `PQLAnalytics.tsx`
+- Change "Primeiro Quiz Criado" → "Primeiro Quiz Editado" to clarify the `hasUserInteracted` condition
 
 ---
 
-### Category 5: `UnifiedQuizPreview.test.tsx` — Assertion mismatches
+### Knowledge Prompt (delivered in chat after implementation)
 
-**Problem**: Tests assert `getByLabelText('Sim')` but the component may render options differently (as buttons/divs, not as `<label>` + `<input>`). Also progress text format may differ.
-
-**Fix**: Read `UnifiedQuizPreview.tsx` to verify how options are rendered, then adjust assertions to match (e.g., `getByText` instead of `getByLabelText`, correct progress format).
-
----
-
-### Category 6: `DashboardTour.test.tsx` and `Onboarding.test.tsx` — `test-utils` wrapper
-
-**Problem**: These use `@/__tests__/test-utils` which wraps in `MockAuthProvider` (not the real one), so `useAuth` calls still use the global mock returning `null`. Should work but may have import conflicts with the global mock.
-
-**Fix**: Verify these pass or add minimal fixes if they fail on specific assertions.
+Will provide a comprehensive prompt covering:
+- Project identity and paradigm
+- Architecture (thin router, 34 blocks, dual editor)
+- All document locations and purposes
+- Post-implementation checklist template
+- Advantages/disadvantages analysis pattern
 
 ---
 
-### Category 7: `QuizView.test.tsx` — `test-utils` wrapper + assertion format
+### Technical Details
 
-**Problem**: Uses `@/__tests__/test-utils` and renders `QuizView` in preview mode. The `rpc` mock from the local supabase mock is missing, causing `get_quiz_for_display` call to fail.
-
-**Fix**: Already has local supabase mock with `functions.invoke`. Verify assertions match current rendering.
-
----
-
-### Files to modify
-
-| File | Change |
-|------|--------|
-| `src/hooks/__tests__/useUserRole.test.tsx` | Add `vi.unmock` for AuthContext and useUserRole, expand supabase mock |
-| `src/pages/__tests__/Analytics.test.tsx` | Add DashboardLayout mock, AuthContext override, useUserStage mock |
-| `src/pages/__tests__/CRM.test.tsx` | Add DashboardLayout mock, useUserStage mock |
-| `src/pages/__tests__/Dashboard.test.tsx` | Add DashboardLayout mock, useUserStage mock |
-| `src/components/quiz/__tests__/UnifiedQuizPreview.test.tsx` | Adjust assertions to match actual rendering |
-| Other test files | Minor mock additions as needed |
-
-### Approach
-Fix all files in parallel, targeting the specific mock gaps identified above. No production code changes needed.
+- No production logic changes except the PQLAnalytics label fix
+- All changes are documentation + one string rename
+- Cross-reference validation across all 12 docs
+- Estimated: ~12 files modified/created
 
