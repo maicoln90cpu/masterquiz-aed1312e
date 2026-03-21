@@ -2,14 +2,22 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useQuizTracking } from '../useQuizTracking';
 
+// Polyfill requestIdleCallback for jsdom
+if (!('requestIdleCallback' in window)) {
+  (window as any).requestIdleCallback = (cb: Function) => setTimeout(cb, 0);
+  (window as any).cancelIdleCallback = (id: number) => clearTimeout(id);
+}
+
 describe('useQuizTracking', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     (window as any).dataLayer = undefined;
     (window as any).fbq = undefined;
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     const elements = document.querySelectorAll('[id*="pixel"], [id*="gtm"], [id*="quiz-fb"]');
     elements.forEach(el => el.remove());
   });
@@ -119,14 +127,17 @@ describe('useQuizTracking', () => {
     }).not.toThrow();
   });
 
-  // ✅ NEW: GTM should load even if pixel ID is invalid
   it('should load GTM even if pixel ID is invalid', () => {
-    const { result } = renderHook(() =>
+    renderHook(() =>
       useQuizTracking({
         quiz: { id: 'quiz-1', title: 'Test Quiz' } as any,
         quizOwnerProfile: { facebook_pixel_id: 'INVALID', gtm_container_id: 'GTM-ABC1234' }
       })
     );
+
+    // Flush all timers (requestIdleCallback polyfill uses setTimeout)
+    vi.runAllTimers();
+
     // GTM should have injected quiz_view event
     expect((window as any).dataLayer).toContainEqual(
       expect.objectContaining({ event: 'quiz_view', quiz_id: 'quiz-1' })
@@ -135,9 +146,7 @@ describe('useQuizTracking', () => {
     expect(document.getElementById('quiz-gtm-script')).not.toBeNull();
   });
 
-  // ✅ NEW: Pixel should not duplicate if global pixel has same ID
   it('should not inject pixel if global pixel has same ID', () => {
-    // Simulate global pixel already present
     const globalScript = document.createElement('script');
     globalScript.id = 'global-fb-pixel-script';
     globalScript.textContent = `fbq('init', '1234567890123456');`;
@@ -150,10 +159,9 @@ describe('useQuizTracking', () => {
       })
     );
 
-    // Should NOT have created a quiz-specific pixel script
-    expect(document.getElementById('quiz-fb-pixel-script')).toBeNull();
+    vi.runAllTimers();
 
-    // Cleanup
+    expect(document.getElementById('quiz-fb-pixel-script')).toBeNull();
     globalScript.remove();
   });
 });

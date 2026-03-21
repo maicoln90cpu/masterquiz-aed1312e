@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // Mock dependencies
-vi.mock('@/integrations/supabase/client');
+// Supabase mock is provided by global setup.ts
 vi.mock('sonner', () => ({
   toast: {
     error: vi.fn(),

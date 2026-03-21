@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AudioUploader } from '../AudioUploader';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,10 +101,12 @@ describe('AudioUploader - FASE 5', () => {
       const file = new File(['text'], 'test.txt', { type: 'text/plain' });
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
 
-      await userEvent.upload(input, file);
+      // Use fireEvent to bypass the accept attribute filtering
+      fireEvent.change(input, { target: { files: [file] } });
 
-      // toast.error is called with i18n key
-      expect(toast.error).toHaveBeenCalledWith('components.uploaders.audio.formatNotSupported');
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('components.uploaders.audio.formatNotSupported');
+      });
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 

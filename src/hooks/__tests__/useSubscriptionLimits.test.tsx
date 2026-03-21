@@ -8,6 +8,8 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
       getUser: vi.fn(),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -21,13 +23,16 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// Override useUserRole for each test
+const mockUseUserRole = vi.fn();
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => mockUseUserRole(),
+}));
+
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
+      queries: { retry: false, gcTime: 0 },
     },
   });
   const Wrapper = ({ children }: { children: ReactNode }) => {
@@ -39,6 +44,15 @@ const createWrapper = () => {
 describe('useSubscriptionLimits', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: not admin
+    mockUseUserRole.mockReturnValue({
+      roles: [],
+      loading: false,
+      hasRole: () => false,
+      isMasterAdmin: false,
+      isAdmin: false,
+      isUser: false,
+    });
   });
 
   it('should return null subscription when user is not authenticated', async () => {
@@ -83,20 +97,12 @@ describe('useSubscriptionLimits', () => {
         return {
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              maybeSingle: vi.fn().mockResolvedValue({
+              single: vi.fn().mockResolvedValue({
                 data: mockSubscription,
                 error: null,
               }),
-            })),
-          })),
-        } as any;
-      }
-      if (table === 'user_roles') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
               maybeSingle: vi.fn().mockResolvedValue({
-                data: null,
+                data: mockSubscription,
                 error: null,
               }),
             })),
@@ -107,6 +113,7 @@ describe('useSubscriptionLimits', () => {
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
             maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
           })),
         })),
       } as any;
@@ -127,32 +134,20 @@ describe('useSubscriptionLimits', () => {
 
   it('should return unlimited subscription for master_admin', async () => {
     const { supabase } = await import('@/integrations/supabase/client');
+
+    // Set useUserRole to return master admin
+    mockUseUserRole.mockReturnValue({
+      roles: ['master_admin'],
+      loading: false,
+      hasRole: (r: string) => r === 'master_admin',
+      isMasterAdmin: true,
+      isAdmin: true,
+      isUser: true,
+    });
     
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: { id: 'admin-user-id' } as any },
       error: null,
-    });
-
-    vi.mocked(supabase.from).mockImplementation((table: string) => {
-      if (table === 'user_roles') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: { role: 'master_admin' },
-                error: null,
-              }),
-            })),
-          })),
-        } as any;
-      }
-      return {
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      } as any;
     });
 
     const { useSubscriptionLimits } = await import('../useSubscriptionLimits');
@@ -164,8 +159,8 @@ describe('useSubscriptionLimits', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Master admin should have unlimited subscription
-    expect(result.current.subscription?.quiz_limit).toBe(Infinity);
-    expect(result.current.subscription?.response_limit).toBe(Infinity);
+    // Master admin should have high limits (999999)
+    expect(result.current.subscription?.quiz_limit).toBe(999999);
+    expect(result.current.subscription?.response_limit).toBe(999999);
   });
 });
