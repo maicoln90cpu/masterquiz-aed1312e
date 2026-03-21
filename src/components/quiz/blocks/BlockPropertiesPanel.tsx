@@ -889,6 +889,8 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
             <SelectItem value="email">Email</SelectItem>
             <SelectItem value="phone">Telefone</SelectItem>
             <SelectItem value="number">Número</SelectItem>
+            <SelectItem value="cpf">CPF</SelectItem>
+            <SelectItem value="cnpj">CNPJ</SelectItem>
           </SelectContent>
         </Select>
       </PropertySection>
