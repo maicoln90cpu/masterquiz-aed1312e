@@ -393,6 +393,8 @@ const SeparatorProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
           </PropertySection>
         </>
       )}
+      {/* ✅ Etapa 2F: Animação fade-in */}
+      <SwitchRow label="Animação fade-in" checked={(block as any).animateFade || false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
     </div>
   );
 };
@@ -418,6 +420,8 @@ const ImageProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
+      {/* ✅ Etapa 2F: Lightbox ao clicar */}
+      <SwitchRow label="Expandir ao clicar (Lightbox)" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
     </div>
   );
 };
@@ -513,6 +517,8 @@ const GalleryProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
+      {/* ✅ Etapa 2F: Lightbox ao clicar */}
+      <SwitchRow label="Lightbox ao clicar" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
     </div>
   );
 };
@@ -703,6 +709,7 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
             <SelectItem value="minimal">Minimal</SelectItem>
             <SelectItem value="bold">Bold</SelectItem>
             <SelectItem value="card">Card</SelectItem>
+            <SelectItem value="flip">🔄 Flip Clock</SelectItem>
           </SelectContent>
         </Select>
       </PropertySection>
@@ -740,6 +747,7 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
 
 const TestimonialProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'testimonial') return null;
+  const additional = (block as any).additionalTestimonials || [];
   return (
     <div className="space-y-4">
       <PropertySection title="Nome do Autor">
@@ -769,6 +777,57 @@ const TestimonialProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
         <Input type="color" value={block.primaryColor || '#3b82f6'} onChange={(e) => onChange(update(block, { primaryColor: e.target.value }))} />
       </PropertySection>
       <SwitchRow label="Mostrar avaliação" checked={block.showRating || false} onChange={(v) => onChange(update(block, { showRating: v }))} />
+
+      {/* ✅ Etapa 2F: Carrossel de depoimentos */}
+      <Separator />
+      <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground">
+        <p className="font-medium text-foreground text-xs mb-1">📋 Depoimentos adicionais (carrossel)</p>
+        <p>Adicione mais depoimentos para criar um carrossel com auto-slide e dots de navegação.</p>
+      </div>
+      {additional.map((t: any, idx: number) => (
+        <div key={idx} className="border rounded-md p-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium">Depoimento {idx + 2}</span>
+            <button type="button" className="text-xs text-destructive" onClick={() => {
+              const newList = additional.filter((_: any, i: number) => i !== idx);
+              onChange(update(block, { additionalTestimonials: newList }));
+            }}>✕</button>
+          </div>
+          <textarea
+            className="w-full min-h-[60px] px-2 py-1 border rounded text-xs bg-background resize-none"
+            placeholder="Citação..."
+            value={t.quote || ''}
+            onChange={(e) => {
+              const newList = [...additional];
+              newList[idx] = { ...t, quote: e.target.value };
+              onChange(update(block, { additionalTestimonials: newList }));
+            }}
+          />
+          <Input className="h-7 text-xs" placeholder="Nome do autor" value={t.authorName || ''} onChange={(e) => {
+            const newList = [...additional];
+            newList[idx] = { ...t, authorName: e.target.value };
+            onChange(update(block, { additionalTestimonials: newList }));
+          }} />
+          <Input className="h-7 text-xs" placeholder="Cargo (opcional)" value={t.authorRole || ''} onChange={(e) => {
+            const newList = [...additional];
+            newList[idx] = { ...t, authorRole: e.target.value };
+            onChange(update(block, { additionalTestimonials: newList }));
+          }} />
+        </div>
+      ))}
+      <button type="button" className="text-xs text-primary underline" onClick={() => {
+        onChange(update(block, { additionalTestimonials: [...additional, { quote: '', authorName: '' }] }));
+      }}>+ Adicionar depoimento</button>
+      {additional.length > 0 && (
+        <>
+          <SwitchRow label="Auto-slide" checked={(block as any).autoSlide || false} onChange={(v) => onChange(update(block, { autoSlide: v }))} />
+          {(block as any).autoSlide && (
+            <PropertySection title="Intervalo (segundos)">
+              <Input type="number" min={2} max={15} value={(block as any).slideInterval || 5} onChange={(e) => onChange(update(block, { slideInterval: Number(e.target.value) }))} />
+            </PropertySection>
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -830,6 +889,8 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
             <SelectItem value="email">Email</SelectItem>
             <SelectItem value="phone">Telefone</SelectItem>
             <SelectItem value="number">Número</SelectItem>
+            <SelectItem value="cpf">CPF</SelectItem>
+            <SelectItem value="cnpj">CNPJ</SelectItem>
           </SelectContent>
         </Select>
       </PropertySection>
@@ -842,6 +903,10 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
         {/* ✅ Etapa 2E: Validação visual em tempo real */}
         {block.validation && block.validation !== 'none' && (
           <SwitchRow label="Feedback visual de validação" checked={block.showValidationFeedback || false} onChange={(v) => onChange(update(block, { showValidationFeedback: v }))} />
+        )}
+        {/* ✅ Etapa 2F: Máscara de input */}
+        {(block.validation === 'cpf' || block.validation === 'cnpj' || block.validation === 'phone') && (
+          <SwitchRow label="Máscara automática" checked={(block as any).useMask || false} onChange={(v) => onChange(update(block, { useMask: v }))} />
         )}
       </div>
     </div>
@@ -1115,6 +1180,15 @@ const EmbedProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
     <div className="space-y-4">
       <PropertySection title="Provider">
         <Input value={block.provider || ''} placeholder="Detectado automaticamente" onChange={(e) => onChange(update(block, { provider: e.target.value }))} />
+      </PropertySection>
+      {/* ✅ Etapa 2F: Whitelist de domínios */}
+      <PropertySection title="Domínios permitidos">
+        <Input
+          value={((block as any).allowedDomains || []).join(', ')}
+          placeholder="google.com, youtube.com (vazio = todos)"
+          onChange={(e) => onChange(update(block, { allowedDomains: e.target.value ? e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [] }))}
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">Separe domínios por vírgula. Vazio = aceitar todos.</p>
       </PropertySection>
     </div>
   );
@@ -1939,6 +2013,33 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
 
   return (
     <div className="space-y-4">
+      {/* ✅ Etapa 2F: Templates de fórmula prontos */}
+      <PropertySection title="Template de fórmula">
+        <Select value={(block as any).formulaTemplate || '_custom'} onValueChange={(v) => {
+          const templates: Record<string, { formula: string; vars: any[]; unit: string; label: string }> = {
+            imc: { formula: 'peso / (altura * altura)', vars: [{ id: 'v-peso', name: 'peso', defaultValue: 70 }, { id: 'v-altura', name: 'altura', defaultValue: 1.75 }], unit: 'kg/m²', label: 'IMC' },
+            roi: { formula: '((ganho - investimento) / investimento) * 100', vars: [{ id: 'v-ganho', name: 'ganho', defaultValue: 10000 }, { id: 'v-investimento', name: 'investimento', defaultValue: 5000 }], unit: '%', label: 'ROI' },
+            economia: { formula: '(valorAtual - valorNovo) * 12', vars: [{ id: 'v-atual', name: 'valorAtual', defaultValue: 500 }, { id: 'v-novo', name: 'valorNovo', defaultValue: 300 }], unit: 'R$/ano', label: 'Economia Anual' },
+            retorno: { formula: 'investimento / economiaMensal', vars: [{ id: 'v-invest', name: 'investimento', defaultValue: 10000 }, { id: 'v-econ', name: 'economiaMensal', defaultValue: 2000 }], unit: 'meses', label: 'Tempo de Retorno' },
+          };
+          if (v !== '_custom' && templates[v]) {
+            const t = templates[v];
+            onChange(update(block, { formulaTemplate: v, formula: t.formula, variables: t.vars, resultUnit: t.unit, resultLabel: t.label }));
+          } else {
+            onChange(update(block, { formulaTemplate: v }));
+          }
+        }}>
+          <SelectTrigger><SelectValue placeholder="Personalizada" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_custom">Personalizada</SelectItem>
+            <SelectItem value="imc">📊 IMC (peso/altura²)</SelectItem>
+            <SelectItem value="roi">💰 ROI (%)</SelectItem>
+            <SelectItem value="economia">💵 Economia Anual</SelectItem>
+            <SelectItem value="retorno">⏱️ Tempo de Retorno</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+
       <PropertySection title="Fórmula">
         <Input
           value={block.formula || ''}

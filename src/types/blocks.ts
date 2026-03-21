@@ -71,6 +71,7 @@ export interface SeparatorBlock extends BaseBlock {
   style?: 'line' | 'dots' | 'dashes' | 'space';
   color?: string;
   thickness?: 'thin' | 'medium' | 'thick';
+  animateFade?: boolean; // ✅ Etapa 2F: Animação fade-in ao aparecer
 }
 
 export interface ImageBlock extends BaseBlock {
@@ -79,6 +80,7 @@ export interface ImageBlock extends BaseBlock {
   alt?: string;
   caption?: string;
   size?: 'small' | 'medium' | 'large' | 'full';
+  enableLightbox?: boolean; // ✅ Etapa 2F: Clicar para expandir em tela cheia
 }
 
 export interface VideoBlock extends BaseBlock {
@@ -122,6 +124,7 @@ export interface GalleryBlock extends BaseBlock {
     caption?: string;
   }[];
   layout?: 'grid' | 'carousel' | 'masonry';
+  enableLightbox?: boolean; // ✅ Etapa 2F: Lightbox ao clicar
 }
 
 export interface EmbedBlock extends BaseBlock {
@@ -129,6 +132,8 @@ export interface EmbedBlock extends BaseBlock {
   url: string;
   html?: string;
   provider?: string;
+  allowedDomains?: string[]; // ✅ Etapa 2F: Whitelist de domínios permitidos
+  showPreview?: boolean; // ✅ Etapa 2F: Preview inline no editor
 }
 
 export interface ButtonBlock extends BaseBlock {
@@ -211,7 +216,7 @@ export interface CountdownBlock extends BaseBlock {
   showHours?: boolean;
   showMinutes?: boolean;
   showSeconds?: boolean;
-  style?: 'default' | 'minimal' | 'bold' | 'card';
+  style?: 'default' | 'minimal' | 'bold' | 'card' | 'flip'; // ✅ Etapa 2F: Flip-clock style
   expiryMessage?: string;
   expiryAction?: 'none' | 'hide' | 'redirect';
   redirectUrl?: string;
@@ -231,6 +236,17 @@ export interface TestimonialBlock extends BaseBlock {
   style?: 'default' | 'minimal' | 'card' | 'quote';
   primaryColor?: string;
   secondaryColor?: string;
+  // ✅ Etapa 2F: Carrossel de depoimentos
+  additionalTestimonials?: {
+    quote: string;
+    authorName: string;
+    authorRole?: string;
+    authorCompany?: string;
+    authorImage?: string;
+    rating?: number;
+  }[];
+  autoSlide?: boolean;
+  slideInterval?: number; // em segundos
 }
 
 export interface SliderBlock extends BaseBlock {
@@ -255,8 +271,9 @@ export interface TextInputBlock extends BaseBlock {
   multiline?: boolean;
   maxLength?: number;
   required?: boolean;
-  validation?: 'none' | 'email' | 'phone' | 'number';
+  validation?: 'none' | 'email' | 'phone' | 'number' | 'cpf' | 'cnpj'; // ✅ Etapa 2F: +CPF/CNPJ
   showValidationFeedback?: boolean; // ✅ Etapa 2E: Validação visual em tempo real (borda verde/vermelha)
+  useMask?: boolean; // ✅ Etapa 2F: Máscara automática de input
 }
 
 export interface NPSBlock extends BaseBlock {
@@ -482,6 +499,8 @@ export interface CalculatorBlock extends BaseBlock {
     label: string;
     color?: string;
   }[];
+  formulaTemplate?: string; // ✅ Etapa 2F: Template de fórmula pré-configurada
+  showGauge?: boolean; // ✅ Etapa 2F: Exibir resultado como gauge visual
 }
 
 export type QuizBlock =

@@ -218,75 +218,150 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
     );
   }
 
-  const TimeUnit = ({ value, label }: { value: number; label: string }) => (
-    <div className={`text-center ${
-      block.style === 'card' ? 'p-4 bg-background rounded-xl shadow-lg border-2 min-w-[80px]'
-        : block.style === 'bold' ? 'p-3 min-w-[70px]'
-        : 'p-2 min-w-[60px]'
-    }`} style={block.style === 'card' ? { borderColor: `${block.primaryColor}30` } : undefined}>
-      <div className={`tabular-nums transition-transform duration-300 ${pulse ? 'scale-110' : 'scale-100'} ${
-        block.style === 'bold' ? 'text-5xl font-black' : block.style === 'minimal' ? 'text-2xl font-medium' : 'text-4xl font-bold'
-      }`} style={{ color: block.primaryColor }}>
-        {value.toString().padStart(2, '0')}
+  // ✅ Etapa 2F: Flip-clock digit component
+  const FlipDigit = ({ value, label }: { value: number; label: string }) => {
+    const digits = value.toString().padStart(2, '0');
+    return (
+      <div className="text-center">
+        <div className="flex gap-1">
+          {digits.split('').map((digit, i) => (
+            <div key={`${label}-${i}`} className="relative w-10 h-14 rounded-lg overflow-hidden shadow-lg" style={{ perspective: '200px' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900 flex items-center justify-center">
+                <span className="text-3xl font-black tabular-nums text-white">{digit}</span>
+              </div>
+              <div className="absolute inset-x-0 top-1/2 h-px bg-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+            </div>
+          ))}
+        </div>
+        <div className="text-[10px] text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">{label}</div>
       </div>
-      <div className="text-xs text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">{label}</div>
-    </div>
-  );
+    );
+  };
 
-  const Separator = () => (
-    <span className={`text-2xl font-bold self-start mt-3 ${pulse ? 'opacity-100' : 'opacity-40'} transition-opacity`} style={{ color: block.primaryColor }}>:</span>
+  const TimeUnit = ({ value, label }: { value: number; label: string }) => {
+    if (block.style === 'flip') return <FlipDigit value={value} label={label} />;
+    return (
+      <div className={`text-center ${
+        block.style === 'card' ? 'p-4 bg-background rounded-xl shadow-lg border-2 min-w-[80px]'
+          : block.style === 'bold' ? 'p-3 min-w-[70px]'
+          : 'p-2 min-w-[60px]'
+      }`} style={block.style === 'card' ? { borderColor: `${block.primaryColor}30` } : undefined}>
+        <div className={`tabular-nums transition-transform duration-300 ${pulse ? 'scale-110' : 'scale-100'} ${
+          block.style === 'bold' ? 'text-5xl font-black' : block.style === 'minimal' ? 'text-2xl font-medium' : 'text-4xl font-bold'
+        }`} style={{ color: block.primaryColor }}>
+          {value.toString().padStart(2, '0')}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">{label}</div>
+      </div>
+    );
+  };
+
+  const CountdownSeparator = () => (
+    <span className={`text-2xl font-bold self-start ${block.style === 'flip' ? 'mt-4 text-foreground' : 'mt-3'} ${pulse ? 'opacity-100' : 'opacity-40'} transition-opacity`} style={block.style !== 'flip' ? { color: block.primaryColor } : undefined}>:</span>
   );
 
   return (
     <div className="flex gap-2 justify-center items-start flex-wrap">
-      {block.showDays && <><TimeUnit value={days} label="dias" /><Separator /></>}
-      {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <Separator />}</>}
-      {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <Separator />}</>}
+      {block.showDays && <><TimeUnit value={days} label="dias" /><CountdownSeparator /></>}
+      {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <CountdownSeparator />}</>}
+      {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <CountdownSeparator />}</>}
       {block.showSeconds && <TimeUnit value={seconds} label="seg" />}
     </div>
   );
 };
 
 // ---- TESTIMONIAL ----
-export const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 'testimonial' } }) => (
-  <div className={`relative ${
-    block.style === 'card' ? 'p-8 bg-background rounded-2xl shadow-xl border'
-      : block.style === 'quote' ? 'py-6 px-4'
-      : block.style === 'minimal' ? 'py-4'
-      : 'p-6 bg-background rounded-xl shadow-md border'
-  }`}>
-    <div className="absolute -top-3 left-6 text-7xl leading-none opacity-15 select-none pointer-events-none" style={{ color: block.primaryColor || 'hsl(var(--primary))' }}>"</div>
-    <div className="relative z-10">
-      <p className={`${block.style === 'minimal' ? 'text-sm' : 'text-lg leading-relaxed'} italic mb-6 text-foreground`}>"{block.quote}"</p>
-      {block.showRating && block.rating && (
-        <div className="flex gap-1 mb-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <svg key={i} className={`w-5 h-5 transition-colors ${i < block.rating! ? 'fill-yellow-400 text-yellow-400' : 'fill-muted text-muted'}`} viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-          ))}
-        </div>
-      )}
-      <div className="flex items-center gap-4">
-        {block.authorImage ? (
-          <img src={block.authorImage} alt={block.authorName} className="w-14 h-14 rounded-full object-cover ring-2 ring-primary ring-offset-2 shadow-md" />
-        ) : (
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-primary-foreground shadow-md" style={{ backgroundColor: block.primaryColor || 'hsl(var(--primary))' }}>
-            {block.authorName?.charAt(0)?.toUpperCase() || 'U'}
+// ✅ Etapa 2F: Carrossel de depoimentos com auto-slide e dots
+export const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 'testimonial' } }) => {
+  const additional = (block as any).additionalTestimonials || [];
+  const allTestimonials = [
+    { quote: block.quote, authorName: block.authorName, authorRole: block.authorRole, authorCompany: block.authorCompany, authorImage: block.authorImage, rating: block.rating },
+    ...additional,
+  ];
+  const isCarousel = allTestimonials.length > 1;
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  useEffect(() => {
+    if (!isCarousel || !(block as any).autoSlide) return;
+    const interval = setInterval(() => {
+      setCurrentIdx(prev => (prev + 1) % allTestimonials.length);
+    }, ((block as any).slideInterval || 5) * 1000);
+    return () => clearInterval(interval);
+  }, [isCarousel, allTestimonials.length, (block as any).autoSlide, (block as any).slideInterval]);
+
+  const current = allTestimonials[currentIdx];
+
+  const renderTestimonial = (t: typeof current) => (
+    <div className={`relative ${
+      block.style === 'card' ? 'p-8 bg-background rounded-2xl shadow-xl border'
+        : block.style === 'quote' ? 'py-6 px-4'
+        : block.style === 'minimal' ? 'py-4'
+        : 'p-6 bg-background rounded-xl shadow-md border'
+    }`}>
+      <div className="absolute -top-3 left-6 text-7xl leading-none opacity-15 select-none pointer-events-none" style={{ color: block.primaryColor || 'hsl(var(--primary))' }}>"</div>
+      <div className="relative z-10">
+        <p className={`${block.style === 'minimal' ? 'text-sm' : 'text-lg leading-relaxed'} italic mb-6 text-foreground`}>"{t.quote}"</p>
+        {block.showRating && t.rating && (
+          <div className="flex gap-1 mb-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <svg key={i} className={`w-5 h-5 transition-colors ${i < t.rating! ? 'fill-yellow-400 text-yellow-400' : 'fill-muted text-muted'}`} viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            ))}
           </div>
         )}
-        <div>
-          <p className="font-bold text-base" style={{ color: block.primaryColor }}>{block.authorName}</p>
-          {(block.authorRole || block.authorCompany) && (
-            <p className="text-sm text-muted-foreground">
-              {block.authorRole}{block.authorRole && block.authorCompany && ' • '}{block.authorCompany}
-            </p>
+        <div className="flex items-center gap-4">
+          {t.authorImage ? (
+            <img src={t.authorImage} alt={t.authorName} className="w-14 h-14 rounded-full object-cover ring-2 ring-primary ring-offset-2 shadow-md" />
+          ) : (
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-primary-foreground shadow-md" style={{ backgroundColor: block.primaryColor || 'hsl(var(--primary))' }}>
+              {t.authorName?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
           )}
+          <div>
+            <p className="font-bold text-base" style={{ color: block.primaryColor }}>{t.authorName}</p>
+            {(t.authorRole || t.authorCompany) && (
+              <p className="text-sm text-muted-foreground">
+                {t.authorRole}{t.authorRole && t.authorCompany && ' • '}{t.authorCompany}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+
+  return (
+    <div className="space-y-3">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIdx}
+          initial={isCarousel ? { opacity: 0, x: 20 } : undefined}
+          animate={{ opacity: 1, x: 0 }}
+          exit={isCarousel ? { opacity: 0, x: -20 } : undefined}
+          transition={{ duration: 0.3 }}
+        >
+          {renderTestimonial(current)}
+        </motion.div>
+      </AnimatePresence>
+      {/* Dots navigation */}
+      {isCarousel && (
+        <div className="flex justify-center gap-2 pt-2">
+          {allTestimonials.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIdx(idx)}
+              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                idx === currentIdx ? 'bg-primary scale-110' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ---- SLIDER ----
 export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slider' } }) => {
@@ -344,16 +419,60 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
 };
 
 // ---- TEXT INPUT ----
+// ✅ Etapa 2F: Máscaras de input (CPF, CNPJ, telefone)
+const applyMask = (value: string, type?: string): string => {
+  const digits = value.replace(/\D/g, '');
+  switch (type) {
+    case 'cpf':
+      return digits
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+        .substring(0, 14);
+    case 'cnpj':
+      return digits
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+        .substring(0, 18);
+    case 'phone':
+      if (digits.length <= 10) {
+        return digits
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{4})(\d{1,4})$/, '$1-$2');
+      }
+      return digits
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d{1,4})$/, '$1-$2')
+        .substring(0, 15);
+    default:
+      return value;
+  }
+};
+
 export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => {
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
+  const useMask = (block as any).useMask;
 
-  // ✅ Etapa 2E: Validação em tempo real
+  const handleChange = (rawValue: string) => {
+    if (useMask && (block.validation === 'cpf' || block.validation === 'cnpj' || block.validation === 'phone')) {
+      setValue(applyMask(rawValue, block.validation));
+    } else {
+      setValue(rawValue);
+    }
+  };
+
+  // ✅ Etapa 2E + 2F: Validação em tempo real (com CPF/CNPJ)
   const validate = (val: string): boolean | null => {
     if (!val || !block.showValidationFeedback) return null;
+    const digits = val.replace(/\D/g, '');
     if (block.validation === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     if (block.validation === 'phone') return /^[\d\s\-\+\(\)]{8,}$/.test(val);
     if (block.validation === 'number') return !isNaN(Number(val)) && val.trim() !== '';
+    if (block.validation === 'cpf') return digits.length === 11;
+    if (block.validation === 'cnpj') return digits.length === 14;
     return null;
   };
 
@@ -364,6 +483,16 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
       : 'border-red-500 focus-visible:ring-red-500/30'
     : '';
 
+  const getPlaceholder = () => {
+    if (block.placeholder) return block.placeholder;
+    if (useMask) {
+      if (block.validation === 'cpf') return '000.000.000-00';
+      if (block.validation === 'cnpj') return '00.000.000/0000-00';
+      if (block.validation === 'phone') return '(00) 00000-0000';
+    }
+    return '';
+  };
+
   return (
     <div className="space-y-2">
       <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
@@ -372,17 +501,17 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
           placeholder={block.placeholder}
           maxLength={block.maxLength}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           onBlur={() => setTouched(true)}
           className={`w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background transition-colors ${borderClass}`}
         />
       ) : (
         <Input
-          placeholder={block.placeholder}
+          placeholder={getPlaceholder()}
           maxLength={block.maxLength}
           type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           onBlur={() => setTouched(true)}
           className={borderClass}
         />
