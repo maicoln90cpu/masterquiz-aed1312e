@@ -290,8 +290,10 @@ export interface NPSBlock extends BaseBlock {
   highLabel?: string;
   showLabels?: boolean;
   required?: boolean;
-  showComment?: boolean; // ✅ Etapa 2E: Comentário opcional após nota
-  commentPlaceholder?: string; // ✅ Etapa 2E: Placeholder do campo de comentário
+  showComment?: boolean;
+  commentPlaceholder?: string;
+  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter nota
+  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
 }
 
 export interface AccordionBlock extends BaseBlock {
