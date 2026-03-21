@@ -109,6 +109,11 @@ Q4 2025: Expansão Internacional
   - Dashboard de performance por categoria
   - Unsubscribe com compliance CAN-SPAM/LGPD
   - Webhook de tracking (open/click/bounce)
+- **34 tipos de blocos no editor** (5 visuais, 6 dinâmicos, 1 calculadora) ✅
+- **Editor Classic/Modern com thin router** ✅
+- **Imagens por opção de resposta no quiz publicado** ✅
+- **Estabilização da suíte de testes (~22 fixes, 10 suites)** ✅
+- **Templates re-habilitados (14 ativos)** ✅
 
 ### H2 2026
 - Expansão para EUA
