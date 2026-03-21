@@ -904,6 +904,10 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
         {block.validation && block.validation !== 'none' && (
           <SwitchRow label="Feedback visual de validação" checked={block.showValidationFeedback || false} onChange={(v) => onChange(update(block, { showValidationFeedback: v }))} />
         )}
+        {/* ✅ Etapa 2F: Máscara de input */}
+        {(block.validation === 'cpf' || block.validation === 'cnpj' || block.validation === 'phone') && (
+          <SwitchRow label="Máscara automática" checked={(block as any).useMask || false} onChange={(v) => onChange(update(block, { useMask: v }))} />
+        )}
       </div>
     </div>
   );
