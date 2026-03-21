@@ -460,6 +460,7 @@ const applyMask = (value: string, type?: string): string => {
 export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => {
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
+  const [webhookFired, setWebhookFired] = useState(false);
   const useMask = (block as any).useMask;
 
   const handleChange = (rawValue: string) => {
@@ -470,7 +471,22 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
     }
   };
 
-  // ✅ Etapa 2E + 2F: Validação em tempo real (com CPF/CNPJ)
+  // ✅ Etapa 4: Webhook ao sair do campo (blur)
+  const handleBlur = useCallback(() => {
+    setTouched(true);
+    if ((block as any).webhookOnSubmit && (block as any).webhookUrl && value && !webhookFired) {
+      fireBlockWebhook((block as any).webhookUrl, {
+        blockType: 'textInput',
+        blockId: block.id,
+        label: block.label,
+        value,
+        timestamp: new Date().toISOString(),
+        metadata: { validation: block.validation },
+      });
+      setWebhookFired(true);
+    }
+  }, [block, value, webhookFired]);
+
   const validate = (val: string): boolean | null => {
     if (!val || !block.showValidationFeedback) return null;
     const digits = val.replace(/\D/g, '');
@@ -508,7 +524,7 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
           maxLength={block.maxLength}
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => setTouched(true)}
+          onBlur={handleBlur}
           className={`w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background transition-colors ${borderClass}`}
         />
       ) : (
@@ -518,7 +534,7 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
           type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'}
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => setTouched(true)}
+          onBlur={handleBlur}
           className={borderClass}
         />
       )}
