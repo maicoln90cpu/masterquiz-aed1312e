@@ -272,45 +272,96 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
 };
 
 // ---- TESTIMONIAL ----
-export const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 'testimonial' } }) => (
-  <div className={`relative ${
-    block.style === 'card' ? 'p-8 bg-background rounded-2xl shadow-xl border'
-      : block.style === 'quote' ? 'py-6 px-4'
-      : block.style === 'minimal' ? 'py-4'
-      : 'p-6 bg-background rounded-xl shadow-md border'
-  }`}>
-    <div className="absolute -top-3 left-6 text-7xl leading-none opacity-15 select-none pointer-events-none" style={{ color: block.primaryColor || 'hsl(var(--primary))' }}>"</div>
-    <div className="relative z-10">
-      <p className={`${block.style === 'minimal' ? 'text-sm' : 'text-lg leading-relaxed'} italic mb-6 text-foreground`}>"{block.quote}"</p>
-      {block.showRating && block.rating && (
-        <div className="flex gap-1 mb-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <svg key={i} className={`w-5 h-5 transition-colors ${i < block.rating! ? 'fill-yellow-400 text-yellow-400' : 'fill-muted text-muted'}`} viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-          ))}
-        </div>
-      )}
-      <div className="flex items-center gap-4">
-        {block.authorImage ? (
-          <img src={block.authorImage} alt={block.authorName} className="w-14 h-14 rounded-full object-cover ring-2 ring-primary ring-offset-2 shadow-md" />
-        ) : (
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-primary-foreground shadow-md" style={{ backgroundColor: block.primaryColor || 'hsl(var(--primary))' }}>
-            {block.authorName?.charAt(0)?.toUpperCase() || 'U'}
+// ✅ Etapa 2F: Carrossel de depoimentos com auto-slide e dots
+export const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 'testimonial' } }) => {
+  const additional = (block as any).additionalTestimonials || [];
+  const allTestimonials = [
+    { quote: block.quote, authorName: block.authorName, authorRole: block.authorRole, authorCompany: block.authorCompany, authorImage: block.authorImage, rating: block.rating },
+    ...additional,
+  ];
+  const isCarousel = allTestimonials.length > 1;
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  useEffect(() => {
+    if (!isCarousel || !(block as any).autoSlide) return;
+    const interval = setInterval(() => {
+      setCurrentIdx(prev => (prev + 1) % allTestimonials.length);
+    }, ((block as any).slideInterval || 5) * 1000);
+    return () => clearInterval(interval);
+  }, [isCarousel, allTestimonials.length, (block as any).autoSlide, (block as any).slideInterval]);
+
+  const current = allTestimonials[currentIdx];
+
+  const renderTestimonial = (t: typeof current) => (
+    <div className={`relative ${
+      block.style === 'card' ? 'p-8 bg-background rounded-2xl shadow-xl border'
+        : block.style === 'quote' ? 'py-6 px-4'
+        : block.style === 'minimal' ? 'py-4'
+        : 'p-6 bg-background rounded-xl shadow-md border'
+    }`}>
+      <div className="absolute -top-3 left-6 text-7xl leading-none opacity-15 select-none pointer-events-none" style={{ color: block.primaryColor || 'hsl(var(--primary))' }}>"</div>
+      <div className="relative z-10">
+        <p className={`${block.style === 'minimal' ? 'text-sm' : 'text-lg leading-relaxed'} italic mb-6 text-foreground`}>"{t.quote}"</p>
+        {block.showRating && t.rating && (
+          <div className="flex gap-1 mb-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <svg key={i} className={`w-5 h-5 transition-colors ${i < t.rating! ? 'fill-yellow-400 text-yellow-400' : 'fill-muted text-muted'}`} viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            ))}
           </div>
         )}
-        <div>
-          <p className="font-bold text-base" style={{ color: block.primaryColor }}>{block.authorName}</p>
-          {(block.authorRole || block.authorCompany) && (
-            <p className="text-sm text-muted-foreground">
-              {block.authorRole}{block.authorRole && block.authorCompany && ' • '}{block.authorCompany}
-            </p>
+        <div className="flex items-center gap-4">
+          {t.authorImage ? (
+            <img src={t.authorImage} alt={t.authorName} className="w-14 h-14 rounded-full object-cover ring-2 ring-primary ring-offset-2 shadow-md" />
+          ) : (
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-primary-foreground shadow-md" style={{ backgroundColor: block.primaryColor || 'hsl(var(--primary))' }}>
+              {t.authorName?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
           )}
+          <div>
+            <p className="font-bold text-base" style={{ color: block.primaryColor }}>{t.authorName}</p>
+            {(t.authorRole || t.authorCompany) && (
+              <p className="text-sm text-muted-foreground">
+                {t.authorRole}{t.authorRole && t.authorCompany && ' • '}{t.authorCompany}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+
+  return (
+    <div className="space-y-3">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIdx}
+          initial={isCarousel ? { opacity: 0, x: 20 } : undefined}
+          animate={{ opacity: 1, x: 0 }}
+          exit={isCarousel ? { opacity: 0, x: -20 } : undefined}
+          transition={{ duration: 0.3 }}
+        >
+          {renderTestimonial(current)}
+        </motion.div>
+      </AnimatePresence>
+      {/* Dots navigation */}
+      {isCarousel && (
+        <div className="flex justify-center gap-2 pt-2">
+          {allTestimonials.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIdx(idx)}
+              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                idx === currentIdx ? 'bg-primary scale-110' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ---- SLIDER ----
 export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slider' } }) => {
