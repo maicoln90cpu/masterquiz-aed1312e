@@ -56,6 +56,7 @@ export interface QuestionBlock extends BaseBlock {
   autoAdvance?: boolean;
   nextButtonText?: string; // Texto personalizado do botão "Próxima Pergunta"
   randomizeOptions?: boolean; // ✅ Etapa 2C: Randomizar ordem das opções
+  optionImages?: string[]; // ✅ Etapa 2E: Imagem por opção de resposta (cards visuais)
 }
 
 export interface TextBlock extends BaseBlock {
