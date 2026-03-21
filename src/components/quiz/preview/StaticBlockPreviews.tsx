@@ -50,8 +50,9 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
 };
 
 // ---- SEPARATOR ----
-export const SeparatorBlockPreview = ({ block }: { block: QuizBlock & { type: 'separator' } }) =>
-  block.style === "space" ? (
+// ✅ Etapa 2F: Animação fade-in opcional
+export const SeparatorBlockPreview = ({ block }: { block: QuizBlock & { type: 'separator' } }) => {
+  const content = block.style === "space" ? (
     <div className="my-6 h-8" />
   ) : (
     <div
@@ -63,6 +64,21 @@ export const SeparatorBlockPreview = ({ block }: { block: QuizBlock & { type: 's
       }}
     />
   );
+
+  if ((block as any).animateFade) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        {content}
+      </motion.div>
+    );
+  }
+
+  return content;
+};
 
 // ---- IMAGE ----
 export const ImageBlockPreview = ({ block }: { block: QuizBlock & { type: 'image' } }) =>
