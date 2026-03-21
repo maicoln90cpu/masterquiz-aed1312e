@@ -218,30 +218,54 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
     );
   }
 
-  const TimeUnit = ({ value, label }: { value: number; label: string }) => (
-    <div className={`text-center ${
-      block.style === 'card' ? 'p-4 bg-background rounded-xl shadow-lg border-2 min-w-[80px]'
-        : block.style === 'bold' ? 'p-3 min-w-[70px]'
-        : 'p-2 min-w-[60px]'
-    }`} style={block.style === 'card' ? { borderColor: `${block.primaryColor}30` } : undefined}>
-      <div className={`tabular-nums transition-transform duration-300 ${pulse ? 'scale-110' : 'scale-100'} ${
-        block.style === 'bold' ? 'text-5xl font-black' : block.style === 'minimal' ? 'text-2xl font-medium' : 'text-4xl font-bold'
-      }`} style={{ color: block.primaryColor }}>
-        {value.toString().padStart(2, '0')}
+  // ✅ Etapa 2F: Flip-clock digit component
+  const FlipDigit = ({ value, label }: { value: number; label: string }) => {
+    const digits = value.toString().padStart(2, '0');
+    return (
+      <div className="text-center">
+        <div className="flex gap-1">
+          {digits.split('').map((digit, i) => (
+            <div key={`${label}-${i}`} className="relative w-10 h-14 rounded-lg overflow-hidden shadow-lg" style={{ perspective: '200px' }}>
+              <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900 flex items-center justify-center">
+                <span className="text-3xl font-black tabular-nums text-white">{digit}</span>
+              </div>
+              <div className="absolute inset-x-0 top-1/2 h-px bg-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+            </div>
+          ))}
+        </div>
+        <div className="text-[10px] text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">{label}</div>
       </div>
-      <div className="text-xs text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">{label}</div>
-    </div>
-  );
+    );
+  };
 
-  const Separator = () => (
-    <span className={`text-2xl font-bold self-start mt-3 ${pulse ? 'opacity-100' : 'opacity-40'} transition-opacity`} style={{ color: block.primaryColor }}>:</span>
+  const TimeUnit = ({ value, label }: { value: number; label: string }) => {
+    if (block.style === 'flip') return <FlipDigit value={value} label={label} />;
+    return (
+      <div className={`text-center ${
+        block.style === 'card' ? 'p-4 bg-background rounded-xl shadow-lg border-2 min-w-[80px]'
+          : block.style === 'bold' ? 'p-3 min-w-[70px]'
+          : 'p-2 min-w-[60px]'
+      }`} style={block.style === 'card' ? { borderColor: `${block.primaryColor}30` } : undefined}>
+        <div className={`tabular-nums transition-transform duration-300 ${pulse ? 'scale-110' : 'scale-100'} ${
+          block.style === 'bold' ? 'text-5xl font-black' : block.style === 'minimal' ? 'text-2xl font-medium' : 'text-4xl font-bold'
+        }`} style={{ color: block.primaryColor }}>
+          {value.toString().padStart(2, '0')}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">{label}</div>
+      </div>
+    );
+  };
+
+  const CountdownSeparator = () => (
+    <span className={`text-2xl font-bold self-start ${block.style === 'flip' ? 'mt-4 text-foreground' : 'mt-3'} ${pulse ? 'opacity-100' : 'opacity-40'} transition-opacity`} style={block.style !== 'flip' ? { color: block.primaryColor } : undefined}>:</span>
   );
 
   return (
     <div className="flex gap-2 justify-center items-start flex-wrap">
-      {block.showDays && <><TimeUnit value={days} label="dias" /><Separator /></>}
-      {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <Separator />}</>}
-      {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <Separator />}</>}
+      {block.showDays && <><TimeUnit value={days} label="dias" /><CountdownSeparator /></>}
+      {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <CountdownSeparator />}</>}
+      {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <CountdownSeparator />}</>}
       {block.showSeconds && <TimeUnit value={seconds} label="seg" />}
     </div>
   );
