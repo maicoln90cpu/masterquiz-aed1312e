@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/ImageUploader";
-import { Images, Plus, Trash2 } from "lucide-react";
+import { Images, Plus, Trash2, X } from "lucide-react";
 import type { GalleryBlock as GalleryBlockType } from "@/types/blocks";
 
 interface GalleryBlockProps {
@@ -12,7 +12,6 @@ interface GalleryBlockProps {
 }
 
 export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
-  // Normalização defensiva
   const images = block.images || [];
   const safeBlock = { ...block, images };
 
@@ -43,7 +42,6 @@ export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
           </Button>
         </div>
 
-        {/* Content: Image list */}
         {images.length === 0 ? (
           <div className="text-center py-8 border-2 border-dashed rounded-lg">
             <Images className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
@@ -60,7 +58,35 @@ export const GalleryBlock = ({ block, onChange }: GalleryBlockProps) => {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <ImageUploader value={image.url} onChange={(url) => updateImage(index, { url })} />
+
+                  {/* ✅ Preview único: imagem com X ou upload zone */}
+                  {image.url ? (
+                    <div className="relative">
+                      <img
+                        src={image.url}
+                        alt={image.alt || `Imagem ${index + 1}`}
+                        className="w-full max-h-48 object-contain rounded-lg border bg-muted/20"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-7 w-7"
+                        onClick={() => updateImage(index, { url: '' })}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      {image.caption && (
+                        <p className="text-xs text-center text-muted-foreground mt-1">{image.caption}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <ImageUploader
+                      value={image.url}
+                      onChange={(url) => updateImage(index, { url })}
+                    />
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input placeholder="Texto alternativo..." value={image.alt || ''} onChange={(e) => updateImage(index, { alt: e.target.value })} />
                     <Input placeholder="Legenda..." value={image.caption || ''} onChange={(e) => updateImage(index, { caption: e.target.value })} />
