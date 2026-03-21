@@ -158,14 +158,17 @@ UI Action → pushGTMEvent() → dataLayer.push() + gtm_event_logs INSERT
 
 ---
 
-## 📦 Sistema de Blocos (22 tipos)
+## 📦 Sistema de Blocos (34 tipos)
 
 ```typescript
 type BlockType =
   | 'question' | 'text' | 'separator' | 'image' | 'video' | 'audio'
   | 'gallery' | 'embed' | 'button' | 'price' | 'metrics' | 'loading'
   | 'progress' | 'countdown' | 'testimonial' | 'slider' | 'textInput'
-  | 'nps' | 'accordion' | 'comparison' | 'socialProof';
+  | 'nps' | 'accordion' | 'comparison' | 'socialProof' | 'animatedCounter'
+  | 'callout' | 'iconList' | 'quote' | 'badgeRow' | 'banner'
+  | 'answerSummary' | 'progressMessage' | 'avatarGroup'
+  | 'conditionalText' | 'comparisonResult' | 'recommendation' | 'calculator';
 ```
 
 Cada pergunta pode ter múltiplos blocos organizados por `order`. O bloco `question` é obrigatório e define o tipo de resposta (`yes_no`, `single_choice`, `multiple_choice`, `short_text`).
