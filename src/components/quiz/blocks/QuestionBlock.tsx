@@ -9,6 +9,7 @@ import type { QuestionBlock as QuestionBlockType } from "@/types/blocks";
 import { normalizeOption } from "@/types/blocks";
 import { RichTextEditor } from "./RichTextEditor";
 import { EmojiPicker } from "./EmojiPicker";
+import { OptionAutocomplete } from "./OptionAutocomplete";
 
 interface QuestionBlockProps {
   block: QuestionBlockType;
@@ -113,10 +114,12 @@ export const QuestionBlock = ({ block, onChange }: QuestionBlockProps) => {
                       value={block.emojis?.[index] || ''}
                       onChange={(emoji) => updateEmoji(index, emoji)}
                     />
-                    <Input
-                      placeholder={`Opção ${index + 1}`}
+                    <OptionAutocomplete
                       value={normalizeOption(option)}
-                      onChange={(e) => updateOption(index, e.target.value)}
+                      onChange={(val) => updateOption(index, val)}
+                      questionText={block.questionText || ''}
+                      existingOptions={(block.options || []).map(normalizeOption)}
+                      placeholder={`Opção ${index + 1}`}
                       className="flex-1 min-w-0"
                     />
                     <Input
