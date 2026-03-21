@@ -34,9 +34,12 @@ vi.mock('@/components/DashboardLayout', () => ({
 vi.mock('@/hooks/useUserStage', () => ({
   useTrackPageView: vi.fn(),
   useUserStage: vi.fn(() => ({
-    stage: null,
+    stage: 'new',
+    stageLabel: 'Novo',
     loading: false,
     updateStage: vi.fn(),
+    primaryCTA: { label: 'Criar Quiz', action: vi.fn(), variant: 'default' },
+    upgradeHint: null,
   })),
 }));
 
