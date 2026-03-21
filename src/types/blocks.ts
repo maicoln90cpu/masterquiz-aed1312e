@@ -271,8 +271,9 @@ export interface TextInputBlock extends BaseBlock {
   multiline?: boolean;
   maxLength?: number;
   required?: boolean;
-  validation?: 'none' | 'email' | 'phone' | 'number';
+  validation?: 'none' | 'email' | 'phone' | 'number' | 'cpf' | 'cnpj'; // ✅ Etapa 2F: +CPF/CNPJ
   showValidationFeedback?: boolean; // ✅ Etapa 2E: Validação visual em tempo real (borda verde/vermelha)
+  useMask?: boolean; // ✅ Etapa 2F: Máscara automática de input
 }
 
 export interface NPSBlock extends BaseBlock {
