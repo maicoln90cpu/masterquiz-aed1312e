@@ -4,6 +4,59 @@
 
 ---
 
+## ✅ v2.37.0 - Documentation Overhaul + Thin Router + Test Fixes (21/03/2026)
+
+### Feature: CreateQuiz Thin Router (Classic/Modern)
+- `CreateQuiz.tsx` refatorado como thin router: só decide Classic vs Modern via `useEditorLayout`
+- `CreateQuizClassic.tsx` e `CreateQuizModern.tsx` carregados via `React.lazy` + `Suspense`
+- Elimina hooks duplicados que causavam freeze no editor Modern
+
+### Feature: Imagens por Opção de Resposta no Quiz Publicado
+- `optionImages`, `optionImageLayout`, `optionImageSize` suportados no `QuizViewQuestion`
+- Layouts: acima do texto, ao lado (esquerda/direita), somente imagem
+- Tamanhos: small, medium, large
+
+### Feature: Templates Re-habilitados
+- `disabledTemplateIds` removido — 14 templates ativos novamente
+- Todos os templates renderizam corretamente no preview e no quiz público
+
+### Fix: Estabilização da Suíte de Testes (~22 correções)
+- `useUserRole.test.tsx`: `vi.unmock` para AuthContext e useUserRole, supabase mock expandido
+- `Analytics.test.tsx`: Mock de DashboardLayout, AuthContext override com user autenticado
+- `CRM.test.tsx`: Mock de DashboardLayout, useUserStage, useTrackPageView
+- `Dashboard.test.tsx`: Mock de DashboardLayout com primaryCTA e stageLabel
+- `UnifiedQuizPreview.test.tsx`: Assertions corrigidas (getByText vs getByLabelText, progress %)
+
+### Fix: Label PQLAnalytics A/B
+- "Primeiro Quiz Criado" → "Primeiro Quiz Editado Manualmente" (reflete condição `hasUserInteracted`)
+
+### Docs: Overhaul Completo v2.37.0
+- Todos os docs atualizados para v2.37.0, contagem de blocos 22→34
+- `blocks.md` renomeado para `BLOCKS.md`
+- Novo: `docs/TESTING.md` — guia de infraestrutura de testes
+- Cross-references corrigidos entre documentos
+- Knowledge prompt atualizado
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/CreateQuiz.tsx` | Thin router (lazy Classic/Modern) |
+| `src/components/admin/PQLAnalytics.tsx` | Label A/B corrigido |
+| `README.md` | v2.37.0, 34 blocos, BLOCKS.md, TESTING.md |
+| `docs/PENDENCIAS.md` | +v2.37.0 entry |
+| `docs/ROADMAP.md` | +H1 2026 items |
+| `docs/PRD.md` | +RF02.13, RF02.14, 34 blocos |
+| `docs/SYSTEM_DESIGN.md` | 34 blocos, thin router |
+| `docs/COMPONENTS.md` | +CreateQuizClassic/Modern |
+| `docs/STYLE_GUIDE.md` | +thin router pattern |
+| `docs/CHECKLIST.md` | +image options, editor mode |
+| `docs/BLOCKS.md` | Renomeado, v2.37.0 |
+| `docs/TESTING.md` | NOVO |
+| `docs/AUDIT_TEMPLATE.md` | +block coverage item |
+| `docs/API_DOCS.md` | v2.37.0 |
+
+---
+
 ## ✅ v2.36.0 - Fix Preview Atual + Bloco Calculadora (20/03/2026)
 
 ### Bug Fix: Preview Atual sempre mostrava pergunta 1
