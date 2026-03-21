@@ -396,7 +396,7 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
             {/* ✅ Etapa 2C: Labels nos extremos */}
             {block.minLabel && <p className="text-[10px] text-muted-foreground/70">{block.minLabel}</p>}
           </div>
-          <Slider value={[value]} min={block.min} max={block.max} step={block.step} onValueChange={(v) => setValue(v[0])} className="flex-1" />
+          <Slider value={[value]} min={block.min} max={block.max} step={block.step} onValueChange={(v) => setValue(v[0])} onValueCommit={handleCommit} className="flex-1" />
           <div className="min-w-[40px]">
             <span className="text-sm text-muted-foreground font-medium tabular-nums">{block.max}{block.unit}</span>
             {/* ✅ Etapa 2C: Labels nos extremos */}
