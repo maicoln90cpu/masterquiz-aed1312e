@@ -380,6 +380,17 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
             </Select>
           </PropertySection>
 
+          <PropertySection title="Alinhamento da Imagem">
+            <Select value={(block as any).imageAlignment || 'center'} onValueChange={(v) => onChange(update(block, { imageAlignment: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">⬅ Esquerda</SelectItem>
+                <SelectItem value="center">↔ Centro</SelectItem>
+                <SelectItem value="right">➡ Direita</SelectItem>
+              </SelectContent>
+            </Select>
+          </PropertySection>
+
           <PropertySection title="Tamanho da Imagem">
             <Select value={(block as any).imageSize || 'medium'} onValueChange={(v) => onChange(update(block, { imageSize: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
