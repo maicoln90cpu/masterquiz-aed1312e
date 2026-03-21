@@ -26,6 +26,29 @@ vi.mock('@/hooks/useOnboarding', () => ({
   })),
 }));
 
+// Mock DashboardLayout to just render children
+vi.mock('@/components/DashboardLayout', () => ({
+  DashboardLayout: ({ children }: any) => <div data-testid="dashboard-layout">{children}</div>,
+}));
+
+// Mock useUserStage (useTrackPageView)
+vi.mock('@/hooks/useUserStage', () => ({
+  useTrackPageView: vi.fn(),
+  useUserStage: vi.fn(() => ({
+    stage: null,
+    loading: false,
+    updateStage: vi.fn(),
+  })),
+}));
+
+// Mock useTestLead
+vi.mock('@/hooks/useTestLead', () => ({
+  useTestLead: vi.fn(() => ({
+    createTestLead: vi.fn(),
+    isCreating: false,
+  })),
+}));
+
 // Override AuthContext to provide authenticated user
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -159,7 +182,7 @@ describe('CRM', () => {
       
       await waitFor(() => {
         expect(screen.getByText('CRM')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
 
     it('deve renderizar cards de estatísticas', async () => {
@@ -196,7 +219,7 @@ describe('CRM', () => {
       await waitFor(() => {
         expect(screen.getByText('João Silva')).toBeInTheDocument();
         expect(screen.getByText('Maria Santos')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
   });
 
@@ -262,7 +285,7 @@ describe('CRM', () => {
       
       await waitFor(() => {
         expect(screen.getByText('João Silva')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);

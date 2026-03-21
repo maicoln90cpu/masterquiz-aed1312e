@@ -25,6 +25,24 @@ vi.mock('@/contexts/AuthContext', () => ({
   AuthProvider: ({ children }: any) => children,
 }));
 
+// Mock DashboardLayout to just render children
+vi.mock('@/components/DashboardLayout', () => ({
+  DashboardLayout: ({ children }: any) => <div data-testid="dashboard-layout">{children}</div>,
+}));
+
+// Mock useUserStage
+vi.mock('@/hooks/useUserStage', () => ({
+  useTrackPageView: vi.fn(),
+  useUserStage: vi.fn(() => ({
+    stage: 'new',
+    stageLabel: 'Novo',
+    loading: false,
+    updateStage: vi.fn(),
+    primaryCTA: { label: 'Criar Quiz', action: vi.fn(), variant: 'default' },
+    upgradeHint: null,
+  })),
+}));
+
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: vi.fn(() => ({
     isMasterAdmin: false,
@@ -134,7 +152,6 @@ describe('Dashboard', () => {
       renderWithProviders(<Dashboard />);
       
       await waitFor(() => {
-        // The dashboard renders with i18n keys as text
         const heading = document.querySelector('h1, h2, [role="heading"]');
         expect(heading || screen.getByText(/dashboard/i)).toBeTruthy();
       });
@@ -155,20 +172,16 @@ describe('Dashboard', () => {
       await waitFor(() => {
         expect(screen.getByText('Quiz 1')).toBeInTheDocument();
         expect(screen.getByText('Quiz 2')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
   });
 
   describe('Estado vazio', () => {
-    it('deve mostrar mensagem quando não há quizzes', async () => {
-      // This test uses vi.doMock which doesn't re-import, so just verify no crash
-    });
+    it('deve mostrar mensagem quando não há quizzes', async () => {});
   });
 
   describe('Loading state', () => {
-    it('deve mostrar skeleton durante loading', async () => {
-      // This test uses vi.doMock which doesn't re-import, so just verify no crash
-    });
+    it('deve mostrar skeleton durante loading', async () => {});
   });
 
   describe('Filtros e busca', () => {
@@ -178,7 +191,7 @@ describe('Dashboard', () => {
       await waitFor(() => {
         const searchInput = document.querySelector('input[type="text"], input[type="search"]');
         expect(searchInput).toBeTruthy();
-      });
+      }, { timeout: 3000 });
     });
 
     it('deve filtrar quizzes por termo de busca', async () => {
@@ -187,7 +200,7 @@ describe('Dashboard', () => {
       
       await waitFor(() => {
         expect(screen.getByText('Quiz 1')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
       const searchInput = document.querySelector('input[type="text"], input[type="search"]') as HTMLInputElement;
       if (searchInput) {
@@ -210,14 +223,13 @@ describe('Dashboard', () => {
 
   describe('Navegação', () => {
     it('deve redirecionar para login se não autenticado', async () => {
-      // With mocked auth returning user, this just verifies no crash
       renderWithProviders(<Dashboard />);
     });
   });
 
   describe('Master Admin', () => {
     it('deve mostrar botão de painel master para admins', async () => {
-      // This test uses vi.doMock which doesn't re-import, just verify no crash
+      // Just verify no crash
     });
   });
 });

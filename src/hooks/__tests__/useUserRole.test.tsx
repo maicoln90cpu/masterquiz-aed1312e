@@ -1,3 +1,7 @@
+// Must unmock before any other imports
+vi.unmock('@/hooks/useUserRole');
+vi.unmock('@/contexts/AuthContext');
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useUserRole } from '../useUserRole';
@@ -5,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ReactNode } from 'react';
 
-// Mock modules
+// Mock supabase with all methods AuthProvider needs
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
@@ -13,6 +17,10 @@ vi.mock('@/integrations/supabase/client', () => ({
       onAuthStateChange: vi.fn(),
     },
     from: vi.fn(),
+    functions: {
+      invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
+    },
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   },
 }));
 
@@ -39,9 +47,7 @@ const createMockSession = (userId = 'test-user-id') => ({
 
 // Wrapper with AuthProvider
 const createWrapper = (session: any = null) => {
-  // Setup auth mocks
   vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((callback) => {
-    // Immediately call with session
     setTimeout(() => callback('INITIAL_SESSION', session), 0);
     return {
       data: {
@@ -146,7 +152,7 @@ describe('useUserRole', () => {
 
       await waitFor(() => {
         expect(result.current.isMasterAdmin).toBe(true);
-        expect(result.current.isAdmin).toBe(true); // master_admin implies admin
+        expect(result.current.isAdmin).toBe(true);
       });
     });
 
@@ -211,7 +217,6 @@ describe('useUserRole', () => {
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      // Mock error
       const chain = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockRejectedValue(new Error('Network error')),
@@ -242,7 +247,6 @@ describe('useUserRole', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      // Should not crash, roles remain empty
       expect(result.current.roles).toEqual([]);
     });
   });
@@ -261,7 +265,6 @@ describe('useUserRole', () => {
       });
 
       await waitFor(() => {
-        // master_admin should be considered admin as well
         expect(result.current.isAdmin).toBe(true);
         expect(result.current.isMasterAdmin).toBe(true);
       });

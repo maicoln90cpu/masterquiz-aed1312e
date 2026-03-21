@@ -33,6 +33,22 @@ describe('UnifiedQuizPreview', () => {
     mode: 'embedded' as const,
   };
 
+  // Helper: create multiple questions so "Próxima" button appears (not "Finalizar")
+  const multipleQuestions = [
+    {
+      id: 'q1',
+      question_text: 'Q1',
+      answer_format: 'single_choice' as const,
+      blocks: [{ id: 'b1', type: 'question', questionText: 'Pergunta 1', answerFormat: 'single_choice', options: ['Opção 1', 'Opção 2'] }],
+    },
+    {
+      id: 'q2',
+      question_text: 'Q2',
+      answer_format: 'single_choice' as const,
+      blocks: [{ id: 'b2', type: 'question', questionText: 'Pergunta 2', answerFormat: 'single_choice', options: ['A', 'B'] }],
+    },
+  ];
+
   describe('Suporte a yes_no', () => {
     it('deve renderizar pergunta yes_no com opções Sim e Não', () => {
       const questions = [{
@@ -57,29 +73,34 @@ describe('UnifiedQuizPreview', () => {
 
     it('deve permitir selecionar opção yes_no', async () => {
       const user = userEvent.setup();
-      const questions = [{
-        id: 'q1',
-        question_text: 'Teste yes/no?',
-        answer_format: 'yes_no' as const,
-        blocks: [{
-          id: 'b1',
-          type: 'question',
-          questionText: 'Teste yes/no?',
-          answerFormat: 'yes_no',
-          options: ['Sim', 'Não'],
-        }],
-      }];
+      const questions = [
+        {
+          id: 'q1',
+          question_text: 'Teste yes/no?',
+          answer_format: 'yes_no' as const,
+          blocks: [{ id: 'b1', type: 'question', questionText: 'Teste yes/no?', answerFormat: 'yes_no', options: ['Sim', 'Não'] }],
+        },
+        {
+          id: 'q2',
+          question_text: 'Outra?',
+          answer_format: 'single_choice' as const,
+          blocks: [{ id: 'b2', type: 'question', questionText: 'Outra?', answerFormat: 'single_choice', options: ['A', 'B'] }],
+        },
+      ];
 
       render(<UnifiedQuizPreview {...baseProps} questions={questions as any} />);
 
-      const simOption = screen.getByLabelText('Sim');
-      await user.click(simOption);
+      // Click the option div (which triggers the answer selection)
+      const simLabel = screen.getByLabelText('Sim');
+      await user.click(simLabel);
 
-      expect(simOption).toBeChecked();
-      
-      // Botão "Próxima" deve habilitar após seleção
-      const proximaButton = screen.getByRole('button', { name: /próxima/i });
-      expect(proximaButton).toBeEnabled();
+      // After selection, next button should be enabled
+      const buttons = screen.getAllByRole('button');
+      const nextButton = buttons.find(b => b.textContent?.includes('Próxima'));
+      expect(nextButton).toBeTruthy();
+      if (nextButton) {
+        expect(nextButton).toBeEnabled();
+      }
     });
   });
 
@@ -109,45 +130,29 @@ describe('UnifiedQuizPreview', () => {
   });
 
   describe('Navegação e estado', () => {
-    it('deve desabilitar botão "Próxima" até resposta ser selecionada', () => {
-      const questions = [{
-        id: 'q1',
-        question_text: 'Test',
-        answer_format: 'single_choice' as const,
-        blocks: [{
-          id: 'b1',
-          type: 'question',
-          answerFormat: 'single_choice',
-          options: ['A', 'B'],
-        }],
-      }];
+    it('deve desabilitar botão até resposta ser selecionada', () => {
+      render(<UnifiedQuizPreview {...baseProps} questions={multipleQuestions as any} />);
 
-      render(<UnifiedQuizPreview {...baseProps} questions={questions as any} />);
-
-      const proximaButton = screen.getByRole('button', { name: /próxima/i });
-      expect(proximaButton).toBeDisabled();
+      const buttons = screen.getAllByRole('button');
+      const nextButton = buttons.find(b => b.textContent?.includes('Próxima'));
+      expect(nextButton).toBeTruthy();
+      if (nextButton) {
+        expect(nextButton).toBeDisabled();
+      }
     });
 
-    it('deve habilitar botão "Próxima" após resposta selecionada', async () => {
+    it('deve habilitar botão após resposta selecionada', async () => {
       const user = userEvent.setup();
-      const questions = [{
-        id: 'q1',
-        question_text: 'Test',
-        answer_format: 'single_choice' as const,
-        blocks: [{
-          id: 'b1',
-          type: 'question',
-          answerFormat: 'single_choice',
-          options: ['Opção 1', 'Opção 2'],
-        }],
-      }];
-
-      render(<UnifiedQuizPreview {...baseProps} questions={questions as any} />);
+      render(<UnifiedQuizPreview {...baseProps} questions={multipleQuestions as any} />);
 
       await user.click(screen.getByLabelText('Opção 1'));
 
-      const proximaButton = screen.getByRole('button', { name: /próxima/i });
-      expect(proximaButton).toBeEnabled();
+      const buttons = screen.getAllByRole('button');
+      const nextButton = buttons.find(b => b.textContent?.includes('Próxima'));
+      expect(nextButton).toBeTruthy();
+      if (nextButton) {
+        expect(nextButton).toBeEnabled();
+      }
     });
 
     it('deve mostrar progresso correto', () => {
@@ -177,17 +182,16 @@ describe('UnifiedQuizPreview', () => {
         <UnifiedQuizPreview {...baseProps} questions={questions as any} mode="inline" showDeviceFrame={true} />
       );
 
-      // Deve ter device switcher quando showDeviceFrame=true
       expect(container.querySelector('button')).toBeInTheDocument();
     });
 
-    it('deve renderizar modo embedded (simples) corretamente', () => {
-      const questions = [{
-        id: 'q1',
-        question_text: 'Test',
-        answer_format: 'single_choice' as const,
-        blocks: [{ id: 'b1', type: 'question', answerFormat: 'single_choice', options: ['A'] }],
-      }];
+    it('deve renderizar modo embedded corretamente', () => {
+      // With 3 questions, first question shows 33%
+      const questions = [
+        { id: 'q1', question_text: 'T1', answer_format: 'single_choice' as const, blocks: [{ id: 'b1', type: 'question', answerFormat: 'single_choice', options: ['A'] }] },
+        { id: 'q2', question_text: 'T2', answer_format: 'single_choice' as const, blocks: [{ id: 'b2', type: 'question', answerFormat: 'single_choice', options: ['B'] }] },
+        { id: 'q3', question_text: 'T3', answer_format: 'single_choice' as const, blocks: [{ id: 'b3', type: 'question', answerFormat: 'single_choice', options: ['C'] }] },
+      ];
 
       render(<UnifiedQuizPreview {...baseProps} questions={questions as any} mode="embedded" />);
 

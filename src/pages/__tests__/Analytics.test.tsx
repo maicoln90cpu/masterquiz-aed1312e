@@ -16,6 +16,27 @@ vi.mock('sonner', () => ({
     info: vi.fn(),
   },
 }));
+
+// Override AuthContext with authenticated user
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'user-1', email: 'test@example.com' },
+    session: { access_token: 'token' },
+    loading: false,
+  }),
+  AuthProvider: ({ children }: any) => children,
+}));
+
+// Mock DashboardLayout to just render children
+vi.mock('@/components/DashboardLayout', () => ({
+  DashboardLayout: ({ children }: any) => <div data-testid="dashboard-layout">{children}</div>,
+}));
+
+// Mock useUserStage (useTrackPageView)
+vi.mock('@/hooks/useUserStage', () => ({
+  useTrackPageView: vi.fn(),
+}));
+
 vi.mock('@/hooks/usePlanFeatures', () => ({
   usePlanFeatures: vi.fn(() => ({
     allowExportPDF: true,
@@ -56,7 +77,13 @@ vi.mock('react-i18next', () => ({
         'analytics.generating': 'Gerando...',
         'common.back': 'Voltar',
       };
-      return translations[key] || key;
+      return translations[key] || (typeof defaultValue === 'string' ? defaultValue : key);
+    },
+    i18n: {
+      language: 'pt',
+      changeLanguage: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
     },
   }),
 }));
@@ -82,13 +109,10 @@ const mockAnalyticsData = [
   },
 ];
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: false },
-  },
-});
-
 const renderWithProviders = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -130,7 +154,11 @@ describe('Analytics', () => {
           }),
         } as any;
       }
-      return {} as any;
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      } as any;
     });
   });
 
@@ -147,7 +175,6 @@ describe('Analytics', () => {
       renderWithProviders(<Analytics />);
       
       await waitFor(() => {
-        // Estatísticas principais
         expect(screen.getByText(/visualiza/i)).toBeInTheDocument();
       });
     });
@@ -156,9 +183,7 @@ describe('Analytics', () => {
       renderWithProviders(<Analytics />);
       
       await waitFor(() => {
-        // Total views: 100 + 120 = 220
         expect(screen.getByText('220')).toBeInTheDocument();
-        // Total completions: 40 + 50 = 90
         expect(screen.getByText('90')).toBeInTheDocument();
       });
     });
@@ -178,7 +203,6 @@ describe('Analytics', () => {
       renderWithProviders(<Analytics />);
       
       await waitFor(() => {
-        // Período padrão selecionado
         const periodSelect = screen.getByRole('combobox');
         expect(periodSelect).toBeInTheDocument();
       });
@@ -190,7 +214,6 @@ describe('Analytics', () => {
       renderWithProviders(<Analytics />);
       
       await waitFor(() => {
-        // Lazy-loaded charts area
         expect(screen.getByText(/filtros/i)).toBeInTheDocument();
       });
     });
@@ -231,7 +254,11 @@ describe('Analytics', () => {
             order: vi.fn().mockResolvedValue({ data: [], error: null }),
           } as any;
         }
-        return {} as any;
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        } as any;
       });
 
       const user = userEvent.setup();
@@ -253,7 +280,6 @@ describe('Analytics', () => {
       renderWithProviders(<Analytics />);
       
       await waitFor(() => {
-        // Tabs de diferentes views de analytics
         const tabs = screen.getAllByRole('tab');
         expect(tabs.length).toBeGreaterThanOrEqual(1);
       });
@@ -265,9 +291,7 @@ describe('Analytics', () => {
       renderWithProviders(<Analytics />);
       
       await waitFor(() => {
-        // Área de comparação
         const checkboxes = screen.queryAllByRole('checkbox');
-        // Pode ou não ter checkboxes dependendo dos quizzes
       });
     });
   });
@@ -279,12 +303,10 @@ describe('Analytics', () => {
         eq: vi.fn().mockReturnThis(),
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnValue(new Promise(() => {})), // Never resolves
+        order: vi.fn().mockReturnValue(new Promise(() => {})),
       } as any));
 
       renderWithProviders(<Analytics />);
-      
-      // Skeleton deve aparecer durante loading
     });
   });
 
@@ -303,8 +325,6 @@ describe('Analytics', () => {
       renderWithProviders(<Analytics />);
       
       await waitFor(() => {
-        // FunnelChart com dados mockados
-        // Verificação indireta - o componente renderiza
         expect(screen.getByText('Analytics')).toBeInTheDocument();
       });
     });
