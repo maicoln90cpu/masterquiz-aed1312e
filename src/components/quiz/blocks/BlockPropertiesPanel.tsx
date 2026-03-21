@@ -292,30 +292,46 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         )}
       </div>
 
-      {/* ✅ Etapa 2E: Imagens por opção */}
+      {/* ✅ Etapa 2E: Imagens por opção — Upload ou URL */}
       {(block.answerFormat === 'single_choice' || block.answerFormat === 'multiple_choice') && (
         <>
           <Separator />
           <PropertySection title="🖼️ Imagens por Opção">
             <p className="text-[10px] text-muted-foreground mb-2">
-              Cole URLs de imagens para criar cards visuais. Deixe em branco para exibir opções normais.
+              Faça upload ou cole URL de imagens para criar cards visuais. Deixe em branco para opções normais.
             </p>
             {(block.options || []).map((opt, idx) => {
               const optText = typeof opt === 'string' ? opt : (opt as any)?.text || `Opção ${idx + 1}`;
+              const currentUrl = (block.optionImages || [])[idx] || '';
+              const updateOptionImage = (url: string) => {
+                const imgs = [...(block.optionImages || [])];
+                while (imgs.length <= idx) imgs.push('');
+                imgs[idx] = url;
+                onChange(update(block, { optionImages: imgs }));
+              };
               return (
-                <div key={idx} className="flex gap-2 items-center mb-1">
-                  <span className="text-xs text-muted-foreground w-20 truncate">{optText}</span>
-                  <Input
-                    className="flex-1 text-xs h-7"
-                    placeholder="https://... (URL da imagem)"
-                    value={(block.optionImages || [])[idx] || ''}
-                    onChange={(e) => {
-                      const imgs = [...(block.optionImages || [])];
-                      while (imgs.length <= idx) imgs.push('');
-                      imgs[idx] = e.target.value;
-                      onChange(update(block, { optionImages: imgs }));
-                    }}
-                  />
+                <div key={idx} className="mb-3 border rounded-lg p-2 space-y-1">
+                  <span className="text-xs font-medium text-muted-foreground">{optText}</span>
+                  {currentUrl ? (
+                    <div className="relative group">
+                      <img src={currentUrl} alt={optText} className="w-full max-h-24 object-contain rounded border bg-muted/20" />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => updateOptionImage('')}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <ImageUploader
+                      value=""
+                      onChange={(url) => updateOptionImage(url)}
+                      className="[&_div]:p-3 [&_svg]:h-6 [&_svg]:w-6"
+                    />
+                  )}
                 </div>
               );
             })}
