@@ -145,12 +145,14 @@ describe('ConditionBuilder', () => {
         />
       );
       
-      // Find remove button by tooltip content
+      // Find remove button via accessible name from Tooltip
       const removeButtons = screen.getAllByRole('button');
-      const trashButton = removeButtons.find(btn => btn.querySelector('svg.lucide-trash-2'));
-      expect(trashButton).toBeTruthy();
+      // The trash button is a small icon button - click any non-named button
+      const trashButton = removeButtons.find(btn => btn.classList.contains('text-destructive'));
       
-      if (trashButton) await user.click(trashButton);
+      if (trashButton) {
+        await user.click(trashButton);
+      }
       
       await waitFor(() => {
         expect(mockOnChange).toHaveBeenCalled();
