@@ -339,6 +339,34 @@ const QuestionProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
               );
             })}
           </PropertySection>
+
+          {/* Layout e Tamanho das imagens de opção */}
+          {(block.optionImages || []).some(img => img && img.trim() !== '') && (
+            <>
+              <PropertySection title="Layout das Opções" tooltip="Como as opções com imagem são dispostas: vertical (1×4), grade (2×2) ou horizontal (4×1)">
+                <Select value={block.optionImageLayout || '2x2'} onValueChange={(v) => onChange(update(block, { optionImageLayout: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1x4">1×4 Vertical (uma abaixo da outra)</SelectItem>
+                    <SelectItem value="2x2">2×2 Grade</SelectItem>
+                    <SelectItem value="4x1">4×1 Horizontal (lado a lado)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </PropertySection>
+
+              <PropertySection title="Tamanho da Imagem" tooltip="Controla a altura/aspecto das imagens nos cards de opção">
+                <Select value={block.optionImageSize || 'medium'} onValueChange={(v) => onChange(update(block, { optionImageSize: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tiny">Mini</SelectItem>
+                    <SelectItem value="small">Pequeno</SelectItem>
+                    <SelectItem value="medium">Médio</SelectItem>
+                    <SelectItem value="large">Grande</SelectItem>
+                  </SelectContent>
+                </Select>
+              </PropertySection>
+            </>
+          )}
         </>
       )}
     </div>
