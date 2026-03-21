@@ -20,8 +20,14 @@ export const TextBlock = ({ block, onChange }: TextBlockProps) => {
     full: 'w-full',
   }[block.imageSize || 'medium'];
 
+  const imageAlignClass = {
+    left: 'mr-auto',
+    center: 'mx-auto',
+    right: 'ml-auto',
+  }[block.imageAlignment || 'center'];
+
   const imageElement = block.imageUrl ? (
-    <div className="relative group">
+    <div className={`relative group ${imageAlignClass}`} style={{ width: 'fit-content' }}>
       <img
         src={block.imageUrl}
         alt="Imagem do bloco de texto"

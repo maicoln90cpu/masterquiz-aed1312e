@@ -67,6 +67,7 @@ export interface TextBlock extends BaseBlock {
   imageUrl?: string;
   imagePosition?: 'above' | 'below';
   imageSize?: 'small' | 'medium' | 'large' | 'full';
+  imageAlignment?: 'left' | 'center' | 'right';
 }
 
 export interface SeparatorBlock extends BaseBlock {
