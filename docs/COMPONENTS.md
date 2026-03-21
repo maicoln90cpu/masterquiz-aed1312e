@@ -89,8 +89,8 @@
 
 ### `BlockEditor`
 - **Arquivo:** `src/components/quiz/BlockEditor.tsx`
-- **Descrição:** Editor dos 22 tipos de blocos
-- **Tipos:** question, text, separator, image, video, audio, gallery, embed, button, price, metrics, loading, progress, countdown, testimonial, slider, textInput, nps, accordion, comparison, socialProof
+- **Descrição:** Editor dos 34 tipos de blocos
+- **Tipos:** question, text, separator, image, video, audio, gallery, embed, button, price, metrics, loading, progress, countdown, testimonial, slider, textInput, nps, accordion, comparison, socialProof, animatedCounter, callout, iconList, quote, badgeRow, banner, answerSummary, progressMessage, avatarGroup, conditionalText, comparisonResult, recommendation, calculator
 
 ### `CalculatorWizard`
 - **Arquivo:** `src/components/quiz/wizard/CalculatorWizard.tsx`
