@@ -1429,6 +1429,8 @@ const AnswerSummaryProperties = ({ block, onChange, questions }: BlockProperties
         <Label>Mostrar ícones</Label>
         <Switch checked={block.showIcon !== false} onCheckedChange={(v) => onChange(update(block, { showIcon: v }))} />
       </div>
+      {/* ✅ Etapa 2E: Botão copiar respostas */}
+      <SwitchRow label="Botão 'Copiar respostas'" checked={block.showCopyButton || false} onChange={(v) => onChange(update(block, { showCopyButton: v }))} />
     </div>
   );
 };
