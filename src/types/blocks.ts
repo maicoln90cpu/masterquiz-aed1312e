@@ -216,7 +216,7 @@ export interface CountdownBlock extends BaseBlock {
   showHours?: boolean;
   showMinutes?: boolean;
   showSeconds?: boolean;
-  style?: 'default' | 'minimal' | 'bold' | 'card';
+  style?: 'default' | 'minimal' | 'bold' | 'card' | 'flip'; // ✅ Etapa 2F: Flip-clock style
   expiryMessage?: string;
   expiryAction?: 'none' | 'hide' | 'redirect';
   redirectUrl?: string;
