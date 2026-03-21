@@ -71,10 +71,6 @@ describe('AIQuizGenerator', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Ensure functions.invoke exists
-    if (!supabase.functions) {
-      (supabase as any).functions = { invoke: vi.fn() };
-    }
   });
 
   describe('Renderização inicial', () => {
