@@ -40,6 +40,7 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
   }
 
   const imageSizeClass = {
+    tiny: 'max-w-[120px]',
     small: 'max-w-[200px]',
     medium: 'max-w-[400px]',
     large: 'max-w-[600px]',
