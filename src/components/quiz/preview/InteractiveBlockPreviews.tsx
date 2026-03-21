@@ -173,6 +173,7 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
     return block.duration || 300;
   });
   const [pulse, setPulse] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -184,15 +185,35 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
     return () => clearInterval(interval);
   }, [timeLeft]);
 
+  // ✅ Etapa 2E: Ação ao expirar (redirect)
+  useEffect(() => {
+    if (timeLeft === 0 && !hasRedirected) {
+      if (block.expiryAction === 'redirect' && block.redirectUrl) {
+        setHasRedirected(true);
+        window.open(block.redirectUrl, '_blank');
+      }
+    }
+  }, [timeLeft, hasRedirected, block.expiryAction, block.redirectUrl]);
+
   const days = Math.floor(timeLeft / 86400);
   const hours = Math.floor((timeLeft % 86400) / 3600);
   const minutes = Math.floor((timeLeft % 3600) / 60);
   const seconds = timeLeft % 60;
 
+  // ✅ Etapa 2E: Ação 'hide' esconde o bloco
+  if (timeLeft === 0 && block.expiryAction === 'hide') {
+    return null;
+  }
+
   if (timeLeft === 0 && block.expiryMessage) {
     return (
       <div className="text-center p-8 rounded-xl border-2 border-dashed" style={{ borderColor: block.primaryColor, backgroundColor: block.secondaryColor }}>
         <p className="text-2xl font-bold" style={{ color: block.primaryColor }}>{block.expiryMessage}</p>
+        {block.expiryAction === 'redirect' && block.redirectUrl && (
+          <p className="text-sm text-muted-foreground mt-2">
+            🔗 Redirecionando para {block.redirectUrl}...
+          </p>
+        )}
       </div>
     );
   }
