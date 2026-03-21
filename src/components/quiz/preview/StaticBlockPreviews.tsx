@@ -34,18 +34,41 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
       if (answer) {
         const answerStr = Array.isArray(answer) ? answer.join(', ') : String(answer);
         content = content.replace(new RegExp(`\\{resposta_P${idx + 1}\\}`, 'gi'), answerStr);
-        content = content.replace(new RegExp(`\\{resposta\\}`, 'i'), answerStr); // first match only
+        content = content.replace(new RegExp(`\\{resposta\\}`, 'i'), answerStr);
       }
     });
   }
 
-  return (
+  const imageSizeClass = {
+    small: 'max-w-[200px]',
+    medium: 'max-w-[400px]',
+    large: 'max-w-[600px]',
+    full: 'w-full',
+  }[(block as any).imageSize || 'medium'];
+
+  const imageElement = (block as any).imageUrl ? (
+    <img
+      src={(block as any).imageUrl}
+      alt="Imagem ilustrativa"
+      className={`rounded-lg object-cover ${imageSizeClass}`}
+    />
+  ) : null;
+
+  const textElement = (
     <div
       className={`prose prose-sm max-w-none text-${block.alignment || "left"} ${
         block.fontSize === "small" ? "text-sm" : block.fontSize === "large" ? "text-lg" : "text-base"
       }`}
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
     />
+  );
+
+  return (
+    <div className="space-y-3">
+      {(block as any).imagePosition !== 'below' && imageElement}
+      {textElement}
+      {(block as any).imagePosition === 'below' && imageElement}
+    </div>
   );
 };
 
