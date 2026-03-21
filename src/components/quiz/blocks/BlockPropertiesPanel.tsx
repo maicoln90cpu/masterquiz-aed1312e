@@ -926,15 +926,28 @@ const TextInputProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
       <div className="space-y-3">
         <SwitchRow label="Multilinha" checked={block.multiline || false} onChange={(v) => onChange(update(block, { multiline: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
-        {/* ✅ Etapa 2E: Validação visual em tempo real */}
         {block.validation && block.validation !== 'none' && (
           <SwitchRow label="Feedback visual de validação" checked={block.showValidationFeedback || false} onChange={(v) => onChange(update(block, { showValidationFeedback: v }))} />
         )}
-        {/* ✅ Etapa 2F: Máscara de input */}
         {(block.validation === 'cpf' || block.validation === 'cnpj' || block.validation === 'phone') && (
           <SwitchRow label="Máscara automática" checked={(block as any).useMask || false} onChange={(v) => onChange(update(block, { useMask: v }))} />
         )}
       </div>
+      {/* ✅ Etapa 4: Webhook por campo */}
+      <Separator />
+      <SwitchRow label="🔗 Webhook ao submeter" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
+      {(block as any).webhookOnSubmit && (
+        <PropertySection title="URL do Webhook">
+          <Input
+            value={(block as any).webhookUrl || ''}
+            placeholder="https://seu-servidor.com/webhook"
+            onChange={(e) => onChange(update(block, { webhookUrl: e.target.value }))}
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            POST com valor do campo ao sair (blur) ou submeter. Ideal para captura de email em tempo real.
+          </p>
+        </PropertySection>
+      )}
     </div>
   );
 };
