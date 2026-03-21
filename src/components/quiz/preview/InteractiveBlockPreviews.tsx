@@ -9,6 +9,7 @@ import type { QuizBlock } from "@/types/blocks";
 // ---- LOADING ----
 export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loading' } }) => {
   const [progress, setProgress] = useState(0);
+  const [msgIndex, setMsgIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,6 +20,15 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
     }, 100);
     return () => clearInterval(interval);
   }, [block.duration]);
+
+  // ✅ Etapa 2E: Mensagens rotativas com fade
+  useEffect(() => {
+    if (!block.loadingMessages?.length || !block.rotateMessages) return;
+    const interval = setInterval(() => {
+      setMsgIndex(prev => (prev + 1) % block.loadingMessages!.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [block.loadingMessages, block.rotateMessages]);
 
   const renderSpinner = () => {
     switch (block.spinnerType) {
@@ -51,21 +61,36 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
     }
   };
 
+  const progressColor = block.progressColor || 'hsl(var(--primary))';
+  const messages = block.loadingMessages || [];
+  const currentMsg = block.rotateMessages
+    ? messages[msgIndex]
+    : messages[Math.min(Math.floor(progress / (100 / Math.max(messages.length, 1))), messages.length - 1)];
+
   return (
     <div className="flex flex-col items-center justify-center py-12 space-y-6">
       {renderSpinner()}
       {block.showProgress && (
         <div className="w-full max-w-xs">
           <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
+            <div className="h-full rounded-full transition-all duration-100" style={{ width: `${progress}%`, backgroundColor: progressColor }} />
           </div>
           <p className="text-sm text-center text-muted-foreground mt-2">{Math.round(progress)}%</p>
         </div>
       )}
-      {block.loadingMessages && block.loadingMessages.length > 0 && (
-        <p className="text-sm text-muted-foreground animate-pulse text-center">
-          {block.loadingMessages[Math.min(Math.floor(progress / (100 / block.loadingMessages.length)), block.loadingMessages.length - 1)]}
-        </p>
+      {messages.length > 0 && currentMsg && (
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={block.rotateMessages ? msgIndex : Math.floor(progress)}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="text-sm text-muted-foreground text-center"
+          >
+            {currentMsg}
+          </motion.p>
+        </AnimatePresence>
       )}
     </div>
   );
