@@ -85,7 +85,7 @@ export interface ImageBlock extends BaseBlock {
   url: string;
   alt?: string;
   caption?: string;
-  size?: 'small' | 'medium' | 'large' | 'full';
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
   enableLightbox?: boolean; // ✅ Etapa 2F: Clicar para expandir em tela cheia
 }
 
