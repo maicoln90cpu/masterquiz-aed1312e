@@ -393,6 +393,8 @@ const SeparatorProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
           </PropertySection>
         </>
       )}
+      {/* ✅ Etapa 2F: Animação fade-in */}
+      <SwitchRow label="Animação fade-in" checked={(block as any).animateFade || false} onChange={(v) => onChange(update(block, { animateFade: v }))} />
     </div>
   );
 };
