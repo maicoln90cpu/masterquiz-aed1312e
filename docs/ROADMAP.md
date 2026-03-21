@@ -109,6 +109,11 @@ Q4 2025: Expansão Internacional
   - Dashboard de performance por categoria
   - Unsubscribe com compliance CAN-SPAM/LGPD
   - Webhook de tracking (open/click/bounce)
+- **34 tipos de blocos no editor** (5 visuais, 6 dinâmicos, 1 calculadora) ✅
+- **Editor Classic/Modern com thin router** ✅
+- **Imagens por opção de resposta no quiz publicado** ✅
+- **Estabilização da suíte de testes (~22 fixes, 10 suites)** ✅
+- **Templates re-habilitados (14 ativos)** ✅
 
 ### H2 2026
 - Expansão para EUA
@@ -136,6 +141,8 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-03-21 | **v2.37 — Doc Overhaul + Thin Router + Test Fixes + 34 Blocos + Image Options** |
+| 2026-03-20 | **v2.31–v2.36 — 12 novos blocos + calculadora + seletor de perguntas + preview fix** |
 | 2026-03-19 | **v2.30 — Email Marketing Automatizado + Bulk API + Documentação completa** |
 | 2026-03-15 | **v2.29 — Rotação Prompts de Imagem Blog (5 estilos) + Cooldown Campanhas** |
 | 2026-03-09 | **v2.28 — 5 Eventos GTM + Dashboard Observabilidade + gtmLogger centralizado** |
@@ -165,3 +172,5 @@ Q4 2025: Expansão Internacional
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
 | [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
 | [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |

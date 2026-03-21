@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.30.0** | Última atualização: 19 de Março de 2026
+**Versão 2.37.0** | Última atualização: 21 de Março de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -101,7 +101,9 @@ masterquizz/
 │   ├── ROADMAP.md            # Planejamento estratégico
 │   ├── PENDENCIAS.md         # Changelog e pendências
 │   ├── STYLE_GUIDE.md        # Padrões de código
-│   └── CHECKLIST.md          # Checklist de validação MVP
+│   ├── CHECKLIST.md          # Checklist de validação MVP
+│   ├── BLOCKS.md             # Catálogo dos 34 tipos de blocos
+│   └── TESTING.md            # Guia de testes automatizados
 ├── public/                    # Assets estáticos
 ├── scripts/                   # Scripts de automação
 ├── src/
@@ -119,7 +121,7 @@ masterquizz/
 │   │   ├── lazy/              # Componentes lazy-loaded
 │   │   ├── onboarding/        # Tours guiados (driver.js)
 │   │   ├── quiz/              # Editor de quizzes
-│   │   │   ├── blocks/        # 22 tipos de blocos
+│   │   │   ├── blocks/        # 34 tipos de blocos
 │   │   │   ├── view/          # Componentes de visualização pública
 │   │   │   ├── wizard/        # Calculator Wizard (3 steps)
 │   │   │   └── __tests__/     # Testes de componentes quiz
@@ -507,7 +509,7 @@ src/
 ## ✨ Funcionalidades
 
 ### Para Usuários
-- ✅ Editor visual de blocos (22 tipos)
+- ✅ Editor visual de blocos (34 tipos) com modo Classic e Modern
 - ✅ Geração de quiz com IA (auto-convencimento)
 - ✅ Upload de PDF para geração
 - ✅ 8 templates visuais
@@ -583,7 +585,8 @@ logger.api('API call', { endpoint, status });
 | [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 57 Edge Functions |
 | [docs/COMPONENTS.md](./docs/COMPONENTS.md) | Documentação de componentes |
 | [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
-| [src/__tests__/README.md](./src/__tests__/README.md) | Guia de testes automatizados |
+| [docs/BLOCKS.md](./docs/BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [docs/TESTING.md](./docs/TESTING.md) | Guia de testes automatizados |
 
 ---
 

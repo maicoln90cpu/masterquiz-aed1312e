@@ -1,7 +1,7 @@
 # 🧩 Componentes - MasterQuiz
 
 > Documentação dos componentes principais do frontend
-> Versão 2.30 | 19 de Março de 2026
+> Versão 2.37 | 21 de Março de 2026
 
 ---
 
@@ -38,10 +38,20 @@
 
 ### `CreateQuiz` — `/create` e `/edit/:id`
 - **Arquivo:** `src/pages/CreateQuiz.tsx`
-- **Descrição:** Orquestra o editor de quiz em 5 steps (template, aparência, perguntas, formulário, resultados)
+- **Descrição:** Thin router que delega para `CreateQuizClassic` ou `CreateQuizModern` baseado em `useEditorLayout`
+- **Padrão:** Lazy loading via `React.lazy` + `Suspense` — nenhum hook pesado neste arquivo
+- **Dependências:** useEditorLayout
+
+### `CreateQuizClassic` — Editor clássico 5 steps
+- **Arquivo:** `src/pages/CreateQuizClassic.tsx`
+- **Descrição:** Editor original com 5 steps (template, aparência, perguntas, formulário, resultados)
 - **Hooks:** useQuizState, useQuizPersistence, useHistory, useAutoSave
 - **Eventos GTM:** QuizShared, EditorAbandoned
-- **Dependências:** @dnd-kit, react-quill
+
+### `CreateQuizModern` — Editor moderno com sidebar
+- **Arquivo:** `src/pages/CreateQuizModern.tsx`
+- **Descrição:** Editor com sidebar de blocos, preview lateral e paleta compacta
+- **Hooks:** useQuizState, useQuizPersistence, useHistory, useAutoSave
 
 ### `QuizView` — `/:company/:slug`
 - **Arquivo:** `src/pages/QuizView.tsx`
@@ -79,8 +89,8 @@
 
 ### `BlockEditor`
 - **Arquivo:** `src/components/quiz/BlockEditor.tsx`
-- **Descrição:** Editor dos 22 tipos de blocos
-- **Tipos:** question, text, separator, image, video, audio, gallery, embed, button, price, metrics, loading, progress, countdown, testimonial, slider, textInput, nps, accordion, comparison, socialProof
+- **Descrição:** Editor dos 34 tipos de blocos
+- **Tipos:** question, text, separator, image, video, audio, gallery, embed, button, price, metrics, loading, progress, countdown, testimonial, slider, textInput, nps, accordion, comparison, socialProof, animatedCounter, callout, iconList, quote, badgeRow, banner, answerSummary, progressMessage, avatarGroup, conditionalText, comparisonResult, recommendation, calculator
 
 ### `CalculatorWizard`
 - **Arquivo:** `src/components/quiz/wizard/CalculatorWizard.tsx`
@@ -200,3 +210,5 @@
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
 | [API_DOCS.md](./API_DOCS.md) | Edge Functions |
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |

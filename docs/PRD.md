@@ -2,8 +2,8 @@
 
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
-**Versão:** 2.30  
-**Última atualização:** 19 de Março de 2026  
+**Versão:** 2.37  
+**Última atualização:** 21 de Março de 2026  
 **Owner:** Product Team
 
 ---
@@ -216,6 +216,9 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF02.10 | Undo/Redo no editor | Média | ✅ |
 | RF02.11 | Quiz branching (lógica condicional) | Alta | ✅ |
 | RF02.12 | Otimização automática de imagens (WebP) | Média | ✅ |
+| RF02.13 | Imagens por opção de resposta (optionImages, optionImageLayout) | Média | ✅ |
+| RF02.14 | Editor Classic/Modern com thin router | Alta | ✅ |
+| RF02.15 | 34 tipos de blocos no editor | Alta | ✅ |
 
 ### RF03 - Resultados e Condições
 
@@ -605,6 +608,8 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 - [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) - Arquitetura técnica
 - [API_DOCS.md](./API_DOCS.md) - Documentação Edge Functions
 - [COMPONENTS.md](./COMPONENTS.md) - Documentação componentes
+- [BLOCKS.md](./BLOCKS.md) - Catálogo dos 34 tipos de blocos
+- [TESTING.md](./TESTING.md) - Guia de testes
 
 ---
 

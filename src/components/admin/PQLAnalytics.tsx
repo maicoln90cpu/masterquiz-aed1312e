@@ -350,7 +350,7 @@ export function PQLAnalytics() {
 // ============================================
 
 const AB_EVENTS = [
-  { classic: 'first_quiz_created', modern: 'first_quiz_createdB', label: 'Primeiro Quiz Criado' },
+  { classic: 'first_quiz_created', modern: 'first_quiz_createdB', label: 'Primeiro Quiz Editado Manualmente' },
   { classic: 'quiz_first_published', modern: 'quiz_first_publishedB', label: 'Primeiro Quiz Publicado' },
 ];
 

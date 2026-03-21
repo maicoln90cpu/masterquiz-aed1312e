@@ -148,6 +148,7 @@ Analise e identifique:
 - [ ] **Types não exportados**: Tipos úteis presos em arquivos específicos
 - [ ] **Funções não documentadas**: Lógica complexa sem explicação
 - [ ] **Fluxos não documentados**: Processos críticos sem documentação
+- [ ] **Cobertura de blocos**: Nem todos os 34 tipos com testes/docs
 - [ ] **Variáveis de ambiente não documentadas**: .env sem template
 - [ ] **Arquitetura não documentada**: Estrutura do projeto não explicada
 - [ ] **Scripts não documentados**: package.json scripts sem descrição

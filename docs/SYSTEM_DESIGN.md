@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 19 de Março de 2026 | Versão 2.30
+> Última atualização: 21 de Março de 2026 | Versão 2.37
 
 ---
 
@@ -146,24 +146,29 @@ UI Action → pushGTMEvent() → dataLayer.push() + gtm_event_logs INSERT
 
 | Componente | Propósito |
 |------------|-----------|
-| `CreateQuiz` | Orquestra editor 5 steps |
+| `CreateQuiz` | Thin router: delega para `CreateQuizClassic` ou `CreateQuizModern` via `useEditorLayout` |
+| `CreateQuizClassic` | Editor Classic 5 steps (lazy-loaded) |
+| `CreateQuizModern` | Editor Modern com sidebar de blocos (lazy-loaded) |
 | `QuizView` | Renderiza quiz público |
 | `UnifiedQuizPreview` | Preview em tempo real |
-| `BlockEditor` | Edição dos 22 tipos de blocos |
+| `BlockEditor` | Edição dos 34 tipos de blocos |
 | `QuestionsList` | Sidebar de perguntas (cards compactos) |
 | `CalculatorWizard` | Wizard de calculadoras (3 steps) |
 | `ProtectedRoute` | Guard de rotas por role |
 
 ---
 
-## 📦 Sistema de Blocos (22 tipos)
+## 📦 Sistema de Blocos (34 tipos)
 
 ```typescript
 type BlockType =
   | 'question' | 'text' | 'separator' | 'image' | 'video' | 'audio'
   | 'gallery' | 'embed' | 'button' | 'price' | 'metrics' | 'loading'
   | 'progress' | 'countdown' | 'testimonial' | 'slider' | 'textInput'
-  | 'nps' | 'accordion' | 'comparison' | 'socialProof';
+  | 'nps' | 'accordion' | 'comparison' | 'socialProof' | 'animatedCounter'
+  | 'callout' | 'iconList' | 'quote' | 'badgeRow' | 'banner'
+  | 'answerSummary' | 'progressMessage' | 'avatarGroup'
+  | 'conditionalText' | 'comparisonResult' | 'recommendation' | 'calculator';
 ```
 
 Cada pergunta pode ter múltiplos blocos organizados por `order`. O bloco `question` é obrigatório e define o tipo de resposta (`yes_no`, `single_choice`, `multiple_choice`, `short_text`).
@@ -549,3 +554,5 @@ Payload (array de até 100 itens):
 | [AUDIT_TEMPLATE.md](./AUDIT_TEMPLATE.md) | Template de auditoria |
 | [API_DOCS.md](./API_DOCS.md) | Documentação Edge Functions |
 | [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
+| [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [TESTING.md](./TESTING.md) | Guia de testes |
