@@ -1,8 +1,10 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { TestimonialBlock as TestimonialBlockType } from "@/types/blocks";
 import { ImageUploader } from "@/components/ImageUploader";
 import { TestimonialBlockPreview } from "../preview/InteractiveBlockPreviews";
+import { X } from "lucide-react";
 
 interface TestimonialBlockProps {
   block: TestimonialBlockType;
@@ -23,17 +25,35 @@ export default function TestimonialBlock({ block, onChange }: TestimonialBlockPr
         />
       </div>
 
-      {/* Content: Author photo */}
+      {/* Content: Author photo — preview único */}
       <div className="space-y-2">
         <Label>Foto do Autor</Label>
-        <ImageUploader
-          value={block.authorImage}
-          onChange={(url) => onChange({ ...block, authorImage: url })}
-          onRemove={() => onChange({ ...block, authorImage: undefined })}
-        />
+        {block.authorImage ? (
+          <div className="relative inline-block">
+            <img
+              src={block.authorImage}
+              alt={block.authorName || 'Autor'}
+              className="w-16 h-16 rounded-full object-cover border-2 border-muted"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full"
+              onClick={() => onChange({ ...block, authorImage: undefined })}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        ) : (
+          <ImageUploader
+            value={block.authorImage}
+            onChange={(url) => onChange({ ...block, authorImage: url })}
+          />
+        )}
       </div>
 
-      {/* ✅ Etapa 3: Preview real — WYSIWYG com carrossel, rating, estilos */}
+      {/* ✅ Preview real — WYSIWYG */}
       <div className="p-4 border rounded-lg bg-muted/50">
         <p className="text-sm text-muted-foreground mb-3">Preview (ao vivo)</p>
         <TestimonialBlockPreview block={block as any} />
