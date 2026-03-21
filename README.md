@@ -121,7 +121,7 @@ masterquizz/
 │   │   ├── lazy/              # Componentes lazy-loaded
 │   │   ├── onboarding/        # Tours guiados (driver.js)
 │   │   ├── quiz/              # Editor de quizzes
-│   │   │   ├── blocks/        # 22 tipos de blocos
+│   │   │   ├── blocks/        # 34 tipos de blocos
 │   │   │   ├── view/          # Componentes de visualização pública
 │   │   │   ├── wizard/        # Calculator Wizard (3 steps)
 │   │   │   └── __tests__/     # Testes de componentes quiz
