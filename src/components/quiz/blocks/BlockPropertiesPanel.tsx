@@ -1294,16 +1294,40 @@ const EmbedProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 // HELPER COMPONENTS
 // ============================================
 
-const PropertySection = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const PropertySection = ({ title, children, tooltip }: { title: string; children: React.ReactNode; tooltip?: string }) => (
   <div className="space-y-1.5">
-    <Label className="text-xs font-medium text-muted-foreground">{title}</Label>
+    <div className="flex items-center gap-1">
+      <Label className="text-xs font-medium text-muted-foreground">{title}</Label>
+      {tooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help shrink-0" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[240px] text-xs">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
     {children}
   </div>
 );
 
-const SwitchRow = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
+const SwitchRow = ({ label, checked, onChange, tooltip }: { label: string; checked: boolean; onChange: (v: boolean) => void; tooltip?: string }) => (
   <div className="flex items-center justify-between">
-    <Label className="text-sm cursor-pointer">{label}</Label>
+    <div className="flex items-center gap-1">
+      <Label className="text-sm cursor-pointer">{label}</Label>
+      {tooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help shrink-0" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[240px] text-xs">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
     <Switch checked={checked} onCheckedChange={onChange} />
   </div>
 );
