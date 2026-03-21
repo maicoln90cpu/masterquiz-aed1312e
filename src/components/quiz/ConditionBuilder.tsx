@@ -33,7 +33,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface ConditionRule {
-  id: string;
+  id?: string;
   questionId: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
   value: string;
