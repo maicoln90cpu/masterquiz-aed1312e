@@ -978,12 +978,26 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <div className="space-y-3">
         <SwitchRow label="Mostrar labels" checked={block.showLabels || false} onChange={(v) => onChange(update(block, { showLabels: v }))} />
         <SwitchRow label="Obrigatório" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
-        {/* ✅ Etapa 2E: Comentário opcional */}
         <SwitchRow label="Campo de comentário" checked={block.showComment || false} onChange={(v) => onChange(update(block, { showComment: v }))} />
       </div>
       {block.showComment && (
         <PropertySection title="Placeholder do comentário">
           <Input value={block.commentPlaceholder || ''} placeholder="Conte-nos mais sobre sua nota..." onChange={(e) => onChange(update(block, { commentPlaceholder: e.target.value }))} />
+        </PropertySection>
+      )}
+      {/* ✅ Etapa 4: Webhook por campo */}
+      <Separator />
+      <SwitchRow label="🔗 Webhook ao submeter" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />
+      {(block as any).webhookOnSubmit && (
+        <PropertySection title="URL do Webhook">
+          <Input
+            value={(block as any).webhookUrl || ''}
+            placeholder="https://seu-servidor.com/webhook"
+            onChange={(e) => onChange(update(block, { webhookUrl: e.target.value }))}
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            POST com nota NPS ao selecionar valor.
+          </p>
         </PropertySection>
       )}
       <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground space-y-1">
