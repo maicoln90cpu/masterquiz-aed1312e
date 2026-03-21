@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TestimonialBlock as TestimonialBlockType } from "@/types/blocks";
 import { ImageUploader } from "@/components/ImageUploader";
-import { Star } from "lucide-react";
+import { TestimonialBlockPreview } from "../preview/InteractiveBlockPreviews";
 
 interface TestimonialBlockProps {
   block: TestimonialBlockType;
@@ -33,31 +33,10 @@ export default function TestimonialBlock({ block, onChange }: TestimonialBlockPr
         />
       </div>
 
-      {/* Preview */}
+      {/* ✅ Etapa 3: Preview real — WYSIWYG com carrossel, rating, estilos */}
       <div className="p-4 border rounded-lg bg-muted/50">
-        <p className="text-sm text-muted-foreground mb-3">Preview</p>
-        <div className={`${block.style === 'card' ? 'p-4 bg-background rounded-lg shadow-md' : ''}`}>
-          {block.style === 'quote' && <div className="text-6xl text-muted-foreground mb-2">"</div>}
-          <p className={`${block.style === 'minimal' ? 'text-sm' : 'text-base'} italic mb-3`}>"{block.quote}"</p>
-          {block.showRating && (
-            <div className="flex gap-1 mb-3">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} className={`w-4 h-4 ${star <= (block.rating || 5) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-              ))}
-            </div>
-          )}
-          <div className="flex items-center gap-3">
-            {block.authorImage && <img src={block.authorImage} alt={block.authorName} className="w-12 h-12 rounded-full object-cover" />}
-            <div>
-              <p className="font-semibold" style={{ color: block.primaryColor }}>{block.authorName}</p>
-              {(block.authorRole || block.authorCompany) && (
-                <p className="text-sm text-muted-foreground">
-                  {block.authorRole}{block.authorRole && block.authorCompany && ' • '}{block.authorCompany}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+        <p className="text-sm text-muted-foreground mb-3">Preview (ao vivo)</p>
+        <TestimonialBlockPreview block={block as any} />
       </div>
 
       <p className="text-xs text-muted-foreground">
