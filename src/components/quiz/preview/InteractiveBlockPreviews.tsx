@@ -419,16 +419,60 @@ export const SliderBlockPreview = ({ block }: { block: QuizBlock & { type: 'slid
 };
 
 // ---- TEXT INPUT ----
+// ✅ Etapa 2F: Máscaras de input (CPF, CNPJ, telefone)
+const applyMask = (value: string, type?: string): string => {
+  const digits = value.replace(/\D/g, '');
+  switch (type) {
+    case 'cpf':
+      return digits
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+        .substring(0, 14);
+    case 'cnpj':
+      return digits
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+        .substring(0, 18);
+    case 'phone':
+      if (digits.length <= 10) {
+        return digits
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{4})(\d{1,4})$/, '$1-$2');
+      }
+      return digits
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d{1,4})$/, '$1-$2')
+        .substring(0, 15);
+    default:
+      return value;
+  }
+};
+
 export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => {
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
+  const useMask = (block as any).useMask;
 
-  // ✅ Etapa 2E: Validação em tempo real
+  const handleChange = (rawValue: string) => {
+    if (useMask && (block.validation === 'cpf' || block.validation === 'cnpj' || block.validation === 'phone')) {
+      setValue(applyMask(rawValue, block.validation));
+    } else {
+      setValue(rawValue);
+    }
+  };
+
+  // ✅ Etapa 2E + 2F: Validação em tempo real (com CPF/CNPJ)
   const validate = (val: string): boolean | null => {
     if (!val || !block.showValidationFeedback) return null;
+    const digits = val.replace(/\D/g, '');
     if (block.validation === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     if (block.validation === 'phone') return /^[\d\s\-\+\(\)]{8,}$/.test(val);
     if (block.validation === 'number') return !isNaN(Number(val)) && val.trim() !== '';
+    if (block.validation === 'cpf') return digits.length === 11;
+    if (block.validation === 'cnpj') return digits.length === 14;
     return null;
   };
 
@@ -439,6 +483,16 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
       : 'border-red-500 focus-visible:ring-red-500/30'
     : '';
 
+  const getPlaceholder = () => {
+    if (block.placeholder) return block.placeholder;
+    if (useMask) {
+      if (block.validation === 'cpf') return '000.000.000-00';
+      if (block.validation === 'cnpj') return '00.000.000/0000-00';
+      if (block.validation === 'phone') return '(00) 00000-0000';
+    }
+    return '';
+  };
+
   return (
     <div className="space-y-2">
       <p className="font-medium">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
@@ -447,17 +501,17 @@ export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 't
           placeholder={block.placeholder}
           maxLength={block.maxLength}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           onBlur={() => setTouched(true)}
           className={`w-full min-h-[120px] px-3 py-2 border rounded-md resize-none bg-background transition-colors ${borderClass}`}
         />
       ) : (
         <Input
-          placeholder={block.placeholder}
+          placeholder={getPlaceholder()}
           maxLength={block.maxLength}
           type={block.validation === 'email' ? 'email' : block.validation === 'number' ? 'number' : 'text'}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           onBlur={() => setTouched(true)}
           className={borderClass}
         />
