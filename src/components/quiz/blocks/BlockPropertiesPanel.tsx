@@ -2320,24 +2320,26 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-3 border-b flex items-center gap-2">
-        <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-          {icon}
+    <TooltipProvider delayDuration={300}>
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="p-3 border-b flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+            {icon}
+          </div>
+          <div>
+            <p className="text-sm font-semibold">{name}</p>
+            <p className="text-xs text-muted-foreground">Propriedades</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold">{name}</p>
-          <p className="text-xs text-muted-foreground">Propriedades</p>
-        </div>
-      </div>
 
-      {/* Properties */}
-      <ScrollArea className="flex-1">
-        <div className="p-3">
-          {renderProperties()}
-        </div>
-      </ScrollArea>
-    </div>
+        {/* Properties */}
+        <ScrollArea className="flex-1">
+          <div className="p-3">
+            {renderProperties()}
+          </div>
+        </ScrollArea>
+      </div>
+    </TooltipProvider>
   );
 };
