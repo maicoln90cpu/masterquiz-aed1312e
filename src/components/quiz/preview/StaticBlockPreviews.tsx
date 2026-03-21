@@ -251,9 +251,22 @@ export const AudioBlockPreview = ({ block }: { block: QuizBlock & { type: 'audio
   ) : null;
 
 // ---- GALLERY ----
+// ✅ Etapa 2F: Lightbox ao clicar em imagem da galeria
 export const GalleryBlockPreview = ({ block }: { block: QuizBlock & { type: 'gallery' } }) => {
   const images = block.images || [];
-  return images.length > 0 ? (
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handleImageClick = (idx: number) => {
+    if ((block as any).enableLightbox) {
+      setLightboxIndex(idx);
+      setLightboxOpen(true);
+    }
+  };
+
+  if (images.length === 0) return null;
+
+  return (
     <div className="space-y-2">
       <div className={
         block.layout === "carousel" ? "flex gap-4 overflow-x-auto"
@@ -261,23 +274,62 @@ export const GalleryBlockPreview = ({ block }: { block: QuizBlock & { type: 'gal
           : "grid grid-cols-2 md:grid-cols-3 gap-4"
       }>
         {images.map((img, idx) => (
-          <div key={idx} className="space-y-1">
-            <img src={img.url} alt={img.alt || `Gallery image ${idx + 1}`} className="rounded-lg w-full" />
+          <div
+            key={idx}
+            className={`space-y-1 group ${(block as any).enableLightbox ? 'cursor-zoom-in' : ''}`}
+            onClick={() => handleImageClick(idx)}
+          >
+            <div className="relative overflow-hidden rounded-lg">
+              <img src={img.url} alt={img.alt || `Gallery image ${idx + 1}`} className="rounded-lg w-full transition-transform group-hover:scale-105" />
+              {(block as any).enableLightbox && (
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
+                  <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-70 transition-opacity drop-shadow-lg" />
+                </div>
+              )}
+            </div>
             {img.caption && <p className="text-xs text-muted-foreground">{img.caption}</p>}
           </div>
         ))}
       </div>
+      {(block as any).enableLightbox && (
+        <GalleryLightbox
+          images={images}
+          initialIndex={lightboxIndex}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
-  ) : null;
+  );
 };
 
 // ---- EMBED ----
-export const EmbedBlockPreview = ({ block }: { block: QuizBlock & { type: 'embed' } }) =>
-  block.html ? (
+// ✅ Etapa 2F: Whitelist de domínios permitidos
+export const EmbedBlockPreview = ({ block }: { block: QuizBlock & { type: 'embed' } }) => {
+  const allowedDomains = (block as any).allowedDomains as string[] | undefined;
+
+  // Check domain whitelist
+  if (allowedDomains && allowedDomains.length > 0 && block.url) {
+    try {
+      const urlDomain = new URL(block.url).hostname;
+      const isAllowed = allowedDomains.some(d => urlDomain.includes(d));
+      if (!isAllowed) {
+        return (
+          <div className="p-4 border-2 border-dashed border-destructive/30 rounded-lg text-center">
+            <p className="text-sm text-destructive font-medium">⚠️ Domínio não permitido</p>
+            <p className="text-xs text-muted-foreground mt-1">O domínio "{urlDomain}" não está na whitelist configurada.</p>
+          </div>
+        );
+      }
+    } catch { /* invalid URL, render anyway */ }
+  }
+
+  return block.html ? (
     <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.html) }} className="rounded-lg overflow-hidden" />
   ) : block.url ? (
-    <iframe src={block.url} className="w-full aspect-video rounded-lg" />
+    <iframe src={block.url} className="w-full aspect-video rounded-lg border" title="Embedded content" />
   ) : null;
+};
 
 // ---- BUTTON ----
 interface ButtonBlockPreviewProps {
