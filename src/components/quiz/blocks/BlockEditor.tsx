@@ -377,46 +377,12 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
     onChange([...blocks, newBlock]);
     setActiveTab('edit');
     
-    const blockTypeNames: Record<BlockType, string> = {
-      question: t('createQuiz.blocks.question'),
-      text: t('createQuiz.blocks.text'),
-      separator: t('createQuiz.blocks.separator'),
-      image: t('createQuiz.blocks.image'),
-      video: t('createQuiz.blocks.video'),
-      audio: t('createQuiz.blocks.audio'),
-      gallery: t('createQuiz.blocks.gallery'),
-      embed: t('createQuiz.blocks.embed'),
-      button: t('createQuiz.blocks.button'),
-      price: t('createQuiz.blocks.price'),
-      metrics: t('createQuiz.blocks.metrics'),
-      loading: t('createQuiz.blocks.loading'),
-      progress: t('createQuiz.blocks.progress'),
-      countdown: t('createQuiz.blocks.countdown'),
-      testimonial: t('createQuiz.blocks.testimonial'),
-      slider: t('createQuiz.blocks.slider'),
-      textInput: t('createQuiz.blocks.textInput'),
-      nps: t('createQuiz.blocks.nps'),
-      accordion: t('createQuiz.blocks.accordion'),
-      comparison: t('createQuiz.blocks.comparison'),
-      socialProof: t('createQuiz.blocks.socialProof'),
-      animatedCounter: t('createQuiz.blocks.animatedCounter', { defaultValue: 'Contador Animado' }),
-      callout: 'Callout/Alerta',
-      iconList: 'Lista com Ícones',
-      quote: 'Citação',
-      badgeRow: 'Selos/Badges',
-      banner: 'Banner/Faixa',
-      answerSummary: 'Resumo de Respostas',
-      progressMessage: 'Mensagem de Progresso',
-      avatarGroup: 'Grupo de Avatares',
-      conditionalText: 'Texto Condicional',
-      comparisonResult: 'Comparação Dinâmica',
-      personalizedCTA: 'CTA Personalizado',
-      recommendation: 'Recomendação',
-      calculator: 'Calculadora',
-    };
+    // Usar catálogo para nome do bloco
+    const catalogItem = blockCatalogSections.flatMap(s => s.items).find(i => i.type === type);
+    const blockName = catalogItem ? t(catalogItem.labelKey, catalogItem.defaultLabel) : type;
     
     toast.success(
-      t('createQuiz.blockAdded', { blockType: blockTypeNames[type] })
+      t('createQuiz.blockAdded', { blockType: blockName })
     );
   };
 
