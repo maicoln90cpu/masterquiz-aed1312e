@@ -351,6 +351,32 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
+
+      {(block as any).imageUrl && (
+        <>
+          <PropertySection title="Posição da Imagem">
+            <Select value={(block as any).imagePosition || 'above'} onValueChange={(v) => onChange(update(block, { imagePosition: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="above">⬆ Acima do texto</SelectItem>
+                <SelectItem value="below">⬇ Abaixo do texto</SelectItem>
+              </SelectContent>
+            </Select>
+          </PropertySection>
+
+          <PropertySection title="Tamanho da Imagem">
+            <Select value={(block as any).imageSize || 'medium'} onValueChange={(v) => onChange(update(block, { imageSize: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">Pequeno</SelectItem>
+                <SelectItem value="medium">Médio</SelectItem>
+                <SelectItem value="large">Grande</SelectItem>
+                <SelectItem value="full">Largura total</SelectItem>
+              </SelectContent>
+            </Select>
+          </PropertySection>
+        </>
+      )}
     </div>
   );
 };
