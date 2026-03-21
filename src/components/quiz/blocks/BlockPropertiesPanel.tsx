@@ -747,6 +747,7 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
 
 const TestimonialProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'testimonial') return null;
+  const additional = (block as any).additionalTestimonials || [];
   return (
     <div className="space-y-4">
       <PropertySection title="Nome do Autor">
@@ -776,6 +777,57 @@ const TestimonialProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
         <Input type="color" value={block.primaryColor || '#3b82f6'} onChange={(e) => onChange(update(block, { primaryColor: e.target.value }))} />
       </PropertySection>
       <SwitchRow label="Mostrar avaliação" checked={block.showRating || false} onChange={(v) => onChange(update(block, { showRating: v }))} />
+
+      {/* ✅ Etapa 2F: Carrossel de depoimentos */}
+      <Separator />
+      <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground">
+        <p className="font-medium text-foreground text-xs mb-1">📋 Depoimentos adicionais (carrossel)</p>
+        <p>Adicione mais depoimentos para criar um carrossel com auto-slide e dots de navegação.</p>
+      </div>
+      {additional.map((t: any, idx: number) => (
+        <div key={idx} className="border rounded-md p-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium">Depoimento {idx + 2}</span>
+            <button type="button" className="text-xs text-destructive" onClick={() => {
+              const newList = additional.filter((_: any, i: number) => i !== idx);
+              onChange(update(block, { additionalTestimonials: newList }));
+            }}>✕</button>
+          </div>
+          <textarea
+            className="w-full min-h-[60px] px-2 py-1 border rounded text-xs bg-background resize-none"
+            placeholder="Citação..."
+            value={t.quote || ''}
+            onChange={(e) => {
+              const newList = [...additional];
+              newList[idx] = { ...t, quote: e.target.value };
+              onChange(update(block, { additionalTestimonials: newList }));
+            }}
+          />
+          <Input className="h-7 text-xs" placeholder="Nome do autor" value={t.authorName || ''} onChange={(e) => {
+            const newList = [...additional];
+            newList[idx] = { ...t, authorName: e.target.value };
+            onChange(update(block, { additionalTestimonials: newList }));
+          }} />
+          <Input className="h-7 text-xs" placeholder="Cargo (opcional)" value={t.authorRole || ''} onChange={(e) => {
+            const newList = [...additional];
+            newList[idx] = { ...t, authorRole: e.target.value };
+            onChange(update(block, { additionalTestimonials: newList }));
+          }} />
+        </div>
+      ))}
+      <button type="button" className="text-xs text-primary underline" onClick={() => {
+        onChange(update(block, { additionalTestimonials: [...additional, { quote: '', authorName: '' }] }));
+      }}>+ Adicionar depoimento</button>
+      {additional.length > 0 && (
+        <>
+          <SwitchRow label="Auto-slide" checked={(block as any).autoSlide || false} onChange={(v) => onChange(update(block, { autoSlide: v }))} />
+          {(block as any).autoSlide && (
+            <PropertySection title="Intervalo (segundos)">
+              <Input type="number" min={2} max={15} value={(block as any).slideInterval || 5} onChange={(e) => onChange(update(block, { slideInterval: Number(e.target.value) }))} />
+            </PropertySection>
+          )}
+        </>
+      )}
     </div>
   );
 };
