@@ -81,23 +81,45 @@ export const SeparatorBlockPreview = ({ block }: { block: QuizBlock & { type: 's
 };
 
 // ---- IMAGE ----
-export const ImageBlockPreview = ({ block }: { block: QuizBlock & { type: 'image' } }) =>
-  block.url ? (
+// ✅ Etapa 2F: Lightbox ao clicar (expandir em tela cheia)
+export const ImageBlockPreview = ({ block }: { block: QuizBlock & { type: 'image' } }) => {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  if (!block.url) return null;
+
+  const sizeClass = block.size === "small" ? "max-w-xs"
+    : block.size === "large" ? "max-w-2xl"
+    : block.size === "full" ? "w-full"
+    : "max-w-md";
+
+  return (
     <div className="space-y-2 w-full overflow-hidden">
-      <img
-        src={block.url}
-        alt={block.alt || "Quiz image"}
-        className={`rounded-lg w-full h-auto object-contain mx-auto ${
-          block.size === "small" ? "max-w-xs"
-            : block.size === "large" ? "max-w-2xl"
-            : block.size === "full" ? "w-full"
-            : "max-w-md"
-        }`}
-        loading="lazy"
-      />
+      <div className={`relative group ${sizeClass} mx-auto`}>
+        <img
+          src={block.url}
+          alt={block.alt || "Quiz image"}
+          className={`rounded-lg w-full h-auto object-contain ${(block as any).enableLightbox ? 'cursor-zoom-in' : ''}`}
+          loading="lazy"
+          onClick={() => (block as any).enableLightbox && setLightboxOpen(true)}
+        />
+        {(block as any).enableLightbox && (
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center pointer-events-none">
+            <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-70 transition-opacity drop-shadow-lg" />
+          </div>
+        )}
+      </div>
       {block.caption && <p className="text-sm text-center text-muted-foreground">{block.caption}</p>}
+      {(block as any).enableLightbox && (
+        <GalleryLightbox
+          images={[{ url: block.url, alt: block.alt, caption: block.caption }]}
+          initialIndex={0}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
-  ) : null;
+  );
+};
 
 // ---- VIDEO ----
 interface VideoBlockPreviewProps {
