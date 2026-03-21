@@ -709,6 +709,7 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
             <SelectItem value="minimal">Minimal</SelectItem>
             <SelectItem value="bold">Bold</SelectItem>
             <SelectItem value="card">Card</SelectItem>
+            <SelectItem value="flip">🔄 Flip Clock</SelectItem>
           </SelectContent>
         </Select>
       </PropertySection>
