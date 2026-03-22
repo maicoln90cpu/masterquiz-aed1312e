@@ -33,6 +33,7 @@ import { createBlock } from "@/types/blocks";
 import type { BlockType, QuizBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
+import { MobileEditorToolbar } from "@/components/quiz/MobileEditorToolbar";
 
 import { useQuizState } from "@/hooks/useQuizState";
 import { useQuizPersistence } from "@/hooks/useQuizPersistence";

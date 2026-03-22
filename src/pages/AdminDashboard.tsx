@@ -1491,6 +1491,7 @@ export default function AdminDashboard() {
                 { id: 'templates', label: 'Templates', icon: <FileText className="h-4 w-4" />, color: 'pink' },
                 { id: 'ai', label: 'Configurações IA', icon: <Sparkles className="h-4 w-4" />, color: 'purple' },
                 { id: 'blog', label: 'Blog', icon: <BookOpen className="h-4 w-4" />, color: 'emerald' },
+                { id: 'costs', label: 'Custos', icon: <DollarSign className="h-4 w-4" />, color: 'green' },
               ]}
               defaultTab="templates"
             >
@@ -1499,6 +1500,7 @@ export default function AdminDashboard() {
                   {activeTab === 'templates' && <TemplateManagement />}
                   {activeTab === 'ai' && <AISettings />}
                   {activeTab === 'blog' && <BlogManager />}
+                  {activeTab === 'costs' && <UnifiedCostsDashboard />}
                 </>
               )}
             </AdminSubTabs>
