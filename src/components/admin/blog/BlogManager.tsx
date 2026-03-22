@@ -21,7 +21,6 @@ export function BlogManager() {
       tabs={[
         { id: "posts", label: "Posts", icon: <FileText className="h-4 w-4" />, color: "emerald" },
         { id: "prompts", label: "Prompts IA", icon: <Sparkles className="h-4 w-4" />, color: "purple" },
-        { id: "costs", label: "Custos", icon: <DollarSign className="h-4 w-4" />, color: "yellow" },
         { id: "automation", label: "Automação", icon: <Settings className="h-4 w-4" />, color: "blue" },
       ]}
       defaultTab="posts"
@@ -30,7 +29,6 @@ export function BlogManager() {
         <Suspense fallback={<Loading />}>
           {activeTab === "posts" && <BlogPostsManager />}
           {activeTab === "prompts" && <BlogPromptConfig />}
-          {activeTab === "costs" && <BlogCostTracking />}
           {activeTab === "automation" && <BlogAutomationSettings />}
         </Suspense>
       )}
