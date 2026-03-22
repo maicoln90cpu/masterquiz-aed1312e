@@ -51,6 +51,7 @@ const PQLAnalytics = lazy(() => import("@/components/admin/PQLAnalytics").then(m
 const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
 const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
+const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -1490,6 +1491,7 @@ export default function AdminDashboard() {
                 { id: 'templates', label: 'Templates', icon: <FileText className="h-4 w-4" />, color: 'pink' },
                 { id: 'ai', label: 'Configurações IA', icon: <Sparkles className="h-4 w-4" />, color: 'purple' },
                 { id: 'blog', label: 'Blog', icon: <BookOpen className="h-4 w-4" />, color: 'emerald' },
+                { id: 'costs', label: 'Custos', icon: <DollarSign className="h-4 w-4" />, color: 'green' },
               ]}
               defaultTab="templates"
             >
@@ -1498,6 +1500,7 @@ export default function AdminDashboard() {
                   {activeTab === 'templates' && <TemplateManagement />}
                   {activeTab === 'ai' && <AISettings />}
                   {activeTab === 'blog' && <BlogManager />}
+                  {activeTab === 'costs' && <UnifiedCostsDashboard />}
                 </>
               )}
             </AdminSubTabs>

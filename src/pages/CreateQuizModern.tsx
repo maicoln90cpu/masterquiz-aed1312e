@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2, List, Plus } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
@@ -32,6 +33,7 @@ import { createBlock } from "@/types/blocks";
 import type { BlockType, QuizBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
+import { MobileEditorToolbar } from "@/components/quiz/MobileEditorToolbar";
 
 import { useQuizState } from "@/hooks/useQuizState";
 import { useQuizPersistence } from "@/hooks/useQuizPersistence";
@@ -718,9 +720,29 @@ const CreateQuizModern = () => {
         {/* ========== STEP 3: Full-width 4-column layout ========== */}
         {(step === 3 || isExpressMode) && (
           <div className={cn(
-            "flex h-full",
+            "flex flex-col lg:flex-row h-full",
             isExpressMode ? "container mx-auto max-w-4xl px-4 py-6" : ""
           )}>
+            {/* ========== MOBILE TOOLBAR (< lg) ========== */}
+            {!isExpressMode && (
+              <MobileEditorToolbar
+                questions={questions}
+                currentQuestionIndex={currentQuestionIndex}
+                step={step}
+                questionsLimit={questionsLimit}
+                editorState={editorState}
+                onQuestionClick={(idx) => {
+                  updateEditor({ currentQuestionIndex: idx, selectedBlockIndex: 0 });
+                }}
+                onAddQuestion={handleAddQuestion}
+                onDeleteQuestion={handleDeleteQuestion}
+                onUpdateQuestion={updateQuestion}
+                onAddBlock={handlePaletteAddBlock}
+                updateCurrentQuestionBlocks={updateCurrentQuestionBlocks}
+                updateEditor={updateEditor}
+              />
+            )}
+
             {/* COL 1: Question List */}
             {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col border-r bg-card">
