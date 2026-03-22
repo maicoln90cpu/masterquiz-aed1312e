@@ -1398,6 +1398,7 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       </div>
       {/* ✅ Etapa 2D: Callout dismissível */}
       <SwitchRow label="Dispensável (botão X)" tooltip="Permite que o usuário feche/dispense o alerta clicando no X" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
+      <SwitchRow label="Ocultar bloco" tooltip="Mantém o bloco configurado mas não o exibe no quiz publicado" checked={(block as any).hidden || false} onChange={(v) => onChange(update(block, { hidden: v }))} />
       <Separator />
       <div className="space-y-2">
         <Label>Cor de fundo</Label>

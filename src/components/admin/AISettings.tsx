@@ -117,26 +117,7 @@ export const AISettings = () => {
   }
 
   return (
-    <Tabs defaultValue="settings" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="settings" className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4" />
-          Configurações
-        </TabsTrigger>
-        <TabsTrigger value="costs" className="flex items-center gap-2">
-          <DollarSign className="h-4 w-4" />
-          Custos IA
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="settings" className="space-y-6">
-        <SettingsTab settings={settings} setSettings={setSettings} saveSettings={saveSettings} saving={saving} />
-      </TabsContent>
-
-      <TabsContent value="costs" className="space-y-6">
-        <CostsTab />
-      </TabsContent>
-    </Tabs>
+    <SettingsTab settings={settings} setSettings={setSettings} saveSettings={saveSettings} saving={saving} />
   );
 };
 

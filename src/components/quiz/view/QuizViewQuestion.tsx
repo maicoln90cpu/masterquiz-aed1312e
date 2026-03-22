@@ -458,13 +458,15 @@ function MultipleChoiceOptions({ options, emojis, optionImages, optionImageLayou
           >
             {image ? (
               <img src={image} alt={optionText} className={`${getImageSizeClass(optionImageSize)} w-full object-cover rounded-lg`} />
+            ) : emoji ? (
+              <span className="flex-shrink-0 text-2xl w-10 h-10 flex items-center justify-center">{emoji}</span>
             ) : (
               <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
                 answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
                 answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
                 'bg-primary/10'
               }`}>
-                {emoji || String.fromCharCode(65 + idx)}
+                {String.fromCharCode(65 + idx)}
               </div>
             )}
             <span className={`${hasImages && optionImageLayout !== '1x4' ? '' : 'flex-1'} text-base`}>
@@ -523,13 +525,15 @@ function SingleChoiceOptions({ options, emojis, optionImages, optionImageLayout,
           >
             {image ? (
               <img src={image} alt={optionText} className={`${getImageSizeClass(optionImageSize)} w-full object-cover rounded-lg`} />
+            ) : emoji ? (
+              <span className="flex-shrink-0 text-2xl w-10 h-10 flex items-center justify-center">{emoji}</span>
             ) : (
               <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
                 answered && isCorrect ? 'bg-green-100 dark:bg-green-900/40' :
                 answered && isSelected ? 'bg-red-100 dark:bg-red-900/40' :
                 'bg-primary/10'
               }`}>
-                {emoji || String.fromCharCode(65 + idx)}
+                {String.fromCharCode(65 + idx)}
               </div>
             )}
             <RadioGroupItem value={optionText} id={`option-${questionId}-${idx}`} className="sr-only" />
