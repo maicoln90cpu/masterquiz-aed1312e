@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { AdminSubTabs } from "@/components/admin/AdminSubTabs";
-import { FileText, Sparkles, DollarSign, Settings } from "lucide-react";
+import { FileText, Sparkles, Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const BlogPostsManager = lazy(() =>

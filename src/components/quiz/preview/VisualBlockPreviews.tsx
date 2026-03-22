@@ -13,7 +13,7 @@ const CALLOUT_DEFAULTS = {
 
 export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'callout' } }) => {
   const [dismissed, setDismissed] = useState(false); // ✅ Etapa 2D: Dismissível
-  if (dismissed) return null;
+  if (dismissed || (block as any).hidden) return null;
 
   const defaults = CALLOUT_DEFAULTS[block.variant || 'warning'];
   const Icon = defaults.icon;
