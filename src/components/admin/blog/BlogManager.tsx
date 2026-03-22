@@ -9,9 +9,6 @@ const BlogPostsManager = lazy(() =>
 const BlogPromptConfig = lazy(() =>
   import("./BlogPromptConfig").then((m) => ({ default: m.BlogPromptConfig }))
 );
-const BlogCostTracking = lazy(() =>
-  import("./BlogCostTracking").then((m) => ({ default: m.BlogCostTracking }))
-);
 const BlogAutomationSettings = lazy(() =>
   import("./BlogAutomationSettings").then((m) => ({ default: m.BlogAutomationSettings }))
 );
