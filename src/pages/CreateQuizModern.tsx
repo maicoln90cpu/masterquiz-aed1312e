@@ -719,9 +719,29 @@ const CreateQuizModern = () => {
         {/* ========== STEP 3: Full-width 4-column layout ========== */}
         {(step === 3 || isExpressMode) && (
           <div className={cn(
-            "flex h-full",
+            "flex flex-col lg:flex-row h-full",
             isExpressMode ? "container mx-auto max-w-4xl px-4 py-6" : ""
           )}>
+            {/* ========== MOBILE TOOLBAR (< lg) ========== */}
+            {!isExpressMode && (
+              <MobileEditorToolbar
+                questions={questions}
+                currentQuestionIndex={currentQuestionIndex}
+                step={step}
+                questionsLimit={questionsLimit}
+                editorState={editorState}
+                onQuestionClick={(idx) => {
+                  updateEditor({ currentQuestionIndex: idx, selectedBlockIndex: 0 });
+                }}
+                onAddQuestion={handleAddQuestion}
+                onDeleteQuestion={handleDeleteQuestion}
+                onUpdateQuestion={updateQuestion}
+                onAddBlock={handlePaletteAddBlock}
+                updateCurrentQuestionBlocks={updateCurrentQuestionBlocks}
+                updateEditor={updateEditor}
+              />
+            )}
+
             {/* COL 1: Question List */}
             {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col border-r bg-card">
