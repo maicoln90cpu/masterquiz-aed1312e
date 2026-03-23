@@ -156,6 +156,7 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
                   showFormAfter={state.formConfig?.collection_timing === 'after'}
                   onSubmit={state.submitQuiz}
                   showResults={quizShowResults}
+                  onCtaClick={onCtaClick}
                 />
               </motion.div>
             ) : null}
