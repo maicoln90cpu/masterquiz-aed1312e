@@ -18,10 +18,17 @@
 - Uses `upsert` instead of `insert` for funnel quizzes (updates progressive-saved row)
 - Skips duplicate `complete` tracking for funnel mode (already tracked in `nextStep`)
 
-#### 4. Heatmap moved from Analytics → Responses
+#### 4. Heatmap moved from Analytics → Responses (first tab)
 - Removed "Heatmaps" tab from `Analytics.tsx`
-- Added "Heatmap" tab to `Responses.tsx`
-- `ResponseHeatmap` component unchanged
+- Added "Heatmap" tab to `Responses.tsx` as **first tab** (default)
+- `ResponseHeatmap` component now accepts `quizId` prop from parent global filter
+- Internal quiz selector hidden when parent provides `quizId`
+- Fixed `parseOptions` to read options from `blocks` (modern quiz format)
+- Added `blocks` column to Supabase query
+
+#### 5. Master Admin sortable columns
+- Users table: all columns clickable for asc/desc sorting (Nome, Email, Cadastro, Último Login, Logins, Quizzes, Leads, Plano)
+- Respondents table: all columns clickable for asc/desc sorting (Nome, Email, WhatsApp, Quiz, Respostas, Última Resposta)
 
 ### Files Modified
 
@@ -30,4 +37,6 @@
 | Migration | Add `session_id` + unique index + anon UPDATE RLS |
 | `src/hooks/useQuizViewState.ts` | Progressive save + upsert + funnel completion tracking |
 | `src/pages/Analytics.tsx` | Remove Heatmap tab (3→3 tabs: Geral, Por Quiz, Vídeos) |
-| `src/pages/Responses.tsx` | Add Heatmap tab (2→3 tabs: Respostas, Planilha, Heatmap) |
+| `src/pages/Responses.tsx` | Heatmap as first tab, pass selectedQuiz to ResponseHeatmap |
+| `src/components/analytics/ResponseHeatmap.tsx` | Fix block parsing, accept quizId prop, hide internal filter |
+| `src/pages/AdminDashboard.tsx` | Add sortable columns to Users and Respondents tables |
