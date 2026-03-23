@@ -145,6 +145,7 @@ export const RecommendationBlockPreview = ({ block, answers, questions, onCtaCli
             showScore={showScore}
             score={item.score}
             rank={i + 1}
+            onCtaClick={onCtaClick}
           />
         ))}
       </div>
