@@ -367,9 +367,10 @@ interface ButtonBlockPreviewProps {
   block: QuizBlock & { type: 'button' };
   onNavigateNext?: () => void;
   onNavigateToQuestion?: (index: number) => void;
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
-export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion }: ButtonBlockPreviewProps) => {
+export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion, onCtaClick }: ButtonBlockPreviewProps) => {
   if (!block.text) return null;
   const action = block.action || 'link';
 
@@ -380,10 +381,22 @@ export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion
   };
 
   if (action === 'link' && block.url) {
+    const handleLinkClick = (e: React.MouseEvent) => {
+      if (onCtaClick) {
+        e.preventDefault();
+        onCtaClick(block.text || 'CTA', block.url!, block.id);
+      }
+    };
+
     return (
       <div className="flex justify-center">
         <Button variant={block.variant || 'default'} size={block.size || 'default'} asChild>
-          <a href={block.url} target={block.openInNewTab ? "_blank" : undefined} rel={block.openInNewTab ? "noopener noreferrer" : undefined}>
+          <a 
+            href={block.url} 
+            target={block.openInNewTab ? "_blank" : undefined} 
+            rel={block.openInNewTab ? "noopener noreferrer" : undefined}
+            onClick={handleLinkClick}
+          >
             {block.text}
           </a>
         </Button>
@@ -401,46 +414,55 @@ export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion
 };
 
 // ---- PRICE ----
-export const PriceBlockPreview = ({ block }: { block: QuizBlock & { type: 'price' } }) => (
-  <div>
-    <Card className={block.highlighted ? "border-2 border-primary shadow-lg" : ""}>
-      <CardContent className="p-6 space-y-4">
-        {block.discount && (
-          <div className="inline-block bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded">
-            {block.discount}
+export const PriceBlockPreview = ({ block, onCtaClick }: { block: QuizBlock & { type: 'price' }; onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void }) => {
+  const handlePriceClick = (e: React.MouseEvent) => {
+    if (onCtaClick && block.buttonUrl) {
+      e.preventDefault();
+      onCtaClick(block.buttonText || 'CTA', block.buttonUrl, block.id);
+    }
+  };
+
+  return (
+    <div>
+      <Card className={block.highlighted ? "border-2 border-primary shadow-lg" : ""}>
+        <CardContent className="p-6 space-y-4">
+          {block.discount && (
+            <div className="inline-block bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded">
+              {block.discount}
+            </div>
+          )}
+          <div>
+            <h3 className="text-2xl font-bold">{block.planName}</h3>
+            <div className="flex items-baseline gap-2 mt-2">
+              {block.originalPrice && (
+                <span className="text-lg text-muted-foreground line-through">{block.currency}{block.originalPrice}</span>
+              )}
+              <span className="text-4xl font-bold text-primary">{block.currency}{block.price}</span>
+              {block.period && <span className="text-muted-foreground">{block.period}</span>}
+            </div>
           </div>
-        )}
-        <div>
-          <h3 className="text-2xl font-bold">{block.planName}</h3>
-          <div className="flex items-baseline gap-2 mt-2">
-            {block.originalPrice && (
-              <span className="text-lg text-muted-foreground line-through">{block.currency}{block.originalPrice}</span>
-            )}
-            <span className="text-4xl font-bold text-primary">{block.currency}{block.price}</span>
-            {block.period && <span className="text-muted-foreground">{block.period}</span>}
-          </div>
-        </div>
-        <ul className="space-y-2">
-          {(block.features || []).map((feature, idx) => (
-            <li key={idx} className="flex items-start gap-2">
-              <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-        {block.buttonText && (
-          <Button className="w-full" size="lg" asChild={!!block.buttonUrl}>
-            {block.buttonUrl ? (
-              <a href={block.buttonUrl} target="_blank" rel="noopener noreferrer">{block.buttonText}</a>
-            ) : (
-              <span>{block.buttonText}</span>
-            )}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
-  </div>
-);
+          <ul className="space-y-2">
+            {(block.features || []).map((feature, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+          {block.buttonText && (
+            <Button className="w-full" size="lg" asChild={!!block.buttonUrl}>
+              {block.buttonUrl ? (
+                <a href={block.buttonUrl} target="_blank" rel="noopener noreferrer" onClick={handlePriceClick}>{block.buttonText}</a>
+              ) : (
+                <span>{block.buttonText}</span>
+              )}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 // ✅ FASE 12: MetricsBlockPreview movido para MetricsBlockPreview.tsx (lazy loaded)
 // Re-export para manter compatibilidade

@@ -333,9 +333,10 @@ export const ComparisonResultBlockPreview = ({ block, answers }: ComparisonResul
 interface PersonalizedCTAPreviewProps {
   block: QuizBlock & { type: 'personalizedCTA' };
   answers?: Record<string, any>;
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
-export const PersonalizedCTABlockPreview = ({ block, answers }: PersonalizedCTAPreviewProps) => {
+export const PersonalizedCTABlockPreview = ({ block, answers, onCtaClick }: PersonalizedCTAPreviewProps) => {
   const sourceId = (block as any).sourceQuestionId;
   const conditions = block.conditions || [];
   
@@ -344,13 +345,11 @@ export const PersonalizedCTABlockPreview = ({ block, answers }: PersonalizedCTAP
   
   if (answers && sourceId && answers[sourceId]) {
     const userAnswer = String(answers[sourceId]);
-    // Check conditions first
     const matched = conditions.find((c: any) => userAnswer.toLowerCase().includes(c.answer.toLowerCase()));
     if (matched) {
       buttonText = matched.text;
       if (matched.url) buttonUrl = matched.url;
     } else {
-      // Template replacement
       buttonText = block.textTemplate.replace(/\{resposta\}/g, userAnswer);
     }
   }
@@ -367,7 +366,11 @@ export const PersonalizedCTABlockPreview = ({ block, answers }: PersonalizedCTAP
 
   const handleClick = () => {
     if (buttonUrl && buttonUrl !== '#') {
-      window.open(buttonUrl, block.openInNewTab ? '_blank' : '_self');
+      if (onCtaClick) {
+        onCtaClick(buttonText, buttonUrl, block.id);
+      } else {
+        window.open(buttonUrl, block.openInNewTab ? '_blank' : '_self');
+      }
     }
   };
 

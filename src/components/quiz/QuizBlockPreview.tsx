@@ -47,6 +47,8 @@ interface QuizBlockPreviewProps {
   // Controlled textInput support
   onTextInputChange?: (blockId: string, value: string) => void;
   textInputValues?: Record<string, string>;
+  // CTA tracking for funnel last step
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
   // Runtime data for dynamic blocks
   answers?: Record<string, any>;
   questions?: QuizQuestion[];
@@ -66,6 +68,7 @@ export const QuizBlockPreview = ({
   onTextChange,
   onTextInputChange,
   textInputValues,
+  onCtaClick,
   answers,
   questions,
   currentStep,
@@ -116,9 +119,9 @@ export const QuizBlockPreview = ({
       case "embed":
         return <EmbedBlockPreview key={block.id} block={block} />;
       case "button":
-        return <ButtonBlockPreview key={block.id} block={block} onNavigateNext={onNavigateNext} onNavigateToQuestion={onNavigateToQuestion} />;
+        return <ButtonBlockPreview key={block.id} block={block} onNavigateNext={onNavigateNext} onNavigateToQuestion={onNavigateToQuestion} onCtaClick={onCtaClick} />;
       case "price":
-        return <PriceBlockPreview key={block.id} block={block} />;
+        return <PriceBlockPreview key={block.id} block={block} onCtaClick={onCtaClick} />;
       case "metrics":
         return (
           <Suspense key={block.id} fallback={<Skeleton className="h-[300px] w-full rounded-lg" />}>
@@ -163,7 +166,7 @@ export const QuizBlockPreview = ({
       case "badgeRow":
         return <BadgeRowBlockPreview key={block.id} block={block as QuizBlock & { type: 'badgeRow' }} />;
       case "banner":
-        return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} />;
+        return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} onCtaClick={onCtaClick} />;
       case "answerSummary":
         return <AnswerSummaryBlockPreview key={block.id} block={block as QuizBlock & { type: 'answerSummary' }} answers={answers} questions={questions} />;
       case "progressMessage":
@@ -175,9 +178,9 @@ export const QuizBlockPreview = ({
       case "comparisonResult":
         return <ComparisonResultBlockPreview key={block.id} block={block as QuizBlock & { type: 'comparisonResult' }} answers={answers} />;
       case "personalizedCTA":
-        return <PersonalizedCTABlockPreview key={block.id} block={block as QuizBlock & { type: 'personalizedCTA' }} answers={answers} />;
+        return <PersonalizedCTABlockPreview key={block.id} block={block as QuizBlock & { type: 'personalizedCTA' }} answers={answers} onCtaClick={onCtaClick} />;
       case "recommendation":
-        return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} />;
+        return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} onCtaClick={onCtaClick} />;
       case "calculator":
         return (
           <div key={block.id} className="p-6 bg-muted/30 rounded-lg border text-center">

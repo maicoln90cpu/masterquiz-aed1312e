@@ -23,6 +23,7 @@ interface RecommendationPreviewProps {
   block: QuizBlock & { type: 'recommendation' };
   answers?: Record<string, any>;
   questions?: QuizQuestion[];
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
 /** Calculates score for a recommendation based on matching rules */
@@ -49,7 +50,7 @@ const calculateScore = (item: RecommendationItem, answers: Record<string, any>):
   return score;
 };
 
-export const RecommendationBlockPreview = ({ block, answers, questions }: RecommendationPreviewProps) => {
+export const RecommendationBlockPreview = ({ block, answers, questions, onCtaClick }: RecommendationPreviewProps) => {
   const recommendations: RecommendationItem[] = (block as any).recommendations || [];
   const displayMode = (block as any).displayMode || 'best_match';
   const style = (block as any).style || 'card';
@@ -144,6 +145,7 @@ export const RecommendationBlockPreview = ({ block, answers, questions }: Recomm
             showScore={showScore}
             score={item.score}
             rank={i + 1}
+            onCtaClick={onCtaClick}
           />
         ))}
       </div>
@@ -159,12 +161,17 @@ interface RecommendationCardProps {
   showScore: boolean;
   score: number;
   rank: number;
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
-const RecommendationCard = ({ item, style, isPreview, showScore, score, rank }: RecommendationCardProps) => {
+const RecommendationCard = ({ item, style, isPreview, showScore, score, rank, onCtaClick }: RecommendationCardProps) => {
   const handleClick = () => {
     if (item.buttonUrl) {
-      window.open(item.buttonUrl, '_blank');
+      if (onCtaClick) {
+        onCtaClick(item.buttonText || item.name || 'CTA', item.buttonUrl, item.id);
+      } else {
+        window.open(item.buttonUrl, '_blank');
+      }
     }
   };
 

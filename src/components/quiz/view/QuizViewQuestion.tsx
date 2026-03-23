@@ -26,6 +26,7 @@ interface QuizViewQuestionProps {
   showFormAfter: boolean;
   onSubmit: () => void;
   showResults?: boolean;
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
 export function QuizViewQuestion({
@@ -41,7 +42,8 @@ export function QuizViewQuestion({
   isLastQuestion,
   showFormAfter,
   onSubmit,
-  showResults = true
+  showResults = true,
+  onCtaClick
 }: QuizViewQuestionProps) {
   const { t } = useTranslation();
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -193,6 +195,7 @@ export function QuizViewQuestion({
                 totalQuestions={totalQuestions}
                 textInputValues={textInputValues}
                 onTextInputChange={handleTextInputChange}
+                onCtaClick={onCtaClick}
               />
             );
           })}

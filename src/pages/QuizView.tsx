@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuizViewState, type PreviewData } from "@/hooks/useQuizViewState";
 import { useQuizTracking } from "@/hooks/useQuizTracking";
+import { useCtaTracking } from "@/hooks/useCtaTracking";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   QuizViewResult, 
@@ -61,6 +62,21 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
     quizOwnerProfile: state.quizOwnerProfile
   });
 
+  // CTA tracking: only for funnel quizzes on the last question
+  const quizShowResults = (state.quiz as any)?.show_results !== false;
+  const isFunnelQuiz = !quizShowResults;
+  const isLastStep = state.currentStep === state.visibleQuestions.length - 1;
+  const ctaCurrentQuestion = state.visibleQuestions[state.currentStep];
+  
+  const ctaTrackingParams = isFunnelQuiz && isLastStep && state.quiz && ctaCurrentQuestion ? {
+    quizId: state.quiz.id,
+    sessionId: state.sessionId,
+    questionId: ctaCurrentQuestion.id,
+    stepNumber: ctaCurrentQuestion.order_number,
+  } : null;
+  
+  const onCtaClick = useCtaTracking(ctaTrackingParams);
+
   if (state.loading) {
     return <QuizLoadingSkeleton />;
   }
@@ -71,8 +87,6 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
   const showFormBefore = state.formConfig?.collection_timing === 'before' && state.currentStep === 0;
   const showFormAfter = state.formConfig?.collection_timing === 'after' && state.currentStep === state.visibleQuestions.length;
 
-  // Show result screen (only if show_results is enabled)
-  const quizShowResults = (state.quiz as any)?.show_results !== false;
   if (state.showResult && state.finalResult && quizShowResults) {
     return (
       <QuizViewResult 
@@ -140,6 +154,7 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
                   showFormAfter={state.formConfig?.collection_timing === 'after'}
                   onSubmit={state.submitQuiz}
                   showResults={quizShowResults}
+                  onCtaClick={onCtaClick}
                 />
               </motion.div>
             ) : null}
