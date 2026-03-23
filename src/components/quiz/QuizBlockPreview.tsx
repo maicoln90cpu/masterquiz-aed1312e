@@ -64,6 +64,8 @@ export const QuizBlockPreview = ({
   selectedAnswer,
   onAnswerSelect,
   onTextChange,
+  onTextInputChange,
+  textInputValues,
   answers,
   questions,
   currentStep,
