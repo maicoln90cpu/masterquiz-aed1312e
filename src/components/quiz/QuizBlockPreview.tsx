@@ -44,6 +44,9 @@ interface QuizBlockPreviewProps {
   selectedAnswer?: string | string[];
   onAnswerSelect?: (value: string, isMultiple: boolean) => void;
   onTextChange?: (text: string) => void;
+  // Controlled textInput support
+  onTextInputChange?: (blockId: string, value: string) => void;
+  textInputValues?: Record<string, string>;
   // Runtime data for dynamic blocks
   answers?: Record<string, any>;
   questions?: QuizQuestion[];
