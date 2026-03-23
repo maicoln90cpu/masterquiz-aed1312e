@@ -346,18 +346,21 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
               </Tooltip>
             </div>
             
-            <Select value={selectedQuiz} onValueChange={setSelectedQuiz}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Selecione um quiz" />
-              </SelectTrigger>
-              <SelectContent>
-                {quizzes.map(quiz => (
-                  <SelectItem key={quiz.id} value={quiz.id}>
-                    {quiz.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Only show internal quiz selector when no external quizId is provided */}
+            {!externalQuizId && (
+              <Select value={selectedQuiz} onValueChange={setSelectedQuiz}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder="Selecione um quiz" />
+                </SelectTrigger>
+                <SelectContent>
+                  {quizzes.map(quiz => (
+                    <SelectItem key={quiz.id} value={quiz.id}>
+                      {quiz.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           
           <CardDescription className="flex items-center gap-4 mt-2">
