@@ -112,7 +112,7 @@ export function ResponseAnswersList({ answers, questions }: ResponseAnswersListP
   return (
     <div className="space-y-3">
       {answerableQuestions.map((question) => {
-        const answer = answers?.[question.id];
+        const answer = getAnswerForQuestion(question, answers);
         const hasAnswer = answer !== null && answer !== undefined;
         questionIndex++;
         
