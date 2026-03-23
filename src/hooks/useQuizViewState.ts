@@ -485,61 +485,51 @@ export function useQuizViewState({
       // Sanitize answers before insert to prevent circular reference errors (DOM elements)
       const sanitizedAnswers = sanitizeAnswers(finalAnswers);
 
-      // Save response - use upsert for funnel mode (progressive save creates row earlier)
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp, ...onlyCustomFields } = formData || {};
       const quizShowResults = (quiz as any)?.show_results !== false;
       
-      const responsePayload: Record<string, any> = {
-        quiz_id: quiz.id,
-        answers: sanitizedAnswers,
-        respondent_name: leadName || null,
-        respondent_email: leadEmail || null,
-        respondent_whatsapp: leadWhatsapp || null,
-        custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
-        result_id: result?.id
-      };
+      // Extract contact info from textInput answers
+      const extracted = extractContactFromAnswers(sanitizedAnswers, questions);
+      const finalEmail = leadEmail || extracted.email || null;
+      const finalWhatsapp = leadWhatsapp || extracted.phone || null;
 
-      let saveError;
       if (!quizShowResults) {
-        // Funnel mode: use SELECT + UPDATE/INSERT to handle partial unique index
-        responsePayload.session_id = sessionId;
-        try {
-          const { data: existing } = await supabase.from('quiz_responses')
-            .select('id')
-            .eq('quiz_id', quiz.id)
-            .eq('session_id', sessionId)
-            .maybeSingle();
-          if (existing) {
-            const { error } = await supabase.from('quiz_responses')
-              .update({
-                answers: sanitizedAnswers,
-                respondent_name: responsePayload.respondent_name,
-                respondent_email: responsePayload.respondent_email,
-                respondent_whatsapp: responsePayload.respondent_whatsapp,
-                custom_field_data: responsePayload.custom_field_data,
-                result_id: responsePayload.result_id,
-              } as any)
-              .eq('id', existing.id);
-            saveError = error;
-          } else {
-            const { error } = await supabase.from('quiz_responses').insert(responsePayload as any);
-            saveError = error;
+        // Funnel mode: use Edge Function (service_role bypasses RLS for SELECT+UPDATE)
+        const { error: fnError } = await supabase.functions.invoke('save-quiz-response', {
+          body: {
+            quiz_id: quiz.id,
+            session_id: sessionId,
+            answers: sanitizedAnswers,
+            respondent_name: leadName || null,
+            respondent_email: finalEmail,
+            respondent_whatsapp: finalWhatsapp,
+            custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
+            result_id: result?.id,
+            is_final: true,
           }
-        } catch (err) {
-          console.error('[submitQuiz funnel] Exception:', err);
-          saveError = err;
+        });
+        if (fnError) {
+          console.error('Error saving quiz response via Edge Function:', fnError);
+          throw fnError;
         }
       } else {
-        // Normal mode: standard insert
+        // Normal mode: standard insert (anon can INSERT)
+        const responsePayload: Record<string, any> = {
+          quiz_id: quiz.id,
+          answers: sanitizedAnswers,
+          respondent_name: leadName || null,
+          respondent_email: finalEmail,
+          respondent_whatsapp: finalWhatsapp,
+          custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
+          result_id: result?.id
+        };
         const { error } = await supabase
           .from('quiz_responses')
           .insert(responsePayload as any);
-        saveError = error;
-      }
-
-      if (saveError) {
-        console.error('Error saving quiz response:', saveError);
-        throw saveError;
+        if (error) {
+          console.error('Error saving quiz response:', error);
+          throw error;
+        }
       }
 
       // Trigger webhook
