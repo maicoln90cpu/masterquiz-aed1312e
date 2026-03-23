@@ -28,6 +28,7 @@ import { ResponsesSkeleton } from "@/components/ui/responses-skeleton";
 import { logExportAction } from "@/lib/auditLogger";
 import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
 import { ResponsesSpreadsheet } from "@/components/responses/ResponsesSpreadsheet";
+import { ResponseHeatmap } from "@/components/analytics/ResponseHeatmap";
 // ✅ ITEM 5: Remover import estático de XLSX - será lazy loaded
 // import * as XLSX from "xlsx";
 
