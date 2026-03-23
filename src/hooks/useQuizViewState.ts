@@ -308,16 +308,35 @@ export function useQuizViewState({
     if (!quizShowResults && !previewMode && quiz?.id) {
       const sanitizedAnswers = sanitizeAnswers(answers);
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp } = formData || {};
-      supabase.from('quiz_responses').upsert({
+      const progressivePayload = {
         quiz_id: quiz.id,
         session_id: sessionId,
         answers: sanitizedAnswers,
         respondent_name: leadName || null,
         respondent_email: leadEmail || null,
         respondent_whatsapp: leadWhatsapp || null,
-      }, { onConflict: 'quiz_id,session_id' }).then(({ error }) => {
-        if (error) console.warn('[Progressive save] Error:', error.message);
-      });
+      };
+      // Use SELECT + INSERT/UPDATE to avoid partial unique index issues with upsert
+      (async () => {
+        try {
+          const { data: existing } = await supabase.from('quiz_responses')
+            .select('id')
+            .eq('quiz_id', quiz.id)
+            .eq('session_id', sessionId)
+            .maybeSingle();
+          if (existing) {
+            const { error } = await supabase.from('quiz_responses')
+              .update({ answers: sanitizedAnswers, respondent_name: leadName || null, respondent_email: leadEmail || null, respondent_whatsapp: leadWhatsapp || null } as any)
+              .eq('id', existing.id);
+            if (error) console.warn('[Progressive save] Update error:', error.message);
+          } else {
+            const { error } = await supabase.from('quiz_responses').insert(progressivePayload as any);
+            if (error) console.warn('[Progressive save] Insert error:', error.message);
+          }
+        } catch (err) {
+          console.warn('[Progressive save] Exception:', err);
+        }
+      })();
 
       // Track completion when reaching last question in funnel mode
       if (nextStepNumber === visibleQuestions.length - 1) {

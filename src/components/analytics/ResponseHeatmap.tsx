@@ -150,6 +150,19 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
           return;
         }
 
+        // Filtrar: excluir slides sem bloco tipo 'question' (intros, CTAs)
+        const questionsWithQuestion = questions.filter(q => {
+          if (!Array.isArray(q.blocks)) return false;
+          return (q.blocks as any[]).some((b: any) => b.type === 'question');
+        });
+
+        if (questionsWithQuestion.length === 0) {
+          setHeatmapData([]);
+          setTotalRespondents(0);
+          setLoading(false);
+          return;
+        }
+
         // Buscar todas as respostas do quiz
         const { data: responses, count } = await supabase
           .from('quiz_responses')
@@ -158,14 +171,34 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
 
         setTotalRespondents(count || 0);
 
+        // Extrair texto real da pergunta dos blocos
+        const extractQuestionText = (q: any): string => {
+          if (Array.isArray(q.blocks)) {
+            const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
+            if (qBlock?.questionText) {
+              // Strip HTML tags
+              return qBlock.questionText.replace(/<[^>]*>/g, '').trim() || q.question_text;
+            }
+          }
+          return q.question_text;
+        };
+
+        // Extrair answerFormat dos blocos
+        const extractAnswerFormat = (q: any): string => {
+          if (Array.isArray(q.blocks)) {
+            const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
+            if (qBlock?.answerFormat) return qBlock.answerFormat;
+          }
+          return q.answer_format;
+        };
+
         if (!responses || responses.length === 0) {
-          // Sem respostas, criar estrutura vazia
-          const emptyData = questions.map(q => ({
+          const emptyData = questionsWithQuestion.map((q, idx) => ({
             questionId: q.id,
-            questionText: q.question_text,
-            questionOrder: q.order_number,
-            answerFormat: q.answer_format,
-            options: parseOptions(q.options, q.answer_format, q.blocks),
+            questionText: extractQuestionText(q),
+            questionOrder: idx + 1,
+            answerFormat: extractAnswerFormat(q),
+            options: parseOptions(q.options, extractAnswerFormat(q), q.blocks),
             responses: [],
             totalResponses: 0,
           }));
@@ -175,11 +208,12 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
         }
 
         // Criar mapeamento de IDs atuais para detectar respostas com IDs antigos
-        const currentQuestionIds = new Set(questions.map(q => q.id));
+        const currentQuestionIds = new Set(questionsWithQuestion.map(q => q.id));
 
         // Processar respostas para cada pergunta
-        const processedData: QuestionHeatmapData[] = questions.map((question, qIndex) => {
-          const options = parseOptions(question.options, question.answer_format, (question as any).blocks);
+        const processedData: QuestionHeatmapData[] = questionsWithQuestion.map((question, qIndex) => {
+          const realFormat = extractAnswerFormat(question);
+          const options = parseOptions(question.options, realFormat, (question as any).blocks);
           const responseCounts: Record<string, number> = {};
           
           // Inicializar contadores
@@ -191,6 +225,7 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
           let totalForQuestion = 0;
           responses.forEach(response => {
             const answers = response.answers as Record<string, string | string[]>;
+            if (!answers) return;
             
             // Tentar buscar resposta pelo ID atual da pergunta
             let answer = answers[question.id];
@@ -202,7 +237,7 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
               
               // Se nenhuma chave corresponde aos IDs atuais, mapear por posição
               if (!hasAnyCurrentId && answerKeys.length > 0) {
-                const sortedKeys = answerKeys; // preservar ordem original
+                const sortedKeys = answerKeys;
                 if (qIndex < sortedKeys.length) {
                   answer = answers[sortedKeys[qIndex]];
                 }
@@ -212,7 +247,6 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
             if (answer) {
               totalForQuestion++;
               
-              // Múltipla escolha pode ter array
               if (Array.isArray(answer)) {
                 answer.forEach(a => {
                   if (responseCounts[a] !== undefined) {
@@ -242,9 +276,9 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
 
           return {
             questionId: question.id,
-            questionText: question.question_text,
-            questionOrder: question.order_number,
-            answerFormat: question.answer_format,
+            questionText: extractQuestionText(question),
+            questionOrder: qIndex + 1, // Renumerar sequencialmente
+            answerFormat: realFormat,
             options,
             responses: responseData,
             totalResponses: totalForQuestion,
