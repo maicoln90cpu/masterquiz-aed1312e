@@ -215,10 +215,12 @@ const CRM = () => {
     toast.success(t('crm.toast.leadDeleted'));
   };
 
-  // Leads filtrados (antes da paginação)
+  // Filter: only show leads with useful contact data in the kanban
+  const identifiedLeads = leads.filter(lead => hasUsefulContactData(lead));
+  
   const filteredLeads = filterStatus !== "all" 
-    ? leads.filter(lead => lead.status === filterStatus)
-    : leads;
+    ? identifiedLeads.filter(lead => lead.status === filterStatus)
+    : identifiedLeads;
   
   // Paginação
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
