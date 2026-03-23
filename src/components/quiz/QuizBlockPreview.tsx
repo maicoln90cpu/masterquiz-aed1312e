@@ -166,7 +166,7 @@ export const QuizBlockPreview = ({
       case "badgeRow":
         return <BadgeRowBlockPreview key={block.id} block={block as QuizBlock & { type: 'badgeRow' }} />;
       case "banner":
-        return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} />;
+        return <BannerBlockPreview key={block.id} block={block as QuizBlock & { type: 'banner' }} onCtaClick={onCtaClick} />;
       case "answerSummary":
         return <AnswerSummaryBlockPreview key={block.id} block={block as QuizBlock & { type: 'answerSummary' }} answers={answers} questions={questions} />;
       case "progressMessage":
