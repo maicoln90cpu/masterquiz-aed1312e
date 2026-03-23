@@ -367,9 +367,10 @@ interface ButtonBlockPreviewProps {
   block: QuizBlock & { type: 'button' };
   onNavigateNext?: () => void;
   onNavigateToQuestion?: (index: number) => void;
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
-export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion }: ButtonBlockPreviewProps) => {
+export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion, onCtaClick }: ButtonBlockPreviewProps) => {
   if (!block.text) return null;
   const action = block.action || 'link';
 
@@ -380,10 +381,22 @@ export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion
   };
 
   if (action === 'link' && block.url) {
+    const handleLinkClick = (e: React.MouseEvent) => {
+      if (onCtaClick) {
+        e.preventDefault();
+        onCtaClick(block.text || 'CTA', block.url!, block.id);
+      }
+    };
+
     return (
       <div className="flex justify-center">
         <Button variant={block.variant || 'default'} size={block.size || 'default'} asChild>
-          <a href={block.url} target={block.openInNewTab ? "_blank" : undefined} rel={block.openInNewTab ? "noopener noreferrer" : undefined}>
+          <a 
+            href={block.url} 
+            target={block.openInNewTab ? "_blank" : undefined} 
+            rel={block.openInNewTab ? "noopener noreferrer" : undefined}
+            onClick={handleLinkClick}
+          >
             {block.text}
           </a>
         </Button>
