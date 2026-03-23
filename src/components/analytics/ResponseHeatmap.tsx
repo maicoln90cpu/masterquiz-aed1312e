@@ -60,11 +60,11 @@ const getHeatBgColor = (percentage: number): string => {
   return 'bg-blue-500/10 border-blue-500/30';
 };
 
-export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
+export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps) => {
   const { allowHeatmap, isLoading: planLoading } = usePlanFeatures();
   const [loading, setLoading] = useState(true);
   const [quizzes, setQuizzes] = useState<{ id: string; title: string }[]>([]);
-  const [selectedQuiz, setSelectedQuiz] = useState<string>(quizId || '');
+  const [selectedQuiz, setSelectedQuiz] = useState<string>(externalQuizId || '');
   const [heatmapData, setHeatmapData] = useState<QuestionHeatmapData[]>([]);
   const [totalRespondents, setTotalRespondents] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,8 +95,16 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
     setCurrentPage(1);
   }, [selectedQuiz]);
 
-  // Carregar lista de quizzes do usuário
+  // Sync with external quizId prop
   useEffect(() => {
+    if (externalQuizId) {
+      setSelectedQuiz(externalQuizId);
+    }
+  }, [externalQuizId]);
+
+  // Carregar lista de quizzes do usuário (only when no external quizId)
+  useEffect(() => {
+    if (externalQuizId) return; // Skip loading quiz list when parent controls the filter
     const loadQuizzes = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -116,7 +124,7 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
     };
 
     loadQuizzes();
-  }, []);
+  }, [externalQuizId]);
 
   // Carregar dados do heatmap quando quiz muda
   useEffect(() => {
@@ -131,7 +139,7 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
         // Buscar perguntas do quiz
         const { data: questions } = await supabase
           .from('quiz_questions')
-          .select('id, question_text, order_number, answer_format, options')
+          .select('id, question_text, order_number, answer_format, options, blocks')
           .eq('quiz_id', selectedQuiz)
           .order('order_number', { ascending: true });
 
@@ -157,7 +165,7 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
             questionText: q.question_text,
             questionOrder: q.order_number,
             answerFormat: q.answer_format,
-            options: parseOptions(q.options, q.answer_format),
+            options: parseOptions(q.options, q.answer_format, q.blocks),
             responses: [],
             totalResponses: 0,
           }));
@@ -171,7 +179,7 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
 
         // Processar respostas para cada pergunta
         const processedData: QuestionHeatmapData[] = questions.map((question, qIndex) => {
-          const options = parseOptions(question.options, question.answer_format);
+          const options = parseOptions(question.options, question.answer_format, (question as any).blocks);
           const responseCounts: Record<string, number> = {};
           
           // Inicializar contadores
@@ -255,7 +263,7 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
   }, [selectedQuiz]);
 
   // Parse options baseado no formato
-  const parseOptions = (options: any, format: string): string[] => {
+  const parseOptions = (options: any, format: string, blocks?: any): string[] => {
     if (format === 'yes_no') {
       return ['Sim', 'Não'];
     }
@@ -264,13 +272,27 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
       return []; // Texto livre não tem opções fixas
     }
 
-    if (Array.isArray(options)) {
+    // First try standard options array
+    if (Array.isArray(options) && options.length > 0) {
       return options.map(opt => {
         if (typeof opt === 'string') return opt;
         if (opt?.text) return opt.text;
         if (opt?.label) return opt.label;
         return String(opt);
       });
+    }
+
+    // Fallback: extract options from blocks (modern quiz format)
+    if (Array.isArray(blocks)) {
+      const questionBlock = blocks.find((b: any) => b.type === 'question');
+      if (questionBlock?.options && Array.isArray(questionBlock.options)) {
+        return questionBlock.options.map((opt: any) => {
+          if (typeof opt === 'string') return opt;
+          if (opt?.text) return opt.text;
+          if (opt?.label) return opt.label;
+          return String(opt);
+        });
+      }
     }
 
     return [];
@@ -324,18 +346,21 @@ export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
               </Tooltip>
             </div>
             
-            <Select value={selectedQuiz} onValueChange={setSelectedQuiz}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Selecione um quiz" />
-              </SelectTrigger>
-              <SelectContent>
-                {quizzes.map(quiz => (
-                  <SelectItem key={quiz.id} value={quiz.id}>
-                    {quiz.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Only show internal quiz selector when no external quizId is provided */}
+            {!externalQuizId && (
+              <Select value={selectedQuiz} onValueChange={setSelectedQuiz}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder="Selecione um quiz" />
+                </SelectTrigger>
+                <SelectContent>
+                  {quizzes.map(quiz => (
+                    <SelectItem key={quiz.id} value={quiz.id}>
+                      {quiz.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           
           <CardDescription className="flex items-center gap-4 mt-2">

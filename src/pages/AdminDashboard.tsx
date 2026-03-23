@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen } from "lucide-react";
+import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
@@ -112,6 +112,35 @@ export default function AdminDashboard() {
   const [editEmail, setEditEmail] = useState('');
   const [editWhatsapp, setEditWhatsapp] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  
+  // Sorting state for tables
+  const [usersSortColumn, setUsersSortColumn] = useState<string>('');
+  const [usersSortDirection, setUsersSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [respondentsSortColumn, setRespondentsSortColumn] = useState<string>('');
+  const [respondentsSortDirection, setRespondentsSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const toggleUsersSort = (column: string) => {
+    if (usersSortColumn === column) {
+      setUsersSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setUsersSortColumn(column);
+      setUsersSortDirection('asc');
+    }
+  };
+
+  const toggleRespondentsSort = (column: string) => {
+    if (respondentsSortColumn === column) {
+      setRespondentsSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setRespondentsSortColumn(column);
+      setRespondentsSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column, activeColumn, direction }: { column: string; activeColumn: string; direction: 'asc' | 'desc' }) => {
+    if (column !== activeColumn) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return direction === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
 
   // ✅ Componente de Skeleton para carregamento
   const UserCardSkeleton = () => (
@@ -177,19 +206,59 @@ export default function AdminDashboard() {
     return result;
   }, [administrators, planFilter, userSearchQuery]);
 
-  // Paginação de usuários
+  // Sorting + Paginação de usuários
+  const sortedAdministrators = useMemo(() => {
+    if (!usersSortColumn) return filteredAdministrators;
+    return [...filteredAdministrators].sort((a: any, b: any) => {
+      let valA: any, valB: any;
+      switch (usersSortColumn) {
+        case 'name': valA = a.profile?.full_name || ''; valB = b.profile?.full_name || ''; break;
+        case 'email': valA = a.email || ''; valB = b.email || ''; break;
+        case 'created_at': valA = a.created_at || ''; valB = b.created_at || ''; break;
+        case 'last_sign_in': valA = a.last_sign_in_at || ''; valB = b.last_sign_in_at || ''; break;
+        case 'logins': valA = a.profile?.login_count || 0; valB = b.profile?.login_count || 0; break;
+        case 'quizzes': valA = a.stats?.quiz_count || 0; valB = b.stats?.quiz_count || 0; break;
+        case 'leads': valA = a.stats?.lead_count || 0; valB = b.stats?.lead_count || 0; break;
+        case 'plan': valA = a.subscription?.plan_type || ''; valB = b.subscription?.plan_type || ''; break;
+        default: return 0;
+      }
+      if (valA < valB) return usersSortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return usersSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredAdministrators, usersSortColumn, usersSortDirection]);
+
   const paginatedAdministrators = useMemo(() => {
     const startIndex = (usersCurrentPage - 1) * USERS_PER_PAGE;
-    return filteredAdministrators.slice(startIndex, startIndex + USERS_PER_PAGE);
-  }, [filteredAdministrators, usersCurrentPage]);
+    return sortedAdministrators.slice(startIndex, startIndex + USERS_PER_PAGE);
+  }, [sortedAdministrators, usersCurrentPage]);
 
   const totalUsersPages = Math.ceil(filteredAdministrators.length / USERS_PER_PAGE);
 
-  // Paginação de respondentes
+  // Sorting + Paginação de respondentes
+  const sortedRespondents = useMemo(() => {
+    if (!respondentsSortColumn) return allUsers;
+    return [...allUsers].sort((a: any, b: any) => {
+      let valA: any, valB: any;
+      switch (respondentsSortColumn) {
+        case 'name': valA = a.name || ''; valB = b.name || ''; break;
+        case 'email': valA = a.email || ''; valB = b.email || ''; break;
+        case 'whatsapp': valA = a.whatsapp || ''; valB = b.whatsapp || ''; break;
+        case 'quiz': valA = a.lastQuizTitle || ''; valB = b.lastQuizTitle || ''; break;
+        case 'responses': valA = a.responseCount || 0; valB = b.responseCount || 0; break;
+        case 'lastResponse': valA = a.lastResponse || ''; valB = b.lastResponse || ''; break;
+        default: return 0;
+      }
+      if (valA < valB) return respondentsSortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return respondentsSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [allUsers, respondentsSortColumn, respondentsSortDirection]);
+
   const paginatedRespondents = useMemo(() => {
     const startIndex = (respondentsCurrentPage - 1) * RESPONDENTS_PER_PAGE;
-    return allUsers.slice(startIndex, startIndex + RESPONDENTS_PER_PAGE);
-  }, [allUsers, respondentsCurrentPage]);
+    return sortedRespondents.slice(startIndex, startIndex + RESPONDENTS_PER_PAGE);
+  }, [sortedRespondents, respondentsCurrentPage]);
 
   const totalRespondentsPages = Math.ceil(allUsers.length / RESPONDENTS_PER_PAGE);
 
@@ -849,15 +918,31 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('name')}>
+                      <span className="flex items-center">Nome<SortIcon column="name" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('email')}>
+                      <span className="flex items-center">Email<SortIcon column="email" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
                     <TableHead>WhatsApp</TableHead>
-                    <TableHead>Cadastro</TableHead>
-                    <TableHead>Último Login</TableHead>
-                    <TableHead className="text-center">Logins</TableHead>
-                    <TableHead className="text-center">Quizzes</TableHead>
-                    <TableHead className="text-center">Leads</TableHead>
-                    <TableHead>Plano</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('created_at')}>
+                      <span className="flex items-center">Cadastro<SortIcon column="created_at" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('last_sign_in')}>
+                      <span className="flex items-center">Último Login<SortIcon column="last_sign_in" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleUsersSort('logins')}>
+                      <span className="flex items-center justify-center">Logins<SortIcon column="logins" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleUsersSort('quizzes')}>
+                      <span className="flex items-center justify-center">Quizzes<SortIcon column="quizzes" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleUsersSort('leads')}>
+                      <span className="flex items-center justify-center">Leads<SortIcon column="leads" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('plan')}>
+                      <span className="flex items-center">Plano<SortIcon column="plan" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1053,12 +1138,24 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>WhatsApp</TableHead>
-                    <TableHead>Quiz</TableHead>
-                    <TableHead>Respostas</TableHead>
-                    <TableHead>Última Resposta</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('name')}>
+                      <span className="flex items-center">Nome<SortIcon column="name" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('email')}>
+                      <span className="flex items-center">Email<SortIcon column="email" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('whatsapp')}>
+                      <span className="flex items-center">WhatsApp<SortIcon column="whatsapp" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('quiz')}>
+                      <span className="flex items-center">Quiz<SortIcon column="quiz" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('responses')}>
+                      <span className="flex items-center">Respostas<SortIcon column="responses" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('lastResponse')}>
+                      <span className="flex items-center">Última Resposta<SortIcon column="lastResponse" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
