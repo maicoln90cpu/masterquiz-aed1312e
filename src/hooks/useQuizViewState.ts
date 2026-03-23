@@ -307,40 +307,25 @@ export function useQuizViewState({
       }).catch(err => console.warn('Step tracking failed:', err));
     }
 
-    // Progressive save for funnel mode (show_results=false)
+    // Progressive save for funnel mode (show_results=false) via Edge Function
     const quizShowResults = (quiz as any)?.show_results !== false;
     if (!quizShowResults && !previewMode && quiz?.id) {
       const sanitizedAnswers = sanitizeAnswers(answersRef.current);
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp } = formData || {};
-      const progressivePayload = {
-        quiz_id: quiz.id,
-        session_id: sessionId,
-        answers: sanitizedAnswers,
-        respondent_name: leadName || null,
-        respondent_email: leadEmail || null,
-        respondent_whatsapp: leadWhatsapp || null,
-      };
-      // Use SELECT + INSERT/UPDATE to avoid partial unique index issues with upsert
-      (async () => {
-        try {
-          const { data: existing } = await supabase.from('quiz_responses')
-            .select('id')
-            .eq('quiz_id', quiz.id)
-            .eq('session_id', sessionId)
-            .maybeSingle();
-          if (existing) {
-            const { error } = await supabase.from('quiz_responses')
-              .update({ answers: sanitizedAnswers, respondent_name: leadName || null, respondent_email: leadEmail || null, respondent_whatsapp: leadWhatsapp || null } as any)
-              .eq('id', existing.id);
-            if (error) console.warn('[Progressive save] Update error:', error.message);
-          } else {
-            const { error } = await supabase.from('quiz_responses').insert(progressivePayload as any);
-            if (error) console.warn('[Progressive save] Insert error:', error.message);
-          }
-        } catch (err) {
-          console.warn('[Progressive save] Exception:', err);
+      
+      // Extract contact info from textInput answers
+      const extracted = extractContactFromAnswers(sanitizedAnswers, questions);
+      
+      supabase.functions.invoke('save-quiz-response', {
+        body: {
+          quiz_id: quiz.id,
+          session_id: sessionId,
+          answers: sanitizedAnswers,
+          respondent_name: leadName || null,
+          respondent_email: leadEmail || extracted.email || null,
+          respondent_whatsapp: leadWhatsapp || extracted.phone || null,
         }
-      })();
+      }).catch(err => console.warn('[Progressive save] Edge Function error:', err));
 
       // Track completion when reaching last question in funnel mode
       if (nextStepNumber === visibleQuestions.length - 1) {
