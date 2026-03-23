@@ -154,7 +154,7 @@ export function FunnelChart({ data, loading = false, completionsOverride }: Funn
           </div>
           <div>
             <p className="text-2xl font-bold text-green-500">
-              {funnelData[funnelData.length - 1]?.count.toLocaleString('pt-BR') || 0}
+              {(completionsOverride ?? funnelData[funnelData.length - 1]?.count ?? 0).toLocaleString('pt-BR')}
             </p>
             <p className="text-xs text-muted-foreground">
               {t('analytics.funnel.completed', 'Completaram')}
@@ -162,8 +162,8 @@ export function FunnelChart({ data, loading = false, completionsOverride }: Funn
           </div>
           <div>
             <p className="text-2xl font-bold text-destructive">
-              {funnelData.length > 1 
-                ? ((1 - (funnelData[funnelData.length - 1].count / funnelData[0].count)) * 100).toFixed(1)
+              {funnelData.length > 1 && funnelData[0].count > 0
+                ? ((1 - ((completionsOverride ?? funnelData[funnelData.length - 1].count) / funnelData[0].count)) * 100).toFixed(1)
                 : 0}%
             </p>
             <p className="text-xs text-muted-foreground">
