@@ -170,3 +170,6 @@ verify_jwt = false
 
 [functions.handle-email-unsubscribe]
 verify_jwt = false
+
+[functions.save-quiz-response]
+verify_jwt = false

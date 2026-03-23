@@ -466,17 +466,26 @@ const applyMask = (value: string, type?: string): string => {
   }
 };
 
-export const TextInputBlockPreview = ({ block }: { block: QuizBlock & { type: 'textInput' } }) => {
-  const [value, setValue] = useState('');
+export const TextInputBlockPreview = ({ block, controlledValue, onValueChange }: { 
+  block: QuizBlock & { type: 'textInput' };
+  controlledValue?: string;
+  onValueChange?: (value: string) => void;
+}) => {
+  const [localValue, setLocalValue] = useState('');
+  const value = controlledValue !== undefined ? controlledValue : localValue;
   const [touched, setTouched] = useState(false);
   const [webhookFired, setWebhookFired] = useState(false);
   const useMask = (block as any).useMask;
 
   const handleChange = (rawValue: string) => {
+    let processed = rawValue;
     if (useMask && (block.validation === 'cpf' || block.validation === 'cnpj' || block.validation === 'phone')) {
-      setValue(applyMask(rawValue, block.validation));
+      processed = applyMask(rawValue, block.validation);
+    }
+    if (onValueChange) {
+      onValueChange(processed);
     } else {
-      setValue(rawValue);
+      setLocalValue(processed);
     }
   };
 

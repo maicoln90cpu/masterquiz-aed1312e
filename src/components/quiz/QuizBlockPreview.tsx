@@ -44,6 +44,9 @@ interface QuizBlockPreviewProps {
   selectedAnswer?: string | string[];
   onAnswerSelect?: (value: string, isMultiple: boolean) => void;
   onTextChange?: (text: string) => void;
+  // Controlled textInput support
+  onTextInputChange?: (blockId: string, value: string) => void;
+  textInputValues?: Record<string, string>;
   // Runtime data for dynamic blocks
   answers?: Record<string, any>;
   questions?: QuizQuestion[];
@@ -61,6 +64,8 @@ export const QuizBlockPreview = ({
   selectedAnswer,
   onAnswerSelect,
   onTextChange,
+  onTextInputChange,
+  textInputValues,
   answers,
   questions,
   currentStep,
@@ -131,7 +136,14 @@ export const QuizBlockPreview = ({
       case "slider":
         return <SliderBlockPreview key={block.id} block={block} />;
       case "textInput":
-        return <TextInputBlockPreview key={block.id} block={block} />;
+        return (
+          <TextInputBlockPreview 
+            key={block.id} 
+            block={block} 
+            controlledValue={textInputValues?.[block.id]}
+            onValueChange={onTextInputChange ? (val) => onTextInputChange(block.id, val) : undefined}
+          />
+        );
       case "nps":
         return <NPSBlockPreview key={block.id} block={block} />;
       case "accordion":

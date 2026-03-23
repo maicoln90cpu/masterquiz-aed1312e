@@ -131,6 +131,30 @@ export function QuizViewQuestion({
       );
     }
 
+    // Collect textInput values from answers for controlled rendering
+    const textInputValues: Record<string, string> = {};
+    if (question.blocks) {
+      for (const block of question.blocks) {
+        if ((block as any).type === 'textInput') {
+          const stored = answers[`textInput:${block.id}`] || answers[question.id];
+          if (typeof stored === 'string') {
+            textInputValues[block.id] = stored;
+          }
+        }
+      }
+    }
+
+    const handleTextInputChange = (blockId: string, value: string) => {
+      // For questions with a single textInput, store under question.id
+      // For multiple, store under textInput:<blockId>
+      const textInputBlocks = question.blocks?.filter((b: any) => b.type === 'textInput') || [];
+      if (textInputBlocks.length === 1) {
+        onAnswer(question.id, value);
+      } else {
+        onAnswer(`textInput:${blockId}`, value);
+      }
+    };
+
     return (
       <div className="space-y-6">
         {question.blocks
@@ -167,6 +191,8 @@ export function QuizViewQuestion({
                 questions={(quiz as any).questions?.slice(0, currentStep) || []}
                 currentStep={currentStep}
                 totalQuestions={totalQuestions}
+                textInputValues={textInputValues}
+                onTextInputChange={handleTextInputChange}
               />
             );
           })}
