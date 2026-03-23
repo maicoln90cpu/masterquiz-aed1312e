@@ -43,6 +43,7 @@ interface Lead {
   status: LeadStatus;
   answers: any;
   custom_field_data: any;
+  quiz_questions?: Array<{ id: string; question_text: string; order_number: number; blocks?: any[] }>;
 }
 
 const CRM = () => {
