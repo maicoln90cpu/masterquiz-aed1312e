@@ -303,6 +303,30 @@ export function useQuizViewState({
       }).catch(err => console.warn('Step tracking failed:', err));
     }
 
+    // Progressive save for funnel mode (show_results=false)
+    const quizShowResults = (quiz as any)?.show_results !== false;
+    if (!quizShowResults && !previewMode && quiz?.id) {
+      const sanitizedAnswers = sanitizeAnswers(answers);
+      const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp } = formData || {};
+      supabase.from('quiz_responses').upsert({
+        quiz_id: quiz.id,
+        session_id: sessionId,
+        answers: sanitizedAnswers,
+        respondent_name: leadName || null,
+        respondent_email: leadEmail || null,
+        respondent_whatsapp: leadWhatsapp || null,
+      }, { onConflict: 'quiz_id,session_id' }).then(({ error }) => {
+        if (error) console.warn('[Progressive save] Error:', error.message);
+      });
+
+      // Track completion when reaching last question in funnel mode
+      if (nextStepNumber === visibleQuestions.length - 1) {
+        supabase.functions.invoke('track-quiz-analytics', {
+          body: { quizId: quiz.id, event: 'complete' }
+        }).catch(err => console.warn('Funnel completion tracking failed:', err));
+      }
+    }
+
     setCurrentStep(nextStepNumber);
   };
 
