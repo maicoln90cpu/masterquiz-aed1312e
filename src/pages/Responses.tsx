@@ -517,6 +517,10 @@ const Responses = () => {
               </Card>
             )}
           </TabsContent>
+
+          <TabsContent value="heatmap">
+            <ResponseHeatmap />
+          </TabsContent>
         </Tabs>
       </div>
 

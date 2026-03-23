@@ -855,10 +855,6 @@ const Analytics = () => {
             </Card>
             </TabsContent>
 
-              <TabsContent value="heatmaps">
-                <ResponseHeatmap />
-              </TabsContent>
-
             <TabsContent value="perquiz">
               <PerQuizAnalytics 
                 quizzes={userQuizzes} 

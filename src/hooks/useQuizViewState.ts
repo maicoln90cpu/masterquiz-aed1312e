@@ -477,23 +477,39 @@ export function useQuizViewState({
       // Sanitize answers before insert to prevent circular reference errors (DOM elements)
       const sanitizedAnswers = sanitizeAnswers(finalAnswers);
 
-      // Save response - don't use .select().single() since anon has INSERT but not SELECT RLS
+      // Save response - use upsert for funnel mode (progressive save creates row earlier)
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp, ...onlyCustomFields } = formData || {};
-      const { error } = await supabase
-        .from('quiz_responses')
-        .insert({
-          quiz_id: quiz.id,
-          answers: sanitizedAnswers,
-          respondent_name: leadName || null,
-          respondent_email: leadEmail || null,
-          respondent_whatsapp: leadWhatsapp || null,
-          custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
-          result_id: result?.id
-        });
+      const quizShowResults = (quiz as any)?.show_results !== false;
+      
+      const responsePayload: Record<string, any> = {
+        quiz_id: quiz.id,
+        answers: sanitizedAnswers,
+        respondent_name: leadName || null,
+        respondent_email: leadEmail || null,
+        respondent_whatsapp: leadWhatsapp || null,
+        custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
+        result_id: result?.id
+      };
 
-      if (error) {
-        console.error('Error inserting quiz response:', error);
-        throw error;
+      let saveError;
+      if (!quizShowResults) {
+        // Funnel mode: upsert to update the progressive-saved row
+        responsePayload.session_id = sessionId;
+        const { error } = await supabase
+          .from('quiz_responses')
+          .upsert(responsePayload, { onConflict: 'quiz_id,session_id' });
+        saveError = error;
+      } else {
+        // Normal mode: standard insert
+        const { error } = await supabase
+          .from('quiz_responses')
+          .insert(responsePayload);
+        saveError = error;
+      }
+
+      if (saveError) {
+        console.error('Error saving quiz response:', saveError);
+        throw saveError;
       }
 
       // Trigger webhook
