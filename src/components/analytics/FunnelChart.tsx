@@ -14,6 +14,8 @@ interface FunnelStep {
 interface FunnelChartProps {
   data: FunnelStep[];
   loading?: boolean;
+  /** Override completions count from quiz_analytics for consistency with metric cards */
+  completionsOverride?: number;
 }
 
 export function FunnelChart({ data, loading = false }: FunnelChartProps) {
