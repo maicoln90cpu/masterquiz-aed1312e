@@ -365,7 +365,7 @@ export function useQuizViewState({
       overrideAnswers = undefined;
     }
     
-    const finalAnswers = overrideAnswers || answers;
+    const finalAnswers = overrideAnswers || answersRef.current;
     
     try {
       const ipAddress = await fetchIPWithCache(3000) || 'unknown';
