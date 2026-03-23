@@ -121,7 +121,7 @@ export const QuizBlockPreview = ({
       case "button":
         return <ButtonBlockPreview key={block.id} block={block} onNavigateNext={onNavigateNext} onNavigateToQuestion={onNavigateToQuestion} onCtaClick={onCtaClick} />;
       case "price":
-        return <PriceBlockPreview key={block.id} block={block} />;
+        return <PriceBlockPreview key={block.id} block={block} onCtaClick={onCtaClick} />;
       case "metrics":
         return (
           <Suspense key={block.id} fallback={<Skeleton className="h-[300px] w-full rounded-lg" />}>
