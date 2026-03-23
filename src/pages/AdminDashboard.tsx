@@ -112,6 +112,36 @@ export default function AdminDashboard() {
   const [editEmail, setEditEmail] = useState('');
   const [editWhatsapp, setEditWhatsapp] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  
+  // Sorting state for tables
+  const [usersSortColumn, setUsersSortColumn] = useState<string>('');
+  const [usersSortDirection, setUsersSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [respondentsSortColumn, setRespondentsSortColumn] = useState<string>('');
+  const [respondentsSortDirection, setRespondentsSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const toggleUsersSort = (column: string) => {
+    if (usersSortColumn === column) {
+      setUsersSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setUsersSortColumn(column);
+      setUsersSortDirection('asc');
+    }
+  };
+
+  const toggleRespondentsSort = (column: string) => {
+    if (respondentsSortColumn === column) {
+      setRespondentsSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setRespondentsSortColumn(column);
+      setRespondentsSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column, activeColumn, direction }: { column: string; activeColumn: string; direction: 'asc' | 'desc' }) => {
+    if (column !== activeColumn) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return direction === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // ✅ Componente de Skeleton para carregamento
   const UserCardSkeleton = () => (
