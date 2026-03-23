@@ -195,6 +195,7 @@ export function QuizViewQuestion({
                 totalQuestions={totalQuestions}
                 textInputValues={textInputValues}
                 onTextInputChange={handleTextInputChange}
+                onCtaClick={onCtaClick}
               />
             );
           })}
