@@ -570,9 +570,8 @@ const Analytics = () => {
 
             {/* Charts */}
             <Tabs defaultValue="general" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="general">Geral</TabsTrigger>
-                <TabsTrigger value="heatmaps">Heatmaps</TabsTrigger>
                 <TabsTrigger value="perquiz">Por Quiz</TabsTrigger>
                 <TabsTrigger value="videos">Vídeos</TabsTrigger>
               </TabsList>
