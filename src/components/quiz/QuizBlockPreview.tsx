@@ -178,7 +178,7 @@ export const QuizBlockPreview = ({
       case "comparisonResult":
         return <ComparisonResultBlockPreview key={block.id} block={block as QuizBlock & { type: 'comparisonResult' }} answers={answers} />;
       case "personalizedCTA":
-        return <PersonalizedCTABlockPreview key={block.id} block={block as QuizBlock & { type: 'personalizedCTA' }} answers={answers} />;
+        return <PersonalizedCTABlockPreview key={block.id} block={block as QuizBlock & { type: 'personalizedCTA' }} answers={answers} onCtaClick={onCtaClick} />;
       case "recommendation":
         return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} />;
       case "calculator":
