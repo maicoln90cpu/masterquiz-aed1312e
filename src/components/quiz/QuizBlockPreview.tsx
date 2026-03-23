@@ -119,7 +119,7 @@ export const QuizBlockPreview = ({
       case "embed":
         return <EmbedBlockPreview key={block.id} block={block} />;
       case "button":
-        return <ButtonBlockPreview key={block.id} block={block} onNavigateNext={onNavigateNext} onNavigateToQuestion={onNavigateToQuestion} />;
+        return <ButtonBlockPreview key={block.id} block={block} onNavigateNext={onNavigateNext} onNavigateToQuestion={onNavigateToQuestion} onCtaClick={onCtaClick} />;
       case "price":
         return <PriceBlockPreview key={block.id} block={block} />;
       case "metrics":
