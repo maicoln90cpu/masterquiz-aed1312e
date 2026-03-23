@@ -71,6 +71,53 @@ const sanitizeAnswers = (answers: Record<string, any>): Record<string, any> => {
   return clean;
 };
 
+// Extract email and phone from textInput block answers
+const extractContactFromAnswers = (
+  answers: Record<string, any>,
+  questions: QuizQuestion[]
+): { email: string | null; phone: string | null } => {
+  let email: string | null = null;
+  let phone: string | null = null;
+
+  for (const question of questions) {
+    if (!question.blocks || !Array.isArray(question.blocks)) continue;
+    for (const block of question.blocks) {
+      const b = block as any;
+      if (b.type !== 'textInput') continue;
+
+      // Check answer keyed by question ID or block-specific key
+      const val = answers[question.id] || answers[`textInput:${b.id}`];
+      if (!val || typeof val !== 'string') continue;
+
+      // Priority 1: explicit validation type on the block
+      if (b.validation === 'email' && !email) {
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) {
+          email = val.trim();
+        }
+      } else if ((b.validation === 'phone' || b.validation === 'cpf') && !phone) {
+        const digits = val.replace(/\D/g, '');
+        if (digits.length >= 10) {
+          phone = val.trim();
+        }
+      }
+
+      // Priority 2: regex fallback if no validation type set
+      if (!email && !b.validation) {
+        const emailMatch = val.match(/[^\s@]+@[^\s@]+\.[^\s@]+/);
+        if (emailMatch) email = emailMatch[0];
+      }
+      if (!phone && !b.validation) {
+        const digits = val.replace(/\D/g, '');
+        if (digits.length >= 10 && digits.length <= 13) {
+          phone = val.trim();
+        }
+      }
+    }
+  }
+
+  return { email, phone };
+};
+
 export function useQuizViewState({
   slug,
   company,
