@@ -516,12 +516,34 @@ export function useQuizViewState({
 
       let saveError;
       if (!quizShowResults) {
-        // Funnel mode: upsert to update the progressive-saved row
+        // Funnel mode: use SELECT + UPDATE/INSERT to handle partial unique index
         responsePayload.session_id = sessionId;
-        const { error } = await supabase
-          .from('quiz_responses')
-          .upsert(responsePayload as any, { onConflict: 'quiz_id,session_id' });
-        saveError = error;
+        try {
+          const { data: existing } = await supabase.from('quiz_responses')
+            .select('id')
+            .eq('quiz_id', quiz.id)
+            .eq('session_id', sessionId)
+            .maybeSingle();
+          if (existing) {
+            const { error } = await supabase.from('quiz_responses')
+              .update({
+                answers: sanitizedAnswers,
+                respondent_name: responsePayload.respondent_name,
+                respondent_email: responsePayload.respondent_email,
+                respondent_whatsapp: responsePayload.respondent_whatsapp,
+                custom_field_data: responsePayload.custom_field_data,
+                result_id: responsePayload.result_id,
+              } as any)
+              .eq('id', existing.id);
+            saveError = error;
+          } else {
+            const { error } = await supabase.from('quiz_responses').insert(responsePayload as any);
+            saveError = error;
+          }
+        } catch (err) {
+          console.error('[submitQuiz funnel] Exception:', err);
+          saveError = err;
+        }
       } else {
         // Normal mode: standard insert
         const { error } = await supabase
