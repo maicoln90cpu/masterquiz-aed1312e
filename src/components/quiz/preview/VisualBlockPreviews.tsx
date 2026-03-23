@@ -168,7 +168,7 @@ const BANNER_STYLES = {
   info: 'bg-blue-100 text-blue-900 border border-blue-300',
 };
 
-export const BannerBlockPreview = ({ block }: { block: QuizBlock & { type: 'banner' } }) => {
+export const BannerBlockPreview = ({ block, onCtaClick }: { block: QuizBlock & { type: 'banner' }; onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void }) => {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
 
@@ -177,7 +177,11 @@ export const BannerBlockPreview = ({ block }: { block: QuizBlock & { type: 'bann
   // ✅ Etapa 2D: Banner clicável com link
   const handleClick = () => {
     if ((block as any).linkUrl) {
-      window.open((block as any).linkUrl, (block as any).linkTarget || '_blank');
+      if (onCtaClick) {
+        onCtaClick(block.text || 'Banner CTA', (block as any).linkUrl, block.id);
+      } else {
+        window.open((block as any).linkUrl, (block as any).linkTarget || '_blank');
+      }
     }
   };
 
