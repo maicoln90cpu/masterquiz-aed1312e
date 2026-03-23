@@ -235,11 +235,30 @@ export default function AdminDashboard() {
 
   const totalUsersPages = Math.ceil(filteredAdministrators.length / USERS_PER_PAGE);
 
-  // Paginação de respondentes
+  // Sorting + Paginação de respondentes
+  const sortedRespondents = useMemo(() => {
+    if (!respondentsSortColumn) return allUsers;
+    return [...allUsers].sort((a: any, b: any) => {
+      let valA: any, valB: any;
+      switch (respondentsSortColumn) {
+        case 'name': valA = a.name || ''; valB = b.name || ''; break;
+        case 'email': valA = a.email || ''; valB = b.email || ''; break;
+        case 'whatsapp': valA = a.whatsapp || ''; valB = b.whatsapp || ''; break;
+        case 'quiz': valA = a.lastQuizTitle || ''; valB = b.lastQuizTitle || ''; break;
+        case 'responses': valA = a.responseCount || 0; valB = b.responseCount || 0; break;
+        case 'lastResponse': valA = a.lastResponse || ''; valB = b.lastResponse || ''; break;
+        default: return 0;
+      }
+      if (valA < valB) return respondentsSortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return respondentsSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [allUsers, respondentsSortColumn, respondentsSortDirection]);
+
   const paginatedRespondents = useMemo(() => {
     const startIndex = (respondentsCurrentPage - 1) * RESPONDENTS_PER_PAGE;
-    return allUsers.slice(startIndex, startIndex + RESPONDENTS_PER_PAGE);
-  }, [allUsers, respondentsCurrentPage]);
+    return sortedRespondents.slice(startIndex, startIndex + RESPONDENTS_PER_PAGE);
+  }, [sortedRespondents, respondentsCurrentPage]);
 
   const totalRespondentsPages = Math.ceil(allUsers.length / RESPONDENTS_PER_PAGE);
 
