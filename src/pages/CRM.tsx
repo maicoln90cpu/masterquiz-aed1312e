@@ -774,6 +774,21 @@ const CRM = () => {
                 </Card>
               </div>
 
+              {/* Respostas do quiz */}
+              {selectedLead.answers && Object.keys(selectedLead.answers).length > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">{t('crm.detailsDialog.answers', 'Respostas do Quiz')}</p>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <ResponseAnswersList 
+                        answers={selectedLead.answers} 
+                        questions={selectedLead.quiz_questions}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               <div>
                 <p className="text-sm text-muted-foreground mb-2">{t('crm.detailsDialog.moveTo')}</p>
                 <div className="flex flex-wrap gap-2">
