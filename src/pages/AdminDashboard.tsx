@@ -1138,12 +1138,24 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>WhatsApp</TableHead>
-                    <TableHead>Quiz</TableHead>
-                    <TableHead>Respostas</TableHead>
-                    <TableHead>Última Resposta</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('name')}>
+                      <span className="flex items-center">Nome<SortIcon column="name" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('email')}>
+                      <span className="flex items-center">Email<SortIcon column="email" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('whatsapp')}>
+                      <span className="flex items-center">WhatsApp<SortIcon column="whatsapp" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('quiz')}>
+                      <span className="flex items-center">Quiz<SortIcon column="quiz" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('responses')}>
+                      <span className="flex items-center">Respostas<SortIcon column="responses" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleRespondentsSort('lastResponse')}>
+                      <span className="flex items-center">Última Resposta<SortIcon column="lastResponse" activeColumn={respondentsSortColumn} direction={respondentsSortDirection} /></span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
