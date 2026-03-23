@@ -43,7 +43,7 @@ const Responses = () => {
   const [selectedResponse, setSelectedResponse] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("heatmap");
   const ITEMS_PER_PAGE = 50; // ✅ Paginação: 50 itens por página
   const { subscription, responseLimit } = useSubscriptionLimits();
   
