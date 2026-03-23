@@ -298,13 +298,22 @@ export function UnifiedCostsDashboard() {
             Blog — Detalhamento
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatItem label="Texto (OpenAI)" value={`$${blogStats.totalText.toFixed(4)}`} />
             <StatItem label="Imagem (Gemini)" value={`$${blogStats.totalImage.toFixed(4)}`} />
             <StatItem label="Custo Médio / Artigo" value={`$${blogStats.avgCost.toFixed(4)}`} />
             <StatItem label="Total Gerações" value={blogStats.count.toString()} />
           </div>
+          {blogStats.count === 0 && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription className="text-sm text-muted-foreground">
+                <strong>Dados históricos indisponíveis:</strong> Os artigos gerados antes da implantação do tracking de custos não possuem registros de log. 
+                Novos artigos gerados a partir de agora terão seus custos registrados automaticamente.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 

@@ -1384,10 +1384,11 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Label>Título</Label>
         <Input value={block.title} onChange={(e) => onChange(update(block, { title: e.target.value }))} />
       </div>
+      <SwitchRow label="Título em negrito" tooltip="Define se o título do callout aparece em negrito" checked={(block as any).titleBold !== false} onChange={(v) => onChange(update(block, { titleBold: v }))} />
       <div className="space-y-2">
         <Label>Itens (um por linha)</Label>
-        <textarea
-          className="w-full min-h-[100px] px-3 py-2 border rounded-md bg-background text-sm"
+        <Textarea
+          className="min-h-[100px]"
           value={(block.items || []).join('\n')}
           onChange={(e) => onChange(update(block, { items: e.target.value.split('\n').filter(Boolean) }))}
         />
@@ -1396,7 +1397,6 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Label>Nota de rodapé</Label>
         <Input value={block.footnote || ''} onChange={(e) => onChange(update(block, { footnote: e.target.value }))} />
       </div>
-      {/* ✅ Etapa 2D: Callout dismissível */}
       <SwitchRow label="Dispensável (botão X)" tooltip="Permite que o usuário feche/dispense o alerta clicando no X" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
       <SwitchRow label="Ocultar bloco" tooltip="Mantém o bloco configurado mas não o exibe no quiz publicado" checked={(block as any).hidden || false} onChange={(v) => onChange(update(block, { hidden: v }))} />
       <Separator />
