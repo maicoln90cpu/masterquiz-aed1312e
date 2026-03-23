@@ -148,6 +148,7 @@ const CRM = () => {
         status: (response.lead_status || 'new') as LeadStatus,
         answers: response.answers || {},
         custom_field_data: response.custom_field_data,
+        quiz_questions: response.quizzes?.quiz_questions || [],
       }));
 
       setLeads(leadsData);
