@@ -139,7 +139,7 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
         // Buscar perguntas do quiz
         const { data: questions } = await supabase
           .from('quiz_questions')
-          .select('id, question_text, order_number, answer_format, options')
+          .select('id, question_text, order_number, answer_format, options, blocks')
           .eq('quiz_id', selectedQuiz)
           .order('order_number', { ascending: true });
 
