@@ -45,6 +45,24 @@ const getQuestionLabel = (question: Question): string => {
   return question.question_text;
 };
 
+/** Gets all possible answer keys for a question (handles textInput:blockId keys) */
+const getAnswerForQuestion = (question: Question, answers: Record<string, any>): any => {
+  // Direct match by question ID
+  if (answers?.[question.id] !== undefined) return answers[question.id];
+  
+  // Check for textInput:blockId keys
+  if (Array.isArray(question.blocks)) {
+    for (const block of question.blocks) {
+      if ((block as any).type === 'textInput') {
+        const key = `textInput:${(block as any).id}`;
+        if (answers?.[key] !== undefined) return answers[key];
+      }
+    }
+  }
+  
+  return undefined;
+};
+
 /** Identifica se a pergunta é um slide informativo sem resposta esperada */
 const isInfoSlide = (question: Question): boolean => {
   if (!Array.isArray(question.blocks)) return false;
