@@ -26,6 +26,7 @@ interface QuizViewQuestionProps {
   showFormAfter: boolean;
   onSubmit: () => void;
   showResults?: boolean;
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
 export function QuizViewQuestion({
