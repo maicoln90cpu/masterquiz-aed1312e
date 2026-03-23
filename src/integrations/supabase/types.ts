@@ -1345,6 +1345,7 @@ export type Database = {
           respondent_name: string | null
           respondent_whatsapp: string | null
           result_id: string | null
+          session_id: string | null
           user_agent: string | null
           variant_id: string | null
         }
@@ -1360,6 +1361,7 @@ export type Database = {
           respondent_name?: string | null
           respondent_whatsapp?: string | null
           result_id?: string | null
+          session_id?: string | null
           user_agent?: string | null
           variant_id?: string | null
         }
@@ -1375,6 +1377,7 @@ export type Database = {
           respondent_name?: string | null
           respondent_whatsapp?: string | null
           result_id?: string | null
+          session_id?: string | null
           user_agent?: string | null
           variant_id?: string | null
         }

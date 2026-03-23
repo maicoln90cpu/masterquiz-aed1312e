@@ -303,6 +303,30 @@ export function useQuizViewState({
       }).catch(err => console.warn('Step tracking failed:', err));
     }
 
+    // Progressive save for funnel mode (show_results=false)
+    const quizShowResults = (quiz as any)?.show_results !== false;
+    if (!quizShowResults && !previewMode && quiz?.id) {
+      const sanitizedAnswers = sanitizeAnswers(answers);
+      const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp } = formData || {};
+      supabase.from('quiz_responses').upsert({
+        quiz_id: quiz.id,
+        session_id: sessionId,
+        answers: sanitizedAnswers,
+        respondent_name: leadName || null,
+        respondent_email: leadEmail || null,
+        respondent_whatsapp: leadWhatsapp || null,
+      }, { onConflict: 'quiz_id,session_id' }).then(({ error }) => {
+        if (error) console.warn('[Progressive save] Error:', error.message);
+      });
+
+      // Track completion when reaching last question in funnel mode
+      if (nextStepNumber === visibleQuestions.length - 1) {
+        supabase.functions.invoke('track-quiz-analytics', {
+          body: { quizId: quiz.id, event: 'complete' }
+        }).catch(err => console.warn('Funnel completion tracking failed:', err));
+      }
+    }
+
     setCurrentStep(nextStepNumber);
   };
 
@@ -453,23 +477,39 @@ export function useQuizViewState({
       // Sanitize answers before insert to prevent circular reference errors (DOM elements)
       const sanitizedAnswers = sanitizeAnswers(finalAnswers);
 
-      // Save response - don't use .select().single() since anon has INSERT but not SELECT RLS
+      // Save response - use upsert for funnel mode (progressive save creates row earlier)
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp, ...onlyCustomFields } = formData || {};
-      const { error } = await supabase
-        .from('quiz_responses')
-        .insert({
-          quiz_id: quiz.id,
-          answers: sanitizedAnswers,
-          respondent_name: leadName || null,
-          respondent_email: leadEmail || null,
-          respondent_whatsapp: leadWhatsapp || null,
-          custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
-          result_id: result?.id
-        });
+      const quizShowResults = (quiz as any)?.show_results !== false;
+      
+      const responsePayload: Record<string, any> = {
+        quiz_id: quiz.id,
+        answers: sanitizedAnswers,
+        respondent_name: leadName || null,
+        respondent_email: leadEmail || null,
+        respondent_whatsapp: leadWhatsapp || null,
+        custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
+        result_id: result?.id
+      };
 
-      if (error) {
-        console.error('Error inserting quiz response:', error);
-        throw error;
+      let saveError;
+      if (!quizShowResults) {
+        // Funnel mode: upsert to update the progressive-saved row
+        responsePayload.session_id = sessionId;
+        const { error } = await supabase
+          .from('quiz_responses')
+          .upsert(responsePayload as any, { onConflict: 'quiz_id,session_id' });
+        saveError = error;
+      } else {
+        // Normal mode: standard insert
+        const { error } = await supabase
+          .from('quiz_responses')
+          .insert(responsePayload as any);
+        saveError = error;
+      }
+
+      if (saveError) {
+        console.error('Error saving quiz response:', saveError);
+        throw saveError;
       }
 
       // Trigger webhook
@@ -482,16 +522,17 @@ export function useQuizViewState({
         }).catch(err => console.error('Webhook error:', err));
       }
 
-      // Track completion
-      await supabase.functions.invoke('track-quiz-analytics', {
-        body: { quizId: quiz.id, event: 'complete' }
-      });
+      // Track completion (skip for funnel mode — already tracked in nextStep)
+      if (quizShowResults) {
+        await supabase.functions.invoke('track-quiz-analytics', {
+          body: { quizId: quiz.id, event: 'complete' }
+        });
+      }
 
       setFinalResult(result || null);
       setShowResult(true);
       
       // Show different toast based on show_results mode
-      const quizShowResults = (quiz as any)?.show_results !== false;
       if (quizShowResults) {
         toast.success(t('quizView.submitSuccess'));
       } else {

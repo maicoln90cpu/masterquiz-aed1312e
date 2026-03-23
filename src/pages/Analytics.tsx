@@ -23,7 +23,6 @@ import { AnalyticsSkeleton } from "@/components/ui/analytics-skeleton";
 import { FunnelChart } from "@/components/analytics/FunnelChart";
 import { useFunnelData } from "@/hooks/useFunnelData";
 import { PerQuizAnalytics } from "@/components/analytics/PerQuizAnalytics";
-import { ResponseHeatmap } from "@/components/analytics/ResponseHeatmap";
 import { AnalyticsTour } from "@/components/onboarding/AnalyticsTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useTrackPageView } from "@/hooks/useUserStage";
@@ -571,9 +570,8 @@ const Analytics = () => {
 
             {/* Charts */}
             <Tabs defaultValue="general" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="general">Geral</TabsTrigger>
-                <TabsTrigger value="heatmaps">Heatmaps</TabsTrigger>
                 <TabsTrigger value="perquiz">Por Quiz</TabsTrigger>
                 <TabsTrigger value="videos">Vídeos</TabsTrigger>
               </TabsList>
@@ -856,10 +854,6 @@ const Analytics = () => {
               </CardContent>
             </Card>
             </TabsContent>
-
-              <TabsContent value="heatmaps">
-                <ResponseHeatmap />
-              </TabsContent>
 
             <TabsContent value="perquiz">
               <PerQuizAnalytics 

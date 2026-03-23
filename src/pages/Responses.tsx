@@ -28,6 +28,7 @@ import { ResponsesSkeleton } from "@/components/ui/responses-skeleton";
 import { logExportAction } from "@/lib/auditLogger";
 import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
 import { ResponsesSpreadsheet } from "@/components/responses/ResponsesSpreadsheet";
+import { ResponseHeatmap } from "@/components/analytics/ResponseHeatmap";
 // ✅ ITEM 5: Remover import estático de XLSX - será lazy loaded
 // import * as XLSX from "xlsx";
 
@@ -359,6 +360,9 @@ const Responses = () => {
               <LayoutGrid className="h-4 w-4" />
               {t('responses.spreadsheet.title', 'Planilha de Dados')}
             </TabsTrigger>
+            <TabsTrigger value="heatmap" className="flex items-center gap-2">
+              {t('responses.heatmap', 'Heatmap')}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="all">
@@ -512,6 +516,10 @@ const Responses = () => {
                 </div>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="heatmap">
+            <ResponseHeatmap />
           </TabsContent>
         </Tabs>
       </div>
