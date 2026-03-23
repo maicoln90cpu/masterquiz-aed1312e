@@ -153,6 +153,10 @@ const CRM = () => {
       }));
 
       setLeads(leadsData);
+      
+      // Count anonymous responses
+      const anonymousCount = leadsData.filter(l => !hasUsefulContactData(l)).length;
+      setAnonymousResponseCount(anonymousCount);
     } catch (error) {
       console.error('Error loading leads:', error);
       toast.error(t('crm.toast.errorLoading'));
