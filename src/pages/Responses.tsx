@@ -76,7 +76,7 @@ const Responses = () => {
         .from('quiz_responses')
         .select(`
           id, quiz_id, completed_at, respondent_name, respondent_email, respondent_whatsapp, answers, custom_field_data, result_id, 
-          quizzes!inner(id, title, user_id, quiz_questions(id, question_text, order_number)), 
+          quizzes!inner(id, title, user_id, quiz_questions(id, question_text, order_number, blocks)), 
           quiz_results(result_text)
         `, { count: 'exact' })
         .eq('quizzes.user_id', user.id)

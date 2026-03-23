@@ -30,6 +30,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useTrackPageView } from "@/hooks/useUserStage";
 import { useTestLead } from "@/hooks/useTestLead";
 import { FlaskConical } from "lucide-react";
+import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
 type LeadStatus = 'new' | 'checkout' | 'negotiation' | 'converted' | 'relationship' | 'lost';
 
 interface Lead {
@@ -43,6 +44,7 @@ interface Lead {
   status: LeadStatus;
   answers: any;
   custom_field_data: any;
+  quiz_questions?: Array<{ id: string; question_text: string; order_number: number; blocks?: any[] }>;
 }
 
 const CRM = () => {
@@ -122,12 +124,12 @@ const CRM = () => {
           lead_status,
           answers,
           custom_field_data,
-          quizzes!inner(id, title, user_id),
+          quizzes!inner(id, title, user_id, quiz_questions(id, question_text, order_number, blocks)),
           quiz_results(result_text)
         `)
         .eq('quizzes.user_id', user.id)
         .order('completed_at', { ascending: false })
-        .limit(500); // ✅ Limit para performance
+        .limit(500);
 
       if (filterQuiz !== "all") {
         query = query.eq('quiz_id', filterQuiz);
@@ -147,6 +149,7 @@ const CRM = () => {
         status: (response.lead_status || 'new') as LeadStatus,
         answers: response.answers || {},
         custom_field_data: response.custom_field_data,
+        quiz_questions: (response.quizzes?.quiz_questions || []) as any[],
       }));
 
       setLeads(leadsData);
@@ -770,6 +773,21 @@ const CRM = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Respostas do quiz */}
+              {selectedLead.answers && Object.keys(selectedLead.answers).length > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">{t('crm.detailsDialog.answers', 'Respostas do Quiz')}</p>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <ResponseAnswersList 
+                        answers={selectedLead.answers} 
+                        questions={selectedLead.quiz_questions}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               <div>
                 <p className="text-sm text-muted-foreground mb-2">{t('crm.detailsDialog.moveTo')}</p>

@@ -723,7 +723,7 @@ const Analytics = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <FunnelChart data={funnelData || []} loading={funnelLoading} />
+              <FunnelChart data={funnelData || []} loading={funnelLoading} completionsOverride={stats.totalCompletions > 0 ? stats.totalCompletions : undefined} />
             </div>
 
             {/* Heatmap foi movido para aba separada */}
