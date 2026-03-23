@@ -100,6 +100,9 @@ export function useQuizViewState({
   const [availableLanguages, setAvailableLanguages] = useState<string[]>(['pt']);
   const [originalQuiz, setOriginalQuiz] = useState<Quiz | null>(previewData?.quiz || null);
   const [sessionId] = useState(() => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  
+  // Ref to always have the latest answers synchronously (fixes stale closure in nextStep/submitQuiz)
+  const answersRef = useRef<Record<string, any>>({});
 
   // A/B Testing
   const { variant: abVariant, markConversion } = useABTest(
