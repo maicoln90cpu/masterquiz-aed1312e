@@ -50,7 +50,7 @@ const calculateScore = (item: RecommendationItem, answers: Record<string, any>):
   return score;
 };
 
-export const RecommendationBlockPreview = ({ block, answers, questions }: RecommendationPreviewProps) => {
+export const RecommendationBlockPreview = ({ block, answers, questions, onCtaClick }: RecommendationPreviewProps) => {
   const recommendations: RecommendationItem[] = (block as any).recommendations || [];
   const displayMode = (block as any).displayMode || 'best_match';
   const style = (block as any).style || 'card';
