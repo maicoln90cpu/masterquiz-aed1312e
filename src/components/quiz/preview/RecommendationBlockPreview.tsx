@@ -161,12 +161,17 @@ interface RecommendationCardProps {
   showScore: boolean;
   score: number;
   rank: number;
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
-const RecommendationCard = ({ item, style, isPreview, showScore, score, rank }: RecommendationCardProps) => {
+const RecommendationCard = ({ item, style, isPreview, showScore, score, rank, onCtaClick }: RecommendationCardProps) => {
   const handleClick = () => {
     if (item.buttonUrl) {
-      window.open(item.buttonUrl, '_blank');
+      if (onCtaClick) {
+        onCtaClick(item.buttonText || item.name || 'CTA', item.buttonUrl, item.id);
+      } else {
+        window.open(item.buttonUrl, '_blank');
+      }
     }
   };
 
