@@ -1194,6 +1194,60 @@ export type Database = {
           },
         ]
       }
+      quiz_cta_click_analytics: {
+        Row: {
+          block_id: string | null
+          clicked_at: string
+          cta_text: string | null
+          cta_url: string
+          date: string
+          id: string
+          question_id: string | null
+          quiz_id: string
+          session_id: string
+          step_number: number | null
+        }
+        Insert: {
+          block_id?: string | null
+          clicked_at?: string
+          cta_text?: string | null
+          cta_url: string
+          date?: string
+          id?: string
+          question_id?: string | null
+          quiz_id: string
+          session_id: string
+          step_number?: number | null
+        }
+        Update: {
+          block_id?: string | null
+          clicked_at?: string
+          cta_text?: string | null
+          cta_url?: string
+          date?: string
+          id?: string
+          question_id?: string | null
+          quiz_id?: string
+          session_id?: string
+          step_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_cta_click_analytics_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_cta_click_analytics_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_form_config: {
         Row: {
           collect_email: boolean

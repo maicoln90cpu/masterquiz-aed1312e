@@ -173,3 +173,6 @@ verify_jwt = false
 
 [functions.save-quiz-response]
 verify_jwt = false
+
+[functions.track-cta-redirect]
+verify_jwt = false
