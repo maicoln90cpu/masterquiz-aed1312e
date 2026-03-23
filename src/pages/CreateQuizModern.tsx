@@ -945,6 +945,23 @@ const CreateQuizModern = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* ========== DELETE QUESTION DIALOG ========== */}
+      <AlertDialog open={uiState.deleteDialogOpen} onOpenChange={(open) => { if (!open) updateUI({ deleteDialogOpen: false, questionToDelete: null }); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('createQuiz.deleteQuestion')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('createQuiz.deleteQuestionConfirm', { number: (uiState.questionToDelete || 0) + 1 })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDeleteQuestion(uiState.questionToDelete)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };
