@@ -206,11 +206,32 @@ export default function AdminDashboard() {
     return result;
   }, [administrators, planFilter, userSearchQuery]);
 
-  // Paginação de usuários
+  // Sorting + Paginação de usuários
+  const sortedAdministrators = useMemo(() => {
+    if (!usersSortColumn) return filteredAdministrators;
+    return [...filteredAdministrators].sort((a: any, b: any) => {
+      let valA: any, valB: any;
+      switch (usersSortColumn) {
+        case 'name': valA = a.profile?.full_name || ''; valB = b.profile?.full_name || ''; break;
+        case 'email': valA = a.email || ''; valB = b.email || ''; break;
+        case 'created_at': valA = a.created_at || ''; valB = b.created_at || ''; break;
+        case 'last_sign_in': valA = a.last_sign_in_at || ''; valB = b.last_sign_in_at || ''; break;
+        case 'logins': valA = a.profile?.login_count || 0; valB = b.profile?.login_count || 0; break;
+        case 'quizzes': valA = a.stats?.quiz_count || 0; valB = b.stats?.quiz_count || 0; break;
+        case 'leads': valA = a.stats?.lead_count || 0; valB = b.stats?.lead_count || 0; break;
+        case 'plan': valA = a.subscription?.plan_type || ''; valB = b.subscription?.plan_type || ''; break;
+        default: return 0;
+      }
+      if (valA < valB) return usersSortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return usersSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredAdministrators, usersSortColumn, usersSortDirection]);
+
   const paginatedAdministrators = useMemo(() => {
     const startIndex = (usersCurrentPage - 1) * USERS_PER_PAGE;
-    return filteredAdministrators.slice(startIndex, startIndex + USERS_PER_PAGE);
-  }, [filteredAdministrators, usersCurrentPage]);
+    return sortedAdministrators.slice(startIndex, startIndex + USERS_PER_PAGE);
+  }, [sortedAdministrators, usersCurrentPage]);
 
   const totalUsersPages = Math.ceil(filteredAdministrators.length / USERS_PER_PAGE);
 
