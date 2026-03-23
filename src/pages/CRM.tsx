@@ -122,12 +122,12 @@ const CRM = () => {
           lead_status,
           answers,
           custom_field_data,
-          quizzes!inner(id, title, user_id),
+          quizzes!inner(id, title, user_id, quiz_questions(id, question_text, order_number, blocks)),
           quiz_results(result_text)
         `)
         .eq('quizzes.user_id', user.id)
         .order('completed_at', { ascending: false })
-        .limit(500); // ✅ Limit para performance
+        .limit(500);
 
       if (filterQuiz !== "all") {
         query = query.eq('quiz_id', filterQuiz);
