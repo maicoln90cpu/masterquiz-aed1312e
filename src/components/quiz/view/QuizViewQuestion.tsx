@@ -42,7 +42,8 @@ export function QuizViewQuestion({
   isLastQuestion,
   showFormAfter,
   onSubmit,
-  showResults = true
+  showResults = true,
+  onCtaClick
 }: QuizViewQuestionProps) {
   const { t } = useTranslation();
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
