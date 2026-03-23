@@ -10,6 +10,10 @@ const LOGIN_URL = 'https://masterquiz.lovable.app/login';
 const BLOG_URL = 'https://masterquiz.lovable.app/blog';
 const SUPABASE_URL = 'https://kmmdzwoidakmbekqvkmq.supabase.co';
 
+// Cost per 1M tokens (Gemini Flash)
+const COST_PER_1M_INPUT = 0.10;
+const COST_PER_1M_OUTPUT = 0.40;
+
 function unsubscribeUrl(email: string, userId?: string): string {
   const params = new URLSearchParams({ email });
   if (userId) params.set('uid', userId);
@@ -80,6 +84,27 @@ interface GenerateRequest {
   recipientUserId?: string;
 }
 
+async function logAICost(supabaseAdmin: any, templateType: string, aiData: any) {
+  try {
+    const usage = aiData?.usage;
+    const promptTokens = usage?.prompt_tokens || 0;
+    const completionTokens = usage?.completion_tokens || 0;
+    const totalTokens = usage?.total_tokens || promptTokens + completionTokens;
+    const estimatedCost = (promptTokens * COST_PER_1M_INPUT / 1_000_000) + (completionTokens * COST_PER_1M_OUTPUT / 1_000_000);
+
+    await supabaseAdmin.from('email_generation_logs').insert({
+      template_type: templateType,
+      model_used: aiData?.model || 'google/gemini-3-flash-preview',
+      prompt_tokens: promptTokens,
+      completion_tokens: completionTokens,
+      total_tokens: totalTokens,
+      estimated_cost_usd: estimatedCost,
+    });
+  } catch (e) {
+    console.error('Failed to log email AI cost:', e);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -90,6 +115,12 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
+
+    // Create Supabase admin client for logging
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') || SUPABASE_URL,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+    );
 
     const firstName = recipientName?.split(' ')[0] || 'Usuário';
     const email = recipientEmail || '';
@@ -128,6 +159,7 @@ ${imgHtml}
 <p style="color:#444;font-size:16px;line-height:1.7;margin:0 0 24px;">${posts.length} artigos fresquinhos saíram do forno! 🔥 Cada um traz insights práticos que você pode aplicar <strong>hoje mesmo</strong> para turbinar seus resultados com quizzes.</p>
 ${cardsHtml}
 ${makeButton('Ver todos os artigos', BLOG_URL)}`;
+        // blog_digest is static, no AI call
         break;
       }
 
@@ -179,6 +211,9 @@ Formato obrigatório (JSON):
         if (!aiResponse.ok) throw new Error(`AI gateway error: ${aiResponse.status}`);
 
         const aiData = await aiResponse.json();
+        // Log AI cost
+        await logAICost(supabaseAdmin, 'weekly_tip', aiData);
+
         let tip = {
           title: 'Dica da Semana',
           intro: 'Use quizzes para qualificar seus leads de forma interativa e divertida.',
@@ -264,6 +299,8 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
         let caseData = { company: 'DigitalBoost', industry: 'Marketing', challenge: 'Baixa conversão de leads', solution: 'Criou quizzes de qualificação com MasterQuizz.', results: [{ metric: 'Leads', value: '340%', improvement: '+240%' }], quote: 'MasterQuizz transformou nossa captação.' };
         if (aiResponse.ok) {
           const aiResp = await aiResponse.json();
+          // Log AI cost
+          await logAICost(supabaseAdmin, 'success_story', aiResp);
           try {
             const toolCall = aiResp.choices?.[0]?.message?.tool_calls?.[0];
             if (toolCall) caseData = JSON.parse(toolCall.function.arguments);
@@ -328,6 +365,8 @@ ${makeButton('Criar meu quiz agora', LOGIN_URL)}`;
           });
           if (aiResp.ok) {
             const data = await aiResp.json();
+            // Log AI cost
+            await logAICost(supabaseAdmin, 'monthly_summary', data);
             insight = data.choices?.[0]?.message?.content || insight;
           }
         } catch { /* use default */ }
@@ -378,6 +417,8 @@ ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
           });
           if (aiResp.ok) {
             const data = await aiResp.json();
+            // Log AI cost
+            await logAICost(supabaseAdmin, 'platform_news', data);
             const content = data.choices?.[0]?.message?.content;
             if (content && content.includes('<li')) formattedUpdates = content;
           }

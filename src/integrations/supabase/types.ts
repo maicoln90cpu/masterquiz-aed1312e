@@ -572,6 +572,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_generation_logs: {
+        Row: {
+          completion_tokens: number | null
+          created_at: string
+          estimated_cost_usd: number | null
+          id: string
+          model_used: string
+          prompt_tokens: number | null
+          template_type: string
+          total_tokens: number | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          created_at?: string
+          estimated_cost_usd?: number | null
+          id?: string
+          model_used?: string
+          prompt_tokens?: number | null
+          template_type: string
+          total_tokens?: number | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          created_at?: string
+          estimated_cost_usd?: number | null
+          id?: string
+          model_used?: string
+          prompt_tokens?: number | null
+          template_type?: string
+          total_tokens?: number | null
+        }
+        Relationships: []
+      }
       email_recovery_contacts: {
         Row: {
           ab_variant: string | null
