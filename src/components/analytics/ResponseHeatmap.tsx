@@ -165,7 +165,7 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
             questionText: q.question_text,
             questionOrder: q.order_number,
             answerFormat: q.answer_format,
-            options: parseOptions(q.options, q.answer_format),
+            options: parseOptions(q.options, q.answer_format, q.blocks),
             responses: [],
             totalResponses: 0,
           }));
