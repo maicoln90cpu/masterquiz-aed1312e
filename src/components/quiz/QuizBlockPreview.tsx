@@ -136,7 +136,14 @@ export const QuizBlockPreview = ({
       case "slider":
         return <SliderBlockPreview key={block.id} block={block} />;
       case "textInput":
-        return <TextInputBlockPreview key={block.id} block={block} />;
+        return (
+          <TextInputBlockPreview 
+            key={block.id} 
+            block={block} 
+            controlledValue={textInputValues?.[block.id]}
+            onValueChange={onTextInputChange ? (val) => onTextInputChange(block.id, val) : undefined}
+          />
+        );
       case "nps":
         return <NPSBlockPreview key={block.id} block={block} />;
       case "accordion":
