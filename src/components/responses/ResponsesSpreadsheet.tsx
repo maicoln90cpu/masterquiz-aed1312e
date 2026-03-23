@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Users, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Users, TrendingUp, ChevronLeft, ChevronRight, MousePointerClick } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,11 @@ interface QuizMetrics {
   visitors: number;
   leads: number;
   conversionRate: number;
+}
+
+interface CtaClickSummary {
+  cta_text: string;
+  clicks: number;
 }
 
 interface ResponsesSpreadsheetProps {
@@ -45,6 +50,8 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
   const [stepRetention, setStepRetention] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [ctaSummary, setCtaSummary] = useState<CtaClickSummary[]>([]);
+  const [lastStepCtaSessions, setLastStepCtaSessions] = useState(0);
 
   useEffect(() => {
     loadSpreadsheetData();
@@ -60,7 +67,8 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
         .eq('quiz_id', quizId)
         .order('order_number');
       
-      setQuestions((questionsData || []) as Question[]);
+      const qs = (questionsData || []) as Question[];
+      setQuestions(qs);
 
       // 2. Buscar métricas de funil (retenção por step)
       const { data: funnelData } = await supabase
@@ -83,13 +91,50 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
       });
       
       const maxCount = stepCounts[0] || Math.max(...Object.values(stepCounts), 1);
+
+      // 3. Buscar cliques CTA da última etapa (quiz_cta_click_analytics)
+      const { data: ctaData } = await supabase
+        .from('quiz_cta_click_analytics')
+        .select('session_id, cta_text')
+        .eq('quiz_id', quizId);
+
+      // Sessões únicas com clique CTA
+      const ctaSessionSet = new Set<string>();
+      const ctaTextCounts: Record<string, number> = {};
+      ctaData?.forEach(row => {
+        ctaSessionSet.add(row.session_id);
+        const text = row.cta_text || 'CTA';
+        ctaTextCounts[text] = (ctaTextCounts[text] || 0) + 1;
+      });
+      setLastStepCtaSessions(ctaSessionSet.size);
+      setCtaSummary(
+        Object.entries(ctaTextCounts)
+          .map(([cta_text, clicks]) => ({ cta_text, clicks }))
+          .sort((a, b) => b.clicks - a.clicks)
+      );
+
+      // Calcular retenção — agora usando order_number diretamente como step_number
+      // O tracking grava step_number = order_number da pergunta (0-indexed)
+      // Para a última etapa, complementar com CTA clicks
+      const lastStepNumber = qs.length > 0 ? qs[qs.length - 1].order_number : -1;
+      
       const retention: Record<number, number> = {};
       Object.entries(stepCounts).forEach(([step, count]) => {
         retention[Number(step)] = (count / maxCount) * 100;
       });
+
+      // Se última etapa tem CTA clicks mas não tem step analytics, usar CTA clicks
+      if (lastStepNumber >= 0 && ctaSessionSet.size > 0) {
+        // Merge: step analytics sessions + CTA click sessions for last step
+        const lastStepSessions = stepSessions[lastStepNumber] || new Set<string>();
+        ctaSessionSet.forEach(s => lastStepSessions.add(s));
+        const mergedCount = lastStepSessions.size;
+        retention[lastStepNumber] = (mergedCount / maxCount) * 100;
+      }
+
       setStepRetention(retention);
 
-      // 3. Buscar respostas com paginação
+      // 4. Buscar respostas com paginação
       const { data: responsesData, count } = await supabase
         .from('quiz_responses')
         .select('*', { count: 'exact' })
@@ -100,7 +145,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
       setResponses(responsesData || []);
       setTotalCount(count || 0);
 
-      // 4. Calcular métricas gerais
+      // 5. Calcular métricas gerais
       const views = maxCount;
       const completions = count || 0;
       setMetrics({
@@ -117,11 +162,15 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
   };
 
   const getColumnColor = (orderNumber: number) => {
-    // step_number é baseado em 1 (step 1 = primeira pergunta)
-    const retention = stepRetention[orderNumber + 1] || 0;
-    if (retention >= 70) return 'bg-green-100/50 dark:bg-green-900/20 border-green-300 dark:border-green-700';
-    if (retention >= 40) return 'bg-yellow-100/50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700';
+    // Agora usa order_number diretamente (sem +1)
+    const ret = stepRetention[orderNumber] || 0;
+    if (ret >= 70) return 'bg-green-100/50 dark:bg-green-900/20 border-green-300 dark:border-green-700';
+    if (ret >= 40) return 'bg-yellow-100/50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700';
     return 'bg-red-100/50 dark:bg-red-900/20 border-red-300 dark:border-red-700';
+  };
+
+  const getRetentionForQuestion = (orderNumber: number) => {
+    return stepRetention[orderNumber] || 0;
   };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -199,6 +248,45 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
         </Card>
       </div>
 
+      {/* CTA Performance (última etapa) */}
+      {ctaSummary.length > 0 && (
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <MousePointerClick className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-sm">
+                {t('responses.spreadsheet.ctaPerformance', 'Performance dos CTAs (Última Etapa)')}
+              </h3>
+              <Badge variant="secondary" className="text-xs">
+                {lastStepCtaSessions} {t('responses.spreadsheet.uniqueClicks', 'cliques únicos')}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {ctaSummary.map((cta, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" title={cta.cta_text}>
+                      {cta.cta_text}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {cta.clicks} {t('responses.spreadsheet.clicks', 'cliques')}
+                      {metrics && metrics.visitors > 0 && (
+                        <span className="ml-1">
+                          ({((cta.clicks / metrics.visitors) * 100).toFixed(1)}% CTR)
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tabela Planilha */}
       <Card>
         <CardContent className="p-0">
@@ -227,7 +315,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
                           {q.question_text.slice(0, 25)}{q.question_text.length > 25 ? '...' : ''}
                         </span>
                         <Badge variant="outline" className="text-[9px] px-1 py-0">
-                          {(stepRetention[q.order_number + 1] || 0).toFixed(0)}%
+                          {getRetentionForQuestion(q.order_number).toFixed(0)}%
                         </Badge>
                       </div>
                     </TableHead>
