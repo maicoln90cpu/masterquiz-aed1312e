@@ -23,6 +23,7 @@ interface RecommendationPreviewProps {
   block: QuizBlock & { type: 'recommendation' };
   answers?: Record<string, any>;
   questions?: QuizQuestion[];
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
 }
 
 /** Calculates score for a recommendation based on matching rules */
