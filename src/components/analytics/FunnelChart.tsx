@@ -18,7 +18,7 @@ interface FunnelChartProps {
   completionsOverride?: number;
 }
 
-export function FunnelChart({ data, loading = false }: FunnelChartProps) {
+export function FunnelChart({ data, loading = false, completionsOverride }: FunnelChartProps) {
   const { t } = useTranslation();
 
   const funnelData = useMemo(() => {
