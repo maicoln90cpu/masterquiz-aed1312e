@@ -232,6 +232,7 @@ export function useQuizViewState({
       return;
     }
     const newAnswers = { ...answers, [questionId]: value };
+    answersRef.current = newAnswers; // Synchronous update — always fresh
     setAnswers(newAnswers);
     
     // Calculate score in real-time
