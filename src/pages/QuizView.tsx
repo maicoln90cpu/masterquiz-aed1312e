@@ -74,6 +74,21 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
 
   // Show result screen (only if show_results is enabled)
   const quizShowResults = (state.quiz as any)?.show_results !== false;
+  
+  // CTA tracking: only for funnel quizzes (no results) on the last question
+  const isFunnelQuiz = !quizShowResults;
+  const isLastStep = state.currentStep === state.visibleQuestions.length - 1;
+  const currentQuestion = state.visibleQuestions[state.currentStep];
+  
+  const ctaTrackingParams = isFunnelQuiz && isLastStep && state.quiz && currentQuestion ? {
+    quizId: state.quiz.id,
+    sessionId: state.sessionId,
+    questionId: currentQuestion.id,
+    stepNumber: currentQuestion.order_number,
+  } : null;
+  
+  const onCtaClick = useCtaTracking(ctaTrackingParams);
+
   if (state.showResult && state.finalResult && quizShowResults) {
     return (
       <QuizViewResult 
