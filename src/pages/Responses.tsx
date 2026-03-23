@@ -352,6 +352,9 @@ const Responses = () => {
         {/* ✅ Tabs para alternar entre visualizações */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="mb-4">
+            <TabsTrigger value="heatmap" className="flex items-center gap-2">
+              {t('responses.heatmap', 'Heatmap')}
+            </TabsTrigger>
             <TabsTrigger value="all" className="flex items-center gap-2">
               <List className="h-4 w-4" />
               {t('responses.allResponses', 'Todas Respostas')}
@@ -359,9 +362,6 @@ const Responses = () => {
             <TabsTrigger value="spreadsheet" className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4" />
               {t('responses.spreadsheet.title', 'Planilha de Dados')}
-            </TabsTrigger>
-            <TabsTrigger value="heatmap" className="flex items-center gap-2">
-              {t('responses.heatmap', 'Heatmap')}
             </TabsTrigger>
           </TabsList>
           
