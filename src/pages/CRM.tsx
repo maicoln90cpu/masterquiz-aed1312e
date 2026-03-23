@@ -30,6 +30,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useTrackPageView } from "@/hooks/useUserStage";
 import { useTestLead } from "@/hooks/useTestLead";
 import { FlaskConical } from "lucide-react";
+import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
 type LeadStatus = 'new' | 'checkout' | 'negotiation' | 'converted' | 'relationship' | 'lost';
 
 interface Lead {
