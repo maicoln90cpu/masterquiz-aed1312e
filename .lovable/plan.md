@@ -2,7 +2,7 @@
 
 ## Plan: Correções de Respostas, Analytics, Editor e CRM
 
-### ✅ IMPLEMENTADO (Fase Atual)
+### ✅ IMPLEMENTADO (Fase 1)
 
 #### 1. Fix crítico: Respostas salvas como `{}` (vazio)
 - **Causa**: `nextStep()` e `submitQuiz()` liam `answers` do state React (assíncrono) antes do re-render
@@ -23,11 +23,37 @@
 - Banner informativo mostra contagem de respostas anônimas com orientação para captura
 - Stats totais mantidos para contagem geral
 
-### Arquivos Modificados
+### ✅ IMPLEMENTADO (Fase 2)
+
+#### 5. Edge Function `save-quiz-response` (fix definitivo de respostas vazias)
+- **Causa raiz**: Anon users não têm permissão SELECT em `quiz_responses` via RLS — o SELECT prévio para detectar row existente falhava silenciosamente
+- **Solução**: Nova Edge Function com `service_role` faz SELECT + INSERT/UPDATE atomicamente, garantindo merge correto de answers
+- Progressive save (nextStep) e submit final agora usam a Edge Function
+- Merge inteligente: mantém respostas anteriores e sobrepõe com novas
+
+#### 6. TextInput controlado no QuizView
+- `TextInputBlockPreview` agora aceita `controlledValue` e `onValueChange` props
+- No QuizView, valores de textInput são persistidos em `answers` via `onAnswer`
+- Respostas de textInput aparecem no Heatmap, lista de respostas e planilha
+
+#### 7. Extração inteligente de contato
+- Helper `extractContactFromAnswers()` detecta email/phone em blocos textInput
+- Prioridade 1: validação explícita no bloco (`validation: 'email'` ou `'phone'`)
+- Prioridade 2: regex fallback para detecção automática
+- Contatos extraídos são promovidos para `respondent_email`/`respondent_whatsapp`
+
+#### 8. ResponseAnswersList: suporte a chaves textInput
+- Nova função `getAnswerForQuestion()` busca por `question.id` e `textInput:<blockId>`
+- Respostas de textInput deixam de aparecer como "Não respondida"
+
+### Arquivos Modificados (Fase 2)
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/hooks/useQuizViewState.ts` | `answersRef` + SELECT/UPDATE no submitQuiz funnel |
-| `src/pages/Analytics.tsx` | Remoção do funil da aba Geral |
-| `src/hooks/useQuizQuestions.ts` | Remoção de `step: 2` no addQuestion |
-| `src/pages/CRM.tsx` | `hasUsefulContactData()`, filtro, banner anônimos |
+| `supabase/functions/save-quiz-response/index.ts` | Nova Edge Function com service_role |
+| `supabase/config.toml` | Registro da nova função |
+| `src/hooks/useQuizViewState.ts` | Edge Function para save + extractContactFromAnswers |
+| `src/components/quiz/preview/InteractiveBlockPreviews.tsx` | TextInputBlockPreview controlado |
+| `src/components/quiz/QuizBlockPreview.tsx` | Props textInputValues/onTextInputChange |
+| `src/components/quiz/view/QuizViewQuestion.tsx` | Wire textInput → onAnswer |
+| `src/components/responses/ResponseAnswersList.tsx` | getAnswerForQuestion com textInput keys |
