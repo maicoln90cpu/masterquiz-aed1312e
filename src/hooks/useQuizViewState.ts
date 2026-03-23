@@ -310,7 +310,7 @@ export function useQuizViewState({
     // Progressive save for funnel mode (show_results=false)
     const quizShowResults = (quiz as any)?.show_results !== false;
     if (!quizShowResults && !previewMode && quiz?.id) {
-      const sanitizedAnswers = sanitizeAnswers(answers);
+      const sanitizedAnswers = sanitizeAnswers(answersRef.current);
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp } = formData || {};
       const progressivePayload = {
         quiz_id: quiz.id,
