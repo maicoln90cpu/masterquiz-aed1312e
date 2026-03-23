@@ -702,31 +702,7 @@ const Analytics = () => {
               </Card>
             </div>
 
-            {/* ✅ Funil de Conversão */}
-            <div id="analytics-funnel" className="mb-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
-                <Label className="text-sm font-medium">{t('analytics.funnel.selectQuiz', 'Selecione um quiz para ver o funil:')}</Label>
-                <Select
-                  value={selectedQuizForFunnel || "all"}
-                  onValueChange={(value) => setSelectedQuizForFunnel(value === "all" ? undefined : value)}
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder={t('analytics.funnel.allQuizzes', 'Todos os quizzes')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('analytics.funnel.allQuizzes', 'Todos os quizzes')}</SelectItem>
-                    {userQuizzes.map((quiz) => (
-                      <SelectItem key={quiz.id} value={quiz.id}>
-                        {quiz.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <FunnelChart data={funnelData || []} loading={funnelLoading} completionsOverride={stats.totalCompletions > 0 ? stats.totalCompletions : undefined} />
-            </div>
-
-            {/* Heatmap foi movido para aba separada */}
+            {/* Funil de conversão removido da aba Geral — disponível apenas em "Por Quiz" */}
 
             {/* Tabelas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

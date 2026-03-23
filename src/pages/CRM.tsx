@@ -33,6 +33,18 @@ import { FlaskConical } from "lucide-react";
 import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
 type LeadStatus = 'new' | 'checkout' | 'negotiation' | 'converted' | 'relationship' | 'lost';
 
+/** Detect if a lead has useful contact data (email, phone, name) either in fields or within answers */
+const hasUsefulContactData = (lead: { respondent_email: string; respondent_whatsapp: string; respondent_name: string; answers: any; custom_field_data: any }): boolean => {
+  // Explicit lead fields
+  if (lead.respondent_email && lead.respondent_email.includes('@')) return true;
+  if (lead.respondent_whatsapp && lead.respondent_whatsapp.replace(/\D/g, '').length >= 8) return true;
+  // Check within answers for email/phone patterns
+  const answersStr = JSON.stringify(lead.answers || {}) + JSON.stringify(lead.custom_field_data || {});
+  if (/[\w.-]+@[\w.-]+\.\w{2,}/.test(answersStr)) return true;
+  if (/\d{10,}/.test(answersStr)) return true;
+  return false;
+};
+
 interface Lead {
   id: string;
   respondent_name: string;
@@ -61,6 +73,7 @@ const CRM = () => {
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [selectedLeadsForComparison, setSelectedLeadsForComparison] = useState<string[]>([]);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
+  const [anonymousResponseCount, setAnonymousResponseCount] = useState(0);
   
   // Novo lead form
   const [newLead, setNewLead] = useState({
@@ -153,6 +166,10 @@ const CRM = () => {
       }));
 
       setLeads(leadsData);
+      
+      // Count anonymous responses
+      const anonymousCount = leadsData.filter(l => !hasUsefulContactData(l)).length;
+      setAnonymousResponseCount(anonymousCount);
     } catch (error) {
       console.error('Error loading leads:', error);
       toast.error(t('crm.toast.errorLoading'));
@@ -198,10 +215,12 @@ const CRM = () => {
     toast.success(t('crm.toast.leadDeleted'));
   };
 
-  // Leads filtrados (antes da paginação)
+  // Filter: only show leads with useful contact data in the kanban
+  const identifiedLeads = leads.filter(lead => hasUsefulContactData(lead));
+  
   const filteredLeads = filterStatus !== "all" 
-    ? leads.filter(lead => lead.status === filterStatus)
-    : leads;
+    ? identifiedLeads.filter(lead => lead.status === filterStatus)
+    : identifiedLeads;
   
   // Paginação
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
@@ -516,6 +535,18 @@ const CRM = () => {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Banner informativo: respostas anônimas */}
+        {anonymousResponseCount > 0 && (
+          <div className="mb-4 p-3 rounded-lg border border-border bg-muted/50 flex items-center gap-3">
+            <Users className="h-5 w-5 text-muted-foreground shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              <strong>{anonymousResponseCount}</strong> {anonymousResponseCount === 1 ? 'resposta anônima' : 'respostas anônimas'} (sem dados de contato). 
+              O CRM exibe apenas leads com e-mail, telefone ou informação identificável. 
+              Para capturar mais leads, adicione um formulário de coleta ao seu quiz.
+            </p>
+          </div>
+        )}
 
         {loading ? (
           <CRMSkeleton />

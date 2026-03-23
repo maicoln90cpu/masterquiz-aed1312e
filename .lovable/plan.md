@@ -1,42 +1,33 @@
 
 
-## Plan: Fix Funnel Mode Analytics, Heatmap & Response Tracking
+## Plan: Correções de Respostas, Analytics, Editor e CRM
 
-### ✅ IMPLEMENTED
+### ✅ IMPLEMENTADO (Fase Atual)
 
-#### 1. Database: `session_id` column on `quiz_responses`
-- Added nullable `session_id TEXT` column
-- Created unique partial index `idx_quiz_responses_session(quiz_id, session_id) WHERE session_id IS NOT NULL`
-- Added RLS policy for anon UPDATE on rows with session_id
+#### 1. Fix crítico: Respostas salvas como `{}` (vazio)
+- **Causa**: `nextStep()` e `submitQuiz()` liam `answers` do state React (assíncrono) antes do re-render
+- **Solução**: Adicionado `answersRef = useRef()` sincronizado em `handleAnswer` — `nextStep` e `submitQuiz` agora usam `answersRef.current`
+- `submitQuiz` em modo funil usa SELECT + UPDATE/INSERT em vez de upsert (bypass de partial unique index)
 
-#### 2. Progressive save in `useQuizViewState.ts`
-- `nextStep()` now upserts partial answers for funnel mode (`show_results=false`)
-- Uses `session_id` for deduplication via `onConflict: 'quiz_id,session_id'`
-- Tracks `complete` event when user reaches last question in funnel mode
+#### 2. Funil removido da aba Geral (Analytics)
+- Funil de conversão disponível apenas na aba "Por Quiz"
+- Aba Geral mantém métricas gerais, gráficos e tabelas
 
-#### 3. `submitQuiz` adjusted for funnel mode
-- Uses `upsert` instead of `insert` for funnel quizzes (updates progressive-saved row)
-- Skips duplicate `complete` tracking for funnel mode (already tracked in `nextStep`)
+#### 3. Editor: addQuestion não força mais step 2
+- Removido `step: 2` do `updateEditor` em `handleAddQuestion`
+- Usuário permanece na etapa atual ao adicionar pergunta
 
-#### 4. Heatmap moved from Analytics → Responses (first tab)
-- Removed "Heatmaps" tab from `Analytics.tsx`
-- Added "Heatmap" tab to `Responses.tsx` as **first tab** (default)
-- `ResponseHeatmap` component now accepts `quizId` prop from parent global filter
-- Internal quiz selector hidden when parent provides `quizId`
-- Fixed `parseOptions` to read options from `blocks` (modern quiz format)
-- Added `blocks` column to Supabase query
+#### 4. CRM: Filtro de leads por dados úteis + agrupamento anônimo
+- Função `hasUsefulContactData()` detecta email/telefone nos campos ou dentro das respostas (regex)
+- Kanban exibe apenas leads com dados de contato identificáveis
+- Banner informativo mostra contagem de respostas anônimas com orientação para captura
+- Stats totais mantidos para contagem geral
 
-#### 5. Master Admin sortable columns
-- Users table: all columns clickable for asc/desc sorting (Nome, Email, Cadastro, Último Login, Logins, Quizzes, Leads, Plano)
-- Respondents table: all columns clickable for asc/desc sorting (Nome, Email, WhatsApp, Quiz, Respostas, Última Resposta)
+### Arquivos Modificados
 
-### Files Modified
-
-| File | Action |
-|------|--------|
-| Migration | Add `session_id` + unique index + anon UPDATE RLS |
-| `src/hooks/useQuizViewState.ts` | Progressive save + upsert + funnel completion tracking |
-| `src/pages/Analytics.tsx` | Remove Heatmap tab (3→3 tabs: Geral, Por Quiz, Vídeos) |
-| `src/pages/Responses.tsx` | Heatmap as first tab, pass selectedQuiz to ResponseHeatmap |
-| `src/components/analytics/ResponseHeatmap.tsx` | Fix block parsing, accept quizId prop, hide internal filter |
-| `src/pages/AdminDashboard.tsx` | Add sortable columns to Users and Respondents tables |
+| Arquivo | Mudança |
+|---------|---------|
+| `src/hooks/useQuizViewState.ts` | `answersRef` + SELECT/UPDATE no submitQuiz funnel |
+| `src/pages/Analytics.tsx` | Remoção do funil da aba Geral |
+| `src/hooks/useQuizQuestions.ts` | Remoção de `step: 2` no addQuestion |
+| `src/pages/CRM.tsx` | `hasUsefulContactData()`, filtro, banner anônimos |

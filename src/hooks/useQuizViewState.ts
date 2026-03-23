@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -100,6 +100,9 @@ export function useQuizViewState({
   const [availableLanguages, setAvailableLanguages] = useState<string[]>(['pt']);
   const [originalQuiz, setOriginalQuiz] = useState<Quiz | null>(previewData?.quiz || null);
   const [sessionId] = useState(() => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  
+  // Ref to always have the latest answers synchronously (fixes stale closure in nextStep/submitQuiz)
+  const answersRef = useRef<Record<string, any>>({});
 
   // A/B Testing
   const { variant: abVariant, markConversion } = useABTest(
@@ -229,6 +232,7 @@ export function useQuizViewState({
       return;
     }
     const newAnswers = { ...answers, [questionId]: value };
+    answersRef.current = newAnswers; // Synchronous update — always fresh
     setAnswers(newAnswers);
     
     // Calculate score in real-time
@@ -306,7 +310,7 @@ export function useQuizViewState({
     // Progressive save for funnel mode (show_results=false)
     const quizShowResults = (quiz as any)?.show_results !== false;
     if (!quizShowResults && !previewMode && quiz?.id) {
-      const sanitizedAnswers = sanitizeAnswers(answers);
+      const sanitizedAnswers = sanitizeAnswers(answersRef.current);
       const { name: leadName, email: leadEmail, whatsapp: leadWhatsapp } = formData || {};
       const progressivePayload = {
         quiz_id: quiz.id,
@@ -361,7 +365,7 @@ export function useQuizViewState({
       overrideAnswers = undefined;
     }
     
-    const finalAnswers = overrideAnswers || answers;
+    const finalAnswers = overrideAnswers || answersRef.current;
     
     try {
       const ipAddress = await fetchIPWithCache(3000) || 'unknown';
@@ -512,12 +516,34 @@ export function useQuizViewState({
 
       let saveError;
       if (!quizShowResults) {
-        // Funnel mode: upsert to update the progressive-saved row
+        // Funnel mode: use SELECT + UPDATE/INSERT to handle partial unique index
         responsePayload.session_id = sessionId;
-        const { error } = await supabase
-          .from('quiz_responses')
-          .upsert(responsePayload as any, { onConflict: 'quiz_id,session_id' });
-        saveError = error;
+        try {
+          const { data: existing } = await supabase.from('quiz_responses')
+            .select('id')
+            .eq('quiz_id', quiz.id)
+            .eq('session_id', sessionId)
+            .maybeSingle();
+          if (existing) {
+            const { error } = await supabase.from('quiz_responses')
+              .update({
+                answers: sanitizedAnswers,
+                respondent_name: responsePayload.respondent_name,
+                respondent_email: responsePayload.respondent_email,
+                respondent_whatsapp: responsePayload.respondent_whatsapp,
+                custom_field_data: responsePayload.custom_field_data,
+                result_id: responsePayload.result_id,
+              } as any)
+              .eq('id', existing.id);
+            saveError = error;
+          } else {
+            const { error } = await supabase.from('quiz_responses').insert(responsePayload as any);
+            saveError = error;
+          }
+        } catch (err) {
+          console.error('[submitQuiz funnel] Exception:', err);
+          saveError = err;
+        }
       } else {
         // Normal mode: standard insert
         const { error } = await supabase

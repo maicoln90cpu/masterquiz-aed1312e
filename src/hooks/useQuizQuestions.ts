@@ -69,7 +69,6 @@ export function useQuizQuestions({
       updateEditor({
         questionCount: newQuestions.length,
         currentQuestionIndex: newQuestions.length - 1,
-        step: 2
       });
     });
     
