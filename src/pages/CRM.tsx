@@ -536,6 +536,18 @@ const CRM = () => {
           </Select>
         </div>
 
+        {/* Banner informativo: respostas anônimas */}
+        {anonymousResponseCount > 0 && (
+          <div className="mb-4 p-3 rounded-lg border border-border bg-muted/50 flex items-center gap-3">
+            <Users className="h-5 w-5 text-muted-foreground shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              <strong>{anonymousResponseCount}</strong> {anonymousResponseCount === 1 ? 'resposta anônima' : 'respostas anônimas'} (sem dados de contato). 
+              O CRM exibe apenas leads com e-mail, telefone ou informação identificável. 
+              Para capturar mais leads, adicione um formulário de coleta ao seu quiz.
+            </p>
+          </div>
+        )}
+
         {loading ? (
           <CRMSkeleton />
         ) : leads.length === 0 ? (
