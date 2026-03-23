@@ -918,15 +918,31 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('name')}>
+                      <span className="flex items-center">Nome<SortIcon column="name" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('email')}>
+                      <span className="flex items-center">Email<SortIcon column="email" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
                     <TableHead>WhatsApp</TableHead>
-                    <TableHead>Cadastro</TableHead>
-                    <TableHead>Último Login</TableHead>
-                    <TableHead className="text-center">Logins</TableHead>
-                    <TableHead className="text-center">Quizzes</TableHead>
-                    <TableHead className="text-center">Leads</TableHead>
-                    <TableHead>Plano</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('created_at')}>
+                      <span className="flex items-center">Cadastro<SortIcon column="created_at" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('last_sign_in')}>
+                      <span className="flex items-center">Último Login<SortIcon column="last_sign_in" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleUsersSort('logins')}>
+                      <span className="flex items-center justify-center">Logins<SortIcon column="logins" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleUsersSort('quizzes')}>
+                      <span className="flex items-center justify-center">Quizzes<SortIcon column="quizzes" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleUsersSort('leads')}>
+                      <span className="flex items-center justify-center">Leads<SortIcon column="leads" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleUsersSort('plan')}>
+                      <span className="flex items-center">Plano<SortIcon column="plan" activeColumn={usersSortColumn} direction={usersSortDirection} /></span>
+                    </TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
