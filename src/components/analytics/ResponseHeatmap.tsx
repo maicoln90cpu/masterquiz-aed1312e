@@ -60,11 +60,11 @@ const getHeatBgColor = (percentage: number): string => {
   return 'bg-blue-500/10 border-blue-500/30';
 };
 
-export const ResponseHeatmap = ({ quizId }: ResponseHeatmapProps) => {
+export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps) => {
   const { allowHeatmap, isLoading: planLoading } = usePlanFeatures();
   const [loading, setLoading] = useState(true);
   const [quizzes, setQuizzes] = useState<{ id: string; title: string }[]>([]);
-  const [selectedQuiz, setSelectedQuiz] = useState<string>(quizId || '');
+  const [selectedQuiz, setSelectedQuiz] = useState<string>(externalQuizId || '');
   const [heatmapData, setHeatmapData] = useState<QuestionHeatmapData[]>([]);
   const [totalRespondents, setTotalRespondents] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
