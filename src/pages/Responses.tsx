@@ -360,6 +360,9 @@ const Responses = () => {
               <LayoutGrid className="h-4 w-4" />
               {t('responses.spreadsheet.title', 'Planilha de Dados')}
             </TabsTrigger>
+            <TabsTrigger value="heatmap" className="flex items-center gap-2">
+              {t('responses.heatmap', 'Heatmap')}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="all">
