@@ -179,7 +179,7 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
 
         // Processar respostas para cada pergunta
         const processedData: QuestionHeatmapData[] = questions.map((question, qIndex) => {
-          const options = parseOptions(question.options, question.answer_format);
+          const options = parseOptions(question.options, question.answer_format, (question as any).blocks);
           const responseCounts: Record<string, number> = {};
           
           // Inicializar contadores
