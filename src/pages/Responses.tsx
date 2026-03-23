@@ -519,7 +519,7 @@ const Responses = () => {
           </TabsContent>
 
           <TabsContent value="heatmap">
-            <ResponseHeatmap />
+            <ResponseHeatmap quizId={selectedQuiz !== 'all' ? selectedQuiz : undefined} />
           </TabsContent>
         </Tabs>
       </div>
