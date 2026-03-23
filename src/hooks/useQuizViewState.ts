@@ -522,16 +522,17 @@ export function useQuizViewState({
         }).catch(err => console.error('Webhook error:', err));
       }
 
-      // Track completion
-      await supabase.functions.invoke('track-quiz-analytics', {
-        body: { quizId: quiz.id, event: 'complete' }
-      });
+      // Track completion (skip for funnel mode — already tracked in nextStep)
+      if (quizShowResults) {
+        await supabase.functions.invoke('track-quiz-analytics', {
+          body: { quizId: quiz.id, event: 'complete' }
+        });
+      }
 
       setFinalResult(result || null);
       setShowResult(true);
       
       // Show different toast based on show_results mode
-      const quizShowResults = (quiz as any)?.show_results !== false;
       if (quizShowResults) {
         toast.success(t('quizView.submitSuccess'));
       } else {
