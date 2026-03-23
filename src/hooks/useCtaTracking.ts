@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface CtaTrackingParams {
   quizId: string;
@@ -15,13 +14,13 @@ export interface CtaClickHandler {
 /**
  * Hook that provides a CTA click tracking function for funnel quizzes.
  * When called, it fires a POST to track-cta-redirect and then opens the URL.
- * Uses navigator.sendBeacon pattern for reliability before redirect.
+ * Uses fetch with keepalive + apikey header (sendBeacon is incompatible with Supabase gateway).
  */
 export function useCtaTracking(params: CtaTrackingParams | null): CtaClickHandler | undefined {
   const handler = useCallback<CtaClickHandler>((ctaText, ctaUrl, blockId) => {
     if (!params) return;
 
-    // Fire tracking POST (non-blocking — we don't wait for response)
+    // Fire tracking POST (non-blocking — we don't await the response)
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -37,26 +36,19 @@ export function useCtaTracking(params: CtaTrackingParams | null): CtaClickHandle
         stepNumber: params.stepNumber?.toString() || null,
       });
 
-      // Try sendBeacon first (most reliable before navigation)
-      const beaconSent = navigator.sendBeacon?.(
-        functionUrl,
-        new Blob([body], { type: 'application/json' })
-      );
-
-      // Fallback: if sendBeacon fails or unavailable, use fetch with keepalive
-      if (!beaconSent) {
-        fetch(functionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': anonKey,
-          },
-          body,
-          keepalive: true,
-        }).catch(() => {
-          // silently ignore - best effort
-        });
-      }
+      // fetch with keepalive survives page navigation; apikey header required by Supabase gateway
+      fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`,
+        },
+        body,
+        keepalive: true,
+      }).catch(() => {
+        // silently ignore - best effort tracking
+      });
     } catch {
       // silently ignore tracking errors
     }

@@ -58,7 +58,6 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!quiz) {
-      // If quiz not found, still redirect (don't block user)
       if (req.method === 'GET') {
         return new Response(null, { status: 302, headers: { ...corsHeaders, 'Location': parsedUrl.toString() } });
       }
@@ -83,7 +82,7 @@ Deno.serve(async (req) => {
       date: today,
     });
 
-    // 2) Record step analytics for the last step (ensures it's tracked)
+    // 2) Record step analytics for the last step
     if (stepNum !== null) {
       await supabase.from('quiz_step_analytics').upsert(
         {
@@ -97,22 +96,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3) Record analytics completion
-    await supabase.from('quiz_analytics').upsert(
-      {
-        quiz_id: quizId,
-        date: today,
-        completions: 1,
-      },
-      { onConflict: 'quiz_id,date' }
-    ).then(async () => {
-      // Increment completions if row existed
-      await supabase.rpc('increment_blog_views', { p_slug: '' }).catch(() => {
-        // ignore - we'll use raw SQL approach below
-      });
-    }).catch(() => {});
-
-    // Increment completions atomically
+    // 3) Increment completions atomically (single select → update/insert)
     const { data: existingAnalytics } = await supabase
       .from('quiz_analytics')
       .select('id, completions')
@@ -131,27 +115,24 @@ Deno.serve(async (req) => {
         .insert({ quiz_id: quizId, date: today, completions: 1, views: 0, starts: 0 });
     }
 
-    // 4) Mark quiz response as final if exists
+    // 4) Mark quiz response as completed
     await supabase
       .from('quiz_responses')
       .update({ completed_at: new Date().toISOString() })
       .eq('quiz_id', quizId)
       .eq('session_id', sessionId);
 
-    console.log(`[track-cta-redirect] Tracked CTA click: quiz=${quizId}, session=${sessionId}, cta="${ctaText}", url=${parsedUrl.toString()}`);
+    console.log(`[track-cta-redirect] OK: quiz=${quizId}, session=${sessionId}, cta="${ctaText}", url=${parsedUrl.toString()}`);
 
-    // For GET requests, do a 302 redirect
+    // GET → 302 redirect
     if (req.method === 'GET') {
       return new Response(null, {
         status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': parsedUrl.toString(),
-        },
+        headers: { ...corsHeaders, 'Location': parsedUrl.toString() },
       });
     }
 
-    // For POST requests, return success (frontend handles redirect)
+    // POST → JSON success
     return new Response(
       JSON.stringify({ success: true, redirectUrl: parsedUrl.toString() }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -159,7 +140,6 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[track-cta-redirect] Error:', error);
 
-    // On error, still try to redirect if GET
     if (req.method === 'GET') {
       try {
         const url = new URL(req.url);
@@ -167,7 +147,7 @@ Deno.serve(async (req) => {
         if (targetUrl) {
           return new Response(null, { status: 302, headers: { ...corsHeaders, 'Location': targetUrl } });
         }
-      } catch {}
+      } catch { /* ignore */ }
     }
 
     return new Response(
