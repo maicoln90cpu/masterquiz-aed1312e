@@ -180,7 +180,7 @@ export const QuizBlockPreview = ({
       case "personalizedCTA":
         return <PersonalizedCTABlockPreview key={block.id} block={block as QuizBlock & { type: 'personalizedCTA' }} answers={answers} onCtaClick={onCtaClick} />;
       case "recommendation":
-        return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} />;
+        return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} onCtaClick={onCtaClick} />;
       case "calculator":
         return (
           <div key={block.id} className="p-6 bg-muted/30 rounded-lg border text-center">
