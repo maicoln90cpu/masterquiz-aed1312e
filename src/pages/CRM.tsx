@@ -33,6 +33,18 @@ import { FlaskConical } from "lucide-react";
 import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
 type LeadStatus = 'new' | 'checkout' | 'negotiation' | 'converted' | 'relationship' | 'lost';
 
+/** Detect if a lead has useful contact data (email, phone, name) either in fields or within answers */
+const hasUsefulContactData = (lead: { respondent_email: string; respondent_whatsapp: string; respondent_name: string; answers: any; custom_field_data: any }): boolean => {
+  // Explicit lead fields
+  if (lead.respondent_email && lead.respondent_email.includes('@')) return true;
+  if (lead.respondent_whatsapp && lead.respondent_whatsapp.replace(/\D/g, '').length >= 8) return true;
+  // Check within answers for email/phone patterns
+  const answersStr = JSON.stringify(lead.answers || {}) + JSON.stringify(lead.custom_field_data || {});
+  if (/[\w.-]+@[\w.-]+\.\w{2,}/.test(answersStr)) return true;
+  if (/\d{10,}/.test(answersStr)) return true;
+  return false;
+};
+
 interface Lead {
   id: string;
   respondent_name: string;
