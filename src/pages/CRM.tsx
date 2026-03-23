@@ -61,6 +61,7 @@ const CRM = () => {
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [selectedLeadsForComparison, setSelectedLeadsForComparison] = useState<string[]>([]);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
+  const [anonymousResponseCount, setAnonymousResponseCount] = useState(0);
   
   // Novo lead form
   const [newLead, setNewLead] = useState({
