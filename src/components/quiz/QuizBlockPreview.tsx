@@ -47,6 +47,8 @@ interface QuizBlockPreviewProps {
   // Controlled textInput support
   onTextInputChange?: (blockId: string, value: string) => void;
   textInputValues?: Record<string, string>;
+  // CTA tracking for funnel last step
+  onCtaClick?: (ctaText: string, ctaUrl: string, blockId?: string) => void;
   // Runtime data for dynamic blocks
   answers?: Record<string, any>;
   questions?: QuizQuestion[];
