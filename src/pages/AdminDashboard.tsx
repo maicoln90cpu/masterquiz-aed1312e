@@ -141,7 +141,6 @@ export default function AdminDashboard() {
     if (column !== activeColumn) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
     return direction === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
   };
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // ✅ Componente de Skeleton para carregamento
   const UserCardSkeleton = () => (
