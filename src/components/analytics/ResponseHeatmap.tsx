@@ -263,7 +263,7 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
   }, [selectedQuiz]);
 
   // Parse options baseado no formato
-  const parseOptions = (options: any, format: string): string[] => {
+  const parseOptions = (options: any, format: string, blocks?: any): string[] => {
     if (format === 'yes_no') {
       return ['Sim', 'Não'];
     }
@@ -272,13 +272,27 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
       return []; // Texto livre não tem opções fixas
     }
 
-    if (Array.isArray(options)) {
+    // First try standard options array
+    if (Array.isArray(options) && options.length > 0) {
       return options.map(opt => {
         if (typeof opt === 'string') return opt;
         if (opt?.text) return opt.text;
         if (opt?.label) return opt.label;
         return String(opt);
       });
+    }
+
+    // Fallback: extract options from blocks (modern quiz format)
+    if (Array.isArray(blocks)) {
+      const questionBlock = blocks.find((b: any) => b.type === 'question');
+      if (questionBlock?.options && Array.isArray(questionBlock.options)) {
+        return questionBlock.options.map((opt: any) => {
+          if (typeof opt === 'string') return opt;
+          if (opt?.text) return opt.text;
+          if (opt?.label) return opt.label;
+          return String(opt);
+        });
+      }
     }
 
     return [];
