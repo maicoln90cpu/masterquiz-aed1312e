@@ -95,8 +95,16 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
     setCurrentPage(1);
   }, [selectedQuiz]);
 
-  // Carregar lista de quizzes do usuário
+  // Sync with external quizId prop
   useEffect(() => {
+    if (externalQuizId) {
+      setSelectedQuiz(externalQuizId);
+    }
+  }, [externalQuizId]);
+
+  // Carregar lista de quizzes do usuário (only when no external quizId)
+  useEffect(() => {
+    if (externalQuizId) return; // Skip loading quiz list when parent controls the filter
     const loadQuizzes = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -116,7 +124,7 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
     };
 
     loadQuizzes();
-  }, []);
+  }, [externalQuizId]);
 
   // Carregar dados do heatmap quando quiz muda
   useEffect(() => {
