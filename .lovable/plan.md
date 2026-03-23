@@ -57,3 +57,42 @@
 | `src/components/quiz/QuizBlockPreview.tsx` | Props textInputValues/onTextInputChange |
 | `src/components/quiz/view/QuizViewQuestion.tsx` | Wire textInput → onAnswer |
 | `src/components/responses/ResponseAnswersList.tsx` | getAnswerForQuestion com textInput keys |
+
+### ✅ IMPLEMENTADO (Fase 3 — CTA Tracking)
+
+#### 9. Tabela `quiz_cta_click_analytics`
+- Nova tabela para rastrear cliques em CTAs da última etapa de quizzes funil
+- Índices para quiz_id, date e session_id
+- RLS: insert público (anon/auth), select apenas owner do quiz
+
+#### 10. Edge Function `track-cta-redirect`
+- Aceita GET (redirect 302) e POST (fire-and-forget)
+- Registra clique CTA, step analytics e completion atomicamente
+- Validação de URL (previne open redirect attacks)
+
+#### 11. Correção da indexação da última etapa na planilha
+- `ResponsesSpreadsheet` agora usa `order_number` direto (sem +1)
+- Merge de dados de `quiz_cta_click_analytics` com `quiz_step_analytics` para última etapa
+- Novo card "Performance dos CTAs" com ranking e CTR%
+
+#### 12. Hook `useCtaTracking` + instrumentação dos blocos
+- Hook usa `navigator.sendBeacon` + fallback `fetch(keepalive)` para máxima confiabilidade
+- Ativado apenas na última etapa de quizzes funil (`show_results = false`)
+- Blocos instrumentados: Button, Price, Banner, PersonalizedCTA, Recommendation
+- Prop `onCtaClick` flui: QuizView → QuizViewQuestion → QuizBlockPreview → blocos
+
+### Arquivos Modificados (Fase 3)
+
+| Arquivo | Mudança |
+|---------|---------|
+| `supabase/functions/track-cta-redirect/index.ts` | Nova Edge Function |
+| `supabase/config.toml` | Registro da função |
+| `src/hooks/useCtaTracking.ts` | Novo hook de tracking CTA |
+| `src/pages/QuizView.tsx` | Integração do hook de CTA tracking |
+| `src/components/quiz/view/QuizViewQuestion.tsx` | Prop onCtaClick |
+| `src/components/quiz/QuizBlockPreview.tsx` | Prop onCtaClick passada aos blocos |
+| `src/components/quiz/preview/StaticBlockPreviews.tsx` | Button + Price com onCtaClick |
+| `src/components/quiz/preview/DynamicBlockPreviews.tsx` | PersonalizedCTA com onCtaClick |
+| `src/components/quiz/preview/VisualBlockPreviews.tsx` | Banner com onCtaClick |
+| `src/components/quiz/preview/RecommendationBlockPreview.tsx` | Recommendation com onCtaClick |
+| `src/components/responses/ResponsesSpreadsheet.tsx` | Fix indexação + CTA ranking |
