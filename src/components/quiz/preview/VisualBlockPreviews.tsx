@@ -26,9 +26,9 @@ export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'cal
       className="rounded-lg p-4 space-y-2 relative"
       style={{ backgroundColor: bg, borderLeft: `4px solid ${border}`, color: text }}
     >
-      <div className="flex items-center gap-2 font-bold text-sm">
+      <div className="flex items-center gap-2 text-sm">
         <Icon className="h-5 w-5 shrink-0" style={{ color: border }} />
-        <span className="flex-1">{block.title}</span>
+        <span className={`flex-1 ${(block as any).titleBold !== false ? 'font-bold' : 'font-normal'}`}>{block.title}</span>
         {/* ✅ Etapa 2D: Botão X para callout dismissível */}
         {block.dismissible && (
           <button onClick={() => setDismissed(true)} className="opacity-60 hover:opacity-100 transition-opacity">

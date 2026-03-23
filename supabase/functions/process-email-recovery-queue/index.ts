@@ -166,6 +166,7 @@ Deno.serve(async (req) => {
             htmlBody: htmlContent,
             openTracking: true,
             clickTracking: true,
+            webhookUrl: 'https://kmmdzwoidakmbekqvkmq.supabase.co/functions/v1/egoi-email-webhook',
             customHeaders: {
               'List-Unsubscribe': `<${unsubLink}>`,
               'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
