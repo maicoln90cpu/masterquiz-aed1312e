@@ -497,13 +497,13 @@ export function useQuizViewState({
         responsePayload.session_id = sessionId;
         const { error } = await supabase
           .from('quiz_responses')
-          .upsert(responsePayload, { onConflict: 'quiz_id,session_id' });
+          .upsert(responsePayload as any, { onConflict: 'quiz_id,session_id' });
         saveError = error;
       } else {
         // Normal mode: standard insert
         const { error } = await supabase
           .from('quiz_responses')
-          .insert(responsePayload);
+          .insert(responsePayload as any);
         saveError = error;
       }
 
