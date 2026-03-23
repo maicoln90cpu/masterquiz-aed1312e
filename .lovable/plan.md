@@ -1,45 +1,33 @@
 
 
-## Plan: Email AI Cost Tracking + Delete Question Fix + E-goi Webhook
+## Plan: Fix Funnel Mode Analytics, Heatmap & Response Tracking
 
-### Bug Fix: Delete Question Not Working (Modern Editor)
+### ✅ IMPLEMENTED
 
-**Root cause found**: `CreateQuizModern.tsx` calls `handleDeleteQuestion` which sets `deleteDialogOpen: true` in the UI state, but **there is no `AlertDialog` rendered** in the component. The Classic editor has it (lines 934-949 of `CreateQuizClassic.tsx`), but it was never added to the Modern editor.
+#### 1. Database: `session_id` column on `quiz_responses`
+- Added nullable `session_id TEXT` column
+- Created unique partial index `idx_quiz_responses_session(quiz_id, session_id) WHERE session_id IS NOT NULL`
+- Added RLS policy for anon UPDATE on rows with session_id
 
-**Fix**: Add the same `AlertDialog` component to `CreateQuizModern.tsx`, reading `deleteDialogOpen` and `questionToDelete` from `uiState`, and calling `confirmDeleteQuestion(questionToDelete)` on confirm. This fixes both desktop and mobile (including the Sheet-based question list).
+#### 2. Progressive save in `useQuizViewState.ts`
+- `nextStep()` now upserts partial answers for funnel mode (`show_results=false`)
+- Uses `session_id` for deduplication via `onConflict: 'quiz_id,session_id'`
+- Tracks `complete` event when user reaches last question in funnel mode
 
----
+#### 3. `submitQuiz` adjusted for funnel mode
+- Uses `upsert` instead of `insert` for funnel quizzes (updates progressive-saved row)
+- Skips duplicate `complete` tracking for funnel mode (already tracked in `nextStep`)
 
-### 1. Create `email_generation_logs` Table
+#### 4. Heatmap moved from Analytics → Responses
+- Removed "Heatmaps" tab from `Analytics.tsx`
+- Added "Heatmap" tab to `Responses.tsx`
+- `ResponseHeatmap` component unchanged
 
-Migration:
-- Table: `id`, `template_type` (text), `model_used` (text), `prompt_tokens` (int), `completion_tokens` (int), `total_tokens` (int), `estimated_cost_usd` (numeric), `created_at` (timestamptz)
-- RLS: admin/master_admin SELECT via `has_role()`
-
-### 2. Update `generate-email-content` Edge Function
-
-After each AI call, parse `usage` from response and insert a row into `email_generation_logs`.
-
-### 3. Update `UnifiedCostsDashboard.tsx`
-
-Replace Email placeholder with real data from `email_generation_logs`:
-- Total email AI cost card
-- Breakdown by template type
-- Include in monthly chart
-
-### 4. Delete Question Dialog in Modern Editor
-
-Add `AlertDialog` to `CreateQuizModern.tsx` (identical to Classic editor's implementation).
-
----
-
-### Files
+### Files Modified
 
 | File | Action |
 |------|--------|
-| Migration | Create `email_generation_logs` table + admin RLS |
-| `supabase/functions/generate-email-content/index.ts` | Log AI usage after each call |
-| `src/components/admin/UnifiedCostsDashboard.tsx` | Show real email AI costs |
-| `src/pages/CreateQuizModern.tsx` | Add missing `AlertDialog` for delete confirmation |
-| Deploy | `generate-email-content` |
-
+| Migration | Add `session_id` + unique index + anon UPDATE RLS |
+| `src/hooks/useQuizViewState.ts` | Progressive save + upsert + funnel completion tracking |
+| `src/pages/Analytics.tsx` | Remove Heatmap tab (3→3 tabs: Geral, Por Quiz, Vídeos) |
+| `src/pages/Responses.tsx` | Add Heatmap tab (2→3 tabs: Respostas, Planilha, Heatmap) |
