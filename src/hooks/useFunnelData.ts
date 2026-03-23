@@ -86,7 +86,7 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
           step.count = step.sessions.size;
         });
 
-        // Buscar nomes das perguntas
+        // Buscar nomes das perguntas (com blocos para texto real)
         const questionIds = Array.from(stepMap.values())
           .map(s => s.questionId)
           .filter(Boolean) as string[];
@@ -95,11 +95,19 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
         if (questionIds.length > 0) {
           const { data: questions } = await supabase
             .from('quiz_questions')
-            .select('id, question_text')
+            .select('id, question_text, blocks')
             .in('id', questionIds);
           
           questions?.forEach(q => {
-            questionNames.set(q.id, q.question_text);
+            // Extract real text from blocks if available
+            let text = q.question_text;
+            if (Array.isArray(q.blocks)) {
+              const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
+              if (qBlock?.questionText) {
+                text = qBlock.questionText.replace(/<[^>]*>/g, '').trim() || text;
+              }
+            }
+            questionNames.set(q.id, text);
           });
         }
 
