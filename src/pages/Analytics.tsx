@@ -23,7 +23,6 @@ import { AnalyticsSkeleton } from "@/components/ui/analytics-skeleton";
 import { FunnelChart } from "@/components/analytics/FunnelChart";
 import { useFunnelData } from "@/hooks/useFunnelData";
 import { PerQuizAnalytics } from "@/components/analytics/PerQuizAnalytics";
-import { ResponseHeatmap } from "@/components/analytics/ResponseHeatmap";
 import { AnalyticsTour } from "@/components/onboarding/AnalyticsTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useTrackPageView } from "@/hooks/useUserStage";
