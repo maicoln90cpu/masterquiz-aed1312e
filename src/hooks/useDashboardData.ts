@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { handleError, showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { useTranslation } from 'react-i18next';
+import { useCurrentUser } from './useCurrentUser';
 import type { Quiz, QuizTag } from '@/types';
 
 interface DashboardStats {
