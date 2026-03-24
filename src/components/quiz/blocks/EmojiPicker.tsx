@@ -234,7 +234,7 @@ export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
           <ScrollArea className="h-48">
             <div className="p-2">
               {filteredEmojis.length > 0 ? (
-                <div className="grid grid-cols-5 gap-1">
+                <div className="grid grid-cols-6 gap-1">
                   {filteredEmojis.map((emoji, idx) => (
                     <Button
                       key={idx}
