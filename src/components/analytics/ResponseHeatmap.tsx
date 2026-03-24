@@ -60,6 +60,31 @@ const getHeatBgColor = (percentage: number): string => {
   if (percentage >= 10) return 'bg-green-500/10 border-green-500/30';
   return 'bg-blue-500/10 border-blue-500/30';
 };
+// Parse options based on format — static function (not a hook)
+const parseOptionsStatic = (options: any, format: string, blocks?: any): string[] => {
+  if (format === 'yes_no') return ['Sim', 'Não'];
+  if (format === 'short_text') return [];
+  if (Array.isArray(options) && options.length > 0) {
+    return options.map(opt => {
+      if (typeof opt === 'string') return opt;
+      if (opt?.text) return opt.text;
+      if (opt?.label) return opt.label;
+      return String(opt);
+    });
+  }
+  if (Array.isArray(blocks)) {
+    const questionBlock = blocks.find((b: any) => b.type === 'question');
+    if (questionBlock?.options && Array.isArray(questionBlock.options)) {
+      return questionBlock.options.map((opt: any) => {
+        if (typeof opt === 'string') return opt;
+        if (opt?.text) return opt.text;
+        if (opt?.label) return opt.label;
+        return String(opt);
+      });
+    }
+  }
+  return [];
+};
 
 export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps) => {
   const { allowHeatmap, isLoading: planLoading } = usePlanFeatures();
