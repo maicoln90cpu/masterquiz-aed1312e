@@ -47,6 +47,7 @@ const Responses = () => {
   const [activeTab, setActiveTab] = useState("heatmap");
   const ITEMS_PER_PAGE = 50; // ✅ Paginação: 50 itens por página
   const { subscription, responseLimit } = useSubscriptionLimits();
+  const { user } = useCurrentUser();
   
   // ✅ FASE 2 - ITEM 6: Estados para filtros de data
   const [startDate, setStartDate] = useState<Date | undefined>();
