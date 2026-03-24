@@ -1,5 +1,5 @@
 // ✅ FASE 2 - ITEM 6: Adicionar imports para filtros de data
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -111,16 +111,16 @@ const Responses = () => {
     }
   };
 
-  // ✅ CORREÇÃO: Busca agora é apenas front-end sobre dados já paginados pelo backend
-  const filteredResponses = responses.filter(response => {
-    if (!searchTerm) return true;
+  // ✅ CORREÇÃO: useMemo para evitar recalcular filteredResponses em cada render
+  const filteredResponses = useMemo(() => {
+    if (!searchTerm) return responses;
     const searchLower = searchTerm.toLowerCase();
-    return (
+    return responses.filter(response => 
       response.respondent_name?.toLowerCase().includes(searchLower) ||
       response.respondent_email?.toLowerCase().includes(searchLower) ||
       response.respondent_whatsapp?.includes(searchTerm)
     );
-  });
+  }, [responses, searchTerm]);
 
   // ✅ ITEM 5: Lazy load XLSX export
   const exportToExcel = async () => {
@@ -557,7 +557,7 @@ const Responses = () => {
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">{t('responses.result')}</p>
+                <p className="text-sm text-muted-foreground">{t('responses.result')}</p>
                 <Card>
                   <CardContent className="pt-4">
                     <p>{selectedResponse.quiz_results?.result_text || "N/A"}</p>

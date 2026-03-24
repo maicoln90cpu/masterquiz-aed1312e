@@ -314,7 +314,7 @@ export const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 
         )}
         <div className="flex items-center gap-4">
           {t.authorImage ? (
-            <img src={t.authorImage} alt={t.authorName} className="w-14 h-14 rounded-full object-cover ring-2 ring-primary ring-offset-2 shadow-md" />
+            <img src={t.authorImage} alt={t.authorName} className="w-14 h-14 rounded-full object-cover ring-2 ring-primary ring-offset-2 shadow-md" loading="lazy" />
           ) : (
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-primary-foreground shadow-md" style={{ backgroundColor: block.primaryColor || 'hsl(var(--primary))' }}>
               {t.authorName?.charAt(0)?.toUpperCase() || 'U'}

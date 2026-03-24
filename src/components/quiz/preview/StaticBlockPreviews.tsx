@@ -58,6 +58,7 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
       src={(block as any).imageUrl}
       alt="Imagem ilustrativa"
       className={`rounded-lg object-cover ${imageSizeClass} ${imageAlignClass}`}
+      loading="lazy"
     />
   ) : null;
 
@@ -311,7 +312,7 @@ export const GalleryBlockPreview = ({ block }: { block: QuizBlock & { type: 'gal
             onClick={() => handleImageClick(idx)}
           >
             <div className="relative overflow-hidden rounded-lg">
-              <img src={img.url} alt={img.alt || `Gallery image ${idx + 1}`} className="rounded-lg w-full transition-transform group-hover:scale-105" />
+              <img src={img.url} alt={img.alt || `Gallery image ${idx + 1}`} className="rounded-lg w-full transition-transform group-hover:scale-105" loading="lazy" />
               {(block as any).enableLightbox && (
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
                   <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-70 transition-opacity drop-shadow-lg" />

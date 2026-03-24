@@ -27,6 +27,11 @@ interface CtaClickSummary {
   clicks: number;
 }
 
+interface CtaClickData {
+  cta_text: string | null;
+  cta_url: string;
+}
+
 interface ResponsesSpreadsheetProps {
   quizId: string;
 }
@@ -52,6 +57,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
   const [totalCount, setTotalCount] = useState(0);
   const [ctaSummary, setCtaSummary] = useState<CtaClickSummary[]>([]);
   const [lastStepCtaSessions, setLastStepCtaSessions] = useState(0);
+  const [responseCtaMap, setResponseCtaMap] = useState<Record<string, CtaClickData>>({});
 
   useEffect(() => {
     loadSpreadsheetData();
@@ -134,15 +140,39 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
 
       setStepRetention(retention);
 
-      // 4. Buscar respostas com paginação
+      // 4. Buscar respostas com paginação (select específico)
       const { data: responsesData, count } = await supabase
         .from('quiz_responses')
-        .select('*', { count: 'exact' })
+        .select('id, completed_at, respondent_name, respondent_email, answers, session_id', { count: 'exact' })
         .eq('quiz_id', quizId)
         .order('completed_at', { ascending: false })
         .range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1);
 
       setResponses(responsesData || []);
+      setTotalCount(count || 0);
+
+      // 4b. Buscar CTAs clicados por session_id para mapear nas respostas
+      const sessionIds = (responsesData || [])
+        .map(r => r.session_id)
+        .filter(Boolean) as string[];
+      
+      if (sessionIds.length > 0) {
+        const { data: ctaClicks } = await supabase
+          .from('quiz_cta_click_analytics')
+          .select('session_id, cta_text, cta_url')
+          .eq('quiz_id', quizId)
+          .in('session_id', sessionIds);
+        
+        const ctaMap: Record<string, CtaClickData> = {};
+        ctaClicks?.forEach(click => {
+          if (!ctaMap[click.session_id]) {
+            ctaMap[click.session_id] = { cta_text: click.cta_text, cta_url: click.cta_url };
+          }
+        });
+        setResponseCtaMap(ctaMap);
+      } else {
+        setResponseCtaMap({});
+      }
       setTotalCount(count || 0);
 
       // 5. Calcular métricas gerais
@@ -303,6 +333,9 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
                   <TableHead className="min-w-[180px]">
                     {t('responses.email', 'Email')}
                   </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    {t('responses.spreadsheet.ctaClicked', 'CTA Clicado')}
+                  </TableHead>
                   {questions.map((q, idx) => (
                     <TableHead 
                       key={q.id} 
@@ -325,7 +358,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
               <TableBody>
                 {responses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3 + questions.length} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={4 + questions.length} className="text-center py-8 text-muted-foreground">
                       {t('responses.noResponses', 'Nenhuma resposta encontrada')}
                     </TableCell>
                   </TableRow>
@@ -340,6 +373,13 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
                       </TableCell>
                       <TableCell className="text-sm">
                         {response.respondent_email || '-'}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {response.session_id && responseCtaMap[response.session_id] ? (
+                          <Badge variant="secondary" className="text-xs" title={responseCtaMap[response.session_id].cta_url}>
+                            {responseCtaMap[response.session_id].cta_text || 'CTA'}
+                          </Badge>
+                        ) : '-'}
                       </TableCell>
                       {questions.map(q => (
                         <TableCell 

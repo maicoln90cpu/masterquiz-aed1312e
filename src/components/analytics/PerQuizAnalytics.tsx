@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Play, CheckCircle2, TrendingUp, Users, Clock } from "lucide-react";
+import { Eye, Play, CheckCircle2, TrendingUp, Users, Clock, MousePointerClick } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,20 +47,6 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
   const { t } = useTranslation();
   const { allowAdvancedAnalytics, isLoading: planLoading } = usePlanFeatures();
   const [selectedQuizId, setSelectedQuizId] = useState<string>(quizzes[0]?.id || "");
-
-  // Verificar permissão do plano
-  if (!allowAdvancedAnalytics && !planLoading) {
-    return (
-      <PlanFeatureGate
-        featureName="Analytics Avançado por Quiz"
-        featureDescription="Visualize métricas detalhadas de cada quiz: funil de conversão, evolução temporal, tempo médio e respostas recentes. Tome decisões baseadas em dados."
-        isAllowed={false}
-        isLoading={planLoading}
-      >
-        <></>
-      </PlanFeatureGate>
-    );
-  }
 
   // Calculate filter dates
   const filterDates = useMemo(() => {
@@ -129,6 +115,33 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
     quizId: selectedQuizId,
     startDate: filterDates.start,
     endDate: filterDates.end,
+  });
+
+  // CTA click analytics for funnel quizzes
+  const { data: ctaPerformance } = useQuery({
+    queryKey: ['quiz-cta-performance', selectedQuizId, filterDates],
+    queryFn: async () => {
+      if (!selectedQuizId) return [];
+      const { data, error } = await supabase
+        .from('quiz_cta_click_analytics')
+        .select('cta_text, session_id')
+        .eq('quiz_id', selectedQuizId)
+        .gte('date', filterDates.start)
+        .lte('date', filterDates.end);
+      if (error) throw error;
+      // Aggregate by cta_text
+      const counts: Record<string, { clicks: number; sessions: Set<string> }> = {};
+      data?.forEach(row => {
+        const text = row.cta_text || 'CTA';
+        if (!counts[text]) counts[text] = { clicks: 0, sessions: new Set() };
+        counts[text].clicks++;
+        counts[text].sessions.add(row.session_id);
+      });
+      return Object.entries(counts)
+        .map(([text, { clicks, sessions }]) => ({ text, clicks, uniqueSessions: sessions.size }))
+        .sort((a, b) => b.clicks - a.clicks);
+    },
+    enabled: !!selectedQuizId,
   });
 
   // Calculate summary metrics
@@ -200,6 +213,20 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
     const config = statusMap[status || 'new'] || statusMap.new;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
+
+  // Verificar permissão do plano (after all hooks)
+  if (!allowAdvancedAnalytics && !planLoading) {
+    return (
+      <PlanFeatureGate
+        featureName="Analytics Avançado por Quiz"
+        featureDescription="Visualize métricas detalhadas de cada quiz: funil de conversão, evolução temporal, tempo médio e respostas recentes. Tome decisões baseadas em dados."
+        isAllowed={false}
+        isLoading={planLoading}
+      >
+        <></>
+      </PlanFeatureGate>
+    );
+  }
 
   if (quizzes.length === 0) {
     return (
@@ -364,6 +391,45 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
               <FunnelChart data={funnelData || []} loading={funnelLoading} />
             </CardContent>
           </Card>
+
+          {/* CTA Performance - only show when there's CTA data */}
+          {ctaPerformance && ctaPerformance.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MousePointerClick className="h-5 w-5" />
+                  {t('analytics.ctaPerformance', 'Performance dos CTAs')}
+                </CardTitle>
+                <CardDescription>
+                  {t('analytics.ctaPerformanceDesc', 'Ranking de cliques por CTA na última etapa do funil')} - {selectedQuiz?.title}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {ctaPerformance.map((cta, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" title={cta.text}>
+                          {cta.text}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {cta.clicks} {t('analytics.clicks', 'cliques')} · {cta.uniqueSessions} {t('analytics.uniqueSessions', 'sessões únicas')}
+                          {summaryMetrics.totalViews > 0 && (
+                            <span className="ml-1">
+                              · {((cta.uniqueSessions / summaryMetrics.totalViews) * 100).toFixed(1)}% CTR
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Recent Responses Table */}
           <Card>
