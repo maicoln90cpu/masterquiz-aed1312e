@@ -110,7 +110,7 @@ const Dashboard = () => {
     };
     
     loadUserData();
-  }, [navigate, t, stats?.totalQuizzes, stats?.activeQuizzes]);
+  }, [navigate, t, stats?.totalQuizzes, stats?.activeQuizzes, user]);
 
   const handleLogout = async () => {
     try {
