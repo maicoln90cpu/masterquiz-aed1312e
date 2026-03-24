@@ -103,6 +103,7 @@ export const useRecentQuizzes = () => {
         tags: quiz.quiz_tag_relations?.map((rel: QuizTagRelationData) => rel.quiz_tags).filter((t): t is QuizTag => t !== null) || []
       })) || [];
     },
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
     retry: 2,
     meta: {
