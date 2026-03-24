@@ -237,7 +237,7 @@ export const useDuplicateQuiz = () => {
 
   return useMutation({
     mutationFn: async ({ quizId, newName }: { quizId: string; newName: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser(); // mutation needs fresh auth
       if (!user) throw new Error('User not authenticated');
 
       // Get original quiz
