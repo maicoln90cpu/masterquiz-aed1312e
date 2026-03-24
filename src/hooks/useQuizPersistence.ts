@@ -213,6 +213,9 @@ export function useQuizPersistence({
         showQuestionNumber: quiz.show_question_number ?? true,
         showResults: (quiz as any).show_results ?? true,
         progressStyle: ((quiz as any).progress_style as 'bar' | 'counter' | 'none') || 'counter',
+        globalTextAlign: ((quiz as any).global_text_align as 'left' | 'center' | 'right') || 'left',
+        globalFontSize: ((quiz as any).global_font_size as 'small' | 'medium' | 'large') || 'medium',
+        globalFontFamily: ((quiz as any).global_font_family as 'sans' | 'serif' | 'mono') || 'sans',
       });
 
       if (formConfig) {
