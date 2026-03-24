@@ -59,7 +59,6 @@ const Responses = () => {
   useEffect(() => {
     if (quizzesLoadedRef.current) return;
     const loadQuizzes = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: quizzesData } = await supabase
         .from('quizzes')
