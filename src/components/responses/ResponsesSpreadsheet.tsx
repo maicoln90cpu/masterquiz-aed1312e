@@ -57,6 +57,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
   const [totalCount, setTotalCount] = useState(0);
   const [ctaSummary, setCtaSummary] = useState<CtaClickSummary[]>([]);
   const [lastStepCtaSessions, setLastStepCtaSessions] = useState(0);
+  const [responseCtaMap, setResponseCtaMap] = useState<Record<string, CtaClickData>>({});
 
   useEffect(() => {
     loadSpreadsheetData();
