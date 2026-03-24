@@ -47,6 +47,8 @@ export function QuizViewQuestion({
 }: QuizViewQuestionProps) {
   const { t } = useTranslation();
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingAutoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [loadingComplete, setLoadingComplete] = useState(false);
 
   // Detect auto-advance from question block settings
   const questionBlock = question.blocks?.find((b: any) => b.type === 'question') as any;
@@ -56,6 +58,36 @@ export function QuizViewQuestion({
   
   // Auto-advance: for single_choice/yes_no, advance after selection
   const shouldAutoAdvance = autoAdvance && (answerFormat === 'single_choice' || answerFormat === 'yes_no');
+
+  // Detect loading block behavior
+  const loadingBlock = question.blocks?.find((b: any) => b.type === 'loading') as any;
+  const hasLoadingBlock = !!loadingBlock;
+  const loadingAutoAdvance = loadingBlock?.autoAdvance === true;
+  const loadingDuration = loadingBlock?.duration || 5;
+
+  // Reset loading state when question changes
+  useEffect(() => {
+    setLoadingComplete(false);
+  }, [question.id]);
+
+  // Loading block auto-advance timer
+  useEffect(() => {
+    if (!hasLoadingBlock) return;
+    
+    const timer = setTimeout(() => {
+      setLoadingComplete(true);
+      if (loadingAutoAdvance) {
+        // Auto-advance after loading completes
+        if (isLastQuestion) {
+          if (showFormAfter) onNext(); else onSubmit();
+        } else {
+          onNext();
+        }
+      }
+    }, loadingDuration * 1000);
+
+    return () => clearTimeout(timer);
+  }, [hasLoadingBlock, loadingAutoAdvance, loadingDuration, question.id, isLastQuestion, showFormAfter, onNext, onSubmit]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -121,6 +153,10 @@ export function QuizViewQuestion({
   // O bloco de pergunta já tem seu próprio fluxo de resposta
   const hasManualNavButton = hasQuestionBlock || hasButtonBlock;
 
+  // Determine if we should hide the next button
+  // Hide when: loading block with autoAdvance, or loading not complete yet, or normal auto-advance
+  const shouldHideNextForLoading = hasLoadingBlock && (loadingAutoAdvance || !loadingComplete);
+
   const renderQuestionBlocks = () => {
     if (!question.blocks || !Array.isArray(question.blocks) || question.blocks.length === 0) {
       return (
@@ -157,6 +193,9 @@ export function QuizViewQuestion({
       }
     };
 
+    // Pass ALL questions up to and including currentStep for AnswerSummary
+    const allQuestions = (quiz as any).questions || [];
+
     return (
       <div className="space-y-6">
         {question.blocks
@@ -171,7 +210,7 @@ export function QuizViewQuestion({
                   answers={answers}
                   onAnswer={onAnswer}
                   onAutoAdvance={shouldAutoAdvance ? handleAutoAdvance : undefined}
-                  showNextButton={!shouldAutoAdvance && !hasButtonBlock}
+                  showNextButton={!shouldAutoAdvance && !hasButtonBlock && !shouldHideNextForLoading}
                   onNextClick={handleNextClick}
                   isNextDisabled={isNextDisabled()}
                   isLastQuestion={isLastQuestion}
@@ -190,7 +229,7 @@ export function QuizViewQuestion({
                 onNavigateToQuestion={() => {}}
                 wrapInCard={false}
                 answers={answers}
-                questions={(quiz as any).questions?.slice(0, currentStep) || []}
+                questions={allQuestions.slice(0, currentStep + 1)}
                 currentStep={currentStep}
                 totalQuestions={totalQuestions}
                 textInputValues={textInputValues}
@@ -253,8 +292,9 @@ export function QuizViewQuestion({
       
       {renderQuestionBlocks()}
       
-      {/* Navigation: only show Next/Finish when not auto-advancing */}
-      {!hideNextButton && !isInformationalSlide && !hasManualNavButton && !(isLastQuestion && !showResults && !showFormAfter) && (
+      {/* Navigation: show Next/Finish button */}
+      {/* Hide when: auto-advance active, informational slide, manual nav button, loading not complete, or last question without results */}
+      {!hideNextButton && !isInformationalSlide && !hasManualNavButton && !shouldHideNextForLoading && !(isLastQuestion && !showResults && !showFormAfter) && (
         <div className="flex gap-2">
           <Button
             onClick={handleNextClick}
