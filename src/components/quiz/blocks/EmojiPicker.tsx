@@ -273,7 +273,7 @@ export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
             <ScrollArea className="h-48">
               {(Object.keys(EMOJI_CATEGORIES) as EmojiCategoryKey[]).map((category) => (
                 <TabsContent key={category} value={category} className="p-2 m-0">
-                  <div className="grid grid-cols-5 gap-1">
+                  <div className="grid grid-cols-6 gap-1">
                     {EMOJI_CATEGORIES[category].map((emoji, idx) => (
                       <Button
                         key={idx}
