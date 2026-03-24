@@ -31,11 +31,11 @@ export interface QuizWithTags extends Quiz {
  */
 export const useDashboardStats = () => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
 
   return useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data: quizzes, error: quizzesError } = await supabase
