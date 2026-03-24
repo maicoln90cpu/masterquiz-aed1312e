@@ -58,6 +58,7 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
       src={(block as any).imageUrl}
       alt="Imagem ilustrativa"
       className={`rounded-lg object-cover ${imageSizeClass} ${imageAlignClass}`}
+      loading="lazy"
     />
   ) : null;
 
