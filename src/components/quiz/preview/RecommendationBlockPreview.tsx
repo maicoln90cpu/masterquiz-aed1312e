@@ -179,7 +179,7 @@ const RecommendationCard = ({ item, style, isPreview, showScore, score, rank, on
     return (
       <div className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:shadow-sm transition-shadow">
         {item.imageUrl && (
-          <img src={item.imageUrl} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+          <img src={item.imageUrl} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" loading="lazy" />
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
