@@ -111,16 +111,16 @@ const Responses = () => {
     }
   };
 
-  // ✅ CORREÇÃO: Busca agora é apenas front-end sobre dados já paginados pelo backend
-  const filteredResponses = responses.filter(response => {
-    if (!searchTerm) return true;
+  // ✅ CORREÇÃO: useMemo para evitar recalcular filteredResponses em cada render
+  const filteredResponses = useMemo(() => {
+    if (!searchTerm) return responses;
     const searchLower = searchTerm.toLowerCase();
-    return (
+    return responses.filter(response => 
       response.respondent_name?.toLowerCase().includes(searchLower) ||
       response.respondent_email?.toLowerCase().includes(searchLower) ||
       response.respondent_whatsapp?.includes(searchTerm)
     );
-  });
+  }, [responses, searchTerm]);
 
   // ✅ ITEM 5: Lazy load XLSX export
   const exportToExcel = async () => {
