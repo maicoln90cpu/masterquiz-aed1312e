@@ -257,7 +257,7 @@ export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
         ) : (
           // Show categories
           <Tabs defaultValue="popular" className="w-full">
-            <TabsList className="w-full grid grid-cols-9 h-10">
+            <TabsList className="w-full grid grid-cols-11 h-10">
               {(Object.keys(EMOJI_CATEGORIES) as EmojiCategoryKey[]).map((category) => (
                 <TabsTrigger
                   key={category}
