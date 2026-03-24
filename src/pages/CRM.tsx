@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,11 +14,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
-// ✅ ITEM 5: Remover import estático de XLSX - será lazy loaded
-// import * as XLSX from "xlsx";
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { DraggableLeadCard } from '@/components/crm/DraggableLeadCard';
-import { DroppableColumn } from '@/components/crm/DroppableColumn';
 import { CRMEmptyState } from '@/components/crm/CRMEmptyState';
 import { MobileNav } from "@/components/MobileNav";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
@@ -31,6 +26,11 @@ import { useTrackPageView } from "@/hooks/useUserStage";
 import { useTestLead } from "@/hooks/useTestLead";
 import { FlaskConical } from "lucide-react";
 import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// ✅ Lazy-load do Kanban Board (~40KB @dnd-kit/core)
+const CRMKanbanBoard = lazy(() => import('@/components/crm/CRMKanbanBoard').then(m => ({ default: m.CRMKanbanBoard })));
+
 type LeadStatus = 'new' | 'checkout' | 'negotiation' | 'converted' | 'relationship' | 'lost';
 
 /** Detect if a lead has useful contact data (email, phone, name) either in fields or within answers */
