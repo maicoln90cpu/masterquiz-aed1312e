@@ -37,6 +37,12 @@ interface AppearanceConfigStepProps {
   onProgressStyleChange?: (value: 'bar' | 'counter' | 'none') => void;
   /** Hide showResults toggle (e.g., when already set in Step 1 Modern) */
   hideShowResults?: boolean;
+  globalTextAlign?: 'left' | 'center' | 'right';
+  globalFontSize?: 'small' | 'medium' | 'large';
+  globalFontFamily?: 'sans' | 'serif' | 'mono';
+  onGlobalTextAlignChange?: (value: 'left' | 'center' | 'right') => void;
+  onGlobalFontSizeChange?: (value: 'small' | 'medium' | 'large') => void;
+  onGlobalFontFamilyChange?: (value: 'sans' | 'serif' | 'mono') => void;
 }
 
 const getTemplates = (t: any) => [
