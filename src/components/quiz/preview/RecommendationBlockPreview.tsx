@@ -212,7 +212,7 @@ const RecommendationCard = ({ item, style, isPreview, showScore, score, rank, on
         <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium mb-2">{item.badge}</span>
       )}
       {item.imageUrl && (
-        <img src={item.imageUrl} alt={item.name} className="w-full h-32 rounded-lg object-cover mb-3" />
+        <img src={item.imageUrl} alt={item.name} className="w-full h-32 rounded-lg object-cover mb-3" loading="lazy" />
       )}
       <h5 className="font-semibold text-sm">{item.name}</h5>
       {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
