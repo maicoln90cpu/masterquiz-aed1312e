@@ -35,6 +35,7 @@ const Analytics = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { allowExportPDF } = usePlanFeatures();
+  const { user } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("7d");
   const [startDate, setStartDate] = useState("");
