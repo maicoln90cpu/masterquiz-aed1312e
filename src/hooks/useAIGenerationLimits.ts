@@ -83,7 +83,7 @@ export const useAIGenerationLimits = () => {
         isUnlimited: limit === 0,
       };
     },
-    enabled: !roleLoading,
+    enabled: !roleLoading && !!user,
   });
 
   return {

@@ -132,7 +132,7 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
         return [];
       }
     },
-    enabled: true,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
   });
 }

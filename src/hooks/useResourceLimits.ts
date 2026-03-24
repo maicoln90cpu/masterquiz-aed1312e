@@ -149,7 +149,7 @@ export const useResourceLimits = () => {
 
       return limits;
     },
-    enabled: !roleLoading,
+    enabled: !roleLoading && !!user,
     refetchInterval: 60000, // Atualizar a cada 1 minuto
   });
 

@@ -107,7 +107,7 @@ export const usePlanFeatures = () => {
         allow_advanced_analytics: plan.allow_advanced_analytics ?? false,
       };
     },
-    enabled: !roleLoading
+    enabled: !roleLoading && !!user
   });
 
   return {

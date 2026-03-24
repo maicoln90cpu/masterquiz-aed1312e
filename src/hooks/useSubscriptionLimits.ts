@@ -87,8 +87,6 @@ export const useSubscriptionLimits = () => {
     
     // ✅ Plano admin tem limite ilimitado
     if (subscription.plan_type === 'admin') return true;
-
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
     // Buscar lead_limit do plano (aceitar planos ativos OU admin)

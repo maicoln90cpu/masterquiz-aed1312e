@@ -29,7 +29,7 @@ export const useVideoStorage = () => {
         bunny_video_count: 0
       };
     },
-    enabled: allowVideoUpload || isMasterAdmin
+    enabled: (allowVideoUpload || isMasterAdmin) && !!user
   });
 
   // Use bunny_size_mb if available, otherwise fallback to total_size_mb
