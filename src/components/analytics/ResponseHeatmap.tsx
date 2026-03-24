@@ -199,41 +199,12 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
   const heatmapData = heatmapResult?.heatmapData || [];
   const totalRespondents = heatmapResult?.totalRespondents || 0;
 
-  // Parse options baseado no formato
-  const parseOptions = (options: any, format: string, blocks?: any): string[] => {
-    if (format === 'yes_no') {
-      return ['Sim', 'Não'];
-    }
-    
-    if (format === 'short_text') {
-      return []; // Texto livre não tem opções fixas
-    }
-
-    // First try standard options array
-    if (Array.isArray(options) && options.length > 0) {
-      return options.map(opt => {
-        if (typeof opt === 'string') return opt;
-        if (opt?.text) return opt.text;
-        if (opt?.label) return opt.label;
-        return String(opt);
-      });
-    }
-
-    // Fallback: extract options from blocks (modern quiz format)
-    if (Array.isArray(blocks)) {
-      const questionBlock = blocks.find((b: any) => b.type === 'question');
-      if (questionBlock?.options && Array.isArray(questionBlock.options)) {
-        return questionBlock.options.map((opt: any) => {
-          if (typeof opt === 'string') return opt;
-          if (opt?.text) return opt.text;
-          if (opt?.label) return opt.label;
-          return String(opt);
-        });
-      }
-    }
-
-    return [];
-  };
+  // Calcular paginação
+  const totalPages = Math.ceil(heatmapData.length / QUESTIONS_PER_PAGE);
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
+    return heatmapData.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
+  }, [heatmapData, currentPage]);
 
   // Encontrar a opção mais popular
   const getMostPopular = (responses: QuestionHeatmapData['responses']) => {
@@ -252,6 +223,18 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
       >
         <></>
       </PlanFeatureGate>
+    );
+  }
+
+  // No quiz selected — show message
+  if (!selectedQuiz) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <p className="text-muted-foreground">Selecione um quiz no filtro acima para visualizar o heatmap.</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -296,22 +279,6 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
                 </TooltipContent>
               </Tooltip>
             </div>
-            
-            {/* Only show internal quiz selector when no external quizId AND no quizId prop */}
-            {!externalQuizId && quizzes.length > 0 && (
-              <Select value={selectedQuiz} onValueChange={setSelectedQuiz}>
-                <SelectTrigger className="w-[250px]">
-                  <SelectValue placeholder="Selecione um quiz" />
-                </SelectTrigger>
-                <SelectContent>
-                  {quizzes.map(quiz => (
-                    <SelectItem key={quiz.id} value={quiz.id}>
-                      {quiz.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
           
           <CardDescription className="flex items-center gap-4 mt-2">
