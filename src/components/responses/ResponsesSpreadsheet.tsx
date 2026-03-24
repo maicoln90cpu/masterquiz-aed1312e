@@ -358,7 +358,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
               <TableBody>
                 {responses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3 + questions.length} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={4 + questions.length} className="text-center py-8 text-muted-foreground">
                       {t('responses.noResponses', 'Nenhuma resposta encontrada')}
                     </TableCell>
                   </TableRow>
