@@ -216,13 +216,19 @@ export const QuizBlockPreview = ({
     </>
   );
 
+  const globalStyle: React.CSSProperties = {
+    textAlign: globalTextAlign || undefined,
+    fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : undefined,
+    fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : undefined,
+  };
+
   if (!wrapInCard) {
-    return <div className="space-y-4">{content}</div>;
+    return <div className="space-y-4" style={globalStyle}>{content}</div>;
   }
 
   return (
     <Card className="border-2">
-      <CardContent className="p-8 space-y-8">{content}</CardContent>
+      <CardContent className="p-8 space-y-8" style={globalStyle}>{content}</CardContent>
     </Card>
   );
 };
