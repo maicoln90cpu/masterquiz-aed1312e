@@ -70,7 +70,7 @@ const Responses = () => {
       quizzesLoadedRef.current = true;
     };
     loadQuizzes();
-  }, []);
+  }, [user]);
 
   // ✅ Carregar responses separadamente (reage a filtros)
   useEffect(() => {
