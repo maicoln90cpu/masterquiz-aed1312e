@@ -64,7 +64,7 @@ const Analytics = () => {
 
   useEffect(() => {
     loadAnalytics();
-  }, [period, startDate, endDate]);
+  }, [period, startDate, endDate, user]);
 
   const loadAnalytics = async () => {
     setLoading(true);
