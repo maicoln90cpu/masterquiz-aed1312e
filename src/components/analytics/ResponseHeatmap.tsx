@@ -63,225 +63,141 @@ const getHeatBgColor = (percentage: number): string => {
 
 export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps) => {
   const { allowHeatmap, isLoading: planLoading } = usePlanFeatures();
-  const [loading, setLoading] = useState(true);
-  const [quizzes, setQuizzes] = useState<{ id: string; title: string }[]>([]);
-  const [selectedQuiz, setSelectedQuiz] = useState<string>(externalQuizId || '');
-  const [heatmapData, setHeatmapData] = useState<QuestionHeatmapData[]>([]);
-  const [totalRespondents, setTotalRespondents] = useState(0);
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Calcular paginação
-  const totalPages = Math.ceil(heatmapData.length / QUESTIONS_PER_PAGE);
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
-    return heatmapData.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
-  }, [heatmapData, currentPage]);
+  // Use externalQuizId directly — no internal quiz selector
+  const selectedQuiz = externalQuizId || '';
 
   // Reset page when quiz changes
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedQuiz]);
 
-  // Sync with external quizId prop
-  useEffect(() => {
-    if (externalQuizId) {
-      setSelectedQuiz(externalQuizId);
-    }
-  }, [externalQuizId]);
+  // Fetch heatmap data with useQuery (cached 5min)
+  const { data: heatmapResult, isLoading: loading } = useQuery({
+    queryKey: ['heatmap', selectedQuiz],
+    queryFn: async () => {
+      const { data: questions } = await supabase
+        .from('quiz_questions')
+        .select('id, question_text, order_number, answer_format, options, blocks')
+        .eq('quiz_id', selectedQuiz)
+        .order('order_number', { ascending: true });
 
-  // Carregar lista de quizzes do usuário (only when no external quizId)
-  useEffect(() => {
-    if (externalQuizId) return; // Skip loading quiz list when parent controls the filter
-    const loadQuizzes = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase
-        .from('quizzes')
-        .select('id, title')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      setQuizzes(data || []);
-      
-      // Se não há quiz selecionado, seleciona o primeiro
-      if (!selectedQuiz && data && data.length > 0) {
-        setSelectedQuiz(data[0].id);
+      if (!questions || questions.length === 0) {
+        return { heatmapData: [] as QuestionHeatmapData[], totalRespondents: 0 };
       }
-    };
 
-    loadQuizzes();
-  }, [externalQuizId]);
+      const questionsWithQuestion = questions.filter(q => {
+        if (!Array.isArray(q.blocks)) return false;
+        return (q.blocks as any[]).some((b: any) => b.type === 'question');
+      });
 
-  // Carregar dados do heatmap quando quiz muda
-  useEffect(() => {
-    if (!selectedQuiz) {
-      setLoading(false);
-      return;
-    }
+      if (questionsWithQuestion.length === 0) {
+        return { heatmapData: [] as QuestionHeatmapData[], totalRespondents: 0 };
+      }
 
-    const loadHeatmapData = async () => {
-      setLoading(true);
-      try {
-        // Buscar perguntas do quiz
-        const { data: questions } = await supabase
-          .from('quiz_questions')
-          .select('id, question_text, order_number, answer_format, options, blocks')
-          .eq('quiz_id', selectedQuiz)
-          .order('order_number', { ascending: true });
+      const { data: responses, count } = await supabase
+        .from('quiz_responses')
+        .select('answers', { count: 'exact' })
+        .eq('quiz_id', selectedQuiz);
 
-        if (!questions || questions.length === 0) {
-          setHeatmapData([]);
-          setTotalRespondents(0);
-          setLoading(false);
-          return;
-        }
-
-        // Filtrar: excluir slides sem bloco tipo 'question' (intros, CTAs)
-        const questionsWithQuestion = questions.filter(q => {
-          if (!Array.isArray(q.blocks)) return false;
-          return (q.blocks as any[]).some((b: any) => b.type === 'question');
-        });
-
-        if (questionsWithQuestion.length === 0) {
-          setHeatmapData([]);
-          setTotalRespondents(0);
-          setLoading(false);
-          return;
-        }
-
-        // Buscar todas as respostas do quiz
-        const { data: responses, count } = await supabase
-          .from('quiz_responses')
-          .select('answers', { count: 'exact' })
-          .eq('quiz_id', selectedQuiz);
-
-        setTotalRespondents(count || 0);
-
-        // Extrair texto real da pergunta dos blocos
-        const extractQuestionText = (q: any): string => {
-          if (Array.isArray(q.blocks)) {
-            const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
-            if (qBlock?.questionText) {
-              // Strip HTML tags
-              return qBlock.questionText.replace(/<[^>]*>/g, '').trim() || q.question_text;
-            }
+      const extractQuestionText = (q: any): string => {
+        if (Array.isArray(q.blocks)) {
+          const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
+          if (qBlock?.questionText) {
+            return qBlock.questionText.replace(/<[^>]*>/g, '').trim() || q.question_text;
           }
-          return q.question_text;
-        };
-
-        // Extrair answerFormat dos blocos
-        const extractAnswerFormat = (q: any): string => {
-          if (Array.isArray(q.blocks)) {
-            const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
-            if (qBlock?.answerFormat) return qBlock.answerFormat;
-          }
-          return q.answer_format;
-        };
-
-        if (!responses || responses.length === 0) {
-          const emptyData = questionsWithQuestion.map((q, idx) => ({
-            questionId: q.id,
-            questionText: extractQuestionText(q),
-            questionOrder: idx + 1,
-            answerFormat: extractAnswerFormat(q),
-            options: parseOptions(q.options, extractAnswerFormat(q), q.blocks),
-            responses: [],
-            totalResponses: 0,
-          }));
-          setHeatmapData(emptyData);
-          setLoading(false);
-          return;
         }
+        return q.question_text;
+      };
 
-        // Criar mapeamento de IDs atuais para detectar respostas com IDs antigos
-        const currentQuestionIds = new Set(questionsWithQuestion.map(q => q.id));
+      const extractAnswerFormat = (q: any): string => {
+        if (Array.isArray(q.blocks)) {
+          const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
+          if (qBlock?.answerFormat) return qBlock.answerFormat;
+        }
+        return q.answer_format;
+      };
 
-        // Processar respostas para cada pergunta
-        const processedData: QuestionHeatmapData[] = questionsWithQuestion.map((question, qIndex) => {
-          const realFormat = extractAnswerFormat(question);
-          const options = parseOptions(question.options, realFormat, (question as any).blocks);
-          const responseCounts: Record<string, number> = {};
+      if (!responses || responses.length === 0) {
+        const emptyData = questionsWithQuestion.map((q, idx) => ({
+          questionId: q.id,
+          questionText: extractQuestionText(q),
+          questionOrder: idx + 1,
+          answerFormat: extractAnswerFormat(q),
+          options: parseOptionsStatic(q.options, extractAnswerFormat(q), q.blocks),
+          responses: [],
+          totalResponses: 0,
+        }));
+        return { heatmapData: emptyData, totalRespondents: 0 };
+      }
+
+      const currentQuestionIds = new Set(questionsWithQuestion.map(q => q.id));
+
+      const processedData: QuestionHeatmapData[] = questionsWithQuestion.map((question, qIndex) => {
+        const realFormat = extractAnswerFormat(question);
+        const options = parseOptionsStatic(question.options, realFormat, (question as any).blocks);
+        const responseCounts: Record<string, number> = {};
+        
+        options.forEach(opt => { responseCounts[opt] = 0; });
+
+        let totalForQuestion = 0;
+        responses.forEach(response => {
+          const answers = response.answers as Record<string, string | string[]>;
+          if (!answers) return;
           
-          // Inicializar contadores
-          options.forEach(opt => {
-            responseCounts[opt] = 0;
-          });
-
-          // Contar respostas
-          let totalForQuestion = 0;
-          responses.forEach(response => {
-            const answers = response.answers as Record<string, string | string[]>;
-            if (!answers) return;
-            
-            // Tentar buscar resposta pelo ID atual da pergunta
-            let answer = answers[question.id];
-            
-            // Fallback por posição: se o ID não bate, verificar se as chaves são IDs antigos
-            if (!answer) {
-              const answerKeys = Object.keys(answers);
-              const hasAnyCurrentId = answerKeys.some(k => currentQuestionIds.has(k));
-              
-              // Se nenhuma chave corresponde aos IDs atuais, mapear por posição
-              if (!hasAnyCurrentId && answerKeys.length > 0) {
-                const sortedKeys = answerKeys;
-                if (qIndex < sortedKeys.length) {
-                  answer = answers[sortedKeys[qIndex]];
-                }
+          let answer = answers[question.id];
+          
+          if (!answer) {
+            const answerKeys = Object.keys(answers);
+            const hasAnyCurrentId = answerKeys.some(k => currentQuestionIds.has(k));
+            if (!hasAnyCurrentId && answerKeys.length > 0) {
+              if (qIndex < answerKeys.length) {
+                answer = answers[answerKeys[qIndex]];
               }
             }
-            
-            if (answer) {
-              totalForQuestion++;
-              
-              if (Array.isArray(answer)) {
-                answer.forEach(a => {
-                  if (responseCounts[a] !== undefined) {
-                    responseCounts[a]++;
-                  } else {
-                    responseCounts[a] = 1;
-                  }
-                });
-              } else {
-                if (responseCounts[answer] !== undefined) {
-                  responseCounts[answer]++;
-                } else {
-                  responseCounts[answer] = 1;
-                }
-              }
+          }
+          
+          if (answer) {
+            totalForQuestion++;
+            if (Array.isArray(answer)) {
+              answer.forEach(a => {
+                responseCounts[a] = (responseCounts[a] || 0) + 1;
+              });
+            } else {
+              responseCounts[answer] = (responseCounts[answer] || 0) + 1;
             }
-          });
-
-          // Calcular percentuais
-          const responseData = Object.entries(responseCounts)
-            .map(([option, count]) => ({
-              option,
-              count,
-              percentage: totalForQuestion > 0 ? (count / totalForQuestion) * 100 : 0,
-            }))
-            .sort((a, b) => b.count - a.count);
-
-          return {
-            questionId: question.id,
-            questionText: extractQuestionText(question),
-            questionOrder: qIndex + 1, // Renumerar sequencialmente
-            answerFormat: realFormat,
-            options,
-            responses: responseData,
-            totalResponses: totalForQuestion,
-          };
+          }
         });
 
-        setHeatmapData(processedData);
-      } catch (error) {
-        console.error('Erro ao carregar heatmap:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+        const responseData = Object.entries(responseCounts)
+          .map(([option, count]) => ({
+            option,
+            count,
+            percentage: totalForQuestion > 0 ? (count / totalForQuestion) * 100 : 0,
+          }))
+          .sort((a, b) => b.count - a.count);
 
-    loadHeatmapData();
-  }, [selectedQuiz]);
+        return {
+          questionId: question.id,
+          questionText: extractQuestionText(question),
+          questionOrder: qIndex + 1,
+          answerFormat: realFormat,
+          options,
+          responses: responseData,
+          totalResponses: totalForQuestion,
+        };
+      });
+
+      return { heatmapData: processedData, totalRespondents: count || 0 };
+    },
+    enabled: !!selectedQuiz,
+    staleTime: 5 * 60 * 1000, // 5 min cache
+  });
+
+  const heatmapData = heatmapResult?.heatmapData || [];
+  const totalRespondents = heatmapResult?.totalRespondents || 0;
 
   // Parse options baseado no formato
   const parseOptions = (options: any, format: string, blocks?: any): string[] => {
