@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Loader2, Filter, X, FileSpreadsheet, Search, Plus, Calendar as CalendarIcon, List, LayoutGrid, ArrowUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { toast } from "sonner";
 import { PlanLimitWarning } from "@/components/PlanLimitWarning";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
