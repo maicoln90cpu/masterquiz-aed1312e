@@ -51,27 +51,37 @@ const Responses = () => {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
-  useEffect(() => {
-    loadData();
-  }, [selectedQuiz, currentPage, startDate, endDate]); // ✅ FASE 2: Recarregar ao mudar filtros de data
+  const quizzesLoadedRef = useRef(false);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
+  // ✅ Separar: carregar quizzes apenas 1x
+  useEffect(() => {
+    if (quizzesLoadedRef.current) return;
+    const loadQuizzes = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      // ✅ CORREÇÃO: Select específico para quizzes
       const { data: quizzesData } = await supabase
         .from('quizzes')
         .select('id, title')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(100); // Limitado a 100 quizzes
-
+        .limit(100);
       setQuizzes(quizzesData || []);
+      quizzesLoadedRef.current = true;
+    };
+    loadQuizzes();
+  }, []);
 
-      // ✅ FASE 2 - ITEM 6: Query com filtros de data + quiz_questions para lista numerada
+  // ✅ Carregar responses separadamente (reage a filtros)
+  useEffect(() => {
+    loadResponses();
+  }, [selectedQuiz, currentPage, startDate, endDate]);
+
+  const loadResponses = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       let query = supabase
         .from('quiz_responses')
         .select(`
@@ -81,25 +91,21 @@ const Responses = () => {
         `, { count: 'exact' })
         .eq('quizzes.user_id', user.id)
         .order('completed_at', { ascending: false })
-        .range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1); // ✅ Paginação real no backend
+        .range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1);
 
       if (selectedQuiz !== "all") {
         query = query.eq('quiz_id', selectedQuiz);
       }
-
-      // ✅ FASE 2 - ITEM 6: Aplicar filtros de data
       if (startDate) {
         query = query.gte('completed_at', startDate.toISOString());
       }
       if (endDate) {
-        // Adicionar 1 dia para incluir o dia completo
         const endOfDay = new Date(endDate);
         endOfDay.setHours(23, 59, 59, 999);
         query = query.lte('completed_at', endOfDay.toISOString());
       }
 
       const { data: responsesData, error, count } = await query;
-
       if (error) throw error;
       setResponses(responsesData || []);
       setTotalPages(Math.ceil((count || 0) / ITEMS_PER_PAGE));
