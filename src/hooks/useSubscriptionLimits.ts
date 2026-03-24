@@ -59,8 +59,6 @@ export const useSubscriptionLimits = () => {
   const checkQuizLimit = async () => {
     if (isMasterAdmin) return true;
     if (!subscription) return false;
-
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
     const { count } = await supabase
