@@ -24,11 +24,11 @@ export interface ResourceLimits {
 
 export const useResourceLimits = () => {
   const { isMasterAdmin, loading: roleLoading } = useUserRole();
+  const { user } = useCurrentUser();
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['resource-limits', isMasterAdmin],
+    queryKey: ['resource-limits', isMasterAdmin, user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       // Se for master admin, retorna limites ilimitados
