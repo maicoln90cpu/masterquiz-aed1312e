@@ -37,6 +37,12 @@ interface AppearanceConfigStepProps {
   onProgressStyleChange?: (value: 'bar' | 'counter' | 'none') => void;
   /** Hide showResults toggle (e.g., when already set in Step 1 Modern) */
   hideShowResults?: boolean;
+  globalTextAlign?: 'left' | 'center' | 'right';
+  globalFontSize?: 'small' | 'medium' | 'large';
+  globalFontFamily?: 'sans' | 'serif' | 'mono';
+  onGlobalTextAlignChange?: (value: 'left' | 'center' | 'right') => void;
+  onGlobalFontSizeChange?: (value: 'small' | 'medium' | 'large') => void;
+  onGlobalFontFamilyChange?: (value: 'sans' | 'serif' | 'mono') => void;
 }
 
 const getTemplates = (t: any) => [
@@ -113,6 +119,12 @@ export const AppearanceConfigStep = ({
   onShowResultsChange,
   onProgressStyleChange,
   hideShowResults = false,
+  globalTextAlign = 'left',
+  globalFontSize = 'medium',
+  globalFontFamily = 'sans',
+  onGlobalTextAlignChange,
+  onGlobalFontSizeChange,
+  onGlobalFontFamilyChange,
 }: AppearanceConfigStepProps) => {
   const { t } = useTranslation();
   const { allowedTemplates, isLoading } = usePlanFeatures();
@@ -285,6 +297,75 @@ export const AppearanceConfigStep = ({
               </div>
             </div>
 
+            <Separator className="my-6" />
+
+            {/* Global Formatting */}
+            <div className="space-y-4">
+              <div>
+                <Label className="text-base font-semibold">Formatação Global</Label>
+                <p className="text-sm text-muted-foreground">
+                  Defina o padrão de formatação para todos os blocos do quiz. Cada bloco pode ser ajustado individualmente depois.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="global-text-align">Alinhamento do Texto</Label>
+                  <select
+                    id="global-text-align"
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    value={globalTextAlign}
+                    onChange={(e) => onGlobalTextAlignChange?.(e.target.value as 'left' | 'center' | 'right')}
+                  >
+                    <option value="left">⬅ Esquerda</option>
+                    <option value="center">↔ Centralizado</option>
+                    <option value="right">➡ Direita</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="global-font-size">Tamanho da Fonte</Label>
+                  <select
+                    id="global-font-size"
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    value={globalFontSize}
+                    onChange={(e) => onGlobalFontSizeChange?.(e.target.value as 'small' | 'medium' | 'large')}
+                  >
+                    <option value="small">Pequeno (14px)</option>
+                    <option value="medium">Médio (16px)</option>
+                    <option value="large">Grande (18px)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="global-font-family">Família da Fonte</Label>
+                  <select
+                    id="global-font-family"
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    value={globalFontFamily}
+                    onChange={(e) => onGlobalFontFamilyChange?.(e.target.value as 'sans' | 'serif' | 'mono')}
+                  >
+                    <option value="sans">Sans-serif (moderna)</option>
+                    <option value="serif">Serif (clássica)</option>
+                    <option value="mono">Monospace (técnica)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Mini preview da formatação */}
+              <div 
+                className="p-4 border rounded-lg bg-muted/30"
+                style={{
+                  textAlign: globalTextAlign,
+                  fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : '16px',
+                  fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : 'inherit',
+                }}
+              >
+                <p className="font-semibold mb-1">Pré-visualização da formatação</p>
+                <p className="opacity-70">Este é um exemplo de como os textos do quiz aparecerão com as configurações selecionadas.</p>
+              </div>
+            </div>
+
             {/* Template Selection */}
             <div className="space-y-3">
               <div>
@@ -344,7 +425,14 @@ export const AppearanceConfigStep = ({
             <CardDescription>{t('createQuiz.appearance.previewDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}>
+            <div 
+              className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}
+              style={{
+                textAlign: globalTextAlign || undefined,
+                fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : undefined,
+                fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : undefined,
+              }}
+            >
               {/* Header com Logo */}
               <Card className="border-2">
                 <CardContent className="p-4 space-y-3">
