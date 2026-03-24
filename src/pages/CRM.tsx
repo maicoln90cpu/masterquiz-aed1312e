@@ -83,20 +83,9 @@ const CRM = () => {
     quizId: ""
   });
 
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
-  
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 100;
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   const columns = [
     { id: 'new' as LeadStatus, title: t('crm.columns.new'), color: 'hsl(221, 83%, 53%)', bgColor: 'bg-primary/5', borderColor: 'border-primary/20' },
