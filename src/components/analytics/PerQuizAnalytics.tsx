@@ -392,6 +392,45 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
             </CardContent>
           </Card>
 
+          {/* CTA Performance - only show when there's CTA data */}
+          {ctaPerformance && ctaPerformance.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MousePointerClick className="h-5 w-5" />
+                  {t('analytics.ctaPerformance', 'Performance dos CTAs')}
+                </CardTitle>
+                <CardDescription>
+                  {t('analytics.ctaPerformanceDesc', 'Ranking de cliques por CTA na última etapa do funil')} - {selectedQuiz?.title}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {ctaPerformance.map((cta, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" title={cta.text}>
+                          {cta.text}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {cta.clicks} {t('analytics.clicks', 'cliques')} · {cta.uniqueSessions} {t('analytics.uniqueSessions', 'sessões únicas')}
+                          {summaryMetrics.totalViews > 0 && (
+                            <span className="ml-1">
+                              · {((cta.uniqueSessions / summaryMetrics.totalViews) * 100).toFixed(1)}% CTR
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Recent Responses Table */}
           <Card>
             <CardHeader>
