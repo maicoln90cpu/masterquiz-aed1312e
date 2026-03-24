@@ -557,7 +557,7 @@ const Responses = () => {
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">{t('responses.result')}</p>
+                <p className="text-sm text-muted-foreground">{t('responses.result')}</p>
                 <Card>
                   <CardContent className="pt-4">
                     <p>{selectedResponse.quiz_results?.result_text || "N/A"}</p>
