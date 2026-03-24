@@ -5,11 +5,11 @@ import { useCurrentUser } from "./useCurrentUser";
 
 export const useVideoStorage = () => {
   const { allowVideoUpload, videoStorageLimitMb, isMasterAdmin, isLoading: planLoading } = usePlanFeatures();
+  const { user } = useCurrentUser();
 
   const { data: usage, isLoading: usageLoading, refetch } = useQuery({
-    queryKey: ['video-usage'],
+    queryKey: ['video-usage', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       const { data, error } = await supabase
