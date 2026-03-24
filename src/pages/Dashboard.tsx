@@ -47,6 +47,7 @@ const Dashboard = () => {
   const [userName, setUserName] = useState('');
   const { isMasterAdmin } = useUserRole();
   const { user } = useCurrentUser();
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { quizLimit, responseLimit } = useSubscriptionLimits();
   const { shouldShowDashboardTour, updateOnboardingStep } = useOnboarding();
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
