@@ -224,6 +224,7 @@ export interface CountdownBlock extends BaseBlock {
   showSeconds?: boolean;
   style?: 'default' | 'minimal' | 'bold' | 'card' | 'flip'; // ✅ Etapa 2F: Flip-clock style
   expiryMessage?: string;
+  activeMessage?: string; // ✅ Texto exibido durante a contagem (acima do timer)
   expiryAction?: 'none' | 'hide' | 'redirect';
   redirectUrl?: string;
   primaryColor?: string;

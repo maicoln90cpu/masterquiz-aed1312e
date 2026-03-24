@@ -68,9 +68,11 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
     ? messages[msgIndex]
     : messages[Math.min(Math.floor(progress / (100 / Math.max(messages.length, 1))), messages.length - 1)];
 
+  const isComplete = progress >= 100;
+
   return (
     <div className="flex flex-col items-center justify-center py-12 space-y-6">
-      {renderSpinner()}
+      {!isComplete && renderSpinner()}
       {block.showProgress && (
         <div className="w-full max-w-xs">
           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -79,7 +81,8 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
           <p className="text-sm text-center text-muted-foreground mt-2">{Math.round(progress)}%</p>
         </div>
       )}
-      {messages.length > 0 && currentMsg && (
+      {/* Mensagens durante loading */}
+      {!isComplete && messages.length > 0 && currentMsg && (
         <AnimatePresence mode="wait">
           <motion.p
             key={block.rotateMessages ? msgIndex : Math.floor(progress)}
@@ -92,6 +95,19 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
             {currentMsg}
           </motion.p>
         </AnimatePresence>
+      )}
+      {/* Mensagem de conclusão (quando loading termina e autoAdvance está desligado) */}
+      {isComplete && !block.autoAdvance && block.completionMessage && (
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-sm font-medium text-foreground text-center"
+        >
+          {block.completionMessage}
+        </motion.p>
+      )}
+      {isComplete && block.autoAdvance && (
+        <p className="text-sm text-muted-foreground text-center">✅ Concluído</p>
       )}
     </div>
   );
@@ -263,11 +279,17 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
   );
 
   return (
-    <div className="flex gap-2 justify-center items-start flex-wrap">
-      {block.showDays && <><TimeUnit value={days} label="dias" /><CountdownSeparator /></>}
-      {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <CountdownSeparator />}</>}
-      {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <CountdownSeparator />}</>}
-      {block.showSeconds && <TimeUnit value={seconds} label="seg" />}
+    <div className="space-y-3">
+      {/* ✅ Texto durante contagem ativa */}
+      {timeLeft > 0 && (block as any).activeMessage && (
+        <p className="text-center text-sm font-medium text-foreground">{(block as any).activeMessage}</p>
+      )}
+      <div className="flex gap-2 justify-center items-start flex-wrap">
+        {block.showDays && <><TimeUnit value={days} label="dias" /><CountdownSeparator /></>}
+        {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <CountdownSeparator />}</>}
+        {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <CountdownSeparator />}</>}
+        {block.showSeconds && <TimeUnit value={seconds} label="seg" />}
+      </div>
     </div>
   );
 };

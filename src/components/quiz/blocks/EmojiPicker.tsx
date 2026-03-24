@@ -21,6 +21,8 @@ const CATEGORY_LABELS: Record<EmojiCategoryKey, string> = {
   education: '📚',
   food: '🍕',
   nature: '🌿',
+  gestures: '👋',
+  sports: '⚽',
   symbols: '🔢',
 };
 
@@ -33,6 +35,8 @@ const CATEGORY_NAMES: Record<EmojiCategoryKey, string> = {
   education: 'Educação',
   food: 'Comida',
   nature: 'Natureza',
+  gestures: 'Gestos',
+  sports: 'Esportes',
   symbols: 'Símbolos',
 };
 
@@ -128,6 +132,79 @@ const EMOJI_SEARCH_TAGS: Record<string, string[]> = {
   '➡️': ['direita', 'right', 'seta', 'arrow', 'proximo', 'next'],
   '⬅️': ['esquerda', 'left', 'seta', 'arrow', 'voltar', 'back'],
   '🔄': ['atualizar', 'refresh', 'reload', 'loop', 'repetir', 'repeat'],
+  // New emojis
+  '✨': ['brilho', 'sparkle', 'magia', 'magic', 'novo', 'new'],
+  '🏅': ['medalha', 'medal', 'premio', 'prize', 'conquista'],
+  '💯': ['cem', 'hundred', 'perfeito', 'perfect', 'nota'],
+  '🙏': ['obrigado', 'thanks', 'orar', 'pray', 'gratidao'],
+  '🤝': ['acordo', 'deal', 'parceria', 'partnership', 'handshake'],
+  '🥺': ['triste', 'sad', 'please', 'por favor', 'suplica'],
+  '😤': ['raiva', 'angry', 'frustrado', 'frustrated', 'determinado'],
+  '🤗': ['abraco', 'hug', 'acolher', 'welcome', 'carinho'],
+  '😱': ['choque', 'shock', 'medo', 'fear', 'surpresa', 'surprised'],
+  '🫡': ['respeito', 'respect', 'saudar', 'salute', 'militar'],
+  '🏢': ['empresa', 'company', 'escritorio', 'office', 'corporativo'],
+  '📋': ['lista', 'clipboard', 'checklist', 'formulario', 'form'],
+  '🗂️': ['pasta', 'folder', 'arquivo', 'file', 'organizar'],
+  '📌': ['fixar', 'pin', 'importante', 'important', 'marcar'],
+  '🔑': ['chave', 'key', 'acesso', 'access', 'seguranca', 'security'],
+  '🛍️': ['compras', 'shopping', 'loja', 'store', 'sacola'],
+  '💅': ['beleza', 'beauty', 'unha', 'nail', 'estilo', 'style'],
+  '🎵': ['musica', 'music', 'som', 'sound', 'nota musical'],
+  '🎬': ['filme', 'movie', 'cinema', 'video', 'acao', 'action'],
+  '📸': ['foto', 'photo', 'camera', 'selfie', 'fotografia'],
+  '🏋️': ['academia', 'gym', 'peso', 'weight', 'treino', 'workout'],
+  '🩹': ['curativo', 'bandaid', 'curar', 'heal', 'primeiros socorros'],
+  '🫀': ['coracao', 'heart', 'orgao', 'cardio', 'saude'],
+  '🦷': ['dente', 'tooth', 'dentista', 'dental', 'sorriso'],
+  '👁️': ['olho', 'eye', 'visao', 'vision', 'ver', 'see'],
+  '🗺️': ['mapa', 'map', 'mundo', 'world', 'viagem', 'travel'],
+  '📐': ['regua', 'ruler', 'medida', 'measure', 'angulo', 'angle'],
+  '🧮': ['abaco', 'abacus', 'calcular', 'calculate', 'matematica'],
+  '🏫': ['escola', 'school', 'aula', 'class', 'ensino'],
+  '📏': ['regua', 'ruler', 'medida', 'measure', 'tamanho', 'size'],
+  '🍣': ['sushi', 'japones', 'japanese', 'peixe', 'fish'],
+  '🥐': ['croissant', 'padaria', 'bakery', 'frances', 'french'],
+  '🍜': ['ramen', 'sopa', 'soup', 'noodle', 'asiatico', 'asian'],
+  '🧁': ['cupcake', 'doce', 'sweet', 'bolo', 'cake'],
+  '🫖': ['cha', 'tea', 'bule', 'teapot', 'quente', 'hot'],
+  '🐶': ['cachorro', 'dog', 'cao', 'pet', 'animal'],
+  '🐱': ['gato', 'cat', 'felino', 'pet', 'animal'],
+  '🦊': ['raposa', 'fox', 'animal', 'esperto', 'clever'],
+  '🐝': ['abelha', 'bee', 'mel', 'honey', 'inseto'],
+  '🌵': ['cacto', 'cactus', 'deserto', 'desert', 'planta'],
+  '👋': ['oi', 'hi', 'tchau', 'bye', 'acenar', 'wave'],
+  '🤙': ['telefone', 'call', 'surfe', 'surf', 'hang loose'],
+  '✌️': ['paz', 'peace', 'vitoria', 'victory', 'dois'],
+  '🤞': ['sorte', 'luck', 'dedos cruzados', 'fingers crossed', 'esperanca'],
+  '🫶': ['coracao', 'heart', 'maos', 'hands', 'amor', 'love'],
+  '👏': ['palmas', 'clap', 'aplaudir', 'applause', 'parabens'],
+  '🤲': ['maos abertas', 'open hands', 'receber', 'receive', 'orar'],
+  '🫵': ['voce', 'you', 'apontar', 'point', 'indicar'],
+  '☝️': ['cima', 'up', 'atencao', 'attention', 'um'],
+  '✋': ['pare', 'stop', 'mao', 'hand', 'alto'],
+  '🖐️': ['cinco', 'five', 'mao aberta', 'open hand', 'ola'],
+  '🤘': ['rock', 'metal', 'legal', 'cool', 'musica'],
+  '🫰': ['dinheiro', 'money', 'snap', 'estalar', 'gesto'],
+  '👌': ['ok', 'perfeito', 'perfect', 'bom', 'good'],
+  '⚽': ['futebol', 'soccer', 'bola', 'ball', 'esporte', 'sport'],
+  '🏀': ['basquete', 'basketball', 'bola', 'ball', 'esporte'],
+  '🎾': ['tenis', 'tennis', 'bola', 'ball', 'raquete'],
+  '🏐': ['volei', 'volleyball', 'bola', 'ball', 'praia'],
+  '🏈': ['futebol americano', 'football', 'nfl', 'esporte'],
+  '🏊': ['natacao', 'swimming', 'piscina', 'pool', 'agua'],
+  '🚴': ['ciclismo', 'cycling', 'bicicleta', 'bike', 'pedalar'],
+  '🥊': ['boxe', 'boxing', 'luta', 'fight', 'soco'],
+  '🎳': ['boliche', 'bowling', 'pino', 'pin', 'jogo'],
+  '⛷️': ['esqui', 'ski', 'neve', 'snow', 'inverno', 'winter'],
+  '🏄': ['surfe', 'surf', 'onda', 'wave', 'praia', 'beach'],
+  '🤸': ['ginastica', 'gymnastics', 'acrobacia', 'flip', 'exercicio'],
+  '🧗': ['escalada', 'climbing', 'montanha', 'mountain', 'aventura'],
+  '⬆️': ['cima', 'up', 'subir', 'ascend', 'seta'],
+  '⬇️': ['baixo', 'down', 'descer', 'descend', 'seta'],
+  '🔗': ['link', 'conexao', 'connection', 'corrente', 'chain'],
+  '⚡': ['raio', 'lightning', 'energia', 'energy', 'rapido', 'fast'],
+  '♻️': ['reciclar', 'recycle', 'verde', 'green', 'sustentavel'],
 };
 
 // Detect if a string contains an emoji character
@@ -230,7 +307,7 @@ export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
           <ScrollArea className="h-48">
             <div className="p-2">
               {filteredEmojis.length > 0 ? (
-                <div className="grid grid-cols-5 gap-1">
+                <div className="grid grid-cols-6 gap-1">
                   {filteredEmojis.map((emoji, idx) => (
                     <Button
                       key={idx}
@@ -253,7 +330,7 @@ export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
         ) : (
           // Show categories
           <Tabs defaultValue="popular" className="w-full">
-            <TabsList className="w-full grid grid-cols-9 h-10">
+            <TabsList className="w-full grid grid-cols-11 h-10">
               {(Object.keys(EMOJI_CATEGORIES) as EmojiCategoryKey[]).map((category) => (
                 <TabsTrigger
                   key={category}
@@ -269,7 +346,7 @@ export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
             <ScrollArea className="h-48">
               {(Object.keys(EMOJI_CATEGORIES) as EmojiCategoryKey[]).map((category) => (
                 <TabsContent key={category} value={category} className="p-2 m-0">
-                  <div className="grid grid-cols-5 gap-1">
+                  <div className="grid grid-cols-6 gap-1">
                     {EMOJI_CATEGORIES[category].map((emoji, idx) => (
                       <Button
                         key={idx}
