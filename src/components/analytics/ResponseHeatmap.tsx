@@ -324,6 +324,20 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
     return responses[0];
   };
 
+  // Verificar permissão do plano (after all hooks)
+  if (!allowHeatmap && !planLoading) {
+    return (
+      <PlanFeatureGate
+        featureName="Heatmap de Respostas"
+        featureDescription="Visualize quais opções são mais escolhidas em cada pergunta com um mapa de calor intuitivo. Identifique padrões e otimize suas perguntas."
+        isAllowed={false}
+        isLoading={planLoading}
+      >
+        <></>
+      </PlanFeatureGate>
+    );
+  }
+
   if (loading) {
     return (
       <Card>
