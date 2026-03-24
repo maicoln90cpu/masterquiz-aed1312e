@@ -399,44 +399,6 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-
-      {(block as any).imageUrl && (
-        <>
-          <PropertySection title="Posição da Imagem" tooltip="Define se a imagem aparece acima ou abaixo do texto">
-            <Select value={(block as any).imagePosition || 'above'} onValueChange={(v) => onChange(update(block, { imagePosition: v }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="above">⬆ Acima do texto</SelectItem>
-                <SelectItem value="below">⬇ Abaixo do texto</SelectItem>
-              </SelectContent>
-            </Select>
-          </PropertySection>
-
-          <PropertySection title="Alinhamento da Imagem" tooltip="Alinhamento horizontal da imagem dentro do bloco">
-            <Select value={(block as any).imageAlignment || 'center'} onValueChange={(v) => onChange(update(block, { imageAlignment: v }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="left">⬅ Esquerda</SelectItem>
-                <SelectItem value="center">↔ Centro</SelectItem>
-                <SelectItem value="right">➡ Direita</SelectItem>
-              </SelectContent>
-            </Select>
-          </PropertySection>
-
-          <PropertySection title="Tamanho da Imagem" tooltip="Largura máxima da imagem no bloco">
-            <Select value={(block as any).imageSize || 'medium'} onValueChange={(v) => onChange(update(block, { imageSize: v }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="tiny">Mini</SelectItem>
-                <SelectItem value="small">Pequeno</SelectItem>
-                <SelectItem value="medium">Médio</SelectItem>
-                <SelectItem value="large">Grande</SelectItem>
-                <SelectItem value="full">Largura total</SelectItem>
-              </SelectContent>
-            </Select>
-          </PropertySection>
-        </>
-      )}
     </div>
   );
 };
