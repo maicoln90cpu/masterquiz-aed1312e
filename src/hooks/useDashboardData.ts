@@ -149,7 +149,8 @@ export const useChartData = () => {
           .reduce((sum, a) => sum + (a.completions || 0), 0) || 0
       }));
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes cache for analytics
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
     retry: 1,
     meta: {
       errorMessage: t('dashboard.errorLoading')
