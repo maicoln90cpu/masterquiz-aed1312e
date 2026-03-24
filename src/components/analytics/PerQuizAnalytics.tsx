@@ -214,6 +214,20 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  // Verificar permissão do plano (after all hooks)
+  if (!allowAdvancedAnalytics && !planLoading) {
+    return (
+      <PlanFeatureGate
+        featureName="Analytics Avançado por Quiz"
+        featureDescription="Visualize métricas detalhadas de cada quiz: funil de conversão, evolução temporal, tempo médio e respostas recentes. Tome decisões baseadas em dados."
+        isAllowed={false}
+        isLoading={planLoading}
+      >
+        <></>
+      </PlanFeatureGate>
+    );
+  }
+
   if (quizzes.length === 0) {
     return (
       <Card>
