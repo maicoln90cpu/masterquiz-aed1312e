@@ -18,6 +18,7 @@ import { CRMEmptyState } from '@/components/crm/CRMEmptyState';
 import { MobileNav } from "@/components/MobileNav";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { CRMSkeleton } from "@/components/ui/crm-skeleton";
 import { CRMTour } from "@/components/onboarding/CRMTour";
