@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
+import { useCurrentUser } from "./useCurrentUser";
 import type { SubscriptionPlan } from "@/types";
 
 /** Features available based on subscription plan */
