@@ -699,13 +699,11 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
 
 const LoadingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'loading') return null;
+  const messages = block.loadingMessages || [];
   return (
     <div className="space-y-4">
       <PropertySection title="Duração (segundos)" tooltip="Tempo em segundos da animação ou exibição">
         <Input type="number" value={block.duration} min={1} max={30} onChange={(e) => onChange(update(block, { duration: Number(e.target.value) }))} />
-      </PropertySection>
-      <PropertySection title="Mensagem" tooltip="Texto exibido para o usuário durante a ação">
-        <Input value={block.message || ''} onChange={(e) => onChange(update(block, { message: e.target.value }))} />
       </PropertySection>
       <PropertySection title="Tipo de Spinner" tooltip="Estilo visual da animação de carregamento">
         <Select value={block.spinnerType || 'spinner'} onValueChange={(v) => onChange(update(block, { spinnerType: v }))}>
@@ -720,13 +718,69 @@ const LoadingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       </PropertySection>
       <SwitchRow label="Avançar automaticamente" tooltip="Avança para a próxima etapa após o tempo definido" checked={block.autoAdvance || false} onChange={(v) => onChange(update(block, { autoAdvance: v }))} />
       <SwitchRow label="Mostrar barra de progresso" tooltip="Exibe uma barra visual de progresso durante o carregamento" checked={block.showProgress || false} onChange={(v) => onChange(update(block, { showProgress: v }))} />
-      {/* ✅ Etapa 2E: Cor da barra + mensagens rotativas */}
       {block.showProgress && (
         <PropertySection title="Cor da barra" tooltip="Cor da barra de progresso durante o carregamento">
           <Input type="color" value={block.progressColor || '#3b82f6'} onChange={(e) => onChange(update(block, { progressColor: e.target.value }))} />
         </PropertySection>
       )}
       <SwitchRow label="Mensagens rotativas (fade)" tooltip="Alterna entre diferentes mensagens com efeito fade durante o loading" checked={block.rotateMessages || false} onChange={(v) => onChange(update(block, { rotateMessages: v }))} />
+
+      <Separator />
+      {/* Lista dinâmica de mensagens */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-medium text-muted-foreground">Mensagens durante loading</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs"
+            onClick={() => onChange(update(block, { loadingMessages: [...messages, ''] }))}
+          >
+            <span className="mr-1">+</span> Adicionar
+          </Button>
+        </div>
+        {messages.length === 0 && (
+          <p className="text-[10px] text-muted-foreground">Nenhuma mensagem. Adicione mensagens para exibir durante o loading.</p>
+        )}
+        {messages.map((msg, idx) => (
+          <div key={idx} className="flex gap-2 items-center">
+            <Input
+              className="h-8 text-xs"
+              placeholder={`Mensagem ${idx + 1}`}
+              value={msg}
+              onChange={(e) => {
+                const newMsgs = [...messages];
+                newMsgs[idx] = e.target.value;
+                onChange(update(block, { loadingMessages: newMsgs }));
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              onClick={() => onChange(update(block, { loadingMessages: messages.filter((_, i) => i !== idx) }))}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Mensagem após conclusão (quando autoAdvance desabilitado) */}
+      {!block.autoAdvance && (
+        <>
+          <Separator />
+          <PropertySection title="Mensagem após conclusão" tooltip="Texto exibido quando o loading termina e o botão Próxima aparece">
+            <Input
+              value={block.completionMessage || ''}
+              placeholder="Tudo pronto! Clique em próxima para continuar."
+              onChange={(e) => onChange(update(block, { completionMessage: e.target.value }))}
+            />
+          </PropertySection>
+        </>
+      )}
     </div>
   );
 };
