@@ -27,6 +27,11 @@ interface CtaClickSummary {
   clicks: number;
 }
 
+interface CtaClickData {
+  cta_text: string | null;
+  cta_url: string;
+}
+
 interface ResponsesSpreadsheetProps {
   quizId: string;
 }
