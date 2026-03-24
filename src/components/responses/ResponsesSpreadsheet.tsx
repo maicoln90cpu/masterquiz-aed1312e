@@ -140,15 +140,39 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
 
       setStepRetention(retention);
 
-      // 4. Buscar respostas com paginação
+      // 4. Buscar respostas com paginação (select específico)
       const { data: responsesData, count } = await supabase
         .from('quiz_responses')
-        .select('*', { count: 'exact' })
+        .select('id, completed_at, respondent_name, respondent_email, answers, session_id', { count: 'exact' })
         .eq('quiz_id', quizId)
         .order('completed_at', { ascending: false })
         .range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1);
 
       setResponses(responsesData || []);
+      setTotalCount(count || 0);
+
+      // 4b. Buscar CTAs clicados por session_id para mapear nas respostas
+      const sessionIds = (responsesData || [])
+        .map(r => r.session_id)
+        .filter(Boolean) as string[];
+      
+      if (sessionIds.length > 0) {
+        const { data: ctaClicks } = await supabase
+          .from('quiz_cta_click_analytics')
+          .select('session_id, cta_text, cta_url')
+          .eq('quiz_id', quizId)
+          .in('session_id', sessionIds);
+        
+        const ctaMap: Record<string, CtaClickData> = {};
+        ctaClicks?.forEach(click => {
+          if (!ctaMap[click.session_id]) {
+            ctaMap[click.session_id] = { cta_text: click.cta_text, cta_url: click.cta_url };
+          }
+        });
+        setResponseCtaMap(ctaMap);
+      } else {
+        setResponseCtaMap({});
+      }
       setTotalCount(count || 0);
 
       // 5. Calcular métricas gerais
