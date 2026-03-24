@@ -17,12 +17,12 @@ interface UseFunnelDataOptions {
 
 export function useFunnelData(options: UseFunnelDataOptions = {}) {
   const { quizId, startDate, endDate } = options;
+  const { user } = useCurrentUser();
 
   return useQuery({
-    queryKey: ['funnel-data', quizId, startDate, endDate],
+    queryKey: ['funnel-data', quizId, startDate, endDate, user?.id],
     queryFn: async (): Promise<FunnelStep[]> => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
         // Primeiro buscar os quiz_ids do usuário
