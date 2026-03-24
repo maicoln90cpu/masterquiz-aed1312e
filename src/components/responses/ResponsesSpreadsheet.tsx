@@ -374,6 +374,13 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
                       <TableCell className="text-sm">
                         {response.respondent_email || '-'}
                       </TableCell>
+                      <TableCell className="text-sm">
+                        {response.session_id && responseCtaMap[response.session_id] ? (
+                          <Badge variant="secondary" className="text-xs" title={responseCtaMap[response.session_id].cta_url}>
+                            {responseCtaMap[response.session_id].cta_text || 'CTA'}
+                          </Badge>
+                        ) : '-'}
+                      </TableCell>
                       {questions.map(q => (
                         <TableCell 
                           key={q.id} 
