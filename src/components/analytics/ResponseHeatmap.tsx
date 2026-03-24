@@ -69,20 +69,6 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
   const [totalRespondents, setTotalRespondents] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Verificar permissão do plano
-  if (!allowHeatmap && !planLoading) {
-    return (
-      <PlanFeatureGate
-        featureName="Heatmap de Respostas"
-        featureDescription="Visualize quais opções são mais escolhidas em cada pergunta com um mapa de calor intuitivo. Identifique padrões e otimize suas perguntas."
-        isAllowed={false}
-        isLoading={planLoading}
-      >
-        <></>
-      </PlanFeatureGate>
-    );
-  }
-
   // Calcular paginação
   const totalPages = Math.ceil(heatmapData.length / QUESTIONS_PER_PAGE);
   const paginatedData = useMemo(() => {
