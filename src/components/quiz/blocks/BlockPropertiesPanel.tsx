@@ -855,6 +855,9 @@ const CountdownProperties = ({ block, onChange }: BlockPropertiesPanelProps) => 
           </SelectContent>
         </Select>
       </PropertySection>
+      <PropertySection title="Texto durante contagem" tooltip="Texto exibido acima do timer enquanto a contagem está ativa">
+        <Input value={(block as any).activeMessage || ''} placeholder="Condição especial por tempo limitado!" onChange={(e) => onChange(update(block, { activeMessage: e.target.value }))} />
+      </PropertySection>
       <PropertySection title="Mensagem ao expirar" tooltip="Texto exibido quando o tempo chega a zero">
         <Input value={block.expiryMessage || ''} onChange={(e) => onChange(update(block, { expiryMessage: e.target.value }))} />
       </PropertySection>
