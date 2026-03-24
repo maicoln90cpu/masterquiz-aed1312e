@@ -235,6 +235,9 @@ export function QuizViewQuestion({
                 textInputValues={textInputValues}
                 onTextInputChange={handleTextInputChange}
                 onCtaClick={onCtaClick}
+                globalTextAlign={(quiz as any).global_text_align || undefined}
+                globalFontSize={(quiz as any).global_font_size || undefined}
+                globalFontFamily={(quiz as any).global_font_family || undefined}
               />
             );
           })}

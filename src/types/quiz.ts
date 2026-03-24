@@ -43,6 +43,9 @@ export interface Quiz {
   show_question_number: boolean | null;
   created_at: string;
   updated_at: string;
+  global_text_align?: string | null;
+  global_font_size?: string | null;
+  global_font_family?: string | null;
 }
 
 export interface QuizWithRelations extends Quiz {
