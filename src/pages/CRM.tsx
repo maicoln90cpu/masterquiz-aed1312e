@@ -223,9 +223,6 @@ const CRM = () => {
     setCurrentPage(1);
   }, [filterQuiz, filterStatus]);
 
-  const getLeadsByStatus = (status: LeadStatus) => {
-    return paginatedLeads.filter(lead => lead.status === status);
-  };
 
   const getStats = () => {
     const total = leads.length;
