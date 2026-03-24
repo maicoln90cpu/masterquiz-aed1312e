@@ -69,7 +69,6 @@ const Analytics = () => {
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Load user quizzes for comparison selector
