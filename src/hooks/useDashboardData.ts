@@ -62,7 +62,8 @@ export const useDashboardStats = () => {
         activeQuizzes
       };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
     retry: 2,
     meta: {
       errorMessage: t('dashboard.errorLoading')
