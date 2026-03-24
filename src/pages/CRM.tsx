@@ -105,7 +105,6 @@ const CRM = () => {
   const loadLeads = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Buscar quizzes do usuário
