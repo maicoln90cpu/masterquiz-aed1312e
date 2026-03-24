@@ -425,7 +425,14 @@ export const AppearanceConfigStep = ({
             <CardDescription>{t('createQuiz.appearance.previewDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}>
+            <div 
+              className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}
+              style={{
+                textAlign: globalTextAlign || undefined,
+                fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : undefined,
+                fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : undefined,
+              }}
+            >
               {/* Header com Logo */}
               <Card className="border-2">
                 <CardContent className="p-4 space-y-3">
