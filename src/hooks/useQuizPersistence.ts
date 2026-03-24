@@ -321,6 +321,9 @@ export function useQuizPersistence({
             show_question_number: showQuestionNumber,
             show_results: appearanceState.showResults,
             progress_style: appearanceState.progressStyle || 'counter',
+            global_text_align: appearanceState.globalTextAlign || 'left',
+            global_font_size: appearanceState.globalFontSize || 'medium',
+            global_font_family: appearanceState.globalFontFamily || 'sans',
             question_count: questionCount,
             is_public: true,
             status: 'active'
