@@ -131,7 +131,6 @@ const Dashboard = () => {
   }
 
   const handleCloseOnboarding = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
     }

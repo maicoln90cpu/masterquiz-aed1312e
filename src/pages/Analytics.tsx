@@ -5,6 +5,7 @@ import { ArrowLeft, Download, TrendingUp, Users, Calendar, Eye, Loader2, FileTex
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

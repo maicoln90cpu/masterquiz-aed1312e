@@ -80,7 +80,6 @@ const Responses = () => {
   const loadResponses = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       let query = supabase
