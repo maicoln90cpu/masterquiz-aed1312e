@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlanFeatures } from "./usePlanFeatures";
+import { useCurrentUser } from "./useCurrentUser";
 
 export const useVideoStorage = () => {
   const { allowVideoUpload, videoStorageLimitMb, isMasterAdmin, isLoading: planLoading } = usePlanFeatures();
