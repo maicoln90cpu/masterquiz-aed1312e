@@ -746,7 +746,7 @@ const CreateQuizModern = () => {
 
             {/* COL 1: Question List */}
             {!isExpressMode && (
-              <div className="w-56 shrink-0 hidden lg:flex flex-col border-r bg-card">
+              <div className="w-56 shrink-0 hidden lg:flex flex-col border-r bg-card overflow-y-auto">
                 <QuestionsList
                   questions={questions}
                   currentStep={step}
@@ -764,7 +764,7 @@ const CreateQuizModern = () => {
 
             {/* COL 2: Block Palette */}
             {!isExpressMode && (
-              <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto">
+              <div className="w-56 shrink-0 hidden lg:flex flex-col overflow-y-auto border-r">
               <ModernBlockPalette onAddBlock={handlePaletteAddBlock} />
               </div>
             )}
