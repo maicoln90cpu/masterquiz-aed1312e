@@ -354,35 +354,6 @@ const CRM = () => {
     return leads.filter(l => selectedLeadsForComparison.includes(l.id));
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    setActiveId(active.id as string);
-    const lead = leads.find(l => l.id === active.id);
-    if (lead) {
-      setDraggedLead(lead);
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (!over) {
-      setActiveId(null);
-      setDraggedLead(null);
-      return;
-    }
-
-    const leadId = active.id as string;
-    const newStatus = over.id as LeadStatus;
-    
-    const lead = leads.find(l => l.id === leadId);
-    if (lead && lead.status !== newStatus) {
-      moveLeadToStatus(leadId, newStatus);
-    }
-    
-    setActiveId(null);
-    setDraggedLead(null);
-  };
 
   const stats = getStats();
   const { status: onboardingStatus } = useOnboarding();
