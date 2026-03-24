@@ -380,8 +380,8 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
               </Tooltip>
             </div>
             
-            {/* Only show internal quiz selector when no external quizId is provided */}
-            {!externalQuizId && (
+            {/* Only show internal quiz selector when no external quizId AND no quizId prop */}
+            {!externalQuizId && quizzes.length > 0 && (
               <Select value={selectedQuiz} onValueChange={setSelectedQuiz}>
                 <SelectTrigger className="w-[250px]">
                   <SelectValue placeholder="Selecione um quiz" />
