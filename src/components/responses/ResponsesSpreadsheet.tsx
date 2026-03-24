@@ -333,6 +333,9 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
                   <TableHead className="min-w-[180px]">
                     {t('responses.email', 'Email')}
                   </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    {t('responses.spreadsheet.ctaClicked', 'CTA Clicado')}
+                  </TableHead>
                   {questions.map((q, idx) => (
                     <TableHead 
                       key={q.id} 
