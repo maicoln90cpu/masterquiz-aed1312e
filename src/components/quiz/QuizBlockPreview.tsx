@@ -54,6 +54,10 @@ interface QuizBlockPreviewProps {
   questions?: QuizQuestion[];
   currentStep?: number;
   totalQuestions?: number;
+  // Global formatting
+  globalTextAlign?: 'left' | 'center' | 'right';
+  globalFontSize?: 'small' | 'medium' | 'large';
+  globalFontFamily?: 'sans' | 'serif' | 'mono';
 }
 
 export const QuizBlockPreview = ({
