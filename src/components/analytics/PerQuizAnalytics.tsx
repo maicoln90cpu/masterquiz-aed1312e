@@ -48,20 +48,6 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
   const { allowAdvancedAnalytics, isLoading: planLoading } = usePlanFeatures();
   const [selectedQuizId, setSelectedQuizId] = useState<string>(quizzes[0]?.id || "");
 
-  // Verificar permissão do plano
-  if (!allowAdvancedAnalytics && !planLoading) {
-    return (
-      <PlanFeatureGate
-        featureName="Analytics Avançado por Quiz"
-        featureDescription="Visualize métricas detalhadas de cada quiz: funil de conversão, evolução temporal, tempo médio e respostas recentes. Tome decisões baseadas em dados."
-        isAllowed={false}
-        isLoading={planLoading}
-      >
-        <></>
-      </PlanFeatureGate>
-    );
-  }
-
   // Calculate filter dates
   const filterDates = useMemo(() => {
     let start: Date;
