@@ -51,7 +51,8 @@ export const useSubscriptionLimits = () => {
       
       return data as UserSubscription;
     },
-    enabled: !roleLoading
+    enabled: !roleLoading && !!user
+  });
   });
 
   // Master admin sempre retorna true para todas as verificações de limite
