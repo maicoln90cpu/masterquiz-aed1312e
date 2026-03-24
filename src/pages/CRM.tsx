@@ -511,156 +511,18 @@ const CRM = () => {
         {loading ? (
           <CRMSkeleton />
         ) : leads.length === 0 ? (
-          /* Estado vazio com botão de gerar lead de teste */
           <CRMEmptyState quizzes={quizzes} />
         ) : (
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            {/* FASE 1.1 & FASE 3.1: Mobile Version with Tabs - One column at a time */}
-            <div className="md:hidden">
-              <Tabs defaultValue="new" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="new" className="text-xs">
-                    {t('crm.columns.new')} ({getLeadsByStatus('new').length})
-                  </TabsTrigger>
-                  <TabsTrigger value="checkout" className="text-xs">
-                    {t('crm.columns.checkout')} ({getLeadsByStatus('checkout').length})
-                  </TabsTrigger>
-                  <TabsTrigger value="negotiation" className="text-xs">
-                    {t('crm.columns.negotiation')} ({getLeadsByStatus('negotiation').length})
-                  </TabsTrigger>
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="converted" className="text-xs">
-                    {t('crm.columns.converted')} ({getLeadsByStatus('converted').length})
-                  </TabsTrigger>
-                  <TabsTrigger value="relationship" className="text-xs">
-                    {t('crm.columns.relationship')} ({getLeadsByStatus('relationship').length})
-                  </TabsTrigger>
-                  <TabsTrigger value="lost" className="text-xs">
-                    {t('crm.columns.lost')} ({getLeadsByStatus('lost').length})
-                  </TabsTrigger>
-                </TabsList>
-                
-                {columns.map((column) => {
-                  const columnLeads = getLeadsByStatus(column.id);
-                  return (
-                    <TabsContent key={column.id} value={column.id} className="mt-0">
-                      <DroppableColumn id={column.id}>
-                        <Card 
-                          className={`border-t-4 ${column.borderColor} w-full`} 
-                          style={{ borderTopColor: column.color }}
-                        >
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-base font-medium flex items-center justify-between">
-                              <span>{column.title}</span>
-                              <Badge variant="secondary" style={{ backgroundColor: column.color, color: 'white' }}>
-                                {columnLeads.length}
-                              </Badge>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin">
-                            {columnLeads.length === 0 ? (
-                              <div className="text-center py-8 text-muted-foreground text-sm">
-                                {t('crm.noLeads')}
-                              </div>
-                            ) : (
-                              columnLeads.map(lead => (
-                                <div key={lead.id} className="relative">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedLeadsForComparison.includes(lead.id)}
-                                    onChange={() => toggleLeadSelection(lead.id)}
-                                    className="absolute top-2 right-2 z-10 h-5 w-5 rounded border-gray-300 cursor-pointer"
-                                  />
-                                  <DraggableLeadCard
-                                    id={lead.id}
-                                    name={lead.respondent_name}
-                                    email={lead.respondent_email}
-                                    whatsapp={lead.respondent_whatsapp}
-                                    quizTitle={lead.quiz_title}
-                                    bgColor={column.bgColor}
-                                    onClick={() => setSelectedLead(lead)}
-                                    isTestLead={lead.answers?._is_test_lead === true}
-                                  />
-                                </div>
-                              ))
-                            )}
-                          </CardContent>
-                        </Card>
-                      </DroppableColumn>
-                    </TabsContent>
-                  );
-                })}
-              </Tabs>
-            </div>
-
-            {/* Desktop Version - Kanban Board with horizontal scroll for many columns */}
-            <div id="crm-kanban" className="hidden md:block overflow-x-auto pb-4">
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 min-w-[800px]">
-              {columns.map((column) => {
-                const columnLeads = getLeadsByStatus(column.id);
-                return (
-                  <DroppableColumn key={column.id} id={column.id}>
-                    <Card 
-                      className={`border-t-4 ${column.borderColor} w-full h-full`} 
-                      style={{ borderTopColor: column.color }}
-                    >
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium flex items-center justify-between">
-                          <span className="truncate">{column.title}</span>
-                          <Badge variant="secondary" style={{ backgroundColor: column.color, color: 'white' }}>
-                            {columnLeads.length}
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin">
-                        {columnLeads.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground text-sm">
-                          {t('crm.noLeads')}
-                        </div>
-                        ) : (
-                          columnLeads.map(lead => (
-                            <div key={lead.id} className="relative">
-                              <input
-                                type="checkbox"
-                                checked={selectedLeadsForComparison.includes(lead.id)}
-                                onChange={() => toggleLeadSelection(lead.id)}
-                                className="absolute top-2 right-2 z-10 h-4 w-4 rounded border-gray-300 cursor-pointer"
-                              />
-                              <DraggableLeadCard
-                                id={lead.id}
-                                name={lead.respondent_name}
-                                email={lead.respondent_email}
-                                whatsapp={lead.respondent_whatsapp}
-                                quizTitle={lead.quiz_title}
-                                bgColor={column.bgColor}
-                                onClick={() => setSelectedLead(lead)}
-                                isTestLead={lead.answers?._is_test_lead === true}
-                              />
-                            </div>
-                          ))
-                        )}
-                      </CardContent>
-                    </Card>
-                  </DroppableColumn>
-                );
-              })}
-              </div>
-            </div>
-            
-            <DragOverlay>
-              {activeId && draggedLead ? (
-                <Card className="p-3 opacity-90 rotate-2 shadow-xl">
-                  <p className="font-medium text-sm">{draggedLead.respondent_name}</p>
-                  <p className="text-xs text-muted-foreground">{draggedLead.quiz_title}</p>
-                </Card>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+            <CRMKanbanBoard
+              leads={paginatedLeads}
+              columns={columns}
+              onLeadClick={setSelectedLead}
+              onMoveLeadToStatus={moveLeadToStatus}
+              selectedLeadsForComparison={selectedLeadsForComparison}
+              onToggleLeadSelection={toggleLeadSelection}
+            />
+          </Suspense>
         )}
 
         {/* Paginação */}
