@@ -63,6 +63,7 @@ const CRM = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { checkLeadLimit } = useSubscriptionLimits();
+  const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
