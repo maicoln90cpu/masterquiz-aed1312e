@@ -31,6 +31,7 @@ export const useTagsData = () => {
       return data || [];
     },
     enabled: !!user,
+    staleTime: 10 * 60 * 1000,
     retry: 2,
     meta: {
       errorMessage: 'Erro ao carregar tags'
