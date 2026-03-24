@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "./useCurrentUser";
 
 interface FunnelStep {
   stepNumber: number;
@@ -16,12 +17,12 @@ interface UseFunnelDataOptions {
 
 export function useFunnelData(options: UseFunnelDataOptions = {}) {
   const { quizId, startDate, endDate } = options;
+  const { user } = useCurrentUser();
 
   return useQuery({
-    queryKey: ['funnel-data', quizId, startDate, endDate],
+    queryKey: ['funnel-data', quizId, startDate, endDate, user?.id],
     queryFn: async (): Promise<FunnelStep[]> => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
         // Primeiro buscar os quiz_ids do usuário
@@ -131,7 +132,7 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
         return [];
       }
     },
-    enabled: true,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
   });
 }

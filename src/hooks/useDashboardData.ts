@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { handleError, showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { useTranslation } from 'react-i18next';
+import { useCurrentUser } from './useCurrentUser';
 import type { Quiz, QuizTag } from '@/types';
 
 interface DashboardStats {
@@ -30,11 +31,11 @@ export interface QuizWithTags extends Quiz {
  */
 export const useDashboardStats = () => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
 
   return useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data: quizzes, error: quizzesError } = await supabase
@@ -61,7 +62,8 @@ export const useDashboardStats = () => {
         activeQuizzes
       };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
     retry: 2,
     meta: {
       errorMessage: t('dashboard.errorLoading')
@@ -74,11 +76,11 @@ export const useDashboardStats = () => {
  */
 export const useRecentQuizzes = () => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
 
   return useQuery<QuizWithTags[]>({
-    queryKey: ['recent-quizzes'],
+    queryKey: ['recent-quizzes', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data: quizzes, error } = await supabase
@@ -101,6 +103,7 @@ export const useRecentQuizzes = () => {
         tags: quiz.quiz_tag_relations?.map((rel: QuizTagRelationData) => rel.quiz_tags).filter((t): t is QuizTag => t !== null) || []
       })) || [];
     },
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
     retry: 2,
     meta: {
@@ -114,11 +117,11 @@ export const useRecentQuizzes = () => {
  */
 export const useChartData = () => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
 
   return useQuery<ChartDataPoint[]>({
-    queryKey: ['chart-data'],
+    queryKey: ['chart-data', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data: quizzes } = await supabase
@@ -146,7 +149,8 @@ export const useChartData = () => {
           .reduce((sum, a) => sum + (a.completions || 0), 0) || 0
       }));
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes cache for analytics
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
     retry: 1,
     meta: {
       errorMessage: t('dashboard.errorLoading')
@@ -233,7 +237,7 @@ export const useDuplicateQuiz = () => {
 
   return useMutation({
     mutationFn: async ({ quizId, newName }: { quizId: string; newName: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser(); // mutation needs fresh auth
       if (!user) throw new Error('User not authenticated');
 
       // Get original quiz

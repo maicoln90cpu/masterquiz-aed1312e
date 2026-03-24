@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
+import { useCurrentUser } from './useCurrentUser';
 
 interface Tag {
   id: string;
@@ -13,11 +14,11 @@ interface Tag {
  */
 export const useTagsData = () => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
 
   return useQuery<Tag[]>({
-    queryKey: ['user-tags'],
+    queryKey: ['user-tags', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
@@ -29,7 +30,8 @@ export const useTagsData = () => {
       if (error) throw error;
       return data || [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
     retry: 2,
     meta: {
       errorMessage: 'Erro ao carregar tags'

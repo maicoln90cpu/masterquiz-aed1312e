@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
+import { useCurrentUser } from "./useCurrentUser";
 import type { UserSubscription, PlanType } from "@/types";
 
 /** Extended subscription for master admin simulation */
@@ -10,11 +11,11 @@ interface AdminSubscription extends UserSubscription {
 
 export const useSubscriptionLimits = () => {
   const { isMasterAdmin, loading: roleLoading } = useUserRole();
+  const { user } = useCurrentUser();
 
   const { data: subscription, isLoading } = useQuery<UserSubscription | AdminSubscription | null>({
-    queryKey: ['subscription', isMasterAdmin],
+    queryKey: ['subscription', isMasterAdmin, user?.id],
     queryFn: async (): Promise<UserSubscription | AdminSubscription | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       // Master admin: retorna subscription simulada com limites ilimitados
@@ -50,15 +51,13 @@ export const useSubscriptionLimits = () => {
       
       return data as UserSubscription;
     },
-    enabled: !roleLoading
+    enabled: !roleLoading && !!user
   });
 
   // Master admin sempre retorna true para todas as verificações de limite
   const checkQuizLimit = async () => {
     if (isMasterAdmin) return true;
     if (!subscription) return false;
-
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
     const { count } = await supabase
@@ -87,8 +86,6 @@ export const useSubscriptionLimits = () => {
     
     // ✅ Plano admin tem limite ilimitado
     if (subscription.plan_type === 'admin') return true;
-
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
     // Buscar lead_limit do plano (aceitar planos ativos OU admin)

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
+import { useCurrentUser } from "./useCurrentUser";
 import type { SubscriptionPlan } from "@/types";
 
 /** Features available based on subscription plan */
@@ -50,11 +51,11 @@ const MASTER_ADMIN_FEATURES: PlanFeatures = {
 
 export const usePlanFeatures = () => {
   const { isMasterAdmin, loading: roleLoading } = useUserRole();
+  const { user } = useCurrentUser();
 
   const { data: features, isLoading } = useQuery<PlanFeatures | null>({
-    queryKey: ['plan-features', isMasterAdmin],
+    queryKey: ['plan-features', isMasterAdmin, user?.id],
     queryFn: async (): Promise<PlanFeatures | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       // Master admin tem acesso a TODAS as features
@@ -106,7 +107,7 @@ export const usePlanFeatures = () => {
         allow_advanced_analytics: plan.allow_advanced_analytics ?? false,
       };
     },
-    enabled: !roleLoading
+    enabled: !roleLoading && !!user
   });
 
   return {

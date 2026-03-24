@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Loader2, Filter, X, FileSpreadsheet, Search, Plus, Calendar as CalendarIcon, List, LayoutGrid, ArrowUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { toast } from "sonner";
 import { PlanLimitWarning } from "@/components/PlanLimitWarning";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
@@ -46,6 +47,7 @@ const Responses = () => {
   const [activeTab, setActiveTab] = useState("heatmap");
   const ITEMS_PER_PAGE = 50; // ✅ Paginação: 50 itens por página
   const { subscription, responseLimit } = useSubscriptionLimits();
+  const { user } = useCurrentUser();
   
   // ✅ FASE 2 - ITEM 6: Estados para filtros de data
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -57,7 +59,6 @@ const Responses = () => {
   useEffect(() => {
     if (quizzesLoadedRef.current) return;
     const loadQuizzes = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: quizzesData } = await supabase
         .from('quizzes')
@@ -69,7 +70,7 @@ const Responses = () => {
       quizzesLoadedRef.current = true;
     };
     loadQuizzes();
-  }, []);
+  }, [user]);
 
   // ✅ Carregar responses separadamente (reage a filtros)
   useEffect(() => {
@@ -79,7 +80,6 @@ const Responses = () => {
   const loadResponses = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       let query = supabase

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
+import { useCurrentUser } from "./useCurrentUser";
 import type { PlanType } from "@/types";
 
 export interface ResourceLimit {
@@ -23,11 +24,11 @@ export interface ResourceLimits {
 
 export const useResourceLimits = () => {
   const { isMasterAdmin, loading: roleLoading } = useUserRole();
+  const { user } = useCurrentUser();
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['resource-limits', isMasterAdmin],
+    queryKey: ['resource-limits', isMasterAdmin, user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       // Se for master admin, retorna limites ilimitados
@@ -148,7 +149,7 @@ export const useResourceLimits = () => {
 
       return limits;
     },
-    enabled: !roleLoading,
+    enabled: !roleLoading && !!user,
     refetchInterval: 60000, // Atualizar a cada 1 minuto
   });
 

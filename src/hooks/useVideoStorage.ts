@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlanFeatures } from "./usePlanFeatures";
+import { useCurrentUser } from "./useCurrentUser";
 
 export const useVideoStorage = () => {
   const { allowVideoUpload, videoStorageLimitMb, isMasterAdmin, isLoading: planLoading } = usePlanFeatures();
+  const { user } = useCurrentUser();
 
   const { data: usage, isLoading: usageLoading, refetch } = useQuery({
-    queryKey: ['video-usage'],
+    queryKey: ['video-usage', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       const { data, error } = await supabase
@@ -28,7 +29,7 @@ export const useVideoStorage = () => {
         bunny_video_count: 0
       };
     },
-    enabled: allowVideoUpload || isMasterAdmin
+    enabled: (allowVideoUpload || isMasterAdmin) && !!user
   });
 
   // Use bunny_size_mb if available, otherwise fallback to total_size_mb

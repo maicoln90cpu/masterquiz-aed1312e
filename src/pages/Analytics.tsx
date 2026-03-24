@@ -5,6 +5,7 @@ import { ArrowLeft, Download, TrendingUp, Users, Calendar, Eye, Loader2, FileTex
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,7 @@ const Analytics = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { allowExportPDF } = usePlanFeatures();
+  const { user } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("7d");
   const [startDate, setStartDate] = useState("");
@@ -62,12 +64,11 @@ const Analytics = () => {
 
   useEffect(() => {
     loadAnalytics();
-  }, [period, startDate, endDate]);
+  }, [period, startDate, endDate, user]);
 
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Load user quizzes for comparison selector

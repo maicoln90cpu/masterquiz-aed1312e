@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
+import { useCurrentUser } from "./useCurrentUser";
 
 export const useAIGenerationLimits = () => {
   const { isMasterAdmin, loading: roleLoading } = useUserRole();
+  const { user } = useCurrentUser();
   
   const { data, isLoading } = useQuery({
-    queryKey: ['ai-generation-limits', isMasterAdmin],
+    queryKey: ['ai-generation-limits', isMasterAdmin, user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       // ✅ Master admin tem acesso ilimitado
@@ -82,7 +83,7 @@ export const useAIGenerationLimits = () => {
         isUnlimited: limit === 0,
       };
     },
-    enabled: !roleLoading,
+    enabled: !roleLoading && !!user,
   });
 
   return {

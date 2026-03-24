@@ -4,6 +4,7 @@ import { BarChart3, Plus, MessageSquare, Webhook, Settings, Loader2, HelpCircle,
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTranslation } from "react-i18next";
 import { useDashboardStats, useChartData } from "@/hooks/useDashboardData";
 import { showErrorToast } from "@/lib/errorHandler";
@@ -45,6 +46,7 @@ const Dashboard = () => {
   // Local state
   const [userName, setUserName] = useState('');
   const { isMasterAdmin } = useUserRole();
+  const { user } = useCurrentUser();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { quizLimit, responseLimit } = useSubscriptionLimits();
   const { shouldShowDashboardTour, updateOnboardingStep } = useOnboarding();
@@ -65,7 +67,6 @@ const Dashboard = () => {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           navigate('/login');
           return;
@@ -110,7 +111,7 @@ const Dashboard = () => {
     };
     
     loadUserData();
-  }, [navigate, t, stats?.totalQuizzes, stats?.activeQuizzes]);
+  }, [navigate, t, stats?.totalQuizzes, stats?.activeQuizzes, user]);
 
   const handleLogout = async () => {
     try {
@@ -131,7 +132,6 @@ const Dashboard = () => {
   }
 
   const handleCloseOnboarding = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
     }
