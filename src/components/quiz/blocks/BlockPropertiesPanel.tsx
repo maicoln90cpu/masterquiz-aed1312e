@@ -1313,6 +1313,9 @@ const PriceProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'price') return null;
   return (
     <div className="space-y-4">
+      <PropertySection title="Preço Atual" tooltip="Valor que o usuário paga (exibido em destaque)">
+        <Input value={block.price || ''} placeholder="99,90" onChange={(e) => onChange(update(block, { price: e.target.value }))} />
+      </PropertySection>
       <PropertySection title="Moeda" tooltip="Símbolo monetário exibido (R$, $, €)">
         <Input value={block.currency || 'R$'} onChange={(e) => onChange(update(block, { currency: e.target.value }))} />
       </PropertySection>

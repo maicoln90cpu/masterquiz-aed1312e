@@ -263,11 +263,17 @@ export const CountdownBlockPreview = ({ block }: { block: QuizBlock & { type: 'c
   );
 
   return (
-    <div className="flex gap-2 justify-center items-start flex-wrap">
-      {block.showDays && <><TimeUnit value={days} label="dias" /><CountdownSeparator /></>}
-      {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <CountdownSeparator />}</>}
-      {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <CountdownSeparator />}</>}
-      {block.showSeconds && <TimeUnit value={seconds} label="seg" />}
+    <div className="space-y-3">
+      {/* ✅ Texto durante contagem ativa */}
+      {timeLeft > 0 && (block as any).activeMessage && (
+        <p className="text-center text-sm font-medium text-foreground">{(block as any).activeMessage}</p>
+      )}
+      <div className="flex gap-2 justify-center items-start flex-wrap">
+        {block.showDays && <><TimeUnit value={days} label="dias" /><CountdownSeparator /></>}
+        {block.showHours && <><TimeUnit value={hours} label="horas" />{(block.showMinutes || block.showSeconds) && <CountdownSeparator />}</>}
+        {block.showMinutes && <><TimeUnit value={minutes} label="min" />{block.showSeconds && <CountdownSeparator />}</>}
+        {block.showSeconds && <TimeUnit value={seconds} label="seg" />}
+      </div>
     </div>
   );
 };
