@@ -131,6 +131,33 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
     endDate: filterDates.end,
   });
 
+  // CTA click analytics for funnel quizzes
+  const { data: ctaPerformance } = useQuery({
+    queryKey: ['quiz-cta-performance', selectedQuizId, filterDates],
+    queryFn: async () => {
+      if (!selectedQuizId) return [];
+      const { data, error } = await supabase
+        .from('quiz_cta_click_analytics')
+        .select('cta_text, session_id')
+        .eq('quiz_id', selectedQuizId)
+        .gte('date', filterDates.start)
+        .lte('date', filterDates.end);
+      if (error) throw error;
+      // Aggregate by cta_text
+      const counts: Record<string, { clicks: number; sessions: Set<string> }> = {};
+      data?.forEach(row => {
+        const text = row.cta_text || 'CTA';
+        if (!counts[text]) counts[text] = { clicks: 0, sessions: new Set() };
+        counts[text].clicks++;
+        counts[text].sessions.add(row.session_id);
+      });
+      return Object.entries(counts)
+        .map(([text, { clicks, sessions }]) => ({ text, clicks, uniqueSessions: sessions.size }))
+        .sort((a, b) => b.clicks - a.clicks);
+    },
+    enabled: !!selectedQuizId,
+  });
+
   // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
     if (!analyticsData || analyticsData.length === 0) {
