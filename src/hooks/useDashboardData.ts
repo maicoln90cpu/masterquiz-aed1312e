@@ -76,11 +76,11 @@ export const useDashboardStats = () => {
  */
 export const useRecentQuizzes = () => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
 
   return useQuery<QuizWithTags[]>({
-    queryKey: ['recent-quizzes'],
+    queryKey: ['recent-quizzes', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data: quizzes, error } = await supabase
