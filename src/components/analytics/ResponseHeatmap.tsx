@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Flame, BarChart3, TrendingUp, Users, HelpCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -59,15 +60,169 @@ const getHeatBgColor = (percentage: number): string => {
   if (percentage >= 10) return 'bg-green-500/10 border-green-500/30';
   return 'bg-blue-500/10 border-blue-500/30';
 };
+// Parse options based on format — static function (not a hook)
+const parseOptionsStatic = (options: any, format: string, blocks?: any): string[] => {
+  if (format === 'yes_no') return ['Sim', 'Não'];
+  if (format === 'short_text') return [];
+  if (Array.isArray(options) && options.length > 0) {
+    return options.map(opt => {
+      if (typeof opt === 'string') return opt;
+      if (opt?.text) return opt.text;
+      if (opt?.label) return opt.label;
+      return String(opt);
+    });
+  }
+  if (Array.isArray(blocks)) {
+    const questionBlock = blocks.find((b: any) => b.type === 'question');
+    if (questionBlock?.options && Array.isArray(questionBlock.options)) {
+      return questionBlock.options.map((opt: any) => {
+        if (typeof opt === 'string') return opt;
+        if (opt?.text) return opt.text;
+        if (opt?.label) return opt.label;
+        return String(opt);
+      });
+    }
+  }
+  return [];
+};
 
 export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps) => {
   const { allowHeatmap, isLoading: planLoading } = usePlanFeatures();
-  const [loading, setLoading] = useState(true);
-  const [quizzes, setQuizzes] = useState<{ id: string; title: string }[]>([]);
-  const [selectedQuiz, setSelectedQuiz] = useState<string>(externalQuizId || '');
-  const [heatmapData, setHeatmapData] = useState<QuestionHeatmapData[]>([]);
-  const [totalRespondents, setTotalRespondents] = useState(0);
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Use externalQuizId directly — no internal quiz selector
+  const selectedQuiz = externalQuizId || '';
+
+  // Reset page when quiz changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedQuiz]);
+
+  // Fetch heatmap data with useQuery (cached 5min)
+  const { data: heatmapResult, isLoading: loading } = useQuery({
+    queryKey: ['heatmap', selectedQuiz],
+    queryFn: async () => {
+      const { data: questions } = await supabase
+        .from('quiz_questions')
+        .select('id, question_text, order_number, answer_format, options, blocks')
+        .eq('quiz_id', selectedQuiz)
+        .order('order_number', { ascending: true });
+
+      if (!questions || questions.length === 0) {
+        return { heatmapData: [] as QuestionHeatmapData[], totalRespondents: 0 };
+      }
+
+      const questionsWithQuestion = questions.filter(q => {
+        if (!Array.isArray(q.blocks)) return false;
+        return (q.blocks as any[]).some((b: any) => b.type === 'question');
+      });
+
+      if (questionsWithQuestion.length === 0) {
+        return { heatmapData: [] as QuestionHeatmapData[], totalRespondents: 0 };
+      }
+
+      const { data: responses, count } = await supabase
+        .from('quiz_responses')
+        .select('answers', { count: 'exact' })
+        .eq('quiz_id', selectedQuiz);
+
+      const extractQuestionText = (q: any): string => {
+        if (Array.isArray(q.blocks)) {
+          const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
+          if (qBlock?.questionText) {
+            return qBlock.questionText.replace(/<[^>]*>/g, '').trim() || q.question_text;
+          }
+        }
+        return q.question_text;
+      };
+
+      const extractAnswerFormat = (q: any): string => {
+        if (Array.isArray(q.blocks)) {
+          const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
+          if (qBlock?.answerFormat) return qBlock.answerFormat;
+        }
+        return q.answer_format;
+      };
+
+      if (!responses || responses.length === 0) {
+        const emptyData = questionsWithQuestion.map((q, idx) => ({
+          questionId: q.id,
+          questionText: extractQuestionText(q),
+          questionOrder: idx + 1,
+          answerFormat: extractAnswerFormat(q),
+          options: parseOptionsStatic(q.options, extractAnswerFormat(q), q.blocks),
+          responses: [],
+          totalResponses: 0,
+        }));
+        return { heatmapData: emptyData, totalRespondents: 0 };
+      }
+
+      const currentQuestionIds = new Set(questionsWithQuestion.map(q => q.id));
+
+      const processedData: QuestionHeatmapData[] = questionsWithQuestion.map((question, qIndex) => {
+        const realFormat = extractAnswerFormat(question);
+        const options = parseOptionsStatic(question.options, realFormat, (question as any).blocks);
+        const responseCounts: Record<string, number> = {};
+        
+        options.forEach(opt => { responseCounts[opt] = 0; });
+
+        let totalForQuestion = 0;
+        responses.forEach(response => {
+          const answers = response.answers as Record<string, string | string[]>;
+          if (!answers) return;
+          
+          let answer = answers[question.id];
+          
+          if (!answer) {
+            const answerKeys = Object.keys(answers);
+            const hasAnyCurrentId = answerKeys.some(k => currentQuestionIds.has(k));
+            if (!hasAnyCurrentId && answerKeys.length > 0) {
+              if (qIndex < answerKeys.length) {
+                answer = answers[answerKeys[qIndex]];
+              }
+            }
+          }
+          
+          if (answer) {
+            totalForQuestion++;
+            if (Array.isArray(answer)) {
+              answer.forEach(a => {
+                responseCounts[a] = (responseCounts[a] || 0) + 1;
+              });
+            } else {
+              responseCounts[answer] = (responseCounts[answer] || 0) + 1;
+            }
+          }
+        });
+
+        const responseData = Object.entries(responseCounts)
+          .map(([option, count]) => ({
+            option,
+            count,
+            percentage: totalForQuestion > 0 ? (count / totalForQuestion) * 100 : 0,
+          }))
+          .sort((a, b) => b.count - a.count);
+
+        return {
+          questionId: question.id,
+          questionText: extractQuestionText(question),
+          questionOrder: qIndex + 1,
+          answerFormat: realFormat,
+          options,
+          responses: responseData,
+          totalResponses: totalForQuestion,
+        };
+      });
+
+      return { heatmapData: processedData, totalRespondents: count || 0 };
+    },
+    enabled: !!selectedQuiz,
+    staleTime: 5 * 60 * 1000, // 5 min cache
+  });
+
+  const heatmapData = heatmapResult?.heatmapData || [];
+  const totalRespondents = heatmapResult?.totalRespondents || 0;
 
   // Calcular paginação
   const totalPages = Math.ceil(heatmapData.length / QUESTIONS_PER_PAGE);
@@ -75,248 +230,6 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
     const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
     return heatmapData.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
   }, [heatmapData, currentPage]);
-
-  // Reset page when quiz changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedQuiz]);
-
-  // Sync with external quizId prop
-  useEffect(() => {
-    if (externalQuizId) {
-      setSelectedQuiz(externalQuizId);
-    }
-  }, [externalQuizId]);
-
-  // Carregar lista de quizzes do usuário (only when no external quizId)
-  useEffect(() => {
-    if (externalQuizId) return; // Skip loading quiz list when parent controls the filter
-    const loadQuizzes = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase
-        .from('quizzes')
-        .select('id, title')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      setQuizzes(data || []);
-      
-      // Se não há quiz selecionado, seleciona o primeiro
-      if (!selectedQuiz && data && data.length > 0) {
-        setSelectedQuiz(data[0].id);
-      }
-    };
-
-    loadQuizzes();
-  }, [externalQuizId]);
-
-  // Carregar dados do heatmap quando quiz muda
-  useEffect(() => {
-    if (!selectedQuiz) {
-      setLoading(false);
-      return;
-    }
-
-    const loadHeatmapData = async () => {
-      setLoading(true);
-      try {
-        // Buscar perguntas do quiz
-        const { data: questions } = await supabase
-          .from('quiz_questions')
-          .select('id, question_text, order_number, answer_format, options, blocks')
-          .eq('quiz_id', selectedQuiz)
-          .order('order_number', { ascending: true });
-
-        if (!questions || questions.length === 0) {
-          setHeatmapData([]);
-          setTotalRespondents(0);
-          setLoading(false);
-          return;
-        }
-
-        // Filtrar: excluir slides sem bloco tipo 'question' (intros, CTAs)
-        const questionsWithQuestion = questions.filter(q => {
-          if (!Array.isArray(q.blocks)) return false;
-          return (q.blocks as any[]).some((b: any) => b.type === 'question');
-        });
-
-        if (questionsWithQuestion.length === 0) {
-          setHeatmapData([]);
-          setTotalRespondents(0);
-          setLoading(false);
-          return;
-        }
-
-        // Buscar todas as respostas do quiz
-        const { data: responses, count } = await supabase
-          .from('quiz_responses')
-          .select('answers', { count: 'exact' })
-          .eq('quiz_id', selectedQuiz);
-
-        setTotalRespondents(count || 0);
-
-        // Extrair texto real da pergunta dos blocos
-        const extractQuestionText = (q: any): string => {
-          if (Array.isArray(q.blocks)) {
-            const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
-            if (qBlock?.questionText) {
-              // Strip HTML tags
-              return qBlock.questionText.replace(/<[^>]*>/g, '').trim() || q.question_text;
-            }
-          }
-          return q.question_text;
-        };
-
-        // Extrair answerFormat dos blocos
-        const extractAnswerFormat = (q: any): string => {
-          if (Array.isArray(q.blocks)) {
-            const qBlock = (q.blocks as any[]).find((b: any) => b.type === 'question');
-            if (qBlock?.answerFormat) return qBlock.answerFormat;
-          }
-          return q.answer_format;
-        };
-
-        if (!responses || responses.length === 0) {
-          const emptyData = questionsWithQuestion.map((q, idx) => ({
-            questionId: q.id,
-            questionText: extractQuestionText(q),
-            questionOrder: idx + 1,
-            answerFormat: extractAnswerFormat(q),
-            options: parseOptions(q.options, extractAnswerFormat(q), q.blocks),
-            responses: [],
-            totalResponses: 0,
-          }));
-          setHeatmapData(emptyData);
-          setLoading(false);
-          return;
-        }
-
-        // Criar mapeamento de IDs atuais para detectar respostas com IDs antigos
-        const currentQuestionIds = new Set(questionsWithQuestion.map(q => q.id));
-
-        // Processar respostas para cada pergunta
-        const processedData: QuestionHeatmapData[] = questionsWithQuestion.map((question, qIndex) => {
-          const realFormat = extractAnswerFormat(question);
-          const options = parseOptions(question.options, realFormat, (question as any).blocks);
-          const responseCounts: Record<string, number> = {};
-          
-          // Inicializar contadores
-          options.forEach(opt => {
-            responseCounts[opt] = 0;
-          });
-
-          // Contar respostas
-          let totalForQuestion = 0;
-          responses.forEach(response => {
-            const answers = response.answers as Record<string, string | string[]>;
-            if (!answers) return;
-            
-            // Tentar buscar resposta pelo ID atual da pergunta
-            let answer = answers[question.id];
-            
-            // Fallback por posição: se o ID não bate, verificar se as chaves são IDs antigos
-            if (!answer) {
-              const answerKeys = Object.keys(answers);
-              const hasAnyCurrentId = answerKeys.some(k => currentQuestionIds.has(k));
-              
-              // Se nenhuma chave corresponde aos IDs atuais, mapear por posição
-              if (!hasAnyCurrentId && answerKeys.length > 0) {
-                const sortedKeys = answerKeys;
-                if (qIndex < sortedKeys.length) {
-                  answer = answers[sortedKeys[qIndex]];
-                }
-              }
-            }
-            
-            if (answer) {
-              totalForQuestion++;
-              
-              if (Array.isArray(answer)) {
-                answer.forEach(a => {
-                  if (responseCounts[a] !== undefined) {
-                    responseCounts[a]++;
-                  } else {
-                    responseCounts[a] = 1;
-                  }
-                });
-              } else {
-                if (responseCounts[answer] !== undefined) {
-                  responseCounts[answer]++;
-                } else {
-                  responseCounts[answer] = 1;
-                }
-              }
-            }
-          });
-
-          // Calcular percentuais
-          const responseData = Object.entries(responseCounts)
-            .map(([option, count]) => ({
-              option,
-              count,
-              percentage: totalForQuestion > 0 ? (count / totalForQuestion) * 100 : 0,
-            }))
-            .sort((a, b) => b.count - a.count);
-
-          return {
-            questionId: question.id,
-            questionText: extractQuestionText(question),
-            questionOrder: qIndex + 1, // Renumerar sequencialmente
-            answerFormat: realFormat,
-            options,
-            responses: responseData,
-            totalResponses: totalForQuestion,
-          };
-        });
-
-        setHeatmapData(processedData);
-      } catch (error) {
-        console.error('Erro ao carregar heatmap:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadHeatmapData();
-  }, [selectedQuiz]);
-
-  // Parse options baseado no formato
-  const parseOptions = (options: any, format: string, blocks?: any): string[] => {
-    if (format === 'yes_no') {
-      return ['Sim', 'Não'];
-    }
-    
-    if (format === 'short_text') {
-      return []; // Texto livre não tem opções fixas
-    }
-
-    // First try standard options array
-    if (Array.isArray(options) && options.length > 0) {
-      return options.map(opt => {
-        if (typeof opt === 'string') return opt;
-        if (opt?.text) return opt.text;
-        if (opt?.label) return opt.label;
-        return String(opt);
-      });
-    }
-
-    // Fallback: extract options from blocks (modern quiz format)
-    if (Array.isArray(blocks)) {
-      const questionBlock = blocks.find((b: any) => b.type === 'question');
-      if (questionBlock?.options && Array.isArray(questionBlock.options)) {
-        return questionBlock.options.map((opt: any) => {
-          if (typeof opt === 'string') return opt;
-          if (opt?.text) return opt.text;
-          if (opt?.label) return opt.label;
-          return String(opt);
-        });
-      }
-    }
-
-    return [];
-  };
 
   // Encontrar a opção mais popular
   const getMostPopular = (responses: QuestionHeatmapData['responses']) => {
@@ -335,6 +248,18 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
       >
         <></>
       </PlanFeatureGate>
+    );
+  }
+
+  // No quiz selected — show message
+  if (!selectedQuiz) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <p className="text-muted-foreground">Selecione um quiz no filtro acima para visualizar o heatmap.</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -379,22 +304,6 @@ export const ResponseHeatmap = ({ quizId: externalQuizId }: ResponseHeatmapProps
                 </TooltipContent>
               </Tooltip>
             </div>
-            
-            {/* Only show internal quiz selector when no external quizId AND no quizId prop */}
-            {!externalQuizId && quizzes.length > 0 && (
-              <Select value={selectedQuiz} onValueChange={setSelectedQuiz}>
-                <SelectTrigger className="w-[250px]">
-                  <SelectValue placeholder="Selecione um quiz" />
-                </SelectTrigger>
-                <SelectContent>
-                  {quizzes.map(quiz => (
-                    <SelectItem key={quiz.id} value={quiz.id}>
-                      {quiz.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
           
           <CardDescription className="flex items-center gap-4 mt-2">

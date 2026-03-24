@@ -1,20 +1,18 @@
 
-## Implementado: Coluna CTA, Dashboard CTA, Filtro Heatmap, Performance
+## Implementado: CTA Tracking Deploy, Heatmap useQuery, DnD Lazy-load, Performance
 
 ### O que foi alterado
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/components/responses/ResponsesSpreadsheet.tsx` | Coluna "CTA Clicado" na tabela + JOIN com `quiz_cta_click_analytics` por `session_id` + select específico (não mais `*`) |
-| `src/components/analytics/PerQuizAnalytics.tsx` | Seção "Performance dos CTAs" com ranking, cliques, sessões únicas e CTR + fix hooks antes de early return |
-| `src/components/analytics/ResponseHeatmap.tsx` | Removido seletor interno quando `externalQuizId` fornecido + fix hooks antes de early return |
-| `src/pages/Responses.tsx` | `useMemo` em `filteredResponses` para evitar recálculo desnecessário |
-| `src/components/quiz/preview/StaticBlockPreviews.tsx` | `loading="lazy"` em imagens de texto+imagem e galeria |
-| `src/components/quiz/preview/InteractiveBlockPreviews.tsx` | `loading="lazy"` em imagens de testimonial |
-| `src/components/quiz/preview/RecommendationBlockPreview.tsx` | `loading="lazy"` em imagens de recomendação |
+| `supabase/functions/track-cta-redirect/index.ts` | **Deployado** — edge function nunca havia sido deployada, causando 0 registros em quiz_cta_click_analytics |
+| `src/components/analytics/ResponseHeatmap.tsx` | Migrado para `useQuery` com cache 5min; removido seletor interno de quiz (usa filtro global); removido import de Select; função parseOptions extraída como estática |
+| `src/components/crm/CRMKanbanBoard.tsx` | **Novo** — componente extraído com DndContext, sensors, drag handlers e kanban grid |
+| `src/pages/CRM.tsx` | @dnd-kit lazy-loaded via React.lazy(); drag handlers movidos para CRMKanbanBoard; auth centralizado via useAuth |
+| `src/pages/Responses.tsx` | Query de quizzes separada (executa 1x) da query de responses (reage a filtros); useRef para evitar re-fetch |
+| `src/hooks/useCurrentUser.ts` | **Novo** — hook centralizado para obter user do AuthContext sem chamar supabase.auth.getUser() |
 
 ### Próximas fases
-- Migrar ResponseHeatmap para `useQuery` do react-query com `staleTime`
-- Lazy-load `@dnd-kit/core` no CRM (~40KB)
-- Separar query de quizzes da query de responses em Responses.tsx
-- Centralizar `supabase.auth.getUser()` para evitar chamadas repetidas
+- Substituir `supabase.auth.getUser()` por `useCurrentUser()` nos demais componentes (~50 arquivos)
+- Adicionar coluna "CTA Clicado" na tabela de respostas individuais (dados agora disponíveis após deploy)
+- Dashboard de conversão por CTA no Analytics (PerQuizAnalytics)
