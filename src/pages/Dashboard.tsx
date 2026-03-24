@@ -4,6 +4,7 @@ import { BarChart3, Plus, MessageSquare, Webhook, Settings, Loader2, HelpCircle,
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTranslation } from "react-i18next";
 import { useDashboardStats, useChartData } from "@/hooks/useDashboardData";
 import { showErrorToast } from "@/lib/errorHandler";
