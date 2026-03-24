@@ -21,6 +21,8 @@ const CATEGORY_LABELS: Record<EmojiCategoryKey, string> = {
   education: '📚',
   food: '🍕',
   nature: '🌿',
+  gestures: '👋',
+  sports: '⚽',
   symbols: '🔢',
 };
 
@@ -33,6 +35,8 @@ const CATEGORY_NAMES: Record<EmojiCategoryKey, string> = {
   education: 'Educação',
   food: 'Comida',
   nature: 'Natureza',
+  gestures: 'Gestos',
+  sports: 'Esportes',
   symbols: 'Símbolos',
 };
 
