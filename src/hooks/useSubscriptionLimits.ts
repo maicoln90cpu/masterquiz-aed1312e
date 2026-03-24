@@ -53,7 +53,6 @@ export const useSubscriptionLimits = () => {
     },
     enabled: !roleLoading && !!user
   });
-  });
 
   // Master admin sempre retorna true para todas as verificações de limite
   const checkQuizLimit = async () => {
