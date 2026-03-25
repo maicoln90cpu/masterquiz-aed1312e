@@ -269,6 +269,16 @@ const CreateQuizModern = () => {
     updateEditor({ step: newStep });
   }, [updateEditor]);
 
+  // ✅ Auto-scroll properties panel to top when selected block changes
+  useEffect(() => {
+    if (propertiesRef.current) {
+      const scrollContainer = propertiesRef.current.querySelector('.overflow-y-auto');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }, [editorState.selectedBlockIndex]);
+
   // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
     if (editorState.step >= 3 && !isExpressMode && !uiState.isLoadingQuiz) {
