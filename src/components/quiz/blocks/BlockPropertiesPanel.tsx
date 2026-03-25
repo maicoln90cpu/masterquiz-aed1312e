@@ -19,6 +19,7 @@ import {
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
 import { FONT_OPTIONS as FONT_OPTIONS_LIST } from "@/lib/fontMap";
+import { hasAnyStyleCapability, getStyleCapabilities } from "@/lib/blockStyleEngine";
 
 interface QuestionInfo {
   id: string;
