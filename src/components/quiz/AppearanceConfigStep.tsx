@@ -316,11 +316,11 @@ export const AppearanceConfigStep = ({
                     id="global-text-align"
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                     value={globalTextAlign}
-                    onChange={(e) => onGlobalTextAlignChange?.(e.target.value as 'left' | 'center' | 'right')}
+                    onChange={(e) => onGlobalTextAlignChange?.(e.target.value)}
                   >
-                    <option value="left">⬅ Esquerda</option>
-                    <option value="center">↔ Centralizado</option>
-                    <option value="right">➡ Direita</option>
+                    {ALIGN_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -330,11 +330,11 @@ export const AppearanceConfigStep = ({
                     id="global-font-size"
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                     value={globalFontSize}
-                    onChange={(e) => onGlobalFontSizeChange?.(e.target.value as 'small' | 'medium' | 'large')}
+                    onChange={(e) => onGlobalFontSizeChange?.(e.target.value)}
                   >
-                    <option value="small">Pequeno (14px)</option>
-                    <option value="medium">Médio (16px)</option>
-                    <option value="large">Grande (18px)</option>
+                    {FONT_SIZE_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -344,11 +344,11 @@ export const AppearanceConfigStep = ({
                     id="global-font-family"
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                     value={globalFontFamily}
-                    onChange={(e) => onGlobalFontFamilyChange?.(e.target.value as 'sans' | 'serif' | 'mono')}
+                    onChange={(e) => onGlobalFontFamilyChange?.(e.target.value)}
                   >
-                    <option value="sans">Sans-serif (moderna)</option>
-                    <option value="serif">Serif (clássica)</option>
-                    <option value="mono">Monospace (técnica)</option>
+                    {FONT_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value} style={{ fontFamily: o.family }}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -357,9 +357,9 @@ export const AppearanceConfigStep = ({
               <div 
                 className="p-4 border rounded-lg bg-muted/30"
                 style={{
-                  textAlign: globalTextAlign,
-                  fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : '16px',
-                  fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : 'inherit',
+                  textAlign: (globalTextAlign as any) || undefined,
+                  fontSize: resolveFontSize(globalFontSize) || '16px',
+                  fontFamily: resolveFontFamily(globalFontFamily) || 'inherit',
                 }}
               >
                 <p className="font-semibold mb-1">Pré-visualização da formatação</p>
