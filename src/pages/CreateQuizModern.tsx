@@ -191,7 +191,9 @@ const CreateQuizModern = () => {
   useEffect(() => {
     const editQuizId = searchParams.get('id');
     if (editQuizId) {
-      loadExistingQuiz(editQuizId);
+      loadExistingQuiz(editQuizId).then(() => {
+        quizLoadedRef.current = true;
+      });
       if (isExpressMode) {
         updateEditor({ step: 3 });
         updateUI({ showTemplateSelector: false });
