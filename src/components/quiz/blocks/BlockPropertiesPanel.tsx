@@ -2345,7 +2345,7 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
 
 
 
-export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: BlockPropertiesPanelProps) => {
+export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions, currentQuestionIndex }: BlockPropertiesPanelProps) => {
   const block = normalizeBlock(rawBlock);
   const icon = BLOCK_ICONS[block.type];
   const name = BLOCK_NAMES[block.type];
