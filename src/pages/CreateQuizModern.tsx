@@ -234,7 +234,6 @@ const CreateQuizModern = () => {
     const newBlock = createBlock(blockType, existingBlocks.length);
     
     // Herdar formatação global via motor de estilo tipado
-    const { applyGlobalDefaultsOnCreate } = require('@/lib/blockStyleEngine');
     applyGlobalDefaultsOnCreate(newBlock, appearanceState);
     
     const newBlocks = [...existingBlocks, newBlock];
