@@ -37,12 +37,6 @@ interface AppearanceConfigStepProps {
   onProgressStyleChange?: (value: 'bar' | 'counter' | 'none') => void;
   /** Hide showResults toggle (e.g., when already set in Step 1 Modern) */
   hideShowResults?: boolean;
-  globalTextAlign?: string;
-  globalFontSize?: string;
-  globalFontFamily?: string;
-  onGlobalTextAlignChange?: (value: string) => void;
-  onGlobalFontSizeChange?: (value: string) => void;
-  onGlobalFontFamilyChange?: (value: string) => void;
 }
 
 const getTemplates = (t: any) => [
