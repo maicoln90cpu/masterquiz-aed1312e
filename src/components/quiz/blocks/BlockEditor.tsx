@@ -335,6 +335,24 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"edit" | "templates">("edit");
   const [showHelp, setShowHelp] = useState(false);
+  const blockRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  
+  // Auto-scroll para o bloco selecionado
+  useEffect(() => {
+    if (selectedBlockIndex == null) return;
+    const el = blockRefs.current.get(selectedBlockIndex);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [selectedBlockIndex]);
+
+  const setBlockRef = useCallback((index: number, el: HTMLDivElement | null) => {
+    if (el) {
+      blockRefs.current.set(index, el);
+    } else {
+      blockRefs.current.delete(index);
+    }
+  }, []);
   
   // Ensure blocks is always an array
   const safeBlocks = blocks || [];
