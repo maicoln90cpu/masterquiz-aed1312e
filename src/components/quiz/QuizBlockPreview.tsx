@@ -216,7 +216,7 @@ export const QuizBlockPreview = ({
 
   return (
     <Card className="border-2">
-      <CardContent className="p-8 space-y-8" style={globalStyle}>{content}</CardContent>
+      <CardContent className="p-8 space-y-8">{content}</CardContent>
     </Card>
   );
 };

@@ -348,11 +348,6 @@ export const AppearanceConfigStep = ({
           <CardContent>
             <div 
               className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}
-              style={{
-                textAlign: (globalTextAlign as any) || undefined,
-                fontSize: resolveFontSize(globalFontSize) || undefined,
-                fontFamily: resolveFontFamily(globalFontFamily) || undefined,
-              }}
             >
               {/* Header com Logo */}
               <Card className="border-2">

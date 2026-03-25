@@ -696,9 +696,6 @@ export function useQuizPersistence({
           show_question_number: appearanceState.showQuestionNumber,
           progress_style: appearanceState.progressStyle || 'counter',
           show_results: appearanceState.showResults !== false,
-          global_text_align: appearanceState.globalTextAlign || 'left',
-          global_font_size: appearanceState.globalFontSize || 'medium',
-          global_font_family: appearanceState.globalFontFamily || 'sans',
           question_count: editorState.questionCount,
           updated_at: new Date().toISOString()
         })
