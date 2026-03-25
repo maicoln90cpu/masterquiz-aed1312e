@@ -32,7 +32,6 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import type { BlockType, QuizBlock } from "@/types/blocks";
-import { applyGlobalDefaultsOnCreate } from "@/lib/blockStyleEngine";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { MobileEditorToolbar } from "@/components/quiz/MobileEditorToolbar";
@@ -223,7 +222,7 @@ const CreateQuizModern = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [editorState.quizId, appearanceState.title, hasInteracted, questions.length]);
 
-  // ✅ Palette handlers — Motor de estilo tipado centralizado
+  // ✅ Palette handlers — fluxo estável (sem injeção de estilo em novos blocos)
   const handlePaletteAddBlock = useCallback((blockType: BlockType) => {
     const currentQ = questions[editorState.currentQuestionIndex];
     if (!currentQ) {
@@ -233,15 +232,12 @@ const CreateQuizModern = () => {
     const existingBlocks = currentQ.blocks || [];
     const newBlock = createBlock(blockType, existingBlocks.length);
     
-    // Herdar formatação global via motor de estilo tipado
-    applyGlobalDefaultsOnCreate(newBlock, appearanceState);
-    
     const newBlocks = [...existingBlocks, newBlock];
     updateCurrentQuestionBlocks(newBlocks);
     
     // Auto-selecionar o novo bloco
     updateEditor({ selectedBlockIndex: newBlocks.length - 1 });
-  }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks, appearanceState, updateEditor]);
+  }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks, updateEditor]);
 
 
   // ✅ Handler para publicar
