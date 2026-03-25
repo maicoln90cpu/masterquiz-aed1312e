@@ -272,16 +272,7 @@ const CreateQuizModern = () => {
     updateEditor({ step: newStep });
   }, [updateEditor]);
 
-  // ✅ Auto-scroll properties panel to top when selected block changes
-  useEffect(() => {
-    if (propertiesRef.current) {
-      const scrollContainer = propertiesRef.current.querySelector('[data-radix-scroll-area-viewport]') 
-        || propertiesRef.current.querySelector('.overflow-y-auto');
-      if (scrollContainer) {
-        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-  }, [editorState.selectedBlockIndex]);
+   // Removed: auto-scroll useEffect — columns now scroll independently
 
   // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
