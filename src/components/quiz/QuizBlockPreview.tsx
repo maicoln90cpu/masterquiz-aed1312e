@@ -210,14 +210,8 @@ export const QuizBlockPreview = ({
     </>
   );
 
-  const globalStyle: React.CSSProperties = {
-    textAlign: (globalTextAlign as React.CSSProperties['textAlign']) || undefined,
-    fontSize: resolveFontSize(globalFontSize),
-    fontFamily: resolveFontFamily(globalFontFamily),
-  };
-
   if (!wrapInCard) {
-    return <div className="space-y-4" style={globalStyle}>{content}</div>;
+    return <div className="space-y-4">{content}</div>;
   }
 
   return (
