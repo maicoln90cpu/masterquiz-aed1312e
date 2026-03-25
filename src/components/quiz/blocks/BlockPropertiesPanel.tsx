@@ -30,6 +30,7 @@ interface BlockPropertiesPanelProps {
   block: QuizBlock;
   onChange: (block: QuizBlock) => void;
   questions?: QuestionInfo[];
+  currentQuestionIndex?: number;
 }
 
 // ---- Reusable Question Selector (dropdown) ----
