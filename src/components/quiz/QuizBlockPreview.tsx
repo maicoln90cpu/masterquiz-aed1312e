@@ -74,9 +74,6 @@ export const QuizBlockPreview = ({
   questions,
   currentStep,
   totalQuestions,
-  globalTextAlign,
-  globalFontSize,
-  globalFontFamily,
 }: QuizBlockPreviewProps) => {
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
