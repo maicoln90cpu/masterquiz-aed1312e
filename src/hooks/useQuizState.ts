@@ -126,9 +126,6 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
     showQuestionNumber: true,
     showResults: true,
     progressStyle: 'counter',
-    globalTextAlign: 'left',
-    globalFontSize: 'medium',
-    globalFontFamily: 'sans',
   });
 
   // ✅ Estado do formulário de coleta
