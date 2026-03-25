@@ -210,7 +210,20 @@ export const QuizBlockPreview = ({
     <p className="text-center text-muted-foreground">Adicione blocos para visualizar o preview</p>
   ) : (
     <>
-      {blocks.map((block) => renderBlock(block))}
+      {blocks.map((block) => {
+        const overrideStyle: React.CSSProperties = {};
+        const b = block as any;
+        if (b.overrideAlign) overrideStyle.textAlign = b.overrideAlign;
+        if (b.overrideFontSize) overrideStyle.fontSize = resolveFontSize(b.overrideFontSize) || undefined;
+        if (b.overrideFontFamily) overrideStyle.fontFamily = resolveFontFamily(b.overrideFontFamily) || undefined;
+        
+        const hasOverride = Object.keys(overrideStyle).length > 0;
+        const rendered = renderBlock(block);
+        
+        return hasOverride ? (
+          <div key={`override-${block.id}`} style={overrideStyle}>{rendered}</div>
+        ) : rendered;
+      })}
       {showNavigationButton && (
         <Button className="w-full" size="lg" onClick={onNavigateNext}>{nextButtonText}</Button>
       )}
