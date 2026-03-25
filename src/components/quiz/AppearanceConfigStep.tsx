@@ -113,12 +113,6 @@ export const AppearanceConfigStep = ({
   onShowResultsChange,
   onProgressStyleChange,
   hideShowResults = false,
-  globalTextAlign = 'left',
-  globalFontSize = 'medium',
-  globalFontFamily = 'sans',
-  onGlobalTextAlignChange,
-  onGlobalFontSizeChange,
-  onGlobalFontFamilyChange,
 }: AppearanceConfigStepProps) => {
   const { t } = useTranslation();
   const { allowedTemplates, isLoading } = usePlanFeatures();
