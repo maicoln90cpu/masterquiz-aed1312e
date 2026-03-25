@@ -846,19 +846,22 @@ const CreateQuizModern = () => {
 
             {/* COL 4: Block Properties Panel */}
             {!isExpressMode && (
-              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card h-0 min-h-full">
+              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card h-full min-h-0">
                 <div className="p-3 border-b bg-muted/30 shrink-0">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Settings2 className="h-4 w-4" />
                     {t('createQuiz.blockProperties', 'Propriedades')}
                   </h3>
                 </div>
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 min-h-0 overflow-y-auto">
                   <BlockErrorBoundary blockType="properties-panel">
                     {(() => {
-                      const selectedIdx = editorState.selectedBlockIndex ?? 0;
                       const currentQ = questions[currentQuestionIndex];
-                      const selectedBlock = currentQ?.blocks?.[selectedIdx] || null;
+                      const blocks = currentQ?.blocks || [];
+                      // Clamp: proteger índice fora do range
+                      const rawIdx = editorState.selectedBlockIndex ?? 0;
+                      const selectedIdx = blocks.length > 0 ? Math.min(rawIdx, blocks.length - 1) : -1;
+                      const selectedBlock = selectedIdx >= 0 ? blocks[selectedIdx] : null;
 
                       if (!selectedBlock) {
                         return (
@@ -876,9 +879,9 @@ const CreateQuizModern = () => {
                           block={selectedBlock}
                           questions={questions}
                           onChange={(updatedBlock) => {
-                            const blocks = [...(currentQ.blocks || [])];
-                            blocks[selectedIdx] = updatedBlock;
-                            updateCurrentQuestionBlocks(blocks);
+                            const updatedBlocks = [...blocks];
+                            updatedBlocks[selectedIdx] = updatedBlock;
+                            updateCurrentQuestionBlocks(updatedBlocks);
                           }}
                         />
                       );
