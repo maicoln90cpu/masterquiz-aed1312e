@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FONT_OPTIONS, FONT_SIZE_OPTIONS, ALIGN_OPTIONS, resolveFontFamily, resolveFontSize } from "@/lib/fontMap";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
