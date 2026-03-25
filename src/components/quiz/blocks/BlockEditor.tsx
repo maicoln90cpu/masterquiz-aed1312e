@@ -544,18 +544,19 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 {safeBlocks.map((block, index) => {
                   const normalizedBlock = normalizeBlock(block);
                   return (
-                    <SortableBlock
-                      key={block.id}
-                      block={normalizedBlock}
-                      blockIndex={index}
-                      onUpdate={(updated) => updateBlock(block.id, updated)}
-                      onDelete={() => deleteBlock(block.id)}
-                      totalQuestions={totalQuestions}
-                      currentQuestionIndex={currentQuestionIndex}
-                      t={t}
-                      onBlockSelect={onBlockSelect}
-                      isSelected={selectedBlockIndex === index}
-                    />
+                    <div key={block.id} ref={(el) => setBlockRef(index, el)}>
+                      <SortableBlock
+                        block={normalizedBlock}
+                        blockIndex={index}
+                        onUpdate={(updated) => updateBlock(block.id, updated)}
+                        onDelete={() => deleteBlock(block.id)}
+                        totalQuestions={totalQuestions}
+                        currentQuestionIndex={currentQuestionIndex}
+                        t={t}
+                        onBlockSelect={onBlockSelect}
+                        isSelected={selectedBlockIndex === index}
+                      />
+                    </div>
                   );
                 })}
               </div>
