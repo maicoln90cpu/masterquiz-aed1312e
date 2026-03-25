@@ -672,12 +672,6 @@ const CreateQuizModern = () => {
               onShowResultsChange={(v) => updateAppearance({ showResults: v })}
               progressStyle={appearanceState.progressStyle}
               onProgressStyleChange={(v) => updateAppearance({ progressStyle: v })}
-              globalTextAlign={appearanceState.globalTextAlign}
-              globalFontSize={appearanceState.globalFontSize}
-              globalFontFamily={appearanceState.globalFontFamily}
-              onGlobalTextAlignChange={(v) => updateAppearance({ globalTextAlign: v })}
-              onGlobalFontSizeChange={(v) => updateAppearance({ globalFontSize: v })}
-              onGlobalFontFamilyChange={(v) => updateAppearance({ globalFontFamily: v })}
               hideShowResults
             />
           )}

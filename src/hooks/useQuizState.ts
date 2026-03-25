@@ -23,9 +23,6 @@ export interface QuizAppearanceState {
   showQuestionNumber: boolean;
   showResults: boolean;
   progressStyle: 'bar' | 'counter' | 'none';
-  globalTextAlign: string;
-  globalFontSize: string;
-  globalFontFamily: string;
 }
 
 export interface QuizFormConfigState {
@@ -129,9 +126,6 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
     showQuestionNumber: true,
     showResults: true,
     progressStyle: 'counter',
-    globalTextAlign: 'left',
-    globalFontSize: 'medium',
-    globalFontFamily: 'sans',
   });
 
   // ✅ Estado do formulário de coleta
@@ -313,9 +307,6 @@ export function useQuizState({ isEditMode, questionsLimit }: UseQuizStateOptions
       showQuestionNumber: true,
       showResults: true,
       progressStyle: 'counter',
-      globalTextAlign: 'left',
-      globalFontSize: 'medium',
-      globalFontFamily: 'sans',
     });
     setFormConfigState({
       collectionTiming: 'after',

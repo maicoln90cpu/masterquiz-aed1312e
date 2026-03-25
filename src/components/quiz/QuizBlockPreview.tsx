@@ -1,5 +1,5 @@
 import { useRef, useCallback, lazy, Suspense } from "react";
-import { resolveFontFamily, resolveFontSize } from "@/lib/fontMap";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,10 +55,6 @@ interface QuizBlockPreviewProps {
   questions?: QuizQuestion[];
   currentStep?: number;
   totalQuestions?: number;
-  // Global formatting
-  globalTextAlign?: string;
-  globalFontSize?: string;
-  globalFontFamily?: string;
 }
 
 export const QuizBlockPreview = ({
@@ -78,9 +74,6 @@ export const QuizBlockPreview = ({
   questions,
   currentStep,
   totalQuestions,
-  globalTextAlign,
-  globalFontSize,
-  globalFontFamily,
 }: QuizBlockPreviewProps) => {
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
@@ -217,19 +210,13 @@ export const QuizBlockPreview = ({
     </>
   );
 
-  const globalStyle: React.CSSProperties = {
-    textAlign: (globalTextAlign as React.CSSProperties['textAlign']) || undefined,
-    fontSize: resolveFontSize(globalFontSize),
-    fontFamily: resolveFontFamily(globalFontFamily),
-  };
-
   if (!wrapInCard) {
-    return <div className="space-y-4" style={globalStyle}>{content}</div>;
+    return <div className="space-y-4">{content}</div>;
   }
 
   return (
     <Card className="border-2">
-      <CardContent className="p-8 space-y-8" style={globalStyle}>{content}</CardContent>
+      <CardContent className="p-8 space-y-8">{content}</CardContent>
     </Card>
   );
 };
