@@ -752,6 +752,13 @@ const ProgressProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'progress') return null;
   return (
     <div className="space-y-4">
+      <PropertySection title="Texto/Frase" tooltip="Texto exibido junto à barra de progresso">
+        <Input
+          value={block.label || ''}
+          placeholder="Ex: Continue para ver seu resultado!"
+          onChange={(e) => onChange(update(block, { label: e.target.value }))}
+        />
+      </PropertySection>
       <PropertySection title="Estilo" tooltip="Formato visual do componente">
         <Select value={block.style || 'bar'} onValueChange={(v) => onChange(update(block, { style: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>

@@ -275,7 +275,8 @@ const CreateQuizModern = () => {
   // ✅ Auto-scroll properties panel to top when selected block changes
   useEffect(() => {
     if (propertiesRef.current) {
-      const scrollContainer = propertiesRef.current.querySelector('.overflow-y-auto');
+      const scrollContainer = propertiesRef.current.querySelector('[data-radix-scroll-area-viewport]') 
+        || propertiesRef.current.querySelector('.overflow-y-auto');
       if (scrollContainer) {
         scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -284,6 +285,9 @@ const CreateQuizModern = () => {
 
   // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
+    // Guard: em modo edição, só reconciliar APÓS loadExistingQuiz completar
+    if (isEditMode && !quizLoadedRef.current) return;
+    
     if (editorState.step >= 3 && !isExpressMode && !uiState.isLoadingQuiz) {
       const targetCount = editorState.questionCount;
       
