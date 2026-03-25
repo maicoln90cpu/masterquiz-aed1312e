@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
+import { FONT_OPTIONS as FONT_OPTIONS_LIST } from "@/lib/fontMap";
 
 interface QuestionInfo {
   id: string;
