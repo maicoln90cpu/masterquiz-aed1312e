@@ -78,6 +78,7 @@ const CreateQuizModern = () => {
   const [showCurrentPreviewDialog, setShowCurrentPreviewDialog] = useState(false);
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
+  const propertiesRef = useRef<HTMLDivElement>(null);
   const firedEventsRef = useRef(new Set<string>());
   const fireOnce = useCallback((event: string, data: Record<string, unknown> = {}) => {
     const quizId = searchParams.get('id');
@@ -267,6 +268,16 @@ const CreateQuizModern = () => {
   const handleStepClick = useCallback((newStep: number) => {
     updateEditor({ step: newStep });
   }, [updateEditor]);
+
+  // ✅ Auto-scroll properties panel to top when selected block changes
+  useEffect(() => {
+    if (propertiesRef.current) {
+      const scrollContainer = propertiesRef.current.querySelector('.overflow-y-auto');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }, [editorState.selectedBlockIndex]);
 
   // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
@@ -815,7 +826,7 @@ const CreateQuizModern = () => {
 
             {/* COL 4: Block Properties Panel */}
             {!isExpressMode && (
-              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card">
+              <div ref={propertiesRef} className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card overflow-hidden">
                 <div className="p-3 border-b bg-muted/30">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Settings2 className="h-4 w-4" />
@@ -844,6 +855,7 @@ const CreateQuizModern = () => {
                         <BlockPropertiesPanel
                           block={selectedBlock}
                           questions={questions}
+                          currentQuestionIndex={currentQuestionIndex}
                           onChange={(updatedBlock) => {
                             const blocks = [...(currentQ.blocks || [])];
                             blocks[selectedIdx] = updatedBlock;

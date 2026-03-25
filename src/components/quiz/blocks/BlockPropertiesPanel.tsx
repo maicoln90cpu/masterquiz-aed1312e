@@ -30,6 +30,7 @@ interface BlockPropertiesPanelProps {
   block: QuizBlock;
   onChange: (block: QuizBlock) => void;
   questions?: QuestionInfo[];
+  currentQuestionIndex?: number;
 }
 
 // ---- Reusable Question Selector (dropdown) ----
@@ -1634,8 +1635,16 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 };
 
 // ---- ANSWER SUMMARY ----
-const AnswerSummaryProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
+const AnswerSummaryProperties = ({ block, onChange, questions, currentQuestionIndex }: BlockPropertiesPanelProps) => {
   if (block.type !== 'answerSummary') return null;
+  
+  // Filter: only questions BEFORE current position AND with a 'question' block
+  const filteredQuestions = (questions || []).filter((q, idx) => {
+    if (currentQuestionIndex !== undefined && idx >= currentQuestionIndex) return false;
+    const hasQuestionBlock = q.blocks?.some((b: any) => b.type === 'question');
+    return hasQuestionBlock;
+  });
+
   return (
     <div className="space-y-4">
       <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
@@ -1652,12 +1661,20 @@ const AnswerSummaryProperties = ({ block, onChange, questions }: BlockProperties
         <Input value={block.subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
       </div>
       <Separator />
-      <QuestionMultiSelector
-        selectedIds={(block as any).selectedQuestionIds || []}
-        onChange={(ids) => onChange(update(block, { selectedQuestionIds: ids }))}
-        questions={questions}
-        label="Perguntas a exibir"
-      />
+      {filteredQuestions.length === 0 ? (
+        <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+          <p className="text-xs text-amber-800 dark:text-amber-200">
+            ⚠️ Nenhuma pergunta anterior disponível. Coloque este bloco após perguntas respondíveis.
+          </p>
+        </div>
+      ) : (
+        <QuestionMultiSelector
+          selectedIds={(block as any).selectedQuestionIds || []}
+          onChange={(ids) => onChange(update(block, { selectedQuestionIds: ids }))}
+          questions={filteredQuestions}
+          label="Perguntas a exibir"
+        />
+      )}
       <Separator />
       <div className="space-y-2">
         <Label>Estilo</Label>
@@ -2328,7 +2345,7 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
 
 
 
-export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: BlockPropertiesPanelProps) => {
+export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions, currentQuestionIndex }: BlockPropertiesPanelProps) => {
   const block = normalizeBlock(rawBlock);
   const icon = BLOCK_ICONS[block.type];
   const name = BLOCK_NAMES[block.type];
@@ -2362,7 +2379,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
       case 'quote': return <QuoteProperties block={block} onChange={onChange} />;
       case 'badgeRow': return <BadgeRowProperties block={block} onChange={onChange} />;
       case 'banner': return <BannerProperties block={block} onChange={onChange} />;
-      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} questions={questions} />;
+      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} questions={questions} currentQuestionIndex={currentQuestionIndex} />;
       case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
       case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
       case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} questions={questions} />;
