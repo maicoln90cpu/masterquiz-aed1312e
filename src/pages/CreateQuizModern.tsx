@@ -815,7 +815,7 @@ const CreateQuizModern = () => {
 
             {/* COL 4: Block Properties Panel */}
             {!isExpressMode && (
-              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card">
+              <div ref={propertiesRef} className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card overflow-hidden">
                 <div className="p-3 border-b bg-muted/30">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Settings2 className="h-4 w-4" />
@@ -844,6 +844,7 @@ const CreateQuizModern = () => {
                         <BlockPropertiesPanel
                           block={selectedBlock}
                           questions={questions}
+                          currentQuestionIndex={currentQuestionIndex}
                           onChange={(updatedBlock) => {
                             const blocks = [...(currentQ.blocks || [])];
                             blocks[selectedIdx] = updatedBlock;

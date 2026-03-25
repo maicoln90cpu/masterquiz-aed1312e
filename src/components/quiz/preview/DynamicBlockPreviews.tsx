@@ -79,8 +79,15 @@ export const AnswerSummaryBlockPreview = ({ block, answers, questions }: AnswerS
               }
               return true;
             })
-            .map((q) => {
-            const answer = answers![q.id];
+            .map((q, qIdx) => {
+            // Try direct ID match first, then fallback to position-based mapping
+            let answer = answers![q.id];
+            if (answer === undefined) {
+              const answerKeys = Object.keys(answers!);
+              if (qIdx < answerKeys.length) {
+                answer = answers![answerKeys[qIdx]];
+              }
+            }
             if (!answer) return null;
             const questionBlock = q.blocks?.find((b: any) => b.type === 'question') as any;
             const qText = questionBlock?.questionText || q.question_text;

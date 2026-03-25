@@ -22,14 +22,16 @@ export const LoadingBlockPreview = ({ block }: { block: QuizBlock & { type: 'loa
     return () => clearInterval(interval);
   }, [block.duration]);
 
-  // ✅ Etapa 2E: Mensagens rotativas com fade
+  // ✅ Mensagens rotativas com intervalo calculado dinamicamente
   useEffect(() => {
     if (!block.loadingMessages?.length || !block.rotateMessages) return;
+    const messageCount = block.loadingMessages.length;
+    const intervalMs = Math.max(500, (block.duration * 1000) / messageCount);
     const interval = setInterval(() => {
-      setMsgIndex(prev => (prev + 1) % block.loadingMessages!.length);
-    }, 2500);
+      setMsgIndex(prev => (prev + 1) % messageCount);
+    }, intervalMs);
     return () => clearInterval(interval);
-  }, [block.loadingMessages, block.rotateMessages]);
+  }, [block.loadingMessages, block.rotateMessages, block.duration]);
 
   const renderSpinner = () => {
     switch (block.spinnerType) {
