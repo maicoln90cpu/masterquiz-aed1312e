@@ -55,9 +55,9 @@ interface QuizBlockPreviewProps {
   currentStep?: number;
   totalQuestions?: number;
   // Global formatting
-  globalTextAlign?: 'left' | 'center' | 'right';
-  globalFontSize?: 'small' | 'medium' | 'large';
-  globalFontFamily?: 'sans' | 'serif' | 'mono';
+  globalTextAlign?: string;
+  globalFontSize?: string;
+  globalFontFamily?: string;
 }
 
 export const QuizBlockPreview = ({

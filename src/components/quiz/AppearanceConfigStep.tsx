@@ -429,9 +429,9 @@ export const AppearanceConfigStep = ({
             <div 
               className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}
               style={{
-                textAlign: globalTextAlign || undefined,
-                fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : undefined,
-                fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : undefined,
+                textAlign: (globalTextAlign as any) || undefined,
+                fontSize: resolveFontSize(globalFontSize) || undefined,
+                fontFamily: resolveFontFamily(globalFontFamily) || undefined,
               }}
             >
               {/* Header com Logo */}
