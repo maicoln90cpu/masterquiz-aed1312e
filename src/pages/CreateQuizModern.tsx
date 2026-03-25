@@ -223,6 +223,7 @@ const CreateQuizModern = () => {
   }, [editorState.quizId, appearanceState.title, hasInteracted, questions.length]);
 
   // ✅ Palette handlers — mesmo fluxo do Classic (via updateCurrentQuestionBlocks)
+  // Novos blocos herdam formatação global da etapa 2
   const handlePaletteAddBlock = useCallback((blockType: BlockType) => {
     const currentQ = questions[editorState.currentQuestionIndex];
     if (!currentQ) {
@@ -231,8 +232,24 @@ const CreateQuizModern = () => {
     }
     const existingBlocks = currentQ.blocks || [];
     const newBlock = createBlock(blockType, existingBlocks.length);
-    updateCurrentQuestionBlocks([...existingBlocks, newBlock]);
-  }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks]);
+    
+    // Herdar formatação global da etapa 2
+    if (appearanceState.globalTextAlign && appearanceState.globalTextAlign !== 'left') {
+      (newBlock as any).alignment = appearanceState.globalTextAlign;
+    }
+    if (appearanceState.globalFontSize && appearanceState.globalFontSize !== 'medium') {
+      (newBlock as any).fontSize = appearanceState.globalFontSize;
+    }
+    if (appearanceState.globalFontFamily && appearanceState.globalFontFamily !== 'sans') {
+      (newBlock as any).fontFamily = appearanceState.globalFontFamily;
+    }
+    
+    const newBlocks = [...existingBlocks, newBlock];
+    updateCurrentQuestionBlocks(newBlocks);
+    
+    // Auto-selecionar o novo bloco
+    updateEditor({ selectedBlockIndex: newBlocks.length - 1 });
+  }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks, appearanceState, updateEditor]);
 
 
   // ✅ Handler para publicar
@@ -821,8 +838,8 @@ const CreateQuizModern = () => {
 
             {/* COL 4: Block Properties Panel */}
             {!isExpressMode && (
-              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card">
-                <div className="p-3 border-b bg-muted/30">
+              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card h-0 min-h-full">
+                <div className="p-3 border-b bg-muted/30 shrink-0">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Settings2 className="h-4 w-4" />
                     {t('createQuiz.blockProperties', 'Propriedades')}
