@@ -393,7 +393,7 @@ const CreateQuizModern = () => {
   // RENDER PRINCIPAL — MODERN LAYOUT
   // ============================================
   return (
-    <main className="min-h-screen bg-background flex flex-col">
+    <main className={cn("bg-background flex flex-col", step === 3 && !isExpressMode ? "h-screen overflow-hidden" : "min-h-screen")}>
       {/* ========== HEADER ========== */}
       <header className="border-b bg-card px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
