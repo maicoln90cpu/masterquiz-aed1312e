@@ -272,16 +272,7 @@ const CreateQuizModern = () => {
     updateEditor({ step: newStep });
   }, [updateEditor]);
 
-  // ✅ Auto-scroll properties panel to top when selected block changes
-  useEffect(() => {
-    if (propertiesRef.current) {
-      const scrollContainer = propertiesRef.current.querySelector('[data-radix-scroll-area-viewport]') 
-        || propertiesRef.current.querySelector('.overflow-y-auto');
-      if (scrollContainer) {
-        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-  }, [editorState.selectedBlockIndex]);
+   // Removed: auto-scroll useEffect — columns now scroll independently
 
   // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
@@ -402,7 +393,7 @@ const CreateQuizModern = () => {
   // RENDER PRINCIPAL — MODERN LAYOUT
   // ============================================
   return (
-    <main className="min-h-screen bg-background flex flex-col">
+    <main className={cn("bg-background flex flex-col", step === 3 && !isExpressMode ? "h-screen overflow-hidden" : "min-h-screen")}>
       {/* ========== HEADER ========== */}
       <header className="border-b bg-card px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
