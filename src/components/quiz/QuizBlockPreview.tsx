@@ -1,5 +1,5 @@
 import { useRef, useCallback, lazy, Suspense } from "react";
-import { resolveFontFamily, resolveFontSize } from "@/lib/fontMap";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
