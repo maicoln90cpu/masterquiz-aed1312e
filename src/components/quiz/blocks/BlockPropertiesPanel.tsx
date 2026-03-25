@@ -1635,8 +1635,16 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
 };
 
 // ---- ANSWER SUMMARY ----
-const AnswerSummaryProperties = ({ block, onChange, questions }: BlockPropertiesPanelProps) => {
+const AnswerSummaryProperties = ({ block, onChange, questions, currentQuestionIndex }: BlockPropertiesPanelProps) => {
   if (block.type !== 'answerSummary') return null;
+  
+  // Filter: only questions BEFORE current position AND with a 'question' block
+  const filteredQuestions = (questions || []).filter((q, idx) => {
+    if (currentQuestionIndex !== undefined && idx >= currentQuestionIndex) return false;
+    const hasQuestionBlock = q.blocks?.some((b: any) => b.type === 'question');
+    return hasQuestionBlock;
+  });
+
   return (
     <div className="space-y-4">
       <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
@@ -1653,12 +1661,20 @@ const AnswerSummaryProperties = ({ block, onChange, questions }: BlockProperties
         <Input value={block.subtitle || ''} onChange={(e) => onChange(update(block, { subtitle: e.target.value }))} />
       </div>
       <Separator />
-      <QuestionMultiSelector
-        selectedIds={(block as any).selectedQuestionIds || []}
-        onChange={(ids) => onChange(update(block, { selectedQuestionIds: ids }))}
-        questions={questions}
-        label="Perguntas a exibir"
-      />
+      {filteredQuestions.length === 0 ? (
+        <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+          <p className="text-xs text-amber-800 dark:text-amber-200">
+            ⚠️ Nenhuma pergunta anterior disponível. Coloque este bloco após perguntas respondíveis.
+          </p>
+        </div>
+      ) : (
+        <QuestionMultiSelector
+          selectedIds={(block as any).selectedQuestionIds || []}
+          onChange={(ids) => onChange(update(block, { selectedQuestionIds: ids }))}
+          questions={filteredQuestions}
+          label="Perguntas a exibir"
+        />
+      )}
       <Separator />
       <div className="space-y-2">
         <Label>Estilo</Label>
