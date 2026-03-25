@@ -217,9 +217,9 @@ export const QuizBlockPreview = ({
   );
 
   const globalStyle: React.CSSProperties = {
-    textAlign: globalTextAlign || undefined,
-    fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : undefined,
-    fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : undefined,
+    textAlign: (globalTextAlign as React.CSSProperties['textAlign']) || undefined,
+    fontSize: resolveFontSize(globalFontSize),
+    fontFamily: resolveFontFamily(globalFontFamily),
   };
 
   if (!wrapInCard) {
