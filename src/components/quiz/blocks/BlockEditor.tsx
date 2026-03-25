@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -335,24 +335,6 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"edit" | "templates">("edit");
   const [showHelp, setShowHelp] = useState(false);
-  const blockRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  
-  // Auto-scroll para o bloco selecionado
-  useEffect(() => {
-    if (selectedBlockIndex == null) return;
-    const el = blockRefs.current.get(selectedBlockIndex);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [selectedBlockIndex]);
-
-  const setBlockRef = useCallback((index: number, el: HTMLDivElement | null) => {
-    if (el) {
-      blockRefs.current.set(index, el);
-    } else {
-      blockRefs.current.delete(index);
-    }
-  }, []);
   
   // Ensure blocks is always an array
   const safeBlocks = blocks || [];
@@ -544,19 +526,18 @@ export const BlockEditor = ({ blocks, onChange, totalQuestions = 0, currentQuest
                 {safeBlocks.map((block, index) => {
                   const normalizedBlock = normalizeBlock(block);
                   return (
-                    <div key={block.id} ref={(el) => setBlockRef(index, el)}>
-                      <SortableBlock
-                        block={normalizedBlock}
-                        blockIndex={index}
-                        onUpdate={(updated) => updateBlock(block.id, updated)}
-                        onDelete={() => deleteBlock(block.id)}
-                        totalQuestions={totalQuestions}
-                        currentQuestionIndex={currentQuestionIndex}
-                        t={t}
-                        onBlockSelect={onBlockSelect}
-                        isSelected={selectedBlockIndex === index}
-                      />
-                    </div>
+                    <SortableBlock
+                      key={block.id}
+                      block={normalizedBlock}
+                      blockIndex={index}
+                      onUpdate={(updated) => updateBlock(block.id, updated)}
+                      onDelete={() => deleteBlock(block.id)}
+                      totalQuestions={totalQuestions}
+                      currentQuestionIndex={currentQuestionIndex}
+                      t={t}
+                      onBlockSelect={onBlockSelect}
+                      isSelected={selectedBlockIndex === index}
+                    />
                   );
                 })}
               </div>

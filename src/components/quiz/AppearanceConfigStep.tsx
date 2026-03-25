@@ -285,8 +285,6 @@ export const AppearanceConfigStep = ({
               </div>
             </div>
 
-            <Separator className="my-6" />
-
             {/* Template Selection */}
             <div className="space-y-3">
               <div>
@@ -346,9 +344,7 @@ export const AppearanceConfigStep = ({
             <CardDescription>{t('createQuiz.appearance.previewDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div 
-              className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}
-            >
+            <div className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}>
               {/* Header com Logo */}
               <Card className="border-2">
                 <CardContent className="p-4 space-y-3">

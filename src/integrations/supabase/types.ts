@@ -1767,9 +1767,6 @@ export type Database = {
           creation_source: string | null
           description: string | null
           facebook_pixel_id: string | null
-          global_font_family: string | null
-          global_font_size: string | null
-          global_text_align: string | null
           hide_branding: boolean | null
           id: string
           is_public: boolean
@@ -1794,9 +1791,6 @@ export type Database = {
           creation_source?: string | null
           description?: string | null
           facebook_pixel_id?: string | null
-          global_font_family?: string | null
-          global_font_size?: string | null
-          global_text_align?: string | null
           hide_branding?: boolean | null
           id?: string
           is_public?: boolean
@@ -1821,9 +1815,6 @@ export type Database = {
           creation_source?: string | null
           description?: string | null
           facebook_pixel_id?: string | null
-          global_font_family?: string | null
-          global_font_size?: string | null
-          global_text_align?: string | null
           hide_branding?: boolean | null
           id?: string
           is_public?: boolean

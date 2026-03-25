@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
-import { FONT_OPTIONS as FONT_OPTIONS_LIST } from "@/lib/fontMap";
 
 interface QuestionInfo {
   id: string;
@@ -2390,10 +2389,9 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
         </div>
 
         {/* Properties */}
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="p-3 space-y-4">
+        <ScrollArea className="flex-1">
+          <div className="p-3">
             {renderProperties()}
-            
           </div>
         </ScrollArea>
       </div>

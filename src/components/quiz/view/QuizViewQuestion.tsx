@@ -229,7 +229,7 @@ export function QuizViewQuestion({
                 onNavigateToQuestion={() => {}}
                 wrapInCard={false}
                 answers={answers}
-                questions={allQuestions}
+                questions={allQuestions.slice(0, currentStep + 1)}
                 currentStep={currentStep}
                 totalQuestions={totalQuestions}
                 textInputValues={textInputValues}
