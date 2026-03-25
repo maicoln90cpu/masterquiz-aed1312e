@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FONT_OPTIONS, FONT_SIZE_OPTIONS, ALIGN_OPTIONS, resolveFontFamily, resolveFontSize } from "@/lib/fontMap";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,12 +38,12 @@ interface AppearanceConfigStepProps {
   onProgressStyleChange?: (value: 'bar' | 'counter' | 'none') => void;
   /** Hide showResults toggle (e.g., when already set in Step 1 Modern) */
   hideShowResults?: boolean;
-  globalTextAlign?: 'left' | 'center' | 'right';
-  globalFontSize?: 'small' | 'medium' | 'large';
-  globalFontFamily?: 'sans' | 'serif' | 'mono';
-  onGlobalTextAlignChange?: (value: 'left' | 'center' | 'right') => void;
-  onGlobalFontSizeChange?: (value: 'small' | 'medium' | 'large') => void;
-  onGlobalFontFamilyChange?: (value: 'sans' | 'serif' | 'mono') => void;
+  globalTextAlign?: string;
+  globalFontSize?: string;
+  globalFontFamily?: string;
+  onGlobalTextAlignChange?: (value: string) => void;
+  onGlobalFontSizeChange?: (value: string) => void;
+  onGlobalFontFamilyChange?: (value: string) => void;
 }
 
 const getTemplates = (t: any) => [
@@ -315,11 +316,11 @@ export const AppearanceConfigStep = ({
                     id="global-text-align"
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                     value={globalTextAlign}
-                    onChange={(e) => onGlobalTextAlignChange?.(e.target.value as 'left' | 'center' | 'right')}
+                    onChange={(e) => onGlobalTextAlignChange?.(e.target.value)}
                   >
-                    <option value="left">⬅ Esquerda</option>
-                    <option value="center">↔ Centralizado</option>
-                    <option value="right">➡ Direita</option>
+                    {ALIGN_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -329,11 +330,11 @@ export const AppearanceConfigStep = ({
                     id="global-font-size"
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                     value={globalFontSize}
-                    onChange={(e) => onGlobalFontSizeChange?.(e.target.value as 'small' | 'medium' | 'large')}
+                    onChange={(e) => onGlobalFontSizeChange?.(e.target.value)}
                   >
-                    <option value="small">Pequeno (14px)</option>
-                    <option value="medium">Médio (16px)</option>
-                    <option value="large">Grande (18px)</option>
+                    {FONT_SIZE_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -343,11 +344,11 @@ export const AppearanceConfigStep = ({
                     id="global-font-family"
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                     value={globalFontFamily}
-                    onChange={(e) => onGlobalFontFamilyChange?.(e.target.value as 'sans' | 'serif' | 'mono')}
+                    onChange={(e) => onGlobalFontFamilyChange?.(e.target.value)}
                   >
-                    <option value="sans">Sans-serif (moderna)</option>
-                    <option value="serif">Serif (clássica)</option>
-                    <option value="mono">Monospace (técnica)</option>
+                    {FONT_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value} style={{ fontFamily: o.family }}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -356,9 +357,9 @@ export const AppearanceConfigStep = ({
               <div 
                 className="p-4 border rounded-lg bg-muted/30"
                 style={{
-                  textAlign: globalTextAlign,
-                  fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : '16px',
-                  fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : 'inherit',
+                  textAlign: (globalTextAlign as any) || undefined,
+                  fontSize: resolveFontSize(globalFontSize) || '16px',
+                  fontFamily: resolveFontFamily(globalFontFamily) || 'inherit',
                 }}
               >
                 <p className="font-semibold mb-1">Pré-visualização da formatação</p>
@@ -428,9 +429,9 @@ export const AppearanceConfigStep = ({
             <div 
               className={`quiz-template-${template || 'moderno'} p-4 rounded-lg space-y-4 transition-all duration-300`}
               style={{
-                textAlign: globalTextAlign || undefined,
-                fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : undefined,
-                fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : undefined,
+                textAlign: (globalTextAlign as any) || undefined,
+                fontSize: resolveFontSize(globalFontSize) || undefined,
+                fontFamily: resolveFontFamily(globalFontFamily) || undefined,
               }}
             >
               {/* Header com Logo */}

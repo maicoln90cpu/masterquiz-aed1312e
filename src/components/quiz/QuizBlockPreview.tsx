@@ -1,4 +1,5 @@
 import { useRef, useCallback, lazy, Suspense } from "react";
+import { resolveFontFamily, resolveFontSize } from "@/lib/fontMap";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,9 +56,9 @@ interface QuizBlockPreviewProps {
   currentStep?: number;
   totalQuestions?: number;
   // Global formatting
-  globalTextAlign?: 'left' | 'center' | 'right';
-  globalFontSize?: 'small' | 'medium' | 'large';
-  globalFontFamily?: 'sans' | 'serif' | 'mono';
+  globalTextAlign?: string;
+  globalFontSize?: string;
+  globalFontFamily?: string;
 }
 
 export const QuizBlockPreview = ({
@@ -209,7 +210,20 @@ export const QuizBlockPreview = ({
     <p className="text-center text-muted-foreground">Adicione blocos para visualizar o preview</p>
   ) : (
     <>
-      {blocks.map((block) => renderBlock(block))}
+      {blocks.map((block) => {
+        const overrideStyle: React.CSSProperties = {};
+        const b = block as any;
+        if (b.overrideAlign) overrideStyle.textAlign = b.overrideAlign;
+        if (b.overrideFontSize) overrideStyle.fontSize = resolveFontSize(b.overrideFontSize) || undefined;
+        if (b.overrideFontFamily) overrideStyle.fontFamily = resolveFontFamily(b.overrideFontFamily) || undefined;
+        
+        const hasOverride = Object.keys(overrideStyle).length > 0;
+        const rendered = renderBlock(block);
+        
+        return hasOverride ? (
+          <div key={`override-${block.id}`} style={overrideStyle}>{rendered}</div>
+        ) : rendered;
+      })}
       {showNavigationButton && (
         <Button className="w-full" size="lg" onClick={onNavigateNext}>{nextButtonText}</Button>
       )}
@@ -217,9 +231,9 @@ export const QuizBlockPreview = ({
   );
 
   const globalStyle: React.CSSProperties = {
-    textAlign: globalTextAlign || undefined,
-    fontSize: globalFontSize === 'small' ? '14px' : globalFontSize === 'large' ? '18px' : undefined,
-    fontFamily: globalFontFamily === 'serif' ? 'Georgia, "Times New Roman", serif' : globalFontFamily === 'mono' ? '"Courier New", Courier, monospace' : undefined,
+    textAlign: (globalTextAlign as React.CSSProperties['textAlign']) || undefined,
+    fontSize: resolveFontSize(globalFontSize),
+    fontFamily: resolveFontFamily(globalFontFamily),
   };
 
   if (!wrapInCard) {

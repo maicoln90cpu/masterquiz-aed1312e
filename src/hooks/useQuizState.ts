@@ -23,9 +23,9 @@ export interface QuizAppearanceState {
   showQuestionNumber: boolean;
   showResults: boolean;
   progressStyle: 'bar' | 'counter' | 'none';
-  globalTextAlign: 'left' | 'center' | 'right';
-  globalFontSize: 'small' | 'medium' | 'large';
-  globalFontFamily: 'sans' | 'serif' | 'mono';
+  globalTextAlign: string;
+  globalFontSize: string;
+  globalFontFamily: string;
 }
 
 export interface QuizFormConfigState {
