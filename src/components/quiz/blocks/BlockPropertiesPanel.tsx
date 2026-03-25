@@ -2379,7 +2379,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
       case 'quote': return <QuoteProperties block={block} onChange={onChange} />;
       case 'badgeRow': return <BadgeRowProperties block={block} onChange={onChange} />;
       case 'banner': return <BannerProperties block={block} onChange={onChange} />;
-      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} questions={questions} />;
+      case 'answerSummary': return <AnswerSummaryProperties block={block} onChange={onChange} questions={questions} currentQuestionIndex={undefined} />;
       case 'progressMessage': return <ProgressMessageProperties block={block} onChange={onChange} />;
       case 'avatarGroup': return <AvatarGroupProperties block={block} onChange={onChange} />;
       case 'conditionalText': return <ConditionalTextProperties block={block} onChange={onChange} questions={questions} />;
