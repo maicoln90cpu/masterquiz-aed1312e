@@ -838,8 +838,8 @@ const CreateQuizModern = () => {
 
             {/* COL 4: Block Properties Panel */}
             {!isExpressMode && (
-              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card">
-                <div className="p-3 border-b bg-muted/30">
+              <div className="w-72 shrink-0 hidden lg:flex flex-col border-l bg-card h-0 min-h-full">
+                <div className="p-3 border-b bg-muted/30 shrink-0">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Settings2 className="h-4 w-4" />
                     {t('createQuiz.blockProperties', 'Propriedades')}
