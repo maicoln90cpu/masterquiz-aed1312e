@@ -2395,71 +2395,80 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions }: B
           <div className="p-3 space-y-4">
             {renderProperties()}
             
-            {/* Override de Formatação Individual */}
-            {['text', 'question', 'button', 'callout', 'quote', 'iconList', 'banner', 'price', 'testimonial', 'accordion', 'comparison', 'socialProof', 'countdown', 'metrics', 'badgeRow', 'personalizedCTA', 'answerSummary', 'progressMessage', 'recommendation'].includes(block.type) && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Formatação Individual</p>
-                  <p className="text-[10px] text-muted-foreground">Sobrescreve a formatação global definida na Etapa 2. Deixe "Herdar global" para manter o padrão.</p>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-xs">Alinhamento</Label>
-                    <Select
-                      value={(block as any).overrideAlign || '_inherit'}
-                      onValueChange={(v) => onChange({ ...block, overrideAlign: v === '_inherit' ? undefined : v } as any)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="_inherit">Herdar global</SelectItem>
-                        <SelectItem value="left">Esquerda</SelectItem>
-                        <SelectItem value="center">Centralizado</SelectItem>
-                        <SelectItem value="right">Direita</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+            {/* Override de Formatação Individual — só para blocos com capabilities */}
+            {hasAnyStyleCapability(block.type) && (() => {
+              const cap = getStyleCapabilities(block.type);
+              return (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Formatação Individual</p>
+                    <p className="text-[10px] text-muted-foreground">Sobrescreve a formatação global definida na Etapa 2. Deixe "Herdar global" para manter o padrão.</p>
+                    
+                    {cap.align && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Alinhamento</Label>
+                        <Select
+                          value={(block as any).overrideAlign || '_inherit'}
+                          onValueChange={(v) => onChange({ ...block, overrideAlign: v === '_inherit' ? undefined : v } as any)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="_inherit">Herdar global</SelectItem>
+                            <SelectItem value="left">Esquerda</SelectItem>
+                            <SelectItem value="center">Centralizado</SelectItem>
+                            <SelectItem value="right">Direita</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
-                  <div className="space-y-2">
-                    <Label className="text-xs">Tamanho da Fonte</Label>
-                    <Select
-                      value={(block as any).overrideFontSize || '_inherit'}
-                      onValueChange={(v) => onChange({ ...block, overrideFontSize: v === '_inherit' ? undefined : v } as any)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="_inherit">Herdar global</SelectItem>
-                        <SelectItem value="small">Pequeno (14px)</SelectItem>
-                        <SelectItem value="medium">Médio (16px)</SelectItem>
-                        <SelectItem value="large">Grande (18px)</SelectItem>
-                        <SelectItem value="xl">Extra Grande (20px)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    {cap.fontSize && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Tamanho da Fonte</Label>
+                        <Select
+                          value={(block as any).overrideFontSize || '_inherit'}
+                          onValueChange={(v) => onChange({ ...block, overrideFontSize: v === '_inherit' ? undefined : v } as any)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="_inherit">Herdar global</SelectItem>
+                            <SelectItem value="small">Pequeno (14px)</SelectItem>
+                            <SelectItem value="medium">Médio (16px)</SelectItem>
+                            <SelectItem value="large">Grande (18px)</SelectItem>
+                            <SelectItem value="xl">Extra Grande (20px)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
-                  <div className="space-y-2">
-                    <Label className="text-xs">Família da Fonte</Label>
-                    <Select
-                      value={(block as any).overrideFontFamily || '_inherit'}
-                      onValueChange={(v) => onChange({ ...block, overrideFontFamily: v === '_inherit' ? undefined : v } as any)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="_inherit">Herdar global</SelectItem>
-                        {FONT_OPTIONS_LIST.map(f => (
-                          <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {cap.fontFamily && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Família da Fonte</Label>
+                        <Select
+                          value={(block as any).overrideFontFamily || '_inherit'}
+                          onValueChange={(v) => onChange({ ...block, overrideFontFamily: v === '_inherit' ? undefined : v } as any)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="_inherit">Herdar global</SelectItem>
+                            {FONT_OPTIONS_LIST.map(f => (
+                              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              );
+            })()}
           </div>
         </ScrollArea>
       </div>
