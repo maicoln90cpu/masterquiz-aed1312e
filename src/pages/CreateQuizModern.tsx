@@ -79,6 +79,7 @@ const CreateQuizModern = () => {
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
   const propertiesRef = useRef<HTMLDivElement>(null);
+  const quizLoadedRef = useRef(false);
   const firedEventsRef = useRef(new Set<string>());
   const fireOnce = useCallback((event: string, data: Record<string, unknown> = {}) => {
     const quizId = searchParams.get('id');
