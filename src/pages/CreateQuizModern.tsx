@@ -224,6 +224,12 @@ const CreateQuizModern = () => {
 
   // ✅ Palette handlers — mesmo fluxo do Classic (via updateCurrentQuestionBlocks)
   // Novos blocos herdam formatação global da etapa 2
+  // Tipos de bloco que suportam herança de formatação global
+  const FORMATTABLE_BLOCK_TYPES: BlockType[] = [
+    'text', 'callout', 'quote', 'iconList', 'banner', 'testimonial',
+    'accordion', 'socialProof', 'badgeRow', 'progressMessage', 'recommendation',
+  ];
+
   const handlePaletteAddBlock = useCallback((blockType: BlockType) => {
     const currentQ = questions[editorState.currentQuestionIndex];
     if (!currentQ) {
@@ -233,15 +239,17 @@ const CreateQuizModern = () => {
     const existingBlocks = currentQ.blocks || [];
     const newBlock = createBlock(blockType, existingBlocks.length);
     
-    // Herdar formatação global da etapa 2
-    if (appearanceState.globalTextAlign && appearanceState.globalTextAlign !== 'left') {
-      (newBlock as any).alignment = appearanceState.globalTextAlign;
-    }
-    if (appearanceState.globalFontSize && appearanceState.globalFontSize !== 'medium') {
-      (newBlock as any).fontSize = appearanceState.globalFontSize;
-    }
-    if (appearanceState.globalFontFamily && appearanceState.globalFontFamily !== 'sans') {
-      (newBlock as any).fontFamily = appearanceState.globalFontFamily;
+    // Herdar formatação global APENAS em blocos compatíveis
+    if (FORMATTABLE_BLOCK_TYPES.includes(blockType)) {
+      if (appearanceState.globalTextAlign && appearanceState.globalTextAlign !== 'left') {
+        (newBlock as any).alignment = appearanceState.globalTextAlign;
+      }
+      if (appearanceState.globalFontSize && appearanceState.globalFontSize !== 'medium') {
+        (newBlock as any).fontSize = appearanceState.globalFontSize;
+      }
+      if (appearanceState.globalFontFamily && appearanceState.globalFontFamily !== 'sans') {
+        (newBlock as any).fontFamily = appearanceState.globalFontFamily;
+      }
     }
     
     const newBlocks = [...existingBlocks, newBlock];
