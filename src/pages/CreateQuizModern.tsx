@@ -32,7 +32,6 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import type { BlockType, QuizBlock } from "@/types/blocks";
-import { applyGlobalDefaultsOnCreate } from "@/lib/blockStyleEngine";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { MobileEditorToolbar } from "@/components/quiz/MobileEditorToolbar";
