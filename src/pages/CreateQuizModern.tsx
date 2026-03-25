@@ -79,6 +79,7 @@ const CreateQuizModern = () => {
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
   const propertiesRef = useRef<HTMLDivElement>(null);
+  const quizLoadedRef = useRef(false);
   const firedEventsRef = useRef(new Set<string>());
   const fireOnce = useCallback((event: string, data: Record<string, unknown> = {}) => {
     const quizId = searchParams.get('id');
@@ -190,7 +191,9 @@ const CreateQuizModern = () => {
   useEffect(() => {
     const editQuizId = searchParams.get('id');
     if (editQuizId) {
-      loadExistingQuiz(editQuizId);
+      loadExistingQuiz(editQuizId).then(() => {
+        quizLoadedRef.current = true;
+      });
       if (isExpressMode) {
         updateEditor({ step: 3 });
         updateUI({ showTemplateSelector: false });
@@ -272,7 +275,8 @@ const CreateQuizModern = () => {
   // ✅ Auto-scroll properties panel to top when selected block changes
   useEffect(() => {
     if (propertiesRef.current) {
-      const scrollContainer = propertiesRef.current.querySelector('.overflow-y-auto');
+      const scrollContainer = propertiesRef.current.querySelector('[data-radix-scroll-area-viewport]') 
+        || propertiesRef.current.querySelector('.overflow-y-auto');
       if (scrollContainer) {
         scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -281,6 +285,9 @@ const CreateQuizModern = () => {
 
   // ✅ Reconciliar perguntas ao entrar no Step 3+ (garante questions.length === questionCount)
   useEffect(() => {
+    // Guard: em modo edição, só reconciliar APÓS loadExistingQuiz completar
+    if (isEditMode && !quizLoadedRef.current) return;
+    
     if (editorState.step >= 3 && !isExpressMode && !uiState.isLoadingQuiz) {
       const targetCount = editorState.questionCount;
       
