@@ -151,6 +151,7 @@ const CreateQuizModern = () => {
     hasUserInteracted: hasInteracted,
     isExpressMode,
     editorMode: 'modern',
+    autoSaveEnabled,
   });
 
   // ✅ Hook de manipulação de perguntas
