@@ -183,6 +183,7 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   personalizedCTA: <MousePointer className="h-4 w-4" />,
   recommendation: <Star className="h-4 w-4" />,
   calculator: <BarChart3 className="h-4 w-4" />,
+  rating: <Star className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
