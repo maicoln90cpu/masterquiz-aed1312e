@@ -860,16 +860,22 @@ const CreateQuizModern = () => {
               )}
               
               {col3Mode === 'preview' ? (
-                <div className="border rounded-lg overflow-hidden bg-background relative">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="absolute top-2 right-2 z-20 h-7 text-[11px] gap-1 bg-background/90 backdrop-blur-sm shadow-sm"
-                    onClick={() => setCol3Mode('edit')}
-                  >
-                    <ArrowLeft className="h-3 w-3" />
-                    Voltar à Edição
-                  </Button>
+                <div className="flex flex-col flex-1 min-h-0">
+                  <div className="flex items-center justify-between px-3 py-2 bg-primary/10 border border-primary/20 rounded-t-lg shrink-0">
+                    <span className="text-xs font-medium text-primary">
+                      🔍 Modo Preview — visualização em tempo real
+                    </span>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="h-7 text-[11px] gap-1"
+                      onClick={() => setCol3Mode('edit')}
+                    >
+                      <ArrowLeft className="h-3 w-3" />
+                      Sair do Preview
+                    </Button>
+                  </div>
+                  <div className="border border-t-0 rounded-b-lg overflow-hidden bg-background flex-1 min-h-0">
                   <UnifiedQuizPreview
                     questions={questions}
                     title={title}
@@ -890,6 +896,7 @@ const CreateQuizModern = () => {
                       collection_timing: collectionTiming as 'before' | 'after' | 'none',
                     }}
                   />
+                  </div>
                 </div>
               ) : (
                 (() => {
