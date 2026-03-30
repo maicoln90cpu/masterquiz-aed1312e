@@ -744,6 +744,17 @@ const LoadingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </PropertySection>
         </>
       )}
+
+      <Separator />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => onChange(update(block, { _previewKey: ((block as any)._previewKey || 0) + 1 }))}
+      >
+        🔄 Reiniciar Preview
+      </Button>
     </div>
   );
 };
