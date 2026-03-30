@@ -383,9 +383,10 @@ export interface CalloutBlock extends BaseBlock {
 
 export interface IconListBlock extends BaseBlock {
   type: 'iconList';
-  items: { icon: string; text: string; color?: string }[]; // ✅ Etapa 2D: Cor individual por item
+  items: { icon: string; text: string; color?: string }[];
   iconColor?: string;
   layout?: 'vertical' | 'horizontal';
+  iconSize?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export interface QuoteBlock extends BaseBlock {
