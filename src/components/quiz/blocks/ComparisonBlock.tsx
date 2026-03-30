@@ -53,11 +53,31 @@ export const ComparisonBlock = ({ block, onChange }: ComparisonBlockProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Título Esquerda</Label>
-            <Input value={block.leftTitle} onChange={(e) => onChange({ ...block, leftTitle: e.target.value })} placeholder="Antes / Sem..." />
+            <Input value={block.leftTitle} onChange={(e) => onChange({ ...safeBlock, leftTitle: e.target.value })} placeholder="Antes / Sem..." />
+            {block.leftImage ? (
+              <div className="relative">
+                <img src={block.leftImage} alt="Esquerda" className="w-full h-20 object-cover rounded-md" />
+                <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => onChange({ ...safeBlock, leftImage: undefined })}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <ImageUploader value="" onChange={(url) => onChange({ ...safeBlock, leftImage: url })} />
+            )}
           </div>
           <div className="space-y-2">
             <Label>Título Direita</Label>
-            <Input value={block.rightTitle} onChange={(e) => onChange({ ...block, rightTitle: e.target.value })} placeholder="Depois / Com..." />
+            <Input value={block.rightTitle} onChange={(e) => onChange({ ...safeBlock, rightTitle: e.target.value })} placeholder="Depois / Com..." />
+            {block.rightImage ? (
+              <div className="relative">
+                <img src={block.rightImage} alt="Direita" className="w-full h-20 object-cover rounded-md" />
+                <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => onChange({ ...safeBlock, rightImage: undefined })}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <ImageUploader value="" onChange={(url) => onChange({ ...safeBlock, rightImage: url })} />
+            )}
           </div>
         </div>
 
