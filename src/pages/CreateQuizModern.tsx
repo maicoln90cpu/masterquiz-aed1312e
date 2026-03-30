@@ -78,6 +78,7 @@ const CreateQuizModern = () => {
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCurrentPreviewDialog, setShowCurrentPreviewDialog] = useState(false);
+  const [col3Mode, setCol3Mode] = useState<'edit' | 'preview'>('edit');
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
   const propertiesRef = useRef<HTMLDivElement>(null);
