@@ -1209,7 +1209,6 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
         </Select>
       </PropertySection>
       <SwitchRow label="Mostrar ícones" tooltip="Exibe ícones visuais ao lado de cada item no resumo" checked={block.showIcons || false} onChange={(v) => onChange(update(block, { showIcons: v }))} />
-      {/* ✅ Etapa 2D: Highlight da coluna vencedora */}
       <PropertySection title="Destacar coluna" tooltip="Aplica destaque visual à coluna selecionada como vencedora">
         <Select value={(block as any).highlightWinner || 'none'} onValueChange={(v) => onChange(update(block, { highlightWinner: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1220,7 +1219,6 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
           </SelectContent>
         </Select>
       </PropertySection>
-      {/* ✅ Etapa 2D: Ícones por coluna */}
       {block.showIcons && (
         <>
           <Separator />
@@ -1234,6 +1232,37 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
           </div>
         </>
       )}
+
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Imagens (Antes/Depois)</Label>
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <Label className="text-xs">Imagem Esquerda</Label>
+          {(block as any).leftImage ? (
+            <div className="relative">
+              <img src={(block as any).leftImage} alt="Esquerda" className="w-full h-20 object-cover rounded-md" />
+              <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => onChange(update(block, { leftImage: undefined }))}>
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <ImageUploader value="" onChange={(url) => onChange(update(block, { leftImage: url }))} />
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Imagem Direita</Label>
+          {(block as any).rightImage ? (
+            <div className="relative">
+              <img src={(block as any).rightImage} alt="Direita" className="w-full h-20 object-cover rounded-md" />
+              <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => onChange(update(block, { rightImage: undefined }))}>
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <ImageUploader value="" onChange={(url) => onChange(update(block, { rightImage: url }))} />
+          )}
+        </div>
+      </div>
     </div>
   );
 };
