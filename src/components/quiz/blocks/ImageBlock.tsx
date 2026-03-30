@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Image as ImageIcon, HelpCircle, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ImageBlock as ImageBlockType } from "@/types/blocks";
 
 interface ImageBlockProps {
@@ -54,7 +55,18 @@ export const ImageBlock = ({ block, onChange }: ImageBlockProps) => {
                   <img
                     src={block.url}
                     alt={block.alt || 'Quiz image'}
-                    className="rounded-lg w-full h-auto object-contain"
+                    className={cn(
+                      "w-full h-auto object-contain",
+                      (block as any).borderRadius === 'none' ? 'rounded-none' :
+                      (block as any).borderRadius === 'small' ? 'rounded-md' :
+                      (block as any).borderRadius === 'large' ? 'rounded-2xl' :
+                      (block as any).borderRadius === 'circular' ? 'rounded-full' :
+                      'rounded-lg',
+                      (block as any).shadow === 'light' ? 'shadow-md' :
+                      (block as any).shadow === 'medium' ? 'shadow-lg' :
+                      (block as any).shadow === 'strong' ? 'shadow-2xl' :
+                      ''
+                    )}
                   />
                 </div>
                 {block.caption && (

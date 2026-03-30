@@ -839,7 +839,16 @@ const CreateQuizModern = () => {
               )}
               
               {col3Mode === 'preview' ? (
-                <div className="border rounded-lg overflow-hidden bg-background">
+                <div className="border rounded-lg overflow-hidden bg-background relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 z-20 h-7 text-[11px] gap-1 bg-background/90 backdrop-blur-sm shadow-sm"
+                    onClick={() => setCol3Mode('edit')}
+                  >
+                    <ArrowLeft className="h-3 w-3" />
+                    Voltar à Edição
+                  </Button>
                   <UnifiedQuizPreview
                     questions={questions}
                     title={title}

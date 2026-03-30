@@ -1363,12 +1363,14 @@ const SocialProofProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
         <PropertySection title="Cor de Fundo" tooltip="Cor de fundo da notificação">
           <div className="flex gap-1 items-center">
             <Input type="color" value={(block as any).bgColor || '#ffffff'} onChange={(e) => onChange(update(block, { bgColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            <Input value={(block as any).bgColor || ''} placeholder="#ffffff" onChange={(e) => onChange(update(block, { bgColor: e.target.value }))} className="flex-1 h-8 text-xs" />
             {(block as any).bgColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { bgColor: undefined }))}><X className="h-3 w-3" /></Button>}
           </div>
         </PropertySection>
         <PropertySection title="Cor da Borda" tooltip="Cor da borda da notificação">
           <div className="flex gap-1 items-center">
             <Input type="color" value={(block as any).borderColor || '#e5e7eb'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            <Input value={(block as any).borderColor || ''} placeholder="#e5e7eb" onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} className="flex-1 h-8 text-xs" />
             {(block as any).borderColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { borderColor: undefined }))}><X className="h-3 w-3" /></Button>}
           </div>
         </PropertySection>

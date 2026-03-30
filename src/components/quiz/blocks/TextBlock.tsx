@@ -30,12 +30,14 @@ export const TextBlock = ({ block, onChange }: TextBlockProps) => {
 
           <div className="space-y-2">
             <Label htmlFor={`text-${block.id}`}>Conteúdo</Label>
-            <RichTextEditor
-              value={block.content}
-              onChange={(value) => onChange({ ...block, content: value })}
-              placeholder="Digite o texto aqui... Use a barra de ferramentas para formatar."
-              minHeight="200px"
-            />
+            <div style={{ color: (block as any).textColor || undefined }}>
+              <RichTextEditor
+                value={block.content}
+                onChange={(value) => onChange({ ...block, content: value })}
+                placeholder="Digite o texto aqui... Use a barra de ferramentas para formatar."
+                minHeight="200px"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
