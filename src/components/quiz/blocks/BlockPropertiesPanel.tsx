@@ -407,7 +407,7 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <div className="flex gap-2 items-center">
           <Input
             type="color"
-            value={(block as any).textColor || '#000000'}
+            value={(block as any).textColor || '#111111'}
             onChange={(e) => onChange(update(block, { textColor: e.target.value }))}
             className="w-12 h-8 p-1 cursor-pointer"
           />
@@ -1447,6 +1447,9 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
           </SelectContent>
         </Select>
       </PropertySection>
+      <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => onChange(update(block, { _previewKey: ((block as any)._previewKey || 0) + 1 }))}>
+        🔄 Reiniciar Preview
+      </Button>
     </div>
   );
 };
@@ -1636,8 +1639,9 @@ const IconListProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>Cor padrão dos ícones</Label>
+        <Label>Cor do texto dos itens</Label>
         <Input type="color" value={block.iconColor || '#10b981'} onChange={(e) => onChange(update(block, { iconColor: e.target.value }))} />
+        <p className="text-[10px] text-muted-foreground">Emojis não aceitam cor via CSS; esta cor é aplicada ao texto dos itens.</p>
       </div>
       <PropertySection title="Tamanho dos Ícones" tooltip="Tamanho visual dos ícones/emojis na lista">
         <Select value={(block as any).iconSize || 'md'} onValueChange={(v) => onChange(update(block, { iconSize: v }))}>
@@ -2563,6 +2567,7 @@ const RatingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </div>
       </PropertySection>
       <SwitchRow label="Mostrar valor numérico" tooltip="Exibe o número da avaliação ao lado das estrelas" checked={block.showValue || false} onChange={(v) => onChange(update(block, { showValue: v }))} />
+      <SwitchRow label="Permitir meias-estrelas" tooltip="Permite avaliações com 0.5 estrela" checked={block.halfStars || false} onChange={(v) => onChange(update(block, { halfStars: v }))} />
       <SwitchRow label="Obrigatório" tooltip="Exige interação do usuário antes de avançar" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
     </div>
   );

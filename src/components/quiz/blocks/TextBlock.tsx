@@ -36,6 +36,7 @@ export const TextBlock = ({ block, onChange }: TextBlockProps) => {
                 onChange={(value) => onChange({ ...block, content: value })}
                 placeholder="Digite o texto aqui... Use a barra de ferramentas para formatar."
                 minHeight="200px"
+                textColor={(block as any).textColor}
               />
             </div>
           </div>
