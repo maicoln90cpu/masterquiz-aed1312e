@@ -146,15 +146,14 @@ export interface EmbedBlock extends BaseBlock {
 export interface ButtonBlock extends BaseBlock {
   type: 'button';
   text: string;
-  // Ação do botão
   action?: 'link' | 'next_question' | 'go_to_question';
-  url?: string; // Usado quando action = 'link'
-  targetQuestionIndex?: number; // Usado quando action = 'go_to_question' (1-based para o usuário)
+  url?: string;
+  targetQuestionIndex?: number;
   variant?: 'default' | 'outline' | 'secondary' | 'ghost';
   size?: 'sm' | 'default' | 'lg';
   openInNewTab?: boolean;
   icon?: string;
-  // Personalização dinâmica (unificado do antigo personalizedCTA)
+  backgroundColor?: string;
   sourceQuestionId?: string;
   textTemplate?: string;
   conditions?: { answer: string; text: string; url?: string }[];
