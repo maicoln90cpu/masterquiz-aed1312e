@@ -530,6 +530,17 @@ export interface CalculatorBlock extends BaseBlock {
   showGauge?: boolean; // ✅ Etapa 2F: Exibir resultado como gauge visual
 }
 
+export interface RatingBlock extends BaseBlock {
+  type: 'rating';
+  label: string;
+  maxStars: number;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  color?: string;
+  required?: boolean;
+  showValue?: boolean;
+  halfStars?: boolean;
+}
+
 export type QuizBlock =
   | QuestionBlock
   | TextBlock
