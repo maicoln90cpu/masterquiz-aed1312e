@@ -87,7 +87,9 @@ export interface ImageBlock extends BaseBlock {
   alt?: string;
   caption?: string;
   size?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
-  enableLightbox?: boolean; // ✅ Etapa 2F: Clicar para expandir em tela cheia
+  enableLightbox?: boolean;
+  borderRadius?: 'none' | 'small' | 'medium' | 'large' | 'full';
+  shadow?: 'none' | 'small' | 'medium' | 'large';
 }
 
 export interface VideoBlock extends BaseBlock {
