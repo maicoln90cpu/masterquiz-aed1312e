@@ -2,9 +2,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus, Trash2 } from "lucide-react";
 import type { SocialProofBlock as SocialProofBlockType } from "@/types/blocks";
+import { SocialProofBlockPreview } from "../preview/InteractiveBlockPreviews";
 
 interface SocialProofBlockProps {
   block: SocialProofBlockType;
