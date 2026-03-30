@@ -1428,13 +1428,23 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
         <Input type="color" value={block.color || '#3b82f6'} onChange={(e) => onChange(update(block, { color: e.target.value }))} />
       </PropertySection>
       <SwitchRow label="Separador de milhar" tooltip="Adiciona pontos entre milhares para melhor leitura (ex: 1.000.000)" checked={block.separator || false} onChange={(v) => onChange(update(block, { separator: v }))} />
-      {/* ✅ Etapa 2D: Formato de moeda */}
       <SwitchRow label="Formato moeda (R$)" tooltip="Formata o número como valor monetário brasileiro com vírgula decimal" checked={(block as any).currencyFormat || false} onChange={(v) => onChange(update(block, { currencyFormat: v }))} />
       {(block as any).currencyFormat && (
         <PropertySection title="Casas decimais" tooltip="Quantidade de casas após a vírgula">
           <Input type="number" min={0} max={4} value={(block as any).decimalPlaces || 2} onChange={(e) => onChange(update(block, { decimalPlaces: Number(e.target.value) }))} />
         </PropertySection>
       )}
+      <Separator />
+      <PropertySection title="Fonte" tooltip="Família tipográfica do número animado">
+        <Select value={(block as any).fontFamily || 'sans'} onValueChange={(v) => onChange(update(block, { fontFamily: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sans">Sans-serif (padrão)</SelectItem>
+            <SelectItem value="mono">Monospace (timer)</SelectItem>
+            <SelectItem value="serif">Serif (elegante)</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
     </div>
   );
 };
