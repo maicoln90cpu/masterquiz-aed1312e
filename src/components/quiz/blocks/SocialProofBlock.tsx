@@ -65,30 +65,11 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
           ))}
         </div>
 
-        {/* Preview */}
-        {notifications.length > 0 && currentNotification && (
+        {/* ✅ Preview real — WYSIWYG */}
+        {notifications.length > 0 && (
           <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">Preview ({interval}s):</p>
-            <div className="flex items-center justify-center">
-              <div className={cn(
-                "animate-fade-in transition-all duration-300",
-                block.style === 'toast' && "bg-background border shadow-lg rounded-lg p-3 max-w-xs",
-                block.style === 'banner' && "bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center",
-                block.style === 'floating' && "bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2"
-              )}>
-                <div className="flex items-center gap-3">
-                  {block.showAvatar && (
-                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm"><span className="font-semibold">{currentNotification.name}</span> {currentNotification.action}</p>
-                    <p className="text-xs text-muted-foreground">{currentNotification.time}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-sm font-medium text-muted-foreground">Preview (ao vivo)</p>
+            <SocialProofBlockPreview block={block as any} />
           </div>
         )}
 
