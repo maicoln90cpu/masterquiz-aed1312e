@@ -80,6 +80,10 @@ const CreateQuizModern = () => {
 
   const propertiesRef = useRef<HTMLDivElement>(null);
   const quizLoadedRef = useRef(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
+    const stored = localStorage.getItem('quiz_auto_save_enabled');
+    return stored !== null ? stored === 'true' : true;
+  });
   const firedEventsRef = useRef(new Set<string>());
   const fireOnce = useCallback((event: string, data: Record<string, unknown> = {}) => {
     const quizId = searchParams.get('id');
