@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2, List, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2, List, Plus, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -846,9 +846,10 @@ const CreateQuizModern = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-6 text-[11px] px-2 rounded-sm"
+                        className="h-6 text-[11px] px-2 rounded-sm gap-1"
                         onClick={() => setCol3Mode('edit')}
                       >
+                        <X className="h-3 w-3" />
                         Sair do Preview
                       </Button>
                     )}
@@ -860,22 +861,7 @@ const CreateQuizModern = () => {
               )}
               
               {col3Mode === 'preview' ? (
-                <div className="flex flex-col flex-1 min-h-0">
-                  <div className="flex items-center justify-between px-3 py-2 bg-primary/10 border border-primary/20 rounded-t-lg shrink-0">
-                    <span className="text-xs font-medium text-primary">
-                      🔍 Modo Preview — visualização em tempo real
-                    </span>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="h-7 text-[11px] gap-1"
-                      onClick={() => setCol3Mode('edit')}
-                    >
-                      <ArrowLeft className="h-3 w-3" />
-                      Sair do Preview
-                    </Button>
-                  </div>
-                  <div className="border border-t-0 rounded-b-lg overflow-hidden bg-background flex-1 min-h-0">
+                <div className="border rounded-lg overflow-hidden bg-background flex-1 min-h-0">
                   <UnifiedQuizPreview
                     questions={questions}
                     title={title}
@@ -888,7 +874,8 @@ const CreateQuizModern = () => {
                     showQuestionNumber={showQuestionNumber}
                     showIntroScreen={false}
                     externalQuestionIndex={currentQuestionIndex}
-                    mode="fullscreen"
+                    mode="inline"
+                    onClose={() => setCol3Mode('edit')}
                     formConfig={{
                       collect_name: collectName,
                       collect_email: collectEmail,
@@ -896,7 +883,6 @@ const CreateQuizModern = () => {
                       collection_timing: collectionTiming as 'before' | 'after' | 'none',
                     }}
                   />
-                  </div>
                 </div>
               ) : (
                 (() => {

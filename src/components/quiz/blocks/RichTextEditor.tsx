@@ -17,7 +17,6 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   minHeight?: string;
-  textColor?: string;
 }
 
 // Cores de texto disponíveis
@@ -41,7 +40,6 @@ export const RichTextEditor = ({
   onChange, 
   placeholder = "Digite aqui...",
   minHeight = "150px",
-  textColor,
 }: RichTextEditorProps) => {
   // Unique scope per instance to avoid CSS collisions
   const reactId = useId();
@@ -77,9 +75,6 @@ export const RichTextEditor = ({
     "link",
   ];
 
-  const resolvedColor = textColor || 'hsl(var(--foreground))';
-  const placeholderColor = textColor || 'hsl(var(--muted-foreground))';
-
   return (
     <div className={`rich-text-editor ${scopeClass}`} style={{ minHeight }}>
       <ReactQuill
@@ -104,10 +99,10 @@ export const RichTextEditor = ({
         }
         .${scopeClass} .ql-editor {
           min-height: ${minHeight};
-          color: ${resolvedColor};
+          color: hsl(var(--foreground));
         }
         .${scopeClass} .ql-editor.ql-blank::before {
-          color: ${placeholderColor};
+          color: hsl(var(--muted-foreground));
         }
         .${scopeClass} .ql-picker-label,
         .${scopeClass} .ql-picker-item {
