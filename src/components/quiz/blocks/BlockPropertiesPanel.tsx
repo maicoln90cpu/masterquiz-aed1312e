@@ -492,7 +492,29 @@ const ImageProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-      {/* ✅ Etapa 2F: Lightbox ao clicar */}
+      <PropertySection title="Borda Arredondada" tooltip="Controla o arredondamento dos cantos da imagem">
+        <Select value={(block as any).borderRadius || 'medium'} onValueChange={(v) => onChange(update(block, { borderRadius: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="small">Pequena</SelectItem>
+            <SelectItem value="medium">Média</SelectItem>
+            <SelectItem value="large">Grande</SelectItem>
+            <SelectItem value="full">Circular</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      <PropertySection title="Sombra" tooltip="Sombra aplicada na imagem para efeito de profundidade">
+        <Select value={(block as any).shadow || 'none'} onValueChange={(v) => onChange(update(block, { shadow: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="small">Leve</SelectItem>
+            <SelectItem value="medium">Média</SelectItem>
+            <SelectItem value="large">Forte</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
       <SwitchRow label="Expandir ao clicar (Lightbox)" tooltip="Permite ampliar a imagem em tela cheia ao clicar sobre ela" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
     </div>
   );
@@ -1034,6 +1056,22 @@ const SliderProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <PropertySection title="Label Máximo" tooltip="Texto descritivo na extremidade direita do slider">
         <Input value={block.maxLabel || ''} placeholder="Ex: Muito" onChange={(e) => onChange(update(block, { maxLabel: e.target.value }))} />
       </PropertySection>
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores do Slider</Label>
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Cor da Track" tooltip="Cor da barra preenchida do slider">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={(block as any).trackColor || '#3b82f6'} onChange={(e) => onChange(update(block, { trackColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {(block as any).trackColor && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => onChange(update(block, { trackColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+        <PropertySection title="Cor do Thumb" tooltip="Cor do indicador arrastável do slider">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={(block as any).thumbColor || '#3b82f6'} onChange={(e) => onChange(update(block, { thumbColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {(block as any).thumbColor && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => onChange(update(block, { thumbColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+      </div>
       {/* ✅ Etapa 4: Webhook por campo */}
       <Separator />
       <SwitchRow label="🔗 Webhook ao submeter" tooltip="Envia os dados deste campo para uma URL externa (Zapier, n8n, Make) em tempo real" checked={(block as any).webhookOnSubmit || false} onChange={(v) => onChange(update(block, { webhookOnSubmit: v }))} />

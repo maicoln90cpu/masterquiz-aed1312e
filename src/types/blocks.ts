@@ -87,7 +87,9 @@ export interface ImageBlock extends BaseBlock {
   alt?: string;
   caption?: string;
   size?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
-  enableLightbox?: boolean; // ✅ Etapa 2F: Clicar para expandir em tela cheia
+  enableLightbox?: boolean;
+  borderRadius?: 'none' | 'small' | 'medium' | 'large' | 'full';
+  shadow?: 'none' | 'small' | 'medium' | 'large';
 }
 
 export interface VideoBlock extends BaseBlock {
@@ -269,8 +271,10 @@ export interface SliderBlock extends BaseBlock {
   minLabel?: string;
   maxLabel?: string;
   showDots?: boolean;
-  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter valor
-  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
+  trackColor?: string;
+  thumbColor?: string;
+  webhookUrl?: string;
+  webhookOnSubmit?: boolean;
 }
 
 export interface TextInputBlock extends BaseBlock {

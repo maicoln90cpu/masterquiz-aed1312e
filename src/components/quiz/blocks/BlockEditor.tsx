@@ -61,6 +61,7 @@ import { BlockErrorBoundary } from "./BlockErrorBoundary";
 import { CalloutBlockPreview as CalloutBlockPreviewInline, IconListBlockPreview as IconListBlockPreviewInline, QuoteBlockPreview as QuoteBlockPreviewInline, BadgeRowBlockPreview as BadgeRowBlockPreviewInline, BannerBlockPreview as BannerBlockPreviewInline } from "../preview/VisualBlockPreviews";
 import { AnswerSummaryBlockPreview as AnswerSummaryBlockPreviewInline, ProgressMessageBlockPreview as ProgressMessageBlockPreviewInline, AvatarGroupBlockPreview as AvatarGroupBlockPreviewInline, ConditionalTextBlockPreview as ConditionalTextBlockPreviewInline, ComparisonResultBlockPreview as ComparisonResultBlockPreviewInline, PersonalizedCTABlockPreview as PersonalizedCTABlockPreviewInline } from "../preview/DynamicBlockPreviews";
 import { RecommendationBlockPreview as RecommendationBlockPreviewInline } from "../preview/RecommendationBlockPreview";
+import { CalculatorBlockPreview as CalculatorBlockPreviewInline } from "../preview/InteractiveBlockPreviews";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
@@ -230,14 +231,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'recommendation':
         return <RecommendationBlockPreviewInline block={block as any} />;
       case 'calculator':
-        return (
-          <div className="p-4 bg-muted/50 rounded-lg border text-center">
-            <p className="text-sm font-medium">🧮 Calculadora</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {(block as any).formula ? `Fórmula: ${(block as any).formula}` : 'Configure a fórmula nas propriedades'}
-            </p>
-          </div>
-        );
+        return <CalculatorBlockPreviewInline block={block as any} />;
       default:
         return null;
     }
