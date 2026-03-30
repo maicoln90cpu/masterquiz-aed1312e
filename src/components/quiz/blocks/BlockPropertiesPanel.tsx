@@ -632,6 +632,27 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
           </SelectContent>
         </Select>
       </PropertySection>
+      <PropertySection title="Cor de Fundo" tooltip="Cor de fundo personalizada do botão (sobrescreve a variante)">
+        <div className="flex gap-2 items-center">
+          <Input
+            type="color"
+            value={(block as any).backgroundColor || '#3b82f6'}
+            onChange={(e) => onChange(update(block, { backgroundColor: e.target.value }))}
+            className="w-12 h-8 p-1 cursor-pointer"
+          />
+          <Input
+            value={(block as any).backgroundColor || ''}
+            placeholder="Padrão da variante"
+            onChange={(e) => onChange(update(block, { backgroundColor: e.target.value }))}
+            className="flex-1"
+          />
+          {(block as any).backgroundColor && (
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onChange(update(block, { backgroundColor: undefined }))}>
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      </PropertySection>
       <SwitchRow label="Abrir em nova aba" tooltip="Abre o link de destino em uma nova aba do navegador" checked={block.openInNewTab || false} onChange={(v) => onChange(update(block, { openInNewTab: v }))} />
       
       <Separator />
