@@ -92,7 +92,7 @@ export function useQuizPersistence({
     isSaving: isSavingDraft
   } = useAutoSave({
     debounceMs: 30000,
-    enabled: !!quizId,
+    enabled: autoSaveEnabled && !!quizId,
     showToast: false,
     onSaveComplete: onSaveCompleteStable,
     onSaveError: onSaveErrorStable,
