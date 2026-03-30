@@ -12,9 +12,7 @@ interface SocialProofBlockProps {
 }
 
 export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const notifications = block.notifications || [];
-  const interval = block.interval || 5;
 
   useEffect(() => {
     if (notifications.length === 0) return;
