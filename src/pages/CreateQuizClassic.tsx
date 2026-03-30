@@ -65,6 +65,10 @@ const CreateQuizClassic = () => {
   const isExpressMode = searchParams.get('mode') === 'express';
   const [showCelebration, setShowCelebration] = useState(false);
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
+    const stored = localStorage.getItem('quiz_auto_save_enabled');
+    return stored !== null ? stored === 'true' : true;
+  });
 
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
