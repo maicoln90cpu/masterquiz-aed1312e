@@ -232,6 +232,8 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
         return <RecommendationBlockPreviewInline block={block as any} />;
       case 'calculator':
         return <CalculatorBlockPreviewInline block={block as any} />;
+      case 'rating':
+        return <RatingBlockPreviewInline block={block as any} />;
       default:
         return null;
     }
