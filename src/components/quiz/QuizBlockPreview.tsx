@@ -184,6 +184,8 @@ export const QuizBlockPreview = ({
         return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} onCtaClick={onCtaClick} />;
       case "calculator":
         return <CalculatorBlockPreview key={block.id} block={block as QuizBlock & { type: 'calculator' }} />;
+      case "rating":
+        return <RatingBlockPreview key={block.id} block={block as QuizBlock & { type: 'rating' }} />;
       default:
         return null;
     }
