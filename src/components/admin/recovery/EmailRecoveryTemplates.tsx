@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, Pencil, Trash2, Mail, Eye, Code, Monitor } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Mail, Eye, Code, Monitor, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -27,6 +27,9 @@ interface EmailTemplate {
   usage_count: number;
   created_at: string;
 }
+
+type SortField = 'name' | 'category' | 'trigger_days' | 'usage_count' | 'is_active' | 'priority';
+type SortDirection = 'asc' | 'desc';
 
 const CATEGORIES = [
   { value: 'welcome', label: '👋 Boas-vindas' },
@@ -66,6 +69,8 @@ export function EmailRecoveryTemplates() {
   const [editing, setEditing] = useState<EmailTemplate | null>(null);
   const [editorTab, setEditorTab] = useState<string>('visual');
   const [form, setForm] = useState(defaultForm);
+  const [sortField, setSortField] = useState<SortField>('priority');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => { load(); }, []);
@@ -84,6 +89,50 @@ export function EmailRecoveryTemplates() {
       setTemplates(data || []);
     } catch { toast.error('Erro ao carregar templates'); }
     finally { setLoading(false); }
+  };
+
+  const sortedTemplates = useMemo(() => {
+    const sorted = [...templates].sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name, 'pt-BR');
+          break;
+        case 'category':
+          comparison = a.category.localeCompare(b.category);
+          break;
+        case 'trigger_days':
+          comparison = a.trigger_days - b.trigger_days;
+          break;
+        case 'usage_count':
+          comparison = a.usage_count - b.usage_count;
+          break;
+        case 'is_active':
+          comparison = (a.is_active === b.is_active) ? 0 : a.is_active ? -1 : 1;
+          break;
+        case 'priority':
+          comparison = a.priority - b.priority;
+          break;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    return sorted;
+  }, [templates, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
   };
 
   const save = async () => {
@@ -303,18 +352,28 @@ export function EmailRecoveryTemplates() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('name')}>
+                  <span className="flex items-center">Nome <SortIcon field="name" /></span>
+                </TableHead>
                 <TableHead>Assunto</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Trigger</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('category')}>
+                  <span className="flex items-center">Categoria <SortIcon field="category" /></span>
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('trigger_days')}>
+                  <span className="flex items-center">Trigger <SortIcon field="trigger_days" /></span>
+                </TableHead>
                 <TableHead>A/B</TableHead>
-                <TableHead>Usos</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('usage_count')}>
+                  <span className="flex items-center">Usos <SortIcon field="usage_count" /></span>
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('is_active')}>
+                  <span className="flex items-center">Status <SortIcon field="is_active" /></span>
+                </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {templates.map(t => (
+              {sortedTemplates.map(t => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">{t.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{t.subject}</TableCell>
