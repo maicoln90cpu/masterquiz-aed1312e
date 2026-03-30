@@ -2532,6 +2532,40 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
 };
 
 
+// ---- RATING ----
+const RatingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'rating') return null;
+  return (
+    <div className="space-y-4">
+      <PropertySection title="Label" tooltip="Texto descritivo exibido acima das estrelas">
+        <Input value={block.label} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
+      </PropertySection>
+      <PropertySection title="Máximo de Estrelas" tooltip="Quantidade total de estrelas na escala">
+        <Input type="number" min={3} max={10} value={block.maxStars} onChange={(e) => onChange(update(block, { maxStars: Number(e.target.value) }))} />
+      </PropertySection>
+      <PropertySection title="Tamanho" tooltip="Dimensão visual das estrelas">
+        <Select value={block.size || 'lg'} onValueChange={(v) => onChange(update(block, { size: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sm">Pequeno</SelectItem>
+            <SelectItem value="md">Médio</SelectItem>
+            <SelectItem value="lg">Grande</SelectItem>
+            <SelectItem value="xl">Extra Grande</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      <PropertySection title="Cor das Estrelas" tooltip="Cor de preenchimento das estrelas selecionadas">
+        <div className="flex gap-1 items-center">
+          <Input type="color" value={block.color || '#f59e0b'} onChange={(e) => onChange(update(block, { color: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+          {block.color && block.color !== '#f59e0b' && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { color: '#f59e0b' }))}><X className="h-3 w-3" /></Button>}
+        </div>
+      </PropertySection>
+      <SwitchRow label="Mostrar valor numérico" tooltip="Exibe o número da avaliação ao lado das estrelas" checked={block.showValue || false} onChange={(v) => onChange(update(block, { showValue: v }))} />
+      <SwitchRow label="Obrigatório" tooltip="Exige interação do usuário antes de avançar" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+    </div>
+  );
+};
+
 
 export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions, currentQuestionIndex }: BlockPropertiesPanelProps) => {
   const block = normalizeBlock(rawBlock);
