@@ -201,6 +201,35 @@ export function RecoveryCampaigns() {
         }
       }
 
+      // Fetch global stats per template_id (all campaigns combined)
+      const uniqueTemplateIds = [...new Set(rawCampaigns.map(c => c.template_id).filter(Boolean))] as string[];
+      const templateGlobalStats: Record<string, Record<string, number>> = {};
+      
+      if (uniqueTemplateIds.length > 0) {
+        const { data: globalContacts } = await supabase
+          .from('recovery_contacts')
+          .select('template_id, status')
+          .in('template_id', uniqueTemplateIds);
+
+        if (globalContacts) {
+          for (const gc of globalContacts) {
+            if (!gc.template_id) continue;
+            if (!templateGlobalStats[gc.template_id]) templateGlobalStats[gc.template_id] = {};
+            templateGlobalStats[gc.template_id][gc.status] = (templateGlobalStats[gc.template_id][gc.status] || 0) + 1;
+          }
+        }
+      }
+
+      // Attach global template stats to campaigns
+      for (const campaign of rawCampaigns) {
+        const gs = campaign.template_id ? templateGlobalStats[campaign.template_id] : null;
+        if (gs) {
+          (campaign as any).globalSent = (gs.sent || 0) + (gs.delivered || 0) + (gs.read || 0) + (gs.responded || 0);
+          (campaign as any).globalDelivered = (gs.delivered || 0) + (gs.read || 0) + (gs.responded || 0);
+          (campaign as any).globalTotal = Object.values(gs).reduce((a, b) => a + b, 0);
+        }
+      }
+
       setCampaigns(rawCampaigns);
       setTemplates(templatesRes.data || []);
     } catch (error) {
