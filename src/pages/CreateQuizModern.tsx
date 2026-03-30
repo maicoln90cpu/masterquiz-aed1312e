@@ -852,6 +852,13 @@ const CreateQuizModern = () => {
                     showQuestionNumber={showQuestionNumber}
                     showIntroScreen={false}
                     externalQuestionIndex={currentQuestionIndex}
+                    mode="fullscreen"
+                    formConfig={{
+                      collect_name: collectName,
+                      collect_email: collectEmail,
+                      collect_whatsapp: collectWhatsapp,
+                      collection_timing: collectionTiming as 'before' | 'after' | 'none',
+                    }}
                   />
                 </div>
               ) : (
