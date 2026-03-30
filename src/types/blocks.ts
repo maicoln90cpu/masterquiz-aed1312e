@@ -347,6 +347,8 @@ export interface SocialProofBlock extends BaseBlock {
   style?: 'toast' | 'banner' | 'floating';
   position?: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
   showAvatar?: boolean;
+  bgColor?: string;
+  borderColor?: string;
 }
 
 export interface AnimatedCounterBlock extends BaseBlock {
