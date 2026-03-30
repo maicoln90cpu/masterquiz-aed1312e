@@ -492,7 +492,29 @@ const ImageProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </PropertySection>
-      {/* ✅ Etapa 2F: Lightbox ao clicar */}
+      <PropertySection title="Borda Arredondada" tooltip="Controla o arredondamento dos cantos da imagem">
+        <Select value={(block as any).borderRadius || 'medium'} onValueChange={(v) => onChange(update(block, { borderRadius: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="small">Pequena</SelectItem>
+            <SelectItem value="medium">Média</SelectItem>
+            <SelectItem value="large">Grande</SelectItem>
+            <SelectItem value="full">Circular</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      <PropertySection title="Sombra" tooltip="Sombra aplicada na imagem para efeito de profundidade">
+        <Select value={(block as any).shadow || 'none'} onValueChange={(v) => onChange(update(block, { shadow: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="small">Leve</SelectItem>
+            <SelectItem value="medium">Média</SelectItem>
+            <SelectItem value="large">Forte</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
       <SwitchRow label="Expandir ao clicar (Lightbox)" tooltip="Permite ampliar a imagem em tela cheia ao clicar sobre ela" checked={(block as any).enableLightbox || false} onChange={(v) => onChange(update(block, { enableLightbox: v }))} />
     </div>
   );

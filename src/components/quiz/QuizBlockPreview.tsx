@@ -182,17 +182,7 @@ export const QuizBlockPreview = ({
       case "recommendation":
         return <RecommendationBlockPreview key={block.id} block={block as QuizBlock & { type: 'recommendation' }} answers={answers} questions={questions} onCtaClick={onCtaClick} />;
       case "calculator":
-        return (
-          <div key={block.id} className="p-6 bg-muted/30 rounded-lg border text-center">
-            <p className="text-lg font-semibold">🧮 {(block as any).resultLabel || 'Resultado'}</p>
-            <p className="text-2xl font-bold text-primary mt-2">
-              {(block as any).resultPrefix || ''}{(block as any).formula ? '—' : '0'} {(block as any).resultUnit || ''}
-            </p>
-            {(block as any).formula && (
-              <p className="text-xs text-muted-foreground mt-2">Fórmula: {(block as any).formula}</p>
-            )}
-          </div>
-        );
+        return <CalculatorBlockPreview key={block.id} block={block as QuizBlock & { type: 'calculator' }} />;
       default:
         return null;
     }

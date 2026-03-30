@@ -125,18 +125,33 @@ export const ImageBlockPreview = ({ block }: { block: QuizBlock & { type: 'image
     : block.size === "full" ? "w-full"
     : "max-w-md";
 
+  const borderRadiusClass = {
+    none: 'rounded-none',
+    small: 'rounded-md',
+    medium: 'rounded-lg',
+    large: 'rounded-2xl',
+    full: 'rounded-full',
+  }[(block as any).borderRadius || 'medium'] || 'rounded-lg';
+
+  const shadowClass = {
+    none: '',
+    small: 'shadow-sm',
+    medium: 'shadow-md',
+    large: 'shadow-xl',
+  }[(block as any).shadow || 'none'] || '';
+
   return (
     <div className="space-y-2 w-full overflow-hidden">
       <div className={`relative group ${sizeClass} mx-auto`}>
         <img
           src={block.url}
           alt={block.alt || "Quiz image"}
-          className={`rounded-lg w-full h-auto object-contain ${(block as any).enableLightbox ? 'cursor-zoom-in' : ''}`}
+          className={`${borderRadiusClass} ${shadowClass} w-full h-auto object-contain ${(block as any).enableLightbox ? 'cursor-zoom-in' : ''}`}
           loading="lazy"
           onClick={() => (block as any).enableLightbox && setLightboxOpen(true)}
         />
         {(block as any).enableLightbox && (
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center pointer-events-none">
+          <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors ${borderRadiusClass} flex items-center justify-center pointer-events-none`}>
             <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-70 transition-opacity drop-shadow-lg" />
           </div>
         )}
