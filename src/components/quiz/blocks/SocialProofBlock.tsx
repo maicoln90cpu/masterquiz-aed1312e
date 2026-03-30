@@ -30,7 +30,7 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
     onChange({ ...block, notifications: notifications.filter((_, i) => i !== index) });
   };
 
-  const currentNotification = notifications[currentIndex];
+  
 
   return (
     <Card>
