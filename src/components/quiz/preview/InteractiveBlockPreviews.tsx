@@ -882,3 +882,102 @@ export const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { ty
     </div>
   );
 };
+
+// ---- CALCULATOR ----
+export const CalculatorBlockPreview = ({ block }: { block: QuizBlock & { type: 'calculator' } }) => {
+  const variables = (block as any).variables || [];
+  const formula = (block as any).formula || '';
+  const ranges = (block as any).ranges || [];
+  const resultLabel = (block as any).resultLabel || 'Resultado';
+  const resultPrefix = (block as any).resultPrefix || '';
+  const resultUnit = (block as any).resultUnit || '';
+  const showGauge = (block as any).showGauge;
+
+  // Calculate example result using default values
+  let exampleResult = 0;
+  try {
+    let evalFormula = formula;
+    variables.forEach((v: any) => {
+      const regex = new RegExp(`\\b${v.name}\\b`, 'g');
+      evalFormula = evalFormula.replace(regex, String(v.defaultValue || 0));
+    });
+    if (evalFormula) {
+      // Safe eval for simple math
+      exampleResult = Function(`"use strict"; return (${evalFormula})`)();
+      if (isNaN(exampleResult) || !isFinite(exampleResult)) exampleResult = 0;
+    }
+  } catch { exampleResult = 0; }
+
+  const decimalPlaces = (block as any).decimalPlaces || 2;
+  const formattedResult = exampleResult.toFixed(decimalPlaces);
+
+  // Find matching range
+  const matchedRange = ranges.find((r: any) => exampleResult >= r.min && exampleResult <= r.max);
+
+  // Gauge percentage (based on first and last range)
+  const gaugeMin = ranges.length > 0 ? Math.min(...ranges.map((r: any) => r.min)) : 0;
+  const gaugeMax = ranges.length > 0 ? Math.max(...ranges.map((r: any) => r.max)) : 100;
+  const gaugePercent = gaugeMax > gaugeMin ? Math.min(100, Math.max(0, ((exampleResult - gaugeMin) / (gaugeMax - gaugeMin)) * 100)) : 50;
+
+  return (
+    <div className="p-6 space-y-4">
+      <p className="text-lg font-semibold text-center">🧮 {resultLabel}</p>
+      
+      {/* Variables display */}
+      {variables.length > 0 && (
+        <div className="flex flex-wrap gap-2 justify-center">
+          {variables.map((v: any) => (
+            <span key={v.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs font-medium">
+              {v.name} = {v.defaultValue || 0}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Formula display */}
+      {formula && (
+        <p className="text-xs text-center text-muted-foreground font-mono bg-muted/50 px-3 py-1.5 rounded-md">
+          {formula}
+        </p>
+      )}
+
+      {/* Result */}
+      <div className="text-center">
+        <p className="text-3xl font-bold text-primary">
+          {resultPrefix}{formattedResult} {resultUnit}
+        </p>
+        {matchedRange && (
+          <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: matchedRange.color || 'hsl(var(--primary))' }}>
+            {matchedRange.label}
+          </span>
+        )}
+      </div>
+
+      {/* Gauge */}
+      {showGauge && ranges.length > 0 && (
+        <div className="space-y-1">
+          <div className="h-3 rounded-full overflow-hidden flex">
+            {ranges.map((r: any, i: number) => {
+              const rangeWidth = ((r.max - r.min) / (gaugeMax - gaugeMin)) * 100;
+              return (
+                <div key={i} className="h-full" style={{ width: `${rangeWidth}%`, backgroundColor: r.color || '#e5e7eb' }} />
+              );
+            })}
+          </div>
+          <div className="relative h-4">
+            <div className="absolute w-3 h-3 rounded-full bg-foreground border-2 border-background shadow-md -translate-x-1/2" style={{ left: `${gaugePercent}%` }} />
+          </div>
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            {ranges.map((r: any, i: number) => (
+              <span key={i}>{r.label}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!formula && (
+        <p className="text-xs text-center text-muted-foreground">Configure a fórmula nas propriedades →</p>
+      )}
+    </div>
+  );
+};
