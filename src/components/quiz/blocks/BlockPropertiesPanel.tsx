@@ -1183,9 +1183,30 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </p>
         </PropertySection>
       )}
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores por Faixa</Label>
+      <div className="grid grid-cols-3 gap-2">
+        <PropertySection title="Detrator (0-6)" tooltip="Cor dos botões na faixa de detratores">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={block.detractorColor || '#ef4444'} onChange={(e) => onChange(update(block, { detractorColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {block.detractorColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { detractorColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+        <PropertySection title="Neutro (7-8)" tooltip="Cor dos botões na faixa neutra">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={block.passiveColor || '#eab308'} onChange={(e) => onChange(update(block, { passiveColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {block.passiveColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { passiveColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+        <PropertySection title="Promotor (9-10)" tooltip="Cor dos botões na faixa de promotores">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={block.promoterColor || '#22c55e'} onChange={(e) => onChange(update(block, { promoterColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {block.promoterColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { promoterColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+      </div>
       <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground space-y-1">
         <p>🔴 0-6 = Detrator | 🟡 7-8 = Neutro | 🟢 9-10 = Promotor</p>
-        <p>As cores são aplicadas automaticamente no preview.</p>
       </div>
     </div>
   );
