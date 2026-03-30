@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Plus, Trash2 } from "lucide-react";
-import type { PriceBlock as PriceBlockType } from "@/types/blocks";
+import type { PriceBlock as PriceBlockType, QuizBlock } from "@/types/blocks";
+import { PriceBlockPreview } from "../preview/StaticBlockPreviews";
 
 interface PriceBlockProps {
   block: PriceBlockType;
@@ -11,7 +12,6 @@ interface PriceBlockProps {
 }
 
 export const PriceBlock = ({ block, onChange }: PriceBlockProps) => {
-  // Normalização defensiva
   const features = block.features || ['Recurso 1'];
   const safeBlock = { ...block, features };
 
@@ -92,6 +92,12 @@ export const PriceBlock = ({ block, onChange }: PriceBlockProps) => {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Preview WYSIWYG real */}
+        <div className="pt-2 border-t">
+          <p className="text-xs text-muted-foreground mb-2">Preview</p>
+          <PriceBlockPreview block={safeBlock as unknown as QuizBlock & { type: 'price' }} />
         </div>
 
         <p className="text-xs text-muted-foreground">

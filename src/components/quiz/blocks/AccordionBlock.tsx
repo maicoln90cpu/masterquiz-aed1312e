@@ -4,8 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2 } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { AccordionBlock as AccordionBlockType } from "@/types/blocks";
+import type { AccordionBlock as AccordionBlockType, QuizBlock } from "@/types/blocks";
+import { AccordionBlockPreview } from "../preview/InteractiveBlockPreviews";
 
 interface AccordionBlockProps {
   block: AccordionBlockType;
@@ -13,7 +13,6 @@ interface AccordionBlockProps {
 }
 
 export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
-  // Normalização defensiva
   const items = block.items || [{ question: 'Nova pergunta', answer: 'Resposta...' }];
   const safeBlock = { ...block, items };
 
@@ -73,18 +72,10 @@ export const AccordionBlock = ({ block, onChange }: AccordionBlockProps) => {
           ))}
         </div>
 
-        {/* Preview */}
-        <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-          <p className="text-sm font-medium text-muted-foreground">Preview:</p>
-          <h3 className="font-semibold">{block.title}</h3>
-          <Accordion type={safeBlock.allowMultiple ? "multiple" : "single"} collapsible className="w-full">
-            {items.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className={block.style === 'bordered' ? 'border rounded-lg mb-2 px-3' : ''}>
-                <AccordionTrigger className={block.style === 'minimal' ? 'text-sm py-2' : ''}>{item.question}</AccordionTrigger>
-                <AccordionContent>{item.answer}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        {/* Preview WYSIWYG real */}
+        <div className="p-4 border rounded-lg bg-muted/10">
+          <p className="text-xs text-muted-foreground mb-2">Preview</p>
+          <AccordionBlockPreview block={safeBlock as unknown as QuizBlock & { type: 'accordion' }} />
         </div>
 
         <p className="text-xs text-muted-foreground">
