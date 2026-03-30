@@ -413,7 +413,12 @@ export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion
 
   return (
     <div className="flex justify-center">
-      <Button variant={block.variant || 'default'} size={block.size || 'default'} onClick={handleButtonClick}>
+      <Button
+        variant={block.variant || 'default'}
+        size={block.size || 'default'}
+        onClick={handleButtonClick}
+        style={(block as any).backgroundColor ? { backgroundColor: (block as any).backgroundColor, borderColor: (block as any).backgroundColor, color: '#fff' } : undefined}
+      >
         {block.text}
       </Button>
     </div>
