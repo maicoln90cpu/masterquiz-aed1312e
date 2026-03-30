@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { QuestionConfigStep } from "@/components/quiz/QuestionConfigStep";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
 import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";
@@ -63,6 +65,10 @@ const CreateQuizClassic = () => {
   const isExpressMode = searchParams.get('mode') === 'express';
   const [showCelebration, setShowCelebration] = useState(false);
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
+    const stored = localStorage.getItem('quiz_auto_save_enabled');
+    return stored !== null ? stored === 'true' : true;
+  });
 
   const { hasInteracted, trackInteraction } = useEditorInteractionTracker(searchParams.get('id'));
 
@@ -131,6 +137,7 @@ const CreateQuizClassic = () => {
     clearHistory,
     hasUserInteracted: hasInteracted,
     isExpressMode,
+    autoSaveEnabled,
   });
 
   const {
@@ -381,11 +388,28 @@ const CreateQuizClassic = () => {
                   <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
                   
                   <AutoSaveIndicator
-                    status={!isOnline ? 'offline' : autoSaveStatus}
+                    status={!autoSaveEnabled ? 'disabled' : !isOnline ? 'offline' : autoSaveStatus}
                     lastSavedAt={lastSavedToSupabase}
                     hasQuizId={!!quizId}
                     compact
                   />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center">
+                        <Switch
+                          checked={autoSaveEnabled}
+                          onCheckedChange={(checked) => {
+                            setAutoSaveEnabled(checked);
+                            localStorage.setItem('quiz_auto_save_enabled', String(checked));
+                          }}
+                          className="scale-75"
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{autoSaveEnabled ? t('autoSave.toggleOff', 'Desativar auto-save') : t('autoSave.toggleOn', 'Ativar auto-save')}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </>
               )}
 
@@ -587,11 +611,28 @@ const CreateQuizClassic = () => {
                           </span>
                         </Button>
                         <AutoSaveIndicator
-                          status={!isOnline ? 'offline' : autoSaveStatus}
+                          status={!autoSaveEnabled ? 'disabled' : !isOnline ? 'offline' : autoSaveStatus}
                           lastSavedAt={lastSavedToSupabase}
                           hasQuizId={!!quizId}
                           compact
                         />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center">
+                              <Switch
+                                checked={autoSaveEnabled}
+                                onCheckedChange={(checked) => {
+                                  setAutoSaveEnabled(checked);
+                                  localStorage.setItem('quiz_auto_save_enabled', String(checked));
+                                }}
+                                className="scale-75"
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>{autoSaveEnabled ? t('autoSave.toggleOff', 'Desativar auto-save') : t('autoSave.toggleOn', 'Ativar auto-save')}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </div>
                   )}

@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
     if (toQueue.length > 0) {
       const { error: insertError } = await supabase
         .from('email_recovery_contacts')
-        .upsert(toQueue, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
+        .upsert(toQueue, { onConflict: 'user_id,template_id,campaign_id', ignoreDuplicates: true });
       if (insertError) throw insertError;
     }
 

@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { BlockPropertiesPanel } from "@/components/quiz/blocks/BlockPropertiesPanel";
 import { BlockEditor } from "@/components/quiz/blocks/BlockEditor";
 import { ModernBlockPalette } from "@/components/quiz/blocks/ModernBlockPalette";
@@ -80,6 +82,10 @@ const CreateQuizModern = () => {
 
   const propertiesRef = useRef<HTMLDivElement>(null);
   const quizLoadedRef = useRef(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
+    const stored = localStorage.getItem('quiz_auto_save_enabled');
+    return stored !== null ? stored === 'true' : true;
+  });
   const firedEventsRef = useRef(new Set<string>());
   const fireOnce = useCallback((event: string, data: Record<string, unknown> = {}) => {
     const quizId = searchParams.get('id');
@@ -147,6 +153,7 @@ const CreateQuizModern = () => {
     hasUserInteracted: hasInteracted,
     isExpressMode,
     editorMode: 'modern',
+    autoSaveEnabled,
   });
 
   // ✅ Hook de manipulação de perguntas
@@ -405,11 +412,28 @@ const CreateQuizModern = () => {
             {title || t('createQuiz.newQuiz', 'Novo Quiz')}
           </h1>
           <AutoSaveIndicator
-            status={!isOnline ? 'offline' : autoSaveStatus}
+            status={!autoSaveEnabled ? 'disabled' : !isOnline ? 'offline' : autoSaveStatus}
             lastSavedAt={lastSavedToSupabase}
             hasQuizId={!!quizId}
             compact
           />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center">
+                <Switch
+                  checked={autoSaveEnabled}
+                  onCheckedChange={(checked) => {
+                    setAutoSaveEnabled(checked);
+                    localStorage.setItem('quiz_auto_save_enabled', String(checked));
+                  }}
+                  className="scale-75"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{autoSaveEnabled ? t('autoSave.toggleOff', 'Desativar auto-save') : t('autoSave.toggleOn', 'Ativar auto-save')}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center gap-2">
           <UndoRedoControls

@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline';
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline' | 'disabled';
 
 interface AutoSaveIndicatorProps {
   status: SaveStatus;
@@ -70,6 +70,13 @@ export const AutoSaveIndicator = ({
           icon: <CloudOff className="h-3.5 w-3.5" />,
           label: t('autoSave.offline', 'Offline - salvo localmente'),
           color: 'bg-muted text-muted-foreground border-muted',
+          pulse: false
+        };
+      case 'disabled':
+        return {
+          icon: <CloudOff className="h-3.5 w-3.5" />,
+          label: t('autoSave.disabled', 'Auto-save desativado'),
+          color: 'bg-muted/50 text-muted-foreground border-muted',
           pulse: false
         };
       default:

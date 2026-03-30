@@ -37,6 +37,8 @@ interface UseQuizPersistenceOptions {
   isExpressMode?: boolean;
   /** Editor layout mode — 'modern' fires B-variant events for A/B tracking */
   editorMode?: 'classic' | 'modern';
+  /** Whether auto-save is enabled (default: true) */
+  autoSaveEnabled?: boolean;
 }
 
 // ============================================
@@ -58,6 +60,7 @@ export function useQuizPersistence({
   hasUserInteracted = false,
   isExpressMode = false,
   editorMode = 'classic',
+  autoSaveEnabled = true,
 }: UseQuizPersistenceOptions) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -89,7 +92,7 @@ export function useQuizPersistence({
     isSaving: isSavingDraft
   } = useAutoSave({
     debounceMs: 30000,
-    enabled: !!quizId,
+    enabled: autoSaveEnabled && !!quizId,
     showToast: false,
     onSaveComplete: onSaveCompleteStable,
     onSaveError: onSaveErrorStable,
