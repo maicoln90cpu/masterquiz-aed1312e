@@ -17,19 +17,25 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log('E-goi webhook received:', JSON.stringify(body));
 
-    // E-goi sends different event types
-    // Normalize: could be single object or array
     const events = Array.isArray(body) ? body : [body];
     let processed = 0;
 
     for (const event of events) {
-      const messageId = event.messageId || event.message_id || event.msgId || event.id;
-      const eventType = (event.event || event.type || event.action || '').toLowerCase();
+      // E-goi Slingshot V2 sends nested structure: { data: { messageId, ... }, action: "SENT" }
+      // Also support flat structure as fallback
+      const nestedData = event.data || {};
+      const messageId = nestedData.messageId || nestedData.message_id || nestedData.msgId
+        || event.messageId || event.message_id || event.msgId || event.id;
+      const eventType = (
+        event.action || event.event || event.type || nestedData.action || ''
+      ).toLowerCase();
 
       if (!messageId) {
         console.log('No messageId in event, skipping:', JSON.stringify(event));
         continue;
       }
+
+      console.log(`Processing event: type=${eventType}, messageId=${messageId}`);
 
       // Find contact by egoi_message_id
       const { data: contact } = await supabase
@@ -58,7 +64,7 @@ Deno.serve(async (req) => {
           .from('email_recovery_contacts')
           .update({
             clicked_at: new Date().toISOString(),
-            opened_at: new Date().toISOString(), // click implies open
+            opened_at: new Date().toISOString(),
             status: 'clicked',
           })
           .eq('id', contact.id);
@@ -75,13 +81,25 @@ Deno.serve(async (req) => {
           .from('email_recovery_contacts')
           .update({
             status: 'failed',
-            error_message: `${eventType}: ${event.reason || event.description || 'Bounce/Complaint'}`,
+            error_message: `${eventType}: ${nestedData.reason || event.reason || event.description || 'Bounce/Complaint'}`,
           })
           .eq('id', contact.id);
         processed++;
 
+      } else if (eventType === 'sent' || eventType === 'delivered') {
+        // Mark as sent if still pending
+        if (contact.status === 'pending' || contact.status === 'queued') {
+          await supabase
+            .from('email_recovery_contacts')
+            .update({
+              status: 'sent',
+              sent_at: new Date().toISOString(),
+            })
+            .eq('id', contact.id);
+          processed++;
+        }
       } else {
-        console.log('Unknown event type:', eventType);
+        console.log('Unknown event type:', eventType, 'full event:', JSON.stringify(event));
       }
     }
 

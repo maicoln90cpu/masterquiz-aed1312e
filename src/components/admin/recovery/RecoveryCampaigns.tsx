@@ -185,12 +185,18 @@ export function RecoveryCampaigns() {
 
           for (const campaign of rawCampaigns) {
             const c = counters[campaign.id] || {};
-            campaign.sent_count = (c.sent || 0) + (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
+            const realSent = (c.sent || 0) + (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
+            const realFailed = c.failed || 0;
+            const realQueued = (c.pending || 0) + (c.queued || 0);
+            const realTotal = Object.values(c).reduce((a, b) => a + b, 0);
+
+            campaign.sent_count = realSent;
             campaign.delivered_count = (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
             campaign.responded_count = c.responded || 0;
-            campaign.failed_count = c.failed || 0;
-            campaign.queued_count = (c.pending || 0) + (c.queued || 0);
-            campaign.total_targets = Object.values(c).reduce((a, b) => a + b, 0);
+            campaign.failed_count = realFailed;
+            // Use DB values as fallback when real contacts are fewer (due to deduplication)
+            campaign.queued_count = Math.max(realQueued, campaign.queued_count || 0);
+            campaign.total_targets = Math.max(realTotal, campaign.total_targets || 0);
           }
         }
       }

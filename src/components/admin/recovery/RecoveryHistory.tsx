@@ -291,8 +291,8 @@ export function RecoveryHistory() {
                     </TableCell>
                     <TableCell>{item.phone_number}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {item.recovery_templates?.name || 'N/A'}
+                      <Badge variant="outline" className={!item.recovery_templates?.name ? 'text-muted-foreground' : ''}>
+                        {item.recovery_templates?.name || 'Sem template'}
                       </Badge>
                     </TableCell>
                     <TableCell>
