@@ -137,6 +137,7 @@ const CreateQuizClassic = () => {
     clearHistory,
     hasUserInteracted: hasInteracted,
     isExpressMode,
+    autoSaveEnabled,
   });
 
   const {
