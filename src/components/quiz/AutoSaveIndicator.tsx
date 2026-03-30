@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline';
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline' | 'disabled';
 
 interface AutoSaveIndicatorProps {
   status: SaveStatus;
