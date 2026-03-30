@@ -2,7 +2,8 @@ import {
   HelpCircle, Type, Minus, Image, Video, Music, Images, Code,
   SlidersHorizontal, MessageSquare, Star, ChevronDown, Columns, Bell,
   MousePointerClick, DollarSign, BarChart3, Loader2, TrendingUp, Timer,
-  AlertTriangle, List, Quote, Award, Flag, ClipboardList, Users, GitBranch, ArrowRightLeft, Calculator
+  AlertTriangle, List, Quote, Award, Flag, ClipboardList, Users, GitBranch, ArrowRightLeft, Calculator,
+  StarHalf
 } from "lucide-react";
 import type { BlockType } from "@/types/blocks";
 import type { LucideIcon } from "lucide-react";
@@ -59,6 +60,7 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'slider', icon: SlidersHorizontal, labelKey: 'createQuiz.blocks.slider', defaultLabel: 'Slider/Range' },
       { type: 'textInput', icon: MessageSquare, labelKey: 'createQuiz.blocks.textInput', defaultLabel: 'Input de Texto' },
       { type: 'nps', icon: Star, labelKey: 'createQuiz.blocks.nps', defaultLabel: 'NPS (Satisfação)' },
+      { type: 'rating', icon: StarHalf, labelKey: 'createQuiz.blocks.rating', defaultLabel: 'Avaliação (Estrelas)' },
     ],
   },
   {

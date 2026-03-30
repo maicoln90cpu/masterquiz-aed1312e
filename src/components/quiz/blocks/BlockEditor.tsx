@@ -61,7 +61,7 @@ import { BlockErrorBoundary } from "./BlockErrorBoundary";
 import { CalloutBlockPreview as CalloutBlockPreviewInline, IconListBlockPreview as IconListBlockPreviewInline, QuoteBlockPreview as QuoteBlockPreviewInline, BadgeRowBlockPreview as BadgeRowBlockPreviewInline, BannerBlockPreview as BannerBlockPreviewInline } from "../preview/VisualBlockPreviews";
 import { AnswerSummaryBlockPreview as AnswerSummaryBlockPreviewInline, ProgressMessageBlockPreview as ProgressMessageBlockPreviewInline, AvatarGroupBlockPreview as AvatarGroupBlockPreviewInline, ConditionalTextBlockPreview as ConditionalTextBlockPreviewInline, ComparisonResultBlockPreview as ComparisonResultBlockPreviewInline, PersonalizedCTABlockPreview as PersonalizedCTABlockPreviewInline } from "../preview/DynamicBlockPreviews";
 import { RecommendationBlockPreview as RecommendationBlockPreviewInline } from "../preview/RecommendationBlockPreview";
-import { CalculatorBlockPreview as CalculatorBlockPreviewInline } from "../preview/InteractiveBlockPreviews";
+import { CalculatorBlockPreview as CalculatorBlockPreviewInline, RatingBlockPreview as RatingBlockPreviewInline } from "../preview/InteractiveBlockPreviews";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
@@ -152,6 +152,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'personalizedCTA':
       case 'recommendation':
       case 'calculator':
+      case 'rating':
         return true;
       default:
         return false;
@@ -232,6 +233,8 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
         return <RecommendationBlockPreviewInline block={block as any} />;
       case 'calculator':
         return <CalculatorBlockPreviewInline block={block as any} />;
+      case 'rating':
+        return <RatingBlockPreviewInline block={block as any} />;
       default:
         return null;
     }

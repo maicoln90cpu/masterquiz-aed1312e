@@ -77,6 +77,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       case 'personalizedCTA': return <Bell className="h-3 w-3" />;
       case 'recommendation': return <Star className="h-3 w-3" />;
       case 'calculator': return <BarChart3 className="h-3 w-3" />;
+      case 'rating': return <Star className="h-3 w-3" />;
     }
   };
 
@@ -117,6 +118,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       personalizedCTA: 'CTA Personalizado',
       recommendation: 'Recomendação',
       calculator: 'Calculadora',
+      rating: 'Avaliação (Estrelas)',
     };
     return labels[type];
   };

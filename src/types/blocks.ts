@@ -35,7 +35,8 @@ export type BlockType =
   | 'comparisonResult'
   | 'personalizedCTA'
   | 'recommendation'
-  | 'calculator';
+  | 'calculator'
+  | 'rating';
 
 export interface BaseBlock {
   id: string;
@@ -300,8 +301,11 @@ export interface NPSBlock extends BaseBlock {
   required?: boolean;
   showComment?: boolean;
   commentPlaceholder?: string;
-  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter nota
-  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
+  webhookUrl?: string;
+  webhookOnSubmit?: boolean;
+  detractorColor?: string;
+  passiveColor?: string;
+  promoterColor?: string;
 }
 
 export interface AccordionBlock extends BaseBlock {
@@ -343,6 +347,8 @@ export interface SocialProofBlock extends BaseBlock {
   style?: 'toast' | 'banner' | 'floating';
   position?: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
   showAvatar?: boolean;
+  bgColor?: string;
+  borderColor?: string;
 }
 
 export interface AnimatedCounterBlock extends BaseBlock {
@@ -357,8 +363,9 @@ export interface AnimatedCounterBlock extends BaseBlock {
   color?: string;
   label?: string;
   separator?: boolean;
-  currencyFormat?: boolean; // ✅ Etapa 2D: Formato de moeda (R$ 1.234,56)
-  decimalPlaces?: number; // ✅ Etapa 2D: Casas decimais para moeda
+  currencyFormat?: boolean;
+  decimalPlaces?: number;
+  fontFamily?: 'sans' | 'mono' | 'serif';
 }
 
 export interface CalloutBlock extends BaseBlock {
@@ -376,9 +383,10 @@ export interface CalloutBlock extends BaseBlock {
 
 export interface IconListBlock extends BaseBlock {
   type: 'iconList';
-  items: { icon: string; text: string; color?: string }[]; // ✅ Etapa 2D: Cor individual por item
+  items: { icon: string; text: string; color?: string }[];
   iconColor?: string;
   layout?: 'vertical' | 'horizontal';
+  iconSize?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export interface QuoteBlock extends BaseBlock {
@@ -522,6 +530,17 @@ export interface CalculatorBlock extends BaseBlock {
   showGauge?: boolean; // ✅ Etapa 2F: Exibir resultado como gauge visual
 }
 
+export interface RatingBlock extends BaseBlock {
+  type: 'rating';
+  label: string;
+  maxStars: number;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  color?: string;
+  required?: boolean;
+  showValue?: boolean;
+  halfStars?: boolean;
+}
+
 export type QuizBlock =
   | QuestionBlock
   | TextBlock
@@ -557,7 +576,8 @@ export type QuizBlock =
   | ComparisonResultBlock
   | PersonalizedCTABlock
   | RecommendationBlock
-  | CalculatorBlock;
+  | CalculatorBlock
+  | RatingBlock;
 
 // Helper function to create a new block
 export const createBlock = (type: BlockType, order: number): QuizBlock => {
@@ -991,6 +1011,18 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         resultLabel: 'Resultado',
         ranges: [],
       } as CalculatorBlock;
+
+    case 'rating':
+      return {
+        ...baseBlock,
+        type: 'rating',
+        label: 'Como você avalia?',
+        maxStars: 5,
+        size: 'lg',
+        color: '#f59e0b',
+        required: true,
+        showValue: true,
+      } as RatingBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);

@@ -605,7 +605,10 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
   const [value, setValue] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [webhookFired, setWebhookFired] = useState(false);
-  const getNPSColor = (v: number) => v <= 6 ? "bg-red-500" : v <= 8 ? "bg-yellow-500" : "bg-green-500";
+  const detractorColor = (block as any).detractorColor || '#ef4444';
+  const passiveColor = (block as any).passiveColor || '#eab308';
+  const promoterColor = (block as any).promoterColor || '#22c55e';
+  const getNPSColor = (v: number) => v <= 6 ? detractorColor : v <= 8 ? passiveColor : promoterColor;
 
   // ✅ Etapa 4: Webhook ao selecionar nota NPS
   const handleSelect = useCallback((i: number) => {
@@ -634,12 +637,12 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
       <div className="flex justify-center gap-1 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => (
           <button key={i} onClick={() => handleSelect(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
-            value === i ? `${getNPSColor(i)} text-white scale-110 shadow-lg` : "bg-muted hover:bg-muted/80 text-foreground"
-          }`}>{i}</button>
+            value === i ? 'text-white scale-110 shadow-lg' : 'bg-muted hover:bg-muted/80 text-foreground'
+          }`} style={value === i ? { backgroundColor: getNPSColor(i) } : undefined}>{i}</button>
         ))}
       </div>
       {value !== null && (
-        <p className={`text-center text-sm font-medium ${value <= 6 ? "text-red-600" : value <= 8 ? "text-yellow-600" : "text-green-600"}`}>
+        <p className="text-center text-sm font-medium" style={{ color: getNPSColor(value) }}>
           {value <= 6 ? "Detrator" : value <= 8 ? "Neutro" : "Promotor"} ({value})
         </p>
       )}
@@ -806,10 +809,15 @@ export const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className={`${
-            block.style === 'banner' ? 'bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center'
-              : block.style === 'floating' ? 'bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2'
-              : 'bg-background border shadow-lg rounded-lg p-3 max-w-xs'
+            block.style === 'banner' ? 'px-4 py-2 rounded-md w-full text-center'
+              : block.style === 'floating' ? 'shadow-xl rounded-full px-4 py-2'
+              : 'shadow-lg rounded-lg p-3 max-w-xs'
           }`}
+          style={{
+            backgroundColor: (block as any).bgColor || (block.style === 'banner' ? 'hsl(var(--primary))' : 'hsl(var(--background))'),
+            color: block.style === 'banner' ? 'hsl(var(--primary-foreground))' : undefined,
+            border: block.style !== 'banner' ? `1px solid ${(block as any).borderColor || 'hsl(var(--border))'}` : undefined,
+          }}
         >
           <div className="flex items-center gap-3">
             {block.showAvatar && (
@@ -880,10 +888,11 @@ export const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { ty
   };
 
   const fontSizeClass = block.fontSize === 'xlarge' ? 'text-6xl' : block.fontSize === 'large' ? 'text-5xl' : block.fontSize === 'medium' ? 'text-3xl' : 'text-2xl';
+  const fontFamilyClass = (block as any).fontFamily === 'mono' ? 'font-mono' : (block as any).fontFamily === 'serif' ? 'font-serif' : 'font-sans';
 
   return (
     <div ref={ref} className="text-center py-6 space-y-2">
-      <p className={`font-black tabular-nums ${fontSizeClass}`} style={{ color: block.color || 'hsl(var(--primary))' }}>
+      <p className={`font-black tabular-nums ${fontSizeClass} ${fontFamilyClass}`} style={{ color: block.color || 'hsl(var(--primary))' }}>
         {block.prefix}{formatValue(displayValue)}{block.suffix}
       </p>
       {block.label && <p className="text-muted-foreground text-sm font-medium">{block.label}</p>}
@@ -985,6 +994,43 @@ export const CalculatorBlockPreview = ({ block }: { block: QuizBlock & { type: '
 
       {!formula && (
         <p className="text-xs text-center text-muted-foreground">Configure a fórmula nas propriedades →</p>
+      )}
+    </div>
+  );
+};
+
+// ---- RATING (STARS) ----
+export const RatingBlockPreview = ({ block }: { block: QuizBlock & { type: 'rating' } }) => {
+  const [value, setValue] = useState(0);
+  const [hover, setHover] = useState(0);
+  const maxStars = block.maxStars || 5;
+  const color = block.color || '#f59e0b';
+  const sizeClass = block.size === 'sm' ? 'w-6 h-6' : block.size === 'xl' ? 'w-12 h-12' : block.size === 'lg' ? 'w-10 h-10' : 'w-8 h-8';
+
+  return (
+    <div className="space-y-3">
+      <p className="font-medium text-center">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
+      <div className="flex justify-center gap-1">
+        {Array.from({ length: maxStars }, (_, i) => {
+          const starIndex = i + 1;
+          const isFilled = starIndex <= (hover || value);
+          return (
+            <button
+              key={i}
+              onClick={() => setValue(starIndex)}
+              onMouseEnter={() => setHover(starIndex)}
+              onMouseLeave={() => setHover(0)}
+              className={`${sizeClass} transition-transform hover:scale-110`}
+            >
+              <svg viewBox="0 0 24 24" className="w-full h-full transition-colors" style={{ fill: isFilled ? color : 'hsl(var(--muted))', color: isFilled ? color : 'hsl(var(--muted))' }}>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+          );
+        })}
+      </div>
+      {block.showValue && value > 0 && (
+        <p className="text-center text-lg font-bold" style={{ color }}>{value} / {maxStars}</p>
       )}
     </div>
   );

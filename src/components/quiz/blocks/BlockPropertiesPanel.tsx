@@ -183,6 +183,7 @@ const BLOCK_ICONS: Record<BlockType, React.ReactNode> = {
   personalizedCTA: <MousePointer className="h-4 w-4" />,
   recommendation: <Star className="h-4 w-4" />,
   calculator: <BarChart3 className="h-4 w-4" />,
+  rating: <Star className="h-4 w-4" />,
 };
 
 const BLOCK_NAMES: Record<BlockType, string> = {
@@ -221,6 +222,7 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   personalizedCTA: 'CTA Personalizado',
   recommendation: 'Recomendação',
   calculator: 'Calculadora',
+  rating: 'Avaliação (Estrelas)',
 };
 
 // Helper to update block with type safety
@@ -1181,9 +1183,30 @@ const NPSProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </p>
         </PropertySection>
       )}
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores por Faixa</Label>
+      <div className="grid grid-cols-3 gap-2">
+        <PropertySection title="Detrator (0-6)" tooltip="Cor dos botões na faixa de detratores">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={block.detractorColor || '#ef4444'} onChange={(e) => onChange(update(block, { detractorColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {block.detractorColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { detractorColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+        <PropertySection title="Neutro (7-8)" tooltip="Cor dos botões na faixa neutra">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={block.passiveColor || '#eab308'} onChange={(e) => onChange(update(block, { passiveColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {block.passiveColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { passiveColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+        <PropertySection title="Promotor (9-10)" tooltip="Cor dos botões na faixa de promotores">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={block.promoterColor || '#22c55e'} onChange={(e) => onChange(update(block, { promoterColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {block.promoterColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { promoterColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+      </div>
       <div className="p-2 rounded-md bg-muted/50 text-[10px] text-muted-foreground space-y-1">
         <p>🔴 0-6 = Detrator | 🟡 7-8 = Neutro | 🟢 9-10 = Promotor</p>
-        <p>As cores são aplicadas automaticamente no preview.</p>
       </div>
     </div>
   );
@@ -1334,6 +1357,22 @@ const SocialProofProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
         </Select>
       </PropertySection>
       <SwitchRow label="Mostrar avatar" tooltip="Exibe foto ou avatar junto à notificação de prova social" checked={block.showAvatar || false} onChange={(v) => onChange(update(block, { showAvatar: v }))} />
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores</Label>
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Cor de Fundo" tooltip="Cor de fundo da notificação">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={(block as any).bgColor || '#ffffff'} onChange={(e) => onChange(update(block, { bgColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {(block as any).bgColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { bgColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+        <PropertySection title="Cor da Borda" tooltip="Cor da borda da notificação">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={(block as any).borderColor || '#e5e7eb'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {(block as any).borderColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { borderColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+      </div>
     </div>
   );
 };
@@ -1389,13 +1428,23 @@ const AnimatedCounterProperties = ({ block, onChange }: BlockPropertiesPanelProp
         <Input type="color" value={block.color || '#3b82f6'} onChange={(e) => onChange(update(block, { color: e.target.value }))} />
       </PropertySection>
       <SwitchRow label="Separador de milhar" tooltip="Adiciona pontos entre milhares para melhor leitura (ex: 1.000.000)" checked={block.separator || false} onChange={(v) => onChange(update(block, { separator: v }))} />
-      {/* ✅ Etapa 2D: Formato de moeda */}
       <SwitchRow label="Formato moeda (R$)" tooltip="Formata o número como valor monetário brasileiro com vírgula decimal" checked={(block as any).currencyFormat || false} onChange={(v) => onChange(update(block, { currencyFormat: v }))} />
       {(block as any).currencyFormat && (
         <PropertySection title="Casas decimais" tooltip="Quantidade de casas após a vírgula">
           <Input type="number" min={0} max={4} value={(block as any).decimalPlaces || 2} onChange={(e) => onChange(update(block, { decimalPlaces: Number(e.target.value) }))} />
         </PropertySection>
       )}
+      <Separator />
+      <PropertySection title="Fonte" tooltip="Família tipográfica do número animado">
+        <Select value={(block as any).fontFamily || 'sans'} onValueChange={(v) => onChange(update(block, { fontFamily: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sans">Sans-serif (padrão)</SelectItem>
+            <SelectItem value="mono">Monospace (timer)</SelectItem>
+            <SelectItem value="serif">Serif (elegante)</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
     </div>
   );
 };
@@ -1588,6 +1637,17 @@ const IconListProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Label>Cor padrão dos ícones</Label>
         <Input type="color" value={block.iconColor || '#10b981'} onChange={(e) => onChange(update(block, { iconColor: e.target.value }))} />
       </div>
+      <PropertySection title="Tamanho dos Ícones" tooltip="Tamanho visual dos ícones/emojis na lista">
+        <Select value={(block as any).iconSize || 'md'} onValueChange={(v) => onChange(update(block, { iconSize: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sm">Pequeno</SelectItem>
+            <SelectItem value="md">Médio</SelectItem>
+            <SelectItem value="lg">Grande</SelectItem>
+            <SelectItem value="xl">Extra Grande</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
       <Separator />
       <Label>Itens</Label>
       {items.map((item, idx) => (
@@ -2472,6 +2532,40 @@ const CalculatorProperties = ({ block, onChange, questions }: BlockPropertiesPan
 };
 
 
+// ---- RATING ----
+const RatingProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
+  if (block.type !== 'rating') return null;
+  return (
+    <div className="space-y-4">
+      <PropertySection title="Label" tooltip="Texto descritivo exibido acima das estrelas">
+        <Input value={block.label} onChange={(e) => onChange(update(block, { label: e.target.value }))} />
+      </PropertySection>
+      <PropertySection title="Máximo de Estrelas" tooltip="Quantidade total de estrelas na escala">
+        <Input type="number" min={3} max={10} value={block.maxStars} onChange={(e) => onChange(update(block, { maxStars: Number(e.target.value) }))} />
+      </PropertySection>
+      <PropertySection title="Tamanho" tooltip="Dimensão visual das estrelas">
+        <Select value={block.size || 'lg'} onValueChange={(v) => onChange(update(block, { size: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sm">Pequeno</SelectItem>
+            <SelectItem value="md">Médio</SelectItem>
+            <SelectItem value="lg">Grande</SelectItem>
+            <SelectItem value="xl">Extra Grande</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
+      <PropertySection title="Cor das Estrelas" tooltip="Cor de preenchimento das estrelas selecionadas">
+        <div className="flex gap-1 items-center">
+          <Input type="color" value={block.color || '#f59e0b'} onChange={(e) => onChange(update(block, { color: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+          {block.color && block.color !== '#f59e0b' && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { color: '#f59e0b' }))}><X className="h-3 w-3" /></Button>}
+        </div>
+      </PropertySection>
+      <SwitchRow label="Mostrar valor numérico" tooltip="Exibe o número da avaliação ao lado das estrelas" checked={block.showValue || false} onChange={(v) => onChange(update(block, { showValue: v }))} />
+      <SwitchRow label="Obrigatório" tooltip="Exige interação do usuário antes de avançar" checked={block.required || false} onChange={(v) => onChange(update(block, { required: v }))} />
+    </div>
+  );
+};
+
 
 export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions, currentQuestionIndex }: BlockPropertiesPanelProps) => {
   const block = normalizeBlock(rawBlock);
@@ -2515,6 +2609,7 @@ export const BlockPropertiesPanel = ({ block: rawBlock, onChange, questions, cur
       case 'personalizedCTA': return <PersonalizedCTAProperties block={block} onChange={onChange} questions={questions} />;
       case 'recommendation': return <RecommendationProperties block={block} onChange={onChange} questions={questions} />;
       case 'calculator': return <CalculatorProperties block={block} onChange={onChange} questions={questions} />;
+      case 'rating': return <RatingProperties block={block} onChange={onChange} />;
       default: return <p className="text-sm text-muted-foreground">Sem propriedades configuráveis</p>;
     }
   };
