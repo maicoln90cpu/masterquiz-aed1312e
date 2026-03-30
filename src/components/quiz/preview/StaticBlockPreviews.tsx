@@ -67,6 +67,7 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
       className={`prose prose-sm max-w-none text-${block.alignment || "left"} ${
         block.fontSize === "small" ? "text-sm" : block.fontSize === "large" ? "text-lg" : "text-base"
       }`}
+      style={(block as any).textColor ? { color: (block as any).textColor } : undefined}
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
     />
   );
