@@ -301,8 +301,11 @@ export interface NPSBlock extends BaseBlock {
   required?: boolean;
   showComment?: boolean;
   commentPlaceholder?: string;
-  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter nota
-  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
+  webhookUrl?: string;
+  webhookOnSubmit?: boolean;
+  detractorColor?: string;
+  passiveColor?: string;
+  promoterColor?: string;
 }
 
 export interface AccordionBlock extends BaseBlock {
