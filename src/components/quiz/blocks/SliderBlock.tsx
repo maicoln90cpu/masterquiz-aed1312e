@@ -1,8 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import type { SliderBlock as SliderBlockType } from "@/types/blocks";
+import type { SliderBlock as SliderBlockType, QuizBlock } from "@/types/blocks";
+import { SliderBlockPreview } from "../preview/InteractiveBlockPreviews";
 
 interface SliderBlockProps {
   block: SliderBlockType;
@@ -28,20 +28,10 @@ export const SliderBlock = ({ block, onChange }: SliderBlockProps) => {
           />
         </div>
 
-        {/* Preview */}
-        <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-          <p className="text-sm font-medium text-muted-foreground">Preview:</p>
-          <p className="font-medium">{block.label}</p>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{block.min}{block.unit}</span>
-            <Slider value={[block.defaultValue ?? block.min]} min={block.min} max={block.max} step={block.step} className="flex-1" />
-            <span className="text-sm text-muted-foreground">{block.max}{block.unit}</span>
-          </div>
-          {block.showValue && (
-            <p className="text-center text-lg font-bold text-primary">
-              {block.defaultValue ?? block.min}{block.unit}
-            </p>
-          )}
+        {/* Preview WYSIWYG real */}
+        <div className="p-4 border rounded-lg bg-muted/10">
+          <p className="text-xs text-muted-foreground mb-2">Preview</p>
+          <SliderBlockPreview block={block as unknown as QuizBlock & { type: 'slider' }} />
         </div>
 
         <p className="text-xs text-muted-foreground">
