@@ -403,27 +403,6 @@ const TextProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         </Select>
       </PropertySection>
 
-      <PropertySection title="Cor do Texto" tooltip="Cor personalizada para o texto deste bloco">
-        <div className="flex gap-2 items-center">
-          <Input
-            type="color"
-            value={(block as any).textColor || '#111111'}
-            onChange={(e) => onChange(update(block, { textColor: e.target.value }))}
-            className="w-12 h-8 p-1 cursor-pointer"
-          />
-          <Input
-            value={(block as any).textColor || ''}
-            placeholder="Padrão do tema"
-            onChange={(e) => onChange(update(block, { textColor: e.target.value }))}
-            className="flex-1"
-          />
-          {(block as any).textColor && (
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onChange(update(block, { textColor: undefined }))}>
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-      </PropertySection>
     </div>
   );
 };

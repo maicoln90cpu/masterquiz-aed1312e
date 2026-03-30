@@ -6,6 +6,29 @@
 
 ## ✅ v2.37.0 - Documentation Overhaul + Thin Router + Test Fixes (21/03/2026)
 
+## ✅ v2.37.1 - Fix Preview Inline + Remoção da Cor no Text Block (30/03/2026)
+
+### Fix: saída real do preview inline na COL 3
+- O preview lateral do editor Modern deixou de usar `mode="fullscreen"` dentro da COL 3 e passou a usar `mode="inline"`, evitando o overlay que prendia o usuário no preview.
+- `UnifiedQuizPreview` inline agora exibe botão `X Sair do Preview` ao lado de `Reiniciar`, com retorno imediato para o modo edição.
+- O botão do header da COL 3 também passou a mostrar `X Sair do Preview` enquanto o preview está ativo.
+
+### Simplificação: remoção da cor customizada do bloco Text
+- Removida a propriedade `Cor do Texto` do painel do bloco Text.
+- O `TextBlock` voltou a usar apenas a cor padrão do tema no editor e no preview publicado.
+- `RichTextEditor` deixou de aceitar `textColor` para esse fluxo, eliminando a inconsistência reportada.
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/CreateQuizModern.tsx` | preview inline da COL 3 corrigido + botão `X Sair do Preview` |
+| `src/components/quiz/UnifiedQuizPreview.tsx` | header inline com ação explícita de saída |
+| `src/components/quiz/blocks/TextBlock.tsx` | remoção do repasse de `textColor` |
+| `src/components/quiz/blocks/RichTextEditor.tsx` | remoção do `textColor` customizado |
+| `src/components/quiz/blocks/BlockPropertiesPanel.tsx` | remoção do controle `Cor do Texto` no bloco Text |
+| `src/components/quiz/preview/StaticBlockPreviews.tsx` | preview do Text volta a usar cor padrão do tema |
+| `docs/PENDENCIAS.md` | changelog da correção |
+
 ### Fix: WYSIWYG final da Etapa 1/2 do editor Modern
 - `RichTextEditor` agora respeita `textColor` no canvas do editor, corrigindo o caso em que o texto permanecia preto mesmo após escolha de cor.
 - `ImageBlock` passou a respeitar `borderRadius` (`none` → `full`) e `shadow` (`none` → `large`) com os valores reais usados no painel.

@@ -324,6 +324,17 @@ export const UnifiedQuizPreview = ({
               >
                 <RotateCcw className="h-4 w-4" />
               </Button>
+              {onClose && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  className="h-8 gap-1 px-3 text-xs"
+                >
+                  <X className="h-4 w-4" />
+                  {t('preview.exitInline', 'Sair do Preview')}
+                </Button>
+              )}
             </div>
           </div>
         )}
