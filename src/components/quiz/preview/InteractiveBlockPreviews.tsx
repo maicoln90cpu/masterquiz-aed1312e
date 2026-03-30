@@ -888,10 +888,11 @@ export const AnimatedCounterBlockPreview = ({ block }: { block: QuizBlock & { ty
   };
 
   const fontSizeClass = block.fontSize === 'xlarge' ? 'text-6xl' : block.fontSize === 'large' ? 'text-5xl' : block.fontSize === 'medium' ? 'text-3xl' : 'text-2xl';
+  const fontFamilyClass = (block as any).fontFamily === 'mono' ? 'font-mono' : (block as any).fontFamily === 'serif' ? 'font-serif' : 'font-sans';
 
   return (
     <div ref={ref} className="text-center py-6 space-y-2">
-      <p className={`font-black tabular-nums ${fontSizeClass}`} style={{ color: block.color || 'hsl(var(--primary))' }}>
+      <p className={`font-black tabular-nums ${fontSizeClass} ${fontFamilyClass}`} style={{ color: block.color || 'hsl(var(--primary))' }}>
         {block.prefix}{formatValue(displayValue)}{block.suffix}
       </p>
       {block.label && <p className="text-muted-foreground text-sm font-medium">{block.label}</p>}

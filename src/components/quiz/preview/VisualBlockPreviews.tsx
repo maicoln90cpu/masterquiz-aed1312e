@@ -57,16 +57,17 @@ export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'cal
 export const IconListBlockPreview = ({ block }: { block: QuizBlock & { type: 'iconList' } }) => {
   const items = block.items || [];
   const isHorizontal = block.layout === 'horizontal';
+  const iconSizeClass = (block as any).iconSize === 'sm' ? 'text-sm' : (block as any).iconSize === 'lg' ? 'text-2xl' : (block as any).iconSize === 'xl' ? 'text-3xl' : 'text-lg';
+  const textSizeClass = (block as any).iconSize === 'sm' ? 'text-xs' : (block as any).iconSize === 'lg' ? 'text-base' : (block as any).iconSize === 'xl' ? 'text-lg' : 'text-sm';
 
   return (
     <div className={`${isHorizontal ? 'flex flex-wrap gap-4' : 'space-y-2'}`}>
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center gap-2">
-          {/* ✅ Etapa 2D: Cor individual por item */}
-          <span className="text-lg shrink-0" style={{ color: item.color || block.iconColor || 'hsl(var(--primary))' }}>
+          <span className={`${iconSizeClass} shrink-0`} style={{ color: item.color || block.iconColor || 'hsl(var(--primary))' }}>
             {item.icon}
           </span>
-          <span className="text-sm">{item.text}</span>
+          <span className={textSizeClass}>{item.text}</span>
         </div>
       ))}
     </div>
