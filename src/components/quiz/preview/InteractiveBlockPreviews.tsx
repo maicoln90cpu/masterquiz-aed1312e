@@ -733,6 +733,11 @@ export const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: '
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className={`p-4 rounded-lg transition-all ${block.leftStyle === 'negative' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-muted'} ${highlightWinner === 'left' ? 'ring-2 ring-primary shadow-md' : ''}`}>
+        {(block as any).leftImage && (
+          <div className="mb-3 rounded-lg overflow-hidden">
+            <img src={(block as any).leftImage} alt={block.leftTitle || 'Antes'} className="w-full h-auto object-cover rounded-lg" />
+          </div>
+        )}
         <h4 className={`font-semibold mb-3 ${block.leftStyle === 'negative' ? 'text-red-600' : ''}`}>{block.leftTitle || ''}</h4>
         <ul className="space-y-2">
           {leftItems.map((item, i) => (
@@ -743,6 +748,11 @@ export const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: '
         </ul>
       </div>
       <div className={`p-4 rounded-lg transition-all ${block.rightStyle === 'positive' ? 'bg-green-50 dark:bg-green-950/30' : 'bg-muted'} ${highlightWinner === 'right' ? 'ring-2 ring-primary shadow-md' : ''}`}>
+        {(block as any).rightImage && (
+          <div className="mb-3 rounded-lg overflow-hidden">
+            <img src={(block as any).rightImage} alt={block.rightTitle || 'Depois'} className="w-full h-auto object-cover rounded-lg" />
+          </div>
+        )}
         <h4 className={`font-semibold mb-3 ${block.rightStyle === 'positive' ? 'text-green-600' : ''}`}>{block.rightTitle || ''}</h4>
         <ul className="space-y-2">
           {rightItems.map((item, i) => (
