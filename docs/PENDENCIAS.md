@@ -6,6 +6,28 @@
 
 ## ✅ v2.37.0 - Documentation Overhaul + Thin Router + Test Fixes (21/03/2026)
 
+### Fix: WYSIWYG final da Etapa 1/2 do editor Modern
+- `RichTextEditor` agora respeita `textColor` no canvas do editor, corrigindo o caso em que o texto permanecia preto mesmo após escolha de cor.
+- `ImageBlock` passou a respeitar `borderRadius` (`none` → `full`) e `shadow` (`none` → `large`) com os valores reais usados no painel.
+- `CreateQuizModern` ganhou saída real do modo preview: botão no header, botão dentro do preview e atalho `Esc` para voltar à edição.
+
+### Feature: Finalização da Etapa 2 dos blocos
+- `AnimatedCounter` recebeu botão de reset do preview com reinício real da animação via `_previewKey`.
+- `IconList` aplica a cor configurada ao texto dos itens (explicando a limitação técnica dos emojis).
+- `Rating` agora suporta `halfStars`, permitindo seleção de 0.5 estrela no editor e no quiz.
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/quiz/blocks/RichTextEditor.tsx` | suporte a `textColor` no editor |
+| `src/components/quiz/blocks/TextBlock.tsx` | repassa `textColor` ao editor rico |
+| `src/components/quiz/blocks/ImageBlock.tsx` | corrige shadow + borda arredondada inline |
+| `src/components/quiz/blocks/AnimatedCounterBlock.tsx` | reinicia preview com `key` |
+| `src/components/quiz/blocks/BlockPropertiesPanel.tsx` | reset do counter, ajuda do IconList, toggle de half-stars |
+| `src/components/quiz/preview/VisualBlockPreviews.tsx` | cor do IconList aplicada ao texto |
+| `src/components/quiz/preview/InteractiveBlockPreviews.tsx` | half-stars no Rating |
+| `src/pages/CreateQuizModern.tsx` | botão sair do preview + atalho `Esc` |
+
 ### Feature: CreateQuiz Thin Router (Classic/Modern)
 - `CreateQuiz.tsx` refatorado como thin router: só decide Classic vs Modern via `useEditorLayout`
 - `CreateQuizClassic.tsx` e `CreateQuizModern.tsx` carregados via `React.lazy` + `Suspense`
