@@ -896,6 +896,7 @@ const CreateQuizModern = () => {
                       collection_timing: collectionTiming as 'before' | 'after' | 'none',
                     }}
                   />
+                  </div>
                 </div>
               ) : (
                 (() => {

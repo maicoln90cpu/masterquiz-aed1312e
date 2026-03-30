@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useId } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -43,6 +43,10 @@ export const RichTextEditor = ({
   minHeight = "150px",
   textColor,
 }: RichTextEditorProps) => {
+  // Unique scope per instance to avoid CSS collisions
+  const reactId = useId();
+  const scopeClass = useMemo(() => `rte-${reactId.replace(/:/g, '')}`, [reactId]);
+
   const modules = useMemo(() => ({
     toolbar: [
       [{ font: ['', 'inter', 'roboto', 'open-sans', 'poppins', 'montserrat', 'lato'] }],
@@ -73,8 +77,11 @@ export const RichTextEditor = ({
     "link",
   ];
 
+  const resolvedColor = textColor || 'hsl(var(--foreground))';
+  const placeholderColor = textColor || 'hsl(var(--muted-foreground))';
+
   return (
-    <div className="rich-text-editor" style={{ minHeight }}>
+    <div className={`rich-text-editor ${scopeClass}`} style={{ minHeight }}>
       <ReactQuill
         theme="snow"
         value={value}
@@ -85,91 +92,90 @@ export const RichTextEditor = ({
         className="bg-background"
       />
       <style>{`
-        .rich-text-editor .ql-toolbar {
+        .${scopeClass} .ql-toolbar {
           border-color: hsl(var(--border));
           border-radius: 0.5rem 0.5rem 0 0;
           background: hsl(var(--muted));
         }
-        .rich-text-editor .ql-container {
+        .${scopeClass} .ql-container {
           border-color: hsl(var(--border));
           border-radius: 0 0 0.5rem 0.5rem;
           font-size: 1rem;
         }
-        .rich-text-editor .ql-editor {
+        .${scopeClass} .ql-editor {
           min-height: ${minHeight};
-          color: ${textColor || 'hsl(var(--foreground))'};
+          color: ${resolvedColor};
         }
-        .rich-text-editor .ql-editor.ql-blank::before {
-          color: ${textColor || 'hsl(var(--muted-foreground))'};
+        .${scopeClass} .ql-editor.ql-blank::before {
+          color: ${placeholderColor};
         }
-        .rich-text-editor .ql-picker-label,
-        .rich-text-editor .ql-picker-item {
+        .${scopeClass} .ql-picker-label,
+        .${scopeClass} .ql-picker-item {
           color: hsl(var(--foreground));
         }
-        .rich-text-editor .ql-stroke {
+        .${scopeClass} .ql-stroke {
           stroke: hsl(var(--foreground));
         }
-        .rich-text-editor .ql-fill {
+        .${scopeClass} .ql-fill {
           fill: hsl(var(--foreground));
         }
-        .rich-text-editor .ql-picker-options {
+        .${scopeClass} .ql-picker-options {
           background: hsl(var(--popover));
           border-color: hsl(var(--border));
         }
-        .rich-text-editor .ql-color-picker .ql-picker-options,
-        .rich-text-editor .ql-background .ql-picker-options {
+        .${scopeClass} .ql-color-picker .ql-picker-options,
+        .${scopeClass} .ql-background .ql-picker-options {
           width: 196px;
           padding: 4px;
         }
-        .rich-text-editor .ql-color-picker .ql-picker-item,
-        .rich-text-editor .ql-background .ql-picker-item {
+        .${scopeClass} .ql-color-picker .ql-picker-item,
+        .${scopeClass} .ql-background .ql-picker-item {
           width: 20px;
           height: 20px;
           border-radius: 3px;
           margin: 2px;
         }
         
-        /* MOBILE: Toolbar compacta em 2 linhas - sem flex no toolbar principal */
         @media (max-width: 768px) {
-          .rich-text-editor .ql-toolbar {
+          .${scopeClass} .ql-toolbar {
             padding: 6px 8px !important;
           }
-          .rich-text-editor .ql-toolbar .ql-formats {
+          .${scopeClass} .ql-toolbar .ql-formats {
             margin-right: 6px !important;
             margin-bottom: 4px !important;
           }
-          .rich-text-editor .ql-toolbar button {
+          .${scopeClass} .ql-toolbar button {
             width: 26px !important;
             height: 26px !important;
             padding: 3px !important;
           }
-          .rich-text-editor .ql-toolbar .ql-picker {
+          .${scopeClass} .ql-toolbar .ql-picker {
             height: 26px !important;
           }
-          .rich-text-editor .ql-toolbar .ql-picker-label {
+          .${scopeClass} .ql-toolbar .ql-picker-label {
             padding: 0 4px !important;
             border: 1px solid hsl(var(--border)) !important;
             border-radius: 4px !important;
           }
-          .rich-text-editor .ql-header.ql-picker {
+          .${scopeClass} .ql-header.ql-picker {
             width: 70px !important;
           }
-          .rich-text-editor .ql-toolbar svg {
+          .${scopeClass} .ql-toolbar svg {
             width: 16px !important;
             height: 16px !important;
           }
-          .rich-text-editor .ql-editor {
+          .${scopeClass} .ql-editor {
             min-height: 80px;
             font-size: 14px;
             padding: 8px;
           }
-          .rich-text-editor .ql-container {
+          .${scopeClass} .ql-container {
             font-size: 14px;
           }
-          .rich-text-editor .ql-picker.ql-font {
+          .${scopeClass} .ql-picker.ql-font {
             width: 90px !important;
           }
-          .rich-text-editor .ql-picker.ql-size {
+          .${scopeClass} .ql-picker.ql-size {
             width: 70px !important;
           }
         }
