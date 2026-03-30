@@ -222,6 +222,7 @@ const BLOCK_NAMES: Record<BlockType, string> = {
   personalizedCTA: 'CTA Personalizado',
   recommendation: 'Recomendação',
   calculator: 'Calculadora',
+  rating: 'Avaliação (Estrelas)',
 };
 
 // Helper to update block with type safety

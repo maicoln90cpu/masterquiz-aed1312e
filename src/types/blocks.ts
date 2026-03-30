@@ -1011,6 +1011,18 @@ export const createBlock = (type: BlockType, order: number): QuizBlock => {
         resultLabel: 'Resultado',
         ranges: [],
       } as CalculatorBlock;
+
+    case 'rating':
+      return {
+        ...baseBlock,
+        type: 'rating',
+        label: 'Como você avalia?',
+        maxStars: 5,
+        size: 'lg',
+        color: '#f59e0b',
+        required: true,
+        showValue: true,
+      } as RatingBlock;
     
     default:
       throw new Error(`Unknown block type: ${type}`);

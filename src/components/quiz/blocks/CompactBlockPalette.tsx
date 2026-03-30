@@ -118,6 +118,7 @@ const TemplatePreview = ({ blocks }: { blocks: QuizBlock[] }) => {
       personalizedCTA: 'CTA Personalizado',
       recommendation: 'Recomendação',
       calculator: 'Calculadora',
+      rating: 'Avaliação (Estrelas)',
     };
     return labels[type];
   };
