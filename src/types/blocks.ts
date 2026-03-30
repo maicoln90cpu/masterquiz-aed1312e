@@ -271,8 +271,10 @@ export interface SliderBlock extends BaseBlock {
   minLabel?: string;
   maxLabel?: string;
   showDots?: boolean;
-  webhookUrl?: string; // ✅ Etapa 4: Webhook ao submeter valor
-  webhookOnSubmit?: boolean; // ✅ Etapa 4: Ativar disparo
+  trackColor?: string;
+  thumbColor?: string;
+  webhookUrl?: string;
+  webhookOnSubmit?: boolean;
 }
 
 export interface TextInputBlock extends BaseBlock {
