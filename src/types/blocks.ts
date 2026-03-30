@@ -35,7 +35,8 @@ export type BlockType =
   | 'comparisonResult'
   | 'personalizedCTA'
   | 'recommendation'
-  | 'calculator';
+  | 'calculator'
+  | 'rating';
 
 export interface BaseBlock {
   id: string;
