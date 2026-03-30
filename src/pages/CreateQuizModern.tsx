@@ -841,22 +841,17 @@ const CreateQuizModern = () => {
               {col3Mode === 'preview' ? (
                 <div className="border rounded-lg overflow-hidden bg-background">
                   <UnifiedQuizPreview
-                    quizId={searchParams.get('id') || ''}
-                    title={quizState.title}
-                    description={quizState.description}
                     questions={questions}
-                    showTitle={quizState.showTitle}
-                    showDescription={quizState.showDescription}
-                    showLogo={quizState.showLogo}
-                    logoUrl={quizState.logoUrl}
-                    showQuestionNumber={quizState.showQuestionNumber}
-                    progressStyle={quizState.progressStyle}
-                    template={quizState.template}
-                    globalFontFamily={quizState.globalFontFamily}
-                    globalFontSize={quizState.globalFontSize}
-                    globalTextAlign={quizState.globalTextAlign}
-                    initialStep={currentQuestionIndex}
+                    title={title}
+                    description={description}
+                    template={template}
+                    logoUrl={logoUrl}
+                    showLogo={showLogo}
+                    showTitle={showTitle}
+                    showDescription={showDescription}
+                    showQuestionNumber={showQuestionNumber}
                     showIntroScreen={false}
+                    externalQuestionIndex={currentQuestionIndex}
                   />
                 </div>
               ) : (
