@@ -14,13 +14,6 @@ interface SocialProofBlockProps {
 export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => {
   const notifications = block.notifications || [];
 
-  useEffect(() => {
-    if (notifications.length === 0) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % notifications.length);
-    }, interval * 1000);
-    return () => clearInterval(timer);
-  }, [notifications.length, interval]);
 
   const addNotification = () => {
     onChange({ ...block, notifications: [...notifications, { name: 'Nome do Cliente', action: 'acabou de comprar', time: 'agora' }] });
