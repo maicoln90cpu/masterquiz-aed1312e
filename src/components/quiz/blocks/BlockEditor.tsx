@@ -61,6 +61,7 @@ import { BlockErrorBoundary } from "./BlockErrorBoundary";
 import { CalloutBlockPreview as CalloutBlockPreviewInline, IconListBlockPreview as IconListBlockPreviewInline, QuoteBlockPreview as QuoteBlockPreviewInline, BadgeRowBlockPreview as BadgeRowBlockPreviewInline, BannerBlockPreview as BannerBlockPreviewInline } from "../preview/VisualBlockPreviews";
 import { AnswerSummaryBlockPreview as AnswerSummaryBlockPreviewInline, ProgressMessageBlockPreview as ProgressMessageBlockPreviewInline, AvatarGroupBlockPreview as AvatarGroupBlockPreviewInline, ConditionalTextBlockPreview as ConditionalTextBlockPreviewInline, ComparisonResultBlockPreview as ComparisonResultBlockPreviewInline, PersonalizedCTABlockPreview as PersonalizedCTABlockPreviewInline } from "../preview/DynamicBlockPreviews";
 import { RecommendationBlockPreview as RecommendationBlockPreviewInline } from "../preview/RecommendationBlockPreview";
+import { CalculatorBlockPreview as CalculatorBlockPreviewInline } from "../preview/InteractiveBlockPreviews";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
