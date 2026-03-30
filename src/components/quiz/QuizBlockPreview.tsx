@@ -18,7 +18,7 @@ import {
   TestimonialBlockPreview, SliderBlockPreview, TextInputBlockPreview,
   NPSBlockPreview, AccordionBlockPreview, ComparisonBlockPreview,
   SocialProofBlockPreview, AnimatedCounterBlockPreview,
-  CalculatorBlockPreview,
+  CalculatorBlockPreview, RatingBlockPreview,
 } from "./preview/InteractiveBlockPreviews";
 import {
   CalloutBlockPreview, IconListBlockPreview, QuoteBlockPreview,
