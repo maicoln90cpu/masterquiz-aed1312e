@@ -950,11 +950,17 @@ export function RecoveryCampaigns() {
                     <Send className="h-4 w-4 mx-auto mb-1 text-blue-500" />
                     <p className="text-lg font-bold">{campaign.sent_count}</p>
                     <p className="text-xs text-muted-foreground">Enviadas</p>
+                    {(campaign as any).globalSent > campaign.sent_count && (
+                      <p className="text-[10px] text-blue-500 mt-0.5">{(campaign as any).globalSent} total template</p>
+                    )}
                   </div>
                   <div className="text-center p-2 bg-muted rounded">
                     <CheckCircle className="h-4 w-4 mx-auto mb-1 text-green-500" />
                     <p className="text-lg font-bold">{campaign.delivered_count}</p>
                     <p className="text-xs text-muted-foreground">Entregues</p>
+                    {(campaign as any).globalDelivered > campaign.delivered_count && (
+                      <p className="text-[10px] text-green-500 mt-0.5">{(campaign as any).globalDelivered} total template</p>
+                    )}
                   </div>
                   <div className="text-center p-2 bg-muted rounded">
                     <Megaphone className="h-4 w-4 mx-auto mb-1 text-purple-500" />
