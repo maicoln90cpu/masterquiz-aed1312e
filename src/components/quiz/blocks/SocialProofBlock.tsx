@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus, Trash2 } from "lucide-react";
 import type { SocialProofBlock as SocialProofBlockType } from "@/types/blocks";
+import { SocialProofBlockPreview } from "../preview/InteractiveBlockPreviews";
 
 interface SocialProofBlockProps {
   block: SocialProofBlockType;
@@ -13,17 +12,8 @@ interface SocialProofBlockProps {
 }
 
 export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const notifications = block.notifications || [];
-  const interval = block.interval || 5;
 
-  useEffect(() => {
-    if (notifications.length === 0) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % notifications.length);
-    }, interval * 1000);
-    return () => clearInterval(timer);
-  }, [notifications.length, interval]);
 
   const addNotification = () => {
     onChange({ ...block, notifications: [...notifications, { name: 'Nome do Cliente', action: 'acabou de comprar', time: 'agora' }] });
@@ -40,7 +30,7 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
     onChange({ ...block, notifications: notifications.filter((_, i) => i !== index) });
   };
 
-  const currentNotification = notifications[currentIndex];
+  
 
   return (
     <Card>
@@ -75,30 +65,11 @@ export const SocialProofBlock = ({ block, onChange }: SocialProofBlockProps) => 
           ))}
         </div>
 
-        {/* Preview */}
-        {notifications.length > 0 && currentNotification && (
+        {/* ✅ Preview real — WYSIWYG */}
+        {notifications.length > 0 && (
           <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">Preview ({interval}s):</p>
-            <div className="flex items-center justify-center">
-              <div className={cn(
-                "animate-fade-in transition-all duration-300",
-                block.style === 'toast' && "bg-background border shadow-lg rounded-lg p-3 max-w-xs",
-                block.style === 'banner' && "bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center",
-                block.style === 'floating' && "bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2"
-              )}>
-                <div className="flex items-center gap-3">
-                  {block.showAvatar && (
-                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm"><span className="font-semibold">{currentNotification.name}</span> {currentNotification.action}</p>
-                    <p className="text-xs text-muted-foreground">{currentNotification.time}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-sm font-medium text-muted-foreground">Preview (ao vivo)</p>
+            <SocialProofBlockPreview block={block as any} />
           </div>
         )}
 
