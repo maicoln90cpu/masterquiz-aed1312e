@@ -410,11 +410,28 @@ const CreateQuizModern = () => {
             {title || t('createQuiz.newQuiz', 'Novo Quiz')}
           </h1>
           <AutoSaveIndicator
-            status={!isOnline ? 'offline' : autoSaveStatus}
+            status={!autoSaveEnabled ? 'disabled' : !isOnline ? 'offline' : autoSaveStatus}
             lastSavedAt={lastSavedToSupabase}
             hasQuizId={!!quizId}
             compact
           />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center">
+                <Switch
+                  checked={autoSaveEnabled}
+                  onCheckedChange={(checked) => {
+                    setAutoSaveEnabled(checked);
+                    localStorage.setItem('quiz_auto_save_enabled', String(checked));
+                  }}
+                  className="scale-75"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{autoSaveEnabled ? t('autoSave.toggleOff', 'Desativar auto-save') : t('autoSave.toggleOn', 'Ativar auto-save')}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center gap-2">
           <UndoRedoControls
