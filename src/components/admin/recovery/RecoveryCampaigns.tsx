@@ -201,6 +201,35 @@ export function RecoveryCampaigns() {
         }
       }
 
+      // Fetch global stats per template_id (all campaigns combined)
+      const uniqueTemplateIds = [...new Set(rawCampaigns.map(c => c.template_id).filter(Boolean))] as string[];
+      const templateGlobalStats: Record<string, Record<string, number>> = {};
+      
+      if (uniqueTemplateIds.length > 0) {
+        const { data: globalContacts } = await supabase
+          .from('recovery_contacts')
+          .select('template_id, status')
+          .in('template_id', uniqueTemplateIds);
+
+        if (globalContacts) {
+          for (const gc of globalContacts) {
+            if (!gc.template_id) continue;
+            if (!templateGlobalStats[gc.template_id]) templateGlobalStats[gc.template_id] = {};
+            templateGlobalStats[gc.template_id][gc.status] = (templateGlobalStats[gc.template_id][gc.status] || 0) + 1;
+          }
+        }
+      }
+
+      // Attach global template stats to campaigns
+      for (const campaign of rawCampaigns) {
+        const gs = campaign.template_id ? templateGlobalStats[campaign.template_id] : null;
+        if (gs) {
+          (campaign as any).globalSent = (gs.sent || 0) + (gs.delivered || 0) + (gs.read || 0) + (gs.responded || 0);
+          (campaign as any).globalDelivered = (gs.delivered || 0) + (gs.read || 0) + (gs.responded || 0);
+          (campaign as any).globalTotal = Object.values(gs).reduce((a, b) => a + b, 0);
+        }
+      }
+
       setCampaigns(rawCampaigns);
       setTemplates(templatesRes.data || []);
     } catch (error) {
@@ -921,11 +950,17 @@ export function RecoveryCampaigns() {
                     <Send className="h-4 w-4 mx-auto mb-1 text-blue-500" />
                     <p className="text-lg font-bold">{campaign.sent_count}</p>
                     <p className="text-xs text-muted-foreground">Enviadas</p>
+                    {(campaign as any).globalSent > campaign.sent_count && (
+                      <p className="text-[10px] text-blue-500 mt-0.5">{(campaign as any).globalSent} total template</p>
+                    )}
                   </div>
                   <div className="text-center p-2 bg-muted rounded">
                     <CheckCircle className="h-4 w-4 mx-auto mb-1 text-green-500" />
                     <p className="text-lg font-bold">{campaign.delivered_count}</p>
                     <p className="text-xs text-muted-foreground">Entregues</p>
+                    {(campaign as any).globalDelivered > campaign.delivered_count && (
+                      <p className="text-[10px] text-green-500 mt-0.5">{(campaign as any).globalDelivered} total template</p>
+                    )}
                   </div>
                   <div className="text-center p-2 bg-muted rounded">
                     <Megaphone className="h-4 w-4 mx-auto mb-1 text-purple-500" />

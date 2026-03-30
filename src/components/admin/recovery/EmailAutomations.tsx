@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History, Mail } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History, Mail, ChevronDown, ChevronLeft, ChevronRight, Activity, Send, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -68,6 +69,23 @@ const EDGE_FUNCTION_MAP: Record<string, string> = {
   platform_news: 'send-platform-news',
 };
 
+const CRON_LABELS: Record<string, string> = {
+  blog_digest: 'A cada 10 dias, 9h UTC',
+  weekly_tip: 'Segunda, 10h UTC',
+  success_story: 'Quinta, 10h UTC',
+  monthly_summary: 'Dia 1, 9h UTC',
+  platform_news: 'Manual (sem cron)',
+};
+
+const PERIOD_OPTIONS = [
+  { value: '7', label: 'Últimos 7 dias' },
+  { value: '30', label: 'Últimos 30 dias' },
+  { value: '90', label: 'Últimos 90 dias' },
+  { value: 'all', label: 'Todos' },
+];
+
+const PAGE_SIZE = 20;
+
 export function EmailAutomations() {
   const [automations, setAutomations] = useState<AutomationConfig[]>([]);
   const [logs, setLogs] = useState<AutomationLog[]>([]);
@@ -78,10 +96,15 @@ export function EmailAutomations() {
   const [newsUpdates, setNewsUpdates] = useState('');
   const [newsVersion, setNewsVersion] = useState('');
   const [newsSegment, setNewsSegment] = useState('all');
-  // Test email state
   const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [sendingTest, setSendingTest] = useState(false);
+  // Filters
+  const [filterAutomation, setFilterAutomation] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterPeriod, setFilterPeriod] = useState<string>('30');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -90,7 +113,7 @@ export function EmailAutomations() {
     try {
       const [{ data: configs }, { data: logData }] = await Promise.all([
         supabase.from('email_automation_config').select('*').order('created_at'),
-        supabase.from('email_automation_logs').select('*').order('executed_at', { ascending: false }).limit(50),
+        supabase.from('email_automation_logs').select('*').order('executed_at', { ascending: false }).limit(500),
       ]);
       setAutomations((configs || []) as unknown as AutomationConfig[]);
       setLogs((logData || []) as unknown as AutomationLog[]);
@@ -100,6 +123,39 @@ export function EmailAutomations() {
       setLoading(false);
     }
   };
+
+  // Summary stats
+  const summaryStats = useMemo(() => {
+    const totalExecutions = logs.length;
+    const totalSent = logs.reduce((sum, l) => sum + (l.emails_sent || 0), 0);
+    const successCount = logs.filter(l => l.status === 'success').length;
+    const successRate = totalExecutions > 0 ? Math.round((successCount / totalExecutions) * 100) : 0;
+    const lastExecution = logs.length > 0 ? logs[0].executed_at : null;
+    return { totalExecutions, totalSent, successRate, lastExecution };
+  }, [logs]);
+
+  // Filtered logs
+  const filteredLogs = useMemo(() => {
+    let filtered = [...logs];
+    if (filterAutomation !== 'all') {
+      filtered = filtered.filter(l => l.automation_key === filterAutomation);
+    }
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(l => l.status === filterStatus);
+    }
+    if (filterPeriod !== 'all') {
+      const days = parseInt(filterPeriod);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      filtered = filtered.filter(l => new Date(l.executed_at) >= cutoff);
+    }
+    return filtered;
+  }, [logs, filterAutomation, filterStatus, filterPeriod]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
+  const paginatedLogs = filteredLogs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  useEffect(() => { setCurrentPage(1); }, [filterAutomation, filterStatus, filterPeriod]);
 
   const toggleAutomation = async (id: string, enabled: boolean) => {
     const { error } = await supabase
@@ -119,7 +175,6 @@ export function EmailAutomations() {
     setSendingTest(true);
     try {
       let body: Record<string, unknown> = { test: true, testEmail: testEmailAddress };
-
       if (key === 'platform_news') {
         body.updates = ['Teste de novidade da plataforma'];
         body.version = 'v-teste';
@@ -127,7 +182,6 @@ export function EmailAutomations() {
       } else if (key === 'blog_digest') {
         body.force = true;
       }
-
       const { data, error } = await supabase.functions.invoke(fnName, { body });
       if (error) throw error;
       toast.success(data?.sent ? 'Email de teste enviado!' : 'Falha no envio de teste');
@@ -147,7 +201,6 @@ export function EmailAutomations() {
     setExecuting(key);
     try {
       let body: Record<string, unknown> = {};
-
       if (key === 'platform_news') {
         const updates = newsUpdates.split('\n').filter(l => l.trim());
         if (updates.length === 0) { toast.error('Adicione pelo menos uma novidade'); setExecuting(null); return; }
@@ -191,6 +244,66 @@ export function EmailAutomations() {
 
   return (
     <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 text-blue-700">
+                <Activity className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{summaryStats.totalExecutions}</p>
+                <p className="text-xs text-muted-foreground">Total Execuções</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700">
+                <Send className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{summaryStats.totalSent}</p>
+                <p className="text-xs text-muted-foreground">Emails Enviados</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100 text-purple-700">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{summaryStats.successRate}%</p>
+                <p className="text-xs text-muted-foreground">Taxa de Sucesso</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-100 text-amber-700">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">
+                  {summaryStats.lastExecution
+                    ? format(new Date(summaryStats.lastExecution), "dd/MM HH:mm", { locale: ptBR })
+                    : 'Nunca'}
+                </p>
+                <p className="text-xs text-muted-foreground">Última Execução</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Automation Cards */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {automations.map(auto => (
@@ -203,9 +316,14 @@ export function EmailAutomations() {
                   </div>
                   <div>
                     <CardTitle className="text-base">{auto.display_name}</CardTitle>
-                    <Badge variant="outline" className="text-xs mt-1">
-                      {FREQUENCY_LABELS[auto.frequency || 'manual'] || auto.frequency}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {FREQUENCY_LABELS[auto.frequency || 'manual'] || auto.frequency}
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {CRON_LABELS[auto.automation_key] || 'Manual'}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
                 <Switch
@@ -360,7 +478,10 @@ export function EmailAutomations() {
                 <History className="h-4 w-4" />
                 Histórico de Execuções
               </CardTitle>
-              <CardDescription>Últimas 50 execuções de automações</CardDescription>
+              <CardDescription>
+                {filteredLogs.length} registros
+                {filterAutomation !== 'all' || filterStatus !== 'all' || filterPeriod !== 'all' ? ' (filtrados)' : ''}
+              </CardDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setShowLogs(!showLogs)}>
@@ -373,9 +494,44 @@ export function EmailAutomations() {
           </div>
         </CardHeader>
         {showLogs && (
-          <CardContent>
-            {logs.length === 0 ? (
-              <p className="text-center text-muted-foreground py-6">Nenhuma execução registrada</p>
+          <CardContent className="space-y-4">
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3">
+              <Select value={filterAutomation} onValueChange={setFilterAutomation}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Automação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas automações</SelectItem>
+                  {automations.map(a => (
+                    <SelectItem key={a.automation_key} value={a.automation_key}>{a.display_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos status</SelectItem>
+                  <SelectItem value="success">Sucesso</SelectItem>
+                  <SelectItem value="error">Erro</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PERIOD_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {paginatedLogs.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6">Nenhuma execução encontrada</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -389,41 +545,90 @@ export function EmailAutomations() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logs.map(log => {
+                    {paginatedLogs.map(log => {
                       const auto = automations.find(a => a.automation_key === log.automation_key);
+                      const isExpanded = expandedLogId === log.id;
                       return (
-                        <TableRow key={log.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className={`p-1 rounded ${AUTOMATION_COLORS[log.automation_key] || 'bg-muted'}`}>
-                                {AUTOMATION_ICONS[log.automation_key] || <Zap className="h-3.5 w-3.5" />}
+                        <>
+                          <TableRow key={log.id} className="cursor-pointer" onClick={() => setExpandedLogId(isExpanded ? null : log.id)}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className={`p-1 rounded ${AUTOMATION_COLORS[log.automation_key] || 'bg-muted'}`}>
+                                  {AUTOMATION_ICONS[log.automation_key] || <Zap className="h-3.5 w-3.5" />}
+                                </div>
+                                <span className="text-sm">{auto?.display_name || log.automation_key}</span>
                               </div>
-                              <span className="text-sm">{auto?.display_name || log.automation_key}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {log.status === 'success' ? (
-                              <Badge className="bg-green-100 text-green-700 text-xs">
-                                <CheckCircle2 className="h-3 w-3 mr-1" />Sucesso
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-red-100 text-red-700 text-xs">
-                                <XCircle className="h-3 w-3 mr-1" />Erro
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="font-medium">{log.emails_sent}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {format(new Date(log.executed_at), "dd/MM/yy HH:mm", { locale: ptBR })}
-                          </TableCell>
-                          <TableCell className="text-xs max-w-[200px] truncate text-muted-foreground">
-                            {log.error_message || (log.details ? JSON.stringify(log.details).substring(0, 80) : '-')}
-                          </TableCell>
-                        </TableRow>
+                            </TableCell>
+                            <TableCell>
+                              {log.status === 'success' ? (
+                                <Badge className="bg-green-100 text-green-700 text-xs">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />Sucesso
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-red-100 text-red-700 text-xs">
+                                  <XCircle className="h-3 w-3 mr-1" />Erro
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-medium">{log.emails_sent}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {format(new Date(log.executed_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              <div className="flex items-center gap-1">
+                                <span className="max-w-[200px] truncate text-muted-foreground">
+                                  {log.error_message || (log.details ? JSON.stringify(log.details).substring(0, 60) : '-')}
+                                </span>
+                                <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {isExpanded && (
+                            <TableRow key={`${log.id}-details`}>
+                              <TableCell colSpan={5}>
+                                <div className="p-3 bg-muted rounded text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
+                                  {log.error_message && (
+                                    <div className="text-destructive mb-2">Erro: {log.error_message}</div>
+                                  )}
+                                  {log.details ? JSON.stringify(log.details, null, 2) : 'Sem detalhes'}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
                       );
                     })}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-xs text-muted-foreground">
+                  Página {currentPage} de {totalPages}
+                </p>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={currentPage <= 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
