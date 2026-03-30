@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Image as ImageIcon, HelpCircle, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ImageBlock as ImageBlockType } from "@/types/blocks";
 
 interface ImageBlockProps {
