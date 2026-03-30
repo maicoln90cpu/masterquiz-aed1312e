@@ -67,6 +67,7 @@ export const TextBlockPreview = ({ block, answers, questions, respondentName }: 
       className={`prose prose-sm max-w-none text-${block.alignment || "left"} ${
         block.fontSize === "small" ? "text-sm" : block.fontSize === "large" ? "text-lg" : "text-base"
       }`}
+      style={(block as any).textColor ? { color: (block as any).textColor } : undefined}
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
     />
   );
@@ -391,7 +392,12 @@ export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion
 
     return (
       <div className="flex justify-center">
-        <Button variant={block.variant || 'default'} size={block.size || 'default'} asChild>
+        <Button
+          variant={block.variant || 'default'}
+          size={block.size || 'default'}
+          style={(block as any).backgroundColor ? { backgroundColor: (block as any).backgroundColor, borderColor: (block as any).backgroundColor, color: '#fff' } : undefined}
+          asChild
+        >
           <a 
             href={block.url} 
             target={block.openInNewTab ? "_blank" : undefined} 
@@ -407,7 +413,12 @@ export const ButtonBlockPreview = ({ block, onNavigateNext, onNavigateToQuestion
 
   return (
     <div className="flex justify-center">
-      <Button variant={block.variant || 'default'} size={block.size || 'default'} onClick={handleButtonClick}>
+      <Button
+        variant={block.variant || 'default'}
+        size={block.size || 'default'}
+        onClick={handleButtonClick}
+        style={(block as any).backgroundColor ? { backgroundColor: (block as any).backgroundColor, borderColor: (block as any).backgroundColor, color: '#fff' } : undefined}
+      >
         {block.text}
       </Button>
     </div>

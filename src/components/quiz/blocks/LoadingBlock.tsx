@@ -20,7 +20,7 @@ export const LoadingBlock = ({ block, onChange }: LoadingBlockProps) => {
 
         {/* Preview WYSIWYG real */}
         <div className="border rounded-lg bg-muted/10 overflow-hidden">
-          <LoadingBlockPreview block={block as unknown as QuizBlock & { type: 'loading' }} />
+          <LoadingBlockPreview key={(block as any)._previewKey || 0} block={block as unknown as QuizBlock & { type: 'loading' }} />
         </div>
 
         <p className="text-xs text-muted-foreground">

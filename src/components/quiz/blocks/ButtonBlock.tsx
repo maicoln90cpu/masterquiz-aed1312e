@@ -132,6 +132,7 @@ export const ButtonBlock = ({ block, onChange, totalQuestions = 0, currentQuesti
                   variant={block.variant || 'default'}
                   size={block.size || 'default'}
                   className="pointer-events-none"
+                  style={block.backgroundColor ? { backgroundColor: block.backgroundColor, borderColor: block.backgroundColor, color: '#fff' } : undefined}
                 >
                   {block.text}
                 </Button>

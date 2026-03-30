@@ -66,6 +66,7 @@ export interface TextBlock extends BaseBlock {
   content: string;
   alignment?: 'left' | 'center' | 'right';
   fontSize?: 'small' | 'medium' | 'large';
+  textColor?: string;
   imageUrl?: string;
   imagePosition?: 'above' | 'below';
   imageSize?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
@@ -145,15 +146,14 @@ export interface EmbedBlock extends BaseBlock {
 export interface ButtonBlock extends BaseBlock {
   type: 'button';
   text: string;
-  // Ação do botão
   action?: 'link' | 'next_question' | 'go_to_question';
-  url?: string; // Usado quando action = 'link'
-  targetQuestionIndex?: number; // Usado quando action = 'go_to_question' (1-based para o usuário)
+  url?: string;
+  targetQuestionIndex?: number;
   variant?: 'default' | 'outline' | 'secondary' | 'ghost';
   size?: 'sm' | 'default' | 'lg';
   openInNewTab?: boolean;
   icon?: string;
-  // Personalização dinâmica (unificado do antigo personalizedCTA)
+  backgroundColor?: string;
   sourceQuestionId?: string;
   textTemplate?: string;
   conditions?: { answer: string; text: string; url?: string }[];
@@ -321,8 +321,10 @@ export interface ComparisonBlock extends BaseBlock {
   leftStyle?: 'negative' | 'neutral';
   rightStyle?: 'positive' | 'neutral';
   showIcons?: boolean;
-  highlightWinner?: 'left' | 'right' | 'none'; // ✅ Etapa 2D: Highlight da coluna vencedora
-  itemIcons?: { left?: string; right?: string }; // ✅ Etapa 2D: Ícones customizados por coluna
+  highlightWinner?: 'left' | 'right' | 'none';
+  itemIcons?: { left?: string; right?: string };
+  leftImage?: string;
+  rightImage?: string;
 }
 
 export interface SocialProofBlock extends BaseBlock {
