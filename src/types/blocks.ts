@@ -66,6 +66,7 @@ export interface TextBlock extends BaseBlock {
   content: string;
   alignment?: 'left' | 'center' | 'right';
   fontSize?: 'small' | 'medium' | 'large';
+  textColor?: string;
   imageUrl?: string;
   imagePosition?: 'above' | 'below';
   imageSize?: 'tiny' | 'small' | 'medium' | 'large' | 'full';
