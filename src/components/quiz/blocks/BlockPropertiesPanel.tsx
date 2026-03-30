@@ -1357,6 +1357,22 @@ const SocialProofProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
         </Select>
       </PropertySection>
       <SwitchRow label="Mostrar avatar" tooltip="Exibe foto ou avatar junto à notificação de prova social" checked={block.showAvatar || false} onChange={(v) => onChange(update(block, { showAvatar: v }))} />
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores</Label>
+      <div className="grid grid-cols-2 gap-2">
+        <PropertySection title="Cor de Fundo" tooltip="Cor de fundo da notificação">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={(block as any).bgColor || '#ffffff'} onChange={(e) => onChange(update(block, { bgColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {(block as any).bgColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { bgColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+        <PropertySection title="Cor da Borda" tooltip="Cor da borda da notificação">
+          <div className="flex gap-1 items-center">
+            <Input type="color" value={(block as any).borderColor || '#e5e7eb'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} className="w-10 h-8 p-1 cursor-pointer" />
+            {(block as any).borderColor && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => onChange(update(block, { borderColor: undefined }))}><X className="h-3 w-3" /></Button>}
+          </div>
+        </PropertySection>
+      </div>
     </div>
   );
 };
