@@ -2,7 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
+import { ImageUploader } from "@/components/ImageUploader";
 import type { ComparisonBlock as ComparisonBlockType } from "@/types/blocks";
 import { ComparisonBlockPreview } from "../preview/InteractiveBlockPreviews";
 
