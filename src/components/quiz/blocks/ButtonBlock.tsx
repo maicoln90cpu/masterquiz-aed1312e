@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MousePointer, HelpCircle, ExternalLink, ArrowRight, Navigation } from "lucide-react";
@@ -119,6 +120,22 @@ export const ButtonBlock = ({ block, onChange, totalQuestions = 0, currentQuesti
               ) : (
                 <p className="text-sm text-muted-foreground">Nenhuma pergunta disponível.</p>
               )}
+            </div>
+          )}
+
+          {/* Preview WYSIWYG do botão */}
+          {block.text && (
+            <div className="pt-2 border-t">
+              <p className="text-xs text-muted-foreground mb-2">Preview</p>
+              <div className="flex justify-center">
+                <Button
+                  variant={block.variant || 'default'}
+                  size={block.size || 'default'}
+                  className="pointer-events-none"
+                >
+                  {block.text}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

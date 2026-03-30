@@ -381,8 +381,23 @@ export const AppearanceConfigStep = ({
               {/* Exemplo de Pergunta */}
               <Card className="border-2">
                 <CardContent className="p-4 space-y-3">
+                  {/* Preview dinâmico do progressStyle */}
+                  {progressStyle === 'bar' && (
+                    <div className="space-y-1">
+                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: '20%' }} />
+                      </div>
+                      <p className="text-xs text-center text-muted-foreground">20%</p>
+                    </div>
+                  )}
+                  {progressStyle === 'counter' && (
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="text-xs">Pergunta 1 de {questionCount}</Badge>
+                      <span className="text-xs text-muted-foreground">{Math.round(100 / questionCount)}%</span>
+                    </div>
+                  )}
                   <div className="space-y-2">
-                    {showQuestionNumber && (
+                    {showQuestionNumber && progressStyle !== 'counter' && (
                       <Badge variant="outline" className="text-xs">Pergunta 1 de {questionCount}</Badge>
                     )}
                     <h2 className="font-semibold text-lg">
