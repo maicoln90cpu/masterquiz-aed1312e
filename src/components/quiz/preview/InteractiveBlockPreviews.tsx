@@ -681,16 +681,25 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">{block.title}</h3>
-      <div className="space-y-2">
+      <div className={`space-y-2 ${block.style === 'minimal' ? '' : ''}`}>
         {items.map((item, index) => {
           const isOpen = openItems.has(index);
+          const styleClasses = block.style === 'minimal'
+            ? 'border-b border-muted'
+            : block.style === 'bordered'
+              ? 'border-2 border-primary/30 rounded-lg shadow-sm'
+              : 'border rounded-lg bg-muted/20';
+          const triggerClasses = block.style === 'minimal'
+            ? 'w-full py-3 font-medium flex items-center justify-between text-left hover:text-primary transition-colors'
+            : block.style === 'bordered'
+              ? 'w-full p-3 font-medium bg-primary/5 flex items-center justify-between text-left hover:bg-primary/10 transition-colors'
+              : 'w-full p-3 font-medium bg-muted/50 flex items-center justify-between text-left hover:bg-muted/70 transition-colors';
           return (
-            <div key={index} className={`border rounded-lg overflow-hidden ${block.style === 'bordered' ? 'border-2' : ''}`}>
-              <button onClick={() => toggleItem(index)} className="w-full p-3 font-medium bg-muted/50 flex items-center justify-between text-left hover:bg-muted/70 transition-colors">
+            <div key={index} className={`overflow-hidden ${styleClasses}`}>
+              <button onClick={() => toggleItem(index)} className={triggerClasses}>
                 {item.question}
                 {renderIcon(isOpen)}
               </button>
-              {/* ✅ Etapa 2C: Animação suave de abertura */}
               <AnimatePresence>
                 {isOpen && (
                   <motion.div
@@ -700,7 +709,7 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
                     transition={{ duration: 0.2, ease: 'easeOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="p-3 text-sm text-muted-foreground border-t">{item.answer}</div>
+                    <div className={`p-3 text-sm text-muted-foreground ${block.style !== 'minimal' ? 'border-t' : ''}`}>{item.answer}</div>
                   </motion.div>
                 )}
               </AnimatePresence>
