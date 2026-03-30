@@ -17,6 +17,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   minHeight?: string;
+  textColor?: string;
 }
 
 // Cores de texto disponíveis
@@ -39,7 +40,8 @@ export const RichTextEditor = ({
   value, 
   onChange, 
   placeholder = "Digite aqui...",
-  minHeight = "150px"
+  minHeight = "150px",
+  textColor,
 }: RichTextEditorProps) => {
   const modules = useMemo(() => ({
     toolbar: [
@@ -95,6 +97,10 @@ export const RichTextEditor = ({
         }
         .rich-text-editor .ql-editor {
           min-height: ${minHeight};
+          color: ${textColor || 'hsl(var(--foreground))'};
+        }
+        .rich-text-editor .ql-editor.ql-blank::before {
+          color: ${textColor || 'hsl(var(--muted-foreground))'};
         }
         .rich-text-editor .ql-picker-label,
         .rich-text-editor .ql-picker-item {

@@ -234,6 +234,17 @@ const CreateQuizModern = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [editorState.quizId, appearanceState.title, hasInteracted, questions.length]);
 
+  useEffect(() => {
+    if (col3Mode !== 'preview') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCol3Mode('edit');
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [col3Mode]);
+
   // ✅ Palette handlers — mesmo fluxo do Classic (via updateCurrentQuestionBlocks)
   const handlePaletteAddBlock = useCallback((blockType: BlockType) => {
     const currentQ = questions[editorState.currentQuestionIndex];
@@ -831,6 +842,16 @@ const CreateQuizModern = () => {
                         Preview
                       </Button>
                     </div>
+                    {col3Mode === 'preview' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-[11px] px-2 rounded-sm"
+                        onClick={() => setCol3Mode('edit')}
+                      >
+                        Sair do Preview
+                      </Button>
+                    )}
                     <span className="text-xs text-muted-foreground">
                       {questions[currentQuestionIndex]?.blocks?.length || 0} blocos
                     </span>

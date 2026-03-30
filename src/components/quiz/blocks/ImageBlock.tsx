@@ -20,6 +20,19 @@ export const ImageBlock = ({ block, onChange }: ImageBlockProps) => {
     block.size === 'full' ? 'w-full' :
     'max-w-md';
 
+  const borderRadiusClass =
+    block.borderRadius === 'none' ? 'rounded-none' :
+    block.borderRadius === 'small' ? 'rounded-md' :
+    block.borderRadius === 'large' ? 'rounded-2xl' :
+    block.borderRadius === 'full' ? 'rounded-full' :
+    'rounded-lg';
+
+  const shadowClass =
+    block.shadow === 'small' ? 'shadow-md' :
+    block.shadow === 'medium' ? 'shadow-lg' :
+    block.shadow === 'large' ? 'shadow-2xl' :
+    '';
+
   return (
     <TooltipProvider>
       <Card className="border-2 border-muted">
@@ -57,15 +70,8 @@ export const ImageBlock = ({ block, onChange }: ImageBlockProps) => {
                     alt={block.alt || 'Quiz image'}
                     className={cn(
                       "w-full h-auto object-contain",
-                      (block as any).borderRadius === 'none' ? 'rounded-none' :
-                      (block as any).borderRadius === 'small' ? 'rounded-md' :
-                      (block as any).borderRadius === 'large' ? 'rounded-2xl' :
-                      (block as any).borderRadius === 'circular' ? 'rounded-full' :
-                      'rounded-lg',
-                      (block as any).shadow === 'light' ? 'shadow-md' :
-                      (block as any).shadow === 'medium' ? 'shadow-lg' :
-                      (block as any).shadow === 'strong' ? 'shadow-2xl' :
-                      ''
+                      borderRadiusClass,
+                      shadowClass
                     )}
                   />
                 </div>

@@ -1006,6 +1006,7 @@ export const RatingBlockPreview = ({ block }: { block: QuizBlock & { type: 'rati
   const maxStars = block.maxStars || 5;
   const color = block.color || '#f59e0b';
   const sizeClass = block.size === 'sm' ? 'w-6 h-6' : block.size === 'xl' ? 'w-12 h-12' : block.size === 'lg' ? 'w-10 h-10' : 'w-8 h-8';
+  const displayValue = hover || value;
 
   return (
     <div className="space-y-3">
@@ -1013,24 +1014,37 @@ export const RatingBlockPreview = ({ block }: { block: QuizBlock & { type: 'rati
       <div className="flex justify-center gap-1">
         {Array.from({ length: maxStars }, (_, i) => {
           const starIndex = i + 1;
-          const isFilled = starIndex <= (hover || value);
+          const getPointerValue = (event: React.MouseEvent<HTMLButtonElement>) => {
+            if (!block.halfStars) return starIndex;
+            const rect = event.currentTarget.getBoundingClientRect();
+            const pointerX = event.clientX - rect.left;
+            return pointerX <= rect.width / 2 ? starIndex - 0.5 : starIndex;
+          };
+
+          const fillPercent = displayValue >= starIndex ? 100 : block.halfStars && displayValue >= starIndex - 0.5 ? 50 : 0;
+
           return (
             <button
               key={i}
-              onClick={() => setValue(starIndex)}
-              onMouseEnter={() => setHover(starIndex)}
+              onClick={(event) => setValue(getPointerValue(event))}
+              onMouseMove={(event) => setHover(getPointerValue(event))}
               onMouseLeave={() => setHover(0)}
-              className={`${sizeClass} transition-transform hover:scale-110`}
+              className={`${sizeClass} relative transition-transform hover:scale-110`}
             >
-              <svg viewBox="0 0 24 24" className="w-full h-full transition-colors" style={{ fill: isFilled ? color : 'hsl(var(--muted))', color: isFilled ? color : 'hsl(var(--muted))' }}>
+              <svg viewBox="0 0 24 24" className="w-full h-full transition-colors" style={{ fill: 'hsl(var(--muted))', color: 'hsl(var(--muted))' }}>
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
+              {fillPercent > 0 && (
+                <svg viewBox="0 0 24 24" className="absolute inset-0 w-full h-full pointer-events-none" style={{ fill: color, color, clipPath: fillPercent === 50 ? 'inset(0 50% 0 0)' : 'inset(0 0 0 0)' }}>
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              )}
             </button>
           );
         })}
       </div>
       {block.showValue && value > 0 && (
-        <p className="text-center text-lg font-bold" style={{ color }}>{value} / {maxStars}</p>
+        <p className="text-center text-lg font-bold" style={{ color }}>{value.toFixed(1).replace('.0', '')} / {maxStars}</p>
       )}
     </div>
   );

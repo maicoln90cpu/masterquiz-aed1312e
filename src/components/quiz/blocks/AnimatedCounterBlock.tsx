@@ -18,7 +18,7 @@ export const AnimatedCounterBlock = ({ block, onChange }: AnimatedCounterBlockPr
         {/* ✅ Etapa 3: Preview real — WYSIWYG com animação, easing, formato moeda */}
         <div className="p-4 bg-muted/50 rounded-lg">
           <p className="text-sm text-muted-foreground mb-2">Preview (ao vivo)</p>
-          <AnimatedCounterBlockPreview block={block as any} />
+          <AnimatedCounterBlockPreview key={(block as any)._previewKey || 0} block={block as any} />
         </div>
 
         <p className="text-xs text-muted-foreground">
