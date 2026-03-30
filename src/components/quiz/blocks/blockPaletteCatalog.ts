@@ -60,6 +60,7 @@ export const blockCatalogSections: BlockCatalogSection[] = [
       { type: 'slider', icon: SlidersHorizontal, labelKey: 'createQuiz.blocks.slider', defaultLabel: 'Slider/Range' },
       { type: 'textInput', icon: MessageSquare, labelKey: 'createQuiz.blocks.textInput', defaultLabel: 'Input de Texto' },
       { type: 'nps', icon: Star, labelKey: 'createQuiz.blocks.nps', defaultLabel: 'NPS (Satisfação)' },
+      { type: 'rating', icon: StarHalf, labelKey: 'createQuiz.blocks.rating', defaultLabel: 'Avaliação (Estrelas)' },
     ],
   },
   {

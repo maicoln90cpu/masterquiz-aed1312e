@@ -998,3 +998,40 @@ export const CalculatorBlockPreview = ({ block }: { block: QuizBlock & { type: '
     </div>
   );
 };
+
+// ---- RATING (STARS) ----
+export const RatingBlockPreview = ({ block }: { block: QuizBlock & { type: 'rating' } }) => {
+  const [value, setValue] = useState(0);
+  const [hover, setHover] = useState(0);
+  const maxStars = block.maxStars || 5;
+  const color = block.color || '#f59e0b';
+  const sizeClass = block.size === 'sm' ? 'w-6 h-6' : block.size === 'xl' ? 'w-12 h-12' : block.size === 'lg' ? 'w-10 h-10' : 'w-8 h-8';
+
+  return (
+    <div className="space-y-3">
+      <p className="font-medium text-center">{block.label} {block.required && <span className="text-destructive">*</span>}</p>
+      <div className="flex justify-center gap-1">
+        {Array.from({ length: maxStars }, (_, i) => {
+          const starIndex = i + 1;
+          const isFilled = starIndex <= (hover || value);
+          return (
+            <button
+              key={i}
+              onClick={() => setValue(starIndex)}
+              onMouseEnter={() => setHover(starIndex)}
+              onMouseLeave={() => setHover(0)}
+              className={`${sizeClass} transition-transform hover:scale-110`}
+            >
+              <svg viewBox="0 0 24 24" className="w-full h-full transition-colors" style={{ fill: isFilled ? color : 'hsl(var(--muted))', color: isFilled ? color : 'hsl(var(--muted))' }}>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+          );
+        })}
+      </div>
+      {block.showValue && value > 0 && (
+        <p className="text-center text-lg font-bold" style={{ color }}>{value} / {maxStars}</p>
+      )}
+    </div>
+  );
+};
