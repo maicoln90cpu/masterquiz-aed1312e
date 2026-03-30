@@ -72,6 +72,13 @@ export const AutoSaveIndicator = ({
           color: 'bg-muted text-muted-foreground border-muted',
           pulse: false
         };
+      case 'disabled':
+        return {
+          icon: <CloudOff className="h-3.5 w-3.5" />,
+          label: t('autoSave.disabled', 'Auto-save desativado'),
+          color: 'bg-muted/50 text-muted-foreground border-muted',
+          pulse: false
+        };
       default:
         return {
           icon: hasQuizId ? <Cloud className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />,
