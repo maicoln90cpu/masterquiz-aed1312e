@@ -37,6 +37,8 @@ interface UseQuizPersistenceOptions {
   isExpressMode?: boolean;
   /** Editor layout mode — 'modern' fires B-variant events for A/B tracking */
   editorMode?: 'classic' | 'modern';
+  /** Whether auto-save is enabled (default: true) */
+  autoSaveEnabled?: boolean;
 }
 
 // ============================================
