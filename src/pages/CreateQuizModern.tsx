@@ -811,15 +811,26 @@ const CreateQuizModern = () => {
                     Pergunta {currentQuestionIndex + 1} de {questions.length}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs gap-1 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/20"
-                      onClick={() => setShowCurrentPreviewDialog(true)}
-                    >
-                      <Eye className="h-3 w-3" />
-                      Preview Atual
-                    </Button>
+                    {/* Toggle Edição / Preview */}
+                    <div className="flex items-center bg-muted rounded-md p-0.5">
+                      <Button
+                        variant={col3Mode === 'edit' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="h-6 text-[11px] px-2 rounded-sm"
+                        onClick={() => setCol3Mode('edit')}
+                      >
+                        Edição
+                      </Button>
+                      <Button
+                        variant={col3Mode === 'preview' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="h-6 text-[11px] px-2 rounded-sm"
+                        onClick={() => setCol3Mode('preview')}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Preview
+                      </Button>
+                    </div>
                     <span className="text-xs text-muted-foreground">
                       {questions[currentQuestionIndex]?.blocks?.length || 0} blocos
                     </span>
@@ -827,24 +838,47 @@ const CreateQuizModern = () => {
                 </div>
               )}
               
-              {(() => {
-                const currentQ = questions[currentQuestionIndex];
-                if (!currentQ) return (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p>Nenhuma pergunta selecionada</p>
-                  </div>
-                );
-                return (
-                  <BlockEditor
-                    blocks={currentQ.blocks || []}
-                    onChange={updateCurrentQuestionBlocks}
-                    onBlockSelect={(idx) => updateEditor({ selectedBlockIndex: idx })}
-                    selectedBlockIndex={editorState.selectedBlockIndex ?? 0}
-                    totalQuestions={questions.length}
-                    currentQuestionIndex={currentQuestionIndex}
+              {col3Mode === 'preview' ? (
+                <div className="border rounded-lg overflow-hidden bg-background">
+                  <UnifiedQuizPreview
+                    quizId={searchParams.get('id') || ''}
+                    title={quizState.title}
+                    description={quizState.description}
+                    questions={questions}
+                    showTitle={quizState.showTitle}
+                    showDescription={quizState.showDescription}
+                    showLogo={quizState.showLogo}
+                    logoUrl={quizState.logoUrl}
+                    showQuestionNumber={quizState.showQuestionNumber}
+                    progressStyle={quizState.progressStyle}
+                    template={quizState.template}
+                    globalFontFamily={quizState.globalFontFamily}
+                    globalFontSize={quizState.globalFontSize}
+                    globalTextAlign={quizState.globalTextAlign}
+                    initialStep={currentQuestionIndex}
+                    showIntroScreen={false}
                   />
-                );
-              })()}
+                </div>
+              ) : (
+                (() => {
+                  const currentQ = questions[currentQuestionIndex];
+                  if (!currentQ) return (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <p>Nenhuma pergunta selecionada</p>
+                    </div>
+                  );
+                  return (
+                    <BlockEditor
+                      blocks={currentQ.blocks || []}
+                      onChange={updateCurrentQuestionBlocks}
+                      onBlockSelect={(idx) => updateEditor({ selectedBlockIndex: idx })}
+                      selectedBlockIndex={editorState.selectedBlockIndex ?? 0}
+                      totalQuestions={questions.length}
+                      currentQuestionIndex={currentQuestionIndex}
+                    />
+                  );
+                })()
+              )}
             </div>
 
             {/* COL 4: Block Properties Panel */}
