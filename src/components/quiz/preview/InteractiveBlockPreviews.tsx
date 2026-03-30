@@ -605,7 +605,10 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
   const [value, setValue] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [webhookFired, setWebhookFired] = useState(false);
-  const getNPSColor = (v: number) => v <= 6 ? "bg-red-500" : v <= 8 ? "bg-yellow-500" : "bg-green-500";
+  const detractorColor = (block as any).detractorColor || '#ef4444';
+  const passiveColor = (block as any).passiveColor || '#eab308';
+  const promoterColor = (block as any).promoterColor || '#22c55e';
+  const getNPSColor = (v: number) => v <= 6 ? detractorColor : v <= 8 ? passiveColor : promoterColor;
 
   // ✅ Etapa 4: Webhook ao selecionar nota NPS
   const handleSelect = useCallback((i: number) => {
@@ -634,12 +637,12 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
       <div className="flex justify-center gap-1 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => (
           <button key={i} onClick={() => handleSelect(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
-            value === i ? `${getNPSColor(i)} text-white scale-110 shadow-lg` : "bg-muted hover:bg-muted/80 text-foreground"
-          }`}>{i}</button>
+            value === i ? 'text-white scale-110 shadow-lg' : 'bg-muted hover:bg-muted/80 text-foreground'
+          }`} style={value === i ? { backgroundColor: getNPSColor(i) } : undefined}>{i}</button>
         ))}
       </div>
       {value !== null && (
-        <p className={`text-center text-sm font-medium ${value <= 6 ? "text-red-600" : value <= 8 ? "text-yellow-600" : "text-green-600"}`}>
+        <p className="text-center text-sm font-medium" style={{ color: getNPSColor(value) }}>
           {value <= 6 ? "Detrator" : value <= 8 ? "Neutro" : "Promotor"} ({value})
         </p>
       )}
