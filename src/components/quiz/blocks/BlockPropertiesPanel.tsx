@@ -1637,6 +1637,17 @@ const IconListProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
         <Label>Cor padrão dos ícones</Label>
         <Input type="color" value={block.iconColor || '#10b981'} onChange={(e) => onChange(update(block, { iconColor: e.target.value }))} />
       </div>
+      <PropertySection title="Tamanho dos Ícones" tooltip="Tamanho visual dos ícones/emojis na lista">
+        <Select value={(block as any).iconSize || 'md'} onValueChange={(v) => onChange(update(block, { iconSize: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sm">Pequeno</SelectItem>
+            <SelectItem value="md">Médio</SelectItem>
+            <SelectItem value="lg">Grande</SelectItem>
+            <SelectItem value="xl">Extra Grande</SelectItem>
+          </SelectContent>
+        </Select>
+      </PropertySection>
       <Separator />
       <Label>Itens</Label>
       {items.map((item, idx) => (
