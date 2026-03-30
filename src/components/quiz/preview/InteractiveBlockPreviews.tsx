@@ -809,10 +809,15 @@ export const SocialProofBlockPreview = ({ block }: { block: QuizBlock & { type: 
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className={`${
-            block.style === 'banner' ? 'bg-primary text-primary-foreground px-4 py-2 rounded-md w-full text-center'
-              : block.style === 'floating' ? 'bg-background border-2 border-primary shadow-xl rounded-full px-4 py-2'
-              : 'bg-background border shadow-lg rounded-lg p-3 max-w-xs'
+            block.style === 'banner' ? 'px-4 py-2 rounded-md w-full text-center'
+              : block.style === 'floating' ? 'shadow-xl rounded-full px-4 py-2'
+              : 'shadow-lg rounded-lg p-3 max-w-xs'
           }`}
+          style={{
+            backgroundColor: (block as any).bgColor || (block.style === 'banner' ? 'hsl(var(--primary))' : 'hsl(var(--background))'),
+            color: block.style === 'banner' ? 'hsl(var(--primary-foreground))' : undefined,
+            border: block.style !== 'banner' ? `1px solid ${(block as any).borderColor || 'hsl(var(--border))'}` : undefined,
+          }}
         >
           <div className="flex items-center gap-3">
             {block.showAvatar && (
