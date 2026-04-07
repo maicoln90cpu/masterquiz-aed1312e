@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, Settings, MessageSquare, Megaphone, ListOrdered, History, BarChart3, Ban, Bot, MessageCircle, Mail, MailOpen, MailCheck, Phone, Zap } from "lucide-react";
+import { Smartphone, Settings, MessageSquare, Megaphone, ListOrdered, History, BarChart3, Ban, Bot, MessageCircle, Mail, MailOpen, MailCheck, Phone, Zap, DollarSign } from "lucide-react";
 import { AdminSubTabs } from "@/components/admin/AdminSubTabs";
 import { WhatsAppConnection } from "./WhatsAppConnection";
 import { RecoverySettings } from "./RecoverySettings";
