@@ -36,7 +36,6 @@ export default function Checkout() {
   const { isModeB } = useSiteMode();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
 
   useEffect(() => {
