@@ -116,16 +116,20 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
           console.log('✅ Quiz-specific GTM loaded:', normalizedGTM);
         }
 
-        // Push quiz_view event (persisted to DB)
-        pushGTMEvent('quiz_view', {
-          quiz_id: quiz?.id,
-          quiz_title: quiz?.title
-        });
+        // quiz_view already pushed above (independent of GTM)
       } else {
         console.error('Invalid GTM Container ID format:', normalizedGTM);
       }
     }
     }; // end injectGTM
+
+    // Always push quiz_view event (independent of GTM container)
+    if (quiz?.id) {
+      pushGTMEvent('quiz_view', {
+        quiz_id: quiz.id,
+        quiz_title: quiz?.title
+      });
+    }
 
     // Schedule both injections during idle time
     scheduleIdle(injectPixel);
