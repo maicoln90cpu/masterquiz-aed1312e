@@ -17,6 +17,7 @@ import { EmailRecoveryTemplates } from "./EmailRecoveryTemplates";
 import { EmailRecoveryQueue } from "./EmailRecoveryQueue";
 import { EmailRecoveryReports } from "./EmailRecoveryReports";
 import { EmailAutomations } from "./EmailAutomations";
+import { EmailRecoveryCosts } from "./EmailRecoveryCosts";
 
 export function CustomerRecovery() {
   return (
