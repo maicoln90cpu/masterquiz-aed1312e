@@ -1,5 +1,34 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.38.0 - Fix Automações Email + Vault Secrets + Tracking (07/04/2026)
+
+### Fix: Vault secrets para pg_cron
+- Inseridos `supabase_url` e `supabase_anon_key` no vault do Supabase
+- Os 4 cron jobs de automação (Blog Digest, Weekly Tip, Success Story, Monthly Summary) agora conseguem chamar as Edge Functions corretamente
+- **Antes**: cron jobs falhavam silenciosamente (URL=NULL)
+- **Depois**: cron jobs executam normalmente nos horários configurados
+
+### Fix: Logging nas automações de email
+- Todas as 5 funções de automação agora gravam registros na tabela `email_automation_logs`
+- O dashboard de automações passa a mostrar histórico real de execuções
+- Atualizam `email_automation_config` com última execução, contagem e resultado
+
+### Fix: Tracking de abertura/clique (webhookUrl)
+- Adicionado `webhookUrl` em todos os envios E-goi (bulk e single) das 5 funções
+- A E-goi agora notifica o webhook `egoi-email-webhook` sobre aberturas e cliques
+- **Antes**: apenas `process-email-recovery-queue` tinha tracking
+- **Depois**: Blog Digest, Weekly Tip, Success Story, Monthly Summary e Platform News todos com tracking
+
+### Funções alteradas
+| Função | Mudanças |
+|--------|----------|
+| `send-blog-digest` | +webhookUrl +logAutomation |
+| `send-weekly-tip` | +webhookUrl +logAutomation |
+| `send-success-story` | +webhookUrl +logAutomation |
+| `send-monthly-summary` | +webhookUrl +logAutomation |
+| `send-platform-news` | +webhookUrl +logAutomation |
+
+
 > Documento centralizado de changelog, pendências e histórico de desenvolvimento.
 
 ---
