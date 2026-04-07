@@ -84,6 +84,9 @@ const PlanCard = memo(({ plan, onEdit, onDelete }: {
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">💰</span>
               <span className="font-medium">R$ {plan.price_monthly}/mês</span>
+              {plan.price_monthly_mode_b != null && (
+                <span className="text-xs text-muted-foreground ml-1">(B: R$ {plan.price_monthly_mode_b})</span>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">📝</span>
