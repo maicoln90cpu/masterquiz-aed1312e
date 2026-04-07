@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History, Mail, ChevronDown, ChevronLeft, ChevronRight, Activity, Send, TrendingUp } from "lucide-react";
+import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History, Mail, ChevronDown, ChevronLeft, ChevronRight, Activity, Send, TrendingUp, Eye, ArrowLeft, Users } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -99,6 +100,10 @@ export function EmailAutomations() {
   const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [sendingTest, setSendingTest] = useState(false);
+  // Preview state
+  const [newsStep, setNewsStep] = useState<'compose' | 'preview'>('compose');
+  const [generatingPreview, setGeneratingPreview] = useState(false);
+  const [emailPreview, setEmailPreview] = useState<{ subject: string; html: string; recipientCount: number; segmentLabel: string } | null>(null);
   // Filters
   const [filterAutomation, setFilterAutomation] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -194,6 +199,55 @@ export function EmailAutomations() {
     }
   };
 
+  const generateNewsPreview = async () => {
+    const updates = newsUpdates.split('\n').filter(l => l.trim());
+    if (updates.length === 0) { toast.error('Adicione pelo menos uma novidade'); return; }
+
+    setGeneratingPreview(true);
+    try {
+      // Generate email content via edge function
+      const { data: genData, error: genErr } = await supabase.functions.invoke('generate-email-content', {
+        body: { templateType: 'platform_news', context: { updates, version: newsVersion || undefined }, recipientName: '{first_name}' },
+      });
+      if (genErr) throw genErr;
+
+      const subject = genData?.subject || 'Novidades da Plataforma';
+      const html = genData?.html || '<p>Erro ao gerar conteúdo</p>';
+
+      // Count recipients by segment
+      const segmentLabels: Record<string, string> = { all: 'Todos', active: 'Ativos (30d)', free: 'Plano Free', paid: 'Planos Pagos' };
+
+      // Quick estimate from profiles + unsubscribes
+      const [{ count: profileCount }, { count: unsubCount }, { count: blacklistCount }] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).not('email', 'is', null),
+        supabase.from('email_unsubscribes').select('id', { count: 'exact', head: true }),
+        supabase.from('recovery_blacklist').select('id', { count: 'exact', head: true }),
+      ]);
+
+      const estimatedRecipients = Math.max(0, (profileCount || 0) - (unsubCount || 0) - (blacklistCount || 0));
+
+      setEmailPreview({
+        subject,
+        html,
+        recipientCount: estimatedRecipients,
+        segmentLabel: segmentLabels[newsSegment] || 'Todos',
+      });
+      setNewsStep('preview');
+    } catch (err) {
+      toast.error('Erro ao gerar preview: ' + (err instanceof Error ? err.message : 'Erro'));
+    } finally {
+      setGeneratingPreview(false);
+    }
+  };
+
+  const handleNewsDialogClose = (open: boolean) => {
+    if (!open) {
+      setNewsStep('compose');
+      setEmailPreview(null);
+    }
+    setNewsDialogOpen(open);
+  };
+
   const executeAutomation = async (key: string) => {
     const fnName = EDGE_FUNCTION_MAP[key];
     if (!fnName) return;
@@ -225,9 +279,11 @@ export function EmailAutomations() {
         execution_count: (automations.find(a => a.automation_key === key)?.execution_count || 0) + 1,
       }).eq('automation_key', key);
 
-      setNewsDialogOpen(false);
+      handleNewsDialogClose(false);
       setNewsUpdates('');
       setNewsVersion('');
+      setNewsStep('compose');
+      setEmailPreview(null);
       await loadData();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao executar';
@@ -402,49 +458,109 @@ export function EmailAutomations() {
 
                 {/* Main Action Button */}
                 {auto.automation_key === 'platform_news' ? (
-                  <Dialog open={newsDialogOpen} onOpenChange={setNewsDialogOpen}>
+                  <Dialog open={newsDialogOpen} onOpenChange={handleNewsDialogClose}>
                     <DialogTrigger asChild>
                       <Button size="sm" className="flex-1" disabled={!auto.is_enabled || executing !== null}>
                         <Play className="h-3.5 w-3.5 mr-1.5" />
                         Enviar Novidades
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Enviar Novidades da Plataforma</DialogTitle>
-                        <DialogDescription>Liste as novidades (uma por linha). A IA formatará automaticamente.</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Novidades (uma por linha)</Label>
-                          <Textarea value={newsUpdates} onChange={e => setNewsUpdates(e.target.value)} placeholder={"Novo editor de quizzes\nSuporte a vídeos\nRelatórios avançados"} rows={5} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label>Versão (opcional)</Label>
-                            <Input value={newsVersion} onChange={e => setNewsVersion(e.target.value)} placeholder="v2.5" />
+                    <DialogContent className="max-w-2xl">
+                      {newsStep === 'compose' ? (
+                        <>
+                          <DialogHeader>
+                            <DialogTitle>Enviar Novidades da Plataforma</DialogTitle>
+                            <DialogDescription>Liste as novidades (uma por linha). A IA formatará automaticamente.</DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Novidades (uma por linha)</Label>
+                              <Textarea value={newsUpdates} onChange={e => setNewsUpdates(e.target.value)} placeholder={"Novo editor de quizzes\nSuporte a vídeos\nRelatórios avançados"} rows={5} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label>Versão (opcional)</Label>
+                                <Input value={newsVersion} onChange={e => setNewsVersion(e.target.value)} placeholder="v2.5" />
+                              </div>
+                              <div>
+                                <Label>Segmento</Label>
+                                <Select value={newsSegment} onValueChange={setNewsSegment}>
+                                  <SelectTrigger><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">Todos</SelectItem>
+                                    <SelectItem value="active">Ativos (30d)</SelectItem>
+                                    <SelectItem value="free">Plano Free</SelectItem>
+                                    <SelectItem value="paid">Planos Pagos</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <Label>Segmento</Label>
-                            <Select value={newsSegment} onValueChange={setNewsSegment}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                <SelectItem value="active">Ativos (30d)</SelectItem>
-                                <SelectItem value="free">Plano Free</SelectItem>
-                                <SelectItem value="paid">Planos Pagos</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setNewsDialogOpen(false)}>Cancelar</Button>
-                        <Button onClick={() => executeAutomation('platform_news')} disabled={executing === 'platform_news'}>
-                          {executing === 'platform_news' ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
-                          Enviar
-                        </Button>
-                      </DialogFooter>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => handleNewsDialogClose(false)}>Cancelar</Button>
+                            <Button onClick={generateNewsPreview} disabled={generatingPreview}>
+                              {generatingPreview ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Eye className="h-4 w-4 mr-1.5" />}
+                              Gerar Preview
+                            </Button>
+                          </DialogFooter>
+                        </>
+                      ) : (
+                        <>
+                          <DialogHeader>
+                            <DialogTitle>Preview do Email</DialogTitle>
+                            <DialogDescription>Revise o conteúdo antes de enviar para os destinatários.</DialogDescription>
+                          </DialogHeader>
+
+                          {emailPreview && (
+                            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                              {/* Resumo de destinatários */}
+                              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
+                                <Users className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    ~{emailPreview.recipientCount} destinatários
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Segmento: {emailPreview.segmentLabel}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Assunto */}
+                              <div className="p-3 rounded-lg border">
+                                <p className="text-xs text-muted-foreground mb-1">Assunto:</p>
+                                <p className="text-sm font-medium">{emailPreview.subject}</p>
+                              </div>
+
+                              {/* HTML Preview */}
+                              <div className="border rounded-lg overflow-hidden">
+                                <div className="bg-muted px-3 py-1.5 text-xs text-muted-foreground border-b">
+                                  Preview do corpo do email
+                                </div>
+                                <div
+                                  className="p-4 bg-background text-foreground text-sm"
+                                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(emailPreview.html) }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          <DialogFooter className="gap-2">
+                            <Button variant="outline" onClick={() => { setNewsStep('compose'); setEmailPreview(null); }}>
+                              <ArrowLeft className="h-4 w-4 mr-1.5" />
+                              Voltar
+                            </Button>
+                            <Button
+                              onClick={() => executeAutomation('platform_news')}
+                              disabled={executing === 'platform_news'}
+                              variant="default"
+                            >
+                              {executing === 'platform_news' ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Send className="h-4 w-4 mr-1.5" />}
+                              Enviar Agora
+                            </Button>
+                          </DialogFooter>
+                        </>
+                      )}
                     </DialogContent>
                   </Dialog>
                 ) : (
