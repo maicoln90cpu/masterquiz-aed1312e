@@ -2296,10 +2296,12 @@ export type Database = {
           is_active: boolean | null
           is_popular: boolean | null
           kiwify_checkout_url: string | null
+          kiwify_checkout_url_mode_b: string | null
           lead_limit: number | null
           plan_name: string
           plan_type: Database["public"]["Enums"]["plan_type"]
           price_monthly: number | null
+          price_monthly_mode_b: number | null
           questions_per_quiz_limit: number
           quiz_limit: number
           response_limit: number
@@ -2329,10 +2331,12 @@ export type Database = {
           is_active?: boolean | null
           is_popular?: boolean | null
           kiwify_checkout_url?: string | null
+          kiwify_checkout_url_mode_b?: string | null
           lead_limit?: number | null
           plan_name: string
           plan_type: Database["public"]["Enums"]["plan_type"]
           price_monthly?: number | null
+          price_monthly_mode_b?: number | null
           questions_per_quiz_limit?: number
           quiz_limit: number
           response_limit: number
@@ -2362,10 +2366,12 @@ export type Database = {
           is_active?: boolean | null
           is_popular?: boolean | null
           kiwify_checkout_url?: string | null
+          kiwify_checkout_url_mode_b?: string | null
           lead_limit?: number | null
           plan_name?: string
           plan_type?: Database["public"]["Enums"]["plan_type"]
           price_monthly?: number | null
+          price_monthly_mode_b?: number | null
           questions_per_quiz_limit?: number
           quiz_limit?: number
           response_limit?: number
