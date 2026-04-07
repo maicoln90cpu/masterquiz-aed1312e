@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 import type { Quiz, Profile } from "@/types/quiz";
 
 interface UseQuizTrackingProps {
