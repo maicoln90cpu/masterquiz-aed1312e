@@ -434,6 +434,7 @@ export default function PlanManagement() {
       plan_name: "",
       plan_type: "free",
       price_monthly: 0,
+      price_monthly_mode_b: null,
       quiz_limit: 3,
       response_limit: 100,
       lead_limit: 1000,
@@ -455,6 +456,7 @@ export default function PlanManagement() {
       ai_generations_per_month: 0,
       allowed_templates: ["moderno"],
       kiwify_checkout_url: "",
+      kiwify_checkout_url_mode_b: "",
       // Analytics Avançado
       allow_heatmap: false,
       allow_ab_testing: false,
@@ -475,6 +477,7 @@ export default function PlanManagement() {
       plan_name: plan.plan_name,
       plan_type: displayPlanType as PlanType,
       price_monthly: plan.price_monthly,
+      price_monthly_mode_b: (plan as any).price_monthly_mode_b ?? null,
       quiz_limit: plan.quiz_limit,
       response_limit: plan.response_limit,
       lead_limit: plan.lead_limit || 1000,
@@ -496,6 +499,7 @@ export default function PlanManagement() {
       ai_generations_per_month: (plan as any).ai_generations_per_month || 0,
       allowed_templates: plan.allowed_templates || ['moderno'],
       kiwify_checkout_url: (plan as any).kiwify_checkout_url || "",
+      kiwify_checkout_url_mode_b: (plan as any).kiwify_checkout_url_mode_b || "",
       // Analytics Avançado
       allow_heatmap: plan.allow_heatmap || false,
       allow_ab_testing: plan.allow_ab_testing || false,
