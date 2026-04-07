@@ -116,9 +116,8 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
           console.log('✅ Quiz-specific GTM loaded:', normalizedGTM);
         }
 
-        // Push quiz_view event
-        (window as any).dataLayer.push({
-          event: 'quiz_view',
+        // Push quiz_view event (persisted to DB)
+        pushGTMEvent('quiz_view', {
           quiz_id: quiz?.id,
           quiz_title: quiz?.title
         });
@@ -146,13 +145,10 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
   }, [quizOwnerProfile, quiz]);
 
   const trackQuizStart = (quizId: string, quizTitle: string) => {
-    if ((window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'quiz_start',
-        quiz_id: quizId,
-        quiz_title: quizTitle
-      });
-    }
+    pushGTMEvent('quiz_start', {
+      quiz_id: quizId,
+      quiz_title: quizTitle
+    });
 
     if ((window as any).fbq) {
       (window as any).fbq('trackCustom', 'QuizStart', {
@@ -163,14 +159,11 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
   };
 
   const trackQuizComplete = (quizId: string, quizTitle: string, resultId?: string) => {
-    if ((window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'quiz_complete',
-        quiz_id: quizId,
-        quiz_title: quizTitle,
-        result_id: resultId
-      });
-    }
+    pushGTMEvent('quiz_complete', {
+      quiz_id: quizId,
+      quiz_title: quizTitle,
+      result_id: resultId
+    });
 
     if ((window as any).fbq) {
       (window as any).fbq('trackCustom', 'QuizComplete', {
@@ -182,17 +175,14 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
   };
 
   const trackLeadCaptured = (quizId: string, quizTitle: string, hasEmail: boolean, hasWhatsapp: boolean, email?: string, name?: string) => {
-    if ((window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'lead_captured',
-        quiz_id: quizId,
-        quiz_title: quizTitle,
-        has_email: hasEmail,
-        has_whatsapp: hasWhatsapp,
-        lead_email: email || undefined,
-        lead_name: name || undefined
-      });
-    }
+    pushGTMEvent('lead_captured', {
+      quiz_id: quizId,
+      quiz_title: quizTitle,
+      has_email: hasEmail,
+      has_whatsapp: hasWhatsapp,
+      lead_email: email || undefined,
+      lead_name: name || undefined
+    });
 
     if ((window as any).fbq && (hasEmail || hasWhatsapp)) {
       (window as any).fbq('track', 'Lead', {
