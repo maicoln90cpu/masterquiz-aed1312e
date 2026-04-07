@@ -1524,6 +1524,7 @@ export default function AdminDashboard() {
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, color: 'blue' },
                 { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'green' },
                 { id: 'pql', label: 'PQL Analytics', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
+                { id: 'comparison', label: 'Comparação A×B', icon: <TrendingUp className="h-4 w-4" />, color: 'orange' },
               ]}
               defaultTab="dashboard"
             >
@@ -1534,6 +1535,11 @@ export default function AdminDashboard() {
                   {activeTab === 'pql' && (
                     <Suspense fallback={<ComponentLoader />}>
                       <PQLAnalytics />
+                    </Suspense>
+                  )}
+                  {activeTab === 'comparison' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <ModeComparison />
                     </Suspense>
                   )}
                 </>
