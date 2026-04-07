@@ -166,9 +166,7 @@ const Responses = () => {
       XLSX.writeFile(wb, `respostas-${new Date().toISOString().split('T')[0]}.xlsx`);
       
       // GTM: LeadExported
-      const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-      w.dataLayer = w.dataLayer || [];
-      w.dataLayer.push({ event: 'LeadExported', source: 'responses_excel', count: filteredResponses.length });
+      pushGTMEvent('LeadExported', { source: 'responses_excel', count: filteredResponses.length });
       
       // Audit log para export
       await logExportAction('export:excel_generated', selectedQuiz !== 'all' ? selectedQuiz : undefined, {
@@ -224,9 +222,7 @@ const Responses = () => {
       link.click();
       
       // GTM: LeadExported (CSV)
-      const w2 = window as Window & { dataLayer?: Record<string, unknown>[] };
-      w2.dataLayer = w2.dataLayer || [];
-      w2.dataLayer.push({ event: 'LeadExported', source: 'responses_csv', count: exportData.length });
+      pushGTMEvent('LeadExported', { source: 'responses_csv', count: exportData.length });
       
       toast.success(t('responses.csvDownloaded'), { duration: 8000 });
     } catch (error) {

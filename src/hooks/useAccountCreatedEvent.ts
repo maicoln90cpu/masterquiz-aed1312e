@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { pushGTMEvent } from '@/lib/gtmLogger';
 
 const SESSION_KEY = 'mq_account_created_checked';
 
@@ -22,14 +23,11 @@ export const useAccountCreatedEvent = () => {
     if (sessionStorage.getItem(SESSION_KEY) === 'true') return;
 
     const fireEvent = (userId: string, email: string | undefined, source: string) => {
-      const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-      w.dataLayer = w.dataLayer || [];
-      w.dataLayer.push({
-        event: 'AccountCreated',
+      pushGTMEvent('AccountCreated', {
         user_id: userId,
         user_email: email,
       });
-      console.log(`🎯 [GTM] Event pushed: AccountCreated (${source})`);
+      console.log(`🎯 [GTM] AccountCreated (${source})`);
     };
 
     const run = async () => {
