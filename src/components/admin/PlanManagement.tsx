@@ -38,6 +38,7 @@ interface Plan {
   plan_name: string;
   plan_type: PlanType;
   price_monthly: number;
+  price_monthly_mode_b?: number | null;
   quiz_limit: number;
   response_limit: number;
   lead_limit: number;
@@ -58,6 +59,7 @@ interface Plan {
   ai_generations_per_month?: number;
   allowed_templates: string[];
   kiwify_checkout_url?: string;
+  kiwify_checkout_url_mode_b?: string | null;
   // Analytics Avançado
   allow_heatmap?: boolean;
   allow_ab_testing?: boolean;
@@ -226,6 +228,7 @@ export default function PlanManagement() {
     plan_name: string;
     plan_type: PlanType;
     price_monthly: number;
+    price_monthly_mode_b: number | null;
     quiz_limit: number;
     response_limit: number;
     lead_limit: number;
@@ -247,6 +250,7 @@ export default function PlanManagement() {
     ai_generations_per_month: number;
     allowed_templates: string[];
     kiwify_checkout_url: string;
+    kiwify_checkout_url_mode_b: string;
     // Analytics Avançado
     allow_heatmap: boolean;
     allow_ab_testing: boolean;
