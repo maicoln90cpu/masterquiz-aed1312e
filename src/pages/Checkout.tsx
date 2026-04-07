@@ -9,12 +9,14 @@ import { toast } from "sonner";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useTranslation } from "react-i18next";
+import { useSiteMode } from "@/hooks/useSiteMode";
 
 interface Plan {
   id: string;
   plan_name: string;
   plan_type: string;
   price_monthly: number;
+  price_monthly_mode_b?: number | null;
   quiz_limit: number;
   response_limit: number;
   features: any;
@@ -23,6 +25,7 @@ interface Plan {
   allow_gtm: boolean;
   display_order: number;
   kiwify_checkout_url?: string;
+  kiwify_checkout_url_mode_b?: string | null;
 }
 
 export default function Checkout() {
@@ -30,6 +33,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { subscription } = useSubscriptionLimits();
+  const { isModeB } = useSiteMode();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
@@ -69,9 +73,13 @@ export default function Checkout() {
   const handleCheckout = async (plan: Plan) => {
     setCheckingOut(plan.id);
     try {
-      // 100% Kiwify: apenas redireciona para a URL configurada no plano
-      if (plan.kiwify_checkout_url) {
-        window.open(plan.kiwify_checkout_url, '_blank');
+      // Use Mode B checkout URL if available
+      const checkoutUrl = isModeB && plan.kiwify_checkout_url_mode_b
+        ? plan.kiwify_checkout_url_mode_b
+        : plan.kiwify_checkout_url;
+
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank');
         toast.success(t('checkout.redirecting'));
         return;
       }
@@ -131,10 +139,19 @@ export default function Checkout() {
                 <CardHeader>
                   <CardTitle className="text-2xl">{plan.plan_name}</CardTitle>
                   <CardDescription>
-                    <span className="text-3xl font-bold text-foreground">
-                      {isFree ? 'R$ 0' : `R$ ${plan.price_monthly.toFixed(2)}`}
-                    </span>
-                    {!isFree && <span className="text-muted-foreground">{t('checkout.perMonth')}</span>}
+                    {(() => {
+                      const effectivePrice = isModeB && plan.price_monthly_mode_b != null
+                        ? plan.price_monthly_mode_b
+                        : plan.price_monthly;
+                      return (
+                        <>
+                          <span className="text-3xl font-bold text-foreground">
+                            {isFree ? 'R$ 0' : `R$ ${effectivePrice.toFixed(2)}`}
+                          </span>
+                          {!isFree && <span className="text-muted-foreground">{t('checkout.perMonth')}</span>}
+                        </>
+                      );
+                    })()}
                   </CardDescription>
                 </CardHeader>
 

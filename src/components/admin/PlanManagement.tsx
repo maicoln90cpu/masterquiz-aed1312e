@@ -38,6 +38,7 @@ interface Plan {
   plan_name: string;
   plan_type: PlanType;
   price_monthly: number;
+  price_monthly_mode_b?: number | null;
   quiz_limit: number;
   response_limit: number;
   lead_limit: number;
@@ -58,6 +59,7 @@ interface Plan {
   ai_generations_per_month?: number;
   allowed_templates: string[];
   kiwify_checkout_url?: string;
+  kiwify_checkout_url_mode_b?: string | null;
   // Analytics Avançado
   allow_heatmap?: boolean;
   allow_ab_testing?: boolean;
@@ -82,6 +84,9 @@ const PlanCard = memo(({ plan, onEdit, onDelete }: {
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">💰</span>
               <span className="font-medium">R$ {plan.price_monthly}/mês</span>
+              {plan.price_monthly_mode_b != null && (
+                <span className="text-xs text-muted-foreground ml-1">(B: R$ {plan.price_monthly_mode_b})</span>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">📝</span>
@@ -226,6 +231,7 @@ export default function PlanManagement() {
     plan_name: string;
     plan_type: PlanType;
     price_monthly: number;
+    price_monthly_mode_b: number | null;
     quiz_limit: number;
     response_limit: number;
     lead_limit: number;
@@ -247,6 +253,7 @@ export default function PlanManagement() {
     ai_generations_per_month: number;
     allowed_templates: string[];
     kiwify_checkout_url: string;
+    kiwify_checkout_url_mode_b: string;
     // Analytics Avançado
     allow_heatmap: boolean;
     allow_ab_testing: boolean;
@@ -256,6 +263,7 @@ export default function PlanManagement() {
     plan_name: "",
     plan_type: "free" as PlanType,
     price_monthly: 0,
+    price_monthly_mode_b: null,
     quiz_limit: 3,
     response_limit: 100,
     lead_limit: 1000,
@@ -277,6 +285,7 @@ export default function PlanManagement() {
     ai_generations_per_month: 0,
     allowed_templates: ["moderno"],
     kiwify_checkout_url: "",
+    kiwify_checkout_url_mode_b: "",
     // Analytics Avançado
     allow_heatmap: false,
     allow_ab_testing: false,
@@ -428,6 +437,7 @@ export default function PlanManagement() {
       plan_name: "",
       plan_type: "free",
       price_monthly: 0,
+      price_monthly_mode_b: null,
       quiz_limit: 3,
       response_limit: 100,
       lead_limit: 1000,
@@ -449,6 +459,7 @@ export default function PlanManagement() {
       ai_generations_per_month: 0,
       allowed_templates: ["moderno"],
       kiwify_checkout_url: "",
+      kiwify_checkout_url_mode_b: "",
       // Analytics Avançado
       allow_heatmap: false,
       allow_ab_testing: false,
@@ -469,6 +480,7 @@ export default function PlanManagement() {
       plan_name: plan.plan_name,
       plan_type: displayPlanType as PlanType,
       price_monthly: plan.price_monthly,
+      price_monthly_mode_b: (plan as any).price_monthly_mode_b ?? null,
       quiz_limit: plan.quiz_limit,
       response_limit: plan.response_limit,
       lead_limit: plan.lead_limit || 1000,
@@ -490,6 +502,7 @@ export default function PlanManagement() {
       ai_generations_per_month: (plan as any).ai_generations_per_month || 0,
       allowed_templates: plan.allowed_templates || ['moderno'],
       kiwify_checkout_url: (plan as any).kiwify_checkout_url || "",
+      kiwify_checkout_url_mode_b: (plan as any).kiwify_checkout_url_mode_b || "",
       // Analytics Avançado
       allow_heatmap: plan.allow_heatmap || false,
       allow_ab_testing: plan.allow_ab_testing || false,
@@ -569,27 +582,55 @@ export default function PlanManagement() {
                         required
                       />
                     </div>
-                    
-                    <div className="space-y-2 col-span-3">
-                      <Label>URL de Checkout Kiwify</Label>
-                      <Input
-                        value={formData.kiwify_checkout_url}
-                        onChange={(e) => setFormData({ ...formData, kiwify_checkout_url: e.target.value })}
-                        placeholder="https://pay.kiwify.com.br/xxxxx"
-                        className="font-mono text-sm"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Cole aqui a URL de checkout da Kiwify para este plano
-                      </p>
-                    </div>
-                  </>
-                )}
-                
-                {formData.plan_type === 'free' && (
-                  <div className="space-y-2 col-span-3">
-                    <p className="text-sm text-muted-foreground">Planos gratuitos não possuem preço</p>
-                  </div>
-                )}
+                     
+                     <div className="space-y-2 col-span-3">
+                       <Label>URL de Checkout Kiwify</Label>
+                       <Input
+                         value={formData.kiwify_checkout_url}
+                         onChange={(e) => setFormData({ ...formData, kiwify_checkout_url: e.target.value })}
+                         placeholder="https://pay.kiwify.com.br/xxxxx"
+                         className="font-mono text-sm"
+                       />
+                       <p className="text-xs text-muted-foreground">
+                         Cole aqui a URL de checkout da Kiwify para este plano (Modo A)
+                       </p>
+                     </div>
+
+                     {/* Modo B Fields */}
+                     <div className="col-span-3 border-t pt-4 mt-2">
+                       <p className="text-sm font-semibold text-muted-foreground mb-3">⚡ Configurações Modo B (Apenas Pago)</p>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-2">
+                           <Label>Preço/Mês Modo B (R$)</Label>
+                           <Input
+                             type="number"
+                             step="0.01"
+                             value={formData.price_monthly_mode_b ?? ''}
+                             onChange={(e) => setFormData({ ...formData, price_monthly_mode_b: e.target.value ? parseFloat(e.target.value) : null })}
+                             placeholder="Mesmo do Modo A se vazio"
+                           />
+                           <p className="text-xs text-muted-foreground">Deixe vazio para usar o mesmo preço do Modo A</p>
+                         </div>
+                         <div className="space-y-2">
+                           <Label>URL Checkout Modo B</Label>
+                           <Input
+                             value={formData.kiwify_checkout_url_mode_b}
+                             onChange={(e) => setFormData({ ...formData, kiwify_checkout_url_mode_b: e.target.value })}
+                             placeholder="https://pay.kiwify.com.br/yyyyy"
+                             className="font-mono text-sm"
+                           />
+                           <p className="text-xs text-muted-foreground">URL diferente para o Modo B (opcional)</p>
+                         </div>
+                       </div>
+                     </div>
+                   </>
+                 )}
+                 
+                 {formData.plan_type === 'free' && (
+                   <div className="space-y-2 col-span-3">
+                     <p className="text-sm text-muted-foreground">Planos gratuitos não possuem preço</p>
+                   </div>
+                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

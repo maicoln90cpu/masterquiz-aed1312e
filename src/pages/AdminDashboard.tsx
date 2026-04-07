@@ -32,6 +32,7 @@ import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hoo
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
+const ModeComparison = lazy(() => import("@/components/admin/ModeComparison").then(m => ({ default: m.ModeComparison })));
 const PerformanceMetrics = lazy(() => import("@/components/admin/PerformanceMetrics").then(m => ({ default: m.PerformanceMetrics })));
 const AuditLogsViewer = lazy(() => import("@/components/admin/AuditLogsViewer").then(m => ({ default: m.AuditLogsViewer })));
 const TrackingConfiguration = lazy(() => import("@/components/admin/TrackingConfiguration").then(m => ({ default: m.TrackingConfiguration })));
@@ -1524,6 +1525,7 @@ export default function AdminDashboard() {
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, color: 'blue' },
                 { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'green' },
                 { id: 'pql', label: 'PQL Analytics', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
+                { id: 'comparison', label: 'Comparação A×B', icon: <TrendingUp className="h-4 w-4" />, color: 'orange' },
               ]}
               defaultTab="dashboard"
             >
@@ -1534,6 +1536,11 @@ export default function AdminDashboard() {
                   {activeTab === 'pql' && (
                     <Suspense fallback={<ComponentLoader />}>
                       <PQLAnalytics />
+                    </Suspense>
+                  )}
+                  {activeTab === 'comparison' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <ModeComparison />
                     </Suspense>
                   )}
                 </>
