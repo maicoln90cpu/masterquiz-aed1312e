@@ -24,7 +24,6 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Validate caller using getUser (works with signing-keys)
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -38,7 +37,6 @@ Deno.serve(async (req) => {
 
     const userId = user.id;
 
-    // Check admin role
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: roleData } = await adminClient
       .from("user_roles")
@@ -53,7 +51,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // List all auth users (paginated, up to 1000)
+    // List all auth users
     const { data: authData, error: authError } = await adminClient.auth.admin.listUsers({
       perPage: 1000,
     });
@@ -65,15 +63,13 @@ Deno.serve(async (req) => {
     const authUsers = authData?.users || [];
     const userIds = authUsers.map((u) => u.id);
 
-    // Fetch profiles, subscriptions, roles, stats, and historical quiz count in parallel
-    const [profilesRes, subsRes, rolesRes, quizCountRes, leadCountRes, auditDeletedRes, responsesPerQuizRes] = await Promise.all([
+    // Fetch profiles, subscriptions, roles, quizzes, and audit logs in parallel
+    const [profilesRes, subsRes, rolesRes, quizRes, auditDeletedRes] = await Promise.all([
       adminClient.from("profiles").select("*").in("id", userIds),
       adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
       adminClient.from("user_roles").select("*").in("user_id", userIds),
-      adminClient.from("quizzes").select("user_id, id, is_public, status, creation_source").in("user_id", userIds),
-      adminClient.from("quiz_responses").select("quiz_id, id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
+      adminClient.from("quizzes").select("id, user_id, is_public, status, creation_source").in("user_id", userIds),
       adminClient.from("audit_logs").select("user_id, resource_id").eq("action", "quiz:deleted").in("user_id", userIds),
-      adminClient.from("quiz_responses").select("quiz_id, answers, quizzes!inner(user_id)").in("quizzes.user_id", userIds),
     ]);
 
     const profilesMap = new Map(
@@ -88,49 +84,61 @@ Deno.serve(async (req) => {
       rolesMap.get(r.user_id)!.push(r.role);
     }
 
-    // Build quiz count map, published count map, and express/manual counts
+    // Build quiz maps
     const quizCountMap = new Map<string, number>();
     const publishedCountMap = new Map<string, number>();
     const expressQuizCountMap = new Map<string, number>();
     const manualQuizCountMap = new Map<string, number>();
-    for (const q of quizCountRes.data || []) {
+    const quizIdToOwner = new Map<string, string>();
+    const allQuizIds: string[] = [];
+
+    for (const q of quizRes.data || []) {
       quizCountMap.set(q.user_id, (quizCountMap.get(q.user_id) || 0) + 1);
       if (q.is_public && q.status === "active") {
         publishedCountMap.set(q.user_id, (publishedCountMap.get(q.user_id) || 0) + 1);
       }
-      if ((q as any).creation_source === 'express_auto') {
+      if (q.creation_source === 'express_auto') {
         expressQuizCountMap.set(q.user_id, (expressQuizCountMap.get(q.user_id) || 0) + 1);
       } else {
         manualQuizCountMap.set(q.user_id, (manualQuizCountMap.get(q.user_id) || 0) + 1);
       }
+      quizIdToOwner.set(q.id, q.user_id);
+      allQuizIds.push(q.id);
     }
 
-    // Build lead count map (excluding test leads)
+    // Now fetch responses using quiz IDs directly (not foreign table filter)
     const leadCountMap = new Map<string, number>();
-    for (const r of leadCountRes.data || []) {
-      const ownerUserId = (r as any).quizzes?.user_id;
-      const answers = (r as any).answers;
-      const isTestLead = answers && typeof answers === 'object' && answers._is_test_lead === true;
-      if (ownerUserId && !isTestLead) {
-        leadCountMap.set(ownerUserId, (leadCountMap.get(ownerUserId) || 0) + 1);
-      }
-    }
-
-    // Build quizzes with real leads map (exclude test leads)
     const quizzesWithLeadsMap = new Map<string, Set<string>>();
-    for (const r of responsesPerQuizRes.data || []) {
-      const ownerUserId = (r as any).quizzes?.user_id;
-      const answers = (r as any).answers;
-      const isTestLead = answers && typeof answers === "object" && answers._is_test_lead === true;
-      if (ownerUserId && !isTestLead) {
-        if (!quizzesWithLeadsMap.has(ownerUserId)) {
-          quizzesWithLeadsMap.set(ownerUserId, new Set());
+
+    if (allQuizIds.length > 0) {
+      // Fetch in batches of 500 to avoid URL length limits
+      const batchSize = 500;
+      for (let i = 0; i < allQuizIds.length; i += batchSize) {
+        const batch = allQuizIds.slice(i, i + batchSize);
+        const { data: responses } = await adminClient
+          .from("quiz_responses")
+          .select("quiz_id, answers")
+          .in("quiz_id", batch);
+
+        for (const r of responses || []) {
+          const ownerUserId = quizIdToOwner.get(r.quiz_id);
+          if (!ownerUserId) continue;
+
+          const answers = r.answers as any;
+          const isTestLead = answers && typeof answers === 'object' && answers._is_test_lead === true;
+          if (isTestLead) continue;
+
+          leadCountMap.set(ownerUserId, (leadCountMap.get(ownerUserId) || 0) + 1);
+
+          if (!quizzesWithLeadsMap.has(ownerUserId)) {
+            quizzesWithLeadsMap.set(ownerUserId, new Set());
+          }
+          quizzesWithLeadsMap.get(ownerUserId)!.add(r.quiz_id);
         }
-        quizzesWithLeadsMap.get(ownerUserId)!.add(r.quiz_id);
       }
     }
 
-    // Build deleted quiz count map from audit_logs
+    // Build deleted quiz count map
     const deletedQuizCountMap = new Map<string, number>();
     for (const a of auditDeletedRes.data || []) {
       if (a.user_id) {

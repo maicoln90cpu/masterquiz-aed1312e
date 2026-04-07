@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Mail, TrendingDown, Wallet, PieChart, ArrowDownRight, ArrowUpRight } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPie, Pie, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPie, Pie } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,6 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const TOTAL_RECHARGE_BRL = 190;
 const TOTAL_EMAILS_PURCHASED = 40533;
 const COST_PER_EMAIL_BRL = TOTAL_RECHARGE_BRL / TOTAL_EMAILS_PURCHASED; // ~R$0.00469
+
+const formatBRL = (value: number, decimals = 2) =>
+  value.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
 const CATEGORY_LABELS: Record<string, string> = {
   welcome: "Boas-vindas",
@@ -47,14 +50,17 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export function EmailRecoveryCosts() {
+  // Buscar apenas contatos com status "sent" (enviados efetivamente)
+  // opened/clicked são subsequentes a sent, contá-los duplicaria
   const { data: contacts, isLoading } = useQuery({
     queryKey: ["email-recovery-costs"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("email_recovery_contacts")
         .select("id, status, template_id, sent_at, created_at")
-        .in("status", ["sent", "opened", "clicked"]);
+        .not("sent_at", "is", null);
       if (error) throw error;
+      // Deduplicar por id (cada registro = 1 envio)
       return data || [];
     },
   });
@@ -67,17 +73,6 @@ export function EmailRecoveryCosts() {
         .select("id, name, category");
       if (error) throw error;
       return data || [];
-    },
-  });
-
-  const { data: allContacts } = useQuery({
-    queryKey: ["email-recovery-all-contacts-count"],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("email_recovery_contacts")
-        .select("id", { count: "exact", head: true });
-      if (error) throw error;
-      return count || 0;
     },
   });
 
@@ -168,7 +163,7 @@ export function EmailRecoveryCosts() {
         <div>
           <h3 className="text-lg font-semibold">Custos de Email Transacional</h3>
           <p className="text-sm text-muted-foreground">
-            Base: R${TOTAL_RECHARGE_BRL},00 = {TOTAL_EMAILS_PURCHASED.toLocaleString("pt-BR")} emails (R${COST_PER_EMAIL_BRL.toFixed(5)}/email)
+            Base: R$ {formatBRL(TOTAL_RECHARGE_BRL)} = {TOTAL_EMAILS_PURCHASED.toLocaleString("pt-BR")} emails (R$ {formatBRL(COST_PER_EMAIL_BRL, 5)}/email)
           </p>
         </div>
         <Badge variant="outline" className="text-xs">
@@ -186,7 +181,7 @@ export function EmailRecoveryCosts() {
           <CardContent>
             <div className="text-2xl font-bold">{totalSent.toLocaleString("pt-BR")}</div>
             <p className="text-xs text-muted-foreground">
-              de {TOTAL_EMAILS_PURCHASED.toLocaleString("pt-BR")} disponíveis ({usagePercent.toFixed(1)}%)
+              de {TOTAL_EMAILS_PURCHASED.toLocaleString("pt-BR")} disponíveis ({formatBRL(usagePercent, 1)}%)
             </p>
             <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
               <div
@@ -207,11 +202,11 @@ export function EmailRecoveryCosts() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              R$ {totalCost.toFixed(2)}
+              R$ {formatBRL(totalCost)}
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <ArrowDownRight className="h-3 w-3" />
-              de R$ {TOTAL_RECHARGE_BRL},00 investidos
+              de R$ {formatBRL(TOTAL_RECHARGE_BRL)} investidos
             </p>
           </CardContent>
         </Card>
@@ -223,7 +218,7 @@ export function EmailRecoveryCosts() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-500">
-              R$ {remainingBalance.toFixed(2)}
+              R$ {formatBRL(remainingBalance)}
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <ArrowUpRight className="h-3 w-3" />
@@ -239,7 +234,7 @@ export function EmailRecoveryCosts() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {COST_PER_EMAIL_BRL.toFixed(5)}
+              R$ {formatBRL(COST_PER_EMAIL_BRL, 5)}
             </div>
             <p className="text-xs text-muted-foreground">
               ≈ US$ {(COST_PER_EMAIL_BRL / 5.5).toFixed(6)} por email
@@ -263,9 +258,9 @@ export function EmailRecoveryCosts() {
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="month" fontSize={12} />
-                  <YAxis fontSize={12} tickFormatter={(v) => `R$${v.toFixed(2)}`} />
+                  <YAxis fontSize={12} tickFormatter={(v) => `R$${formatBRL(v)}`} />
                   <Tooltip
-                    formatter={(value: number) => [`R$ ${value.toFixed(4)}`, "Custo"]}
+                    formatter={(value: number) => [`R$ ${formatBRL(value, 4)}`, "Custo"]}
                     labelFormatter={(label) => `Mês: ${label}`}
                   />
                   <Bar dataKey="custo" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -303,7 +298,7 @@ export function EmailRecoveryCosts() {
                       <Cell key={index} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number, name: string) => [`${value} emails (R$ ${(value * COST_PER_EMAIL_BRL).toFixed(4)})`, name]} />
+                  <Tooltip formatter={(value: number, name: string) => [`${value} emails (R$ ${formatBRL(value * COST_PER_EMAIL_BRL, 4)})`, name]} />
                 </RechartsPie>
               </ResponsiveContainer>
             ) : (
@@ -329,12 +324,12 @@ export function EmailRecoveryCosts() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{cat.label}</span>
                   <Badge variant="secondary" className="text-xs">
-                    {cat.percent.toFixed(1)}%
+                    {formatBRL(cat.percent, 1)}%
                   </Badge>
                 </div>
                 <div className="text-lg font-bold">{cat.count.toLocaleString("pt-BR")} emails</div>
                 <div className="text-sm text-muted-foreground">
-                  R$ {cat.cost.toFixed(4)}
+                  R$ {formatBRL(cat.cost, 4)}
                 </div>
               </div>
             ))}
@@ -370,13 +365,13 @@ export function EmailRecoveryCosts() {
                   </TableCell>
                   <TableCell className="text-right">{t.count.toLocaleString("pt-BR")}</TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                    R$ {COST_PER_EMAIL_BRL.toFixed(5)}
+                    R$ {formatBRL(COST_PER_EMAIL_BRL, 5)}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    R$ {(t.count * COST_PER_EMAIL_BRL).toFixed(4)}
+                    R$ {formatBRL(t.count * COST_PER_EMAIL_BRL, 4)}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                    {totalSent > 0 ? ((t.count / totalSent) * 100).toFixed(1) : 0}%
+                    {totalSent > 0 ? formatBRL((t.count / totalSent) * 100, 1) : "0,0"}%
                   </TableCell>
                 </TableRow>
               ))}
@@ -387,7 +382,7 @@ export function EmailRecoveryCosts() {
                   <TableCell className="text-right">{totalSent.toLocaleString("pt-BR")}</TableCell>
                   <TableCell />
                   <TableCell className="text-right text-destructive">
-                    R$ {totalCost.toFixed(4)}
+                    R$ {formatBRL(totalCost, 4)}
                   </TableCell>
                   <TableCell className="text-right">100%</TableCell>
                 </TableRow>
