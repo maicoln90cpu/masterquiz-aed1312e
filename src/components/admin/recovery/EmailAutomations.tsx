@@ -248,7 +248,7 @@ export function EmailAutomations() {
     setNewsDialogOpen(open);
   };
 
-
+  const executeAutomation = async (key: string) => {
     const fnName = EDGE_FUNCTION_MAP[key];
     if (!fnName) return;
 
