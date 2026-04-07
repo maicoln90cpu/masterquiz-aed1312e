@@ -279,9 +279,11 @@ export function EmailAutomations() {
         execution_count: (automations.find(a => a.automation_key === key)?.execution_count || 0) + 1,
       }).eq('automation_key', key);
 
-      setNewsDialogOpen(false);
+      handleNewsDialogClose(false);
       setNewsUpdates('');
       setNewsVersion('');
+      setNewsStep('compose');
+      setEmailPreview(null);
       await loadData();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao executar';
