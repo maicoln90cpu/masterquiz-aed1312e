@@ -9,12 +9,14 @@ import { toast } from "sonner";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useTranslation } from "react-i18next";
+import { useSiteMode } from "@/hooks/useSiteMode";
 
 interface Plan {
   id: string;
   plan_name: string;
   plan_type: string;
   price_monthly: number;
+  price_monthly_mode_b?: number | null;
   quiz_limit: number;
   response_limit: number;
   features: any;
@@ -23,6 +25,7 @@ interface Plan {
   allow_gtm: boolean;
   display_order: number;
   kiwify_checkout_url?: string;
+  kiwify_checkout_url_mode_b?: string | null;
 }
 
 export default function Checkout() {

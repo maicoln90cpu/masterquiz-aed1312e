@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteMode } from "./useSiteMode";
 
 export interface PricingPlan {
   id: string;
@@ -23,8 +24,10 @@ export interface PricingPlan {
 }
 
 export const usePricingPlans = () => {
+  const { isModeB } = useSiteMode();
+
   const { data: plans, isLoading, error } = useQuery({
-    queryKey: ['pricing-plans'],
+    queryKey: ['pricing-plans', isModeB],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('subscription_plans')
@@ -35,16 +38,26 @@ export const usePricingPlans = () => {
       if (error) throw error;
 
       return (data || []).map(plan => {
+        // Use Mode B price if available and in Mode B
+        const effectivePrice = isModeB && (plan as any).price_monthly_mode_b != null
+          ? (plan as any).price_monthly_mode_b
+          : plan.price_monthly;
+
+        // Use Mode B checkout URL if available and in Mode B
+        const effectiveCheckoutUrl = isModeB && (plan as any).kiwify_checkout_url_mode_b
+          ? (plan as any).kiwify_checkout_url_mode_b
+          : (plan as any).kiwify_checkout_url;
+
         // Format price
         let formattedPrice = 'R$ 0';
         let showPerMonth = false;
         
-        if (plan.price_monthly === null || plan.price_monthly === 0) {
+        if (effectivePrice === null || effectivePrice === 0) {
           formattedPrice = 'Grátis';
-        } else if (plan.price_monthly === -1) {
+        } else if (effectivePrice === -1) {
           formattedPrice = 'Sob consulta';
         } else {
-          formattedPrice = `R$ ${plan.price_monthly}`;
+          formattedPrice = `R$ ${effectivePrice}`;
           showPerMonth = true;
         }
 
@@ -57,7 +70,7 @@ export const usePricingPlans = () => {
           `${plan.questions_per_quiz_limit === -1 ? '∞' : plan.questions_per_quiz_limit} perguntas por quiz`,
         ];
 
-        // Build enabled features array (boolean features with details)
+        // Build enabled features array
         const enabledFeatures = [
           { 
             key: 'allow_ai_generation', 
@@ -80,8 +93,7 @@ export const usePricingPlans = () => {
           { key: 'allow_export_pdf', label: 'Exportação PDF', enabled: plan.allow_export_pdf ?? false },
           { key: 'allow_quiz_sharing', label: 'Compartilhamento de Quiz', enabled: plan.allow_quiz_sharing ?? false },
           { key: 'allow_custom_domain', label: 'Domínio Personalizado', enabled: plan.allow_custom_domain ?? false },
-          { key: 'integrations', label: 'Integrações Externas (CRM, E-mail, Automação)', enabled: true }, // Disponível para todos
-          // Advanced Analytics Features (Partner+ only)
+          { key: 'integrations', label: 'Integrações Externas (CRM, E-mail, Automação)', enabled: true },
           { key: 'allow_heatmap', label: 'Heatmap de Respostas', enabled: (plan as any).allow_heatmap ?? false },
           { key: 'allow_ab_testing', label: 'Testes A/B de Quizzes', enabled: (plan as any).allow_ab_testing ?? false },
           { key: 'allow_quiz_branching', label: 'Perguntas Condicionais (Branching)', enabled: (plan as any).allow_quiz_branching ?? false },
@@ -99,7 +111,7 @@ export const usePricingPlans = () => {
           enabledFeatures,
           highlighted: plan.plan_type === 'partner',
           popular: plan.is_popular ?? false,
-          kiwifyCheckoutUrl: (plan as any).kiwify_checkout_url || null,
+          kiwifyCheckoutUrl: effectiveCheckoutUrl || null,
           ctaText: plan.plan_type === 'free' ? 'Criar conta grátis' : 'Assinar Agora',
           ctaVariant: (plan.is_popular ? 'default' : 'outline') as 'default' | 'outline',
           planType: plan.plan_type,
@@ -108,7 +120,7 @@ export const usePricingPlans = () => {
         return planData;
       });
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   return {
