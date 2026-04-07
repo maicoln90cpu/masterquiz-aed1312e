@@ -74,7 +74,7 @@ export function ModeComparison() {
     queryFn: async () => {
       const { data } = await supabase
         .from('user_subscriptions' as any)
-        .select('user_id, plan_type, created_at');
+        .select('user_id, plan_type, created_at') as any;
       return (data || []) as Array<{ user_id: string; plan_type: string; created_at: string }>;
     },
   });
