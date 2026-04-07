@@ -100,6 +100,10 @@ export function EmailAutomations() {
   const [testDialogKey, setTestDialogKey] = useState<string | null>(null);
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [sendingTest, setSendingTest] = useState(false);
+  // Preview state
+  const [newsStep, setNewsStep] = useState<'compose' | 'preview'>('compose');
+  const [generatingPreview, setGeneratingPreview] = useState(false);
+  const [emailPreview, setEmailPreview] = useState<{ subject: string; html: string; recipientCount: number; segmentLabel: string } | null>(null);
   // Filters
   const [filterAutomation, setFilterAutomation] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
