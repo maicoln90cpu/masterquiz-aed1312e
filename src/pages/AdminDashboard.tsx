@@ -32,6 +32,7 @@ import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hoo
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
+const ModeComparison = lazy(() => import("@/components/admin/ModeComparison").then(m => ({ default: m.ModeComparison })));
 const PerformanceMetrics = lazy(() => import("@/components/admin/PerformanceMetrics").then(m => ({ default: m.PerformanceMetrics })));
 const AuditLogsViewer = lazy(() => import("@/components/admin/AuditLogsViewer").then(m => ({ default: m.AuditLogsViewer })));
 const TrackingConfiguration = lazy(() => import("@/components/admin/TrackingConfiguration").then(m => ({ default: m.TrackingConfiguration })));
