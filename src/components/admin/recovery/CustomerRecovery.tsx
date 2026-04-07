@@ -74,6 +74,7 @@ export function CustomerRecovery() {
             { id: 'email-queue', label: 'Fila de Envio', icon: <MailCheck className="h-4 w-4" />, color: 'green' },
             { id: 'email-automations', label: 'Automações', icon: <Zap className="h-4 w-4" />, color: 'amber' },
             { id: 'email-reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'pink' },
+            { id: 'email-costs', label: 'Custos', icon: <DollarSign className="h-4 w-4" />, color: 'emerald' },
           ]}
           defaultTab="email-settings"
         >
@@ -84,6 +85,7 @@ export function CustomerRecovery() {
               {activeTab === 'email-queue' && <EmailRecoveryQueue />}
               {activeTab === 'email-automations' && <EmailAutomations />}
               {activeTab === 'email-reports' && <EmailRecoveryReports />}
+              {activeTab === 'email-costs' && <EmailRecoveryCosts />}
             </>
           )}
         </AdminSubTabs>
