@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuizViewState, type PreviewData } from "@/hooks/useQuizViewState";
 import { useQuizTracking } from "@/hooks/useQuizTracking";
+import { useQuizGTMTracking } from "@/hooks/useQuizGTMTracking";
 import { useCtaTracking } from "@/hooks/useCtaTracking";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -57,9 +58,22 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
   });
 
   // Initialize tracking
-  useQuizTracking({
+  const { trackQuizStart, trackQuizComplete, trackLeadCaptured } = useQuizTracking({
     quiz: state.quiz,
     quizOwnerProfile: state.quizOwnerProfile
+  });
+
+  // Pass tracking functions to state hook
+  useQuizGTMTracking({
+    quiz: state.quiz,
+    currentStep: state.currentStep,
+    showResult: state.showResult,
+    finalResult: state.finalResult,
+    formData: state.formData,
+    formConfig: state.formConfig,
+    trackQuizStart,
+    trackQuizComplete,
+    trackLeadCaptured,
   });
 
   // CTA tracking: only for funnel quizzes on the last question

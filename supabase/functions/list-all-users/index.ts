@@ -6,6 +6,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Helper: fetch rows in batches to avoid PostgREST URL length limits
+async function fetchInBatches<T>(
+  client: any,
+  table: string,
+  selectColumns: string,
+  filterColumn: string,
+  ids: string[],
+  batchSize = 100
+): Promise<T[]> {
+  const allRows: T[] = [];
+  for (let i = 0; i < ids.length; i += batchSize) {
+    const batch = ids.slice(i, i + batchSize);
+    const { data, error } = await client
+      .from(table)
+      .select(selectColumns)
+      .in(filterColumn, batch);
+    if (error) {
+      console.error(`[list-all-users] Error fetching ${table} batch ${i}:`, error.message);
+      continue;
+    }
+    if (data) allRows.push(...data);
+  }
+  return allRows;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -63,23 +88,31 @@ Deno.serve(async (req) => {
     const authUsers = authData?.users || [];
     const userIds = authUsers.map((u) => u.id);
 
-    // Fetch profiles, subscriptions, roles, quizzes, and audit logs in parallel
-    const [profilesRes, subsRes, rolesRes, quizRes, auditDeletedRes] = await Promise.all([
-      adminClient.from("profiles").select("*").in("id", userIds),
-      adminClient.from("user_subscriptions").select("*").in("user_id", userIds),
-      adminClient.from("user_roles").select("*").in("user_id", userIds),
-      adminClient.from("quizzes").select("id, user_id, is_public, status, creation_source").in("user_id", userIds),
-      adminClient.from("audit_logs").select("user_id, resource_id").eq("action", "quiz:deleted").in("user_id", userIds),
+    // Fetch profiles, subscriptions, roles, quizzes, and audit logs in BATCHES
+    const [profiles, subs, roles, quizzes, auditDeleted] = await Promise.all([
+      fetchInBatches<any>(adminClient, "profiles", "*", "id", userIds),
+      fetchInBatches<any>(adminClient, "user_subscriptions", "*", "user_id", userIds),
+      fetchInBatches<any>(adminClient, "user_roles", "*", "user_id", userIds),
+      fetchInBatches<any>(adminClient, "quizzes", "id, user_id, is_public, status, creation_source", "user_id", userIds),
+      fetchInBatches<any>(adminClient, "audit_logs", "user_id, resource_id", "user_id", userIds),
     ]);
 
-    const profilesMap = new Map(
-      (profilesRes.data || []).map((p) => [p.id, p])
-    );
-    const subsMap = new Map(
-      (subsRes.data || []).map((s) => [s.user_id, s])
-    );
+    // Filter audit_logs for quiz:deleted action separately (batched)
+    const auditDeletedFiltered: any[] = [];
+    for (let i = 0; i < userIds.length; i += 100) {
+      const batch = userIds.slice(i, i + 100);
+      const { data } = await adminClient
+        .from("audit_logs")
+        .select("user_id, resource_id")
+        .eq("action", "quiz:deleted")
+        .in("user_id", batch);
+      if (data) auditDeletedFiltered.push(...data);
+    }
+
+    const profilesMap = new Map(profiles.map((p: any) => [p.id, p]));
+    const subsMap = new Map(subs.map((s: any) => [s.user_id, s]));
     const rolesMap = new Map<string, string[]>();
-    for (const r of rolesRes.data || []) {
+    for (const r of roles) {
       if (!rolesMap.has(r.user_id)) rolesMap.set(r.user_id, []);
       rolesMap.get(r.user_id)!.push(r.role);
     }
@@ -92,7 +125,7 @@ Deno.serve(async (req) => {
     const quizIdToOwner = new Map<string, string>();
     const allQuizIds: string[] = [];
 
-    for (const q of quizRes.data || []) {
+    for (const q of quizzes) {
       quizCountMap.set(q.user_id, (quizCountMap.get(q.user_id) || 0) + 1);
       if (q.is_public && q.status === "active") {
         publishedCountMap.set(q.user_id, (publishedCountMap.get(q.user_id) || 0) + 1);
@@ -106,13 +139,12 @@ Deno.serve(async (req) => {
       allQuizIds.push(q.id);
     }
 
-    // Now fetch responses using quiz IDs directly (not foreign table filter)
+    // Fetch responses using quiz IDs in batches
     const leadCountMap = new Map<string, number>();
     const quizzesWithLeadsMap = new Map<string, Set<string>>();
 
     if (allQuizIds.length > 0) {
-      // Fetch in batches of 500 to avoid URL length limits
-      const batchSize = 500;
+      const batchSize = 200;
       for (let i = 0; i < allQuizIds.length; i += batchSize) {
         const batch = allQuizIds.slice(i, i + batchSize);
         const { data: responses } = await adminClient
@@ -140,7 +172,7 @@ Deno.serve(async (req) => {
 
     // Build deleted quiz count map
     const deletedQuizCountMap = new Map<string, number>();
-    for (const a of auditDeletedRes.data || []) {
+    for (const a of auditDeletedFiltered) {
       if (a.user_id) {
         deletedQuizCountMap.set(a.user_id, (deletedQuizCountMap.get(a.user_id) || 0) + 1);
       }
