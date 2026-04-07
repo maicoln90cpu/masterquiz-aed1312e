@@ -260,6 +260,7 @@ export default function PlanManagement() {
     plan_name: "",
     plan_type: "free" as PlanType,
     price_monthly: 0,
+    price_monthly_mode_b: null,
     quiz_limit: 3,
     response_limit: 100,
     lead_limit: 1000,
@@ -281,6 +282,7 @@ export default function PlanManagement() {
     ai_generations_per_month: 0,
     allowed_templates: ["moderno"],
     kiwify_checkout_url: "",
+    kiwify_checkout_url_mode_b: "",
     // Analytics Avançado
     allow_heatmap: false,
     allow_ab_testing: false,
