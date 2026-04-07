@@ -456,49 +456,109 @@ export function EmailAutomations() {
 
                 {/* Main Action Button */}
                 {auto.automation_key === 'platform_news' ? (
-                  <Dialog open={newsDialogOpen} onOpenChange={setNewsDialogOpen}>
+                  <Dialog open={newsDialogOpen} onOpenChange={handleNewsDialogClose}>
                     <DialogTrigger asChild>
                       <Button size="sm" className="flex-1" disabled={!auto.is_enabled || executing !== null}>
                         <Play className="h-3.5 w-3.5 mr-1.5" />
                         Enviar Novidades
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Enviar Novidades da Plataforma</DialogTitle>
-                        <DialogDescription>Liste as novidades (uma por linha). A IA formatará automaticamente.</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Novidades (uma por linha)</Label>
-                          <Textarea value={newsUpdates} onChange={e => setNewsUpdates(e.target.value)} placeholder={"Novo editor de quizzes\nSuporte a vídeos\nRelatórios avançados"} rows={5} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label>Versão (opcional)</Label>
-                            <Input value={newsVersion} onChange={e => setNewsVersion(e.target.value)} placeholder="v2.5" />
+                    <DialogContent className="max-w-2xl">
+                      {newsStep === 'compose' ? (
+                        <>
+                          <DialogHeader>
+                            <DialogTitle>Enviar Novidades da Plataforma</DialogTitle>
+                            <DialogDescription>Liste as novidades (uma por linha). A IA formatará automaticamente.</DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Novidades (uma por linha)</Label>
+                              <Textarea value={newsUpdates} onChange={e => setNewsUpdates(e.target.value)} placeholder={"Novo editor de quizzes\nSuporte a vídeos\nRelatórios avançados"} rows={5} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label>Versão (opcional)</Label>
+                                <Input value={newsVersion} onChange={e => setNewsVersion(e.target.value)} placeholder="v2.5" />
+                              </div>
+                              <div>
+                                <Label>Segmento</Label>
+                                <Select value={newsSegment} onValueChange={setNewsSegment}>
+                                  <SelectTrigger><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">Todos</SelectItem>
+                                    <SelectItem value="active">Ativos (30d)</SelectItem>
+                                    <SelectItem value="free">Plano Free</SelectItem>
+                                    <SelectItem value="paid">Planos Pagos</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <Label>Segmento</Label>
-                            <Select value={newsSegment} onValueChange={setNewsSegment}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                <SelectItem value="active">Ativos (30d)</SelectItem>
-                                <SelectItem value="free">Plano Free</SelectItem>
-                                <SelectItem value="paid">Planos Pagos</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setNewsDialogOpen(false)}>Cancelar</Button>
-                        <Button onClick={() => executeAutomation('platform_news')} disabled={executing === 'platform_news'}>
-                          {executing === 'platform_news' ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
-                          Enviar
-                        </Button>
-                      </DialogFooter>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => handleNewsDialogClose(false)}>Cancelar</Button>
+                            <Button onClick={generateNewsPreview} disabled={generatingPreview}>
+                              {generatingPreview ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Eye className="h-4 w-4 mr-1.5" />}
+                              Gerar Preview
+                            </Button>
+                          </DialogFooter>
+                        </>
+                      ) : (
+                        <>
+                          <DialogHeader>
+                            <DialogTitle>Preview do Email</DialogTitle>
+                            <DialogDescription>Revise o conteúdo antes de enviar para os destinatários.</DialogDescription>
+                          </DialogHeader>
+
+                          {emailPreview && (
+                            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                              {/* Resumo de destinatários */}
+                              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
+                                <Users className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    ~{emailPreview.recipientCount} destinatários
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Segmento: {emailPreview.segmentLabel}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Assunto */}
+                              <div className="p-3 rounded-lg border">
+                                <p className="text-xs text-muted-foreground mb-1">Assunto:</p>
+                                <p className="text-sm font-medium">{emailPreview.subject}</p>
+                              </div>
+
+                              {/* HTML Preview */}
+                              <div className="border rounded-lg overflow-hidden">
+                                <div className="bg-muted px-3 py-1.5 text-xs text-muted-foreground border-b">
+                                  Preview do corpo do email
+                                </div>
+                                <div
+                                  className="p-4 bg-background text-foreground text-sm"
+                                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(emailPreview.html) }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          <DialogFooter className="gap-2">
+                            <Button variant="outline" onClick={() => { setNewsStep('compose'); setEmailPreview(null); }}>
+                              <ArrowLeft className="h-4 w-4 mr-1.5" />
+                              Voltar
+                            </Button>
+                            <Button
+                              onClick={() => executeAutomation('platform_news')}
+                              disabled={executing === 'platform_news'}
+                              variant="default"
+                            >
+                              {executing === 'platform_news' ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Send className="h-4 w-4 mr-1.5" />}
+                              Enviar Agora
+                            </Button>
+                          </DialogFooter>
+                        </>
+                      )}
                     </DialogContent>
                   </Dialog>
                 ) : (
