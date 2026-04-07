@@ -199,7 +199,56 @@ export function EmailAutomations() {
     }
   };
 
-  const executeAutomation = async (key: string) => {
+  const generateNewsPreview = async () => {
+    const updates = newsUpdates.split('\n').filter(l => l.trim());
+    if (updates.length === 0) { toast.error('Adicione pelo menos uma novidade'); return; }
+
+    setGeneratingPreview(true);
+    try {
+      // Generate email content via edge function
+      const { data: genData, error: genErr } = await supabase.functions.invoke('generate-email-content', {
+        body: { templateType: 'platform_news', context: { updates, version: newsVersion || undefined }, recipientName: '{first_name}' },
+      });
+      if (genErr) throw genErr;
+
+      const subject = genData?.subject || 'Novidades da Plataforma';
+      const html = genData?.html || '<p>Erro ao gerar conteúdo</p>';
+
+      // Count recipients by segment
+      const segmentLabels: Record<string, string> = { all: 'Todos', active: 'Ativos (30d)', free: 'Plano Free', paid: 'Planos Pagos' };
+
+      // Quick estimate from profiles + unsubscribes
+      const [{ count: profileCount }, { count: unsubCount }, { count: blacklistCount }] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).not('email', 'is', null),
+        supabase.from('email_unsubscribes').select('id', { count: 'exact', head: true }),
+        supabase.from('recovery_blacklist').select('id', { count: 'exact', head: true }),
+      ]);
+
+      const estimatedRecipients = Math.max(0, (profileCount || 0) - (unsubCount || 0) - (blacklistCount || 0));
+
+      setEmailPreview({
+        subject,
+        html,
+        recipientCount: estimatedRecipients,
+        segmentLabel: segmentLabels[newsSegment] || 'Todos',
+      });
+      setNewsStep('preview');
+    } catch (err) {
+      toast.error('Erro ao gerar preview: ' + (err instanceof Error ? err.message : 'Erro'));
+    } finally {
+      setGeneratingPreview(false);
+    }
+  };
+
+  const handleNewsDialogClose = (open: boolean) => {
+    if (!open) {
+      setNewsStep('compose');
+      setEmailPreview(null);
+    }
+    setNewsDialogOpen(open);
+  };
+
+
     const fnName = EDGE_FUNCTION_MAP[key];
     if (!fnName) return;
 
