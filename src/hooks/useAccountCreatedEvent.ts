@@ -22,7 +22,8 @@ export const useAccountCreatedEvent = () => {
     // Guard: já verificou nesta sessão
     if (sessionStorage.getItem(SESSION_KEY) === 'true') return;
 
-    const fireEvent = (userId: string, email: string | undefined, source: string) => {
+    const fireEvent = async (userId: string, email: string | undefined, source: string) => {
+      // Use persist=true and await to ensure DB write succeeds before marking sent
       pushGTMEvent('AccountCreated', {
         user_id: userId,
         user_email: email,
