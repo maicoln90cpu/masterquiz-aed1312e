@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -261,9 +262,7 @@ const CRM = () => {
       XLSX.writeFile(wb, `leads_crm_${new Date().toISOString().split('T')[0]}.xlsx`);
       
       // GTM: LeadExported
-      const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-      w.dataLayer = w.dataLayer || [];
-      w.dataLayer.push({ event: 'LeadExported', source: 'crm', count: leads.length });
+      pushGTMEvent('LeadExported', { source: 'crm', count: leads.length });
       
       toast.success(t('crm.toast.exportSuccess', { count: leads.length }));
     } catch (error) {

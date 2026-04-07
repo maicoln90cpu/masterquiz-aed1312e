@@ -1,5 +1,6 @@
 // ✅ FASE 2 - ITEM 6: Adicionar imports para filtros de data
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -166,9 +167,7 @@ const Responses = () => {
       XLSX.writeFile(wb, `respostas-${new Date().toISOString().split('T')[0]}.xlsx`);
       
       // GTM: LeadExported
-      const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-      w.dataLayer = w.dataLayer || [];
-      w.dataLayer.push({ event: 'LeadExported', source: 'responses_excel', count: filteredResponses.length });
+      pushGTMEvent('LeadExported', { source: 'responses_excel', count: filteredResponses.length });
       
       // Audit log para export
       await logExportAction('export:excel_generated', selectedQuiz !== 'all' ? selectedQuiz : undefined, {
@@ -224,9 +223,7 @@ const Responses = () => {
       link.click();
       
       // GTM: LeadExported (CSV)
-      const w2 = window as Window & { dataLayer?: Record<string, unknown>[] };
-      w2.dataLayer = w2.dataLayer || [];
-      w2.dataLayer.push({ event: 'LeadExported', source: 'responses_csv', count: exportData.length });
+      pushGTMEvent('LeadExported', { source: 'responses_csv', count: exportData.length });
       
       toast.success(t('responses.csvDownloaded'), { duration: 8000 });
     } catch (error) {
