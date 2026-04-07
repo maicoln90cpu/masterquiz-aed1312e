@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuizViewState, type PreviewData } from "@/hooks/useQuizViewState";
 import { useQuizTracking } from "@/hooks/useQuizTracking";
+import { useQuizGTMTracking } from "@/hooks/useQuizGTMTracking";
 import { useCtaTracking } from "@/hooks/useCtaTracking";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
