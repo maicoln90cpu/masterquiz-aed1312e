@@ -1,7 +1,7 @@
 # 🧩 Componentes - MasterQuiz
 
 > Documentação dos componentes principais do frontend
-> Versão 2.37 | 21 de Março de 2026
+> Versão 2.39 | 08 de Abril de 2026
 
 ---
 
@@ -160,6 +160,11 @@
 - **Arquivo:** `src/components/admin/recovery/RecoveryCampaigns.tsx`
 - **Descrição:** Gestão de campanhas WhatsApp com cooldown global
 
+### `EmailRecoveryCosts`
+- **Arquivo:** `src/components/admin/recovery/EmailRecoveryCosts.tsx`
+- **Descrição:** Aba de custos de email transacional com cálculo detalhado por categoria
+- **Features:** Cards de saldo/custo total, tabela por categoria, baseado em R$190/40.533 emails
+
 ---
 
 ## 🏠 Landing
@@ -200,6 +205,16 @@
 - **Descrição:** Player de vídeo customizado com analytics tracking
 - **Integração:** Bunny CDN streaming
 
+### `ModeComparison`
+- **Arquivo:** `src/components/admin/ModeComparison.tsx`
+- **Descrição:** Comparação histórica de métricas entre Modo A (Freemium) e Modo B (Apenas Pago)
+- **Features:** Segmentação por período, cadastros, quizzes, conversões, tabela comparativa
+
+### `useQuizGTMTracking`
+- **Arquivo:** `src/hooks/useQuizGTMTracking.ts`
+- **Descrição:** Hook de tracking GTM integrado ao estado real do quiz público
+- **Eventos:** quiz_view (mount), quiz_start (1º step), quiz_complete (resultado), lead_captured (form)
+
 ---
 
 ## 📚 Documentação Relacionada
@@ -212,3 +227,6 @@
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código |
 | [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
 | [TESTING.md](./TESTING.md) | Guia de testes |
+| [BLOG.md](./BLOG.md) | Guia do blog com IA |
+| [EGOI.md](./EGOI.md) | Guia do email marketing |
+| [MONETIZATION.md](./MONETIZATION.md) | Monetização A/B e custos |
