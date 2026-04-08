@@ -2,8 +2,8 @@
 
 > Guia completo para validação manual do aplicativo antes do lançamento.
 
-**Versão:** 2.37.0  
-**Data:** 21/03/2026
+**Versão:** 2.39.0  
+**Data:** 08/04/2026
 
 ---
 
@@ -1639,10 +1639,59 @@ Após completar o checklist, o produto está pronto para **soft launch**.
 
 ---
 
+## 🆕 v2.39 — Novos Itens de Validação
+
+### Custos de Email (Admin → Recovery → Custos)
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Aba "Custos" aparece na seção de emails | | |
+| [ ] Cards de saldo, custo total, custo por email exibem | | |
+| [ ] Valores corretos (R$190 / 40.533 emails) | | |
+| [ ] Tabela por categoria com volumes | | |
+
+### Preview de Email (Admin → Recovery → Automações)
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Botão "Enviar Novidades" abre compose | | |
+| [ ] Preview mostra assunto + HTML renderizado | | |
+| [ ] Contagem de destinatários correta | | |
+| [ ] Botão "Enviar Agora" funciona | | |
+
+### Comparação A×B (Admin → Config)
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Aba de comparação carrega métricas | | |
+| [ ] Dados segmentados por período A e B | | |
+| [ ] Tabela comparativa com diferenças | | |
+
+### Preços Modo B (Admin → Planos)
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] Campos "Preço Modo B" visíveis | | |
+| [ ] Campos "URL Checkout Modo B" visíveis | | |
+| [ ] Checkout dinâmico usa URL correta por modo | | |
+
+### GTM Lifecycle (Quiz Público)
+
+| Item | Status | Observações |
+|------|--------|-------------|
+| [ ] quiz_view registrado ao abrir quiz | | |
+| [ ] quiz_start registrado na 1ª pergunta | | |
+| [ ] quiz_complete registrado ao ver resultado | | |
+| [ ] lead_captured registrado ao enviar form | | |
+| [ ] Eventos aparecem em Admin → Observabilidade | | |
+
+---
+
 ## 📚 Links Relacionados
 
-- [README.md](README.md) - Visão geral do projeto
+- [../README.md](../README.md) - Visão geral do projeto
 - [PRD.md](PRD.md) - Requisitos do produto
 - [ROADMAP.md](ROADMAP.md) - Planejamento de releases
 - [PENDENCIAS.md](PENDENCIAS.md) - Histórico de versões
 - [STYLE_GUIDE.md](STYLE_GUIDE.md) - Padrões de código
+- [MONETIZATION.md](MONETIZATION.md) - Monetização A/B e custos

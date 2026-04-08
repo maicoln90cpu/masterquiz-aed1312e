@@ -114,6 +114,12 @@ Q4 2025: Expansão Internacional
 - **Imagens por opção de resposta no quiz publicado** ✅
 - **Estabilização da suíte de testes (~22 fixes, 10 suites)** ✅
 - **Templates re-habilitados (14 ativos)** ✅
+- **Aba Custos de Email Transacional** (cálculo detalhado por categoria) ✅
+- **Preview de email antes do envio em massa** (compose→preview→enviar) ✅
+- **Comparação A×B de modos de monetização** (métricas históricas) ✅
+- **Preços diferenciados por modo (A/B)** com checkout dinâmico ✅
+- **GTM lifecycle tracking completo** (quiz_view/start/complete/lead_captured) ✅
+- **Batching na `list-all-users`** (corrige dados zerados com 400+ usuários) ✅
 
 ### H2 2026
 - Expansão para EUA
@@ -141,6 +147,9 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-04-08 | **v2.39.0 — Custos Email + Preview Email + Comparação A×B + Preços Modo B + GTM Lifecycle + Batching Users + Doc Overhaul** |
+| 2026-04-07 | **v2.38.0–v2.38.4 — Vault secrets, logging automações, webhookUrl, fix usuarios, fix GTM** |
+| 2026-03-30 | **v2.37.1 — Fix Preview Inline + Remoção da Cor no Text Block** |
 | 2026-03-21 | **v2.37 — Doc Overhaul + Thin Router + Test Fixes + 34 Blocos + Image Options** |
 | 2026-03-20 | **v2.31–v2.36 — 12 novos blocos + calculadora + seletor de perguntas + preview fix** |
 | 2026-03-19 | **v2.30 — Email Marketing Automatizado + Bulk API + Documentação completa** |
@@ -174,3 +183,6 @@ Q4 2025: Expansão Internacional
 | [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
 | [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
 | [TESTING.md](./TESTING.md) | Guia de testes |
+| [BLOG.md](./BLOG.md) | Guia do blog com IA |
+| [EGOI.md](./EGOI.md) | Guia do email marketing |
+| [MONETIZATION.md](./MONETIZATION.md) | Monetização A/B e custos |

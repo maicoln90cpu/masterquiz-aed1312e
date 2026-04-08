@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.37.0** | Última atualização: 21 de Março de 2026
+**Versão 2.39.0** | Última atualização: 08 de Abril de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -545,6 +545,11 @@ src/
 - ✅ Dashboard de Eventos GTM (observabilidade)
 - ✅ Blog: Rotação de prompts de imagem (5 estilos, anti-repetição)
 - ✅ Cooldown global de campanhas WhatsApp
+- ✅ Aba Custos de Email Transacional (cálculo detalhado por categoria)
+- ✅ Preview de email antes do envio em massa (compose→preview→enviar)
+- ✅ Comparação A×B de modos de monetização (métricas históricas)
+- ✅ Preços diferenciados por modo (A/B) com checkout dinâmico
+- ✅ GTM lifecycle tracking completo (quiz_view/start/complete/lead_captured)
 
 ---
 
@@ -561,6 +566,8 @@ src/
 | Eventos GTM não aparecem | Verificar se `pushGTMEvent` está sendo chamado e tabela `gtm_event_logs` tem RLS INSERT |
 | Imagens do blog sempre iguais | Verificar se há ≥2 prompts ativos em `blog_image_prompts` |
 | Emails não enviados | Verificar `EGOI_API_KEY` e configurações em `email_recovery_settings` |
+| Dados zerados em Usuários (Admin) | `list-all-users` precisa de batching para >100 users; verificar se a Edge Function está atualizada |
+| Eventos GTM com poucos tipos | Verificar se `useQuizGTMTracking` está integrado e se `quiz_view` dispara independente de `gtm_container_id` |
 
 ### Debug
 
@@ -587,6 +594,9 @@ logger.api('API call', { endpoint, status });
 | [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
 | [docs/BLOCKS.md](./docs/BLOCKS.md) | Catálogo dos 34 tipos de blocos |
 | [docs/TESTING.md](./docs/TESTING.md) | Guia de testes automatizados |
+| [docs/BLOG.md](./docs/BLOG.md) | Guia de replicação do blog com IA |
+| [docs/EGOI.md](./docs/EGOI.md) | Guia de replicação do email marketing |
+| [docs/MONETIZATION.md](./docs/MONETIZATION.md) | Monetização A/B e custos |
 
 ---
 
