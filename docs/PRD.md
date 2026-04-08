@@ -2,8 +2,8 @@
 
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
-**Versão:** 2.37  
-**Última atualização:** 21 de Março de 2026  
+**Versão:** 2.39  
+**Última atualização:** 08 de Abril de 2026  
 **Owner:** Product Team
 
 ---
@@ -286,6 +286,7 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF08.5 | Eventos GTM centralizados (pushGTMEvent) | Alta | ✅ |
 | RF08.6 | Persistência de eventos para analytics admin | Média | ✅ |
 | RF08.7 | Dashboard de eventos GTM no admin | Média | ✅ |
+| RF08.8 | GTM lifecycle completo (quiz_view/start/complete/lead_captured persistidos) | Alta | ✅ |
 
 ### RF09 - Pagamentos
 
@@ -295,6 +296,7 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF09.2 | Planos (Free, Paid, Partner, Premium) | Alta | ✅ |
 | RF09.3 | Limites por plano | Alta | ✅ |
 | RF09.4 | Página de sucesso/cancelamento | Alta | ✅ |
+| RF09.5 | Preços diferenciados por modo (A/B) com checkout dinâmico | Alta | ✅ |
 
 ### RF10 - Integrações
 
@@ -326,6 +328,9 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF11.10 | Dashboard de eventos GTM (observabilidade) | Média | ✅ |
 | RF11.11 | Rotação de prompts de imagem do blog (5 estilos) | Média | ✅ |
 | RF11.12 | Cooldown global de campanhas de recuperação | Média | ✅ |
+| RF11.13 | Aba Custos de email transacional (cálculo por categoria) | Média | ✅ |
+| RF11.14 | Preview de email antes de envio em massa (compose→preview→enviar) | Média | ✅ |
+| RF11.15 | Comparação A×B de modos de monetização (métricas históricas) | Média | ✅ |
 
 ### RF12 - Email Marketing Automatizado
 
@@ -474,6 +479,17 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | Como admin, quero dashboard de performance de emails | Média | ✅ |
 | Como usuário, quero poder fazer unsubscribe de emails | Alta | ✅ |
 
+### Épico 6: Monetização e Observabilidade (H1 2026) ✅
+
+| User Story | Prioridade | Status |
+|------------|------------|--------|
+| Como admin, quero ver custos detalhados de email transacional por categoria | Média | ✅ |
+| Como admin, quero preview de email antes de envio em massa | Média | ✅ |
+| Como admin, quero comparar métricas históricas entre modos A e B | Média | ✅ |
+| Como admin, quero preços independentes por modo de monetização | Alta | ✅ |
+| Como admin, quero GTM lifecycle tracking completo nos quizzes | Alta | ✅ |
+| Como admin, quero que a aba de usuários mostre dados reais mesmo com 400+ users | Alta | ✅ |
+
 ### Épico 4: Enterprise (Q3-Q4 2025)
 
 | User Story | Prioridade | Sprint |
@@ -610,6 +626,9 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 - [COMPONENTS.md](./COMPONENTS.md) - Documentação componentes
 - [BLOCKS.md](./BLOCKS.md) - Catálogo dos 34 tipos de blocos
 - [TESTING.md](./TESTING.md) - Guia de testes
+- [BLOG.md](./BLOG.md) - Guia do blog com IA
+- [EGOI.md](./EGOI.md) - Guia do email marketing
+- [MONETIZATION.md](./MONETIZATION.md) - Monetização A/B e custos
 
 ---
 
