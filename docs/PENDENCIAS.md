@@ -1,5 +1,73 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.39.0 - Doc Overhaul + Custos Email + Preview Email + Comparação A×B + GTM Lifecycle (08/04/2026)
+
+### Feature: Aba Custos de Email Transacional
+- Novo componente `EmailRecoveryCosts.tsx` com cálculo detalhado de custos por categoria
+- Cards de saldo, custo total, custo por email, emails restantes
+- Tabela por categoria com volume e custo individual
+- Baseado em recarga de R$190 = 40.533 emails
+
+### Feature: Preview de Email antes do Envio em Massa
+- Fluxo compose→preview→enviar para automação "Novidades da Plataforma"
+- Modal com preview do assunto + HTML renderizado + contagem de destinatários
+- Botão "Enviar Agora" com confirmação
+
+### Feature: Comparação A×B (Modos de Monetização)
+- Novo componente `ModeComparison.tsx` com métricas históricas por modo
+- Segmenta cadastros, quizzes e conversões pagas por período A vs B
+- Tabela comparativa com diferenças percentuais
+
+### Feature: Preços Diferenciados por Modo (A/B)
+- Colunas `price_monthly_mode_b` e `kiwify_checkout_url_mode_b` em `subscription_plans`
+- Checkout dinâmico: usa preço/URL do modo ativo
+- Fallback para valores padrão quando modo B não configurado
+
+### Feature: GTM Lifecycle Tracking Completo
+- Novo hook `useQuizGTMTracking.ts` integrado ao estado real do quiz
+- `quiz_view` independe de `gtm_container_id` — dispara para todos os quizzes
+- `quiz_start`, `quiz_complete`, `lead_captured` disparados nos pontos reais do fluxo
+- `AccountCreated` só marca como enviado após persistência confirmada no banco
+
+### Fix: Batching na `list-all-users`
+- Refatorada para buscar profiles, subscriptions, roles, quizzes e audit_logs em lotes de 100
+- Corrige dados zerados (nome, WhatsApp, logins, quizzes, leads) com 400+ usuários
+- Tratamento de erro em cada consulta
+
+### Fix: Custos de Email — Cálculo Correto
+- Corrigido cálculo do custo total que somava saldo ao invés de subtrair
+- Custo por email agora reflete R$190/40.533 = R$0,00469
+
+### Docs: Overhaul Completo v2.39.0
+- Todos os docs atualizados para v2.39.0
+- Novo: `docs/MONETIZATION.md` — guia de monetização A/B
+- `src/__tests__/README.md` substituído por ponteiro para `docs/TESTING.md`
+- Cross-references atualizados com BLOG.md, EGOI.md e MONETIZATION.md
+- Knowledge prompt atualizado para v2.39.0
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/admin/recovery/EmailRecoveryCosts.tsx` | NOVO — aba de custos |
+| `src/components/admin/recovery/EmailAutomations.tsx` | +fluxo preview de novidades |
+| `src/components/admin/ModeComparison.tsx` | NOVO — comparação A×B |
+| `src/hooks/useQuizGTMTracking.ts` | NOVO — lifecycle tracking |
+| `src/hooks/useAccountCreatedEvent.ts` | persistência confirmada |
+| `src/hooks/useQuizTracking.ts` | quiz_view independente |
+| `src/pages/QuizView.tsx` | integração GTM lifecycle |
+| `supabase/functions/list-all-users/index.ts` | batching em lotes de 100 |
+| `README.md` | v2.39.0, +features, +troubleshooting, +doc links |
+| `docs/PRD.md` | +5 RFs, +1 épico |
+| `docs/ROADMAP.md` | +itens H1 2026, +histórico |
+| `docs/SYSTEM_DESIGN.md` | +hooks, +GTM events, +batching |
+| `docs/API_DOCS.md` | +batching list-all-users |
+| `docs/COMPONENTS.md` | +3 componentes |
+| `docs/CHECKLIST.md` | +5 itens de validação |
+| `docs/TESTING.md` | +merge conteúdo src/__tests__/README.md |
+| `docs/MONETIZATION.md` | NOVO |
+
+---
+
 ## ✅ v2.38.0 - Fix Automações Email + Vault Secrets + Tracking (07/04/2026)
 
 ### Fix: Vault secrets para pg_cron

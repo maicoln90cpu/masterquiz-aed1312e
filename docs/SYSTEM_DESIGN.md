@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 21 de Março de 2026 | Versão 2.37
+> Última atualização: 08 de Abril de 2026 | Versão 2.39
 
 ---
 
@@ -114,12 +114,18 @@ User → Kiwify Checkout → Webhook (Edge Function) → user_subscriptions UPDA
 Trigger (signup/quiz) → recovery_contacts INSERT → process-recovery-queue → Evolution API → WhatsApp
 ```
 
-### 5. Tracking GTM (centralizado)
+### 5. Tracking GTM (centralizado + lifecycle)
 
 ```
 UI Action → pushGTMEvent() → dataLayer.push() + gtm_event_logs INSERT
                                     ↓
                           GTM Dashboard (Admin) ← useQuery(gtm_event_logs)
+
+Quiz Lifecycle (useQuizGTMTracking):
+  QuizView mount → quiz_view
+  First step     → quiz_start
+  Result screen  → quiz_complete
+  Form submit    → lead_captured
 ```
 
 ---
@@ -141,6 +147,7 @@ UI Action → pushGTMEvent() → dataLayer.push() + gtm_event_logs INSERT
 | `useUserStage` | Nível PQL | `hooks/useUserStage.ts` |
 | `useTestLead` | Gera leads de teste | `hooks/useTestLead.ts` |
 | `usePlanUpgradeEvent` | Detecta upgrade free→pago | `hooks/usePlanUpgradeEvent.ts` |
+| `useQuizGTMTracking` | GTM lifecycle (view/start/complete/lead) | `hooks/useQuizGTMTracking.ts` |
 
 ### Componentes Críticos
 
@@ -541,6 +548,31 @@ Payload (array de até 100 itens):
 
 ---
 
+## 💰 Sistema de Monetização A/B
+
+### Modo A (Freemium) vs Modo B (Apenas Pago)
+
+```
+site_mode (system_settings) ──▶ Landing dinâmica
+                                     │
+                    ┌────────────────┼────────────────┐
+                    │ Modo A         │ Modo B          │
+                    │ Signup livre   │ Checkout obrig. │
+                    │ Dashboard      │ Paywall         │
+                    │ free tier      │ payment_confirmed│
+                    └────────────────┴────────────────┘
+```
+
+### Tabelas
+- `subscription_plans`: `price_monthly_mode_b`, `kiwify_checkout_url_mode_b` (fallback para padrão)
+- `system_settings`: `site_mode` (A ou B)
+
+### Comparação A×B (ModeComparison.tsx)
+- Segmenta métricas por período usando `site_mode_history` ou `landing_ab_sessions`
+- Compara cadastros, quizzes criados e conversões pagas por modo
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
@@ -556,3 +588,6 @@ Payload (array de até 100 itens):
 | [COMPONENTS.md](./COMPONENTS.md) | Documentação componentes |
 | [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
 | [TESTING.md](./TESTING.md) | Guia de testes |
+| [BLOG.md](./BLOG.md) | Guia do blog com IA |
+| [EGOI.md](./EGOI.md) | Guia do email marketing |
+| [MONETIZATION.md](./MONETIZATION.md) | Monetização A/B e custos |

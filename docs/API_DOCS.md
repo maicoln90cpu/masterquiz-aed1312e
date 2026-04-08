@@ -1,7 +1,7 @@
 # 🔌 API Docs - Edge Functions (57 funções)
 
 > MasterQuiz — Documentação das Edge Functions (Supabase/Deno)
-> Versão 2.37 | 21 de Março de 2026
+> Versão 2.39 | 08 de Abril de 2026
 
 ---
 
@@ -81,8 +81,10 @@ const corsHeaders = {
 ### `list-all-users`
 - **Método:** GET
 - **Auth:** JWT (admin)
-- **Descrição:** Lista usuários via Supabase Admin API
+- **Descrição:** Lista usuários via Supabase Admin API com agregação de dados
 - **Query:** `?page=1&per_page=20&search=email`
+- **Batching interno:** Busca `profiles`, `user_subscriptions`, `user_roles`, `quizzes` e `audit_logs` em lotes de 100 IDs para evitar estouro de URL no PostgREST (>400 UUIDs)
+- **Response:** `{ users: [{ id, email, profile, subscription, roles, stats }] }`
 
 ### `list-all-respondents`
 - **Método:** GET
