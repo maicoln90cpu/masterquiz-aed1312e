@@ -20,6 +20,7 @@ interface AISettings {
   fallback_message: string;
   admin_alert_phone: string;
   max_agent_retries: number;
+  human_pause_minutes: number;
 }
 
 export function WhatsAppAISettings() {
@@ -63,6 +64,7 @@ export function WhatsAppAISettings() {
           fallback_message: settings.fallback_message,
           admin_alert_phone: settings.admin_alert_phone || null,
           max_agent_retries: settings.max_agent_retries,
+          human_pause_minutes: settings.human_pause_minutes,
           updated_at: new Date().toISOString(),
         })
         .eq('id', settings.id);
