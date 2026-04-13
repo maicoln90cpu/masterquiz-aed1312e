@@ -2917,6 +2917,7 @@ export type Database = {
           admin_alert_phone: string | null
           created_at: string
           fallback_message: string | null
+          human_pause_minutes: number
           id: string
           is_enabled: boolean
           max_agent_retries: number
@@ -2929,6 +2930,7 @@ export type Database = {
           admin_alert_phone?: string | null
           created_at?: string
           fallback_message?: string | null
+          human_pause_minutes?: number
           id?: string
           is_enabled?: boolean
           max_agent_retries?: number
@@ -2941,6 +2943,7 @@ export type Database = {
           admin_alert_phone?: string | null
           created_at?: string
           fallback_message?: string | null
+          human_pause_minutes?: number
           id?: string
           is_enabled?: boolean
           max_agent_retries?: number

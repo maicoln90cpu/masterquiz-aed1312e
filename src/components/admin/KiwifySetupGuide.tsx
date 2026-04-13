@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Copy, ExternalLink, Settings, Webhook, Link2, ShieldCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
-const WEBHOOK_URL = "https://otabjwhvrwtixlyebkvm.supabase.co/functions/v1/kiwify-webhook";
+const WEBHOOK_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/kiwify-webhook`;
 const SUCCESS_URL = "https://masterquiz.lovable.app/kiwify/success";
 const CANCEL_URL = "https://masterquiz.lovable.app/kiwify/cancel";
 

@@ -79,7 +79,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3. Check for human intervention — if last non-user message is 'human', skip AI and alert admin
+    // 3. Check for human intervention — if last non-user message is 'human' within pause window, skip AI
+    const humanPauseMinutes = aiSettings.human_pause_minutes ?? 30;
+    const pauseCutoff = new Date(Date.now() - humanPauseMinutes * 60 * 1000).toISOString();
+    
     const { data: lastNonUserMsg } = await supabase
       .from('whatsapp_conversations')
       .select('role, content, created_at')
@@ -89,8 +92,8 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    if (lastNonUserMsg?.role === 'human') {
-      console.log(`[WHATSAPP-AI] Human intervention detected for ${phone_number}, skipping AI reply`);
+    if (lastNonUserMsg?.role === 'human' && lastNonUserMsg.created_at >= pauseCutoff) {
+      console.log(`[WHATSAPP-AI] Human intervention detected for ${phone_number} (within ${humanPauseMinutes}min window), skipping AI reply`);
 
       // Save user message anyway for history
       await supabase.from('whatsapp_conversations').insert({
