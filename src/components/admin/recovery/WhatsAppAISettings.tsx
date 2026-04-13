@@ -210,6 +210,19 @@ export function WhatsAppAISettings() {
                     Após N respostas seguidas sem resolução, escala para atendimento humano
                   </p>
                 </div>
+                <div className="space-y-2">
+                  <Label>Pausa após Intervenção Humana (minutos)</Label>
+                  <Input
+                    type="number"
+                    min={5}
+                    max={1440}
+                    value={settings.human_pause_minutes}
+                    onChange={(e) => setSettings({ ...settings, human_pause_minutes: parseInt(e.target.value) || 30 })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Quando você responde manualmente, o bot fica em silêncio por este tempo. Depois, volta a responder sozinho.
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">
