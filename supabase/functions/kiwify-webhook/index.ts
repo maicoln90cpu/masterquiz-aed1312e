@@ -12,20 +12,49 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-function mapProductToPlanType(produto: string): 'free' | 'paid' | 'partner' | 'premium' {
-  const p = produto.toLowerCase();
-  if (p.includes('premium')) return 'premium';
-  if (p.includes('partner') || p.includes('parceiro')) return 'partner';
-  if (p.includes('pro') || p.includes('profissional') || p.includes('paid')) return 'paid';
-  return 'paid';
+function mapProductToPlanType(produto: string, planName?: string): 'free' | 'paid' | 'partner' | 'premium' {
+  // Priority: check subscription plan name first, then product name
+  const sources = [planName, produto].filter(Boolean).map(s => s!.toLowerCase());
+  
+  for (const p of sources) {
+    if (p.includes('premium')) return 'premium';
+    if (p.includes('partner') || p.includes('parceiro')) return 'partner';
+    if (p.includes('pro') || p.includes('profissional') || p.includes('paid')) return 'paid';
+  }
+  return 'paid'; // default for any paid event
 }
 
 function isActivationEvent(e: string): boolean {
-  return ['order_paid','subscription_created','subscription_renewed','approved','paid'].some(a => e.toLowerCase().includes(a));
+  return ['order_paid','order_approved','subscription_created','subscription_renewed','approved','paid'].some(a => e.toLowerCase().includes(a));
 }
 
 function isCancellationEvent(e: string): boolean {
   return ['subscription_cancelled','refund_requested','chargeback','cancelled','canceled','refund'].some(a => e.toLowerCase().includes(a));
+}
+
+/**
+ * Extract data from Kiwify webhook payload.
+ * Real payments nest everything under body.order; test webhooks use flat structure.
+ */
+function extractPayloadData(body: any) {
+  const order = body.order || body;
+  
+  // Event: prioritize webhook_event_type > order_status > fallbacks
+  const evento = order.webhook_event_type || order.order_status || body.event || body.order_status || body.subscription_status || 'unknown';
+  
+  // Customer: nested under order.Customer or flat
+  const customer = order.Customer || order.customer || body.Customer || body.customer || body.data?.customer || {};
+  const buyerEmail = (customer.email || body.email || body.data?.buyer?.email)?.toLowerCase();
+  
+  // Product
+  const product = order.Product || order.product || body.Product || body.product || body.data?.product || {};
+  const produto = product.name || product.product_name || body.product_name || 'unknown';
+  
+  // Subscription plan name (e.g. "Partner")
+  const subscription = order.Subscription || order.subscription || {};
+  const planName = subscription.plan?.name || subscription.plan_name || undefined;
+  
+  return { evento, buyerEmail, produto, planName, customer };
 }
 
 Deno.serve(async (req) => {
@@ -37,14 +66,9 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const body = rawBody;
-    const evento = body.event || body.order_status || body.subscription_status || 'unknown';
-    const customer = body.Customer || body.customer || body.data?.customer || {};
-    const buyerEmail = (customer.email || body.email || body.data?.buyer?.email)?.toLowerCase();
-    const product = body.Product || body.product || body.data?.product || {};
-    const produto = product.name || product.product_name || body.product_name || 'unknown';
+    const { evento, buyerEmail, produto, planName } = extractPayloadData(rawBody);
 
-    console.log(`[KIWIFY] Event: ${evento}, email: ${buyerEmail ? '***' : 'none'}, product: ${produto}`);
+    console.log(`[KIWIFY] Event: ${evento}, email: ${buyerEmail ? '***' : 'none'}, product: ${produto}, plan: ${planName || 'N/A'}`);
 
     if (!buyerEmail) {
       await supabaseAdmin.from('webhook_logs').insert({ email: 'test-no-email', evento, produto, status: 'test', error_message: 'No email', provider: 'kiwify' });
@@ -64,7 +88,7 @@ Deno.serve(async (req) => {
     let actionTaken = 'none';
 
     if (isCancellationEvent(evento)) { newPlanType = 'free'; newStatus = 'inactive'; actionTaken = 'downgrade_to_free'; }
-    else if (isActivationEvent(evento)) { newPlanType = mapProductToPlanType(produto); newStatus = 'active'; actionTaken = 'activate_subscription'; }
+    else if (isActivationEvent(evento)) { newPlanType = mapProductToPlanType(produto, planName); newStatus = 'active'; actionTaken = 'activate_subscription'; }
     else {
       await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'ignored', error_message: `Unhandled: ${evento}`, provider: 'kiwify' });
       return new Response(JSON.stringify({ received: true, action: 'logged' }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -74,7 +98,6 @@ Deno.serve(async (req) => {
     const quizLimit = planData?.quiz_limit || (newPlanType === 'free' ? 3 : 10);
     const responseLimit = planData?.response_limit || (newPlanType === 'free' ? 100 : 1000);
 
-    // ✅ ETAPA 3: Setar payment_confirmed=true em ativações
     const updatePayload: Record<string, any> = {
       plan_type: newPlanType, status: newStatus, quiz_limit: quizLimit, response_limit: responseLimit, updated_at: new Date().toISOString()
     };
@@ -94,10 +117,8 @@ Deno.serve(async (req) => {
     // Mark A/B test conversion if applicable
     if (isActivationEvent(evento)) {
       try {
-        // Find any landing_ab_sessions for this user's email and mark as converted
         const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('email', buyerEmail).maybeSingle();
         if (profile) {
-          // Update any recent unconverted sessions (last 7 days)
           await supabaseAdmin
             .from('landing_ab_sessions')
             .update({ 
