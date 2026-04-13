@@ -19,6 +19,7 @@ interface AISettings {
   rate_limit_per_hour: number;
   fallback_message: string;
   admin_alert_phone: string;
+  max_agent_retries: number;
 }
 
 export function WhatsAppAISettings() {
