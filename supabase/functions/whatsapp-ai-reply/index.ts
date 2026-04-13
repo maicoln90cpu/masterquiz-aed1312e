@@ -141,6 +141,93 @@ Deno.serve(async (req) => {
       );
     }
 
+    // 3.5 CHECK MAX AGENT RETRIES — count consecutive assistant messages without user reply
+    const maxRetries = aiSettings.max_agent_retries ?? 2;
+    const { data: recentMessages } = await supabase
+      .from('whatsapp_conversations')
+      .select('role')
+      .eq('phone_number', phone_number)
+      .order('created_at', { ascending: false })
+      .limit(maxRetries + 5); // fetch a bit more to find pattern
+
+    if (recentMessages && recentMessages.length > 0) {
+      // Count consecutive assistant messages at the top (most recent)
+      // The current user message hasn't been saved yet, so the history starts with the last saved message
+      let consecutiveAssistant = 0;
+      for (const msg of recentMessages) {
+        if (msg.role === 'assistant') {
+          consecutiveAssistant++;
+        } else {
+          break;
+        }
+      }
+
+      if (consecutiveAssistant >= maxRetries) {
+        console.log(`[WHATSAPP-AI] Max agent retries (${maxRetries}) reached for ${phone_number}, escalating to human`);
+
+        // Save user message
+        await supabase.from('whatsapp_conversations').insert({
+          user_id: user_id || null,
+          phone_number,
+          role: 'user',
+          content: message_text,
+          template_context_id: contact_id || null,
+        });
+
+        // Send escalation message
+        const fallbackMessage = aiSettings.fallback_message || 
+          'Obrigado pelo contato! Vou encaminhar sua dúvida para nossa equipe de suporte. Um atendente humano entrará em contato em breve. 🙏';
+
+        const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
+        const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
+        const { data: recoverySettings } = await supabase
+          .from('recovery_settings')
+          .select('instance_name')
+          .limit(1)
+          .maybeSingle();
+        const instanceName = recoverySettings?.instance_name || 'masterquizz';
+
+        if (evolutionUrl && evolutionKey) {
+          await fetch(`${evolutionUrl}/message/sendText/${instanceName}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': evolutionKey,
+            },
+            body: JSON.stringify({
+              number: phone_number.replace(/\D/g, ''),
+              text: fallbackMessage,
+            }),
+          });
+
+          // Save escalation message as assistant
+          await supabase.from('whatsapp_conversations').insert({
+            user_id: user_id || null,
+            phone_number,
+            role: 'assistant',
+            content: `[ESCALADO] ${fallbackMessage}`,
+            template_context_id: contact_id || null,
+          });
+
+          // Alert admin
+          const adminPhone = aiSettings.admin_alert_phone;
+          if (adminPhone) {
+            const alertText = `🚨 *Escalação automática*\n\n📱 Número: ${phone_number}\n🔄 O agente IA atingiu o limite de ${maxRetries} tentativas sem resolver.\n💬 Última msg: "${message_text.substring(0, 200)}"\n\n_Necessária intervenção humana._`;
+            await fetch(`${evolutionUrl}/message/sendText/${instanceName}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'apikey': evolutionKey },
+              body: JSON.stringify({ number: adminPhone.replace(/\D/g, ''), text: alertText }),
+            });
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, reason: 'max_retries_escalated', max_retries: maxRetries }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // 4. Save user message to history
     await supabase.from('whatsapp_conversations').insert({
       user_id: user_id || null,
@@ -150,7 +237,7 @@ Deno.serve(async (req) => {
       template_context_id: contact_id || null,
     });
 
-    // 4. Fetch user context if we have a user_id
+    // 4b. Fetch user context if we have a user_id
     let userContext = '';
     if (user_id) {
       const [profileRes, subsRes, quizRes] = await Promise.all([
@@ -187,14 +274,13 @@ Contexto do usuário:
         .eq('is_active', true);
 
       if (allArticles && allArticles.length > 0) {
-        // Score each article by keyword matches
         const scored = allArticles.map((article: any) => {
           let score = 0;
           const keywords: string[] = article.keywords || [];
           for (const kw of keywords) {
             const kwNorm = kw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             if (messageLower.includes(kwNorm)) {
-              score += kwNorm.length; // longer keyword matches = higher relevance
+              score += kwNorm.length;
             }
           }
           return { ...article, score };
