@@ -62,6 +62,7 @@ export function WhatsAppAISettings() {
           rate_limit_per_hour: settings.rate_limit_per_hour,
           fallback_message: settings.fallback_message,
           admin_alert_phone: settings.admin_alert_phone || null,
+          max_agent_retries: settings.max_agent_retries,
           updated_at: new Date().toISOString(),
         })
         .eq('id', settings.id);
