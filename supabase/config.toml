@@ -138,6 +138,9 @@ verify_jwt = false
 [functions.whatsapp-ai-reply]
 verify_jwt = false
 
+[functions.admin-update-subscription]
+verify_jwt = false
+
 [functions.check-inactive-users-email]
 verify_jwt = false
 
