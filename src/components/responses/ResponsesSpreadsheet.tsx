@@ -82,7 +82,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
       // 1. Buscar perguntas do quiz
       const { data: questionsData } = await supabase
         .from('quiz_questions')
-        .select('id, question_text, order_number')
+        .select('id, question_text, order_number, blocks')
         .eq('quiz_id', quizId)
         .order('order_number');
       
@@ -357,8 +357,8 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
                     >
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-xs font-semibold">P{idx + 1}</span>
-                        <span className="text-[10px] text-muted-foreground truncate max-w-[130px]" title={q.question_text}>
-                          {q.question_text.slice(0, 25)}{q.question_text.length > 25 ? '...' : ''}
+                        <span className="text-[10px] text-muted-foreground truncate max-w-[130px]" title={getQuestionDisplayTitle(q)}>
+                          {getQuestionDisplayTitle(q).slice(0, 25)}{getQuestionDisplayTitle(q).length > 25 ? '...' : ''}
                         </span>
                         <Badge variant="outline" className="text-[9px] px-1 py-0">
                           {getRetentionForQuestion(q.order_number).toFixed(0)}%
