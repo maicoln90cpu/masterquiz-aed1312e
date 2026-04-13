@@ -14,7 +14,20 @@ interface Question {
   id: string;
   question_text: string;
   order_number: number;
+  blocks?: any;
 }
+
+/** Extract display title from blocks (like heatmap does), fallback to question_text */
+const getQuestionDisplayTitle = (q: Question): string => {
+  if (q.blocks && Array.isArray(q.blocks)) {
+    const questionBlock = q.blocks.find((b: any) => b.type === 'question');
+    if (questionBlock?.content || questionBlock?.questionText) {
+      const raw = questionBlock.questionText || questionBlock.content || '';
+      return raw.replace(/<[^>]*>/g, '').trim() || q.question_text;
+    }
+  }
+  return q.question_text;
+};
 
 interface QuizMetrics {
   visitors: number;

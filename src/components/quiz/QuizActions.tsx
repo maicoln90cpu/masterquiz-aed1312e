@@ -321,7 +321,7 @@ export const useQuizActions = ({
       setShareDialogOpen(true);
     } catch (error: any) {
       console.error('[QuizActions] ❌ Erro ao salvar quiz:', error);
-      toast.error(t('createQuiz.errorPublishing'));
+      toast.error(`${t('createQuiz.errorPublishing')}: ${(error as any)?.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }

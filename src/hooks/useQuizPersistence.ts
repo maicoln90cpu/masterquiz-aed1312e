@@ -661,7 +661,7 @@ export function useQuizPersistence({
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[CreateQuiz] ❌ Erro ao salvar quiz:', errorMessage);
-      toast.error(t('createQuiz.errorPublishing'));
+      toast.error(`${t('createQuiz.errorPublishing')}: ${errorMessage}`);
       updateUI({ isSaving: false });
       return { success: false, slug: '' };
     }
