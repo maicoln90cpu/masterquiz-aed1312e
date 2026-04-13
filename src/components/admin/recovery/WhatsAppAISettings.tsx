@@ -195,6 +195,19 @@ export function WhatsAppAISettings() {
                     Máximo de respostas da IA por hora para cada número
                   </p>
                 </div>
+                <div className="space-y-2">
+                  <Label>Máx. Tentativas do Agente</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={settings.max_agent_retries}
+                    onChange={(e) => setSettings({ ...settings, max_agent_retries: parseInt(e.target.value) || 2 })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Após N respostas seguidas sem resolução, escala para atendimento humano
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">
