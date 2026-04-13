@@ -511,17 +511,16 @@ export default function AdminDashboard() {
         .eq('id', requestId);
 
       if (approve) {
-        await supabase
-          .from('user_subscriptions')
-          .update({
+        await supabase.functions.invoke('admin-update-subscription', {
+          body: {
+            user_id: request.user_id,
             plan_type: 'partner',
             status: 'active',
             quiz_limit: 999,
             response_limit: 999999,
-            validated_at: new Date().toISOString(),
-            validated_by: user.id
-          })
-          .eq('user_id', request.user_id);
+            payment_confirmed: true,
+          },
+        });
 
         await supabase
           .from('user_roles')
@@ -563,16 +562,19 @@ export default function AdminDashboard() {
 
       const planData = planDataArray[0];
 
-      const { error: updateError } = await supabase
-        .from('user_subscriptions')
-        .update({ 
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('admin-update-subscription', {
+        body: {
+          user_id: userId,
           plan_type: newPlan,
           quiz_limit: planData.quiz_limit,
-          response_limit: planData.response_limit
-        })
-        .eq('user_id', userId);
+          response_limit: planData.response_limit,
+          status: 'active',
+          payment_confirmed: true,
+        },
+      });
 
-      if (updateError) throw updateError;
+      if (fnError) throw fnError;
+      if (fnData?.error) throw new Error(fnData.error);
 
       toast.success(`Plano atualizado! Limites: ${planData.quiz_limit} quizzes, ${planData.response_limit} respostas`);
       await loadData();

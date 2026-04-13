@@ -2919,6 +2919,7 @@ export type Database = {
           fallback_message: string | null
           id: string
           is_enabled: boolean
+          max_agent_retries: number
           max_history_messages: number
           rate_limit_per_hour: number
           system_prompt: string | null
@@ -2930,6 +2931,7 @@ export type Database = {
           fallback_message?: string | null
           id?: string
           is_enabled?: boolean
+          max_agent_retries?: number
           max_history_messages?: number
           rate_limit_per_hour?: number
           system_prompt?: string | null
@@ -2941,6 +2943,7 @@ export type Database = {
           fallback_message?: string | null
           id?: string
           is_enabled?: boolean
+          max_agent_retries?: number
           max_history_messages?: number
           rate_limit_per_hour?: number
           system_prompt?: string | null

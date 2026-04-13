@@ -19,6 +19,7 @@ interface AISettings {
   rate_limit_per_hour: number;
   fallback_message: string;
   admin_alert_phone: string;
+  max_agent_retries: number;
 }
 
 export function WhatsAppAISettings() {
@@ -61,6 +62,7 @@ export function WhatsAppAISettings() {
           rate_limit_per_hour: settings.rate_limit_per_hour,
           fallback_message: settings.fallback_message,
           admin_alert_phone: settings.admin_alert_phone || null,
+          max_agent_retries: settings.max_agent_retries,
           updated_at: new Date().toISOString(),
         })
         .eq('id', settings.id);
@@ -191,6 +193,19 @@ export function WhatsAppAISettings() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Máximo de respostas da IA por hora para cada número
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Máx. Tentativas do Agente</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={settings.max_agent_retries}
+                    onChange={(e) => setSettings({ ...settings, max_agent_retries: parseInt(e.target.value) || 2 })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Após N respostas seguidas sem resolução, escala para atendimento humano
                   </p>
                 </div>
               </div>
