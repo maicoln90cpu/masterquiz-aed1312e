@@ -110,9 +110,10 @@ export default function PaymentGatewaySettings() {
     }
   };
 
+  const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/kiwify-webhook`;
+
   const copyWebhookUrl = () => {
-    const webhookUrl = `https://otabjwhvrwtixlyebkvm.supabase.co/functions/v1/kiwify-webhook`;
-    navigator.clipboard.writeText(webhookUrl);
+    navigator.clipboard.writeText(webhookBaseUrl);
     toast.success('URL copiada!');
   };
 
@@ -125,7 +126,7 @@ export default function PaymentGatewaySettings() {
     setTestLoading(true);
     setTestResult(null);
 
-    const webhookUrl = `https://otabjwhvrwtixlyebkvm.supabase.co/functions/v1/kiwify-webhook`;
+    const webhookUrl = webhookBaseUrl;
     
     const payload = {
       order_id: `TEST-${Date.now()}`,
@@ -270,7 +271,7 @@ export default function PaymentGatewaySettings() {
                 </p>
                 <div className="flex gap-2">
                   <code className="flex-1 bg-muted p-2 rounded text-xs break-all">
-                    https://otabjwhvrwtixlyebkvm.supabase.co/functions/v1/kiwify-webhook
+                    {webhookBaseUrl}
                   </code>
                   <Button variant="outline" size="sm" onClick={copyWebhookUrl}>
                     <Copy className="h-4 w-4" />
