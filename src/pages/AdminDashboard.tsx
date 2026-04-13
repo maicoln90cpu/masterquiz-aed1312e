@@ -511,17 +511,16 @@ export default function AdminDashboard() {
         .eq('id', requestId);
 
       if (approve) {
-        await supabase
-          .from('user_subscriptions')
-          .update({
+        await supabase.functions.invoke('admin-update-subscription', {
+          body: {
+            user_id: request.user_id,
             plan_type: 'partner',
             status: 'active',
             quiz_limit: 999,
             response_limit: 999999,
-            validated_at: new Date().toISOString(),
-            validated_by: user.id
-          })
-          .eq('user_id', request.user_id);
+            payment_confirmed: true,
+          },
+        });
 
         await supabase
           .from('user_roles')
