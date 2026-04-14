@@ -1,5 +1,6 @@
 // ✅ FASE 4: Web Vitals Monitoring
 import { useEffect, useCallback } from "react";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 interface WebVitalMetric {
   name: string;
@@ -36,17 +37,14 @@ export const useWebVitals = (enabled: boolean = true) => {
       console.log(`[Web Vitals] ${emoji} ${metric.name}: ${metric.value.toFixed(2)}ms (${metric.rating})`);
     }
 
-    // Enviar para GTM se disponível
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'web_vitals',
-        metric_name: metric.name,
-        metric_value: metric.value,
-        metric_rating: metric.rating,
-        metric_delta: metric.delta,
-        metric_id: metric.id,
-      });
-    }
+    // Enviar para GTM via helper centralizado (persist: false — só dataLayer, sem gravar no banco)
+    pushGTMEvent('web_vitals', {
+      metric_name: metric.name,
+      metric_value: metric.value,
+      metric_rating: metric.rating,
+      metric_delta: metric.delta,
+      metric_id: metric.id,
+    }, { persist: false });
   }, []);
 
   useEffect(() => {

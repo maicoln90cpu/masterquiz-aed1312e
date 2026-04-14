@@ -93,9 +93,7 @@ const CreateQuizModern = () => {
     const key = `${event}_${quizId}`;
     if (firedEventsRef.current.has(key)) return;
     firedEventsRef.current.add(key);
-    const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-    w.dataLayer = w.dataLayer || [];
-    w.dataLayer.push({ event, ...data });
+    pushGTMEvent(event, data);
   }, [searchParams]);
 
   // ✅ Hook de estado principal

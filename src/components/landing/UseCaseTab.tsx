@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 export const UseCaseTab = () => {
   const { t } = useTranslation();
@@ -53,14 +54,10 @@ export const UseCaseTab = () => {
   ];
 
   const handleUseTemplate = (useCaseId: string) => {
-    // GTM Event
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'template_click',
-        template_type: useCaseId,
-        cta_location: 'use_cases'
-      });
-    }
+    pushGTMEvent('template_click', {
+      template_type: useCaseId,
+      cta_location: 'use_cases',
+    });
     navigate('/login');
   };
 

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 interface PricingCardProps {
   plan: {
@@ -43,16 +44,12 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
       kiwifyCheckoutUrl: plan.kiwifyCheckoutUrl,
     });
 
-    // GTM Event
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'pricing_cta_click',
-        plan_type: plan.id,
-        plan_name: plan.name,
-        cta_location: 'landing_page',
-        payment_gateway: 'kiwify'
-      });
-    }
+    pushGTMEvent('pricing_cta_click', {
+      plan_type: plan.id,
+      plan_name: plan.name,
+      cta_location: 'landing_page',
+      payment_gateway: 'kiwify',
+    });
 
     try {
       setProcessing(true);

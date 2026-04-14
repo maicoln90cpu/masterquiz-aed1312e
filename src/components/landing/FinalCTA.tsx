@@ -3,6 +3,7 @@ import { Rocket, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useSiteMode } from "@/hooks/useSiteMode";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 export const FinalCTA = () => {
   const { t } = useTranslation();
@@ -10,13 +11,10 @@ export const FinalCTA = () => {
   const { isModeB } = useSiteMode();
 
   const handleCTA = () => {
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'cta_click',
-        cta_location: 'final_cta',
-        cta_text: isModeB ? 'choose_plan_final' : 'start_free_final'
-      });
-    }
+    pushGTMEvent('cta_click', {
+      cta_location: 'final_cta',
+      cta_text: isModeB ? 'choose_plan_final' : 'start_free_final',
+    });
     navigate(isModeB ? '/precos' : '/login');
   };
 

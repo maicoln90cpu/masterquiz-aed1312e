@@ -9,6 +9,7 @@ import { BlockIndicators } from "./BlockIndicators";
 import { useLandingContent } from "@/hooks/useLandingContent";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { useSiteMode } from "@/hooks/useSiteMode";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 // Fallback content for instant render (no loading state) - PARADIGMA AUTO-CONVENCIMENTO
 const FALLBACK_CONTENT = {
@@ -79,27 +80,19 @@ export const HeroSection = () => {
       trackConversion({ testId: abTest.id, conversionType: 'cta_click' });
     }
     
-    // GTM Event
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'cta_click',
-        cta_location: 'hero',
-        cta_text: 'start_free',
-        ab_variant: abVariant || 'none'
-      });
-    }
+    pushGTMEvent('cta_click', {
+      cta_location: 'hero',
+      cta_text: 'start_free',
+      ab_variant: abVariant || 'none',
+    });
     navigate(isModeB ? '/precos' : '/login');
   };
 
   const handleDemo = () => {
-    // GTM Event
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'cta_click',
-        cta_location: 'hero',
-        cta_text: 'view_demo'
-      });
-    }
+    pushGTMEvent('cta_click', {
+      cta_location: 'hero',
+      cta_text: 'view_demo',
+    });
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 

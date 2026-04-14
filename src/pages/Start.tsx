@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Rocket, TrendingUp, Megaphone, FlaskConical, GraduationCap, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useAuth } from "@/contexts/AuthContext";
 import { quizTemplates } from "@/data/quizTemplates";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
@@ -82,11 +83,12 @@ const Start = () => {
 
     try {
       // 0. Disparar evento GTM segmentado: objective_selectedON (comercial) ou objective_selectedOFF (educacional)
-      const gtmEvent = COMMERCIAL_OBJECTIVES.includes(objective) ? 'objective_selectedON' : 'objective_selectedOFF';
-      const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-      w.dataLayer = w.dataLayer || [];
-      w.dataLayer.push({ event: gtmEvent, objective, user_id: user.id });
-      console.log(`🎯 [GTM] Event pushed: ${gtmEvent} (objective: ${objective})`);
+      const isCommercial = COMMERCIAL_OBJECTIVES.includes(objective);
+      pushGTMEvent('objective_selected', {
+        value: isCommercial ? 'ON' : 'OFF',
+        objective_type: objective,
+        user_id: user.id,
+      });
 
       // 1. Salvar objetivo no perfil
       await supabase
