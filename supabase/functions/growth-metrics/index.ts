@@ -612,6 +612,35 @@ Deno.serve(async (req) => {
         realPaidCount: realPaidUserIds.length,
         trialCount: trialUserIds.length,
       },
+      sectionD: {
+        expressFunnel: {
+          created: expressCreated,
+          published: expressPublishedCount,
+          createdSecondQuiz: secondQuizTimings.total,
+          timings: {
+            immediate: secondQuizTimings.immediate,
+            sameDay: secondQuizTimings.sameDay,
+            later: secondQuizTimings.later,
+          },
+        },
+        whatsappRecoveryByIcp: {
+          icpOn: whatsappIcpOn,
+          icpOff: whatsappIcpOff,
+          total: whatsappIcpOn + whatsappIcpOff,
+        },
+        secondQuizVsLead: {
+          beforeLead: secondQuizBeforeLead,
+          afterLead: secondQuizAfterLead,
+        },
+        paywallFunnel: {
+          views: paywallViews || 0,
+          clicks: upgradeClicks || 0,
+        },
+        editorSession: {
+          avgSeconds: avgEditorSession,
+          sampleSize: sessionDurations.length,
+        },
+      },
     }
 
     return new Response(JSON.stringify(result), {
