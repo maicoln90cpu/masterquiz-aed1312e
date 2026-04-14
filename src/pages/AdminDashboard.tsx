@@ -66,6 +66,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isAdmin } = useUserRole();
+  const { enterSupportMode } = useSupportMode();
   const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
   const { siteMode, isModeB } = useSiteMode();
   const { updateSiteMode } = useUpdateSiteMode();
