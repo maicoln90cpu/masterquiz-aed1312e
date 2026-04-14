@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
     const realPayerEmails = new Set<string>()
     const refundedEmails = new Set<string>()
     const processedEmails = new Set<string>()
+    // Map email → plan they actually paid for (from webhook)
+    const paidPlanByEmail = new Map<string, string>()
     
     for (const log of webhookLogs || []) {
       const email = log.email?.toLowerCase()
@@ -62,6 +64,10 @@ Deno.serve(async (req) => {
         refundedEmails.add(email)
       } else if (['order_approved', 'order_paid', 'subscription_created'].includes(log.evento) && log.status === 'success') {
         realPayerEmails.add(email)
+        // Use paid_plan_type from webhook if available, otherwise fallback
+        if (log.paid_plan_type) {
+          paidPlanByEmail.set(email, log.paid_plan_type)
+        }
       }
     }
 
