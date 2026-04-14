@@ -521,15 +521,25 @@ export function useQuizPersistence({
           const w = window as Window & { dataLayer?: Record<string, unknown>[] };
           w.dataLayer = w.dataLayer || [];
 
-          // quiz_first_published — sempre ao publicar pela primeira vez
-          const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-          pushGTMEvent(publishEventName, {
-            quiz_id: quiz.id,
-            quiz_title: quiz.title,
-            user_id: user.id,
-            publish_source: isExpressMode ? 'express_auto' : 'manual',
-            editor_mode: editorMode,
-          });
+          // quiz_first_published — FILTRO: Express dispara evento separado
+          const isExpressQuiz = isExpressMode || quiz.creation_source === 'express_auto';
+          if (isExpressQuiz) {
+            pushGTMEvent('express_first_published', {
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id,
+              editor_mode: editorMode,
+            });
+          } else {
+            const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
+            pushGTMEvent(publishEventName, {
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id,
+              publish_source: 'manual',
+              editor_mode: editorMode,
+            });
+          }
 
           // first_quiz_created — SOMENTE se houve interação real
           const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
