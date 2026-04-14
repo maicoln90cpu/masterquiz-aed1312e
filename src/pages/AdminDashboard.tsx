@@ -56,6 +56,7 @@ const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboar
 const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
 import { TrialModal } from "@/components/admin/TrialModal";
 const TrialLogsViewer = lazy(() => import("@/components/admin/TrialLogsViewer").then(m => ({ default: m.TrialLogsViewer })));
+const GrowthDashboard = lazy(() => import("@/components/admin/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
 // Loading fallback for lazy components
 const ComponentLoader = () => (
   <div className="flex items-center justify-center py-8">
@@ -373,67 +374,68 @@ export default function AdminDashboard() {
 
   const loadFinancialData = async () => {
     try {
-      const { data: subscriptions } = await supabase
-        .from('user_subscriptions')
-        .select('plan_type, status, created_at')
-        .eq('status', 'active');
+      // Use growth-metrics edge function (service_role) to bypass RLS
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
+      const { data: growthData, error: gError } = await supabase.functions.invoke('growth-metrics', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (gError || !growthData) {
+        console.error('Error loading growth metrics for reports:', gError);
+        return;
+      }
+
+      const mrr = growthData.sectionC?.mrr || 0;
+      const paidCount: number = Object.values(growthData.sectionC?.paidByPlan || {}).reduce((a: number, b: unknown) => a + Number(b), 0) as number;
+      const totalNonAdmin = growthData.sectionA?.totalUsers || 0;
+      const conversionRate = totalNonAdmin > 0 ? (paidCount / totalNonAdmin) * 100 : 0;
+
+      setFinancialData({
+        activeUsers: paidCount as number,
+        conversionRate: Math.round(conversionRate * 10) / 10,
+        monthlyRevenue: mrr,
+        annualRevenue: mrr * 12
+      });
+
+      // Build chart data from plan counts
+      const planCounts = growthData.sectionA?.planCounts || {};
+      const planDistribution = Object.entries(planCounts).map(([name, value]) => ({
+        name,
+        value: value as number
+      }));
+
+      // Users by month — use profile creation dates from the edge function
+      // For now, use plan distribution as chart data
       const { data: plans } = await supabase
         .from('subscription_plans')
         .select('plan_type, price_monthly');
-
       const planPrices: Record<string, number> = {};
       plans?.forEach(plan => {
         planPrices[plan.plan_type] = parseFloat(String(plan.price_monthly || '0'));
       });
 
-      // Excluir planos free e admin dos cálculos de usuários ativos e receita
-      const activeUsers = subscriptions?.filter(s => s.plan_type !== 'free' && s.plan_type !== 'admin').length || 0;
-      const totalUsers = subscriptions?.filter(s => s.plan_type !== 'admin').length || 0;
-      const conversionRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
-
-      let monthlyRevenue = 0;
-      subscriptions?.forEach(sub => {
-        // Admin não conta para receita (é plano interno de teste)
-        if (sub.plan_type !== 'free' && sub.plan_type !== 'admin') {
-          monthlyRevenue += planPrices[sub.plan_type] || 0;
-        }
-      });
-
-      setFinancialData({
-        activeUsers,
-        conversionRate: Math.round(conversionRate * 10) / 10,
-        monthlyRevenue,
-        annualRevenue: monthlyRevenue * 12
-      });
-
-      const planCounts: Record<string, number> = {};
-      subscriptions?.forEach(sub => {
-        planCounts[sub.plan_type] = (planCounts[sub.plan_type] || 0) + 1;
-      });
-
-      const planDistribution = Object.entries(planCounts).map(([name, value]) => ({
-        name,
-        value
-      }));
-
-      const monthlyData: Record<string, number> = {};
-      subscriptions?.forEach(sub => {
-        const month = new Date(sub.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-        monthlyData[month] = (monthlyData[month] || 0) + 1;
-      });
-
-      const usersByMonth = Object.entries(monthlyData).map(([month, users]) => ({
-        month,
-        users
-      })).slice(-6);
-
-      const revenuePlans = Object.entries(planCounts)
-        .filter(([plan]) => plan !== 'free' && plan !== 'admin')
+      const revenuePlans = Object.entries(growthData.sectionC?.paidByPlan || {})
         .map(([plan, count]) => ({
           plan,
-          revenue: (planPrices[plan] || 0) * count
+          revenue: (planPrices[plan] || 0) * (count as number)
         }));
+
+      // For usersByMonth chart, fetch from profiles (subscription_plans is public)
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const { data: recentProfiles } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .gte('created_at', sixMonthsAgo.toISOString());
+
+      const monthlyData: Record<string, number> = {};
+      recentProfiles?.forEach(p => {
+        const month = new Date(p.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        monthlyData[month] = (monthlyData[month] || 0) + 1;
+      });
+      const usersByMonth = Object.entries(monthlyData).map(([month, users]) => ({ month, users })).slice(-6);
 
       setChartData({
         usersByMonth,
@@ -1597,7 +1599,8 @@ export default function AdminDashboard() {
             <AdminSubTabs
               tabs={[
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, color: 'blue' },
-                { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'green' },
+                { id: 'growth', label: 'Growth', icon: <TrendingUp className="h-4 w-4" />, color: 'green' },
+                { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'emerald' },
                 { id: 'pql', label: 'PQL Analytics', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
                 { id: 'comparison', label: 'Comparação A×B', icon: <TrendingUp className="h-4 w-4" />, color: 'orange' },
               ]}
@@ -1606,6 +1609,11 @@ export default function AdminDashboard() {
               {(activeTab) => (
                 <>
                   {activeTab === 'dashboard' && renderOverviewContent()}
+                  {activeTab === 'growth' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <GrowthDashboard />
+                    </Suspense>
+                  )}
                   {activeTab === 'reports' && renderReportsContent()}
                   {activeTab === 'pql' && (
                     <Suspense fallback={<ComponentLoader />}>
