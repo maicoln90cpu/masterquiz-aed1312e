@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupportMode } from '@/contexts/SupportModeContext';
+import { useSupportMode, type SupportAction } from '@/contexts/SupportModeContext';
 import { logAudit } from '@/lib/auditLogger';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,11 +13,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Loader2, ArrowLeft, CheckCircle, AlertTriangle, XCircle, ExternalLink,
-  RefreshCw, FileText, BarChart3, Shield, Eye, Wrench, RotateCcw,
-  MessageSquare, Send, Search
+  RefreshCw, FileText, BarChart3, Shield, Wrench, RotateCcw,
+  MessageSquare, Send, Search, Pencil, ClipboardList, Clock, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+// ── Types ──
 interface QuizData {
   id: string;
   title: string;
@@ -79,7 +80,7 @@ interface TicketMessage {
 
 const SupportDashboard = () => {
   const navigate = useNavigate();
-  const { isSupportMode, target, exitSupportMode } = useSupportMode();
+  const { isSupportMode, target, exitSupportMode, trackAction, sessionActions, startTime } = useSupportMode();
   const [overview, setOverview] = useState<UserOverview | null>(null);
   const [diagnostics, setDiagnostics] = useState<DiagnosticData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,9 +100,15 @@ const SupportDashboard = () => {
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
 
+  // Session report
+  const [reportOpen, setReportOpen] = useState(false);
+
   // Action loading states
   const [fixingQuizId, setFixingQuizId] = useState<string | null>(null);
   const [republishingQuizId, setRepublishingQuizId] = useState<string | null>(null);
+
+  // Realtime subscription ref
+  const realtimeChannel = useRef<any>(null);
 
   useEffect(() => {
     if (!isSupportMode || !target) {
@@ -110,6 +117,41 @@ const SupportDashboard = () => {
     }
     loadOverview();
   }, [isSupportMode, target]);
+
+  // Realtime subscription for ticket messages
+  useEffect(() => {
+    if (!target || activeTab !== 'chat') return;
+
+    realtimeChannel.current = supabase
+      .channel(`support-tickets-${target.userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'ticket_messages',
+      }, (payload) => {
+        const newMsg = payload.new as TicketMessage;
+        // Only add if it belongs to one of the user's tickets
+        if (tickets.some(t => t.id === newMsg.ticket_id)) {
+          setMessages(prev => [...prev, newMsg]);
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'support_tickets',
+        filter: `user_id=eq.${target.userId}`,
+      }, (payload) => {
+        const updated = payload.new as Ticket;
+        setTickets(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t));
+      })
+      .subscribe();
+
+    return () => {
+      if (realtimeChannel.current) {
+        supabase.removeChannel(realtimeChannel.current);
+      }
+    };
+  }, [target, activeTab, tickets.length]);
 
   const callEdgeFunction = useCallback(async (body: any) => {
     const { data, error } = await supabase.functions.invoke('admin-view-user-data', { body });
@@ -123,6 +165,7 @@ const SupportDashboard = () => {
     try {
       const data = await callEdgeFunction({ target_user_id: target.userId, data_type: 'overview' });
       setOverview(data);
+      trackAction('Visualizou overview', undefined, `${data?.quizzes?.length || 0} quizzes`);
       logAudit('support:view_overview', 'support', target.userId, { target_email: target.email });
     } catch (err: any) {
       console.error('Error loading overview:', err);
@@ -138,6 +181,8 @@ const SupportDashboard = () => {
     try {
       const data = await callEdgeFunction({ target_user_id: target.userId, data_type: 'diagnostics' });
       setDiagnostics(data?.diagnostics || []);
+      const issues = (data?.diagnostics || []).reduce((sum: number, d: any) => sum + (d.issues?.length || 0), 0);
+      trackAction('Executou diagnóstico', undefined, `${issues} problemas encontrados`);
       logAudit('support:run_diagnostics', 'support', target.userId, { target_email: target.email });
     } catch (err: any) {
       console.error('Error loading diagnostics:', err);
@@ -147,12 +192,13 @@ const SupportDashboard = () => {
     }
   };
 
-  const loadQuizDetail = async (quizId: string) => {
+  const loadQuizDetail = async (quizId: string, quizTitle?: string) => {
     setDetailLoading(true);
     setDetailOpen(true);
     try {
       const data = await callEdgeFunction({ target_user_id: target!.userId, data_type: 'quiz_detail', quiz_id: quizId });
       setQuizDetail(data);
+      trackAction('Visualizou detalhes do quiz', quizId, quizTitle);
       logAudit('support:view_quiz_detail', 'support', quizId, { target_user_id: target!.userId });
     } catch (err: any) {
       console.error('Error loading quiz detail:', err);
@@ -162,11 +208,12 @@ const SupportDashboard = () => {
     }
   };
 
-  const handleFixDuplicates = async (quizId: string) => {
+  const handleFixDuplicates = async (quizId: string, quizTitle?: string) => {
     setFixingQuizId(quizId);
     try {
       const data = await callEdgeFunction({ target_user_id: target!.userId, data_type: 'fix_duplicates', quiz_id: quizId });
       toast.success(`IDs reordenados: ${data.questions_reordered} perguntas`);
+      trackAction('Corrigiu IDs duplicados', quizId, `${data.questions_reordered} perguntas reordenadas`);
       logAudit('support:fix_duplicates', 'support', quizId, { target_user_id: target!.userId });
       loadDiagnostics();
     } catch (err: any) {
@@ -176,11 +223,12 @@ const SupportDashboard = () => {
     }
   };
 
-  const handleRepublish = async (quizId: string) => {
+  const handleRepublish = async (quizId: string, quizTitle?: string) => {
     setRepublishingQuizId(quizId);
     try {
       await callEdgeFunction({ target_user_id: target!.userId, data_type: 'republish', quiz_id: quizId });
       toast.success('Quiz republicado com sucesso');
+      trackAction('Republicou quiz', quizId, quizTitle);
       logAudit('support:republish_quiz', 'support', quizId, { target_user_id: target!.userId });
       loadDiagnostics();
       loadOverview();
@@ -191,6 +239,18 @@ const SupportDashboard = () => {
     }
   };
 
+  const handleEditQuiz = (quizId: string, quizTitle?: string) => {
+    trackAction('Abriu editor do quiz', quizId, quizTitle);
+    logAudit('support:view_quiz_detail', 'support', quizId, {
+      target_user_id: target!.userId,
+      action_type: 'edit_quiz',
+    });
+    // Open quiz editor in new tab — the editor loads by quiz_id which the admin can access via service_role
+    // For now we open the detail modal which shows all data read-only
+    // Full editor access would require useEffectiveUser integration (future)
+    loadQuizDetail(quizId, quizTitle);
+  };
+
   const loadTickets = async () => {
     if (!target) return;
     setTicketsLoading(true);
@@ -198,6 +258,7 @@ const SupportDashboard = () => {
       const data = await callEdgeFunction({ target_user_id: target.userId, data_type: 'tickets' });
       setTickets(data?.tickets || []);
       setMessages(data?.messages || []);
+      trackAction('Visualizou tickets', undefined, `${data?.tickets?.length || 0} tickets`);
       logAudit('support:view_tickets', 'support', target.userId, { target_email: target.email });
     } catch (err: any) {
       toast.error('Erro ao carregar tickets');
@@ -217,8 +278,9 @@ const SupportDashboard = () => {
         message: newMessage.trim(),
       });
       toast.success('Mensagem enviada');
-      setNewMessage('');
+      trackAction('Enviou mensagem', selectedTicketId, newMessage.trim().slice(0, 50));
       logAudit('support:send_message', 'support', selectedTicketId, { target_user_id: target!.userId });
+      setNewMessage('');
       loadTickets();
     } catch (err: any) {
       toast.error('Erro ao enviar mensagem');
@@ -228,17 +290,63 @@ const SupportDashboard = () => {
   };
 
   const handleBack = () => {
+    if (sessionActions.length > 1) {
+      setReportOpen(true);
+    } else {
+      exitSupportMode();
+      navigate('/masteradm');
+    }
+  };
+
+  const confirmExit = () => {
+    setReportOpen(false);
     exitSupportMode();
     navigate('/masteradm');
   };
 
   const openQuizPublic = (quiz: QuizData) => {
     const companySlug = overview?.profile?.company_slug;
+    trackAction('Abriu quiz público', quiz.id, quiz.title);
     if (companySlug && quiz.slug) {
       window.open(`/${companySlug}/${quiz.slug}`, '_blank');
     } else if (quiz.slug) {
       window.open(`/quiz/${quiz.slug}`, '_blank');
     }
+  };
+
+  const getSessionDuration = () => {
+    if (!startTime) return '00:00';
+    const seconds = Math.round((Date.now() - startTime.getTime()) / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const exportSessionReport = () => {
+    if (!target) return;
+    const lines = [
+      `# Relatório de Sessão de Suporte`,
+      ``,
+      `**Usuário:** ${target.fullName} (${target.email})`,
+      `**Plano:** ${target.planType}`,
+      `**Início:** ${startTime?.toLocaleString('pt-BR')}`,
+      `**Duração:** ${getSessionDuration()}`,
+      `**Total de ações:** ${sessionActions.length}`,
+      ``,
+      `## Ações realizadas`,
+      ``,
+      ...sessionActions.map((a, i) =>
+        `${i + 1}. **${a.action}** — ${a.timestamp.toLocaleTimeString('pt-BR')}${a.details ? ` — ${a.details}` : ''}${a.resourceId ? ` (ID: ${a.resourceId.slice(0, 8)}...)` : ''}`
+      ),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `suporte-${target.email.split('@')[0]}-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    trackAction('Exportou relatório de sessão');
   };
 
   if (loading) {
@@ -278,10 +386,24 @@ const SupportDashboard = () => {
               <p className="text-sm text-muted-foreground">{target.email}</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={loadOverview}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Atualizar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="gap-1">
+              <Clock className="h-3 w-3" />
+              {getSessionDuration()}
+            </Badge>
+            <Badge variant="secondary" className="gap-1">
+              <ClipboardList className="h-3 w-3" />
+              {sessionActions.length} ações
+            </Badge>
+            <Button variant="outline" size="sm" onClick={exportSessionReport} title="Exportar relatório">
+              <Download className="h-4 w-4 mr-1" />
+              Relatório
+            </Button>
+            <Button variant="outline" size="sm" onClick={loadOverview}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Atualizar
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -344,6 +466,10 @@ const SupportDashboard = () => {
               <MessageSquare className="h-4 w-4" />
               Chat
             </TabsTrigger>
+            <TabsTrigger value="session" className="gap-1">
+              <ClipboardList className="h-4 w-4" />
+              Sessão
+            </TabsTrigger>
           </TabsList>
 
           {/* ── QUIZZES TAB ── */}
@@ -351,7 +477,7 @@ const SupportDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Quizzes do Usuário ({overview.quizzes.length})</CardTitle>
-                <CardDescription>Lista de quizzes com ações de visualização e diagnóstico</CardDescription>
+                <CardDescription>Lista de quizzes com ações de visualização, edição e diagnóstico</CardDescription>
               </CardHeader>
               <CardContent>
                 {overview.quizzes.length === 0 ? (
@@ -389,8 +515,11 @@ const SupportDashboard = () => {
                                   <ExternalLink className="h-4 w-4" />
                                 </Button>
                               )}
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadQuizDetail(quiz.id)} title="Ver detalhes">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadQuizDetail(quiz.id, quiz.title)} title="Ver detalhes">
                                 <Search className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditQuiz(quiz.id, quiz.title)} title="Editar quiz (read-only)">
+                                <Pencil className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -458,26 +587,29 @@ const SupportDashboard = () => {
                                 </div>
                               )}
                             </div>
-                            {/* Action buttons */}
-                            {diag.issues.length > 0 && (
-                              <div className="flex flex-col gap-2 ml-4">
-                                {diag.issues.some(i => i.includes('order_number duplicado')) && (
-                                  <Button
-                                    variant="outline" size="sm"
-                                    onClick={() => handleFixDuplicates(diag.quiz_id)}
-                                    disabled={fixingQuizId === diag.quiz_id}
-                                  >
-                                    {fixingQuizId === diag.quiz_id ? (
-                                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                                    ) : (
-                                      <Wrench className="h-4 w-4 mr-1" />
-                                    )}
-                                    Corrigir IDs
-                                  </Button>
-                                )}
+                            <div className="flex flex-col gap-2 ml-4">
+                              <Button variant="ghost" size="sm" onClick={() => loadQuizDetail(diag.quiz_id, diag.title)}>
+                                <Search className="h-4 w-4 mr-1" />
+                                Detalhe
+                              </Button>
+                              {diag.issues.some(i => i.includes('order_number duplicado')) && (
                                 <Button
                                   variant="outline" size="sm"
-                                  onClick={() => handleRepublish(diag.quiz_id)}
+                                  onClick={() => handleFixDuplicates(diag.quiz_id, diag.title)}
+                                  disabled={fixingQuizId === diag.quiz_id}
+                                >
+                                  {fixingQuizId === diag.quiz_id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                  ) : (
+                                    <Wrench className="h-4 w-4 mr-1" />
+                                  )}
+                                  Corrigir IDs
+                                </Button>
+                              )}
+                              {diag.issues.length > 0 && (
+                                <Button
+                                  variant="outline" size="sm"
+                                  onClick={() => handleRepublish(diag.quiz_id, diag.title)}
                                   disabled={republishingQuizId === diag.quiz_id}
                                 >
                                   {republishingQuizId === diag.quiz_id ? (
@@ -487,8 +619,8 @@ const SupportDashboard = () => {
                                   )}
                                   Republicar
                                 </Button>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -502,12 +634,18 @@ const SupportDashboard = () => {
           {/* ── CHAT TAB ── */}
           <TabsContent value="chat" className="mt-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Chat de Suporte</CardTitle>
-                <CardDescription>Tickets e mensagens do usuário</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Chat de Suporte</CardTitle>
+                  <CardDescription>Tickets e mensagens — atualização em tempo real</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={loadTickets} disabled={ticketsLoading}>
+                  <RefreshCw className={`h-4 w-4 mr-1 ${ticketsLoading ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
               </CardHeader>
               <CardContent>
-                {ticketsLoading ? (
+                {ticketsLoading && tickets.length === 0 ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
@@ -515,7 +653,6 @@ const SupportDashboard = () => {
                   <p className="text-muted-foreground">Nenhum ticket encontrado para este usuário.</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Ticket list */}
                     <div className="space-y-2 md:border-r md:pr-4">
                       <h3 className="font-medium text-sm text-muted-foreground mb-2">Tickets ({tickets.length})</h3>
                       {tickets.map((ticket) => (
@@ -541,7 +678,6 @@ const SupportDashboard = () => {
                       ))}
                     </div>
 
-                    {/* Messages */}
                     <div className="md:col-span-2">
                       {!selectedTicketId ? (
                         <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -559,9 +695,7 @@ const SupportDashboard = () => {
                                   return (
                                     <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                                       <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                                        isAdmin
-                                          ? 'bg-primary text-primary-foreground'
-                                          : 'bg-muted'
+                                        isAdmin ? 'bg-primary text-primary-foreground' : 'bg-muted'
                                       }`}>
                                         <p>{msg.message}</p>
                                         <p className={`text-xs mt-1 ${isAdmin ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
@@ -594,6 +728,50 @@ const SupportDashboard = () => {
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ── SESSION LOG TAB ── */}
+          <TabsContent value="session" className="mt-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Log da Sessão de Suporte</CardTitle>
+                  <CardDescription>
+                    Todas as ações realizadas nesta sessão — Início: {startTime?.toLocaleTimeString('pt-BR')} — Duração: {getSessionDuration()}
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={exportSessionReport}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Exportar .md
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {sessionActions.length === 0 ? (
+                  <p className="text-muted-foreground">Nenhuma ação registrada ainda.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sessionActions.map((action, i) => (
+                      <div key={i} className="flex items-start gap-3 py-2 border-b border-border/50 last:border-0">
+                        <div className="text-xs text-muted-foreground whitespace-nowrap mt-0.5">
+                          {action.timestamp.toLocaleTimeString('pt-BR')}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">{action.action}</div>
+                          {action.details && (
+                            <div className="text-xs text-muted-foreground">{action.details}</div>
+                          )}
+                          {action.resourceId && (
+                            <div className="text-xs text-muted-foreground font-mono">
+                              ID: {action.resourceId.slice(0, 8)}...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -636,7 +814,6 @@ const SupportDashboard = () => {
             </div>
           ) : quizDetail ? (
             <div className="space-y-6">
-              {/* Quiz info */}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><strong>Status:</strong> {quizDetail.quiz?.status}</div>
                 <div><strong>Slug:</strong> {quizDetail.quiz?.slug || '-'}</div>
@@ -646,11 +823,10 @@ const SupportDashboard = () => {
                 <div><strong>Atualizado:</strong> {quizDetail.quiz?.updated_at ? new Date(quizDetail.quiz.updated_at).toLocaleDateString('pt-BR') : '-'}</div>
               </div>
 
-              {/* Questions */}
               <div>
                 <h3 className="font-semibold mb-2">Perguntas ({quizDetail.questions.length})</h3>
                 <div className="space-y-2">
-                  {quizDetail.questions.map((q: any, i: number) => (
+                  {quizDetail.questions.map((q: any) => (
                     <div key={q.id} className="border rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline" className="text-xs">#{q.order_number}</Badge>
@@ -668,12 +844,25 @@ const SupportDashboard = () => {
                           ))}
                         </div>
                       )}
+                      {/* Show options if present */}
+                      {Array.isArray(q.options) && q.options.length > 0 && (
+                        <div className="mt-2">
+                          <span className="text-xs text-muted-foreground">Opções:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {q.options.map((opt: any, oi: number) => (
+                              <Badge key={oi} variant="outline" className="text-xs">
+                                {typeof opt === 'string' ? opt : opt.text || opt.label || JSON.stringify(opt).slice(0, 30)}
+                                {opt.score !== undefined && <span className="ml-1 text-primary">({opt.score}pts)</span>}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Results */}
               <div>
                 <h3 className="font-semibold mb-2">Resultados ({quizDetail.results.length})</h3>
                 <div className="space-y-2">
@@ -683,14 +872,14 @@ const SupportDashboard = () => {
                       <div className="flex gap-3 text-xs text-muted-foreground mt-1">
                         <span>Score: {r.min_score ?? '-'} — {r.max_score ?? '-'}</span>
                         <span>Tipo: {r.condition_type}</span>
-                        {r.redirect_url && <span>🔗 Redirect</span>}
+                        {r.redirect_url && <span>🔗 {r.redirect_url}</span>}
+                        {r.button_text && <span>🔘 {r.button_text}</span>}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Form Config */}
               {quizDetail.formConfig && (
                 <div>
                   <h3 className="font-semibold mb-2">Configuração do Formulário</h3>
@@ -704,6 +893,41 @@ const SupportDashboard = () => {
               )}
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── EXIT CONFIRMATION WITH SESSION SUMMARY ── */}
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Encerrar Sessão de Suporte</DialogTitle>
+            <DialogDescription>
+              Resumo da sessão com {target?.fullName || target?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div><strong>Duração:</strong> {getSessionDuration()}</div>
+              <div><strong>Ações:</strong> {sessionActions.length}</div>
+            </div>
+            <div className="max-h-40 overflow-y-auto border rounded-lg p-2">
+              {sessionActions.slice(-10).map((a, i) => (
+                <div key={i} className="text-xs py-1 border-b border-border/30 last:border-0">
+                  <span className="text-muted-foreground">{a.timestamp.toLocaleTimeString('pt-BR')}</span>
+                  <span className="ml-2">{a.action}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={exportSessionReport}>
+                <Download className="h-4 w-4 mr-1" />
+                Exportar
+              </Button>
+              <Button variant="default" onClick={confirmExit}>
+                Sair do Suporte
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
