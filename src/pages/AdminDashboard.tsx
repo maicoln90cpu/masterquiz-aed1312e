@@ -54,6 +54,7 @@ const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
 const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
 const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
+import { TrialModal } from "@/components/admin/TrialModal";
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
