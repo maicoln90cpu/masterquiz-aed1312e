@@ -132,7 +132,6 @@ const Start = () => {
       }
 
       // 🎯 GTM: express_started — track when Express flow creates a quiz
-      const { pushGTMEvent } = await import("@/lib/gtmLogger");
       pushGTMEvent('express_started', {
         user_id: user.id,
         objective,
