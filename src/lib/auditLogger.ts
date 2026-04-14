@@ -39,6 +39,7 @@ export type AuditAction =
   | "support:view_quiz_detail"
   | "support:send_message"
   | "support:view_tickets"
+  | "support:edit_quiz"
   // Tickets
   | "ticket:created"
   | "ticket:updated"
