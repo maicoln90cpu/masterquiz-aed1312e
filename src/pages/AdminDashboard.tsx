@@ -1817,6 +1817,12 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <TrialModal
+        open={trialModalOpen}
+        onOpenChange={setTrialModalOpen}
+        user={trialUser}
+        onSuccess={() => loadData()}
+      />
     </main>
   );
 }
