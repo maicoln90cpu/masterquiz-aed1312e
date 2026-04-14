@@ -1647,6 +1647,7 @@ export default function AdminDashboard() {
             <AdminSubTabs
               tabs={[
                 { id: 'plans', label: 'Planos', icon: <Package className="h-4 w-4" />, color: 'yellow' },
+                { id: 'trials', label: 'Trials', icon: <Timer className="h-4 w-4" />, color: 'blue' },
                 { id: 'gateway', label: 'Gateway Pagamento', icon: <DollarSign className="h-4 w-4" />, color: 'green' },
                 { id: 'recovery', label: 'Recuperação de Clientes', icon: <RefreshCw className="h-4 w-4" />, color: 'cyan' },
               ]}
@@ -1655,6 +1656,7 @@ export default function AdminDashboard() {
               {(activeTab) => (
                 <>
                   {activeTab === 'plans' && <PlanManagement />}
+                  {activeTab === 'trials' && <TrialLogsViewer />}
                   {activeTab === 'gateway' && <PaymentGatewaySettings />}
                   {activeTab === 'recovery' && <CustomerRecovery />}
                 </>
