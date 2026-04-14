@@ -309,8 +309,152 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════
-    // SECTION C — Revenue & Conversion (REAL PAYERS ONLY)
+    // SECTION D — Advanced Metrics
     // ═══════════════════════════════════════════
+
+    // Express funnel
+    const { data: expressQuizzes } = await supabase
+      .from('quizzes')
+      .select('id, user_id, created_at')
+      .eq('creation_source', 'express_auto')
+    const expressCreated = expressQuizzes?.length || 0
+    const { data: expressPublished } = await supabase
+      .from('quizzes')
+      .select('id, user_id')
+      .eq('creation_source', 'express_auto')
+      .eq('is_public', true)
+      .eq('status', 'active')
+    const expressPublishedCount = expressPublished?.length || 0
+
+    // Users who created a 2nd quiz after Express
+    const expressUserIds = new Set((expressQuizzes || []).map((q: any) => q.user_id))
+    const expressTimeMap = new Map<string, string>()
+    for (const q of expressQuizzes || []) {
+      if (!expressTimeMap.has(q.user_id)) expressTimeMap.set(q.user_id, q.created_at)
+    }
+    // All non-express quizzes by express users
+    const secondQuizTimings = { immediate: 0, sameDay: 0, later: 0, total: 0 }
+    for (const q of creators || []) {
+      if (!expressUserIds.has(q.user_id)) continue
+      const expressTime = expressTimeMap.get(q.user_id)
+      if (!expressTime) continue
+      // Get creation time of non-express quiz
+      const nonExpressQuiz = (nonExpressQuizIds || []).find((nq: any) => nq.user_id === q.user_id)
+      if (!nonExpressQuiz) continue
+      // We already have created_at from pubTimes or we need a separate query
+      // Use simple check — if they're in creators, they created a non-express quiz
+      secondQuizTimings.total++
+      break // count each user once
+    }
+    // More precise: fetch non-express quiz times for express users
+    const expressUserArr = Array.from(expressUserIds).slice(0, 100)
+    if (expressUserArr.length > 0) {
+      const { data: secondQuizzes } = await supabase
+        .from('quizzes')
+        .select('user_id, created_at')
+        .neq('creation_source', 'express_auto')
+        .in('user_id', expressUserArr)
+        .order('created_at', { ascending: true })
+
+      const secondByUser = new Map<string, string>()
+      for (const q of secondQuizzes || []) {
+        if (!secondByUser.has(q.user_id)) secondByUser.set(q.user_id, q.created_at)
+      }
+      secondQuizTimings.total = secondByUser.size
+      secondQuizTimings.immediate = 0
+      secondQuizTimings.sameDay = 0
+      secondQuizTimings.later = 0
+      for (const [uid, secondTime] of secondByUser) {
+        const expTime = expressTimeMap.get(uid)
+        if (!expTime) continue
+        const diffHours = (new Date(secondTime).getTime() - new Date(expTime).getTime()) / (1000 * 60 * 60)
+        if (diffHours < 1) secondQuizTimings.immediate++
+        else if (diffHours < 24) secondQuizTimings.sameDay++
+        else secondQuizTimings.later++
+      }
+    }
+
+    // WhatsApp recovery segmentation by ICP (objective_selectedON)
+    const { data: recoveryContacts } = await supabase
+      .from('recovery_contacts')
+      .select('user_id, reactivated')
+      .eq('reactivated', true)
+    const reactivatedUserIds = (recoveryContacts || []).map((r: any) => r.user_id)
+    let whatsappIcpOn = 0
+    let whatsappIcpOff = 0
+    if (reactivatedUserIds.length > 0) {
+      const { data: reactivatedProfiles } = await supabase
+        .from('profiles')
+        .select('id, user_objectives')
+        .in('id', reactivatedUserIds.slice(0, 100))
+      for (const p of reactivatedProfiles || []) {
+        const hasObjective = p.user_objectives && p.user_objectives.length > 0
+        if (hasObjective) whatsappIcpOn++
+        else whatsappIcpOff++
+      }
+    }
+
+    // 2nd quiz before/after first lead
+    let secondQuizBeforeLead = 0
+    let secondQuizAfterLead = 0
+    if (expressUserArr.length > 0) {
+      const { data: secondQuizzes2 } = await supabase
+        .from('quizzes')
+        .select('user_id, created_at')
+        .neq('creation_source', 'express_auto')
+        .in('user_id', expressUserArr)
+        .order('created_at', { ascending: true })
+
+      const firstNonExpressByUser = new Map<string, string>()
+      for (const q of secondQuizzes2 || []) {
+        if (!firstNonExpressByUser.has(q.user_id)) firstNonExpressByUser.set(q.user_id, q.created_at)
+      }
+
+      // Get first lead time per user
+      const { data: firstLeads } = await supabase
+        .from('quiz_responses')
+        .select('quiz_id, completed_at')
+        .order('completed_at', { ascending: true })
+
+      const firstLeadByUser = new Map<string, string>()
+      for (const r of firstLeads || []) {
+        const uid = quizOwnerMap.get(r.quiz_id)
+        if (uid && !firstLeadByUser.has(uid)) firstLeadByUser.set(uid, r.completed_at)
+      }
+
+      for (const [uid, quizTime] of firstNonExpressByUser) {
+        const leadTime = firstLeadByUser.get(uid)
+        if (!leadTime) { secondQuizBeforeLead++; continue }
+        if (new Date(quizTime) < new Date(leadTime)) secondQuizBeforeLead++
+        else secondQuizAfterLead++
+      }
+    }
+
+    // Paywall views vs clicks (from GTM events)
+    const { count: paywallViews } = await supabase
+      .from('gtm_event_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_name', 'paywall_viewed')
+    const { count: upgradeClicks } = await supabase
+      .from('gtm_event_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_name', 'upgrade_clicked')
+
+    // Editor session average (from GTM events)
+    const { data: editorSessions } = await supabase
+      .from('gtm_event_logs')
+      .select('metadata')
+      .eq('event_name', 'editor_session_end')
+      .order('created_at', { ascending: false })
+      .limit(200)
+    const sessionDurations = (editorSessions || [])
+      .map((e: any) => e.metadata?.duration_seconds)
+      .filter((d: any) => typeof d === 'number' && d > 0)
+    const avgEditorSession = sessionDurations.length > 0
+      ? Math.round(sessionDurations.reduce((a: number, b: number) => a + b, 0) / sessionDurations.length)
+      : null
+
+
 
     // MRR — only real payers
     const { data: plans } = await supabase
@@ -467,6 +611,35 @@ Deno.serve(async (req) => {
         medianDaysToConvert,
         realPaidCount: realPaidUserIds.length,
         trialCount: trialUserIds.length,
+      },
+      sectionD: {
+        expressFunnel: {
+          created: expressCreated,
+          published: expressPublishedCount,
+          createdSecondQuiz: secondQuizTimings.total,
+          timings: {
+            immediate: secondQuizTimings.immediate,
+            sameDay: secondQuizTimings.sameDay,
+            later: secondQuizTimings.later,
+          },
+        },
+        whatsappRecoveryByIcp: {
+          icpOn: whatsappIcpOn,
+          icpOff: whatsappIcpOff,
+          total: whatsappIcpOn + whatsappIcpOff,
+        },
+        secondQuizVsLead: {
+          beforeLead: secondQuizBeforeLead,
+          afterLead: secondQuizAfterLead,
+        },
+        paywallFunnel: {
+          views: paywallViews || 0,
+          clicks: upgradeClicks || 0,
+        },
+        editorSession: {
+          avgSeconds: avgEditorSession,
+          sampleSize: sessionDurations.length,
+        },
       },
     }
 
