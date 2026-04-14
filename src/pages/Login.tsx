@@ -174,7 +174,10 @@ const Login = () => {
         emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           full_name: name,
-          whatsapp: whatsapp
+          whatsapp: whatsapp,
+          utm_source: utmParams.utm_source,
+          utm_medium: utmParams.utm_medium,
+          utm_campaign: utmParams.utm_campaign,
         }
       }
     });
