@@ -55,7 +55,7 @@ const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashbo
 const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
 const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
 import { TrialModal } from "@/components/admin/TrialModal";
-
+const TrialLogsViewer = lazy(() => import("@/components/admin/TrialLogsViewer").then(m => ({ default: m.TrialLogsViewer })));
 // Loading fallback for lazy components
 const ComponentLoader = () => (
   <div className="flex items-center justify-center py-8">
