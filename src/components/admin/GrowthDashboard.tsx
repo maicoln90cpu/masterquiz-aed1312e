@@ -4,8 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, TrendingUp, DollarSign, BarChart3, Activity, Zap, Bot, Eye, Target, AlertTriangle, ChevronDown, ChevronUp, RefreshCw, Loader2 } from "lucide-react";
+import { Users, TrendingUp, DollarSign, BarChart3, Activity, Zap, Bot, Eye, Target, AlertTriangle, ChevronDown, ChevronUp, RefreshCw, Loader2, ShieldCheck, Gift } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSubTabs } from "./AdminSubTabs";
@@ -41,6 +40,8 @@ interface GrowthData {
   };
   sectionC: {
     mrr: number;
+    realPaidByPlan: Record<string, number>;
+    trialByPlan: Record<string, number>;
     paidByPlan: Record<string, number>;
     conversionRate: number;
     paidUserProfiles: Array<{
@@ -51,9 +52,18 @@ interface GrowthData {
       leads: number;
       usedAI: boolean;
       daysToConvert: number | null;
+      source: string;
+    }>;
+    trialUserProfiles: Array<{
+      email: string;
+      name: string;
+      plan: string;
+      source: string;
     }>;
     churnCount: number;
     medianDaysToConvert: number | null;
+    realPaidCount: number;
+    trialCount: number;
   };
 }
 
@@ -133,7 +143,6 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
 
   return (
     <div className="space-y-6">
-      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MetricCard
           title="Total Cadastrados"
@@ -150,13 +159,13 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
               ? `${data.medianTimeToPublishHours.toFixed(1)}h`
               : `${(data.medianTimeToPublishHours / 24).toFixed(1)} dias`
             : 'N/A'}
-          subtitle="Mediana cadastro → publicar"
+          subtitle="Mediana cadastro → publicar (excl. Express)"
           icon={Activity}
         />
         <MetricCard
           title="Zombies"
           value={data.zombieCount}
-          subtitle="7d+ sem criar quiz"
+          subtitle="7d+ sem criar quiz real"
           icon={AlertTriangle}
         />
         <MetricCard
@@ -167,23 +176,21 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
         />
       </div>
 
-      {/* Funnel visual */}
       <Card>
         <CardHeader>
           <CardTitle>Funil de Ativação</CardTitle>
-          <CardDescription>Drop-off em cada etapa — cadastro até pagamento</CardDescription>
+          <CardDescription>Drop-off em cada etapa — excluindo Quiz Express (auto-criado)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <FunnelBar label="Cadastrados" count={total} total={total} pctLabel="do total" />
-          <FunnelBar label="Criou ≥1 Quiz" count={f.createdQuiz} total={total} pctLabel="do total" />
-          <FunnelBar label="Publicou ≥1 Quiz" count={f.publishedQuiz} total={f.createdQuiz} pctLabel="dos que criaram" />
+          <FunnelBar label="Criou ≥1 Quiz (real)" count={f.createdQuiz} total={total} pctLabel="do total" />
+          <FunnelBar label="Publicou ≥1 Quiz (real)" count={f.publishedQuiz} total={f.createdQuiz} pctLabel="dos que criaram" />
           <FunnelBar label="Recebeu ≥1 Resposta" count={f.receivedResponse} total={f.publishedQuiz} pctLabel="dos que publicaram" />
           <FunnelBar label="Recebeu 20+ Respostas" count={f.received20Plus} total={f.receivedResponse} pctLabel="dos que receberam" />
-          <FunnelBar label="Pagantes" count={f.paidUsers} total={total} pctLabel="do total" />
+          <FunnelBar label="Pagantes Reais (webhook)" count={f.paidUsers} total={total} pctLabel="do total" />
         </CardContent>
       </Card>
 
-      {/* Drop rates */}
       <Card>
         <CardHeader>
           <CardTitle>Taxa de Abandono por Etapa</CardTitle>
@@ -211,13 +218,12 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
         </CardContent>
       </Card>
 
-      {/* Zombies */}
       <Card>
         <CardHeader className="cursor-pointer" onClick={() => setShowZombies(!showZombies)}>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Usuários Inativos (Zombies) — {data.zombieCount}</CardTitle>
-              <CardDescription>Cadastrou há 7+ dias e nunca criou quiz</CardDescription>
+              <CardDescription>Cadastrou há 7+ dias e nunca criou quiz real (excl. Express)</CardDescription>
             </div>
             {showZombies ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </div>
@@ -262,7 +268,6 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
 function SectionB({ data, totalUsers }: { data: GrowthData['sectionB']; totalUsers: number }) {
   return (
     <div className="space-y-6">
-      {/* Top metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MetricCard
           title="Quizzes/Usuário (média)"
@@ -292,9 +297,7 @@ function SectionB({ data, totalUsers }: { data: GrowthData['sectionB']; totalUse
         />
       </div>
 
-      {/* Segmentation + Integrations + Limits */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Activity segmentation */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Segmentação de Atividade</CardTitle>
@@ -316,7 +319,6 @@ function SectionB({ data, totalUsers }: { data: GrowthData['sectionB']; totalUse
           </CardContent>
         </Card>
 
-        {/* Integrations */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Integrações Configuradas</CardTitle>
@@ -337,7 +339,6 @@ function SectionB({ data, totalUsers }: { data: GrowthData['sectionB']; totalUse
           </CardContent>
         </Card>
 
-        {/* Limits + UTM */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Gatilhos de Upgrade</CardTitle>
@@ -371,14 +372,16 @@ function SectionB({ data, totalUsers }: { data: GrowthData['sectionB']; totalUse
 // Section C — Revenue & Conversion
 // ═══════════════════════════════════════════
 function SectionC({ data, totalUsers }: { data: GrowthData['sectionC']; totalUsers: number }) {
+  const realPaidCount = data.realPaidCount || 0;
+  const trialCount = data.trialCount || 0;
+
   return (
     <div className="space-y-6">
-      {/* Revenue cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MetricCard
-          title="MRR"
+          title="MRR (Pagantes Reais)"
           value={`R$ ${data.mrr.toFixed(2)}`}
-          subtitle="Receita recorrente mensal"
+          subtitle="Verificado via webhook Kiwify"
           icon={DollarSign}
         />
         <MetricCard
@@ -390,7 +393,7 @@ function SectionC({ data, totalUsers }: { data: GrowthData['sectionC']; totalUse
         <MetricCard
           title="Conversão Free → Pago"
           value={`${data.conversionRate}%`}
-          subtitle={`${Object.values(data.paidByPlan).reduce((a, b) => a + b, 0)} pagantes de ${totalUsers}`}
+          subtitle={`${realPaidCount} pagante${realPaidCount !== 1 ? 's' : ''} real${realPaidCount !== 1 ? 'is' : ''} de ${totalUsers}`}
           icon={Target}
         />
         <MetricCard
@@ -401,21 +404,27 @@ function SectionC({ data, totalUsers }: { data: GrowthData['sectionC']; totalUse
         />
       </div>
 
-      {/* Paid by plan */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Real payers */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Pagantes por Plano</CardTitle>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-green-600" />
+              <div>
+                <CardTitle className="text-sm">Pagantes Reais ({realPaidCount})</CardTitle>
+                <CardDescription className="text-xs">Verificados via webhook Kiwify</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {Object.keys(data.paidByPlan).length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum pagante ainda</p>
+            {Object.keys(data.realPaidByPlan || {}).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum pagante real ainda</p>
             ) : (
               <div className="space-y-2">
-                {Object.entries(data.paidByPlan).map(([plan, count]) => (
+                {Object.entries(data.realPaidByPlan || {}).map(([plan, count]) => (
                   <div key={plan} className="flex items-center justify-between">
                     <span className="text-sm capitalize">{plan}</span>
-                    <Badge>{count}</Badge>
+                    <Badge className="bg-green-600">{count}</Badge>
                   </div>
                 ))}
               </div>
@@ -423,23 +432,59 @@ function SectionC({ data, totalUsers }: { data: GrowthData['sectionC']; totalUse
           </CardContent>
         </Card>
 
+        {/* Trial/courtesy */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Churn</CardTitle>
+            <div className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-amber-600" />
+              <div>
+                <CardTitle className="text-sm">Trials / Cortesia ({trialCount})</CardTitle>
+                <CardDescription className="text-xs">Upgrades manuais sem pagamento confirmado</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data.churnCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Trials expirados (não converteram)</p>
+            {Object.keys(data.trialByPlan || {}).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum trial ativo</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(data.trialByPlan || {}).map(([plan, count]) => (
+                  <div key={plan} className="flex items-center justify-between">
+                    <span className="text-sm capitalize">{plan}</span>
+                    <Badge variant="outline" className="border-amber-600 text-amber-600">{count}</Badge>
+                  </div>
+                ))}
+                {(data.trialUserProfiles || []).length > 0 && (
+                  <div className="border-t pt-2 mt-2 space-y-1">
+                    {(data.trialUserProfiles || []).map((t, i) => (
+                      <div key={i} className="text-xs text-muted-foreground">
+                        {t.email} — <span className="capitalize">{t.plan}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Paid user profiles */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Churn</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold">{data.churnCount}</div>
+          <p className="text-xs text-muted-foreground mt-1">Trials expirados (não converteram)</p>
+        </CardContent>
+      </Card>
+
+      {/* Real paid user profiles */}
       {data.paidUserProfiles.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Perfil dos Pagantes (Comportamento Antes de Pagar)</CardTitle>
-            <CardDescription>O que cada pagante fez antes de converter</CardDescription>
+            <CardTitle>Perfil dos Pagantes Reais (Comportamento Antes de Pagar)</CardTitle>
+            <CardDescription>Verificados via webhook — o que fizeram antes de converter</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -508,7 +553,7 @@ export function GrowthDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Métricas de Crescimento</h2>
-          <p className="text-sm text-muted-foreground">Dados em tempo real do banco de dados</p>
+          <p className="text-sm text-muted-foreground">Dados em tempo real — pagantes verificados via webhook</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
           {isFetching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}

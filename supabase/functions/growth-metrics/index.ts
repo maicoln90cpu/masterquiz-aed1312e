@@ -37,13 +37,42 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════
+    // REAL PAYERS: Cross-reference webhook_logs
+    // ═══════════════════════════════════════════
+    const { data: webhookLogs } = await supabase
+      .from('webhook_logs')
+      .select('email, evento, status, created_at')
+      .in('evento', ['order_approved', 'order_paid', 'subscription_created', 'order_refunded', 'subscription_canceled'])
+      .order('created_at', { ascending: false })
+
+    // Build map: email → is real payer (last relevant event is activation, not refund)
+    const realPayerEmails = new Set<string>()
+    const refundedEmails = new Set<string>()
+    const processedEmails = new Set<string>()
+    
+    for (const log of webhookLogs || []) {
+      const email = log.email?.toLowerCase()
+      if (!email || processedEmails.has(email)) continue
+      // Skip test emails
+      if (email.includes('example.com') || email.includes('test')) continue
+      processedEmails.add(email)
+      
+      // Most recent event for this email determines status
+      if (['order_refunded', 'subscription_canceled'].includes(log.evento)) {
+        refundedEmails.add(email)
+      } else if (['order_approved', 'order_paid', 'subscription_created'].includes(log.evento) && log.status === 'success') {
+        realPayerEmails.add(email)
+      }
+    }
+
+    // ═══════════════════════════════════════════
     // SECTION A — Activation Funnel
     // ═══════════════════════════════════════════
 
     // Total users by plan
     const { data: usersByPlan } = await supabase
       .from('user_subscriptions')
-      .select('plan_type')
+      .select('plan_type, user_id')
 
     const planCounts: Record<string, number> = {}
     let totalUsers = 0
@@ -59,63 +88,85 @@ Deno.serve(async (req) => {
       .select('id', { count: 'exact', head: true })
       .gte('created_at', sevenDaysAgo)
 
-    // Users who created at least 1 quiz
-    const { data: quizCreators } = await supabase.rpc('get_funnel_metrics') as any
+    // Funnel queries — EXCLUDE express_auto quizzes
+    const { data: creators } = await supabase
+      .from('quizzes')
+      .select('user_id')
+      .neq('creation_source', 'express_auto')
+    const uniqueCreators = new Set((creators || []).map((r: any) => r.user_id))
 
-    // Fallback: run individual queries if RPC doesn't exist
-    let funnelData: any = null
-    if (!quizCreators) {
-      // Created at least 1 quiz
-      const { data: creators } = await supabase
-        .from('quizzes')
-        .select('user_id')
-      const uniqueCreators = new Set((creators || []).map((r: any) => r.user_id))
+    const { data: publishers } = await supabase
+      .from('quizzes')
+      .select('user_id')
+      .eq('is_public', true)
+      .eq('status', 'active')
+      .neq('creation_source', 'express_auto')
+    const uniquePublishers = new Set((publishers || []).map((r: any) => r.user_id))
 
-      // Published at least 1 quiz
-      const { data: publishers } = await supabase
-        .from('quizzes')
-        .select('user_id')
-        .eq('is_public', true)
-        .eq('status', 'active')
-      const uniquePublishers = new Set((publishers || []).map((r: any) => r.user_id))
+    // Users who received at least 1 response (on non-express quizzes)
+    const { data: nonExpressQuizIds } = await supabase
+      .from('quizzes')
+      .select('id, user_id')
+      .neq('creation_source', 'express_auto')
+    
+    const quizOwnerMap = new Map<string, string>()
+    for (const q of nonExpressQuizIds || []) {
+      quizOwnerMap.set(q.id, q.user_id)
+    }
 
-      // Users who received at least 1 response
-      const { data: responders } = await supabase
-        .from('quiz_responses')
-        .select('quiz_id, quizzes!inner(user_id)')
-      const uniqueResponders = new Set()
-      const responseCountByUser: Record<string, number> = {}
-      for (const r of responders || []) {
-        const uid = (r as any).quizzes?.user_id
-        if (uid) {
-          uniqueResponders.add(uid)
-          responseCountByUser[uid] = (responseCountByUser[uid] || 0) + 1
-        }
-      }
-
-      // Users with 20+ responses
-      const users20Plus = Object.entries(responseCountByUser).filter(([, c]) => c >= 20).length
-
-      // Paid users
-      const paidUsers = Object.entries(planCounts)
-        .filter(([plan]) => !['free', 'admin'].includes(plan))
-        .reduce((sum, [, count]) => sum + count, 0)
-
-      funnelData = {
-        createdQuiz: uniqueCreators.size,
-        publishedQuiz: uniquePublishers.size,
-        receivedResponse: uniqueResponders.size,
-        received20Plus: users20Plus,
-        paidUsers,
+    const { data: responders } = await supabase
+      .from('quiz_responses')
+      .select('quiz_id')
+    
+    const uniqueResponders = new Set<string>()
+    const responseCountByUser: Record<string, number> = {}
+    for (const r of responders || []) {
+      const uid = quizOwnerMap.get(r.quiz_id)
+      if (uid) {
+        uniqueResponders.add(uid)
+        responseCountByUser[uid] = (responseCountByUser[uid] || 0) + 1
       }
     }
 
-    // Median time: signup → first publish (in hours)
+    const users20Plus = Object.entries(responseCountByUser).filter(([, c]) => c >= 20).length
+
+    // Get profiles to map user_id → email for real payer check
+    const { data: allProfilesForPayer } = await supabase
+      .from('profiles')
+      .select('id, email')
+    const userEmailMap = new Map<string, string>()
+    for (const p of allProfilesForPayer || []) {
+      if (p.email) userEmailMap.set(p.id, p.email.toLowerCase())
+    }
+
+    // Count real paid users (verified via webhook)
+    const realPaidUserIds: string[] = []
+    const trialUserIds: string[] = []
+    for (const sub of usersByPlan || []) {
+      if (['free', 'admin'].includes(sub.plan_type)) continue
+      const email = userEmailMap.get(sub.user_id)
+      if (email && realPayerEmails.has(email)) {
+        realPaidUserIds.push(sub.user_id)
+      } else {
+        trialUserIds.push(sub.user_id)
+      }
+    }
+
+    const funnelData = {
+      createdQuiz: uniqueCreators.size,
+      publishedQuiz: uniquePublishers.size,
+      receivedResponse: uniqueResponders.size,
+      received20Plus: users20Plus,
+      paidUsers: realPaidUserIds.length,
+    }
+
+    // Median time: signup → first publish (in hours) — exclude express
     const { data: pubTimes } = await supabase
       .from('quizzes')
       .select('user_id, created_at')
       .eq('is_public', true)
       .eq('status', 'active')
+      .neq('creation_source', 'express_auto')
       .order('created_at', { ascending: true })
 
     const { data: profileDates } = await supabase
@@ -143,7 +194,7 @@ Deno.serve(async (req) => {
       ? timesToPublish[Math.floor(timesToPublish.length / 2)]
       : null
 
-    // Zombie users (registered 7+ days ago, never created quiz)
+    // Zombie users (registered 7+ days ago, never created quiz — excluding express)
     const { data: allProfiles } = await supabase
       .from('profiles')
       .select('id, email, full_name, created_at')
@@ -152,6 +203,7 @@ Deno.serve(async (req) => {
     const { data: allQuizUserIds } = await supabase
       .from('quizzes')
       .select('user_id')
+      .neq('creation_source', 'express_auto')
     const quizUserSet = new Set((allQuizUserIds || []).map((r: any) => r.user_id))
     const zombies = (allProfiles || [])
       .filter((p: any) => !quizUserSet.has(p.id))
@@ -166,12 +218,9 @@ Deno.serve(async (req) => {
     // SECTION B — Platform Behavior
     // ═══════════════════════════════════════════
 
-    // Quizzes per user (average)
-    const { data: quizCounts } = await supabase
-      .from('quizzes')
-      .select('user_id')
+    // Quizzes per user (exclude express)
     const quizCountByUser: Record<string, number> = {}
-    for (const q of quizCounts || []) {
+    for (const q of creators || []) {
       quizCountByUser[q.user_id] = (quizCountByUser[q.user_id] || 0) + 1
     }
     const quizCountValues = Object.values(quizCountByUser)
@@ -254,51 +303,55 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════
-    // SECTION C — Revenue & Conversion
+    // SECTION C — Revenue & Conversion (REAL PAYERS ONLY)
     // ═══════════════════════════════════════════
 
-    // MRR
+    // MRR — only real payers
     const { data: plans } = await supabase
       .from('subscription_plans')
       .select('plan_type, price_monthly')
     const priceMap = new Map((plans || []).map((p: any) => [p.plan_type, p.price_monthly || 0]))
+    
+    // Get the actual plan for each real payer
+    // We need to find what plan they actually paid for via webhook
+    // For now, use their current subscription plan but only if verified
     let mrr = 0
-    const paidUsersList: string[] = []
+    const realPaidPlans: Record<string, number> = {}
     for (const sub of usersByPlan || []) {
-      if (!['free', 'admin'].includes(sub.plan_type)) {
-        mrr += priceMap.get(sub.plan_type) || 0
+      if (realPaidUserIds.includes(sub.user_id) && !['free', 'admin'].includes(sub.plan_type)) {
+        // Real payer — use the base paid plan price (not partner/courtesy)
+        // Check if they have a 'paid' plan in webhook context
+        const price = priceMap.get(sub.plan_type) || 0
+        mrr += price
+        realPaidPlans[sub.plan_type] = (realPaidPlans[sub.plan_type] || 0) + 1
       }
     }
 
-    // Paid user count by plan
-    const paidByPlan: Record<string, number> = {}
-    for (const [plan, count] of Object.entries(planCounts)) {
-      if (!['free', 'admin'].includes(plan)) {
-        paidByPlan[plan] = count
+    // Trial/courtesy users breakdown
+    const trialPlans: Record<string, number> = {}
+    for (const sub of usersByPlan || []) {
+      if (trialUserIds.includes(sub.user_id) && !['free', 'admin'].includes(sub.plan_type)) {
+        trialPlans[sub.plan_type] = (trialPlans[sub.plan_type] || 0) + 1
       }
     }
 
     const conversionRate = totalUsers > 0
-      ? (Object.values(paidByPlan).reduce((a, b) => a + b, 0) / totalUsers * 100)
+      ? (realPaidUserIds.length / totalUsers * 100)
       : 0
 
-    // Paid user profiles (behavior before paying)
-    const paidUserIds = (usersByPlan || [])
-      .filter((s: any) => !['free', 'admin'].includes(s.plan_type))
-      .map((s: any) => s.user_id)
-
+    // Paid user profiles (only real payers)
     let paidUserProfiles: any[] = []
-    if (paidUserIds.length > 0) {
-      const { data: paidStats } = await supabase.rpc('get_user_quiz_stats', { user_ids: paidUserIds })
+    if (realPaidUserIds.length > 0) {
+      const { data: paidStats } = await supabase.rpc('get_user_quiz_stats', { user_ids: realPaidUserIds })
       const { data: paidProfiles } = await supabase
         .from('profiles')
         .select('id, email, full_name, created_at')
-        .in('id', paidUserIds)
+        .in('id', realPaidUserIds)
 
       const { data: paidSubs } = await supabase
         .from('user_subscriptions')
         .select('user_id, plan_type, created_at')
-        .in('user_id', paidUserIds)
+        .in('user_id', realPaidUserIds)
 
       paidUserProfiles = (paidProfiles || []).map((p: any) => {
         const stats = (paidStats || []).find((s: any) => s.user_id === p.id)
@@ -314,6 +367,31 @@ Deno.serve(async (req) => {
           leads: stats?.lead_count || 0,
           usedAI: aiUserSet.has(p.id),
           daysToConvert,
+          source: 'webhook_verified',
+        }
+      })
+    }
+
+    // Trial user profiles  
+    let trialUserProfiles: any[] = []
+    if (trialUserIds.length > 0) {
+      const { data: trialProfiles } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, created_at')
+        .in('id', trialUserIds)
+
+      const { data: trialSubs } = await supabase
+        .from('user_subscriptions')
+        .select('user_id, plan_type')
+        .in('user_id', trialUserIds)
+
+      trialUserProfiles = (trialProfiles || []).map((p: any) => {
+        const sub = (trialSubs || []).find((s: any) => s.user_id === p.id)
+        return {
+          email: p.email,
+          name: p.full_name,
+          plan: sub?.plan_type,
+          source: 'manual_upgrade',
         }
       })
     }
@@ -324,7 +402,7 @@ Deno.serve(async (req) => {
       .select('status')
     const churnCount = (churnData || []).filter((t: any) => t.status === 'expired').length
 
-    // Median time free → paid (days)
+    // Median time free → paid (days) — real payers only
     const daysToConvert = paidUserProfiles
       .map((p: any) => p.daysToConvert)
       .filter((d: any) => d !== null && d >= 0)
@@ -338,9 +416,9 @@ Deno.serve(async (req) => {
         totalUsers,
         planCounts,
         newUsers7d: newUsers7d || 0,
-        funnel: funnelData || quizCreators,
+        funnel: funnelData,
         medianTimeToPublishHours: medianTimeToPublish ? Math.round(medianTimeToPublish * 10) / 10 : null,
-        zombies: zombies.slice(0, 50), // limit to 50 for payload size
+        zombies: zombies.slice(0, 50),
         zombieCount: zombies.length,
       },
       sectionB: {
@@ -371,11 +449,16 @@ Deno.serve(async (req) => {
       },
       sectionC: {
         mrr,
-        paidByPlan,
+        realPaidByPlan: realPaidPlans,
+        trialByPlan: trialPlans,
+        paidByPlan: realPaidPlans, // backwards compat — now only real payers
         conversionRate: Math.round(conversionRate * 100) / 100,
         paidUserProfiles,
+        trialUserProfiles,
         churnCount,
         medianDaysToConvert,
+        realPaidCount: realPaidUserIds.length,
+        trialCount: trialUserIds.length,
       },
     }
 
