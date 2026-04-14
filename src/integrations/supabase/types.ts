@@ -1152,6 +1152,9 @@ export type Database = {
           updated_at: string
           user_objectives: string[] | null
           user_stage: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -1171,6 +1174,9 @@ export type Database = {
           updated_at?: string
           user_objectives?: string[] | null
           user_stage?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -1190,6 +1196,9 @@ export type Database = {
           updated_at?: string
           user_objectives?: string[] | null
           user_stage?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
           whatsapp?: string | null
         }
         Relationships: []

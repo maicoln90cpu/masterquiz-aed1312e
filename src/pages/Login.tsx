@@ -42,6 +42,16 @@ const Login = () => {
     whatsapp: ''
   });
 
+  // Capture UTM params from URL
+  const utmParams = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      utm_source: params.get('utm_source') || undefined,
+      utm_medium: params.get('utm_medium') || undefined,
+      utm_campaign: params.get('utm_campaign') || undefined,
+    };
+  }, []);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -164,7 +174,10 @@ const Login = () => {
         emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           full_name: name,
-          whatsapp: whatsapp
+          whatsapp: whatsapp,
+          utm_source: utmParams.utm_source,
+          utm_medium: utmParams.utm_medium,
+          utm_campaign: utmParams.utm_campaign,
         }
       }
     });
