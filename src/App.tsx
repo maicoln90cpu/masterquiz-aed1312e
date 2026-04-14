@@ -399,6 +399,11 @@ const App = () => (
                       <LazyRoute Component={AdminTemplateEditor} />
                     </ProtectedRoute>
                   } />
+                  <Route path="/masteradm/support" element={
+                    <ProtectedRoute requiredRole="master_admin">
+                      <LazyRoute Component={SupportDashboard} />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/checkout" element={
                     <RequireAuth>
                       <ProtectedRoute requiredRole="admin">
