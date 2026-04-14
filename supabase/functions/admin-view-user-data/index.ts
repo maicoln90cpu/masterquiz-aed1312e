@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { quiz_updates, questions_updates, results_updates } = body;
+      const { quiz_updates, questions_updates, results_updates, questions_to_add, questions_to_delete } = body;
       const changes: string[] = [];
 
       // Update quiz metadata if provided
@@ -359,6 +359,39 @@ Deno.serve(async (req) => {
         changes.push(`questions: ${questions_updates.length} updated`);
       }
 
+      // Add new questions
+      if (questions_to_add && Array.isArray(questions_to_add) && questions_to_add.length > 0) {
+        for (const q of questions_to_add) {
+          const { error: addErr } = await supabaseAdmin.from("quiz_questions").insert({
+            quiz_id: quiz_id,
+            question_text: q.question_text || 'Nova pergunta',
+            answer_format: q.answer_format || 'single_choice',
+            order_number: q.order_number ?? 0,
+            blocks: q.blocks || [],
+            options: q.options || [],
+            custom_label: q.custom_label || null,
+          });
+          if (addErr) throw addErr;
+        }
+        changes.push(`questions_added: ${questions_to_add.length}`);
+      }
+
+      // Delete questions
+      if (questions_to_delete && Array.isArray(questions_to_delete) && questions_to_delete.length > 0) {
+        for (const qId of questions_to_delete) {
+          const { error: delErr } = await supabaseAdmin.from("quiz_questions").delete().eq("id", qId).eq("quiz_id", quiz_id);
+          if (delErr) throw delErr;
+        }
+        changes.push(`questions_deleted: ${questions_to_delete.length}`);
+      }
+
+      // Update question_count after add/delete
+      if ((questions_to_add && questions_to_add.length > 0) || (questions_to_delete && questions_to_delete.length > 0)) {
+        const { count: newCount } = await supabaseAdmin
+          .from("quiz_questions").select("*", { count: "exact", head: true }).eq("quiz_id", quiz_id);
+        await supabaseAdmin.from("quizzes").update({ question_count: newCount || 0, updated_at: new Date().toISOString() }).eq("id", quiz_id);
+      }
+
       // Update results if provided
       if (results_updates && Array.isArray(results_updates)) {
         for (const r of results_updates) {
@@ -378,6 +411,16 @@ Deno.serve(async (req) => {
         resource_type: "support_edit_quiz",
         resource_id: quiz_id,
         metadata: { target_user_id, changes },
+      });
+
+      // Send notification to user
+      const changeSummary = changes.join(', ');
+      await supabaseAdmin.from("admin_notifications").insert({
+        user_id: target_user_id,
+        type: 'quiz_edited_by_admin',
+        title: 'Quiz atualizado pelo suporte',
+        message: `Alterações realizadas: ${changeSummary}`,
+        metadata: { quiz_id, changes, admin_id: callerId },
       });
 
       result = { success: true, changes };

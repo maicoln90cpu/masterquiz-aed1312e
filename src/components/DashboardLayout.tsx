@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { InAppNotifications } from "./InAppNotifications";
+import { NotificationBell } from "./notifications/NotificationBell";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface DashboardLayoutProps {
@@ -24,6 +25,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             
             <div className="flex items-center gap-2">
               <ThemeToggle />
+              <NotificationBell />
               <InAppNotifications />
               <LanguageSwitch />
             </div>
