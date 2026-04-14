@@ -996,20 +996,45 @@ export default function AdminDashboard() {
                         <span className="font-medium">{user.stats?.lead_count || 0}</span>
                       </TableCell>
                       <TableCell>
-                        <Select 
-                          value={user.subscription?.plan_type || 'free'}
-                          onValueChange={(value) => updatePlan(user.id, value as 'free' | 'paid' | 'partner' | 'premium')}
-                        >
-                          <SelectTrigger className="w-[110px] h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="free">{t('admin.free')}</SelectItem>
-                            <SelectItem value="paid">{t('admin.pro')}</SelectItem>
-                            <SelectItem value="partner">{t('admin.partner')}</SelectItem>
-                            <SelectItem value="premium">{t('admin.premium')}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-1">
+                          <Select 
+                            value={user.subscription?.plan_type || 'free'}
+                            onValueChange={(value) => updatePlan(user.id, value as 'free' | 'paid' | 'partner' | 'premium')}
+                          >
+                            <SelectTrigger className="w-[110px] h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">{t('admin.free')}</SelectItem>
+                              <SelectItem value="paid">{t('admin.pro')}</SelectItem>
+                              <SelectItem value="partner">{t('admin.partner')}</SelectItem>
+                              <SelectItem value="premium">{t('admin.premium')}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Plano temporário (trial)"
+                            onClick={() => {
+                              setTrialUser({
+                                id: user.id,
+                                email: user.email || '',
+                                currentPlan: user.subscription?.plan_type || 'free',
+                                originalPlan: user.subscription?.original_plan_type,
+                                trialEndDate: user.subscription?.trial_end_date,
+                              });
+                              setTrialModalOpen(true);
+                            }}
+                          >
+                            <Timer className="h-4 w-4" />
+                          </Button>
+                          {user.subscription?.original_plan_type && (
+                            <Badge variant="secondary" className="text-[10px] px-1">
+                              ⏱️ {Math.max(0, Math.ceil((new Date(user.subscription.trial_end_date).getTime() - Date.now()) / (1000*60*60*24)))}d
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
