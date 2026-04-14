@@ -531,6 +531,149 @@ function SectionC({ data, totalUsers }: { data: GrowthData['sectionC']; totalUse
 }
 
 // ═══════════════════════════════════════════
+// Section D — Advanced Metrics
+// ═══════════════════════════════════════════
+function SectionD({ data }: { data: NonNullable<GrowthData['sectionD']> }) {
+  const ef = data.expressFunnel;
+  const expressConversion = ef.created > 0 ? ((ef.published / ef.created) * 100).toFixed(1) : '0';
+  const secondQuizPct = ef.published > 0 ? ((ef.createdSecondQuiz / ef.published) * 100).toFixed(1) : '0';
+  const paywallConversion = data.paywallFunnel.views > 0
+    ? ((data.paywallFunnel.clicks / data.paywallFunnel.views) * 100).toFixed(1)
+    : '—';
+  const avgMin = data.editorSession.avgSeconds
+    ? `${Math.floor(data.editorSession.avgSeconds / 60)}m ${data.editorSession.avgSeconds % 60}s`
+    : 'Acumulando dados…';
+
+  return (
+    <div className="space-y-6">
+      {/* Express Funnel */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Rocket className="h-5 w-5 text-amber-600" />
+            <div>
+              <CardTitle>Funil Express</CardTitle>
+              <CardDescription>Onboarding automático — quiz criado na hora</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{ef.created}</div>
+              <div className="text-xs text-muted-foreground">Criados</div>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{ef.published}</div>
+              <div className="text-xs text-muted-foreground">Publicados ({expressConversion}%)</div>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{ef.createdSecondQuiz}</div>
+              <div className="text-xs text-muted-foreground">Criaram 2º Quiz ({secondQuizPct}%)</div>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <div className="text-lg font-bold">
+                {ef.timings.immediate}/{ef.timings.sameDay}/{ef.timings.later}
+              </div>
+              <div className="text-xs text-muted-foreground">&lt;1h / mesmo dia / depois</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* WhatsApp Recovery by ICP */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-sm">WhatsApp Reativados por ICP</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">ICP (objetivo definido)</span>
+              <Badge className="bg-green-600">{data.whatsappRecoveryByIcp.icpOn}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Sem objetivo</span>
+              <Badge variant="secondary">{data.whatsappRecoveryByIcp.icpOff}</Badge>
+            </div>
+            <div className="border-t pt-2 text-xs text-muted-foreground">
+              Total reativados: {data.whatsappRecoveryByIcp.total}
+              {data.whatsappRecoveryByIcp.total > 0 && (
+                <> · {((data.whatsappRecoveryByIcp.icpOn / data.whatsappRecoveryByIcp.total) * 100).toFixed(0)}% são ICP</>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2nd Quiz vs 1st Lead */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-sm">2º Quiz vs 1º Lead</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Antes do 1º lead</span>
+              <Badge variant="secondary">{data.secondQuizVsLead.beforeLead}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Depois do 1º lead</span>
+              <Badge className="bg-blue-600">{data.secondQuizVsLead.afterLead}</Badge>
+            </div>
+            <div className="border-t pt-2 text-xs text-muted-foreground">
+              {data.secondQuizVsLead.afterLead > data.secondQuizVsLead.beforeLead
+                ? 'Maioria cria 2º quiz motivada por resultados reais'
+                : 'Maioria cria 2º quiz antes de receber leads'}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Paywall & Editor */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-rose-600" />
+              <CardTitle className="text-sm">Paywall & Editor</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Viram paywall</span>
+              <Badge variant="secondary">{data.paywallFunnel.views}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Clicaram upgrade</span>
+              <Badge className="bg-rose-600 text-white">{data.paywallFunnel.clicks}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Conversão paywall</span>
+              <span className="text-sm font-bold">{paywallConversion}%</span>
+            </div>
+            <div className="border-t pt-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Timer className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-sm">Tempo médio no editor</span>
+                </div>
+                <span className="text-sm font-medium">{avgMin}</span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Amostra: {data.editorSession.sampleSize} sessões
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
 // Main Component
 // ═══════════════════════════════════════════
 export function GrowthDashboard() {
