@@ -14,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Loader2, ArrowLeft, CheckCircle, AlertTriangle, XCircle, ExternalLink,
   RefreshCw, FileText, BarChart3, Shield, Wrench, RotateCcw,
-  MessageSquare, Send, Search, Pencil, ClipboardList, Clock, Download
+  MessageSquare, Send, Search, Pencil, ClipboardList, Clock, Download, History
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -78,6 +78,19 @@ interface TicketMessage {
   created_at: string;
 }
 
+interface SessionHistoryItem {
+  id: string;
+  admin_id: string;
+  target_user_id: string;
+  target_email: string;
+  target_name: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  actions_count: number;
+  actions_summary: string[];
+}
+
 const SupportDashboard = () => {
   const navigate = useNavigate();
   const { isSupportMode, target, exitSupportMode, trackAction, sessionActions, startTime } = useSupportMode();
@@ -99,9 +112,15 @@ const SupportDashboard = () => {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Session report
   const [reportOpen, setReportOpen] = useState(false);
+
+  // History
+  const [sessionHistory, setSessionHistory] = useState<SessionHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
 
   // Action loading states
   const [fixingQuizId, setFixingQuizId] = useState<string | null>(null);
@@ -118,9 +137,9 @@ const SupportDashboard = () => {
     loadOverview();
   }, [isSupportMode, target]);
 
-  // Realtime subscription for ticket messages
+  // ── GLOBAL Realtime subscription (active during entire session) ──
   useEffect(() => {
-    if (!target || activeTab !== 'chat') return;
+    if (!target) return;
 
     realtimeChannel.current = supabase
       .channel(`support-tickets-${target.userId}`)
@@ -130,9 +149,12 @@ const SupportDashboard = () => {
         table: 'ticket_messages',
       }, (payload) => {
         const newMsg = payload.new as TicketMessage;
-        // Only add if it belongs to one of the user's tickets
         if (tickets.some(t => t.id === newMsg.ticket_id)) {
           setMessages(prev => [...prev, newMsg]);
+          // If not on chat tab or different ticket selected, increment unread
+          if (activeTab !== 'chat' || selectedTicketId !== newMsg.ticket_id) {
+            setUnreadCount(prev => prev + 1);
+          }
         }
       })
       .on('postgres_changes', {
@@ -151,7 +173,14 @@ const SupportDashboard = () => {
         supabase.removeChannel(realtimeChannel.current);
       }
     };
-  }, [target, activeTab, tickets.length]);
+  }, [target, tickets.length]);
+
+  // Clear unread when entering chat tab
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      setUnreadCount(0);
+    }
+  }, [activeTab]);
 
   const callEdgeFunction = useCallback(async (body: any) => {
     const { data, error } = await supabase.functions.invoke('admin-view-user-data', { body });
@@ -245,9 +274,6 @@ const SupportDashboard = () => {
       target_user_id: target!.userId,
       action_type: 'edit_quiz',
     });
-    // Open quiz editor in new tab — the editor loads by quiz_id which the admin can access via service_role
-    // For now we open the detail modal which shows all data read-only
-    // Full editor access would require useEffectiveUser integration (future)
     loadQuizDetail(quizId, quizTitle);
   };
 
@@ -289,6 +315,20 @@ const SupportDashboard = () => {
     }
   };
 
+  const loadSessionHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const data = await callEdgeFunction({ target_user_id: target!.userId, data_type: 'session_history' });
+      setSessionHistory(data?.sessions || []);
+      trackAction('Visualizou histórico de sessões');
+    } catch (err: any) {
+      console.error('Error loading session history:', err);
+      toast.error('Erro ao carregar histórico');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   const handleBack = () => {
     if (sessionActions.length > 1) {
       setReportOpen(true);
@@ -317,6 +357,13 @@ const SupportDashboard = () => {
   const getSessionDuration = () => {
     if (!startTime) return '00:00';
     const seconds = Math.round((Date.now() - startTime.getTime()) / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return '-';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -452,6 +499,7 @@ const SupportDashboard = () => {
           setActiveTab(v);
           if (v === 'diagnostics' && diagnostics.length === 0) loadDiagnostics();
           if (v === 'chat' && tickets.length === 0) loadTickets();
+          if (v === 'history' && sessionHistory.length === 0) loadSessionHistory();
         }}>
           <TabsList>
             <TabsTrigger value="overview" className="gap-1">
@@ -462,13 +510,22 @@ const SupportDashboard = () => {
               <BarChart3 className="h-4 w-4" />
               Diagnóstico
             </TabsTrigger>
-            <TabsTrigger value="chat" className="gap-1">
+            <TabsTrigger value="chat" className="gap-1 relative">
               <MessageSquare className="h-4 w-4" />
               Chat
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="session" className="gap-1">
               <ClipboardList className="h-4 w-4" />
               Sessão
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-1">
+              <History className="h-4 w-4" />
+              Histórico
             </TabsTrigger>
           </TabsList>
 
@@ -777,6 +834,83 @@ const SupportDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* ── HISTORY TAB ── */}
+          <TabsContent value="history" className="mt-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Histórico de Sessões de Suporte</CardTitle>
+                  <CardDescription>Sessões anteriores registradas no audit_logs</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={loadSessionHistory} disabled={historyLoading}>
+                  {historyLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                  Atualizar
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {historyLoading && sessionHistory.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">Carregando histórico...</span>
+                  </div>
+                ) : sessionHistory.length === 0 ? (
+                  <p className="text-muted-foreground">Nenhuma sessão anterior encontrada.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {sessionHistory.map((session) => (
+                      <Card key={session.id} className="border">
+                        <CardContent className="py-3 px-4">
+                          <div
+                            className="flex items-center justify-between cursor-pointer"
+                            onClick={() => setExpandedSessionId(expandedSessionId === session.id ? null : session.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">
+                                  {session.target_name || session.target_email}
+                                </span>
+                                <span className="text-xs text-muted-foreground">{session.target_email}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm">
+                              <div className="text-right">
+                                <div className="text-xs text-muted-foreground">
+                                  {new Date(session.started_at).toLocaleDateString('pt-BR')} {new Date(session.started_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                <div className="flex items-center gap-2 justify-end text-xs">
+                                  <Badge variant="outline" className="text-xs">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {formatDuration(session.duration_seconds)}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {session.actions_count} ações
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {expandedSessionId === session.id && session.actions_summary.length > 0 && (
+                            <div className="mt-3 pt-3 border-t">
+                              <h4 className="text-xs font-medium text-muted-foreground mb-2">Ações realizadas:</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {session.actions_summary.map((action, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">
+                                    {action}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         {/* User Details */}
@@ -844,7 +978,6 @@ const SupportDashboard = () => {
                           ))}
                         </div>
                       )}
-                      {/* Show options if present */}
                       {Array.isArray(q.options) && q.options.length > 0 && (
                         <div className="mt-2">
                           <span className="text-xs text-muted-foreground">Opções:</span>
