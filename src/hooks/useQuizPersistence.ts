@@ -355,6 +355,14 @@ export function useQuizPersistence({
         
         logQuizAction("quiz:updated", quiz.id, { title: quiz.title });
 
+        // 🎯 GTM: quiz_published — disparado ao publicar um quiz existente
+        pushGTMEvent('quiz_published', {
+          quiz_id: quiz.id,
+          quiz_title: quiz.title,
+          user_id: user.id,
+          editor_mode: editorMode,
+        });
+
         // PQL v2: Promoção de estágio + eventos condicionais
         try {
           const { data: profile } = await supabase
@@ -484,6 +492,16 @@ export function useQuizPersistence({
         quiz = data;
         
         logQuizAction("quiz:created", quiz.id, { title: quiz.title, template });
+
+        // 🎯 GTM: quiz_created — disparado toda vez que um quiz é criado
+        pushGTMEvent('quiz_created', {
+          quiz_id: quiz.id,
+          quiz_title: quiz.title,
+          user_id: user.id,
+          used_template: !!template && template !== 'modern',
+          editor_mode: editorMode,
+          creation_source: isExpressMode ? 'express' : 'manual',
+        });
         
         localStorage.setItem(getStorageKey(user.id, 'current_quiz_id'), quiz.id);
 

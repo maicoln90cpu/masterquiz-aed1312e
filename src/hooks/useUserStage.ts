@@ -504,6 +504,12 @@ export function useTrackPageView(page: 'crm' | 'analytics') {
       if (!error) {
         console.log(`🎯 [PQL] Tracked ${page} view, user upgraded to operador`);
       }
+
+      // 🎯 GTM: crm_viewed — disparado ao acessar CRM
+      if (page === 'crm') {
+        const { pushGTMEvent } = await import("@/lib/gtmLogger");
+        pushGTMEvent('crm_viewed', { user_id: user.id });
+      }
     };
 
     trackView();

@@ -36,10 +36,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate quiz exists
+    // Validate quiz exists and get owner
     const { data: quiz } = await supabase
       .from('quizzes')
-      .select('id')
+      .select('id, user_id')
       .eq('id', quiz_id)
       .maybeSingle();
 
@@ -64,6 +64,8 @@ Deno.serve(async (req) => {
       ...(answers && typeof answers === 'object' ? answers : {}),
     };
 
+    let responseId: string;
+
     if (existing) {
       // UPDATE existing row
       const updatePayload: Record<string, unknown> = {
@@ -86,10 +88,7 @@ Deno.serve(async (req) => {
         throw error;
       }
 
-      return new Response(
-        JSON.stringify({ success: true, action: 'updated', id: existing.id }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      responseId = existing.id;
     } else {
       // INSERT new row
       const insertPayload: Record<string, unknown> = {
@@ -114,11 +113,59 @@ Deno.serve(async (req) => {
         throw error;
       }
 
-      return new Response(
-        JSON.stringify({ success: true, action: 'inserted', id: inserted.id }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      responseId = inserted.id;
     }
+
+    // ═══════════════════════════════════════════
+    // 🎯 Milestone events (fire-and-forget)
+    // ═══════════════════════════════════════════
+    try {
+      if (quiz.user_id) {
+        // Count total responses for this quiz owner
+        const { data: ownerQuizzes } = await supabase
+          .from('quizzes')
+          .select('id')
+          .eq('user_id', quiz.user_id);
+
+        if (ownerQuizzes && ownerQuizzes.length > 0) {
+          const quizIds = ownerQuizzes.map((q: { id: string }) => q.id);
+          const { count: totalResponses } = await supabase
+            .from('quiz_responses')
+            .select('id', { count: 'exact', head: true })
+            .in('quiz_id', quizIds);
+
+          const total = totalResponses || 0;
+
+          // first_response_received — exactly 1 response total
+          if (total === 1) {
+            await supabase.from('gtm_event_logs').insert({
+              event_name: 'first_response_received',
+              user_id: quiz.user_id,
+              metadata: { quiz_id, response_id: responseId },
+            });
+            console.log(`🎯 [Milestone] first_response_received for user ${quiz.user_id}`);
+          }
+
+          // aha_threshold_reached — exactly 20 responses total
+          if (total === 20) {
+            await supabase.from('gtm_event_logs').insert({
+              event_name: 'aha_threshold_reached',
+              user_id: quiz.user_id,
+              metadata: { quiz_id, total_responses: total },
+            });
+            console.log(`🎯 [Milestone] aha_threshold_reached for user ${quiz.user_id}`);
+          }
+        }
+      }
+    } catch (milestoneErr) {
+      // Non-blocking — don't fail the response save
+      console.warn('[save-quiz-response] Milestone check failed:', milestoneErr);
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, action: existing ? 'updated' : 'inserted', id: responseId }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('[save-quiz-response] Error:', error);
     return new Response(

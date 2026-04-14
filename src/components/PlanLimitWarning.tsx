@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useEffect, useRef } from "react";
 
 interface PlanLimitWarningProps {
   current: number;
@@ -17,6 +19,23 @@ export const PlanLimitWarning = ({ current, limit, type }: PlanLimitWarningProps
   const { t } = useTranslation();
   const { isMasterAdmin, loading: roleLoading } = useUserRole();
   const { subscription, isLoading: subLoading } = useSubscriptionLimits();
+
+  const isAtLimit = current >= limit;
+  const percentage = (current / limit) * 100;
+
+  // 🎯 GTM: plan_limit_hit — disparado 1x quando atinge o limite
+  const limitFired = useRef(false);
+  useEffect(() => {
+    if (isAtLimit && !limitFired.current && !roleLoading && !subLoading && !isMasterAdmin && subscription?.plan_type !== 'admin') {
+      limitFired.current = true;
+      pushGTMEvent('plan_limit_hit', {
+        limit_type: type,
+        current,
+        limit,
+        plan_type: subscription?.plan_type || 'free',
+      });
+    }
+  }, [isAtLimit, roleLoading, subLoading]);
   
   // ✅ Aguardar carregamento para evitar flash de aviso
   if (roleLoading || subLoading) return null;
@@ -24,12 +43,9 @@ export const PlanLimitWarning = ({ current, limit, type }: PlanLimitWarningProps
   // ✅ Master admin ou plano admin nunca vê avisos de limite
   if (isMasterAdmin || subscription?.plan_type === 'admin') return null;
   
-  const percentage = (current / limit) * 100;
-  
   // Mostrar aviso apenas quando atingir 80% do limite
   if (percentage < 80) return null;
 
-  const isAtLimit = current >= limit;
   const typeText = type === 'quiz' ? t('planLimit.quizzes') : t('planLimit.responsesWord');
   
   return (
@@ -48,7 +64,14 @@ export const PlanLimitWarning = ({ current, limit, type }: PlanLimitWarningProps
         <Button 
           variant={isAtLimit ? "default" : "outline"}
           size="sm"
-          onClick={() => navigate('/settings')}
+          onClick={() => {
+            pushGTMEvent('upgrade_clicked', {
+              source: 'plan_limit_warning',
+              limit_type: type,
+              plan_type: subscription?.plan_type || 'free',
+            });
+            navigate('/settings');
+          }}
           className="ml-4 whitespace-nowrap"
         >
           {t('settings.viewAllPlans')}
