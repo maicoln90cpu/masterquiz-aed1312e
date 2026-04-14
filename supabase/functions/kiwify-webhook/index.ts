@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Failed to update subscription' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'success', error_message: null, provider: 'kiwify' });
+    await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'success', error_message: null, provider: 'kiwify', paid_plan_type: isActivationEvent(evento) ? newPlanType : null });
 
     // Mark A/B test conversion if applicable
     if (isActivationEvent(evento)) {

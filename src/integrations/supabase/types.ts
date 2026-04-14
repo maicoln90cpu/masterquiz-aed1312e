@@ -2941,6 +2941,7 @@ export type Database = {
           error_message: string | null
           evento: string | null
           id: string
+          paid_plan_type: string | null
           produto: string | null
           provider: string | null
           quiz_id: string | null
@@ -2958,6 +2959,7 @@ export type Database = {
           error_message?: string | null
           evento?: string | null
           id?: string
+          paid_plan_type?: string | null
           produto?: string | null
           provider?: string | null
           quiz_id?: string | null
@@ -2975,6 +2977,7 @@ export type Database = {
           error_message?: string | null
           evento?: string | null
           id?: string
+          paid_plan_type?: string | null
           produto?: string | null
           provider?: string | null
           quiz_id?: string | null

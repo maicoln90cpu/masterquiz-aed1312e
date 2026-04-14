@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════
     const { data: webhookLogs } = await supabase
       .from('webhook_logs')
-      .select('email, evento, status, created_at')
+      .select('email, evento, status, created_at, paid_plan_type')
       .in('evento', ['order_approved', 'order_paid', 'subscription_created', 'order_refunded', 'subscription_canceled'])
       .order('created_at', { ascending: false })
 
@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
     const realPayerEmails = new Set<string>()
     const refundedEmails = new Set<string>()
     const processedEmails = new Set<string>()
+    // Map email → plan they actually paid for (from webhook)
+    const paidPlanByEmail = new Map<string, string>()
     
     for (const log of webhookLogs || []) {
       const email = log.email?.toLowerCase()
@@ -62,6 +64,10 @@ Deno.serve(async (req) => {
         refundedEmails.add(email)
       } else if (['order_approved', 'order_paid', 'subscription_created'].includes(log.evento) && log.status === 'success') {
         realPayerEmails.add(email)
+        // Use paid_plan_type from webhook if available, otherwise fallback
+        if (log.paid_plan_type) {
+          paidPlanByEmail.set(email, log.paid_plan_type)
+        }
       }
     }
 
@@ -319,11 +325,13 @@ Deno.serve(async (req) => {
     const realPaidPlans: Record<string, number> = {}
     for (const sub of usersByPlan || []) {
       if (realPaidUserIds.includes(sub.user_id) && !['free', 'admin'].includes(sub.plan_type)) {
-        // Real payer — use the base paid plan price (not partner/courtesy)
-        // Check if they have a 'paid' plan in webhook context
-        const price = priceMap.get(sub.plan_type) || 0
+        // Use paid_plan_type from webhook if available (immutable), else fallback to current plan
+        const email = userEmailMap.get(sub.user_id)
+        const webhookPlan = email ? paidPlanByEmail.get(email) : null
+        const effectivePlan = webhookPlan || sub.plan_type
+        const price = priceMap.get(effectivePlan) || 0
         mrr += price
-        realPaidPlans[sub.plan_type] = (realPaidPlans[sub.plan_type] || 0) + 1
+        realPaidPlans[effectivePlan] = (realPaidPlans[effectivePlan] || 0) + 1
       }
     }
 

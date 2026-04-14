@@ -1,0 +1,1 @@
+ALTER TABLE public.webhook_logs ADD COLUMN IF NOT EXISTS paid_plan_type text;
