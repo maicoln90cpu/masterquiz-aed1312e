@@ -540,7 +540,11 @@ export default function PlanManagement() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Gerenciar Planos</CardTitle>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={handleSyncLimits} disabled={isSyncing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Sincronizando...' : 'Sincronizar Limites'}
+          </Button>
           <Button variant="outline" onClick={handleInvalidateCache}>
             Atualizar Landing Page
           </Button>
