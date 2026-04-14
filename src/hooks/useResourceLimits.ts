@@ -76,16 +76,16 @@ export const useResourceLimits = () => {
       // Buscar subscription do usuário
       const { data: subscription } = await supabase
         .from('user_subscriptions')
-        .select('plan_type, quiz_limit, response_limit')
+        .select('plan_type')
         .eq('user_id', user.id)
         .single();
 
       if (!subscription) return null;
 
-    // Buscar lead_limit e questions_per_quiz_limit do plano
+    // Buscar TODOS os limites da fonte verdade (subscription_plans)
     const { data: plan } = await supabase
       .from('subscription_plans')
-      .select('lead_limit, questions_per_quiz_limit')
+      .select('quiz_limit, response_limit, lead_limit, questions_per_quiz_limit')
       .eq('plan_type', subscription.plan_type)
       .eq('is_active', true)
       .single();
@@ -114,8 +114,8 @@ export const useResourceLimits = () => {
         responseCount = count || 0;
       }
 
-      const quizLimit = subscription.quiz_limit;
-      const responseLimit = subscription.response_limit;
+      const quizLimit = plan?.quiz_limit || 3;
+      const responseLimit = plan?.response_limit || 100;
       const leadLimit = plan?.lead_limit || 1000;
 
       const calculateMetrics = (current: number, limit: number): Omit<ResourceLimit, 'current' | 'limit'> => {
