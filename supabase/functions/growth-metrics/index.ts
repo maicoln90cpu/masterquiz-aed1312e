@@ -325,11 +325,13 @@ Deno.serve(async (req) => {
     const realPaidPlans: Record<string, number> = {}
     for (const sub of usersByPlan || []) {
       if (realPaidUserIds.includes(sub.user_id) && !['free', 'admin'].includes(sub.plan_type)) {
-        // Real payer — use the base paid plan price (not partner/courtesy)
-        // Check if they have a 'paid' plan in webhook context
-        const price = priceMap.get(sub.plan_type) || 0
+        // Use paid_plan_type from webhook if available (immutable), else fallback to current plan
+        const email = userEmailMap.get(sub.user_id)
+        const webhookPlan = email ? paidPlanByEmail.get(email) : null
+        const effectivePlan = webhookPlan || sub.plan_type
+        const price = priceMap.get(effectivePlan) || 0
         mrr += price
-        realPaidPlans[sub.plan_type] = (realPaidPlans[sub.plan_type] || 0) + 1
+        realPaidPlans[effectivePlan] = (realPaidPlans[effectivePlan] || 0) + 1
       }
     }
 
