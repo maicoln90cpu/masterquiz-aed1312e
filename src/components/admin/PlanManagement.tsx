@@ -426,7 +426,6 @@ export default function PlanManagement() {
     }
   };
 
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const handleSyncLimits = async () => {
     if (!confirm('Isso atualizará os limites de TODOS os usuários para os valores atuais dos planos. Continuar?')) return;
