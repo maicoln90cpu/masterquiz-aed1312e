@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, TrendingUp, DollarSign, BarChart3, Activity, Zap, Bot, Eye, Target, AlertTriangle, ChevronDown, ChevronUp, RefreshCw, Loader2, ShieldCheck, Gift } from "lucide-react";
+import { Users, TrendingUp, DollarSign, BarChart3, Activity, Zap, Bot, Eye, Target, AlertTriangle, ChevronDown, ChevronUp, RefreshCw, Loader2, ShieldCheck, Gift, Rocket, MessageCircle, Timer, Lock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSubTabs } from "./AdminSubTabs";
