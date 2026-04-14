@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -65,6 +65,24 @@ export function useQuizPersistence({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { checkRateLimit } = useRateLimit();
+  const editorSessionStart = useRef<number>(Date.now());
+
+  // 🎯 Editor session tracking — log duration on unmount
+  useEffect(() => {
+    editorSessionStart.current = Date.now();
+    return () => {
+      const durationSec = Math.round((Date.now() - editorSessionStart.current) / 1000);
+      if (durationSec > 10 && quizId) {
+        // Fire-and-forget: track editor session duration
+        pushGTMEvent('editor_session_end', {
+          quiz_id: quizId,
+          duration_seconds: durationSec,
+          editor_mode: editorMode,
+          is_express: isExpressMode,
+        });
+      }
+    };
+  }, [quizId, editorMode, isExpressMode]);
 
   // ✅ Helper para isolar localStorage por usuário
   const getStorageKey = useCallback((userId: string, key: string) => {
@@ -377,15 +395,26 @@ export function useQuizPersistence({
           w.dataLayer = w.dataLayer || [];
 
           // Evento quiz_first_published — 1x ao publicar pela primeira vez
-          const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-          if (earlyStages.includes(currentStage)) {
-            pushGTMEvent(publishEventName, {
+          // FILTRO: Express quizzes disparam evento separado (express_first_published)
+          const isExpressQuiz = isExpressMode || quiz.creation_source === 'express_auto';
+          if (isExpressQuiz) {
+            pushGTMEvent('express_first_published', {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
-              publish_source: isExpressMode ? 'express_auto' : 'manual',
               editor_mode: editorMode,
             });
+          } else {
+            const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
+            if (earlyStages.includes(currentStage)) {
+              pushGTMEvent(publishEventName, {
+                quiz_id: quiz.id,
+                quiz_title: quiz.title,
+                user_id: user.id,
+                publish_source: 'manual',
+                editor_mode: editorMode,
+              });
+            }
           }
 
           // first_quiz_created — SOMENTE se houve interação real
@@ -510,15 +539,25 @@ export function useQuizPersistence({
           const w = window as Window & { dataLayer?: Record<string, unknown>[] };
           w.dataLayer = w.dataLayer || [];
 
-          // quiz_first_published — sempre ao publicar pela primeira vez
-          const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-          pushGTMEvent(publishEventName, {
-            quiz_id: quiz.id,
-            quiz_title: quiz.title,
-            user_id: user.id,
-            publish_source: isExpressMode ? 'express_auto' : 'manual',
-            editor_mode: editorMode,
-          });
+          // quiz_first_published — FILTRO: Express dispara evento separado
+          const isExpressQuiz = isExpressMode || quiz.creation_source === 'express_auto';
+          if (isExpressQuiz) {
+            pushGTMEvent('express_first_published', {
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id,
+              editor_mode: editorMode,
+            });
+          } else {
+            const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
+            pushGTMEvent(publishEventName, {
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id,
+              publish_source: 'manual',
+              editor_mode: editorMode,
+            });
+          }
 
           // first_quiz_created — SOMENTE se houve interação real
           const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';

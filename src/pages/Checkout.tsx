@@ -41,6 +41,18 @@ export default function Checkout() {
   useEffect(() => {
     loadPlans();
 
+    // 🎯 GTM: paywall_viewed — track when user sees checkout page
+    (async () => {
+      try {
+        const { pushGTMEvent } = await import("@/lib/gtmLogger");
+        pushGTMEvent('paywall_viewed', {
+          current_plan: subscription?.plan_type || 'free',
+          source: 'checkout_page',
+          mode: isModeB ? 'B' : 'A',
+        });
+      } catch {}
+    })();
+
     // Check payment status from URL
     const paymentStatus = searchParams.get('payment');
     if (paymentStatus === 'success') {
