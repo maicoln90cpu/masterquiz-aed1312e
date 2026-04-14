@@ -29,6 +29,16 @@ export type AuditAction =
   | "admin:user_deleted"
   | "admin:plan_changed"
   | "admin:settings_updated"
+  // Support Mode
+  | "support:enter"
+  | "support:exit"
+  | "support:view_overview"
+  | "support:run_diagnostics"
+  | "support:fix_duplicates"
+  | "support:republish_quiz"
+  | "support:view_quiz_detail"
+  | "support:send_message"
+  | "support:view_tickets"
   // Tickets
   | "ticket:created"
   | "ticket:updated"
