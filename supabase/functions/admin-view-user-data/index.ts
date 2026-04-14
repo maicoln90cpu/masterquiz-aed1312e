@@ -321,6 +321,67 @@ Deno.serve(async (req) => {
 
       result = { sessions };
 
+    // ── SAVE QUIZ (admin edit) ──
+    } else if (data_type === "save_quiz") {
+      if (!quiz_id) {
+        return new Response(JSON.stringify({ error: "quiz_id required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { quiz_updates, questions_updates, results_updates } = body;
+      const changes: string[] = [];
+
+      // Update quiz metadata if provided
+      if (quiz_updates && Object.keys(quiz_updates).length > 0) {
+        const allowedFields = ['title', 'description', 'slug', 'status', 'is_public', 'show_title', 'show_description', 'show_logo', 'show_question_number', 'progress_style', 'template'];
+        const filtered: Record<string, any> = {};
+        for (const key of allowedFields) {
+          if (quiz_updates[key] !== undefined) filtered[key] = quiz_updates[key];
+        }
+        if (Object.keys(filtered).length > 0) {
+          filtered.updated_at = new Date().toISOString();
+          const { error: quizErr } = await supabaseAdmin.from("quizzes").update(filtered).eq("id", quiz_id);
+          if (quizErr) throw quizErr;
+          changes.push(`quiz_metadata: ${Object.keys(filtered).join(', ')}`);
+        }
+      }
+
+      // Update questions if provided
+      if (questions_updates && Array.isArray(questions_updates)) {
+        for (const q of questions_updates) {
+          if (!q.id) continue;
+          const { id, ...updateData } = q;
+          updateData.updated_at = new Date().toISOString();
+          const { error: qErr } = await supabaseAdmin.from("quiz_questions").update(updateData).eq("id", id);
+          if (qErr) throw qErr;
+        }
+        changes.push(`questions: ${questions_updates.length} updated`);
+      }
+
+      // Update results if provided
+      if (results_updates && Array.isArray(results_updates)) {
+        for (const r of results_updates) {
+          if (!r.id) continue;
+          const { id, ...updateData } = r;
+          updateData.updated_at = new Date().toISOString();
+          const { error: rErr } = await supabaseAdmin.from("quiz_results").update(updateData).eq("id", id);
+          if (rErr) throw rErr;
+        }
+        changes.push(`results: ${results_updates.length} updated`);
+      }
+
+      // Audit log
+      await supabaseAdmin.from("audit_logs").insert({
+        user_id: callerId,
+        action: "admin:settings_updated",
+        resource_type: "support_edit_quiz",
+        resource_id: quiz_id,
+        metadata: { target_user_id, changes },
+      });
+
+      result = { success: true, changes };
+
     } else {
       return new Response(JSON.stringify({ error: `Unknown data_type: ${data_type}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
