@@ -405,6 +405,11 @@ const App = () => (
                       <LazyRoute Component={SupportDashboard} />
                     </ProtectedRoute>
                   } />
+                  <Route path="/masteradm/support/edit-quiz/:quizId" element={
+                    <ProtectedRoute requiredRole="master_admin">
+                      <LazyRoute Component={SupportQuizEditor} />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/checkout" element={
                     <RequireAuth>
                       <ProtectedRoute requiredRole="admin">
