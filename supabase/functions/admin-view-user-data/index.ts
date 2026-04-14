@@ -270,6 +270,57 @@ Deno.serve(async (req) => {
 
       result = { success: true, message: msg };
 
+    // ── SESSION HISTORY ──
+    } else if (data_type === "session_history") {
+      // Fetch support:enter and support:exit pairs from audit_logs for this admin
+      const { data: enterLogs } = await supabaseAdmin
+        .from("audit_logs")
+        .select("*")
+        .eq("action", "support:enter")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      const { data: exitLogs } = await supabaseAdmin
+        .from("audit_logs")
+        .select("*")
+        .eq("action", "support:exit")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      const sessions: any[] = [];
+      for (const entry of enterLogs || []) {
+        const meta = entry.metadata as any;
+        const targetEmail = meta?.target_email || 'desconhecido';
+        const targetName = meta?.target_name || targetEmail;
+
+        // Find matching exit log (same user_id, resource_id, created after enter)
+        const exitLog = (exitLogs || []).find((ex: any) => {
+          return ex.user_id === entry.user_id &&
+                 ex.resource_id === entry.resource_id &&
+                 ex.created_at > entry.created_at;
+        });
+
+        const exitMeta = exitLog?.metadata as any;
+        const durationSeconds = exitMeta?.duration_seconds || null;
+        const actionsCount = exitMeta?.actions_count || 0;
+        const actionsSummary = exitMeta?.actions_summary || [];
+
+        sessions.push({
+          id: entry.id,
+          admin_id: entry.user_id,
+          target_user_id: entry.resource_id,
+          target_email: targetEmail,
+          target_name: targetName,
+          started_at: entry.created_at,
+          ended_at: exitLog?.created_at || null,
+          duration_seconds: durationSeconds,
+          actions_count: actionsCount,
+          actions_summary: actionsSummary,
+        });
+      }
+
+      result = { sessions };
+
     } else {
       return new Response(JSON.stringify({ error: `Unknown data_type: ${data_type}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
