@@ -2676,33 +2676,45 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          original_plan_type: string | null
           payment_confirmed: boolean | null
           plan_type: Database["public"]["Enums"]["plan_type"]
           quiz_limit: number
           response_limit: number
           status: Database["public"]["Enums"]["subscription_status"]
+          trial_end_date: string | null
+          trial_started_at: string | null
+          trial_started_by: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          original_plan_type?: string | null
           payment_confirmed?: boolean | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
           quiz_limit?: number
           response_limit?: number
           status?: Database["public"]["Enums"]["subscription_status"]
+          trial_end_date?: string | null
+          trial_started_at?: string | null
+          trial_started_by?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          original_plan_type?: string | null
           payment_confirmed?: boolean | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
           quiz_limit?: number
           response_limit?: number
           status?: Database["public"]["Enums"]["subscription_status"]
+          trial_end_date?: string | null
+          trial_started_at?: string | null
+          trial_started_by?: string | null
           updated_at?: string
           user_id?: string
         }
