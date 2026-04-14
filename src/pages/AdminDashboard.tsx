@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen, ArrowUpDown, ArrowUp, ArrowDown, Eye } from "lucide-react";
+import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen, ArrowUpDown, ArrowUp, ArrowDown, Eye, Timer } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
@@ -54,6 +54,7 @@ const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
 const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
 const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
+import { TrialModal } from "@/components/admin/TrialModal";
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -115,6 +116,8 @@ export default function AdminDashboard() {
   const [editEmail, setEditEmail] = useState('');
   const [editWhatsapp, setEditWhatsapp] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [trialModalOpen, setTrialModalOpen] = useState(false);
+  const [trialUser, setTrialUser] = useState<{id: string, email: string, currentPlan: string, originalPlan?: string | null, trialEndDate?: string | null} | null>(null);
   
   // Sorting state for tables
   const [usersSortColumn, setUsersSortColumn] = useState<string>('');
@@ -993,20 +996,45 @@ export default function AdminDashboard() {
                         <span className="font-medium">{user.stats?.lead_count || 0}</span>
                       </TableCell>
                       <TableCell>
-                        <Select 
-                          value={user.subscription?.plan_type || 'free'}
-                          onValueChange={(value) => updatePlan(user.id, value as 'free' | 'paid' | 'partner' | 'premium')}
-                        >
-                          <SelectTrigger className="w-[110px] h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="free">{t('admin.free')}</SelectItem>
-                            <SelectItem value="paid">{t('admin.pro')}</SelectItem>
-                            <SelectItem value="partner">{t('admin.partner')}</SelectItem>
-                            <SelectItem value="premium">{t('admin.premium')}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-1">
+                          <Select 
+                            value={user.subscription?.plan_type || 'free'}
+                            onValueChange={(value) => updatePlan(user.id, value as 'free' | 'paid' | 'partner' | 'premium')}
+                          >
+                            <SelectTrigger className="w-[110px] h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">{t('admin.free')}</SelectItem>
+                              <SelectItem value="paid">{t('admin.pro')}</SelectItem>
+                              <SelectItem value="partner">{t('admin.partner')}</SelectItem>
+                              <SelectItem value="premium">{t('admin.premium')}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Plano temporário (trial)"
+                            onClick={() => {
+                              setTrialUser({
+                                id: user.id,
+                                email: user.email || '',
+                                currentPlan: user.subscription?.plan_type || 'free',
+                                originalPlan: user.subscription?.original_plan_type,
+                                trialEndDate: user.subscription?.trial_end_date,
+                              });
+                              setTrialModalOpen(true);
+                            }}
+                          >
+                            <Timer className="h-4 w-4" />
+                          </Button>
+                          {user.subscription?.original_plan_type && (
+                            <Badge variant="secondary" className="text-[10px] px-1">
+                              ⏱️ {Math.max(0, Math.ceil((new Date(user.subscription.trial_end_date).getTime() - Date.now()) / (1000*60*60*24)))}d
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
@@ -1079,20 +1107,45 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <Select 
-                          value={user.subscription?.plan_type || 'free'}
-                          onValueChange={(value) => updatePlan(user.id, value as 'free' | 'paid' | 'partner' | 'premium')}
-                        >
-                          <SelectTrigger className="w-[100px] h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="free">{t('admin.free')}</SelectItem>
-                            <SelectItem value="paid">{t('admin.pro')}</SelectItem>
-                            <SelectItem value="partner">{t('admin.partner')}</SelectItem>
-                            <SelectItem value="premium">{t('admin.premium')}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-1">
+                          <Select 
+                            value={user.subscription?.plan_type || 'free'}
+                            onValueChange={(value) => updatePlan(user.id, value as 'free' | 'paid' | 'partner' | 'premium')}
+                          >
+                            <SelectTrigger className="w-[100px] h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">{t('admin.free')}</SelectItem>
+                              <SelectItem value="paid">{t('admin.pro')}</SelectItem>
+                              <SelectItem value="partner">{t('admin.partner')}</SelectItem>
+                              <SelectItem value="premium">{t('admin.premium')}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Trial"
+                            onClick={() => {
+                              setTrialUser({
+                                id: user.id,
+                                email: user.email || '',
+                                currentPlan: user.subscription?.plan_type || 'free',
+                                originalPlan: user.subscription?.original_plan_type,
+                                trialEndDate: user.subscription?.trial_end_date,
+                              });
+                              setTrialModalOpen(true);
+                            }}
+                          >
+                            <Timer className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {user.subscription?.original_plan_type && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            ⏱️ {Math.max(0, Math.ceil((new Date(user.subscription.trial_end_date).getTime() - Date.now()) / (1000*60*60*24)))}d restantes
+                          </Badge>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="sm"
@@ -1764,6 +1817,12 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <TrialModal
+        open={trialModalOpen}
+        onOpenChange={setTrialModalOpen}
+        user={trialUser}
+        onSuccess={() => loadData()}
+      />
     </main>
   );
 }

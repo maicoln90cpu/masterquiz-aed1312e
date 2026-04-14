@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
 import { useCurrentUser } from "./useCurrentUser";
@@ -12,6 +13,25 @@ interface AdminSubscription extends UserSubscription {
 export const useSubscriptionLimits = () => {
   const { isMasterAdmin, loading: roleLoading } = useUserRole();
   const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
+
+  // Realtime: invalidar cache quando subscription muda
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`sub-realtime-${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'user_subscriptions',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['subscription'] });
+        queryClient.invalidateQueries({ queryKey: ['resource-limits'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, queryClient]);
 
   const { data: subscription, isLoading } = useQuery<UserSubscription | AdminSubscription | null>({
     queryKey: ['subscription', isMasterAdmin, user?.id],
