@@ -1013,6 +1013,23 @@ export default function AdminDashboard() {
                           <Button 
                             variant="ghost" 
                             size="icon"
+                            title="Acessar como Usuário"
+                            onClick={() => {
+                              enterSupportMode({
+                                userId: user.id,
+                                email: user.email || '',
+                                fullName: user.profile?.full_name || '',
+                                planType: user.subscription?.plan_type || 'free',
+                              });
+                              navigate('/masteradm/support');
+                            }}
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
                             onClick={() => openEditUser(user)}
                             className="h-8 w-8"
                           >
