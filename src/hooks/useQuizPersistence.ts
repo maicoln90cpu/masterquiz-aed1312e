@@ -377,15 +377,26 @@ export function useQuizPersistence({
           w.dataLayer = w.dataLayer || [];
 
           // Evento quiz_first_published — 1x ao publicar pela primeira vez
-          const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-          if (earlyStages.includes(currentStage)) {
-            pushGTMEvent(publishEventName, {
+          // FILTRO: Express quizzes disparam evento separado (express_first_published)
+          const isExpressQuiz = isExpressMode || quiz.creation_source === 'express_auto';
+          if (isExpressQuiz) {
+            pushGTMEvent('express_first_published', {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
-              publish_source: isExpressMode ? 'express_auto' : 'manual',
               editor_mode: editorMode,
             });
+          } else {
+            const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
+            if (earlyStages.includes(currentStage)) {
+              pushGTMEvent(publishEventName, {
+                quiz_id: quiz.id,
+                quiz_title: quiz.title,
+                user_id: user.id,
+                publish_source: 'manual',
+                editor_mode: editorMode,
+              });
+            }
           }
 
           // first_quiz_created — SOMENTE se houve interação real

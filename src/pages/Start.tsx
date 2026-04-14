@@ -129,6 +129,14 @@ const Start = () => {
         return;
       }
 
+      // 🎯 GTM: express_started — track when Express flow creates a quiz
+      const { pushGTMEvent } = await import("@/lib/gtmLogger");
+      pushGTMEvent('express_started', {
+        user_id: user.id,
+        objective,
+        template_id: templateId,
+      });
+
       // 5. Criar quiz rascunho com slug aleatório numérico
       const expressSlug = 'exp-' + String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
       const { data: quiz, error: quizError } = await supabase
