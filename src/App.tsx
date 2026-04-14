@@ -17,6 +17,8 @@ import { useInvalidateOnLogout } from "@/hooks/useInvalidateOnLogout";
 import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 import { useProductionWebVitals } from "@/hooks/useWebVitals";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SupportModeProvider } from "@/contexts/SupportModeContext";
+import { SupportModeBanner } from "@/components/admin/SupportModeBanner";
 import { useAccountCreatedEvent } from "@/hooks/useAccountCreatedEvent";
 import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 import { useSiteMode } from "@/hooks/useSiteMode";
@@ -278,10 +280,12 @@ const App = () => (
     <GlobalErrorHandler>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <SupportModeProvider>
           <TooltipProvider>
             <WebVitalsProvider>
               <Toaster />
               <Sonner />
+              <SupportModeBanner />
             <BrowserRouter>
               <Routes>
                 {/* ✅ ROTAS COM GTM GLOBAL (todas as páginas do site) */}
@@ -417,6 +421,7 @@ const App = () => (
             </BrowserRouter>
           </WebVitalsProvider>
         </TooltipProvider>
+          </SupportModeProvider>
       </AuthProvider>
     </QueryClientProvider>
   </GlobalErrorHandler>
