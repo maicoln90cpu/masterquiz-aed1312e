@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Eye, CheckCircle, HelpCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, CheckCircle, HelpCircle, RefreshCw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Definições de tooltips para cada feature
@@ -227,6 +227,7 @@ export default function PlanManagement() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [formData, setFormData] = useState<{
     plan_name: string;
     plan_type: PlanType;
@@ -414,21 +415,44 @@ export default function PlanManagement() {
 
   const handleInvalidateCache = async () => {
     try {
-      // Invalidar TODOS os caches relacionados a planos
       await queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       await queryClient.invalidateQueries({ queryKey: ['landing-plans'] });
       
-      toast.success('✅ Cache invalidado! Atualizando página...', {
-        duration: 2000,
-      });
-      
-      // Aguardar para usuário ver o toast
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      toast.success('✅ Cache invalidado! Atualizando página...', { duration: 2000 });
+      setTimeout(() => { window.location.reload(); }, 1500);
     } catch (error) {
       console.error('Erro ao invalidar cache:', error);
       toast.error('❌ Erro ao invalidar cache. Tente novamente.');
+    }
+  };
+
+
+  const handleSyncLimits = async () => {
+    if (!confirm('Isso atualizará os limites de TODOS os usuários para os valores atuais dos planos. Continuar?')) return;
+    
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-plan-limits', {
+        method: 'POST',
+      });
+
+      if (error) throw error;
+
+      const details = data?.details || {};
+      const total = data?.total_updated || 0;
+      const summary = Object.entries(details)
+        .map(([plan, info]: [string, any]) => `${plan}: ${info.updated}`)
+        .join(', ');
+
+      toast.success(`✅ ${total} usuários sincronizados! (${summary})`, { duration: 5000 });
+      
+      queryClient.invalidateQueries({ queryKey: ['resource-limits'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+    } catch (error: any) {
+      console.error('Erro ao sincronizar:', error);
+      toast.error(`❌ Erro: ${error.message || 'Falha ao sincronizar limites'}`);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -516,7 +540,11 @@ export default function PlanManagement() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Gerenciar Planos</CardTitle>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={handleSyncLimits} disabled={isSyncing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Sincronizando...' : 'Sincronizar Limites'}
+          </Button>
           <Button variant="outline" onClick={handleInvalidateCache}>
             Atualizar Landing Page
           </Button>
