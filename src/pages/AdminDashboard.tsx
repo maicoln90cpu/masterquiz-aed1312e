@@ -582,7 +582,7 @@ export default function AdminDashboard() {
       if (fnData?.error) throw new Error(fnData.error);
 
       toast.success(`Plano atualizado! Limites: ${planData.quiz_limit} quizzes, ${planData.response_limit} respostas`);
-      await loadData();
+      await refetchUsers();
     } catch (error) {
       console.error('Error updating plan:', error);
       toast.error('Erro ao atualizar plano');
@@ -1821,7 +1821,7 @@ export default function AdminDashboard() {
         open={trialModalOpen}
         onOpenChange={setTrialModalOpen}
         user={trialUser}
-        onSuccess={() => loadData()}
+        onSuccess={() => refetchUsers()}
       />
     </main>
   );
