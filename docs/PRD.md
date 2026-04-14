@@ -2,8 +2,8 @@
 
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
-**Versão:** 2.39  
-**Última atualização:** 08 de Abril de 2026  
+**Versão:** 2.40  
+**Última atualização:** 14 de Abril de 2026  
 **Owner:** Product Team
 
 ---
@@ -331,6 +331,12 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF11.13 | Aba Custos de email transacional (cálculo por categoria) | Média | ✅ |
 | RF11.14 | Preview de email antes de envio em massa (compose→preview→enviar) | Média | ✅ |
 | RF11.15 | Comparação A×B de modos de monetização (métricas históricas) | Média | ✅ |
+| RF11.16 | Modo Suporte Avançado (impersonação, editor de quiz, diff visual) | Alta | ✅ |
+| RF11.17 | Editor de blocos admin (34 tipos, edição individual) | Alta | ✅ |
+| RF11.18 | Notificações admin para usuários (admin_notifications + NotificationBell) | Média | ✅ |
+| RF11.19 | CRUD de perguntas no editor de suporte (adicionar/remover) | Média | ✅ |
+| RF11.20 | Relatório PDF de sessão de suporte (jsPDF + branding) | Média | ✅ |
+| RF11.21 | Histórico de sessões de suporte (reconstrução via audit_logs) | Média | ✅ |
 
 ### RF12 - Email Marketing Automatizado
 
@@ -490,6 +496,19 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | Como admin, quero GTM lifecycle tracking completo nos quizzes | Alta | ✅ |
 | Como admin, quero que a aba de usuários mostre dados reais mesmo com 400+ users | Alta | ✅ |
 
+### Épico 7: Suporte Avançado (Abril 2026) ✅
+
+| User Story | Prioridade | Status |
+|------------|------------|--------|
+| Como admin, quero visualizar o dashboard de qualquer usuário sem trocar de conta | Alta | ✅ |
+| Como admin, quero editar quizzes de usuários diretamente (metadados, perguntas, blocos) | Alta | ✅ |
+| Como admin, quero ver um diff visual antes de salvar alterações no quiz do usuário | Alta | ✅ |
+| Como admin, quero adicionar e remover perguntas no quiz do usuário | Média | ✅ |
+| Como admin, quero editar os 34 tipos de blocos individualmente no quiz do usuário | Alta | ✅ |
+| Como usuário, quero ser notificado quando o suporte alterar meu quiz | Média | ✅ |
+| Como admin, quero gerar um relatório PDF da sessão de suporte | Média | ✅ |
+| Como admin, quero ver o histórico de sessões de suporte anteriores | Média | ✅ |
+
 ### Épico 4: Enterprise (Q3-Q4 2025)
 
 | User Story | Prioridade | Sprint |
@@ -629,6 +648,12 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 - [BLOG.md](./BLOG.md) - Guia do blog com IA
 - [EGOI.md](./EGOI.md) - Guia do email marketing
 - [MONETIZATION.md](./MONETIZATION.md) - Monetização A/B e custos
+- [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Schema completo do banco
+- [SECURITY.md](./SECURITY.md) - Práticas de segurança e RLS
+- [CODE_STANDARDS.md](./CODE_STANDARDS.md) - Padrões obrigatórios de código
+- [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) - Catálogo das 61 Edge Functions
+- [ONBOARDING.md](./ONBOARDING.md) - Guia para novos desenvolvedores
+- [ADR.md](./ADR.md) - Architecture Decision Records
 
 ---
 
