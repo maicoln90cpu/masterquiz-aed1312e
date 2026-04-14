@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.39.0** | Última atualização: 08 de Abril de 2026
+**Versão 2.40.0** | Última atualização: 14 de Abril de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -59,7 +59,7 @@
 | Serviço | Propósito |
 |---------|-----------|
 | PostgreSQL | Banco de dados relacional com RLS |
-| Edge Functions (Deno) | Lógica serverless (57 funções) |
+| Edge Functions (Deno) | Lógica serverless (61 funções) |
 | Auth | Autenticação email/senha |
 | Storage | Bucket `quiz-media` (público) |
 | Realtime | Updates em tempo real |
@@ -95,7 +95,7 @@ masterquizz/
 ├── docs/
 │   ├── SYSTEM_DESIGN.md      # Arquitetura e fluxos técnicos
 │   ├── AUDIT_TEMPLATE.md     # Template de auditoria
-│   ├── API_DOCS.md           # Documentação das 57 Edge Functions
+│   ├── API_DOCS.md           # Documentação das 61 Edge Functions
 │   ├── COMPONENTS.md         # Documentação de componentes
 │   ├── PRD.md                # Product Requirements
 │   ├── ROADMAP.md            # Planejamento estratégico
@@ -103,7 +103,13 @@ masterquizz/
 │   ├── STYLE_GUIDE.md        # Padrões de código
 │   ├── CHECKLIST.md          # Checklist de validação MVP
 │   ├── BLOCKS.md             # Catálogo dos 34 tipos de blocos
-│   └── TESTING.md            # Guia de testes automatizados
+│   ├── TESTING.md            # Guia de testes automatizados
+│   ├── DATABASE_SCHEMA.md    # Schema completo do banco
+│   ├── SECURITY.md           # Práticas de segurança e RLS
+│   ├── CODE_STANDARDS.md     # Padrões obrigatórios de código
+│   ├── EDGE_FUNCTIONS.md     # Catálogo das 61 Edge Functions
+│   ├── ONBOARDING.md         # Guia para novos desenvolvedores
+│   └── ADR.md                # Architecture Decision Records
 ├── public/                    # Assets estáticos
 ├── scripts/                   # Scripts de automação
 ├── src/
@@ -119,6 +125,7 @@ masterquizz/
 │   │   ├── kiwify/            # Componentes pós-compra
 │   │   ├── landing/           # Landing page (i18n)
 │   │   ├── lazy/              # Componentes lazy-loaded
+│   │   ├── notifications/     # NotificationBell (admin_notifications)
 │   │   ├── onboarding/        # Tours guiados (driver.js)
 │   │   ├── quiz/              # Editor de quizzes
 │   │   │   ├── blocks/        # 34 tipos de blocos
@@ -128,20 +135,21 @@ masterquizz/
 │   │   ├── support/           # Tickets de suporte
 │   │   ├── video/             # Player de vídeo customizado
 │   │   └── ui/                # shadcn components
-│   ├── contexts/              # React contexts (Auth)
+│   ├── contexts/              # React contexts (Auth, SupportMode)
 │   ├── hooks/                 # Custom hooks (35+)
 │   ├── i18n/                  # Traduções (PT/EN/ES)
 │   ├── integrations/
 │   │   └── supabase/          # Cliente e tipos gerados
 │   ├── lib/                   # Utilitários (calculator, sanitize, etc.)
 │   ├── pages/                 # Rotas da aplicação
+│   │   └── support/           # SupportBlockEditor (editor de blocos admin)
 │   ├── styles/                # CSS adicional
 │   ├── types/                 # Tipos TypeScript compartilhados
 │   └── utils/                 # Helpers
 ├── supabase/
 │   ├── config.toml            # Configuração Supabase
 │   ├── migrations/            # SQL migrations (read-only)
-│   └── functions/             # 57 Edge Functions
+│   └── functions/             # 61 Edge Functions
 │       └── _shared/           # Código compartilhado (cors.ts, auth.ts)
 └── [config files]
 ```
@@ -294,7 +302,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 
 ---
 
-## ⚡ Edge Functions (57 funções)
+## ⚡ Edge Functions (61 funções)
 
 ### Core
 | Função | Propósito |
@@ -378,12 +386,16 @@ Signup → trigger handle_new_user_profile() → cria profile
 | `blog-sitemap` | Geração de sitemap |
 | `track-blog-view` | Tracking de views |
 
-### Admin
+### Admin & Suporte
 | Função | Propósito |
 |--------|-----------|
 | `system-health-check` | Saúde do sistema |
 | `export-schema-sql` / `export-table-data` | Exportação de dados |
 | `anonymize-ips` | Anonimização LGPD |
+| `admin-view-user-data` | Dados do usuário para suporte (quizzes, responses, session_history, save_quiz) |
+| `admin-update-subscription` | Atualização de plano do usuário pelo admin |
+| `save-quiz-response` | Salvar resposta de quiz (público) |
+| `track-cta-redirect` | Tracking de cliques em CTAs |
 
 ---
 
@@ -411,6 +423,7 @@ user_integrations, integration_logs, user_webhooks
 -- Admin
 subscription_plans, quiz_templates, system_settings
 audit_logs, support_tickets, ticket_messages
+admin_notifications
 
 -- A/B Testing
 quiz_variants, ab_test_sessions
@@ -438,6 +451,7 @@ blog_generation_logs
 -- Outros
 landing_content, master_admin_emails, notification_preferences
 ai_quiz_generations, system_health_metrics, quiz_tags, quiz_tag_relations
+email_generation_logs, quiz_cta_click_analytics
 ```
 
 ### RLS Policies
@@ -539,6 +553,7 @@ src/
   - Dashboard de performance por categoria
   - Unsubscribe com compliance CAN-SPAM/LGPD
 - ✅ Tickets de suporte
+- ✅ **Modo Suporte Avançado** (impersonação, editor de quiz, editor de blocos, diff visual, PDF report, notificações)
 - ✅ Audit logs + System health
 - ✅ Configuração Kiwify, Bunny, AI prompts
 - ✅ CSP monitoring + Bundle analysis
@@ -589,7 +604,7 @@ logger.api('API call', { endpoint, status });
 | [docs/STYLE_GUIDE.md](./docs/STYLE_GUIDE.md) | Padrões de código e convenções |
 | [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Checklist de validação do MVP |
 | [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
-| [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 57 Edge Functions |
+| [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 61 Edge Functions |
 | [docs/COMPONENTS.md](./docs/COMPONENTS.md) | Documentação de componentes |
 | [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
 | [docs/BLOCKS.md](./docs/BLOCKS.md) | Catálogo dos 34 tipos de blocos |
@@ -597,6 +612,12 @@ logger.api('API call', { endpoint, status });
 | [docs/BLOG.md](./docs/BLOG.md) | Guia de replicação do blog com IA |
 | [docs/EGOI.md](./docs/EGOI.md) | Guia de replicação do email marketing |
 | [docs/MONETIZATION.md](./docs/MONETIZATION.md) | Monetização A/B e custos |
+| [docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md) | Schema completo do banco |
+| [docs/SECURITY.md](./docs/SECURITY.md) | Práticas de segurança e RLS |
+| [docs/CODE_STANDARDS.md](./docs/CODE_STANDARDS.md) | Padrões obrigatórios de código |
+| [docs/EDGE_FUNCTIONS.md](./docs/EDGE_FUNCTIONS.md) | Catálogo das 61 Edge Functions |
+| [docs/ONBOARDING.md](./docs/ONBOARDING.md) | Guia para novos desenvolvedores |
+| [docs/ADR.md](./docs/ADR.md) | Architecture Decision Records |
 
 ---
 
