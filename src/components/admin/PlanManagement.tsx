@@ -227,6 +227,7 @@ export default function PlanManagement() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [formData, setFormData] = useState<{
     plan_name: string;
     plan_type: PlanType;
