@@ -25,23 +25,23 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Validate caller is master_admin
+    // Validate caller via getUser (correct for supabase-js v2)
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: claimsData, error: claimsError } =
-      await supabaseUser.auth.getClaims(authHeader.replace("Bearer ", ""));
-    if (claimsError || !claimsData?.claims?.sub) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseUser.auth.getUser(token);
+    if (userError || !userData?.user?.id) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const callerId = claimsData.claims.sub;
+    const callerId = userData.user.id;
 
     // Check master_admin role
     const { data: roleData } = await supabaseAdmin
@@ -61,7 +61,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { target_user_id, data_type } = await req.json();
+    const body = await req.json();
+    const { target_user_id, data_type, quiz_id, message, ticket_id } = body;
 
     if (!target_user_id) {
       return new Response(
@@ -75,210 +76,204 @@ Deno.serve(async (req) => {
 
     let result: any = {};
 
+    // ── OVERVIEW ──
     if (data_type === "overview" || !data_type) {
-      // Fetch everything for the support dashboard
       const [profileRes, subRes, quizzesRes, rolesRes] = await Promise.all([
-        supabaseAdmin
-          .from("profiles")
-          .select("*")
-          .eq("id", target_user_id)
-          .maybeSingle(),
-        supabaseAdmin
-          .from("user_subscriptions")
-          .select("*")
-          .eq("user_id", target_user_id)
-          .maybeSingle(),
-        supabaseAdmin
-          .from("quizzes")
-          .select(
-            "id, title, slug, status, is_public, question_count, created_at, updated_at, creation_source"
-          )
-          .eq("user_id", target_user_id)
-          .order("created_at", { ascending: false }),
-        supabaseAdmin
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", target_user_id),
+        supabaseAdmin.from("profiles").select("*").eq("id", target_user_id).maybeSingle(),
+        supabaseAdmin.from("user_subscriptions").select("*").eq("user_id", target_user_id).maybeSingle(),
+        supabaseAdmin.from("quizzes")
+          .select("id, title, slug, status, is_public, question_count, created_at, updated_at, creation_source")
+          .eq("user_id", target_user_id).order("created_at", { ascending: false }),
+        supabaseAdmin.from("user_roles").select("role").eq("user_id", target_user_id),
       ]);
 
-      // For each quiz, get response count
       const quizzes = quizzesRes.data || [];
-      const quizIds = quizzes.map((q: any) => q.id);
-
-      let responseCounts: Record<string, number> = {};
-      if (quizIds.length > 0) {
-        // Batch in groups of 50
-        for (let i = 0; i < quizIds.length; i += 50) {
-          const batch = quizIds.slice(i, i + 50);
-          const { data: responses } = await supabaseAdmin
-            .from("quiz_responses")
-            .select("quiz_id", { count: "exact" })
-            .in("quiz_id", batch);
-
-          if (responses) {
-            responses.forEach((r: any) => {
-              responseCounts[r.quiz_id] =
-                (responseCounts[r.quiz_id] || 0) + 1;
-            });
-          }
-        }
-
-        // More accurate: count per quiz
-        for (const qid of quizIds) {
-          const { count } = await supabaseAdmin
-            .from("quiz_responses")
-            .select("*", { count: "exact", head: true })
-            .eq("quiz_id", qid);
-          responseCounts[qid] = count || 0;
-        }
+      const responseCounts: Record<string, number> = {};
+      for (const q of quizzes) {
+        const { count } = await supabaseAdmin
+          .from("quiz_responses").select("*", { count: "exact", head: true }).eq("quiz_id", q.id);
+        responseCounts[q.id] = count || 0;
       }
 
       result = {
         profile: profileRes.data,
         subscription: subRes.data,
         roles: (rolesRes.data || []).map((r: any) => r.role),
-        quizzes: quizzes.map((q: any) => ({
-          ...q,
-          response_count: responseCounts[q.id] || 0,
-        })),
+        quizzes: quizzes.map((q: any) => ({ ...q, response_count: responseCounts[q.id] || 0 })),
       };
-    } else if (data_type === "quiz_detail") {
-      const { quiz_id } = await req.json().catch(() => ({}));
-      if (!quiz_id) {
-        return new Response(
-          JSON.stringify({ error: "quiz_id required for quiz_detail" }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
+
+    // ── DIAGNOSTICS ──
+    } else if (data_type === "diagnostics") {
+      const { data: quizzes } = await supabaseAdmin
+        .from("quizzes").select("id, title, slug, status").eq("user_id", target_user_id);
+
+      const diagnostics: any[] = [];
+      for (const quiz of quizzes || []) {
+        const issues: string[] = [];
+        const { data: questions } = await supabaseAdmin
+          .from("quiz_questions").select("id, question_text, blocks, order_number")
+          .eq("quiz_id", quiz.id).order("order_number");
+
+        const questionCount = questions?.length || 0;
+        const orderNums = questions?.map((q: any) => q.order_number) || [];
+        if (new Set(orderNums).size !== orderNums.length) {
+          issues.push("Perguntas com order_number duplicado");
+        }
+
+        const noBlocks = questions?.filter((q: any) => !q.blocks || (Array.isArray(q.blocks) && q.blocks.length === 0));
+        if (noBlocks && noBlocks.length > 0) {
+          issues.push(`${noBlocks.length} pergunta(s) sem blocos configurados`);
+        }
+
+        const { data: results } = await supabaseAdmin
+          .from("quiz_results").select("id, result_text, min_score, max_score").eq("quiz_id", quiz.id);
+        const resultCount = results?.length || 0;
+        if (resultCount === 0 && quiz.status === "active") {
+          issues.push("Quiz publicado sem resultados configurados");
+        }
+
+        const { data: formConfig } = await supabaseAdmin
+          .from("quiz_form_config").select("*").eq("quiz_id", quiz.id).maybeSingle();
+
+        if (!quiz.slug) {
+          issues.push("Quiz sem slug definido");
+        } else {
+          const { count: slugCount } = await supabaseAdmin
+            .from("quizzes").select("*", { count: "exact", head: true }).eq("slug", quiz.slug);
+          if ((slugCount || 0) > 1) issues.push("Slug duplicado com outro quiz");
+        }
+
+        const { count: responseCount } = await supabaseAdmin
+          .from("quiz_responses").select("*", { count: "exact", head: true }).eq("quiz_id", quiz.id);
+
+        diagnostics.push({
+          quiz_id: quiz.id, title: quiz.title, slug: quiz.slug, status: quiz.status,
+          question_count: questionCount, result_count: resultCount,
+          response_count: responseCount || 0, has_form_config: !!formConfig,
+          issues, health: issues.length === 0 ? "healthy" : "warning",
+        });
       }
+      result = { diagnostics };
 
-      const [quizRes, questionsRes, resultsRes, formConfigRes] =
-        await Promise.all([
-          supabaseAdmin
-            .from("quizzes")
-            .select("*")
-            .eq("id", quiz_id)
-            .maybeSingle(),
-          supabaseAdmin
-            .from("quiz_questions")
-            .select("*")
-            .eq("quiz_id", quiz_id)
-            .order("order_number"),
-          supabaseAdmin
-            .from("quiz_results")
-            .select("*")
-            .eq("quiz_id", quiz_id)
-            .order("order_number"),
-          supabaseAdmin
-            .from("quiz_form_config")
-            .select("*")
-            .eq("quiz_id", quiz_id)
-            .maybeSingle(),
-        ]);
-
+    // ── QUIZ DETAIL ──
+    } else if (data_type === "quiz_detail") {
+      if (!quiz_id) {
+        return new Response(JSON.stringify({ error: "quiz_id required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const [quizRes, questionsRes, resultsRes, formConfigRes] = await Promise.all([
+        supabaseAdmin.from("quizzes").select("*").eq("id", quiz_id).maybeSingle(),
+        supabaseAdmin.from("quiz_questions").select("*").eq("quiz_id", quiz_id).order("order_number"),
+        supabaseAdmin.from("quiz_results").select("*").eq("quiz_id", quiz_id).order("order_number"),
+        supabaseAdmin.from("quiz_form_config").select("*").eq("quiz_id", quiz_id).maybeSingle(),
+      ]);
       result = {
         quiz: quizRes.data,
         questions: questionsRes.data || [],
         results: resultsRes.data || [],
         formConfig: formConfigRes.data,
       };
-    } else if (data_type === "diagnostics") {
-      // Run diagnostics on all quizzes
-      const { data: quizzes } = await supabaseAdmin
-        .from("quizzes")
-        .select("id, title, slug, status")
-        .eq("user_id", target_user_id);
 
-      const diagnostics: any[] = [];
+    // ── FIX DUPLICATE ORDER NUMBERS ──
+    } else if (data_type === "fix_duplicates") {
+      if (!quiz_id) {
+        return new Response(JSON.stringify({ error: "quiz_id required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: questions } = await supabaseAdmin
+        .from("quiz_questions").select("id, order_number").eq("quiz_id", quiz_id).order("order_number");
 
-      for (const quiz of quizzes || []) {
-        const issues: string[] = [];
-
-        // Check questions
-        const { data: questions } = await supabaseAdmin
-          .from("quiz_questions")
-          .select("id, question_text, blocks, order_number")
-          .eq("quiz_id", quiz.id)
-          .order("order_number");
-
-        const questionCount = questions?.length || 0;
-
-        // Check for duplicate order numbers
-        const orderNums = questions?.map((q: any) => q.order_number) || [];
-        const uniqueOrders = new Set(orderNums);
-        if (uniqueOrders.size !== orderNums.length) {
-          issues.push("Perguntas com order_number duplicado");
-        }
-
-        // Check for questions without blocks
-        const noBlocks = questions?.filter(
-          (q: any) => !q.blocks || (Array.isArray(q.blocks) && q.blocks.length === 0)
-        );
-        if (noBlocks && noBlocks.length > 0) {
-          issues.push(`${noBlocks.length} pergunta(s) sem blocos configurados`);
-        }
-
-        // Check for duplicate question IDs
-        const qIds = questions?.map((q: any) => q.id) || [];
-        const uniqueQIds = new Set(qIds);
-        if (uniqueQIds.size !== qIds.length) {
-          issues.push("IDs de perguntas duplicados");
-        }
-
-        // Check results
-        const { data: results } = await supabaseAdmin
-          .from("quiz_results")
-          .select("id, result_text, min_score, max_score")
-          .eq("quiz_id", quiz.id);
-
-        const resultCount = results?.length || 0;
-        if (resultCount === 0 && quiz.status === "active") {
-          issues.push("Quiz publicado sem resultados configurados");
-        }
-
-        // Check form config
-        const { data: formConfig } = await supabaseAdmin
-          .from("quiz_form_config")
-          .select("*")
-          .eq("quiz_id", quiz.id)
-          .maybeSingle();
-
-        // Check slug
-        if (!quiz.slug) {
-          issues.push("Quiz sem slug definido");
-        } else {
-          const { count: slugCount } = await supabaseAdmin
-            .from("quizzes")
-            .select("*", { count: "exact", head: true })
-            .eq("slug", quiz.slug);
-          if ((slugCount || 0) > 1) {
-            issues.push("Slug duplicado com outro quiz");
+      if (questions && questions.length > 0) {
+        for (let i = 0; i < questions.length; i++) {
+          if (questions[i].order_number !== i) {
+            await supabaseAdmin.from("quiz_questions").update({ order_number: i }).eq("id", questions[i].id);
           }
         }
+      }
 
-        // Response count
-        const { count: responseCount } = await supabaseAdmin
-          .from("quiz_responses")
-          .select("*", { count: "exact", head: true })
-          .eq("quiz_id", quiz.id);
+      // Update question_count
+      await supabaseAdmin.from("quizzes").update({ question_count: questions?.length || 0 }).eq("id", quiz_id);
 
-        diagnostics.push({
-          quiz_id: quiz.id,
-          title: quiz.title,
-          slug: quiz.slug,
-          status: quiz.status,
-          question_count: questionCount,
-          result_count: resultCount,
-          response_count: responseCount || 0,
-          has_form_config: !!formConfig,
-          issues,
-          health: issues.length === 0 ? "healthy" : "warning",
+      // Log action
+      await supabaseAdmin.from("audit_logs").insert({
+        user_id: callerId, action: "admin:settings_updated",
+        resource_type: "support_fix_duplicates", resource_id: quiz_id,
+        metadata: { target_user_id, questions_reordered: questions?.length || 0 },
+      });
+
+      result = { success: true, questions_reordered: questions?.length || 0 };
+
+    // ── REPUBLISH QUIZ ──
+    } else if (data_type === "republish") {
+      if (!quiz_id) {
+        return new Response(JSON.stringify({ error: "quiz_id required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { error: updateError } = await supabaseAdmin
+        .from("quizzes").update({ status: "active", is_public: true }).eq("id", quiz_id);
+
+      if (updateError) throw updateError;
+
+      await supabaseAdmin.from("audit_logs").insert({
+        user_id: callerId, action: "admin:settings_updated",
+        resource_type: "support_republish", resource_id: quiz_id,
+        metadata: { target_user_id },
+      });
+
+      result = { success: true };
+
+    // ── TICKETS ──
+    } else if (data_type === "tickets") {
+      const { data: tickets } = await supabaseAdmin
+        .from("support_tickets").select("*").eq("user_id", target_user_id)
+        .order("created_at", { ascending: false });
+
+      const ticketIds = (tickets || []).map((t: any) => t.id);
+      let messages: any[] = [];
+      if (ticketIds.length > 0) {
+        const { data: msgs } = await supabaseAdmin
+          .from("ticket_messages").select("*").in("ticket_id", ticketIds)
+          .order("created_at", { ascending: true });
+        messages = msgs || [];
+      }
+
+      result = { tickets: tickets || [], messages };
+
+    // ── SEND TICKET MESSAGE ──
+    } else if (data_type === "send_message") {
+      if (!ticket_id || !message) {
+        return new Response(JSON.stringify({ error: "ticket_id and message required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      result = { diagnostics };
+      const { data: msg, error: msgError } = await supabaseAdmin
+        .from("ticket_messages").insert({
+          ticket_id, sender_id: callerId, message, is_internal_note: false,
+        }).select().single();
+
+      if (msgError) throw msgError;
+
+      // Mark ticket as having unread admin messages
+      await supabaseAdmin.from("support_tickets")
+        .update({ has_unread_admin: false, updated_at: new Date().toISOString() })
+        .eq("id", ticket_id);
+
+      await supabaseAdmin.from("audit_logs").insert({
+        user_id: callerId, action: "admin:settings_updated",
+        resource_type: "support_send_message", resource_id: ticket_id,
+        metadata: { target_user_id },
+      });
+
+      result = { success: true, message: msg };
+
+    } else {
+      return new Response(JSON.stringify({ error: `Unknown data_type: ${data_type}` }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify(result), {
