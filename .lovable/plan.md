@@ -1,51 +1,27 @@
 
 
-# Diagnóstico e Correção — Webhook Kiwify não processa pagamentos reais
+# Documentação v2.40.0 — Atualização Massiva Completa
 
-## Problema encontrado
+## Status: ✅ CONCLUÍDO (14/04/2026)
 
-O webhook da Kiwify envia dados **reais** dentro de `body.order`:
-```text
-{
-  "order": {
-    "webhook_event_type": "order_approved",
-    "Customer": { "email": "eumonicamanhaes@gmail.com" },
-    "Product": { "product_name": "Master Quiz" },
-    "Subscription": { "plan": { "name": "Partner" } }
-  }
-}
-```
+### O que foi feito
 
-Mas o código atual procura em `body.Customer`, `body.event`, `body.Product` (nível raiz). O teste da Kiwify usa formato plano, por isso os testes funcionam e aparecem nos logs (`johndoe@example.com`). Pagamentos reais nunca são processados porque os dados não são encontrados na estrutura esperada.
+**14 docs existentes atualizados** para v2.40.0:
+- README.md, PRD.md, ROADMAP.md, PENDENCIAS.md, SYSTEM_DESIGN.md, API_DOCS.md
+- COMPONENTS.md, CHECKLIST.md, BLOCKS.md, TESTING.md, MONETIZATION.md
+- STYLE_GUIDE.md, BLOG.md, EGOI.md (versão bump)
 
-Além disso, o produto se chama "Master Quiz" mas o plano na Kiwify é "Partner" — o `mapProductToPlanType` precisa considerar o nome do plano de assinatura (`Subscription.plan.name`), não apenas o nome do produto.
+**6 novos docs criados**:
+- `docs/DATABASE_SCHEMA.md` — Schema completo (45+ tabelas, enums, triggers, ER diagram)
+- `docs/SECURITY.md` — RLS patterns, rate limiting, audit, LGPD, checklist
+- `docs/CODE_STANDARDS.md` — Padrões obrigatórios com do/don't
+- `docs/EDGE_FUNCTIONS.md` — Catálogo das 61 funções por domínio
+- `docs/ONBOARDING.md` — Guia para novos devs (< 1 dia)
+- `docs/ADR.md` — 9 Architecture Decision Records
 
-## O que será feito
-
-**Arquivo:** `supabase/functions/kiwify-webhook/index.ts`
-
-1. **Extrair dados do wrapper `order`**: Se `body.order` existir, usar seus campos como fonte primária
-2. **Melhorar extração de evento**: Priorizar `body.order.webhook_event_type` → `body.order.order_status` → fallbacks atuais
-3. **Melhorar extração de email**: `body.order.Customer.email` → fallbacks atuais
-4. **Usar nome do plano de assinatura**: Verificar `body.order.Subscription.plan.name` além do nome do produto para mapear o plano correto (Partner)
-5. **Atualizar manualmente o plano da Monica** via admin-update-subscription após o deploy
-
-## Como fica
-
-| Aspecto | Antes | Depois |
-|---------|-------|--------|
-| Payload real da Kiwify | Ignorado (dados não encontrados) | Parseado corretamente via `body.order` |
-| Mapeamento de plano | Só olha nome do produto | Olha nome do plano de assinatura também |
-| Plano "Partner" | Nunca ativado automaticamente | Ativado via `Subscription.plan.name = "Partner"` |
-| Monica (eumonicamanhaes) | free, quiz_limit=2 | partner, quiz_limit=5, response_limit=25000 |
-
-## Checklist manual
-- [ ] Após deploy, ir na Kiwify e clicar "Enviar teste" novamente
-- [ ] Verificar em Admin → Kiwify → Logs se aparece o teste com status `pending` (johndoe não existe)
-- [ ] Verificar se a Monica foi atualizada para plano Partner
-- [ ] Fazer um novo pagamento de teste real (se possível) e confirmar ativação automática
-
-## Risco
-- Nenhum risco de quebra — apenas melhora o parsing para cobrir o formato real da Kiwify
-- Formato plano (teste) continua funcionando como fallback
-
+### Mudanças-chave
+- Edge Functions: 57 → 61
+- Novos componentes documentados: SupportDashboard, SupportQuizEditor, SupportBlockEditor, NotificationBell, supportPdfReport
+- Nova tabela: admin_notifications
+- Cross-references atualizados em todos os 20 docs
+- Épico 7 (Suporte Avançado) adicionado ao PRD com 8 user stories

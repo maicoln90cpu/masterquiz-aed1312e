@@ -1,7 +1,7 @@
 # 💰 MONETIZATION — Guia de Monetização A/B
 
 > Documentação do sistema de modos de monetização (Modo A: Freemium / Modo B: Apenas Pago)
-> Versão 2.39 | 08 de Abril de 2026
+> Versão 2.40 | 14 de Abril de 2026
 
 ---
 

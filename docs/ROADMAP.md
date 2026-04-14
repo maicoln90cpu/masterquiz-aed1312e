@@ -120,6 +120,15 @@ Q4 2025: Expansão Internacional
 - **Preços diferenciados por modo (A/B)** com checkout dinâmico ✅
 - **GTM lifecycle tracking completo** (quiz_view/start/complete/lead_captured) ✅
 - **Batching na `list-all-users`** (corrige dados zerados com 400+ usuários) ✅
+- **Modo Suporte Avançado** ✅
+  - Impersonação segura (SupportModeContext + useEffectiveUser)
+  - Editor de quiz completo (metadados + perguntas + CRUD)
+  - Editor de blocos (34 tipos com interfaces dedicadas)
+  - Diff visual (comparação antes/depois no modal de confirmação)
+  - Relatório PDF da sessão (jsPDF + branding)
+  - Histórico de sessões (reconstrução via audit_logs)
+  - Notificações ao usuário (admin_notifications + NotificationBell)
+  - Tabela admin_notifications com RLS
 
 ### H2 2026
 - Expansão para EUA
@@ -147,6 +156,7 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-04-14 | **v2.40.0 — Suporte Avançado + Visual Diff + Block Editor + Notificações + PDF Report + 6 novos docs** |
 | 2026-04-08 | **v2.39.0 — Custos Email + Preview Email + Comparação A×B + Preços Modo B + GTM Lifecycle + Batching Users + Doc Overhaul** |
 | 2026-04-07 | **v2.38.0–v2.38.4 — Vault secrets, logging automações, webhookUrl, fix usuarios, fix GTM** |
 | 2026-03-30 | **v2.37.1 — Fix Preview Inline + Remoção da Cor no Text Block** |
@@ -186,3 +196,9 @@ Q4 2025: Expansão Internacional
 | [BLOG.md](./BLOG.md) | Guia do blog com IA |
 | [EGOI.md](./EGOI.md) | Guia do email marketing |
 | [MONETIZATION.md](./MONETIZATION.md) | Monetização A/B e custos |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo do banco |
+| [SECURITY.md](./SECURITY.md) | Práticas de segurança e RLS |
+| [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões obrigatórios de código |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 61 Edge Functions |
+| [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
+| [ADR.md](./ADR.md) | Architecture Decision Records |
