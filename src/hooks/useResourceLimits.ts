@@ -114,8 +114,8 @@ export const useResourceLimits = () => {
         responseCount = count || 0;
       }
 
-      const quizLimit = subscription.quiz_limit;
-      const responseLimit = subscription.response_limit;
+      const quizLimit = plan?.quiz_limit || 3;
+      const responseLimit = plan?.response_limit || 100;
       const leadLimit = plan?.lead_limit || 1000;
 
       const calculateMetrics = (current: number, limit: number): Omit<ResourceLimit, 'current' | 'limit'> => {
