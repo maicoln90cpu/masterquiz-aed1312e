@@ -57,10 +57,126 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { user_id, plan_type, quiz_limit, response_limit, status, payment_confirmed } = await req.json();
+    const body = await req.json();
+    const { user_id, plan_type, quiz_limit, response_limit, status, payment_confirmed,
+            // Trial fields
+            trial_days, trial_plan_type, original_plan_type, cancel_trial } = body;
 
-    if (!user_id || !plan_type) {
-      return new Response(JSON.stringify({ error: 'user_id and plan_type required' }), {
+    if (!user_id) {
+      return new Response(JSON.stringify({ error: 'user_id required' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // === CANCEL TRIAL ===
+    if (cancel_trial) {
+      console.log(`[ADMIN-UPDATE-SUB] Cancelling trial for user ${user_id}`);
+      
+      // Get current subscription to find original plan
+      const { data: currentSub } = await supabase
+        .from('user_subscriptions')
+        .select('original_plan_type')
+        .eq('user_id', user_id)
+        .single();
+
+      if (!currentSub?.original_plan_type) {
+        return new Response(JSON.stringify({ error: 'No active trial found' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Get limits of the original plan
+      const { data: originalPlan } = await supabase
+        .from('subscription_plans')
+        .select('quiz_limit, response_limit')
+        .eq('plan_type', currentSub.original_plan_type)
+        .eq('is_active', true)
+        .single();
+
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          plan_type: currentSub.original_plan_type,
+          quiz_limit: originalPlan?.quiz_limit || 3,
+          response_limit: originalPlan?.response_limit || 100,
+          original_plan_type: null,
+          trial_end_date: null,
+          trial_started_at: null,
+          trial_started_by: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user_id)
+        .select()
+        .single();
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(`[ADMIN-UPDATE-SUB] Trial cancelled, reverted to ${currentSub.original_plan_type}`);
+      return new Response(JSON.stringify({ success: true, data, trial_cancelled: true }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // === ACTIVATE TRIAL ===
+    if (trial_days && trial_plan_type) {
+      console.log(`[ADMIN-UPDATE-SUB] Activating trial: ${trial_plan_type} for ${trial_days} days, user ${user_id}`);
+
+      // Get current plan type to save as original
+      const { data: currentSub } = await supabase
+        .from('user_subscriptions')
+        .select('plan_type, original_plan_type')
+        .eq('user_id', user_id)
+        .single();
+
+      // Use the real original plan (if already in trial, keep the original original)
+      const realOriginalPlan = original_plan_type || currentSub?.original_plan_type || currentSub?.plan_type || 'free';
+
+      // Get limits of the trial plan
+      const { data: trialPlan } = await supabase
+        .from('subscription_plans')
+        .select('quiz_limit, response_limit')
+        .eq('plan_type', trial_plan_type)
+        .eq('is_active', true)
+        .single();
+
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + trial_days);
+
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          plan_type: trial_plan_type,
+          quiz_limit: trialPlan?.quiz_limit || 10,
+          response_limit: trialPlan?.response_limit || 500,
+          original_plan_type: realOriginalPlan,
+          trial_end_date: trialEndDate.toISOString(),
+          trial_started_at: new Date().toISOString(),
+          trial_started_by: callerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user_id)
+        .select()
+        .single();
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(`[ADMIN-UPDATE-SUB] Trial activated until ${trialEndDate.toISOString()}`);
+      return new Response(JSON.stringify({ success: true, data, trial_activated: true, trial_end_date: trialEndDate.toISOString() }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // === REGULAR PLAN UPDATE ===
+    if (!plan_type) {
+      return new Response(JSON.stringify({ error: 'plan_type required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -70,6 +186,11 @@ Deno.serve(async (req) => {
     const updateData: Record<string, any> = {
       plan_type,
       updated_at: new Date().toISOString(),
+      // Clear trial fields on regular update
+      original_plan_type: null,
+      trial_end_date: null,
+      trial_started_at: null,
+      trial_started_by: null,
     };
 
     if (quiz_limit !== undefined) updateData.quiz_limit = quiz_limit;
