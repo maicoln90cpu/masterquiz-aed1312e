@@ -94,6 +94,13 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
           console.warn('[PricingCard] Failed to save AB context:', e);
         }
         
+        // 🎯 GTM: upgrade_clicked
+        const { pushGTMEvent } = await import("@/lib/gtmLogger");
+        pushGTMEvent('upgrade_clicked', {
+          plan_type: plan.name,
+          source: 'landing_pricing',
+        });
+
         window.open(plan.kiwifyCheckoutUrl, '_blank');
         toast.success('Redirecionando para Kiwify...');
       } else {
