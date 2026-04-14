@@ -73,6 +73,15 @@ export default function Checkout() {
   const handleCheckout = async (plan: Plan) => {
     setCheckingOut(plan.id);
     try {
+      // 🎯 GTM: upgrade_clicked
+      const { pushGTMEvent } = await import("@/lib/gtmLogger");
+      pushGTMEvent('upgrade_clicked', {
+        plan_type: plan.plan_type,
+        plan_name: plan.name,
+        price: plan.price_monthly,
+        source: 'checkout_page',
+      });
+
       // Use Mode B checkout URL if available
       const checkoutUrl = isModeB && plan.kiwify_checkout_url_mode_b
         ? plan.kiwify_checkout_url_mode_b
