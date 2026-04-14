@@ -18,6 +18,7 @@ import {
   ChevronDown, ChevronRight, GripVertical, Plus, Trash2,
   ArrowRight
 } from 'lucide-react';
+import { SupportBlockEditor } from './support/SupportBlockEditor';
 import { toast } from 'sonner';
 
 interface QuizData {
@@ -588,15 +589,22 @@ const SupportQuizEditor = () => {
                           </div>
                         )}
 
-                        {/* Blocks summary */}
+                        {/* Blocks editor */}
                         {Array.isArray(q.blocks) && q.blocks.length > 0 && (
-                          <div>
-                            <Label className="mb-2 block">Blocos ({q.blocks.length})</Label>
-                            <div className="flex flex-wrap gap-1">
-                              {q.blocks.map((b: any, bi: number) => (
-                                <Badge key={bi} variant="secondary" className="text-xs">{b.type || 'unknown'}</Badge>
-                              ))}
-                            </div>
+                          <div className="space-y-2">
+                            <Label className="mb-1 block">Blocos ({q.blocks.length})</Label>
+                            {q.blocks.map((b: any, bi: number) => (
+                              <SupportBlockEditor
+                                key={b.id || bi}
+                                block={b}
+                                blockIndex={bi}
+                                onBlockChange={(updatedBlock) => {
+                                  const newBlocks = [...q.blocks];
+                                  newBlocks[bi] = updatedBlock;
+                                  updateQuestionField(q.id, 'blocks', newBlocks);
+                                }}
+                              />
+                            ))}
                           </div>
                         )}
 
