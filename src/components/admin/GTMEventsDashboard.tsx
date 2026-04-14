@@ -26,6 +26,13 @@ const EVENT_CATEGORIES: Record<string, { label: string; color: string }> = {
   quiz_ia_form: { label: "IA - Formulário", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
   quiz_ia_pdf: { label: "IA - PDF", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
   quiz_ia_edu: { label: "IA - Educacional", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200" },
+  quiz_created: { label: "Criação", color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" },
+  quiz_published: { label: "Publicação", color: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200" },
+  plan_limit_hit: { label: "Conversão", color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200" },
+  upgrade_clicked: { label: "Conversão", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
+  crm_viewed: { label: "Engajamento", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" },
+  first_response_received: { label: "Milestone", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
+  aha_threshold_reached: { label: "Milestone", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
 };
 
 export const GTMEventsDashboard = () => {
