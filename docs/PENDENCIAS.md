@@ -1,6 +1,56 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
-## ✅ v2.39.0 - Doc Overhaul + Custos Email + Preview Email + Comparação A×B + GTM Lifecycle (08/04/2026)
+## ✅ v2.40.0 - Suporte Avançado + Visual Diff + Block Editor + Notificações + Docs Overhaul (14/04/2026)
+
+### Feature: Modo Suporte Avançado
+- SupportDashboard com impersonação segura (SupportModeContext + useEffectiveUser)
+- SupportQuizEditor com edição completa de metadados, perguntas e blocos
+- Diff visual antes/depois no modal de confirmação
+- CRUD de perguntas (adicionar/remover) com atualização do question_count
+- Histórico de sessões de suporte (reconstrução via audit_logs)
+- Relatório PDF profissional com branding MasterQuiz (jsPDF + jspdf-autotable)
+- Banner de modo suporte com cronômetro (SupportModeBanner)
+
+### Feature: Editor de Blocos Admin (SupportBlockEditor)
+- Interfaces dedicadas para 26 tipos de blocos (question, countdown, loading, nps, price, etc.)
+- Editor JSON de fallback para 9 tipos menos comuns (com validação em tempo real)
+- 100% de editabilidade dos 34 tipos de blocos
+
+### Feature: Notificações ao Usuário
+- Tabela `admin_notifications` com RLS (usuário vê só suas notificações)
+- Componente NotificationBell integrado ao DashboardLayout
+- Polling a cada 60s + marcação de lidas (individual e em massa)
+- Notificação automática ao salvar quiz via suporte
+
+### Docs: Overhaul Completo v2.40.0
+- 6 novos docs: DATABASE_SCHEMA, SECURITY, CODE_STANDARDS, EDGE_FUNCTIONS, ONBOARDING, ADR
+- Todos os docs existentes atualizados para v2.40.0 (14 arquivos)
+- Edge Functions: 57 → 61
+- Cross-references atualizados com os 20 docs
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/SupportQuizEditor.tsx` | Editor completo com diff visual + CRUD perguntas |
+| `src/pages/support/SupportBlockEditor.tsx` | NOVO — editor de blocos admin (34 tipos) |
+| `src/components/notifications/NotificationBell.tsx` | NOVO — sino de notificações |
+| `src/components/admin/SupportModeBanner.tsx` | Banner com cronômetro |
+| `src/contexts/SupportModeContext.tsx` | Context de impersonação + tracking |
+| `src/components/DashboardLayout.tsx` | +NotificationBell no header |
+| `src/lib/supportPdfReport.ts` | NOVO — geração de PDF de sessão |
+| `supabase/functions/admin-view-user-data/index.ts` | +save_quiz, +session_history, +questions_to_add/delete, +notifications |
+| `supabase/functions/admin-update-subscription/index.ts` | Atualização de plano pelo admin |
+| Migration admin_notifications | NOVA tabela com RLS |
+| `README.md` | v2.40.0, 61 EFs, +6 docs |
+| `docs/*.md` (14 arquivos) | Versão 2.40.0 |
+| `docs/DATABASE_SCHEMA.md` | NOVO |
+| `docs/SECURITY.md` | NOVO |
+| `docs/CODE_STANDARDS.md` | NOVO |
+| `docs/EDGE_FUNCTIONS.md` | NOVO |
+| `docs/ONBOARDING.md` | NOVO |
+| `docs/ADR.md` | NOVO |
+
+---
 
 ### Feature: Aba Custos de Email Transacional
 - Novo componente `EmailRecoveryCosts.tsx` com cálculo detalhado de custos por categoria

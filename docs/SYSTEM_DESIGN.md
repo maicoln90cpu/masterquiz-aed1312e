@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 08 de Abril de 2026 | Versão 2.39
+> Última atualização: 14 de Abril de 2026 | Versão 2.40
 
 ---
 
@@ -42,7 +42,7 @@
 ├─────────────────────────────────────────────────────────────────────┤
 │  Auth            │  PostgreSQL       │  Edge Functions  │  Storage   │
 │  ────            │  ──────────       │  ──────────────  │  ───────   │
-│  JWT Sessions    │  RLS em tudo      │  57 funções      │  quiz-media│
+│  JWT Sessions    │  RLS em tudo      │  61 funções      │  quiz-media│
 │  Email/Password  │  Triggers         │  Deno runtime    │  (público) │
 │  Auto-refresh    │  DB Functions     │  _shared/        │            │
 └──────────────────┴───────────────────┴──────────────────┴────────────┘

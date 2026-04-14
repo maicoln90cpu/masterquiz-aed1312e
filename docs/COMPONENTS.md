@@ -1,7 +1,7 @@
 # 🧩 Componentes - MasterQuiz
 
 > Documentação dos componentes principais do frontend
-> Versão 2.39 | 08 de Abril de 2026
+> Versão 2.40 | 14 de Abril de 2026
 
 ---
 
@@ -217,6 +217,39 @@
 
 ---
 
+## 🛡️ Suporte Administrativo
+
+### `SupportDashboard`
+- **Arquivo:** `src/pages/SupportDashboard.tsx` (lazy no AdminDashboard)
+- **Descrição:** Dashboard de impersonação: lista usuários, entra em modo suporte
+- **Features:** Busca por email, visualização de dados, ações corretivas, histórico de sessões
+
+### `SupportQuizEditor`
+- **Arquivo:** `src/pages/SupportQuizEditor.tsx`
+- **Descrição:** Editor de quiz completo para admin em modo suporte
+- **Features:** Edição de metadados, CRUD de perguntas, diff visual, snapshot antes/depois
+
+### `SupportBlockEditor`
+- **Arquivo:** `src/pages/support/SupportBlockEditor.tsx`
+- **Descrição:** Editor de blocos dedicado para suporte (34 tipos)
+- **Features:** 26 interfaces dedicadas + 9 JSON fallback com validação
+
+### `SupportModeBanner`
+- **Arquivo:** `src/components/admin/SupportModeBanner.tsx`
+- **Descrição:** Banner fixo amarelo durante modo suporte com cronômetro
+
+### `NotificationBell`
+- **Arquivo:** `src/components/notifications/NotificationBell.tsx`
+- **Descrição:** Sino de notificações no header do dashboard
+- **Features:** Polling 60s, marcar lidas, tipos de ícone por tipo de notificação
+
+### `supportPdfReport`
+- **Arquivo:** `src/lib/supportPdfReport.ts`
+- **Descrição:** Gerador de relatório PDF de sessão de suporte
+- **Features:** Branding MasterQuiz, metadados da sessão, cronologia de eventos
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
@@ -230,3 +263,9 @@
 | [BLOG.md](./BLOG.md) | Guia do blog com IA |
 | [EGOI.md](./EGOI.md) | Guia do email marketing |
 | [MONETIZATION.md](./MONETIZATION.md) | Monetização A/B e custos |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo do banco |
+| [SECURITY.md](./SECURITY.md) | Práticas de segurança |
+| [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de código |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 61 Edge Functions |
+| [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
+| [ADR.md](./ADR.md) | Architecture Decision Records |
