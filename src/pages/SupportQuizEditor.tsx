@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupportMode } from '@/contexts/SupportModeContext';
@@ -12,9 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import {
   Loader2, ArrowLeft, Save, Shield, AlertTriangle,
-  ChevronDown, ChevronRight, GripVertical
+  ChevronDown, ChevronRight, GripVertical, Plus, Trash2,
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -58,6 +60,25 @@ interface ResultData {
   image_url: string | null;
 }
 
+// Diff helpers
+const QUIZ_DIFF_FIELDS: { key: keyof QuizData; label: string }[] = [
+  { key: 'title', label: 'Título' },
+  { key: 'description', label: 'Descrição' },
+  { key: 'slug', label: 'Slug' },
+  { key: 'status', label: 'Status' },
+  { key: 'is_public', label: 'Público' },
+  { key: 'show_title', label: 'Exibir Título' },
+  { key: 'show_description', label: 'Exibir Descrição' },
+  { key: 'show_question_number', label: 'Nº Pergunta' },
+  { key: 'progress_style', label: 'Estilo Progresso' },
+];
+
+const formatDiffValue = (val: any): string => {
+  if (val === null || val === undefined) return '—';
+  if (typeof val === 'boolean') return val ? '✅' : '❌';
+  return String(val);
+};
+
 const SupportQuizEditor = () => {
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
@@ -70,15 +91,23 @@ const SupportQuizEditor = () => {
   const [results, setResults] = useState<ResultData[]>([]);
   const [formConfig, setFormConfig] = useState<any>(null);
 
+  // Snapshots for diff
+  const originalQuiz = useRef<QuizData | null>(null);
+  const originalQuestions = useRef<QuestionData[]>([]);
+  const originalResults = useRef<ResultData[]>([]);
+
   // Track changes
   const [quizChanged, setQuizChanged] = useState(false);
   const [changedQuestionIds, setChangedQuestionIds] = useState<Set<string>>(new Set());
   const [changedResultIds, setChangedResultIds] = useState<Set<string>>(new Set());
+  const [addedQuestionIds, setAddedQuestionIds] = useState<Set<string>>(new Set());
+  const [deletedQuestionIds, setDeletedQuestionIds] = useState<Set<string>>(new Set());
 
   // UI state
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const [expandedResultId, setExpandedResultId] = useState<string | null>(null);
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSupportMode || !target || !quizId) {
@@ -102,11 +131,21 @@ const SupportQuizEditor = () => {
         data_type: 'quiz_detail',
         quiz_id: quizId,
       });
-      setQuiz(data.quiz);
-      setQuestions(data.questions || []);
-      setResults(data.results || []);
+      const q = data.quiz;
+      const qs = data.questions || [];
+      const rs = data.results || [];
+
+      setQuiz(q);
+      setQuestions(qs);
+      setResults(rs);
       setFormConfig(data.formConfig);
-      trackAction('Abriu editor de quiz', quizId, data.quiz?.title);
+
+      // Save snapshots for diff
+      originalQuiz.current = q ? { ...q } : null;
+      originalQuestions.current = qs.map((qq: any) => ({ ...qq }));
+      originalResults.current = rs.map((rr: any) => ({ ...rr }));
+
+      trackAction('Abriu editor de quiz', quizId, q?.title);
     } catch (err: any) {
       console.error('Error loading quiz:', err);
       toast.error('Erro ao carregar quiz');
@@ -132,7 +171,129 @@ const SupportQuizEditor = () => {
     setChangedResultIds(prev => new Set(prev).add(resultId));
   };
 
-  const hasChanges = quizChanged || changedQuestionIds.size > 0 || changedResultIds.size > 0;
+  // Add question
+  const addQuestion = () => {
+    const tempId = `temp-${Date.now()}`;
+    const maxOrder = questions.length > 0 ? Math.max(...questions.map(q => q.order_number)) : -1;
+    const newQuestion: QuestionData = {
+      id: tempId,
+      question_text: 'Nova pergunta',
+      answer_format: 'single_choice',
+      order_number: maxOrder + 1,
+      blocks: [{ type: 'question', content: { questionText: 'Nova pergunta', options: [{ text: 'Opção 1', score: 0 }, { text: 'Opção 2', score: 0 }] } }],
+      options: [{ text: 'Opção 1', score: 0 }, { text: 'Opção 2', score: 0 }],
+      media_url: null,
+      media_type: null,
+      conditions: null,
+      custom_label: null,
+    };
+    setQuestions(prev => [...prev, newQuestion]);
+    setAddedQuestionIds(prev => new Set(prev).add(tempId));
+    setExpandedQuestionId(tempId);
+  };
+
+  // Delete question
+  const deleteQuestion = (questionId: string) => {
+    setQuestions(prev => prev.filter(q => q.id !== questionId));
+    if (addedQuestionIds.has(questionId)) {
+      // Was a new question — just remove from added set
+      setAddedQuestionIds(prev => {
+        const next = new Set(prev);
+        next.delete(questionId);
+        return next;
+      });
+    } else {
+      // Existing question — mark for deletion
+      setDeletedQuestionIds(prev => new Set(prev).add(questionId));
+    }
+    // Clean up other tracking
+    setChangedQuestionIds(prev => {
+      const next = new Set(prev);
+      next.delete(questionId);
+      return next;
+    });
+    setConfirmDeleteId(null);
+    if (expandedQuestionId === questionId) setExpandedQuestionId(null);
+  };
+
+  const hasChanges = quizChanged || changedQuestionIds.size > 0 || changedResultIds.size > 0 || addedQuestionIds.size > 0 || deletedQuestionIds.size > 0;
+
+  // Build diff for confirmation modal
+  const buildDiff = () => {
+    const diff: {
+      metadataChanges: { field: string; before: string; after: string }[];
+      modifiedQuestions: { orderNum: number; text: string; changes: string[] }[];
+      addedQuestions: { text: string }[];
+      deletedQuestions: { orderNum: number; text: string }[];
+      modifiedResults: { orderNum: number; text: string; changes: string[] }[];
+    } = {
+      metadataChanges: [],
+      modifiedQuestions: [],
+      addedQuestions: [],
+      deletedQuestions: [],
+      modifiedResults: [],
+    };
+
+    // Quiz metadata diff
+    if (quizChanged && quiz && originalQuiz.current) {
+      for (const { key, label } of QUIZ_DIFF_FIELDS) {
+        const before = originalQuiz.current[key];
+        const after = quiz[key];
+        if (String(before) !== String(after)) {
+          diff.metadataChanges.push({
+            field: label,
+            before: formatDiffValue(before),
+            after: formatDiffValue(after),
+          });
+        }
+      }
+    }
+
+    // Added questions
+    for (const id of addedQuestionIds) {
+      const q = questions.find(qq => qq.id === id);
+      if (q) diff.addedQuestions.push({ text: q.question_text });
+    }
+
+    // Deleted questions
+    for (const id of deletedQuestionIds) {
+      const orig = originalQuestions.current.find(qq => qq.id === id);
+      if (orig) diff.deletedQuestions.push({ orderNum: orig.order_number, text: orig.question_text });
+    }
+
+    // Modified questions
+    for (const id of changedQuestionIds) {
+      if (addedQuestionIds.has(id) || deletedQuestionIds.has(id)) continue;
+      const current = questions.find(q => q.id === id);
+      const orig = originalQuestions.current.find(q => q.id === id);
+      if (!current || !orig) continue;
+      const changes: string[] = [];
+      if (current.question_text !== orig.question_text) changes.push('texto');
+      if (JSON.stringify(current.options) !== JSON.stringify(orig.options)) changes.push('opções');
+      if (JSON.stringify(current.blocks) !== JSON.stringify(orig.blocks)) changes.push('blocos');
+      if (current.custom_label !== orig.custom_label) changes.push('label');
+      if (changes.length > 0) {
+        diff.modifiedQuestions.push({ orderNum: current.order_number, text: current.question_text.substring(0, 50), changes });
+      }
+    }
+
+    // Modified results
+    for (const id of changedResultIds) {
+      const current = results.find(r => r.id === id);
+      const orig = originalResults.current.find(r => r.id === id);
+      if (!current || !orig) continue;
+      const changes: string[] = [];
+      if (current.result_text !== orig.result_text) changes.push('texto');
+      if (current.min_score !== orig.min_score || current.max_score !== orig.max_score) changes.push('scores');
+      if (current.redirect_url !== orig.redirect_url) changes.push('URL');
+      if (current.button_text !== orig.button_text) changes.push('botão');
+      if (changes.length > 0) {
+        diff.modifiedResults.push({ orderNum: current.order_number, text: current.result_text.substring(0, 50), changes });
+      }
+    }
+
+    return diff;
+  };
 
   const handleSave = async () => {
     setConfirmSaveOpen(false);
@@ -160,7 +321,7 @@ const SupportQuizEditor = () => {
 
       if (changedQuestionIds.size > 0) {
         payload.questions_updates = questions
-          .filter(q => changedQuestionIds.has(q.id))
+          .filter(q => changedQuestionIds.has(q.id) && !addedQuestionIds.has(q.id))
           .map(q => ({
             id: q.id,
             question_text: q.question_text,
@@ -168,6 +329,25 @@ const SupportQuizEditor = () => {
             blocks: q.blocks,
             custom_label: q.custom_label,
           }));
+      }
+
+      // New questions to add
+      if (addedQuestionIds.size > 0) {
+        payload.questions_to_add = questions
+          .filter(q => addedQuestionIds.has(q.id))
+          .map(q => ({
+            question_text: q.question_text,
+            answer_format: q.answer_format,
+            order_number: q.order_number,
+            blocks: q.blocks,
+            options: q.options,
+            custom_label: q.custom_label,
+          }));
+      }
+
+      // Questions to delete
+      if (deletedQuestionIds.size > 0) {
+        payload.questions_to_delete = Array.from(deletedQuestionIds);
       }
 
       if (changedResultIds.size > 0) {
@@ -188,10 +368,15 @@ const SupportQuizEditor = () => {
       trackAction('Salvou alterações no quiz', quizId, `Mudanças: ${data.changes?.join(', ')}`);
       logAudit('support:edit_quiz', 'support', quizId!, { target_user_id: target!.userId, changes: data.changes });
 
+      // Reload to get fresh data with real IDs
+      await loadQuizData();
+
       // Reset change tracking
       setQuizChanged(false);
       setChangedQuestionIds(new Set());
       setChangedResultIds(new Set());
+      setAddedQuestionIds(new Set());
+      setDeletedQuestionIds(new Set());
     } catch (err: any) {
       console.error('Error saving quiz:', err);
       toast.error('Erro ao salvar alterações');
@@ -209,6 +394,9 @@ const SupportQuizEditor = () => {
   }
 
   if (!quiz || !target) return null;
+
+  const diff = buildDiff();
+  const totalDiffItems = diff.metadataChanges.length + diff.modifiedQuestions.length + diff.addedQuestions.length + diff.deletedQuestions.length + diff.modifiedResults.length;
 
   return (
     <div className="min-h-screen bg-background pt-12">
@@ -239,7 +427,7 @@ const SupportQuizEditor = () => {
           <div className="flex items-center gap-2">
             {hasChanges && (
               <Badge variant="outline" className="text-amber-600 border-amber-600">
-                Alterações pendentes
+                {totalDiffItems} alteração(ões)
               </Badge>
             )}
             <Button
@@ -262,54 +450,32 @@ const SupportQuizEditor = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Título</Label>
-                <Input
-                  value={quiz.title}
-                  onChange={(e) => updateQuizField('title', e.target.value)}
-                />
+                <Input value={quiz.title} onChange={(e) => updateQuizField('title', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Slug</Label>
-                <Input
-                  value={quiz.slug || ''}
-                  onChange={(e) => updateQuizField('slug', e.target.value)}
-                />
+                <Input value={quiz.slug || ''} onChange={(e) => updateQuizField('slug', e.target.value)} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Descrição</Label>
-                <Textarea
-                  value={quiz.description || ''}
-                  onChange={(e) => updateQuizField('description', e.target.value)}
-                  className="min-h-[60px]"
-                />
+                <Textarea value={quiz.description || ''} onChange={(e) => updateQuizField('description', e.target.value)} className="min-h-[60px]" />
               </div>
             </div>
             <div className="flex flex-wrap gap-6 pt-2">
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={quiz.is_public}
-                  onCheckedChange={(v) => updateQuizField('is_public', v)}
-                />
+                <Switch checked={quiz.is_public} onCheckedChange={(v) => updateQuizField('is_public', v)} />
                 <Label>Público</Label>
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={quiz.show_title ?? true}
-                  onCheckedChange={(v) => updateQuizField('show_title', v)}
-                />
+                <Switch checked={quiz.show_title ?? true} onCheckedChange={(v) => updateQuizField('show_title', v)} />
                 <Label>Exibir Título</Label>
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={quiz.show_description ?? true}
-                  onCheckedChange={(v) => updateQuizField('show_description', v)}
-                />
+                <Switch checked={quiz.show_description ?? true} onCheckedChange={(v) => updateQuizField('show_description', v)} />
                 <Label>Exibir Descrição</Label>
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={quiz.show_question_number ?? true}
-                  onCheckedChange={(v) => updateQuizField('show_question_number', v)}
-                />
+                <Switch checked={quiz.show_question_number ?? true} onCheckedChange={(v) => updateQuizField('show_question_number', v)} />
                 <Label>Nº da Pergunta</Label>
               </div>
             </div>
@@ -324,14 +490,21 @@ const SupportQuizEditor = () => {
         {/* Questions */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Perguntas ({questions.length})</CardTitle>
-            <CardDescription>Clique para expandir e editar</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Perguntas ({questions.length})</CardTitle>
+                <CardDescription>Clique para expandir e editar</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={addQuestion}>
+                <Plus className="h-4 w-4 mr-1" /> Adicionar
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ScrollArea className="max-h-[500px]">
               <div className="space-y-2">
-                {questions.map((q, idx) => (
-                  <Card key={q.id} className="border">
+                {questions.map((q) => (
+                  <Card key={q.id} className={`border ${addedQuestionIds.has(q.id) ? 'border-green-500/50 bg-green-500/5' : ''}`}>
                     <div
                       className="flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => setExpandedQuestionId(expandedQuestionId === q.id ? null : q.id)}
@@ -340,9 +513,18 @@ const SupportQuizEditor = () => {
                       <Badge variant="outline" className="text-xs shrink-0">#{q.order_number}</Badge>
                       <span className="font-medium text-sm flex-1 truncate">{q.question_text}</span>
                       <Badge variant="secondary" className="text-xs shrink-0">{q.answer_format}</Badge>
-                      {changedQuestionIds.has(q.id) && (
+                      {addedQuestionIds.has(q.id) && (
+                        <Badge className="text-xs bg-green-600 shrink-0">nova</Badge>
+                      )}
+                      {changedQuestionIds.has(q.id) && !addedQuestionIds.has(q.id) && (
                         <Badge variant="outline" className="text-xs text-amber-600 border-amber-600 shrink-0">editado</Badge>
                       )}
+                      <Button
+                        variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(q.id); }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                       {expandedQuestionId === q.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </div>
 
@@ -533,39 +715,139 @@ const SupportQuizEditor = () => {
         )}
       </div>
 
-      {/* Save Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Excluir Pergunta
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação removerá a pergunta permanentemente ao salvar. Deseja continuar?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => confirmDeleteId && deleteQuestion(confirmDeleteId)}>
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Confirmation Dialog with Visual Diff */}
       <Dialog open={confirmSaveOpen} onOpenChange={setConfirmSaveOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
               Confirmar Alterações
             </DialogTitle>
             <DialogDescription>
-              Você está prestes a modificar o quiz de <strong>{target?.fullName || target?.email}</strong>.
-              Esta ação será registrada no log de auditoria.
+              Revise as alterações antes de salvar no quiz de <strong>{target?.fullName || target?.email}</strong>.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
-            {quizChanged && (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">Quiz</Badge>
-                <span>Metadados alterados</span>
+
+          <div className="space-y-4 text-sm">
+            {/* Metadata diff table */}
+            {diff.metadataChanges.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-xs uppercase text-muted-foreground mb-2">📋 Metadados do Quiz</h4>
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left p-2 font-medium">Campo</th>
+                        <th className="text-left p-2 font-medium text-destructive">Antes</th>
+                        <th className="text-center p-2 w-8"></th>
+                        <th className="text-left p-2 font-medium text-green-600">Depois</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {diff.metadataChanges.map((ch, i) => (
+                        <tr key={i} className="border-t">
+                          <td className="p-2 font-medium">{ch.field}</td>
+                          <td className="p-2 text-destructive line-through">{ch.before}</td>
+                          <td className="p-2 text-center"><ArrowRight className="h-3 w-3 text-muted-foreground" /></td>
+                          <td className="p-2 text-green-600 font-medium">{ch.after}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
-            {changedQuestionIds.size > 0 && (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">Perguntas</Badge>
-                <span>{changedQuestionIds.size} pergunta(s) editada(s)</span>
+
+            {/* Added questions */}
+            {diff.addedQuestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-xs uppercase text-muted-foreground mb-2">➕ Perguntas Adicionadas ({diff.addedQuestions.length})</h4>
+                <div className="space-y-1">
+                  {diff.addedQuestions.map((q, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-xs">
+                      <Badge className="bg-green-600 text-xs">nova</Badge>
+                      <span>{q.text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-            {changedResultIds.size > 0 && (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">Resultados</Badge>
-                <span>{changedResultIds.size} resultado(s) editado(s)</span>
+
+            {/* Deleted questions */}
+            {diff.deletedQuestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-xs uppercase text-muted-foreground mb-2">🗑️ Perguntas Excluídas ({diff.deletedQuestions.length})</h4>
+                <div className="space-y-1">
+                  {diff.deletedQuestions.map((q, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-destructive/10 border border-destructive/20 rounded text-xs">
+                      <Badge variant="destructive" className="text-xs">#{q.orderNum}</Badge>
+                      <span className="line-through">{q.text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
+
+            {/* Modified questions */}
+            {diff.modifiedQuestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-xs uppercase text-muted-foreground mb-2">✏️ Perguntas Editadas ({diff.modifiedQuestions.length})</h4>
+                <div className="space-y-1">
+                  {diff.modifiedQuestions.map((q, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded text-xs">
+                      <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">#{q.orderNum}</Badge>
+                      <span className="flex-1 truncate">{q.text}</span>
+                      <span className="text-muted-foreground">{q.changes.join(', ')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Modified results */}
+            {diff.modifiedResults.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-xs uppercase text-muted-foreground mb-2">🏆 Resultados Editados ({diff.modifiedResults.length})</h4>
+                <div className="space-y-1">
+                  {diff.modifiedResults.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded text-xs">
+                      <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">#{r.orderNum}</Badge>
+                      <span className="flex-1 truncate">{r.text}</span>
+                      <span className="text-muted-foreground">{r.changes.join(', ')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {totalDiffItems === 0 && hasChanges && (
+              <p className="text-muted-foreground text-center py-4">Alterações detectadas mas sem diferenças visíveis nos campos rastreados.</p>
             )}
           </div>
+
+          <Separator />
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmSaveOpen(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving}>
