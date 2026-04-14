@@ -75,8 +75,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ received: true, message: 'Test webhook logged' }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const user = authUsers?.users?.find(u => u.email?.toLowerCase() === buyerEmail);
+    // Buscar usuário diretamente na tabela profiles (sem limite de paginação)
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('id, email')
+      .eq('email', buyerEmail)
+      .maybeSingle();
+
+    const user = profile ? { id: profile.id, email: profile.email } : null;
 
     if (!user) {
       await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'pending', error_message: 'User not found', provider: 'kiwify' });
