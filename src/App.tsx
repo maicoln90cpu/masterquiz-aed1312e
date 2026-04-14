@@ -120,6 +120,7 @@ const Integrations = lazyWithRetry(() => import("./pages/Integrations"), "Integr
 const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"), "PrivacyPolicy");
 const MyQuizzes = lazyWithRetry(() => import("./pages/MyQuizzes"), "MyQuizzes");
 const Start = lazyWithRetry(() => import("./pages/Start"), "Start");
+const SupportDashboard = lazyWithRetry(() => import("./pages/SupportDashboard"), "SupportDashboard");
 
 // ✅ GTM GLOBAL: Layout route que carrega tracking apenas nas rotas do site (NÃO quiz público/preview)
 const GlobalTrackingLayout = () => {
