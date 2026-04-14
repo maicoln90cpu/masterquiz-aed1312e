@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupportMode, type SupportAction } from '@/contexts/SupportModeContext';
 import { logAudit } from '@/lib/auditLogger';
+import { generateSupportPdfReport } from '@/lib/supportPdfReport';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -369,31 +370,23 @@ const SupportDashboard = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const exportSessionReport = () => {
-    if (!target) return;
-    const lines = [
-      `# Relatório de Sessão de Suporte`,
-      ``,
-      `**Usuário:** ${target.fullName} (${target.email})`,
-      `**Plano:** ${target.planType}`,
-      `**Início:** ${startTime?.toLocaleString('pt-BR')}`,
-      `**Duração:** ${getSessionDuration()}`,
-      `**Total de ações:** ${sessionActions.length}`,
-      ``,
-      `## Ações realizadas`,
-      ``,
-      ...sessionActions.map((a, i) =>
-        `${i + 1}. **${a.action}** — ${a.timestamp.toLocaleTimeString('pt-BR')}${a.details ? ` — ${a.details}` : ''}${a.resourceId ? ` (ID: ${a.resourceId.slice(0, 8)}...)` : ''}`
-      ),
-    ];
-    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `suporte-${target.email.split('@')[0]}-${new Date().toISOString().slice(0, 10)}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-    trackAction('Exportou relatório de sessão');
+  const exportSessionReport = async () => {
+    if (!target || !startTime) return;
+    try {
+      await generateSupportPdfReport({
+        userName: target.fullName,
+        userEmail: target.email,
+        planType: target.planType,
+        startTime,
+        duration: getSessionDuration(),
+        actions: sessionActions,
+      });
+      trackAction('Exportou relatório PDF');
+      toast.success('PDF exportado com sucesso');
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      toast.error('Erro ao gerar PDF');
+    }
   };
 
   if (loading) {
