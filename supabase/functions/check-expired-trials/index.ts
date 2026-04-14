@@ -71,6 +71,13 @@ Deno.serve(async (req) => {
           console.error(`[CHECK-EXPIRED-TRIALS] Error reverting ${trial.user_id}:`, updateError);
           results.push({ user_id: trial.user_id, status: 'error', error: updateError.message });
         } else {
+          // Log trial expiration
+          await supabase.from('trial_logs').update({
+            status: 'expired',
+            reverted_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq('user_id', trial.user_id).eq('status', 'active');
+
           revertedCount++;
           console.log(`[CHECK-EXPIRED-TRIALS] Reverted ${trial.user_id}: ${trial.plan_type} → ${trial.original_plan_type}`);
           results.push({ user_id: trial.user_id, status: 'reverted', from: trial.plan_type, to: trial.original_plan_type });
