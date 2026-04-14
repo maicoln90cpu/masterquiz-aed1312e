@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useEffect, useRef } from "react";
 
 interface PlanLimitWarningProps {
   current: number;
@@ -31,6 +33,20 @@ export const PlanLimitWarning = ({ current, limit, type }: PlanLimitWarningProps
 
   const isAtLimit = current >= limit;
   const typeText = type === 'quiz' ? t('planLimit.quizzes') : t('planLimit.responsesWord');
+
+  // 🎯 GTM: plan_limit_hit — disparado 1x quando atinge o limite
+  const limitFired = useRef(false);
+  useEffect(() => {
+    if (isAtLimit && !limitFired.current) {
+      limitFired.current = true;
+      pushGTMEvent('plan_limit_hit', {
+        limit_type: type,
+        current,
+        limit,
+        plan_type: subscription?.plan_type || 'free',
+      });
+    }
+  }, [isAtLimit]);
   
   return (
     <Alert variant={isAtLimit ? "destructive" : "default"} className="mb-6">
