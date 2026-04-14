@@ -17,6 +17,8 @@ import { useInvalidateOnLogout } from "@/hooks/useInvalidateOnLogout";
 import { useGlobalTracking } from "@/hooks/useGlobalTracking";
 import { useProductionWebVitals } from "@/hooks/useWebVitals";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SupportModeProvider } from "@/contexts/SupportModeContext";
+import { SupportModeBanner } from "@/components/admin/SupportModeBanner";
 import { useAccountCreatedEvent } from "@/hooks/useAccountCreatedEvent";
 import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 import { useSiteMode } from "@/hooks/useSiteMode";
@@ -118,6 +120,7 @@ const Integrations = lazyWithRetry(() => import("./pages/Integrations"), "Integr
 const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"), "PrivacyPolicy");
 const MyQuizzes = lazyWithRetry(() => import("./pages/MyQuizzes"), "MyQuizzes");
 const Start = lazyWithRetry(() => import("./pages/Start"), "Start");
+const SupportDashboard = lazyWithRetry(() => import("./pages/SupportDashboard"), "SupportDashboard");
 
 // ✅ GTM GLOBAL: Layout route que carrega tracking apenas nas rotas do site (NÃO quiz público/preview)
 const GlobalTrackingLayout = () => {
@@ -278,10 +281,12 @@ const App = () => (
     <GlobalErrorHandler>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <SupportModeProvider>
           <TooltipProvider>
             <WebVitalsProvider>
               <Toaster />
               <Sonner />
+              <SupportModeBanner />
             <BrowserRouter>
               <Routes>
                 {/* ✅ ROTAS COM GTM GLOBAL (todas as páginas do site) */}
@@ -394,6 +399,11 @@ const App = () => (
                       <LazyRoute Component={AdminTemplateEditor} />
                     </ProtectedRoute>
                   } />
+                  <Route path="/masteradm/support" element={
+                    <ProtectedRoute requiredRole="master_admin">
+                      <LazyRoute Component={SupportDashboard} />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/checkout" element={
                     <RequireAuth>
                       <ProtectedRoute requiredRole="admin">
@@ -417,6 +427,7 @@ const App = () => (
             </BrowserRouter>
           </WebVitalsProvider>
         </TooltipProvider>
+          </SupportModeProvider>
       </AuthProvider>
     </QueryClientProvider>
   </GlobalErrorHandler>

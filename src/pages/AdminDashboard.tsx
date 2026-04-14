@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen, ArrowUpDown, ArrowUp, ArrowDown, Eye } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
@@ -29,6 +29,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMode";
 import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hooks/useEditorLayout";
+import { useSupportMode } from "@/contexts/SupportModeContext";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -65,6 +66,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isAdmin } = useUserRole();
+  const { enterSupportMode } = useSupportMode();
   const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
   const { siteMode, isModeB } = useSiteMode();
   const { updateSiteMode } = useUpdateSiteMode();
@@ -1008,6 +1010,23 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            title="Acessar como Usuário"
+                            onClick={() => {
+                              enterSupportMode({
+                                userId: user.id,
+                                email: user.email || '',
+                                fullName: user.profile?.full_name || '',
+                                planType: user.subscription?.plan_type || 'free',
+                              });
+                              navigate('/masteradm/support');
+                            }}
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button 
                             variant="ghost" 
                             size="icon"

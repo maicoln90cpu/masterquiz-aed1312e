@@ -141,6 +141,9 @@ verify_jwt = false
 [functions.admin-update-subscription]
 verify_jwt = false
 
+[functions.admin-view-user-data]
+verify_jwt = false
+
 [functions.check-inactive-users-email]
 verify_jwt = false
 
