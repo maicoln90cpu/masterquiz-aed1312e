@@ -77,7 +77,6 @@ export default function Checkout() {
       const { pushGTMEvent } = await import("@/lib/gtmLogger");
       pushGTMEvent('upgrade_clicked', {
         plan_type: plan.plan_type,
-        plan_name: plan.name,
         price: plan.price_monthly,
         source: 'checkout_page',
       });
