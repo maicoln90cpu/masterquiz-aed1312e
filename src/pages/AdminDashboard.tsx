@@ -56,6 +56,7 @@ const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboar
 const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
 import { TrialModal } from "@/components/admin/TrialModal";
 const TrialLogsViewer = lazy(() => import("@/components/admin/TrialLogsViewer").then(m => ({ default: m.TrialLogsViewer })));
+const GrowthDashboard = lazy(() => import("@/components/admin/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
 // Loading fallback for lazy components
 const ComponentLoader = () => (
   <div className="flex items-center justify-center py-8">
@@ -1597,7 +1598,8 @@ export default function AdminDashboard() {
             <AdminSubTabs
               tabs={[
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, color: 'blue' },
-                { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'green' },
+                { id: 'growth', label: 'Growth', icon: <TrendingUp className="h-4 w-4" />, color: 'green' },
+                { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'emerald' },
                 { id: 'pql', label: 'PQL Analytics', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
                 { id: 'comparison', label: 'Comparação A×B', icon: <TrendingUp className="h-4 w-4" />, color: 'orange' },
               ]}
@@ -1606,6 +1608,11 @@ export default function AdminDashboard() {
               {(activeTab) => (
                 <>
                   {activeTab === 'dashboard' && renderOverviewContent()}
+                  {activeTab === 'growth' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <GrowthDashboard />
+                    </Suspense>
+                  )}
                   {activeTab === 'reports' && renderReportsContent()}
                   {activeTab === 'pql' && (
                     <Suspense fallback={<ComponentLoader />}>
