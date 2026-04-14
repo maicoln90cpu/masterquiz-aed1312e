@@ -414,21 +414,45 @@ export default function PlanManagement() {
 
   const handleInvalidateCache = async () => {
     try {
-      // Invalidar TODOS os caches relacionados a planos
       await queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       await queryClient.invalidateQueries({ queryKey: ['landing-plans'] });
       
-      toast.success('✅ Cache invalidado! Atualizando página...', {
-        duration: 2000,
-      });
-      
-      // Aguardar para usuário ver o toast
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      toast.success('✅ Cache invalidado! Atualizando página...', { duration: 2000 });
+      setTimeout(() => { window.location.reload(); }, 1500);
     } catch (error) {
       console.error('Erro ao invalidar cache:', error);
       toast.error('❌ Erro ao invalidar cache. Tente novamente.');
+    }
+  };
+
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncLimits = async () => {
+    if (!confirm('Isso atualizará os limites de TODOS os usuários para os valores atuais dos planos. Continuar?')) return;
+    
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-plan-limits', {
+        method: 'POST',
+      });
+
+      if (error) throw error;
+
+      const details = data?.details || {};
+      const total = data?.total_updated || 0;
+      const summary = Object.entries(details)
+        .map(([plan, info]: [string, any]) => `${plan}: ${info.updated}`)
+        .join(', ');
+
+      toast.success(`✅ ${total} usuários sincronizados! (${summary})`, { duration: 5000 });
+      
+      queryClient.invalidateQueries({ queryKey: ['resource-limits'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+    } catch (error: any) {
+      console.error('Erro ao sincronizar:', error);
+      toast.error(`❌ Erro: ${error.message || 'Falha ao sincronizar limites'}`);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
