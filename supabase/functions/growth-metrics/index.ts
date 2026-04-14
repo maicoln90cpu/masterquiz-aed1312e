@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════
     const { data: webhookLogs } = await supabase
       .from('webhook_logs')
-      .select('email, evento, status, created_at')
+      .select('email, evento, status, created_at, paid_plan_type')
       .in('evento', ['order_approved', 'order_paid', 'subscription_created', 'order_refunded', 'subscription_canceled'])
       .order('created_at', { ascending: false })
 
