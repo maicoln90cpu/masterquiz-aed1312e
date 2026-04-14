@@ -271,11 +271,10 @@ const SupportDashboard = () => {
 
   const handleEditQuiz = (quizId: string, quizTitle?: string) => {
     trackAction('Abriu editor do quiz', quizId, quizTitle);
-    logAudit('support:view_quiz_detail', 'support', quizId, {
+    logAudit('support:edit_quiz', 'support', quizId, {
       target_user_id: target!.userId,
-      action_type: 'edit_quiz',
     });
-    loadQuizDetail(quizId, quizTitle);
+    navigate(`/masteradm/support/edit-quiz/${quizId}`);
   };
 
   const loadTickets = async () => {
