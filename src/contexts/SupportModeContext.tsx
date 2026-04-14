@@ -33,8 +33,7 @@ export const SupportModeProvider = ({ children }: { children: ReactNode }) => {
   const enterSupportMode = useCallback((t: SupportModeTarget) => {
     setTarget(t);
     setStartTime(new Date());
-    logAudit('admin:settings_updated', 'support_mode', t.userId, {
-      action: 'enter_support_mode',
+    logAudit('support:enter', 'support_mode', t.userId, {
       target_email: t.email,
       target_name: t.fullName,
     });
