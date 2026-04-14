@@ -721,6 +721,7 @@ export function GrowthDashboard() {
           { id: 'funnel', label: 'Funil de Ativação', icon: <Target className="h-4 w-4" />, color: 'red' },
           { id: 'behavior', label: 'Comportamento', icon: <Activity className="h-4 w-4" />, color: 'blue' },
           { id: 'revenue', label: 'Receita & Conversão', icon: <DollarSign className="h-4 w-4" />, color: 'green' },
+          { id: 'advanced', label: 'Avançado', icon: <Rocket className="h-4 w-4" />, color: 'amber' },
         ]}
         defaultTab="funnel"
       >
@@ -729,6 +730,14 @@ export function GrowthDashboard() {
             {activeTab === 'funnel' && <SectionA data={data.sectionA} />}
             {activeTab === 'behavior' && <SectionB data={data.sectionB} totalUsers={data.sectionA.totalUsers} />}
             {activeTab === 'revenue' && <SectionC data={data.sectionC} totalUsers={data.sectionA.totalUsers} />}
+            {activeTab === 'advanced' && data.sectionD && <SectionD data={data.sectionD} />}
+            {activeTab === 'advanced' && !data.sectionD && (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  Dados avançados ainda não disponíveis. Recarregue a página.
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </AdminSubTabs>
