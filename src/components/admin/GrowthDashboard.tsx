@@ -65,6 +65,18 @@ interface GrowthData {
     realPaidCount: number;
     trialCount: number;
   };
+  sectionD?: {
+    expressFunnel: {
+      created: number;
+      published: number;
+      createdSecondQuiz: number;
+      timings: { immediate: number; sameDay: number; later: number };
+    };
+    whatsappRecoveryByIcp: { icpOn: number; icpOff: number; total: number };
+    secondQuizVsLead: { beforeLead: number; afterLead: number };
+    paywallFunnel: { views: number; clicks: number };
+    editorSession: { avgSeconds: number | null; sampleSize: number };
+  };
 }
 
 function useGrowthMetrics() {
