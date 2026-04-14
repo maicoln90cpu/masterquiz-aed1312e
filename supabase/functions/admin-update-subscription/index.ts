@@ -115,6 +115,14 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Log trial cancellation
+      const { data: profile } = await supabase.from('profiles').select('email').eq('id', user_id).single();
+      await supabase.from('trial_logs').update({
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq('user_id', user_id).eq('status', 'active');
+
       console.log(`[ADMIN-UPDATE-SUB] Trial cancelled, reverted to ${currentSub.original_plan_type}`);
       return new Response(JSON.stringify({ success: true, data, trial_cancelled: true }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -167,6 +175,19 @@ Deno.serve(async (req) => {
           status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      // Log trial activation
+      const { data: profile } = await supabase.from('profiles').select('email').eq('id', user_id).single();
+      await supabase.from('trial_logs').insert({
+        user_id,
+        user_email: profile?.email || null,
+        trial_plan_type,
+        original_plan_type: realOriginalPlan,
+        trial_days,
+        trial_end_date: trialEndDate.toISOString(),
+        started_by: callerId,
+        status: 'active',
+      });
 
       console.log(`[ADMIN-UPDATE-SUB] Trial activated until ${trialEndDate.toISOString()}`);
       return new Response(JSON.stringify({ success: true, data, trial_activated: true, trial_end_date: trialEndDate.toISOString() }), {
