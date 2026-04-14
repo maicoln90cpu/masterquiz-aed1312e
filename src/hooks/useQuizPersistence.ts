@@ -65,6 +65,24 @@ export function useQuizPersistence({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { checkRateLimit } = useRateLimit();
+  const editorSessionStart = useRef<number>(Date.now());
+
+  // 🎯 Editor session tracking — log duration on unmount
+  useEffect(() => {
+    editorSessionStart.current = Date.now();
+    return () => {
+      const durationSec = Math.round((Date.now() - editorSessionStart.current) / 1000);
+      if (durationSec > 10 && quizId) {
+        // Fire-and-forget: track editor session duration
+        pushGTMEvent('editor_session_end', {
+          quiz_id: quizId,
+          duration_seconds: durationSec,
+          editor_mode: editorMode,
+          is_express: isExpressMode,
+        });
+      }
+    };
+  }, [quizId, editorMode, isExpressMode]);
 
   // ✅ Helper para isolar localStorage por usuário
   const getStorageKey = useCallback((userId: string, key: string) => {
