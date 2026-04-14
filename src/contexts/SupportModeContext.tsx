@@ -41,8 +41,7 @@ export const SupportModeProvider = ({ children }: { children: ReactNode }) => {
 
   const exitSupportMode = useCallback(() => {
     if (target) {
-      logAudit('admin:settings_updated', 'support_mode', target.userId, {
-        action: 'exit_support_mode',
+      logAudit('support:exit', 'support_mode', target.userId, {
         target_email: target.email,
         duration_seconds: startTime ? Math.round((Date.now() - startTime.getTime()) / 1000) : 0,
       });
