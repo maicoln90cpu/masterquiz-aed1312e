@@ -388,12 +388,12 @@ export default function AdminDashboard() {
       }
 
       const mrr = growthData.sectionC?.mrr || 0;
-      const paidCount = Object.values(growthData.sectionC?.paidByPlan || {}).reduce((a: number, b: any) => a + Number(b), 0);
+      const paidCount: number = Object.values(growthData.sectionC?.paidByPlan || {}).reduce((a: number, b: unknown) => a + Number(b), 0) as number;
       const totalNonAdmin = growthData.sectionA?.totalUsers || 0;
       const conversionRate = totalNonAdmin > 0 ? (paidCount / totalNonAdmin) * 100 : 0;
 
       setFinancialData({
-        activeUsers: paidCount,
+        activeUsers: paidCount as number,
         conversionRate: Math.round(conversionRate * 10) / 10,
         monthlyRevenue: mrr,
         annualRevenue: mrr * 12
