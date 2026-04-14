@@ -2555,6 +2555,60 @@ export type Database = {
           },
         ]
       }
+      trial_logs: {
+        Row: {
+          cancelled_at: string | null
+          converted_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          original_plan_type: string
+          reverted_at: string | null
+          started_by: string | null
+          status: string
+          trial_days: number
+          trial_end_date: string
+          trial_plan_type: string
+          updated_at: string
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          original_plan_type: string
+          reverted_at?: string | null
+          started_by?: string | null
+          status?: string
+          trial_days: number
+          trial_end_date: string
+          trial_plan_type: string
+          updated_at?: string
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          original_plan_type?: string
+          reverted_at?: string | null
+          started_by?: string | null
+          status?: string
+          trial_days?: number
+          trial_end_date?: string
+          trial_plan_type?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_integrations: {
         Row: {
           api_key: string | null
