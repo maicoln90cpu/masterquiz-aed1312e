@@ -796,7 +796,7 @@ const SupportDashboard = () => {
                 </div>
                 <Button variant="outline" size="sm" onClick={exportSessionReport}>
                   <Download className="h-4 w-4 mr-1" />
-                  Exportar .md
+                  Exportar PDF
                 </Button>
               </CardHeader>
               <CardContent>
