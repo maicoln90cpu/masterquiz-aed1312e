@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteMode } from '@/hooks/useSiteMode';
+import { pushGTMEvent } from '@/lib/gtmLogger';
 
 export const LandingHeader = () => {
   const navigate = useNavigate();
@@ -41,24 +42,16 @@ export const LandingHeader = () => {
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
 
-      if (typeof window !== 'undefined' && (window as any).dataLayer) {
-        (window as any).dataLayer.push({
-          event: 'header_nav_click',
-          section: href.replace('#', ''),
-          location: 'header'
-        });
-      }
+      pushGTMEvent('header_nav_click', {
+        section: href.replace('#', ''),
+        location: 'header',
+      });
     }
     setIsMobileMenuOpen(false);
   };
 
   const handleLoginClick = () => {
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: 'header_login_click',
-        location: 'header'
-      });
-    }
+    pushGTMEvent('header_login_click', { location: 'header' });
     navigate(isModeB ? '/precos' : '/login');
   };
 

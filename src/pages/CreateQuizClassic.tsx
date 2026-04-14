@@ -78,10 +78,7 @@ const CreateQuizClassic = () => {
     const key = `${event}_${quizId}`;
     if (firedEventsRef.current.has(key)) return;
     firedEventsRef.current.add(key);
-    const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-    w.dataLayer = w.dataLayer || [];
-    w.dataLayer.push({ event, ...data });
-    console.log(`🎯 [GTM] Event fired (once): ${event}`);
+    pushGTMEvent(event, data);
   }, [searchParams]);
 
   const {
@@ -213,10 +210,7 @@ const CreateQuizClassic = () => {
       if (document.hidden && editorState.quizId && hasInteracted) {
         const quizStatus = editorState.quizId ? 'draft' : null;
         if (quizStatus) {
-          const w = window as Window & { dataLayer?: Record<string, unknown>[] };
-          w.dataLayer = w.dataLayer || [];
-          w.dataLayer.push({
-            event: 'EditorAbandoned',
+          pushGTMEvent('EditorAbandoned', {
             quiz_id: editorState.quizId,
             questions_count: questions.length,
             had_title: !!appearanceState.title?.trim(),
