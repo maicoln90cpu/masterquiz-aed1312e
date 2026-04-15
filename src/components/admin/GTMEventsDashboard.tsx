@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, BarChart3, Clock, TrendingUp } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Loader2, BarChart3, Clock, TrendingUp, Filter } from "lucide-react";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 const EVENT_CATEGORIES: Record<string, { label: string; color: string }> = {
   AccountCreated: { label: "Onboarding", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
@@ -51,8 +54,58 @@ const EVENT_CATEGORIES: Record<string, { label: string; color: string }> = {
   ai_generation_used: { label: "IA - Unificado", color: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200" },
 };
 
+type IntegrationMap = Record<string, { is_integrated: boolean; gtm_event_name: string }>;
+
 export const GTMEventsDashboard = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
+  const [showOnlyPending, setShowOnlyPending] = useState(false);
+  const [localGtmNames, setLocalGtmNames] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
+
+  // Fetch integration status
+  const { data: integrations } = useQuery({
+    queryKey: ["gtm-event-integrations"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("gtm_event_integrations" as any)
+        .select("event_name, is_integrated, gtm_event_name");
+      const map: IntegrationMap = {};
+      (data || []).forEach((r: any) => {
+        map[r.event_name] = {
+          is_integrated: r.is_integrated || false,
+          gtm_event_name: r.gtm_event_name || "",
+        };
+      });
+      return map;
+    },
+  });
+
+  // Upsert mutation
+  const upsertMutation = useMutation({
+    mutationFn: async (payload: { event_name: string; is_integrated?: boolean; gtm_event_name?: string }) => {
+      const existing = integrations?.[payload.event_name];
+      const row = {
+        event_name: payload.event_name,
+        is_integrated: payload.is_integrated ?? existing?.is_integrated ?? false,
+        gtm_event_name: payload.gtm_event_name ?? existing?.gtm_event_name ?? "",
+      };
+      await supabase.from("gtm_event_integrations" as any).upsert(row, { onConflict: "event_name" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gtm-event-integrations"] });
+    },
+  });
+
+  const handleToggleIntegrated = useCallback((eventName: string, checked: boolean) => {
+    upsertMutation.mutate({ event_name: eventName, is_integrated: checked });
+  }, [upsertMutation]);
+
+  const handleGtmNameBlur = useCallback((eventName: string) => {
+    const value = localGtmNames[eventName];
+    if (value !== undefined) {
+      upsertMutation.mutate({ event_name: eventName, gtm_event_name: value });
+    }
+  }, [localGtmNames, upsertMutation]);
 
   // Fetch event counts (24h and 7d)
   const { data: counts, isLoading: countsLoading } = useQuery({
@@ -109,10 +162,17 @@ export const GTMEventsDashboard = () => {
   const totalEvents7d = counts?.reduce((sum, c) => sum + c.count7d, 0) || 0;
   const uniqueEvents = counts?.length || 0;
 
+  // Filter counts for display
+  const filteredCounts = showOnlyPending
+    ? counts?.filter((row) => !integrations?.[row.event]?.is_integrated)
+    : counts;
+
+  const pendingCount = counts?.filter((row) => !integrations?.[row.event]?.is_integrated).length || 0;
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
@@ -146,12 +206,32 @@ export const GTMEventsDashboard = () => {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-destructive/10">
+              <Filter className="h-5 w-5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Pendentes GTM</p>
+              <p className="text-2xl font-bold">{pendingCount}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Event Counts Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Contagem por Evento</CardTitle>
+          <Button
+            variant={showOnlyPending ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowOnlyPending(!showOnlyPending)}
+            className="gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            {showOnlyPending ? `Pendentes (${pendingCount})` : "Mostrar apenas não integrados"}
+          </Button>
         </CardHeader>
         <CardContent>
           {countsLoading ? (
@@ -164,23 +244,46 @@ export const GTMEventsDashboard = () => {
                   <TableHead>Categoria</TableHead>
                   <TableHead className="text-right">24h</TableHead>
                   <TableHead className="text-right">7d</TableHead>
+                  <TableHead className="text-center w-[80px]">No GTM</TableHead>
+                  <TableHead className="w-[200px]">Nome no GTM</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {counts?.map((row) => (
-                  <TableRow key={row.event}>
-                    <TableCell className="font-mono text-sm">{row.event}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={row.categoryColor}>{row.category}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">{row.count24h}</TableCell>
-                    <TableCell className="text-right">{row.count7d}</TableCell>
-                  </TableRow>
-                ))}
-                {(!counts || counts.length === 0) && (
+                {filteredCounts?.map((row) => {
+                  const integration = integrations?.[row.event];
+                  const isIntegrated = integration?.is_integrated || false;
+                  const gtmName = localGtmNames[row.event] ?? integration?.gtm_event_name ?? "";
+
+                  return (
+                    <TableRow key={row.event} className={isIntegrated ? "opacity-70" : ""}>
+                      <TableCell className="font-mono text-sm">{row.event}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={row.categoryColor}>{row.category}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">{row.count24h}</TableCell>
+                      <TableCell className="text-right">{row.count7d}</TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={isIntegrated}
+                          onCheckedChange={(checked) => handleToggleIntegrated(row.event, !!checked)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          placeholder="ex: signup_complete"
+                          className="h-8 text-xs"
+                          value={gtmName}
+                          onChange={(e) => setLocalGtmNames((prev) => ({ ...prev, [row.event]: e.target.value }))}
+                          onBlur={() => handleGtmNameBlur(row.event)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {(!filteredCounts || filteredCounts.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                      Nenhum evento registrado ainda
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      {showOnlyPending ? "Todos os eventos já foram integrados! 🎉" : "Nenhum evento registrado ainda"}
                     </TableCell>
                   </TableRow>
                 )}
