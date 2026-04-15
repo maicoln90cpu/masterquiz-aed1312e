@@ -37,6 +37,7 @@ import type { BlockType, QuizBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { MobileEditorToolbar } from "@/components/quiz/MobileEditorToolbar";
+import { PostExpressScreen } from "@/components/quiz/PostExpressScreen";
 
 import { useQuizState } from "@/hooks/useQuizState";
 import { useQuizPersistence } from "@/hooks/useQuizPersistence";
@@ -74,7 +75,9 @@ const CreateQuizModern = () => {
 
   const isEditMode = !!searchParams.get('id');
   const isExpressMode = searchParams.get('mode') === 'express';
+  const isAIAutoOpen = searchParams.get('ai') === 'true';
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showPostExpress, setShowPostExpress] = useState(false);
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCurrentPreviewDialog, setShowCurrentPreviewDialog] = useState(false);
@@ -202,8 +205,10 @@ const CreateQuizModern = () => {
       });
       if (isExpressMode) {
         updateEditor({ step: 3 });
-        updateUI({ showTemplateSelector: false });
+        updateUI({ showTemplateSelector: false, showAIGenerator: true });
         fireOnce('express_started', { quiz_id: editQuizId });
+      } else if (isAIAutoOpen) {
+        updateUI({ showAIGenerator: true });
       }
     }
   }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI, fireOnce]);
@@ -331,6 +336,13 @@ const CreateQuizModern = () => {
   // RENDERS CONDICIONAIS
   // ============================================
 
+  // Post-Express Screen (shown after celebration)
+  if (showPostExpress && isExpressMode) {
+    return (
+      <PostExpressScreen />
+    );
+  }
+
   // Express Celebration
   if (showCelebration && isExpressMode) {
     return (
@@ -338,9 +350,8 @@ const CreateQuizModern = () => {
         quizUrl={publishedQuizUrl || expressQuizUrl}
         quizTitle={appearanceState.title || t('createQuiz.newQuiz')}
         onGoToDashboard={() => {
-          queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
-          queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-          navigate('/dashboard');
+          setShowCelebration(false);
+          setShowPostExpress(true);
         }}
       />
     );
@@ -356,7 +367,7 @@ const CreateQuizModern = () => {
           </div>
         </header>
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <AIQuizGenerator onBack={handleBackFromAI} />
+          <AIQuizGenerator onBack={handleBackFromAI} lockedMode={isExpressMode ? "form" : undefined} />
         </div>
       </main>
     );
