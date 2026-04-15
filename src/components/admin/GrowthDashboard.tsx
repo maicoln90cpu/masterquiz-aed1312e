@@ -20,6 +20,9 @@ interface GrowthData {
       receivedResponse: number;
       received20Plus: number;
       paidUsers: number;
+      icpPublishedReal?: number;
+      icpRegistered?: number;
+      icpConversionPct?: number;
     };
     medianTimeToPublishHours: number | null;
     zombies: Array<{ id: string; email: string; name: string; created_at: string }>;
@@ -37,6 +40,9 @@ interface GrowthData {
     usersAtFreeLimit: number;
     activitySegmentation: { active: number; sleeping: number; lost: number };
     utmSources: Record<string, number>;
+    aiBeforePublish?: { count: number; total: number; pct: number };
+    medianLoginsBeforePublish?: number | null;
+    crmAfterFirstLead?: { count: number; total: number };
   };
   sectionC: {
     mrr: number;
@@ -64,6 +70,8 @@ interface GrowthData {
     medianDaysToConvert: number | null;
     realPaidCount: number;
     trialCount: number;
+    conversionByPlan?: Record<string, number>;
+    avgDaysToFirstLead?: number | null;
   };
   sectionD?: {
     expressFunnel: {
@@ -74,7 +82,7 @@ interface GrowthData {
     };
     whatsappRecoveryByIcp: { icpOn: number; icpOff: number; total: number };
     secondQuizVsLead: { beforeLead: number; afterLead: number };
-    paywallFunnel: { views: number; clicks: number };
+    paywallFunnel: { views: number; clicks: number; withoutClick?: number };
     editorSession: { avgSeconds: number | null; sampleSize: number };
   };
 }
