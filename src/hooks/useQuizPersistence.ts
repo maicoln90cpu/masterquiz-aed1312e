@@ -405,8 +405,11 @@ export function useQuizPersistence({
               editor_mode: editorMode,
             });
           } else {
+            // Manual quiz: dispara milestone se stage permite E ainda não disparou (dedup via localStorage)
             const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-            if (earlyStages.includes(currentStage)) {
+            const dedupKey = `mq_first_manual_published_${user.id}`;
+            const alreadyFired = localStorage.getItem(dedupKey);
+            if ([...earlyStages, 'construtor'].includes(currentStage) && !alreadyFired) {
               pushGTMEvent(publishEventName, {
                 quiz_id: quiz.id,
                 quiz_title: quiz.title,
@@ -414,18 +417,22 @@ export function useQuizPersistence({
                 publish_source: 'manual',
                 editor_mode: editorMode,
               });
+              localStorage.setItem(dedupKey, new Date().toISOString());
             }
           }
 
           // first_quiz_created — SOMENTE se houve interação real
           const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
-          if (earlyStages.includes(currentStage) && hasUserInteracted) {
+          const createDedupKey = `mq_first_manual_created_${user.id}`;
+          const createAlreadyFired = localStorage.getItem(createDedupKey);
+          if ([...earlyStages, 'construtor'].includes(currentStage) && hasUserInteracted && !createAlreadyFired) {
             pushGTMEvent(createEventName, {
               quiz_id: quiz.id,
               quiz_title: quiz.title,
               user_id: user.id,
               editor_mode: editorMode,
             });
+            localStorage.setItem(createDedupKey, new Date().toISOString());
 
             // Promover para engajado se ainda não passou
             if (currentStage === 'explorador' || currentStage === 'iniciado') {
@@ -438,14 +445,18 @@ export function useQuizPersistence({
             }
           }
 
-          // Promover para construtor ao publicar (independente de interação)
-          if (earlyStages.includes(currentStage)) {
+          // Promover stage ao publicar
+          if (earlyStages.includes(currentStage) || currentStage === 'construtor') {
+            const targetStage = isExpressQuiz ? 'engajado' : 'construtor';
+            const allowedFrom = isExpressQuiz
+              ? ['explorador', 'iniciado']
+              : ['explorador', 'iniciado', 'engajado'];
             await supabase
               .from('profiles')
-              .update({ user_stage: 'construtor', stage_updated_at: new Date().toISOString() })
+              .update({ user_stage: targetStage, stage_updated_at: new Date().toISOString() })
               .eq('id', user.id)
-              .in('user_stage', ['explorador', 'iniciado', 'engajado']);
-            console.log('🎯 [PQL] User stage upgraded to construtor (UPDATE branch)');
+              .in('user_stage', allowedFrom);
+            console.log(`🎯 [PQL] User stage upgraded to ${targetStage} (UPDATE branch, express=${isExpressQuiz})`);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (supabase as any)
@@ -543,60 +554,78 @@ export function useQuizPersistence({
         localStorage.setItem(getStorageKey(user.id, 'current_quiz_id'), quiz.id);
 
         // PQL v2: Promoção de estágio + eventos condicionais (INSERT branch)
-        if (earlyStages.includes(currentStage)) {
+        // PQL v2: Stage promotion + milestone events (INSERT branch)
+        {
           const w = window as Window & { dataLayer?: Record<string, unknown>[] };
           w.dataLayer = w.dataLayer || [];
+          const milestoneStages = [...earlyStages, 'construtor'];
 
-          // quiz_first_published — FILTRO: Express dispara evento separado
           const isExpressQuiz = isExpressMode || quiz.creation_source === 'express_auto';
           if (isExpressQuiz) {
-            pushGTMEvent('express_first_published', {
-              quiz_id: quiz.id,
-              quiz_title: quiz.title,
-              user_id: user.id,
-              editor_mode: editorMode,
-            });
+            if (earlyStages.includes(currentStage)) {
+              pushGTMEvent('express_first_published', {
+                quiz_id: quiz.id,
+                quiz_title: quiz.title,
+                user_id: user.id,
+                editor_mode: editorMode,
+              });
+            }
           } else {
+            // Manual quiz: milestone com dedup via localStorage
             const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-            pushGTMEvent(publishEventName, {
-              quiz_id: quiz.id,
-              quiz_title: quiz.title,
-              user_id: user.id,
-              publish_source: 'manual',
-              editor_mode: editorMode,
-            });
+            const dedupKey = `mq_first_manual_published_${user.id}`;
+            if (milestoneStages.includes(currentStage) && !localStorage.getItem(dedupKey)) {
+              pushGTMEvent(publishEventName, {
+                quiz_id: quiz.id,
+                quiz_title: quiz.title,
+                user_id: user.id,
+                publish_source: 'manual',
+                editor_mode: editorMode,
+              });
+              localStorage.setItem(dedupKey, new Date().toISOString());
+            }
           }
 
-          // first_quiz_created — SOMENTE se houve interação real
-          const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
-          if (hasUserInteracted) {
-            pushGTMEvent(createEventName, {
-              quiz_id: quiz.id,
-              quiz_title: quiz.title,
-              user_id: user.id,
-              editor_mode: editorMode,
-            });
+          // first_quiz_created — SOMENTE se houve interação real + dedup
+          if (!isExpressQuiz) {
+            const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
+            const createDedupKey = `mq_first_manual_created_${user.id}`;
+            if (milestoneStages.includes(currentStage) && hasUserInteracted && !localStorage.getItem(createDedupKey)) {
+              pushGTMEvent(createEventName, {
+                quiz_id: quiz.id,
+                quiz_title: quiz.title,
+                user_id: user.id,
+                editor_mode: editorMode,
+              });
+              localStorage.setItem(createDedupKey, new Date().toISOString());
+            }
           }
 
-          // Promover para construtor ao publicar
-          await supabase
-            .from('profiles')
-            .update({ 
-              user_stage: 'construtor',
-              stage_updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id)
-            .in('user_stage', ['explorador', 'iniciado', 'engajado']);
-          
-          console.log('🎯 [PQL] User stage upgraded to construtor (INSERT branch)');
+          // Promover stage: Express → engajado, Manual → construtor
+          if (earlyStages.includes(currentStage)) {
+            const targetStage = isExpressQuiz ? 'engajado' : 'construtor';
+            const allowedFrom = isExpressQuiz
+              ? ['explorador', 'iniciado']
+              : ['explorador', 'iniciado', 'engajado'];
+            await supabase
+              .from('profiles')
+              .update({ 
+                user_stage: targetStage,
+                stage_updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id)
+              .in('user_stage', allowedFrom);
+            
+            console.log(`🎯 [PQL] User stage upgraded to ${targetStage} (INSERT branch, express=${isExpressQuiz})`);
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase as any)
-            .from('onboarding_status')
-            .update({ first_quiz_created: true })
-            .eq('id', user.id);
-          
-          console.log('🎯 [Onboarding] first_quiz_created milestone marked');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+              .from('onboarding_status')
+              .update({ first_quiz_created: true })
+              .eq('id', user.id);
+            
+            console.log('🎯 [Onboarding] first_quiz_created milestone marked');
+          }
         }
       }
 
