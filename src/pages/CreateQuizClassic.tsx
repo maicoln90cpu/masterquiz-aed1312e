@@ -192,8 +192,10 @@ const CreateQuizClassic = () => {
       loadExistingQuiz(editQuizId);
       if (isExpressMode) {
         updateEditor({ step: 3 });
-        updateUI({ showTemplateSelector: false });
+        updateUI({ showTemplateSelector: false, showAIGenerator: true });
         fireOnce('express_started', { quiz_id: editQuizId });
+      } else if (isAIAutoOpen) {
+        updateUI({ showAIGenerator: true });
       }
     }
   }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI, fireOnce]);
@@ -250,6 +252,13 @@ const CreateQuizClassic = () => {
       : `${window.location.origin}/quiz/${editorState.quizSlug}`;
   }, [editorState.quizSlug, profile?.company_slug]);
 
+  // Post-Express Screen (shown after celebration)
+  if (showPostExpress && isExpressMode) {
+    return (
+      <PostExpressScreen />
+    );
+  }
+
   // Express Celebration Screen
   if (showCelebration && isExpressMode) {
     return (
@@ -257,9 +266,8 @@ const CreateQuizClassic = () => {
         quizUrl={publishedQuizUrl || expressQuizUrl}
         quizTitle={appearanceState.title || t('createQuiz.newQuiz')}
         onGoToDashboard={() => {
-          queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
-          queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-          navigate('/dashboard');
+          setShowCelebration(false);
+          setShowPostExpress(true);
         }}
       />
     );
@@ -275,7 +283,7 @@ const CreateQuizClassic = () => {
           </div>
         </header>
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <AIQuizGenerator onBack={handleBackFromAI} />
+          <AIQuizGenerator onBack={handleBackFromAI} lockedMode={isExpressMode ? "form" : undefined} />
         </div>
       </main>
     );
