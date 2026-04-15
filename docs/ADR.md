@@ -1,7 +1,7 @@
 # 📋 ADR — Architecture Decision Records
 
 > Registro de decisões arquiteturais do MasterQuiz
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.41.0 | 15 de Abril de 2026
 
 ---
 

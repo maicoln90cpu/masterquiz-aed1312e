@@ -1,7 +1,7 @@
 # 📐 CODE STANDARDS — Padrões Obrigatórios de Código
 
 > MasterQuiz — Regras, convenções e exemplos do/don't
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.41.0 | 15 de Abril de 2026
 
 ---
 

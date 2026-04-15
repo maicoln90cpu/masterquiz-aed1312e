@@ -1,7 +1,7 @@
 # 🚀 ONBOARDING — Guia para Novos Desenvolvedores
 
 > Configure o ambiente e entenda o projeto em menos de 1 dia
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.41.0 | 15 de Abril de 2026
 
 ---
 
