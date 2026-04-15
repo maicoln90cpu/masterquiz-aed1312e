@@ -386,14 +386,21 @@ Signup → trigger handle_new_user_profile() → cria profile
 | `blog-sitemap` | Geração de sitemap |
 | `track-blog-view` | Tracking de views |
 
+### Growth & Métricas (3 funções) — NOVO v2.41.0
+| Função | Propósito |
+|--------|-----------|
+| `growth-metrics` | Métricas avançadas do Growth Dashboard |
+| `check-expired-trials` | Verifica e expira trials vencidos |
+| `sync-plan-limits` | Sincroniza limites de plano |
+
 ### Admin & Suporte
 | Função | Propósito |
 |--------|-----------|
 | `system-health-check` | Saúde do sistema |
 | `export-schema-sql` / `export-table-data` | Exportação de dados |
 | `anonymize-ips` | Anonimização LGPD |
-| `admin-view-user-data` | Dados do usuário para suporte (quizzes, responses, session_history, save_quiz) |
-| `admin-update-subscription` | Atualização de plano do usuário pelo admin |
+| `admin-view-user-data` | Dados do usuário para suporte |
+| `admin-update-subscription` | Atualização de plano do usuário |
 | `save-quiz-response` | Salvar resposta de quiz (público) |
 | `track-cta-redirect` | Tracking de cliques em CTAs |
 
@@ -565,6 +572,9 @@ src/
 - ✅ Comparação A×B de modos de monetização (métricas históricas)
 - ✅ Preços diferenciados por modo (A/B) com checkout dinâmico
 - ✅ GTM lifecycle tracking completo (quiz_view/start/complete/lead_captured)
+- ✅ **Growth Dashboard** com métricas ICP, análise de paywall e conversão
+- ✅ **Dashboard GTM com 40+ eventos** mapeados, filtros por categoria/status/integração
+- ✅ **Tabela gtm_event_integrations** para controle de integração por evento
 
 ---
 
