@@ -20,6 +20,9 @@ interface GrowthData {
       receivedResponse: number;
       received20Plus: number;
       paidUsers: number;
+      icpPublishedReal?: number;
+      icpRegistered?: number;
+      icpConversionPct?: number;
     };
     medianTimeToPublishHours: number | null;
     zombies: Array<{ id: string; email: string; name: string; created_at: string }>;
@@ -37,6 +40,9 @@ interface GrowthData {
     usersAtFreeLimit: number;
     activitySegmentation: { active: number; sleeping: number; lost: number };
     utmSources: Record<string, number>;
+    aiBeforePublish?: { count: number; total: number; pct: number };
+    medianLoginsBeforePublish?: number | null;
+    crmAfterFirstLead?: { count: number; total: number };
   };
   sectionC: {
     mrr: number;
@@ -64,6 +70,8 @@ interface GrowthData {
     medianDaysToConvert: number | null;
     realPaidCount: number;
     trialCount: number;
+    conversionByPlan?: Record<string, number>;
+    avgDaysToFirstLead?: number | null;
   };
   sectionD?: {
     expressFunnel: {
@@ -74,7 +82,7 @@ interface GrowthData {
     };
     whatsappRecoveryByIcp: { icpOn: number; icpOff: number; total: number };
     secondQuizVsLead: { beforeLead: number; afterLead: number };
-    paywallFunnel: { views: number; clicks: number };
+    paywallFunnel: { views: number; clicks: number; withoutClick?: number };
     editorSession: { avgSeconds: number | null; sampleSize: number };
   };
 }
@@ -200,6 +208,15 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
           <FunnelBar label="Recebeu ≥1 Resposta" count={f.receivedResponse} total={f.publishedQuiz} pctLabel="dos que publicaram" />
           <FunnelBar label="Recebeu 20+ Respostas" count={f.received20Plus} total={f.receivedResponse} pctLabel="dos que receberam" />
           <FunnelBar label="Pagantes Reais (webhook)" count={f.paidUsers} total={total} pctLabel="do total" />
+          {f.icpRegistered !== undefined && f.icpRegistered > 0 && (
+            <div className="border-t pt-3 mt-3 space-y-1">
+              <FunnelBar label="🎯 ICP que publicou quiz real" count={f.icpPublishedReal || 0} total={f.icpRegistered} pctLabel="dos ICP cadastrados" />
+              <p className="text-xs text-muted-foreground">
+                {f.icpRegistered} usuários com objetivo definido · {f.icpConversionPct?.toFixed(1)}% publicaram quiz real
+                vs {total > 0 ? ((f.publishedQuiz / total) * 100).toFixed(1) : 0}% do total
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -376,6 +393,38 @@ function SectionB({ data, totalUsers }: { data: GrowthData['sectionB']; totalUse
           </CardContent>
         </Card>
       </div>
+
+      {/* New Section B cards — Etapa 3 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {data.aiBeforePublish && (
+          <MetricCard
+            title="🤖 IA antes de Publicar"
+            value={`${data.aiBeforePublish.pct}%`}
+            subtitle={`${data.aiBeforePublish.count} de ${data.aiBeforePublish.total} que publicaram`}
+            icon={Bot}
+          />
+        )}
+        <MetricCard
+          title="🔑 Logins até Publicar"
+          value={data.medianLoginsBeforePublish !== null && data.medianLoginsBeforePublish !== undefined ? data.medianLoginsBeforePublish : 'N/A'}
+          subtitle="Mediana de logins antes de publicar"
+          icon={Activity}
+        />
+        {data.crmAfterFirstLead && (
+          <MetricCard
+            title="📊 CRM após 1º Lead"
+            value={`${data.crmAfterFirstLead.count} de ${data.crmAfterFirstLead.total}`}
+            subtitle={data.crmAfterFirstLead.total > 0 ? `${((data.crmAfterFirstLead.count / data.crmAfterFirstLead.total) * 100).toFixed(1)}% acessaram CRM` : '—'}
+            icon={Eye}
+          />
+        )}
+        <MetricCard
+          title="🔒 Paywall sem Clique"
+          value="Acumulando…"
+          subtitle="Dados disponíveis na aba Avançado"
+          icon={Lock}
+        />
+      </div>
     </div>
   );
 }
@@ -477,6 +526,57 @@ function SectionC({ data, totalUsers }: { data: GrowthData['sectionC']; totalUse
                 )}
               </div>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Conversion by plan + timing */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">💰 Conversão por Plano (Webhook)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(data.conversionByPlan || {}).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum pagante registrado via webhook</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(data.conversionByPlan || {}).map(([plan, count]) => (
+                  <div key={plan} className="flex items-center justify-between">
+                    <span className="text-sm capitalize">{plan}</span>
+                    <Badge className="bg-green-600">{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">⏱️ Cadastro → 1º Lead</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {data.avgDaysToFirstLead !== null && data.avgDaysToFirstLead !== undefined
+                ? data.avgDaysToFirstLead < 1
+                  ? `${Math.round(data.avgDaysToFirstLead * 24)}h`
+                  : `${data.avgDaysToFirstLead.toFixed(1)} dias`
+                : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Tempo médio do cadastro até receber o primeiro lead</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">📅 Dias até Upgrade</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {data.medianDaysToConvert !== null ? `${data.medianDaysToConvert} dias` : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Mediana free → pagante real</p>
           </CardContent>
         </Card>
       </div>
