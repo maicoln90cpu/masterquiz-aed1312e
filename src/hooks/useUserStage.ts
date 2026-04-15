@@ -491,6 +491,15 @@ export function useTrackPageView(page: 'crm' | 'analytics') {
 
       const field = page === 'crm' ? 'crm_viewed_at' : 'analytics_viewed_at';
 
+      // Check if it's first time viewing this page
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select(field)
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const isFirstTime = profile ? !(profile as any)[field] : true;
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -505,11 +514,10 @@ export function useTrackPageView(page: 'crm' | 'analytics') {
         console.log(`🎯 [PQL] Tracked ${page} view, user upgraded to operador`);
       }
 
-      // 🎯 GTM: crm_viewed — disparado ao acessar CRM
-      if (page === 'crm') {
-        const { pushGTMEvent } = await import("@/lib/gtmLogger");
-        pushGTMEvent('crm_viewed', { user_id: user.id });
-      }
+      // 🎯 GTM: crm_viewed / analytics_viewed
+      const { pushGTMEvent } = await import("@/lib/gtmLogger");
+      const eventName = page === 'crm' ? 'crm_viewed' : 'analytics_viewed';
+      pushGTMEvent(eventName, { user_id: user.id, first_time: isFirstTime });
     };
 
     trackView();

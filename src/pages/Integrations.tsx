@@ -85,11 +85,18 @@ export default function Integrations() {
       
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["user-integrations"] });
       toast({
         title: t('integrations.added'),
         description: t('integrations.addedDesc'),
+      });
+      
+      // 🎯 GTM: integration_connected
+      import("@/lib/gtmLogger").then(({ pushGTMEvent }) => {
+        pushGTMEvent('integration_connected', {
+          provider: variables.provider,
+        });
       });
     },
     onError: (error) => {

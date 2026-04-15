@@ -22,13 +22,10 @@ export const useAccountCreatedEvent = () => {
     // Guard: já verificou nesta sessão
     if (sessionStorage.getItem(SESSION_KEY) === 'true') return;
 
-    const fireEvent = async (userId: string, email: string | undefined, source: string) => {
-      // Use persist=true and await to ensure DB write succeeds before marking sent
-      pushGTMEvent('AccountCreated', {
-        user_id: userId,
-        user_email: email,
-      });
-      console.log(`🎯 [GTM] AccountCreated (${source})`);
+    const fireEvent = async (userId: string, _email: string | undefined, source: string) => {
+      // AccountCreated descontinuado — não disparar mais evento GTM
+      // Mantém apenas a marcação de account_created_event_sent para retrocompatibilidade
+      console.log(`🎯 [GTM] AccountCreated SKIP (deprecated) — source: ${source}, user: ${userId}`);
     };
 
     const run = async () => {

@@ -541,12 +541,18 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
       queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       
-      // Disparar evento GTM por tipo de criação IA
+      // Disparar evento GTM por tipo de criação IA (legado + unificado)
       const iaEventMap: Record<string, string> = { form: 'quiz_ia_form', pdf: 'quiz_ia_pdf', educational: 'quiz_ia_edu' };
       pushGTMEvent(iaEventMap[uploadMode] || 'quiz_ia_form', {
         quiz_id: quiz.id,
         questions_count: quizData.questions.length,
         upload_mode: uploadMode,
+      });
+      // 🎯 Evento unificado para facilitar análise
+      pushGTMEvent('ai_generation_used', {
+        type: uploadMode === 'educational' ? 'edu' : uploadMode,
+        quiz_id: quiz.id,
+        questions_count: quizData.questions.length,
       });
 
       toast.success(t('components.aiGenerator.quizCreated'));
