@@ -21,6 +21,8 @@ import { pushGTMEvent } from "@/lib/gtmLogger";
 
 interface AIQuizGeneratorProps {
   onBack: () => void;
+  /** When true, locks the mode to "form" and hides the tab switcher */
+  lockedMode?: "form" | "pdf" | "educational";
 }
 
 interface GeneratedQuestion {
@@ -74,7 +76,7 @@ interface EducationalSettings {
   explanationMode: 'per_question' | 'end_of_quiz';
 }
 
-export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
+export const AIQuizGenerator = ({ onBack, lockedMode }: AIQuizGeneratorProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -85,7 +87,7 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
   const maxQuestions = resourceLimits?.questionsPerQuizLimit || 10;
   
   const [isGenerating, setIsGenerating] = useState(false);
-  const [uploadMode, setUploadMode] = useState<"form" | "pdf" | "educational">("form");
+  const [uploadMode, setUploadMode] = useState<"form" | "pdf" | "educational">(lockedMode || "form");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfContent, setPdfContent] = useState<string>("");
   const [isParsingPdf, setIsParsingPdf] = useState(false);
@@ -637,22 +639,24 @@ export const AIQuizGenerator = ({ onBack }: AIQuizGeneratorProps) => {
           </CardContent>
         </Card>
 
-        {/* Mode Tabs */}
-        <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as "form" | "pdf" | "educational")}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="form" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Formulário Guiado
-            </TabsTrigger>
-            <TabsTrigger value="pdf" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Upload de PDF
-            </TabsTrigger>
-            <TabsTrigger value="educational" className="gap-2">
-              <GraduationCap className="h-4 w-4" />
-              Uso Educacional
-            </TabsTrigger>
-          </TabsList>
+        {/* Mode Tabs — hidden when mode is locked (e.g. Express flow) */}
+        <Tabs value={uploadMode} onValueChange={(v) => !lockedMode && setUploadMode(v as "form" | "pdf" | "educational")}>
+          {!lockedMode && (
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="form" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Formulário Guiado
+              </TabsTrigger>
+              <TabsTrigger value="pdf" className="gap-2">
+                <Upload className="h-4 w-4" />
+                Upload de PDF
+              </TabsTrigger>
+              <TabsTrigger value="educational" className="gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Uso Educacional
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           {/* Form Mode */}
           <TabsContent value="form" className="space-y-4 mt-4">
