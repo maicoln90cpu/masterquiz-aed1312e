@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,11 +54,24 @@ const EVENT_CATEGORIES: Record<string, { label: string; color: string }> = {
   ai_generation_used: { label: "IA - Unificado", color: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200" },
 };
 
+// Extract unique categories for filter
+const UNIQUE_CATEGORIES = [...new Set(Object.values(EVENT_CATEGORIES).map(c => c.label))].sort();
+
+type EventRow = {
+  event: string;
+  count24h: number;
+  count7d: number;
+  category: string;
+  categoryColor: string;
+};
+
 type IntegrationMap = Record<string, { is_integrated: boolean; gtm_event_name: string }>;
 
 export const GTMEventsDashboard = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
   const [showOnlyPending, setShowOnlyPending] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [firingFilter, setFiringFilter] = useState<string>("all"); // "all" | "fired" | "never"
   const [localGtmNames, setLocalGtmNames] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
 
@@ -107,7 +120,7 @@ export const GTMEventsDashboard = () => {
     }
   }, [localGtmNames, upsertMutation]);
 
-  // Fetch event counts (24h and 7d)
+  // Fetch event counts (24h and 7d) — merge with EVENT_CATEGORIES
   const { data: counts, isLoading: countsLoading } = useQuery({
     queryKey: ["gtm-event-counts"],
     queryFn: async () => {
@@ -122,12 +135,12 @@ export const GTMEventsDashboard = () => {
 
       const count = (rows: any[], event: string) => rows?.filter((r: any) => r.event_name === event).length || 0;
 
-      const allEvents = [...new Set([
-        ...(res24.data || []).map((r: any) => r.event_name),
-        ...(res7.data || []).map((r: any) => r.event_name),
-      ])].sort();
+      // Merge: all registered events + any from logs not in EVENT_CATEGORIES
+      const allEventNames = new Set(Object.keys(EVENT_CATEGORIES));
+      (res24.data || []).forEach((r: any) => allEventNames.add(r.event_name));
+      (res7.data || []).forEach((r: any) => allEventNames.add(r.event_name));
 
-      return allEvents.map((event) => ({
+      return [...allEventNames].sort().map((event): EventRow => ({
         event,
         count24h: count(res24.data || [], event),
         count7d: count(res7.data || [], event),
@@ -161,13 +174,24 @@ export const GTMEventsDashboard = () => {
   const totalEvents24h = counts?.reduce((sum, c) => sum + c.count24h, 0) || 0;
   const totalEvents7d = counts?.reduce((sum, c) => sum + c.count7d, 0) || 0;
   const uniqueEvents = counts?.length || 0;
-
-  // Filter counts for display
-  const filteredCounts = showOnlyPending
-    ? counts?.filter((row) => !integrations?.[row.event]?.is_integrated)
-    : counts;
-
   const pendingCount = counts?.filter((row) => !integrations?.[row.event]?.is_integrated).length || 0;
+
+  // Apply all filters
+  const filteredCounts = useMemo(() => {
+    let result = counts || [];
+    if (showOnlyPending) {
+      result = result.filter((row) => !integrations?.[row.event]?.is_integrated);
+    }
+    if (categoryFilter !== "all") {
+      result = result.filter((row) => row.category === categoryFilter);
+    }
+    if (firingFilter === "fired") {
+      result = result.filter((row) => row.count7d > 0);
+    } else if (firingFilter === "never") {
+      result = result.filter((row) => row.count7d === 0);
+    }
+    return result;
+  }, [counts, showOnlyPending, categoryFilter, firingFilter, integrations]);
 
   return (
     <div className="space-y-6">
@@ -221,17 +245,44 @@ export const GTMEventsDashboard = () => {
 
       {/* Event Counts Table */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Contagem por Evento</CardTitle>
-          <Button
-            variant={showOnlyPending ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowOnlyPending(!showOnlyPending)}
-            className="gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            {showOnlyPending ? `Pendentes (${pendingCount})` : "Mostrar apenas não integrados"}
-          </Button>
+        <CardHeader>
+          <div className="flex flex-col gap-3">
+            <CardTitle className="text-lg">Contagem por Evento</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px] h-9 text-xs">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas categorias</SelectItem>
+                  {UNIQUE_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={firingFilter} onValueChange={setFiringFilter}>
+                <SelectTrigger className="w-[180px] h-9 text-xs">
+                  <SelectValue placeholder="Status disparo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="fired">Com disparos (7d)</SelectItem>
+                  <SelectItem value="never">Sem disparos (7d)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant={showOnlyPending ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowOnlyPending(!showOnlyPending)}
+                className="gap-2 h-9"
+              >
+                <Filter className="h-4 w-4" />
+                {showOnlyPending ? `Pendentes (${pendingCount})` : "Não integrados"}
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {countsLoading ? (
@@ -249,14 +300,22 @@ export const GTMEventsDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCounts?.map((row) => {
+                {filteredCounts.map((row) => {
                   const integration = integrations?.[row.event];
                   const isIntegrated = integration?.is_integrated || false;
                   const gtmName = localGtmNames[row.event] ?? integration?.gtm_event_name ?? "";
+                  const hasFired = row.count7d > 0;
 
                   return (
-                    <TableRow key={row.event} className={isIntegrated ? "opacity-70" : ""}>
-                      <TableCell className="font-mono text-sm">{row.event}</TableCell>
+                    <TableRow key={row.event} className={isIntegrated ? "opacity-60" : ""}>
+                      <TableCell className="font-mono text-sm">
+                        {row.event}
+                        {!hasFired && (
+                          <Badge variant="outline" className="ml-2 text-[10px] bg-muted text-muted-foreground">
+                            sem disparos
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={row.categoryColor}>{row.category}</Badge>
                       </TableCell>
@@ -280,10 +339,10 @@ export const GTMEventsDashboard = () => {
                     </TableRow>
                   );
                 })}
-                {(!filteredCounts || filteredCounts.length === 0) && (
+                {filteredCounts.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      {showOnlyPending ? "Todos os eventos já foram integrados! 🎉" : "Nenhum evento registrado ainda"}
+                      {showOnlyPending ? "Todos os eventos já foram integrados! 🎉" : "Nenhum evento encontrado com os filtros aplicados"}
                     </TableCell>
                   </TableRow>
                 )}

@@ -422,20 +422,29 @@ export default function AdminDashboard() {
           revenue: (planPrices[plan] || 0) * (count as number)
         }));
 
-      // For usersByMonth chart, fetch from profiles (subscription_plans is public)
+      // For usersByMonth chart — generate 6 months in chronological order
+      const now = new Date();
       const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      sixMonthsAgo.setMonth(now.getMonth() - 5); // 5 months back + current = 6
+      sixMonthsAgo.setDate(1);
+      sixMonthsAgo.setHours(0, 0, 0, 0);
+
       const { data: recentProfiles } = await supabase
         .from('profiles')
         .select('created_at')
         .gte('created_at', sixMonthsAgo.toISOString());
 
-      const monthlyData: Record<string, number> = {};
-      recentProfiles?.forEach(p => {
-        const month = new Date(p.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-        monthlyData[month] = (monthlyData[month] || 0) + 1;
-      });
-      const usersByMonth = Object.entries(monthlyData).map(([month, users]) => ({ month, users })).slice(-6);
+      // Build ordered array of 6 months
+      const usersByMonth: { month: string; users: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const label = d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        const count = (recentProfiles || []).filter(p => {
+          const pd = new Date(p.created_at);
+          return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear();
+        }).length;
+        usersByMonth.push({ month: label, users: count });
+      }
 
       setChartData({
         usersByMonth,
