@@ -1,7 +1,7 @@
 # 🗄️ DATABASE SCHEMA — MasterQuiz
 
 > Schema completo do banco de dados PostgreSQL (Supabase)
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.41.0 | 15 de Abril de 2026
 
 ---
 
@@ -11,11 +11,17 @@
 - [Tabelas Core](#tabelas-core)
 - [Tabelas de Usuários](#tabelas-de-usuários)
 - [Tabelas de Analytics](#tabelas-de-analytics)
+- [Tabelas de GTM/Tracking](#tabelas-de-gtmtracking)
 - [Tabelas Admin](#tabelas-admin)
-- [Tabelas de Recovery](#tabelas-de-recovery)
+- [Tabelas de Recovery (WhatsApp)](#tabelas-de-recovery-whatsapp)
 - [Tabelas de Email](#tabelas-de-email)
 - [Tabelas de Blog](#tabelas-de-blog)
+- [Tabelas de Vídeo](#tabelas-de-vídeo)
+- [Tabelas de A/B Testing](#tabelas-de-ab-testing)
+- [Tabelas de i18n](#tabelas-de-i18n)
+- [Tabelas de Landing/Site](#tabelas-de-landingsite)
 - [Tabelas de Compliance](#tabelas-de-compliance)
+- [Tabelas de WhatsApp AI](#tabelas-de-whatsapp-ai)
 - [Enums](#enums)
 - [DB Functions](#db-functions)
 - [Triggers](#triggers)
@@ -25,9 +31,9 @@
 
 ## 🎯 Visão Geral
 
-- **Total de tabelas:** 45+
+- **Total de tabelas:** 68
 - **RLS:** Ativo em TODAS as tabelas
-- **Enums:** 7 tipos customizados
+- **Enums:** 8 tipos customizados
 - **DB Functions:** 16+ (incluindo SECURITY DEFINER)
 - **Triggers:** 3 no signup (profile, role, subscription)
 
@@ -109,6 +115,15 @@ Configuração do formulário de coleta por quiz (collect_name, collect_email, c
 ### `custom_form_fields`
 Campos customizados por quiz (field_name, field_type enum, field_options, is_required, order_number).
 
+### `quiz_templates`
+Templates de quiz pré-configurados (name, category, description, icon, full_config, preview_config, is_active, is_premium, display_order).
+
+### `quiz_tags`
+Tags para organização de quizzes (name, color, user_id).
+
+### `quiz_tag_relations`
+Relação N:N entre quizzes e tags (quiz_id FK→quizzes, tag_id FK→quiz_tags).
+
 ---
 
 ## 👤 Tabelas de Usuários
@@ -126,6 +141,10 @@ Campos customizados por quiz (field_name, field_type enum, field_options, is_req
 | user_objectives | text[] | Objetivos |
 | login_count | integer | Contagem de logins |
 | deleted_at | timestamptz | Soft delete |
+| account_created_event_sent | boolean | Flag de evento GTM enviado |
+| analytics_viewed_at, crm_viewed_at | timestamptz | Tracking de PQL |
+| stage_updated_at | timestamptz | Última mudança de estágio |
+| utm_source, utm_medium, utm_campaign | text | UTM tracking |
 
 ### `user_subscriptions`
 Plano ativo do usuário (plan_type, quiz_limit, response_limit, features, kiwify_order_id, expires_at, payment_confirmed).
@@ -146,16 +165,29 @@ Integrações configuradas pelo usuário (provider, api_key criptografada, webho
 ### `user_webhooks`
 Webhooks personalizados do usuário.
 
+### `user_onboarding`
+Estado de onboarding do usuário (steps completados, tour visto, etc.).
+
+### `trial_logs`
+Logs de trials de usuários (user_id, started_at, expires_at, plan_type, status).
+
+### `validation_requests`
+Pedidos de validação de dados (user_id, type, status, metadata).
+
 ---
 
 ## 📊 Tabelas de Analytics
 
 - **`quiz_analytics`** — Métricas agregadas por dia (views, starts, completions, conversion_rate)
 - **`quiz_step_analytics`** — Tracking de funil por step/sessão
-- **`quiz_cta_click_analytics`** — Cliques em CTAs por quiz
-- **`ab_test_sessions`** — Sessões de A/B testing de quizzes
-- **`landing_ab_tests` / `landing_ab_sessions`** — A/B da landing page
-- **`gtm_event_logs`** — Eventos GTM persistidos (quiz_view, quiz_start, quiz_complete, lead_captured)
+- **`quiz_cta_click_analytics`** — Cliques em CTAs por quiz (block_id, cta_url, cta_text, step_number)
+
+---
+
+## 🎯 Tabelas de GTM/Tracking
+
+- **`gtm_event_logs`** — Eventos GTM persistidos (event_name, user_id, metadata, created_at)
+- **`gtm_event_integrations`** — Controle de integração GTM por evento (event_name, gtm_event_name, is_integrated)
 
 ---
 
@@ -167,9 +199,11 @@ Webhooks personalizados do usuário.
   - RLS: Usuário lê/atualiza apenas suas notificações
 - **`support_tickets` / `ticket_messages`** — Sistema de tickets
 - **`system_settings`** — Configurações globais (site_mode, prompts, tokens)
+- **`site_settings`** — Configurações do site (modo A/B, URLs, etc.)
 - **`master_admin_emails`** — Emails com acesso master_admin
 - **`system_health_metrics`** — Métricas de saúde do sistema
 - **`rate_limit_tracker`** — Controle de rate limiting
+- **`ai_quiz_generations`** — Log de gerações de quiz com IA (tokens, custo, modelo)
 
 ---
 
@@ -205,11 +239,49 @@ Webhooks personalizados do usuário.
 
 ---
 
+## 🎥 Tabelas de Vídeo
+
+- **`bunny_videos`** — Vídeos enviados via Bunny CDN (bunny_video_id, cdn_url, status, size_mb, duration_seconds)
+- **`video_usage`** — Uso de vídeo por usuário
+- **`video_analytics`** — Analytics de reprodução de vídeo
+
+---
+
+## 🔀 Tabelas de A/B Testing
+
+- **`quiz_variants`** — Variantes de quiz para A/B testing (variant_letter, traffic_weight, is_control)
+- **`ab_test_sessions`** — Sessões de teste A/B de quizzes
+- **`landing_ab_tests`** — Testes A/B da landing page (variant_a_content, variant_b_content, traffic_split)
+- **`landing_ab_sessions`** — Sessões de testes A/B da landing
+
+---
+
+## 🌐 Tabelas de i18n
+
+- **`quiz_translations`** — Traduções de quizzes (title, description por language_code)
+- **`quiz_question_translations`** — Traduções de perguntas (question_text, options por language_code)
+
+---
+
+## 🏠 Tabelas de Landing/Site
+
+- **`landing_content`** — Conteúdo editável da landing page (key, value_pt, value_en, value_es, site_mode)
+
+---
+
 ## ⚖️ Tabelas de Compliance
 
 - **`cookie_consents`** — Consentimentos de cookies
 - **`scheduled_deletions`** — Exclusões agendadas (LGPD)
 - **`notification_preferences`** — Preferências de notificação
+
+---
+
+## 🤖 Tabelas de WhatsApp AI
+
+- **`whatsapp_ai_settings`** — Configurações do agente IA (model, max_retries, system_prompt)
+- **`whatsapp_ai_knowledge`** — Base de conhecimento para respostas IA
+- **`whatsapp_conversations`** — Histórico de conversas WhatsApp
 
 ---
 
@@ -257,7 +329,9 @@ CREATE TYPE public.recovery_campaign_status AS ENUM ('draft', 'scheduled', 'runn
 auth.users ──┬── profiles (1:1)
              ├── user_roles (1:N)
              ├── user_subscriptions (1:1)
-             └── admin_notifications (1:N)
+             ├── user_onboarding (1:1)
+             ├── admin_notifications (1:N)
+             └── trial_logs (1:N)
 
 profiles ──── quizzes (1:N)
               ├── quiz_questions (1:N)
@@ -278,6 +352,9 @@ profiles ──── user_integrations (1:N)
 
 profiles ──── email_recovery_contacts (1:N)
 profiles ──── bunny_videos (1:N)
+profiles ──── whatsapp_conversations (1:N)
+
+gtm_event_logs ──── gtm_event_integrations (referência por event_name)
 ```
 
 ---
@@ -290,3 +367,4 @@ profiles ──── bunny_videos (1:N)
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
 | [API_DOCS.md](./API_DOCS.md) | Edge Functions |
 | [ADR.md](./ADR.md) | Decisões arquiteturais |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
