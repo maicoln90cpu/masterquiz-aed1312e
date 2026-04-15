@@ -393,6 +393,38 @@ function SectionB({ data, totalUsers }: { data: GrowthData['sectionB']; totalUse
           </CardContent>
         </Card>
       </div>
+
+      {/* New Section B cards — Etapa 3 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {data.aiBeforePublish && (
+          <MetricCard
+            title="🤖 IA antes de Publicar"
+            value={`${data.aiBeforePublish.pct}%`}
+            subtitle={`${data.aiBeforePublish.count} de ${data.aiBeforePublish.total} que publicaram`}
+            icon={Bot}
+          />
+        )}
+        <MetricCard
+          title="🔑 Logins até Publicar"
+          value={data.medianLoginsBeforePublish !== null && data.medianLoginsBeforePublish !== undefined ? data.medianLoginsBeforePublish : 'N/A'}
+          subtitle="Mediana de logins antes de publicar"
+          icon={Activity}
+        />
+        {data.crmAfterFirstLead && (
+          <MetricCard
+            title="📊 CRM após 1º Lead"
+            value={`${data.crmAfterFirstLead.count} de ${data.crmAfterFirstLead.total}`}
+            subtitle={data.crmAfterFirstLead.total > 0 ? `${((data.crmAfterFirstLead.count / data.crmAfterFirstLead.total) * 100).toFixed(1)}% acessaram CRM` : '—'}
+            icon={Eye}
+          />
+        )}
+        <MetricCard
+          title="🔒 Paywall sem Clique"
+          value="Acumulando…"
+          subtitle="Dados disponíveis na aba Avançado"
+          icon={Lock}
+        />
+      </div>
     </div>
   );
 }
