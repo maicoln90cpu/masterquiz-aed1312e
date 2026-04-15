@@ -350,10 +350,18 @@ export const useDuplicateQuiz = () => {
 
       return newQuiz;
     },
-    onSuccess: () => {
+    onSuccess: (newQuiz, variables) => {
       showSuccessToast(t('dashboard.quizDuplicated'));
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+      
+      // 🎯 GTM: quiz_duplicated
+      import("@/lib/gtmLogger").then(({ pushGTMEvent }) => {
+        pushGTMEvent('quiz_duplicated', {
+          original_quiz_id: variables.quizId,
+          new_quiz_id: newQuiz.id,
+        });
+      });
     },
     onError: (error) => {
       showErrorToast(error, 'Duplicate Quiz', t('dashboard.errorDuplicating'));
