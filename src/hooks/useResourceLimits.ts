@@ -37,7 +37,8 @@ export const useResourceLimits = () => {
         const { count: quizCount } = await supabase
           .from('quizzes')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .neq('creation_source', 'express_auto');
 
         const { data: userQuizzes } = await supabase
           .from('quizzes')
@@ -94,7 +95,8 @@ export const useResourceLimits = () => {
       const { count: quizCount } = await supabase
         .from('quizzes')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .neq('creation_source', 'express_auto');
 
       // Buscar IDs dos quizzes do usuário
       const { data: userQuizzes } = await supabase
