@@ -633,7 +633,12 @@ Deno.serve(async (req) => {
         totalUsers,
         planCounts,
         newUsers7d: newUsers7d || 0,
-        funnel: funnelData,
+        funnel: {
+          ...funnelData,
+          icpPublishedReal,
+          icpRegistered,
+          icpConversionPct,
+        },
         medianTimeToPublishHours: medianTimeToPublish ? Math.round(medianTimeToPublish * 10) / 10 : null,
         zombies: zombies.slice(0, 50),
         zombieCount: zombies.length,
@@ -663,12 +668,15 @@ Deno.serve(async (req) => {
           lost: lostUsers,
         },
         utmSources: utmGroups,
+        aiBeforePublish: { count: aiBeforePublishCount, total: publisherIds.length, pct: aiBeforePublishPct },
+        medianLoginsBeforePublish,
+        crmAfterFirstLead: { count: crmAfterFirstLeadCount, total: usersWithLeads.length },
       },
       sectionC: {
         mrr,
         realPaidByPlan: realPaidPlans,
         trialByPlan: trialPlans,
-        paidByPlan: realPaidPlans, // backwards compat — now only real payers
+        paidByPlan: realPaidPlans,
         conversionRate: Math.round(conversionRate * 100) / 100,
         paidUserProfiles,
         trialUserProfiles,
@@ -676,6 +684,8 @@ Deno.serve(async (req) => {
         medianDaysToConvert,
         realPaidCount: realPaidUserIds.length,
         trialCount: trialUserIds.length,
+        conversionByPlan,
+        avgDaysToFirstLead,
       },
       sectionD: {
         expressFunnel: {
@@ -700,6 +710,7 @@ Deno.serve(async (req) => {
         paywallFunnel: {
           views: paywallViews || 0,
           clicks: upgradeClicks || 0,
+          withoutClick: paywallWithoutClick,
         },
         editorSession: {
           avgSeconds: avgEditorSession,
