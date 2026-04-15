@@ -146,6 +146,26 @@ Deno.serve(async (req) => {
             console.log(`🎯 [Milestone] first_response_received for user ${quiz.user_id}`);
           }
 
+          // 🎯 first_lead_received — first REAL lead (with email or whatsapp)
+          const hasContactInfo = !!(respondent_email || respondent_whatsapp);
+          if (hasContactInfo && !existing) {
+            // Count real leads (with contact info) for this owner
+            const { count: totalLeads } = await supabase
+              .from('quiz_responses')
+              .select('id', { count: 'exact', head: true })
+              .in('quiz_id', quizIds)
+              .or('respondent_email.not.is.null,respondent_whatsapp.not.is.null');
+
+            if ((totalLeads || 0) === 1) {
+              await supabase.from('gtm_event_logs').insert({
+                event_name: 'first_lead_received',
+                user_id: quiz.user_id,
+                metadata: { quiz_id, response_id: responseId, email: !!respondent_email, whatsapp: !!respondent_whatsapp },
+              });
+              console.log(`🎯 [Milestone] first_lead_received for user ${quiz.user_id}`);
+            }
+          }
+
           // aha_threshold_reached — exactly 20 responses total
           if (total === 20) {
             await supabase.from('gtm_event_logs').insert({
