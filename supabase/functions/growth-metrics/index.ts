@@ -454,6 +454,71 @@ Deno.serve(async (req) => {
       ? Math.round(sessionDurations.reduce((a: number, b: number) => a + b, 0) / sessionDurations.length)
       : null
 
+    // ═══════════════════════════════════════════
+    // SECTION E — Advanced Dashboard Metrics (Etapa 3)
+    // ═══════════════════════════════════════════
+
+    // 1. ICP who published real quiz
+    const { data: icpProfiles } = await supabase
+      .from('profiles')
+      .select('id, user_objectives')
+      .not('user_objectives', 'is', null)
+    const icpUserIds = (icpProfiles || []).filter((p: any) => p.user_objectives && p.user_objectives.length > 0).map((p: any) => p.id)
+    const icpRegistered = icpUserIds.length
+    const icpPublishedReal = icpUserIds.filter((uid: string) => uniquePublishers.has(uid)).length
+    const icpConversionPct = icpRegistered > 0 ? Math.round((icpPublishedReal / icpRegistered) * 1000) / 10 : 0
+
+    // 2. Used AI before publishing
+    const publisherIds = Array.from(uniquePublishers)
+    const aiBeforePublishCount = publisherIds.filter(uid => aiUserSet.has(uid)).length
+    const aiBeforePublishPct = publisherIds.length > 0 ? Math.round((aiBeforePublishCount / publisherIds.length) * 1000) / 10 : 0
+
+    // 3. Median logins before publishing
+    const { data: loginProfiles } = await supabase
+      .from('profiles')
+      .select('id, login_count')
+      .in('id', publisherIds.slice(0, 100))
+    const loginCounts = (loginProfiles || [])
+      .map((p: any) => p.login_count || 0)
+      .filter((c: number) => c > 0)
+      .sort((a: number, b: number) => a - b)
+    const medianLoginsBeforePublish = loginCounts.length > 0
+      ? loginCounts[Math.floor(loginCounts.length / 2)]
+      : null
+
+    // 4. CRM accessed after 1st lead
+    const usersWithLeads = Array.from(uniqueResponders)
+    const { data: crmAfterLeadProfiles } = await supabase
+      .from('profiles')
+      .select('id, crm_viewed_at')
+      .in('id', usersWithLeads.slice(0, 100))
+      .not('crm_viewed_at', 'is', null)
+    const crmAfterFirstLeadCount = crmAfterLeadProfiles?.length || 0
+
+    // 5. Paywall views without click (already have paywall data above)
+    const paywallWithoutClick = (paywallViews || 0) - (upgradeClicks || 0)
+
+    // 6. Conversion by plan (from webhook paid_plan_type)
+    const conversionByPlan: Record<string, number> = {}
+    for (const [, plan] of paidPlanByEmail) {
+      conversionByPlan[plan] = (conversionByPlan[plan] || 0) + 1
+    }
+
+    // 7. Avg days signup → first lead
+    const signupToLeadDays: number[] = []
+    for (const [uid, leadDate] of firstLeadByUser || new Map()) {
+      const signupDate = profileMap.get(uid)
+      if (signupDate) {
+        const days = (new Date(leadDate).getTime() - new Date(signupDate).getTime()) / (1000 * 60 * 60 * 24)
+        if (days >= 0) signupToLeadDays.push(days)
+      }
+    }
+    signupToLeadDays.sort((a, b) => a - b)
+    const avgDaysToFirstLead = signupToLeadDays.length > 0
+      ? Math.round(signupToLeadDays.reduce((a, b) => a + b, 0) / signupToLeadDays.length * 10) / 10
+      : null
+
+    // Need firstLeadByUser accessible — it's already computed in section D above
 
 
     // MRR — only real payers
