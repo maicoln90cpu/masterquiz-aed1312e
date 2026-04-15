@@ -83,7 +83,8 @@ export const useSubscriptionLimits = () => {
     const { count } = await supabase
       .from('quizzes')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .neq('creation_source', 'express_auto');
 
     return (count || 0) < subscription.quiz_limit;
   };
