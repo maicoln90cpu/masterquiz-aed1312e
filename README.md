@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.40.0** | Última atualização: 14 de Abril de 2026
+**Versão 2.41.0** | Última atualização: 15 de Abril de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -59,7 +59,7 @@
 | Serviço | Propósito |
 |---------|-----------|
 | PostgreSQL | Banco de dados relacional com RLS |
-| Edge Functions (Deno) | Lógica serverless (61 funções) |
+| Edge Functions (Deno) | Lógica serverless (64 funções) |
 | Auth | Autenticação email/senha |
 | Storage | Bucket `quiz-media` (público) |
 | Realtime | Updates em tempo real |
@@ -95,7 +95,7 @@ masterquizz/
 ├── docs/
 │   ├── SYSTEM_DESIGN.md      # Arquitetura e fluxos técnicos
 │   ├── AUDIT_TEMPLATE.md     # Template de auditoria
-│   ├── API_DOCS.md           # Documentação das 61 Edge Functions
+│   ├── API_DOCS.md           # Documentação das 64 Edge Functions
 │   ├── COMPONENTS.md         # Documentação de componentes
 │   ├── PRD.md                # Product Requirements
 │   ├── ROADMAP.md            # Planejamento estratégico
@@ -107,7 +107,7 @@ masterquizz/
 │   ├── DATABASE_SCHEMA.md    # Schema completo do banco
 │   ├── SECURITY.md           # Práticas de segurança e RLS
 │   ├── CODE_STANDARDS.md     # Padrões obrigatórios de código
-│   ├── EDGE_FUNCTIONS.md     # Catálogo das 61 Edge Functions
+│   ├── EDGE_FUNCTIONS.md     # Catálogo das 64 Edge Functions
 │   ├── ONBOARDING.md         # Guia para novos desenvolvedores
 │   └── ADR.md                # Architecture Decision Records
 ├── public/                    # Assets estáticos
@@ -149,7 +149,7 @@ masterquizz/
 ├── supabase/
 │   ├── config.toml            # Configuração Supabase
 │   ├── migrations/            # SQL migrations (read-only)
-│   └── functions/             # 61 Edge Functions
+│   └── functions/             # 64 Edge Functions
 │       └── _shared/           # Código compartilhado (cors.ts, auth.ts)
 └── [config files]
 ```
@@ -302,7 +302,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 
 ---
 
-## ⚡ Edge Functions (61 funções)
+## ⚡ Edge Functions (64 funções)
 
 ### Core
 | Função | Propósito |
@@ -401,7 +401,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 
 ## 🗄 API e Database
 
-### Schema Principal (40+ tabelas)
+### Schema Principal (68 tabelas)
 
 ```sql
 -- Core
