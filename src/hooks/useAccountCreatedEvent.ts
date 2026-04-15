@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { pushGTMEvent } from '@/lib/gtmLogger';
 
 const SESSION_KEY = 'mq_account_created_checked';
 
