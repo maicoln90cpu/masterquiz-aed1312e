@@ -38,6 +38,7 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
+import { PostExpressScreen } from "@/components/quiz/PostExpressScreen";
 
 import { useQuizState } from "@/hooks/useQuizState";
 import { useQuizPersistence } from "@/hooks/useQuizPersistence";
@@ -63,7 +64,9 @@ const CreateQuizClassic = () => {
   
   const isEditMode = !!searchParams.get('id');
   const isExpressMode = searchParams.get('mode') === 'express';
+  const isAIAutoOpen = searchParams.get('ai') === 'true';
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showPostExpress, setShowPostExpress] = useState(false);
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
     const stored = localStorage.getItem('quiz_auto_save_enabled');
