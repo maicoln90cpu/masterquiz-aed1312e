@@ -42,7 +42,7 @@ Configurados no Supabase Dashboard → Settings → Functions (ver README.md par
 
 ### Resumo em 1 minuto
 - **Frontend**: React 18 + TypeScript + Vite + Tailwind + shadcn/ui
-- **Backend**: Supabase (PostgreSQL + RLS + 61 Edge Functions + Auth + Storage)
+- **Backend**: Supabase (PostgreSQL + RLS + 64 Edge Functions + Auth + Storage)
 - **Pagamento**: Kiwify (webhook)
 - **Email**: E-goi (Bulk API)
 - **WhatsApp**: Evolution API
@@ -73,7 +73,7 @@ Landing → Login → Dashboard → Quiz Editor → Publish → Quiz Público �
 | Support mode | `src/contexts/SupportModeContext.tsx` |
 | Hooks | `src/hooks/` (35+) |
 | Utilitários | `src/lib/` (calculator, sanitize, logger) |
-| Edge Functions | `supabase/functions/` (61 funções) |
+| Edge Functions | `supabase/functions/` (64 funções) |
 | Tipos Supabase (auto-gerado) | `src/integrations/supabase/types.ts` (read-only) |
 | Traduções (i18n) | `src/i18n/` |
 | Admin dashboard | `src/pages/AdminDashboard.tsx` |
@@ -131,7 +131,7 @@ Setup global em `src/__tests__/setup.ts`. Padrões em [TESTING.md](./TESTING.md)
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema do banco |
 | [SECURITY.md](./SECURITY.md) | RLS, auth, rate limiting |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de código |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 61 funções |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 funções |
 | [API_DOCS.md](./API_DOCS.md) | Payloads detalhados |
 | [COMPONENTS.md](./COMPONENTS.md) | Componentes React |
 | [BLOCKS.md](./BLOCKS.md) | 34 tipos de blocos |

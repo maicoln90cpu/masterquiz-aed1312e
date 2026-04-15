@@ -104,6 +104,39 @@
 
 ---
 
+## ADR-010: Centralização GTM via pushGTMEvent
+
+**Data:** Abril 2026  
+**Status:** Aceito  
+**Contexto:** Eventos GTM estavam espalhados entre `dataLayer.push` direto, hooks dedicados e chamadas inconsistentes. Manutenção era difícil e eventos não eram persistidos.  
+**Decisão:** Centralizar todos os eventos via `pushGTMEvent()` de `lib/gtmLogger.ts`, que faz push no dataLayer E persiste em `gtm_event_logs`. Tabela `gtm_event_integrations` controla quais eventos estão mapeados no GTM real.  
+**Alternativas rejeitadas:** (1) GTM server-side — complexidade de infra; (2) Segment/Amplitude — custo mensal alto para o estágio atual.  
+**Consequências:** Fonte única de verdade para todos os eventos, dashboard de observabilidade funcional, mas exige disciplina para nunca usar `dataLayer.push` diretamente.
+
+---
+
+## ADR-011: Growth Dashboard com Edge Function Dedicada
+
+**Data:** Abril 2026  
+**Status:** Aceito  
+**Contexto:** Métricas de crescimento (ICP, paywall, conversão) exigem queries pesadas com JOINs complexos.  
+**Decisão:** Edge Function `growth-metrics` centraliza cálculos pesados no servidor, retornando dados pré-processados para o dashboard.  
+**Alternativas rejeitadas:** (1) Queries diretas no frontend — timeout em tabelas grandes; (2) Materialized views — custo de manutenção no Supabase.  
+**Consequências:** Dashboard rápido, sem carga no cliente, mas requer manutenção da EF quando métricas mudam.
+
+---
+
+## ADR-012: Sistema de Trials com trial_logs
+
+**Data:** Abril 2026  
+**Status:** Aceito  
+**Contexto:** Período de trial precisava ser rastreável para análise de conversão.  
+**Decisão:** Tabela `trial_logs` registra início, expiração e status de trials. EF `check-expired-trials` roda via cron para expirar trials vencidos.  
+**Alternativas rejeitadas:** (1) Flag boolean em user_subscriptions — sem histórico; (2) Trigger automático — sem controle de edge cases.  
+**Consequências:** Histórico completo de trials, análise de conversão por cohort, mas exige cron job ativo.
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
@@ -111,4 +144,5 @@
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Contexto técnico das decisões |
 | [SECURITY.md](./SECURITY.md) | ADR-006 detalhado |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões derivados das ADRs |
-| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema referenciado |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema referenciado (68 tabelas) |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |

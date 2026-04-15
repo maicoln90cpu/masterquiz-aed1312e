@@ -250,6 +250,22 @@
 
 ---
 
+## 📈 Growth & GTM (NOVO v2.41.0)
+
+### `GrowthDashboard`
+- **Arquivo:** `src/components/admin/GrowthDashboard.tsx`
+- **Descrição:** Dashboard de métricas avançadas de crescimento
+- **Seções:** Métricas ICP, Análise de Paywall, Análise de Conversão
+- **Hook:** `useGrowthMetrics` (Edge Function `growth-metrics`)
+
+### `GTMEventsDashboard` (atualizado v2.41.0)
+- **Arquivo:** `src/components/admin/GTMEventsDashboard.tsx`
+- **Descrição:** Dashboard de observabilidade de eventos GTM com 40+ eventos mapeados
+- **Features:** Filtros por categoria/status/integração, controles de integração por evento, merge de EVENT_CATEGORIES com dados reais
+- **Tabela:** `gtm_event_integrations` para controle de integração
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
@@ -263,9 +279,9 @@
 | [BLOG.md](./BLOG.md) | Guia do blog com IA |
 | [EGOI.md](./EGOI.md) | Guia do email marketing |
 | [MONETIZATION.md](./MONETIZATION.md) | Monetização A/B e custos |
-| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo do banco |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
 | [SECURITY.md](./SECURITY.md) | Práticas de segurança |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de código |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 61 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
 | [ADR.md](./ADR.md) | Architecture Decision Records |
