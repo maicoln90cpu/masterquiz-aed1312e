@@ -321,6 +321,30 @@ const corsHeaders = {
 
 ---
 
+## 📈 Growth & Métricas (3 funções) — NOVO v2.41.0
+
+### `growth-metrics`
+- **Método:** POST
+- **Auth:** JWT (admin)
+- **Descrição:** Calcula métricas avançadas de crescimento (ICP Score, ativação, paywall, conversão)
+- **Payload:** `{ period?: '7d' | '30d' | '90d' }`
+- **Response:** `{ success, metrics: { icp, paywall, conversion, engagement } }`
+
+### `check-expired-trials`
+- **Método:** POST
+- **Auth:** Service (cron)
+- **Descrição:** Verifica e expira trials vencidos, atualiza user_subscriptions
+- **Response:** `{ success, expired_count: number }`
+
+### `sync-plan-limits`
+- **Método:** POST
+- **Auth:** JWT (admin)
+- **Descrição:** Sincroniza limites de plano entre subscription_plans e user_subscriptions
+- **Payload:** `{ userId?: string }` (se vazio, sincroniza todos)
+- **Response:** `{ success, synced_count: number }`
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
@@ -331,3 +355,5 @@ const corsHeaders = {
 | [PENDENCIAS.md](./PENDENCIAS.md) | Changelog |
 | [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
 | [TESTING.md](./TESTING.md) | Guia de testes |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
