@@ -20,6 +20,7 @@ import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { FeatureTooltip } from "@/components/onboarding/FeatureTooltip";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { PlanLimitWarning } from "@/components/PlanLimitWarning";
+import { FirstLeadUpgradeBanner } from "@/components/FirstLeadUpgradeBanner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { ResourceMonitoringPanel } from "@/components/ResourceMonitoringPanel";
@@ -156,6 +157,7 @@ const Dashboard = () => {
       )}
       
       <div className="container mx-auto px-4 py-8">
+        <FirstLeadUpgradeBanner />
         {/* Header */}
         <div id="dashboard-overview" className="mb-6 flex items-center justify-between">
           <h2 className="text-3xl font-bold flex items-center gap-2">

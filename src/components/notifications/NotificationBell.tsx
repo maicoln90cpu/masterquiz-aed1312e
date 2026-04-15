@@ -126,10 +126,10 @@ export function NotificationBell() {
           ) : (
             <div className="divide-y">
               {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
-                  onClick={() => !n.read && markAsRead(n.id)}
+                  <div
+                    key={n.id}
+                    className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                    onClick={() => handleNotificationClick(n)}
                 >
                   <div className="flex items-start gap-2">
                     <span className="text-base shrink-0 mt-0.5">{getIcon(n.type)}</span>
