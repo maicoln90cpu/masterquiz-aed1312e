@@ -73,12 +73,25 @@ export function NotificationBell() {
     setUnreadCount(0);
   };
 
+  const navigate = useNavigate();
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'quiz_edited_by_admin': return '✏️';
       case 'quiz_fixed_by_admin': return '🔧';
       case 'support_message': return '💬';
+      case 'first_lead_upgrade': return '🎯';
       default: return '🔔';
+    }
+  };
+
+  const handleNotificationClick = (n: Notification) => {
+    if (!n.read) markAsRead(n.id);
+    // Navigate if notification has a link in metadata
+    if (n.type === 'first_lead_upgrade') {
+      const link = n.metadata?.link || '/precos';
+      navigate(link);
+      setOpen(false);
     }
   };
 
