@@ -132,7 +132,13 @@ Deno.serve(async (req) => {
     const { data: authUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     const activeUsers = (authUsers?.users || []).filter(u => u.email);
     const userIds = activeUsers.map(u => u.id);
-    const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds).not('email', 'is', null);
+    const profiles: any[] = [];
+    const BATCH_SIZE = 150;
+    for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+      const batch = userIds.slice(i, i + BATCH_SIZE);
+      const { data } = await supabase.from('profiles').select('id, full_name, email').in('id', batch).not('email', 'is', null);
+      if (data) profiles.push(...data);
+    }
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('user_id');
     const blacklistedIds = new Set((blacklist || []).map(b => b.user_id));
 
