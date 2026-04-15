@@ -886,6 +886,30 @@ export type Database = {
         }
         Relationships: []
       }
+      gtm_event_integrations: {
+        Row: {
+          event_name: string
+          gtm_event_name: string | null
+          id: string
+          is_integrated: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          event_name: string
+          gtm_event_name?: string | null
+          id?: string
+          is_integrated?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          event_name?: string
+          gtm_event_name?: string | null
+          id?: string
+          is_integrated?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gtm_event_logs: {
         Row: {
           created_at: string
