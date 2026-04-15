@@ -148,8 +148,9 @@ Deno.serve(async (req) => {
 
           // 🎯 first_lead_received — first REAL lead (with email or whatsapp)
           const hasContactInfo = !!(respondent_email || respondent_whatsapp);
-          if (hasContactInfo && !existing) {
-            // Count real leads (with contact info) for this owner
+          const isTestLead = mergedAnswers && typeof mergedAnswers === 'object' && (mergedAnswers as Record<string, unknown>)._is_test_lead === true;
+          if (hasContactInfo && !existing && !isTestLead) {
+            // Count real leads (with contact info) for this owner, excluding test leads
             const { count: totalLeads } = await supabase
               .from('quiz_responses')
               .select('id', { count: 'exact', head: true })
@@ -163,6 +164,27 @@ Deno.serve(async (req) => {
                 metadata: { quiz_id, response_id: responseId, email: !!respondent_email, whatsapp: !!respondent_whatsapp },
               });
               console.log(`🎯 [Milestone] first_lead_received for user ${quiz.user_id}`);
+
+              // 🔔 Create upgrade notification for quiz owner (first real lead)
+              // Check if notification already exists to avoid duplicates
+              const { data: existingNotif } = await supabase
+                .from('admin_notifications')
+                .select('id')
+                .eq('user_id', quiz.user_id)
+                .eq('type', 'first_lead_upgrade')
+                .maybeSingle();
+
+              if (!existingNotif) {
+                await supabase.from('admin_notifications').insert({
+                  user_id: quiz.user_id,
+                  type: 'first_lead_upgrade',
+                  title: '🎉 Seu primeiro lead chegou!',
+                  message: 'Para receber mais leads sem limite, faça upgrade do seu plano.',
+                  metadata: { quiz_id, response_id: responseId, link: '/precos' },
+                  read: false,
+                });
+                console.log(`🔔 [Notification] first_lead_upgrade created for user ${quiz.user_id}`);
+              }
             }
           }
 
