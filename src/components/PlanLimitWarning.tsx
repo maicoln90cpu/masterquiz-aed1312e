@@ -70,7 +70,7 @@ export const PlanLimitWarning = ({ current, limit, type }: PlanLimitWarningProps
               limit_type: type,
               plan_type: subscription?.plan_type || 'free',
             });
-            navigate('/settings');
+            navigate('/precos');
           }}
           className="ml-4 whitespace-nowrap"
         >

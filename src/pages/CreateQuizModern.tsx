@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2, List, Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2, List, Plus, X, Copy, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -1055,6 +1055,66 @@ const CreateQuizModern = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ========== SHARE DIALOG (pós-publicação) ========== */}
+      <Dialog open={uiState.shareDialogOpen && !isExpressMode} onOpenChange={(open) => updateUI({ shareDialogOpen: open })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">🎉 {t('createQuiz.quizPublished')}</DialogTitle>
+            <DialogDescription className="text-center">
+              {t('createQuiz.shareYourQuiz')}
+            </DialogDescription>
+          </DialogHeader>
+          {(() => {
+            const quizPublicUrl = profile?.company_slug 
+              ? `${window.location.origin}/${profile.company_slug}/${quizSlug}`
+              : `${window.location.origin}/quiz/${quizSlug}`;
+            
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Input
+                    readOnly
+                    value={quizPublicUrl}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(quizPublicUrl);
+                      toast.success(t('createQuiz.linkCopied'));
+                      pushGTMEvent('QuizShared', { method: 'link', quiz_id: quizId });
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(quizPublicUrl, '_blank')}
+                    className="w-full"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    {t('createQuiz.openQuiz')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      updateUI({ shareDialogOpen: false });
+                      queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+                      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                      navigate('/meus-quizzes');
+                    }}
+                    className="w-full"
+                  >
+                    {t('createQuiz.goToDashboard')}
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
