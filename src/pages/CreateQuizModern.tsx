@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2, List, Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Eye, Loader2, RotateCcw, AlertTriangle, Rocket, Check, Settings2, List, Plus, X, Copy, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate, useSearchParams } from "react-router-dom";
