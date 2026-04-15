@@ -1,6 +1,6 @@
 # 🗺 ROADMAP - MasterQuiz
 
-> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026
+> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026 — v2.41.0
 
 ---
 
@@ -129,6 +129,14 @@ Q4 2025: Expansão Internacional
   - Histórico de sessões (reconstrução via audit_logs)
   - Notificações ao usuário (admin_notifications + NotificationBell)
   - Tabela admin_notifications com RLS
+- **GTM Centralizado + Growth Dashboard** (v2.41.0) ✅
+  - Migração de todos os eventos legados para `pushGTMEvent`
+  - 6 novos eventos comportamentais (QuizDuplicated, TemplateUsed, FirstLeadReceived, etc.)
+  - Growth Dashboard com métricas ICP, paywall e conversão
+  - Tabela `gtm_event_integrations` com controle por evento
+  - Dashboard GTM com filtros por categoria/status/integração
+  - 3 novas Edge Functions (growth-metrics, check-expired-trials, sync-plan-limits)
+  - Documentação atualizada: 68 tabelas, 64 Edge Functions
 
 ### H2 2026
 - Expansão para EUA
@@ -156,6 +164,7 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-04-15 | **v2.41.0 — GTM Centralizado + Growth Dashboard + 3 novas EFs + Docs Overhaul (68 tabelas, 64 EFs)** |
 | 2026-04-14 | **v2.40.0 — Suporte Avançado + Visual Diff + Block Editor + Notificações + PDF Report + 6 novos docs** |
 | 2026-04-08 | **v2.39.0 — Custos Email + Preview Email + Comparação A×B + Preços Modo B + GTM Lifecycle + Batching Users + Doc Overhaul** |
 | 2026-04-07 | **v2.38.0–v2.38.4 — Vault secrets, logging automações, webhookUrl, fix usuarios, fix GTM** |
@@ -199,6 +208,7 @@ Q4 2025: Expansão Internacional
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo do banco |
 | [SECURITY.md](./SECURITY.md) | Práticas de segurança e RLS |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões obrigatórios de código |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 61 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
 | [ADR.md](./ADR.md) | Architecture Decision Records |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |

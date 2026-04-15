@@ -1,5 +1,56 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.41.0 - GTM Centralizado + Growth Dashboard + Docs Overhaul (15/04/2026)
+
+### Feature: Migração GTM Centralizada (Etapa 1)
+- Todos os eventos legados migrados para `pushGTMEvent()` de `lib/gtmLogger.ts`
+- Eventos migrados: SignupStarted, PlanUpgraded, QuizShared, EditorAbandoned, LeadExported
+- Persistência automática em `gtm_event_logs` para todos os eventos
+
+### Feature: Novos Eventos Comportamentais (Etapa 2)
+- 6 novos eventos: QuizDuplicated, TemplateUsed, FirstLeadReceived, IntegrationConnected, SettingsUpdated, ProfileCompleted
+- Milestone `first_lead_received` com lógica de "somente uma vez por usuário"
+- `AccountCreated` restaurado via `pushGTMEvent`; `AccountCreated2` virou no-op
+
+### Feature: Growth Dashboard (Etapa 3)
+- Dashboard com 3 seções: Métricas ICP, Análise de Paywall, Análise de Conversão
+- Edge Function `growth-metrics` dedicada para cálculos pesados
+- Métricas: ICP Score, usuários engajados, taxa de ativação, análise de paywall
+
+### Feature: Dashboard GTM com Controles de Integração
+- Tabela `gtm_event_integrations` para controle de integração por evento
+- 40+ eventos mapeados com categorias (Onboarding, Criação, Engajamento, etc.)
+- Filtros avançados: por categoria, status de disparo (7d), status de integração GTM
+- Card "Pendentes GTM" mostrando eventos não integrados
+
+### Fix: Gráfico de Usuários Cadastrados
+- Corrigida ordenação cronológica dos meses (antes embaralhados via Object.entries)
+- Agora gera 6 meses fixos em ordem do mais antigo ao mais recente
+
+### Docs: Overhaul Completo v2.41.0
+- DATABASE_SCHEMA.md: 45+ → 68 tabelas documentadas
+- EDGE_FUNCTIONS.md: 61 → 64 funções (+growth-metrics, check-expired-trials, sync-plan-limits)
+- Todos os docs atualizados para v2.41.0
+- Cross-references atualizados
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/lib/gtmLogger.ts` | Centralização de todos os eventos |
+| `src/hooks/useAccountCreatedEvent.ts` | Restaurado pushGTMEvent para AccountCreated |
+| `src/hooks/useAccountCreated2Event.ts` | No-op (evento duplicado desligado) |
+| `src/hooks/useGrowthMetrics.ts` | NOVO — hook do Growth Dashboard |
+| `src/components/admin/GrowthDashboard.tsx` | NOVO — dashboard de métricas |
+| `src/components/admin/GTMEventsDashboard.tsx` | +40 eventos, +filtros, +integração GTM |
+| `src/pages/AdminDashboard.tsx` | +GrowthDashboard, fix gráfico cronológico |
+| `supabase/functions/growth-metrics/index.ts` | NOVO — Edge Function |
+| `supabase/functions/check-expired-trials/index.ts` | NOVO — expiração de trials |
+| `supabase/functions/sync-plan-limits/index.ts` | NOVO — sync de limites |
+| `docs/DATABASE_SCHEMA.md` | 45+ → 68 tabelas |
+| `docs/EDGE_FUNCTIONS.md` | 61 → 64 funções |
+
+---
+
 ## ✅ v2.40.0 - Suporte Avançado + Visual Diff + Block Editor + Notificações + Docs Overhaul (14/04/2026)
 
 ### Feature: Modo Suporte Avançado
