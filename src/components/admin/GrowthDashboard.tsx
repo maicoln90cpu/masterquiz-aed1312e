@@ -208,6 +208,15 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
           <FunnelBar label="Recebeu ≥1 Resposta" count={f.receivedResponse} total={f.publishedQuiz} pctLabel="dos que publicaram" />
           <FunnelBar label="Recebeu 20+ Respostas" count={f.received20Plus} total={f.receivedResponse} pctLabel="dos que receberam" />
           <FunnelBar label="Pagantes Reais (webhook)" count={f.paidUsers} total={total} pctLabel="do total" />
+          {f.icpRegistered !== undefined && f.icpRegistered > 0 && (
+            <div className="border-t pt-3 mt-3 space-y-1">
+              <FunnelBar label="🎯 ICP que publicou quiz real" count={f.icpPublishedReal || 0} total={f.icpRegistered} pctLabel="dos ICP cadastrados" />
+              <p className="text-xs text-muted-foreground">
+                {f.icpRegistered} usuários com objetivo definido · {f.icpConversionPct?.toFixed(1)}% publicaram quiz real
+                vs {total > 0 ? ((f.publishedQuiz / total) * 100).toFixed(1) : 0}% do total
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
