@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.40.0** | Última atualização: 14 de Abril de 2026
+**Versão 2.41.0** | Última atualização: 15 de Abril de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -59,7 +59,7 @@
 | Serviço | Propósito |
 |---------|-----------|
 | PostgreSQL | Banco de dados relacional com RLS |
-| Edge Functions (Deno) | Lógica serverless (61 funções) |
+| Edge Functions (Deno) | Lógica serverless (64 funções) |
 | Auth | Autenticação email/senha |
 | Storage | Bucket `quiz-media` (público) |
 | Realtime | Updates em tempo real |
@@ -95,7 +95,7 @@ masterquizz/
 ├── docs/
 │   ├── SYSTEM_DESIGN.md      # Arquitetura e fluxos técnicos
 │   ├── AUDIT_TEMPLATE.md     # Template de auditoria
-│   ├── API_DOCS.md           # Documentação das 61 Edge Functions
+│   ├── API_DOCS.md           # Documentação das 64 Edge Functions
 │   ├── COMPONENTS.md         # Documentação de componentes
 │   ├── PRD.md                # Product Requirements
 │   ├── ROADMAP.md            # Planejamento estratégico
@@ -107,7 +107,7 @@ masterquizz/
 │   ├── DATABASE_SCHEMA.md    # Schema completo do banco
 │   ├── SECURITY.md           # Práticas de segurança e RLS
 │   ├── CODE_STANDARDS.md     # Padrões obrigatórios de código
-│   ├── EDGE_FUNCTIONS.md     # Catálogo das 61 Edge Functions
+│   ├── EDGE_FUNCTIONS.md     # Catálogo das 64 Edge Functions
 │   ├── ONBOARDING.md         # Guia para novos desenvolvedores
 │   └── ADR.md                # Architecture Decision Records
 ├── public/                    # Assets estáticos
@@ -149,7 +149,7 @@ masterquizz/
 ├── supabase/
 │   ├── config.toml            # Configuração Supabase
 │   ├── migrations/            # SQL migrations (read-only)
-│   └── functions/             # 61 Edge Functions
+│   └── functions/             # 64 Edge Functions
 │       └── _shared/           # Código compartilhado (cors.ts, auth.ts)
 └── [config files]
 ```
@@ -302,7 +302,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 
 ---
 
-## ⚡ Edge Functions (61 funções)
+## ⚡ Edge Functions (64 funções)
 
 ### Core
 | Função | Propósito |
@@ -386,14 +386,21 @@ Signup → trigger handle_new_user_profile() → cria profile
 | `blog-sitemap` | Geração de sitemap |
 | `track-blog-view` | Tracking de views |
 
+### Growth & Métricas (3 funções) — NOVO v2.41.0
+| Função | Propósito |
+|--------|-----------|
+| `growth-metrics` | Métricas avançadas do Growth Dashboard |
+| `check-expired-trials` | Verifica e expira trials vencidos |
+| `sync-plan-limits` | Sincroniza limites de plano |
+
 ### Admin & Suporte
 | Função | Propósito |
 |--------|-----------|
 | `system-health-check` | Saúde do sistema |
 | `export-schema-sql` / `export-table-data` | Exportação de dados |
 | `anonymize-ips` | Anonimização LGPD |
-| `admin-view-user-data` | Dados do usuário para suporte (quizzes, responses, session_history, save_quiz) |
-| `admin-update-subscription` | Atualização de plano do usuário pelo admin |
+| `admin-view-user-data` | Dados do usuário para suporte |
+| `admin-update-subscription` | Atualização de plano do usuário |
 | `save-quiz-response` | Salvar resposta de quiz (público) |
 | `track-cta-redirect` | Tracking de cliques em CTAs |
 
@@ -401,7 +408,7 @@ Signup → trigger handle_new_user_profile() → cria profile
 
 ## 🗄 API e Database
 
-### Schema Principal (40+ tabelas)
+### Schema Principal (68 tabelas)
 
 ```sql
 -- Core
@@ -565,6 +572,9 @@ src/
 - ✅ Comparação A×B de modos de monetização (métricas históricas)
 - ✅ Preços diferenciados por modo (A/B) com checkout dinâmico
 - ✅ GTM lifecycle tracking completo (quiz_view/start/complete/lead_captured)
+- ✅ **Growth Dashboard** com métricas ICP, análise de paywall e conversão
+- ✅ **Dashboard GTM com 40+ eventos** mapeados, filtros por categoria/status/integração
+- ✅ **Tabela gtm_event_integrations** para controle de integração por evento
 
 ---
 
@@ -604,7 +614,7 @@ logger.api('API call', { endpoint, status });
 | [docs/STYLE_GUIDE.md](./docs/STYLE_GUIDE.md) | Padrões de código e convenções |
 | [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Checklist de validação do MVP |
 | [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
-| [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 61 Edge Functions |
+| [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 64 Edge Functions |
 | [docs/COMPONENTS.md](./docs/COMPONENTS.md) | Documentação de componentes |
 | [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
 | [docs/BLOCKS.md](./docs/BLOCKS.md) | Catálogo dos 34 tipos de blocos |
@@ -612,10 +622,10 @@ logger.api('API call', { endpoint, status });
 | [docs/BLOG.md](./docs/BLOG.md) | Guia de replicação do blog com IA |
 | [docs/EGOI.md](./docs/EGOI.md) | Guia de replicação do email marketing |
 | [docs/MONETIZATION.md](./docs/MONETIZATION.md) | Monetização A/B e custos |
-| [docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md) | Schema completo do banco |
+| [docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md) | Schema completo do banco (68 tabelas) |
 | [docs/SECURITY.md](./docs/SECURITY.md) | Práticas de segurança e RLS |
 | [docs/CODE_STANDARDS.md](./docs/CODE_STANDARDS.md) | Padrões obrigatórios de código |
-| [docs/EDGE_FUNCTIONS.md](./docs/EDGE_FUNCTIONS.md) | Catálogo das 61 Edge Functions |
+| [docs/EDGE_FUNCTIONS.md](./docs/EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [docs/ONBOARDING.md](./docs/ONBOARDING.md) | Guia para novos desenvolvedores |
 | [docs/ADR.md](./docs/ADR.md) | Architecture Decision Records |
 

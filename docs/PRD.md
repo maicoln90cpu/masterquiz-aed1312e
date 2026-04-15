@@ -2,8 +2,8 @@
 
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
-**Versão:** 2.40  
-**Última atualização:** 14 de Abril de 2026  
+**Versão:** 2.41.0  
+**Última atualização:** 15 de Abril de 2026  
 **Owner:** Product Team
 
 ---
@@ -287,6 +287,8 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF08.6 | Persistência de eventos para analytics admin | Média | ✅ |
 | RF08.7 | Dashboard de eventos GTM no admin | Média | ✅ |
 | RF08.8 | GTM lifecycle completo (quiz_view/start/complete/lead_captured persistidos) | Alta | ✅ |
+| RF08.9 | Mapeamento completo de 40+ eventos GTM com categorias | Alta | ✅ |
+| RF08.10 | Controle de integração por evento via `gtm_event_integrations` | Média | ✅ |
 
 ### RF09 - Pagamentos
 
@@ -337,6 +339,9 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF11.19 | CRUD de perguntas no editor de suporte (adicionar/remover) | Média | ✅ |
 | RF11.20 | Relatório PDF de sessão de suporte (jsPDF + branding) | Média | ✅ |
 | RF11.21 | Histórico de sessões de suporte (reconstrução via audit_logs) | Média | ✅ |
+| RF11.22 | Growth Dashboard com métricas ICP, paywall e conversão | Alta | ✅ |
+| RF11.23 | Tabela GTM Event Integrations (controle de integração por evento) | Média | ✅ |
+| RF11.24 | Filtros avançados no dashboard GTM (categoria, status, integração) | Média | ✅ |
 
 ### RF12 - Email Marketing Automatizado
 
@@ -508,6 +513,17 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | Como usuário, quero ser notificado quando o suporte alterar meu quiz | Média | ✅ |
 | Como admin, quero gerar um relatório PDF da sessão de suporte | Média | ✅ |
 | Como admin, quero ver o histórico de sessões de suporte anteriores | Média | ✅ |
+
+### Épico 8: GTM Centralizado + Growth Dashboard (Abril 2026) ✅
+
+| User Story | Prioridade | Status |
+|------------|------------|--------|
+| Como admin, quero que todos os eventos GTM usem pushGTMEvent centralizado | Alta | ✅ |
+| Como admin, quero 6 novos eventos comportamentais (QuizDuplicated, TemplateUsed, etc.) | Média | ✅ |
+| Como admin, quero um Growth Dashboard com métricas ICP e análise de paywall | Alta | ✅ |
+| Como admin, quero controlar quais eventos estão integrados no GTM | Média | ✅ |
+| Como admin, quero filtrar eventos por categoria, status de disparo e integração | Média | ✅ |
+| Como admin, quero ver o gráfico de usuários em ordem cronológica correta | Alta | ✅ |
 
 ### Épico 4: Enterprise (Q3-Q4 2025)
 

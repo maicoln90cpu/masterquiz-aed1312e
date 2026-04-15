@@ -1,7 +1,7 @@
-# ⚡ EDGE FUNCTIONS — Catálogo Completo (61 funções)
+# ⚡ EDGE FUNCTIONS — Catálogo Completo (64 funções)
 
 > MasterQuiz — Todas as Edge Functions organizadas por domínio
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.41.0 | 15 de Abril de 2026
 
 ---
 
@@ -109,6 +109,14 @@
 | `admin-view-user-data` | POST | JWT+Admin | — | Dados do usuário (quizzes, responses, session_history, save_quiz) |
 | `admin-update-subscription` | POST | JWT+Admin | — | Atualiza plano do usuário |
 
+## 📈 Growth & Métricas (3) — NOVO v2.41.0
+
+| Função | Método | Auth | Rate Limit | Descrição |
+|--------|--------|------|------------|-----------|
+| `growth-metrics` | POST | JWT+Admin | — | Métricas avançadas do Growth Dashboard |
+| `check-expired-trials` | POST | Service | — | Verifica e expira trials vencidos |
+| `sync-plan-limits` | POST | JWT+Admin | — | Sincroniza limites de plano |
+
 ## 🔧 Utilitários (2)
 
 | Função | Método | Auth | Rate Limit | Descrição |
@@ -123,10 +131,10 @@
 | Tipo | Quantidade |
 |------|-----------|
 | JWT (autenticado) | 22 |
-| JWT + Admin | 14 |
-| Service (cron/interno) | 13 |
+| JWT + Admin | 16 |
+| Service (cron/interno) | 14 |
 | Anon (público) | 12 |
-| **Total** | **61** |
+| **Total** | **64** |
 
 ---
 
@@ -137,3 +145,4 @@
 | [API_DOCS.md](./API_DOCS.md) | Payloads e responses detalhados |
 | [SECURITY.md](./SECURITY.md) | Autenticação e rate limiting |
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Fluxos de dados |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
