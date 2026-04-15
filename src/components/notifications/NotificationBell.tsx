@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Bell } from 'lucide-react';
@@ -72,12 +73,25 @@ export function NotificationBell() {
     setUnreadCount(0);
   };
 
+  const navigate = useNavigate();
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'quiz_edited_by_admin': return '✏️';
       case 'quiz_fixed_by_admin': return '🔧';
       case 'support_message': return '💬';
+      case 'first_lead_upgrade': return '🎯';
       default: return '🔔';
+    }
+  };
+
+  const handleNotificationClick = (n: Notification) => {
+    if (!n.read) markAsRead(n.id);
+    // Navigate if notification has a link in metadata
+    if (n.type === 'first_lead_upgrade') {
+      const link = n.metadata?.link || '/precos';
+      navigate(link);
+      setOpen(false);
     }
   };
 
@@ -112,10 +126,10 @@ export function NotificationBell() {
           ) : (
             <div className="divide-y">
               {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
-                  onClick={() => !n.read && markAsRead(n.id)}
+                  <div
+                    key={n.id}
+                    className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                    onClick={() => handleNotificationClick(n)}
                 >
                   <div className="flex items-start gap-2">
                     <span className="text-base shrink-0 mt-0.5">{getIcon(n.type)}</span>

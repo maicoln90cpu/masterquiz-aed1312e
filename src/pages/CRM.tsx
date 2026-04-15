@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { FirstLeadUpgradeBanner } from "@/components/FirstLeadUpgradeBanner";
 import { CRMEmptyState } from '@/components/crm/CRMEmptyState';
 import { MobileNav } from "@/components/MobileNav";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
@@ -361,6 +362,7 @@ const CRM = () => {
   return (
     <DashboardLayout>
       {!onboardingStatus.crm_tour_completed && <CRMTour />}
+      <FirstLeadUpgradeBanner />
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           {/* Mobile: 2 linhas */}
