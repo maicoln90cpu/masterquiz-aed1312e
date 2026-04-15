@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { pushGTMEvent } from '@/lib/gtmLogger';
 
 const SESSION_KEY = 'mq_account_created_checked';
 
 /**
- * Hook global que dispara o evento `account_created` no GTM/dataLayer.
+ * Hook global que dispara o evento `AccountCreated` no GTM/dataLayer.
  * Roda em qualquer rota autenticada (via RequireAuth).
  * 
  * Caminho 1: `mq_just_registered` no localStorage → dispara imediatamente
@@ -21,10 +22,12 @@ export const useAccountCreatedEvent = () => {
     // Guard: já verificou nesta sessão
     if (sessionStorage.getItem(SESSION_KEY) === 'true') return;
 
-    const fireEvent = async (userId: string, _email: string | undefined, source: string) => {
-      // AccountCreated descontinuado — não disparar mais evento GTM
-      // Mantém apenas a marcação de account_created_event_sent para retrocompatibilidade
-      console.log(`🎯 [GTM] AccountCreated SKIP (deprecated) — source: ${source}, user: ${userId}`);
+    const fireEvent = (userId: string, email: string | undefined, source: string) => {
+      pushGTMEvent('AccountCreated', {
+        user_id: userId,
+        email: email || '',
+        source,
+      }, { persist: true });
     };
 
     const run = async () => {
