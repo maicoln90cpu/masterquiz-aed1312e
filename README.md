@@ -614,7 +614,7 @@ logger.api('API call', { endpoint, status });
 | [docs/STYLE_GUIDE.md](./docs/STYLE_GUIDE.md) | Padrões de código e convenções |
 | [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Checklist de validação do MVP |
 | [docs/SYSTEM_DESIGN.md](./docs/SYSTEM_DESIGN.md) | Arquitetura e fluxos técnicos |
-| [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 61 Edge Functions |
+| [docs/API_DOCS.md](./docs/API_DOCS.md) | Documentação das 64 Edge Functions |
 | [docs/COMPONENTS.md](./docs/COMPONENTS.md) | Documentação de componentes |
 | [docs/AUDIT_TEMPLATE.md](./docs/AUDIT_TEMPLATE.md) | Template de auditoria |
 | [docs/BLOCKS.md](./docs/BLOCKS.md) | Catálogo dos 34 tipos de blocos |
@@ -622,10 +622,10 @@ logger.api('API call', { endpoint, status });
 | [docs/BLOG.md](./docs/BLOG.md) | Guia de replicação do blog com IA |
 | [docs/EGOI.md](./docs/EGOI.md) | Guia de replicação do email marketing |
 | [docs/MONETIZATION.md](./docs/MONETIZATION.md) | Monetização A/B e custos |
-| [docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md) | Schema completo do banco |
+| [docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md) | Schema completo do banco (68 tabelas) |
 | [docs/SECURITY.md](./docs/SECURITY.md) | Práticas de segurança e RLS |
 | [docs/CODE_STANDARDS.md](./docs/CODE_STANDARDS.md) | Padrões obrigatórios de código |
-| [docs/EDGE_FUNCTIONS.md](./docs/EDGE_FUNCTIONS.md) | Catálogo das 61 Edge Functions |
+| [docs/EDGE_FUNCTIONS.md](./docs/EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [docs/ONBOARDING.md](./docs/ONBOARDING.md) | Guia para novos desenvolvedores |
 | [docs/ADR.md](./docs/ADR.md) | Architecture Decision Records |
 
