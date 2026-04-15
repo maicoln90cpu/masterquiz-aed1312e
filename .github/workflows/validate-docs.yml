@@ -1,0 +1,32 @@
+name: Validate Documentation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'supabase/functions/**'
+      - 'scripts/validate-docs.cjs'
+
+jobs:
+  validate-docs:
+    name: Check documentation sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run documentation validator
+        run: node scripts/validate-docs.cjs
+
+      - name: Summary
+        if: failure()
+        run: |
+          echo "## ❌ Documentation out of sync" >> $GITHUB_STEP_SUMMARY
+          echo "The documentation does not match the current codebase." >> $GITHUB_STEP_SUMMARY
+          echo "Run \`node scripts/validate-docs.cjs\` locally to see details." >> $GITHUB_STEP_SUMMARY
+          echo "Update the docs before merging this PR." >> $GITHUB_STEP_SUMMARY
