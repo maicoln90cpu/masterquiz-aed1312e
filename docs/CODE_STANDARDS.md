@@ -1,7 +1,7 @@
 # 📐 CODE STANDARDS — Padrões Obrigatórios de Código
 
 > MasterQuiz — Regras, convenções e exemplos do/don't
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.41.0 | 15 de Abril de 2026
 
 ---
 
@@ -224,6 +224,19 @@ serve(async (req) => {
 });
 ```
 
+### GTM Events (OBRIGATÓRIO v2.41.0)
+```typescript
+// ✅ Sempre usar pushGTMEvent para eventos
+import { pushGTMEvent } from '@/lib/gtmLogger';
+pushGTMEvent('QuizShared', { quizId, method: 'link' });
+
+// ❌ NUNCA usar dataLayer.push diretamente
+window.dataLayer?.push({ event: 'QuizShared' }); // ❌
+
+// ❌ NUNCA criar hooks dedicados para eventos simples
+// Use pushGTMEvent inline no handler
+```
+
 ---
 
 ## 📚 Documentação Relacionada
@@ -233,4 +246,5 @@ serve(async (req) => {
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Formatação e linting |
 | [SECURITY.md](./SECURITY.md) | Padrões de segurança |
 | [TESTING.md](./TESTING.md) | Padrões de testes |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo de funções |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [ADR.md](./ADR.md) | ADR-010: Centralização GTM |

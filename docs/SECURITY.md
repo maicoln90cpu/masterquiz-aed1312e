@@ -1,7 +1,7 @@
 # 🔒 SECURITY — Práticas de Segurança
 
 > MasterQuiz — Guia de segurança, RLS, rate limiting e audit
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.41.0 | 15 de Abril de 2026
 
 ---
 
@@ -88,6 +88,27 @@ ON public.admin_notifications FOR UPDATE
 TO authenticated USING (auth.uid() = user_id);
 
 -- Admin insere notificações (via Edge Function com service_role)
+```
+
+### Padrão: GTM Event Integrations (NOVO v2.41.0)
+```sql
+-- Apenas admins podem gerenciar integrações GTM
+CREATE POLICY "Admins can manage GTM integrations"
+ON public.gtm_event_integrations FOR ALL
+TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+
+-- Qualquer autenticado pode INSERT em gtm_event_logs (tracking)
+CREATE POLICY "Authenticated can insert GTM events"
+ON public.gtm_event_logs FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+-- Apenas admins podem SELECT gtm_event_logs (dashboard)
+CREATE POLICY "Admins can read GTM events"
+ON public.gtm_event_logs FOR SELECT
+TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
 ```
 
 ### ⚠️ Anti-padrões
