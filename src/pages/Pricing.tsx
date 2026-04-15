@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { PricingCard } from "@/components/landing/PricingCard";
 import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 export default function Pricing() {
   
@@ -25,9 +26,28 @@ export default function Pricing() {
   }, [allPlans, isModeB]);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
 
+  const paywallFired = useRef(false);
+
   useEffect(() => {
     loadCurrentSubscription();
   }, []);
+
+  // 🎯 GTM: paywall_viewed — dispara 1x ao montar a página de preços
+  useEffect(() => {
+    if (paywallFired.current) return;
+    const firePaywallViewed = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        paywallFired.current = true;
+        pushGTMEvent('paywall_viewed', {
+          source: 'pricing_page',
+          user_id: user.id,
+          current_plan: currentPlan || 'unknown',
+        });
+      }
+    };
+    firePaywallViewed();
+  }, [currentPlan]);
 
   const loadCurrentSubscription = async () => {
     try {

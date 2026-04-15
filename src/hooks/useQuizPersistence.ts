@@ -522,6 +522,14 @@ export function useQuizPersistence({
         
         logQuizAction("quiz:created", quiz.id, { title: quiz.title, template });
 
+        // 🎯 GTM: quiz_published — disparado ao publicar quiz novo (INSERT)
+        pushGTMEvent('quiz_published', {
+          quiz_id: quiz.id,
+          quiz_title: quiz.title,
+          user_id: user.id,
+          editor_mode: editorMode,
+        });
+
         // 🎯 GTM: quiz_created — disparado toda vez que um quiz é criado
         pushGTMEvent('quiz_created', {
           quiz_id: quiz.id,
