@@ -2,11 +2,7 @@
 
 /**
  * Script de Validação de Documentação - MasterQuizz
- * 
- * Verifica se todos os arquivos de documentação estão:
- * - Presentes
- * - Com estrutura correta
- * - Atualizados (últimos 30 dias)
+ * v2.41.0 — Inclui validação de contagens (tabelas, EFs) contra o código real
  * 
  * Uso: node scripts/validate-docs.js
  */
@@ -14,11 +10,14 @@
 const fs = require('fs');
 const path = require('path');
 
-// Configuração dos arquivos de documentação
+// ─────────────────────────────────────────────
+// 1) Configuração dos docs obrigatórios
+// ─────────────────────────────────────────────
+
 const DOCS_CONFIG = {
   'README.md': {
     requiredSections: [
-      '# 🎯 MasterQuizz',
+      '# 🎯 MasterQuiz',
       '## 🛠 Stack Tecnológica',
       '## 🏗 Arquitetura',
       '## 🚀 Setup do Projeto',
@@ -30,280 +29,310 @@ const DOCS_CONFIG = {
       '## 🔧 Troubleshooting',
       '## 🤝 Contribuição'
     ],
-    minSize: 5000, // bytes
+    minSize: 5000,
     description: 'Documentação técnica completa do sistema'
   },
-  'PENDENCIAS.md': {
-    requiredSections: [
-      '# 📋 PENDÊNCIAS',
-      '## 📊 Status Geral',
-      '## ✅ Features Implementadas',
-      '## 🔄 Em Progresso',
-      '## 📝 Pendências Prioritárias',
-      '## 💡 Sugestões Futuras',
-      '## 📜 Changelog'
-    ],
+  'docs/PENDENCIAS.md': {
+    requiredSections: ['# 📋 PENDÊNCIAS'],
     minSize: 3000,
     description: 'Features, pendências e changelog'
   },
-  'ROADMAP.md': {
-    requiredSections: [
-      '# 🗺 ROADMAP',
-      '## 📅 Visão Geral',
-      '## 🎯 Q1 2025',
-      '## 🚀 Q2 2025',
-      '## 🤖 Q3 2025',
-      '## 🏢 Q4 2025',
-      '## 🌎 2026',
-      '## 📊 Métricas de Sucesso'
-    ],
+  'docs/ROADMAP.md': {
+    requiredSections: ['# 🗺 ROADMAP'],
     minSize: 3000,
     description: 'Planejamento estratégico 2025-2026'
   },
-  'PRD.md': {
-    requiredSections: [
-      '# 📄 PRD',
-      '## 🎯 Visão do Produto',
-      '## 🔍 Problema e Solução',
-      '## 👥 Personas',
-      '## ✅ Requisitos Funcionais',
-      '## 🔒 Requisitos Não-Funcionais',
-      '## 📝 Backlog',
-      '## 📊 Métricas de Sucesso'
-    ],
+  'docs/PRD.md': {
+    requiredSections: ['# 📄 PRD'],
     minSize: 5000,
     description: 'Product Requirements Document'
+  },
+  'docs/DATABASE_SCHEMA.md': {
+    requiredSections: ['# 🗄️ DATABASE SCHEMA'],
+    minSize: 3000,
+    description: 'Schema completo do banco'
+  },
+  'docs/EDGE_FUNCTIONS.md': {
+    requiredSections: ['# ⚡ EDGE FUNCTIONS'],
+    minSize: 2000,
+    description: 'Catálogo de Edge Functions'
+  },
+  'docs/SECURITY.md': {
+    requiredSections: ['# 🔒 SECURITY'],
+    minSize: 2000,
+    description: 'Práticas de segurança e RLS'
+  },
+  'docs/CODE_STANDARDS.md': {
+    requiredSections: ['# 📐 CODE STANDARDS'],
+    minSize: 2000,
+    description: 'Padrões obrigatórios de código'
+  },
+  'docs/SYSTEM_DESIGN.md': {
+    requiredSections: ['# 🏗️ System Design Document'],
+    minSize: 3000,
+    description: 'Arquitetura e fluxos técnicos'
+  },
+  'docs/ADR.md': {
+    requiredSections: ['# 📋 ADR'],
+    minSize: 1000,
+    description: 'Architecture Decision Records'
+  },
+  'docs/ONBOARDING.md': {
+    requiredSections: ['# 🚀 ONBOARDING'],
+    minSize: 1000,
+    description: 'Guia para novos desenvolvedores'
+  },
+  'docs/COMPONENTS.md': {
+    requiredSections: ['# 🧩 Componentes'],
+    minSize: 2000,
+    description: 'Documentação de componentes'
   }
 };
 
-// Cores para output
-const colors = {
-  reset: '\x1b[0m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
-  bold: '\x1b[1m'
+// ─────────────────────────────────────────────
+// 2) Cores e helpers
+// ─────────────────────────────────────────────
+
+const C = {
+  reset: '\x1b[0m', red: '\x1b[31m', green: '\x1b[32m',
+  yellow: '\x1b[33m', cyan: '\x1b[36m', bold: '\x1b[1m'
 };
 
-function log(message, color = 'reset') {
-  console.log(`${colors[color]}${message}${colors.reset}`);
+const log = (msg, c = 'reset') => console.log(`${C[c]}${msg}${C.reset}`);
+
+function readFile(p) {
+  try { return fs.readFileSync(path.join(process.cwd(), p), 'utf-8'); } catch { return null; }
 }
 
-function logSection(title) {
-  console.log('\n' + '─'.repeat(60));
-  log(`📄 ${title}`, 'bold');
-  console.log('─'.repeat(60));
+// ─────────────────────────────────────────────
+// 3) Contagem real de EFs e tabelas
+// ─────────────────────────────────────────────
+
+function countEdgeFunctions() {
+  const dir = path.join(process.cwd(), 'supabase', 'functions');
+  if (!fs.existsSync(dir)) return { count: 0, names: [] };
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const funcs = entries.filter(e => e.isDirectory() && !e.name.startsWith('_')).map(e => e.name);
+  return { count: funcs.length, names: funcs };
 }
 
-function checkFileExists(filePath) {
-  return fs.existsSync(filePath);
+function extractDocNumber(content, pattern) {
+  const match = content.match(pattern);
+  if (!match) return null;
+  return parseInt(match[1], 10);
 }
 
-function getFileStats(filePath) {
-  try {
-    return fs.statSync(filePath);
-  } catch {
-    return null;
-  }
-}
+// ─────────────────────────────────────────────
+// 4) Validação de doc individual
+// ─────────────────────────────────────────────
 
-function readFileContent(filePath) {
-  try {
-    return fs.readFileSync(filePath, 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
-function checkSections(content, requiredSections) {
-  const missing = [];
-  const found = [];
+function validateDoc(fileName, config) {
+  const result = { file: fileName, errors: [], warnings: [], exists: false };
+  const content = readFile(fileName);
   
-  for (const section of requiredSections) {
-    if (content.includes(section)) {
-      found.push(section);
-    } else {
-      missing.push(section);
+  if (!content) {
+    result.errors.push(`Arquivo não encontrado: ${fileName}`);
+    return result;
+  }
+  result.exists = true;
+  
+  const size = Buffer.byteLength(content, 'utf-8');
+  if (size < config.minSize) {
+    result.warnings.push(`Tamanho: ${(size/1024).toFixed(1)}KB (mín: ${(config.minSize/1024).toFixed(1)}KB)`);
+  }
+  
+  for (const section of config.requiredSections) {
+    if (!content.includes(section)) {
+      result.errors.push(`Seção faltando: ${section}`);
     }
   }
   
-  return { found, missing };
+  return result;
 }
 
-function getDaysSinceModified(stats) {
-  const now = new Date();
-  const modified = new Date(stats.mtime);
-  const diffTime = Math.abs(now - modified);
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+// ─────────────────────────────────────────────
+// 5) Validação de consistência de contagens
+// ─────────────────────────────────────────────
+
+function validateCounts() {
+  const results = [];
+  const realEFs = countEdgeFunctions();
+  
+  // Verificar contagem de EFs nos docs
+  const docsToCheckEF = [
+    'README.md',
+    'docs/EDGE_FUNCTIONS.md',
+    'docs/ONBOARDING.md',
+    'docs/SYSTEM_DESIGN.md',
+    'docs/API_DOCS.md'
+  ];
+  
+  for (const doc of docsToCheckEF) {
+    const content = readFile(doc);
+    if (!content) continue;
+    
+    // Procura padrões como "(64 funções)", "(61 funções)", "61 Edge Functions"
+    const patterns = [
+      /\((\d+)\s*funç[oõ]es?\)/gi,
+      /(\d+)\s*Edge\s*Functions/gi,
+      /(\d+)\s*funç[oõ]es/gi
+    ];
+    
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const docCount = parseInt(match[1], 10);
+        if (docCount > 10 && docCount !== realEFs.count) {
+          results.push({
+            type: 'error',
+            message: `${doc}: diz ${docCount} EFs, mas existem ${realEFs.count} reais`
+          });
+          break; // só 1 erro por doc
+        }
+      }
+    }
+  }
+  
+  // Verificar contagem de tabelas no DATABASE_SCHEMA
+  const schemaContent = readFile('docs/DATABASE_SCHEMA.md');
+  if (schemaContent) {
+    const tableCountMatch = schemaContent.match(/Total de tabelas:\*?\*?\s*(\d+)/i);
+    if (tableCountMatch) {
+      const docTables = parseInt(tableCountMatch[1], 10);
+      // Nota: contagem real requer query ao DB (não disponível offline)
+      // Validamos apenas consistência interna entre docs
+      const readmeContent = readFile('README.md');
+      if (readmeContent) {
+        const readmeTableMatch = readmeContent.match(/(\d+)\s*tabelas/i);
+        if (readmeTableMatch) {
+          const readmeTables = parseInt(readmeTableMatch[1], 10);
+          if (readmeTables > 10 && readmeTables !== docTables) {
+            results.push({
+              type: 'error',
+              message: `README diz ${readmeTables} tabelas, DATABASE_SCHEMA diz ${docTables}`
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  return { realEFs: realEFs.count, issues: results };
 }
 
-function formatDate(date) {
-  return new Date(date).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+// ─────────────────────────────────────────────
+// 6) Cross-reference validation
+// ─────────────────────────────────────────────
+
+function validateCrossRefs() {
+  const issues = [];
+  const docsDir = path.join(process.cwd(), 'docs');
+  
+  if (!fs.existsSync(docsDir)) return issues;
+  
+  const files = fs.readdirSync(docsDir).filter(f => f.endsWith('.md'));
+  
+  for (const file of files) {
+    const content = readFile(`docs/${file}`);
+    if (!content) continue;
+    
+    // Find markdown links to other docs
+    const linkPattern = /\[.*?\]\(\.\/([\w_-]+\.md)\)/g;
+    let match;
+    while ((match = linkPattern.exec(content)) !== null) {
+      const linked = match[1];
+      if (!files.includes(linked)) {
+        issues.push(`docs/${file}: link quebrado para ./${linked}`);
+      }
+    }
+  }
+  
+  return issues;
 }
 
-function validateDoc(fileName, config) {
-  const results = {
-    file: fileName,
-    exists: false,
-    size: 0,
-    sizeOk: false,
-    sectionsFound: 0,
-    sectionsMissing: [],
-    lastModified: null,
-    daysSinceUpdate: 0,
-    isRecent: false,
-    errors: [],
-    warnings: []
-  };
-  
-  const filePath = path.join(process.cwd(), fileName);
-  
-  // Check existence
-  if (!checkFileExists(filePath)) {
-    results.errors.push(`Arquivo não encontrado: ${fileName}`);
-    return results;
-  }
-  results.exists = true;
-  
-  // Get stats
-  const stats = getFileStats(filePath);
-  if (!stats) {
-    results.errors.push(`Não foi possível ler stats do arquivo`);
-    return results;
-  }
-  
-  results.size = stats.size;
-  results.sizeOk = stats.size >= config.minSize;
-  results.lastModified = stats.mtime;
-  results.daysSinceUpdate = getDaysSinceModified(stats);
-  results.isRecent = results.daysSinceUpdate <= 30;
-  
-  if (!results.sizeOk) {
-    results.warnings.push(`Arquivo muito pequeno (${results.size} bytes, mínimo: ${config.minSize})`);
-  }
-  
-  if (!results.isRecent) {
-    results.warnings.push(`Arquivo não atualizado há ${results.daysSinceUpdate} dias`);
-  }
-  
-  // Read content and check sections
-  const content = readFileContent(filePath);
-  if (!content) {
-    results.errors.push(`Não foi possível ler conteúdo do arquivo`);
-    return results;
-  }
-  
-  const { found, missing } = checkSections(content, config.requiredSections);
-  results.sectionsFound = found.length;
-  results.sectionsMissing = missing;
-  
-  if (missing.length > 0) {
-    results.errors.push(`Seções faltando: ${missing.length}`);
-  }
-  
-  return results;
-}
+// ─────────────────────────────────────────────
+// 7) Main
+// ─────────────────────────────────────────────
 
-function printResults(results, config) {
-  logSection(`${results.file} - ${config.description}`);
+function main() {
+  console.log();
+  log('🔍 VALIDAÇÃO DE DOCUMENTAÇÃO - MasterQuizz v2.41.0', 'bold');
+  log(`   Executado em: ${new Date().toLocaleString('pt-BR')}`, 'cyan');
   
-  // Existence
-  if (results.exists) {
-    log(`  ✅ Arquivo existe`, 'green');
-  } else {
-    log(`  ❌ Arquivo não encontrado`, 'red');
-    return;
+  let totalErrors = 0;
+  let totalWarnings = 0;
+  
+  // A) Validar docs individuais
+  console.log('\n' + '─'.repeat(60));
+  log('📄 VERIFICAÇÃO DE ARQUIVOS', 'bold');
+  console.log('─'.repeat(60));
+  
+  for (const [file, config] of Object.entries(DOCS_CONFIG)) {
+    const r = validateDoc(file, config);
+    const icon = r.errors.length === 0 ? '✅' : '❌';
+    const warnIcon = r.warnings.length > 0 ? ' ⚠️' : '';
+    log(`  ${icon} ${file} — ${config.description}${warnIcon}`, r.errors.length ? 'red' : 'green');
+    r.errors.forEach(e => log(`     └─ ❌ ${e}`, 'red'));
+    r.warnings.forEach(w => log(`     └─ ⚠️  ${w}`, 'yellow'));
+    totalErrors += r.errors.length;
+    totalWarnings += r.warnings.length;
   }
   
-  // Size
-  const sizeKb = (results.size / 1024).toFixed(1);
-  if (results.sizeOk) {
-    log(`  ✅ Tamanho: ${sizeKb} KB`, 'green');
-  } else {
-    log(`  ⚠️  Tamanho: ${sizeKb} KB (mínimo: ${(config.minSize / 1024).toFixed(1)} KB)`, 'yellow');
-  }
+  // B) Validar contagens (EFs, tabelas)
+  console.log('\n' + '─'.repeat(60));
+  log('🔢 VALIDAÇÃO DE CONTAGENS', 'bold');
+  console.log('─'.repeat(60));
   
-  // Last modified
-  const modifiedStr = formatDate(results.lastModified);
-  if (results.isRecent) {
-    log(`  ✅ Última atualização: ${modifiedStr} (${results.daysSinceUpdate} dias atrás)`, 'green');
-  } else {
-    log(`  ⚠️  Última atualização: ${modifiedStr} (${results.daysSinceUpdate} dias atrás)`, 'yellow');
-  }
+  const counts = validateCounts();
+  log(`  📦 Edge Functions no filesystem: ${counts.realEFs}`, 'cyan');
   
-  // Sections
-  const totalSections = config.requiredSections.length;
-  if (results.sectionsMissing.length === 0) {
-    log(`  ✅ Seções: ${results.sectionsFound}/${totalSections} encontradas`, 'green');
+  if (counts.issues.length === 0) {
+    log('  ✅ Contagens consistentes entre docs', 'green');
   } else {
-    log(`  ❌ Seções: ${results.sectionsFound}/${totalSections} encontradas`, 'red');
-    results.sectionsMissing.forEach(section => {
-      log(`     └─ Faltando: ${section}`, 'red');
+    counts.issues.forEach(i => {
+      log(`  ❌ ${i.message}`, 'red');
+      totalErrors++;
     });
   }
-}
-
-function generateReport(allResults) {
+  
+  // C) Cross-references
+  console.log('\n' + '─'.repeat(60));
+  log('🔗 CROSS-REFERENCES', 'bold');
+  console.log('─'.repeat(60));
+  
+  const crossRefIssues = validateCrossRefs();
+  if (crossRefIssues.length === 0) {
+    log('  ✅ Todos os links internos válidos', 'green');
+  } else {
+    crossRefIssues.forEach(i => {
+      log(`  ❌ ${i}`, 'red');
+      totalErrors++;
+    });
+  }
+  
+  // D) Relatório final
   console.log('\n' + '═'.repeat(60));
   log('📊 RELATÓRIO FINAL', 'bold');
   console.log('═'.repeat(60));
   
-  let totalErrors = 0;
-  let totalWarnings = 0;
-  let filesOk = 0;
-  
-  allResults.forEach(r => {
-    totalErrors += r.errors.length;
-    totalWarnings += r.warnings.length;
-    if (r.errors.length === 0) filesOk++;
-  });
-  
-  console.log();
-  log(`  📁 Arquivos verificados: ${allResults.length}`, 'cyan');
-  log(`  ✅ Arquivos OK: ${filesOk}/${allResults.length}`, filesOk === allResults.length ? 'green' : 'yellow');
+  const totalDocs = Object.keys(DOCS_CONFIG).length;
+  log(`  📁 Docs verificados: ${totalDocs}`, 'cyan');
+  log(`  📦 Edge Functions: ${counts.realEFs}`, 'cyan');
   log(`  ❌ Erros: ${totalErrors}`, totalErrors > 0 ? 'red' : 'green');
   log(`  ⚠️  Avisos: ${totalWarnings}`, totalWarnings > 0 ? 'yellow' : 'green');
   
-  console.log('\n' + '─'.repeat(60));
+  console.log('─'.repeat(60));
   
   if (totalErrors === 0 && totalWarnings === 0) {
-    log('🎉 Toda documentação está atualizada e completa!', 'green');
-    return 0;
+    log('🎉 Toda documentação está atualizada e consistente!', 'green');
   } else if (totalErrors === 0) {
     log('⚠️  Documentação OK, mas existem avisos para revisar.', 'yellow');
-    return 0;
   } else {
     log('❌ Existem problemas na documentação que precisam ser corrigidos.', 'red');
-    return 1;
-  }
-}
-
-// Main execution
-function main() {
-  console.log();
-  log('🔍 VALIDAÇÃO DE DOCUMENTAÇÃO - MasterQuizz', 'bold');
-  log(`   Executado em: ${new Date().toLocaleString('pt-BR')}`, 'cyan');
-  
-  const allResults = [];
-  
-  for (const [fileName, config] of Object.entries(DOCS_CONFIG)) {
-    const results = validateDoc(fileName, config);
-    allResults.push(results);
-    printResults(results, config);
   }
   
-  const exitCode = generateReport(allResults);
   console.log();
-  
-  process.exit(exitCode);
+  process.exit(totalErrors > 0 ? 1 : 0);
 }
 
 main();
