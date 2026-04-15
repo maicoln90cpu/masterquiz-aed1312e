@@ -530,6 +530,57 @@ function SectionC({ data, totalUsers }: { data: GrowthData['sectionC']; totalUse
         </Card>
       </div>
 
+      {/* Conversion by plan + timing */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">💰 Conversão por Plano (Webhook)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(data.conversionByPlan || {}).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum pagante registrado via webhook</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(data.conversionByPlan || {}).map(([plan, count]) => (
+                  <div key={plan} className="flex items-center justify-between">
+                    <span className="text-sm capitalize">{plan}</span>
+                    <Badge className="bg-green-600">{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">⏱️ Cadastro → 1º Lead</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {data.avgDaysToFirstLead !== null && data.avgDaysToFirstLead !== undefined
+                ? data.avgDaysToFirstLead < 1
+                  ? `${Math.round(data.avgDaysToFirstLead * 24)}h`
+                  : `${data.avgDaysToFirstLead.toFixed(1)} dias`
+                : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Tempo médio do cadastro até receber o primeiro lead</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">📅 Dias até Upgrade</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {data.medianDaysToConvert !== null ? `${data.medianDaysToConvert} dias` : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Mediana free → pagante real</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">Churn</CardTitle>
