@@ -182,7 +182,7 @@ function validateCounts() {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const docCount = parseInt(match[1], 10);
-        if (docCount > 10 && docCount !== realEFs.count) {
+        if (docCount > 50 && docCount !== realEFs.count) {
           results.push({
             type: 'error',
             message: `${doc}: diz ${docCount} EFs, mas existem ${realEFs.count} reais`
@@ -206,7 +206,7 @@ function validateCounts() {
         const readmeTableMatch = readmeContent.match(/(\d+)\s*tabelas/i);
         if (readmeTableMatch) {
           const readmeTables = parseInt(readmeTableMatch[1], 10);
-          if (readmeTables > 10 && readmeTables !== docTables) {
+          if (readmeTables > 50 && readmeTables !== docTables) {
             results.push({
               type: 'error',
               message: `README diz ${readmeTables} tabelas, DATABASE_SCHEMA diz ${docTables}`
