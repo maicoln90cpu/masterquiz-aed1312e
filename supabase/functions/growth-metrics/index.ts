@@ -395,6 +395,18 @@ Deno.serve(async (req) => {
     }
 
     // 2nd quiz before/after first lead
+    // Get first lead time per user (shared with Section E)
+    const { data: firstLeads } = await supabase
+      .from('quiz_responses')
+      .select('quiz_id, completed_at')
+      .order('completed_at', { ascending: true })
+
+    const firstLeadByUser = new Map<string, string>()
+    for (const r of firstLeads || []) {
+      const uid = quizOwnerMap.get(r.quiz_id)
+      if (uid && !firstLeadByUser.has(uid)) firstLeadByUser.set(uid, r.completed_at)
+    }
+
     let secondQuizBeforeLead = 0
     let secondQuizAfterLead = 0
     if (expressUserArr.length > 0) {
@@ -408,18 +420,6 @@ Deno.serve(async (req) => {
       const firstNonExpressByUser = new Map<string, string>()
       for (const q of secondQuizzes2 || []) {
         if (!firstNonExpressByUser.has(q.user_id)) firstNonExpressByUser.set(q.user_id, q.created_at)
-      }
-
-      // Get first lead time per user
-      const { data: firstLeads } = await supabase
-        .from('quiz_responses')
-        .select('quiz_id, completed_at')
-        .order('completed_at', { ascending: true })
-
-      const firstLeadByUser = new Map<string, string>()
-      for (const r of firstLeads || []) {
-        const uid = quizOwnerMap.get(r.quiz_id)
-        if (uid && !firstLeadByUser.has(uid)) firstLeadByUser.set(uid, r.completed_at)
       }
 
       for (const [uid, quizTime] of firstNonExpressByUser) {
