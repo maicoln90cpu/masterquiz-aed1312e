@@ -1,7 +1,7 @@
 # 🧩 Componentes - MasterQuiz
 
 > Documentação dos componentes principais do frontend
-> Versão 2.41.0 | 15 de Abril de 2026
+> Versão 2.42.0 | 16 de Abril de 2026
 
 ---
 
@@ -285,3 +285,15 @@
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
 | [ADR.md](./ADR.md) | Architecture Decision Records |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services |
+
+### Componentes Admin — Sistema (v2.42.0)
+
+| Componente | Propósito |
+|------------|-----------|
+| `SystemHealthTab` | Sub-aba de saúde do sistema (health check EF) |
+| `ObservabilityTab` | 7 painéis de observabilidade (SLA, custos, erros, performance) |
+| `DatabaseMonitorTab` | Catálogo de 68 tabelas com tamanhos reais via RPC |
+| `SystemSettingsTab` | Configurações do sistema |
+| `GTMDiagnosticTab` | Diagnóstico GTM em 3 etapas com retry |
+| `AdminSubTabs` | Componente reutilizável de sub-navegação por aba |

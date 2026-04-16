@@ -1,7 +1,7 @@
 # 🧪 Guia de Testes — MasterQuiz
 
 > Infraestrutura de testes, padrões de mock e troubleshooting
-> Versão 2.40 | 14 de Abril de 2026
+> Versão 2.42.0 | 16 de Abril de 2026
 >
 > **Nota:** Para documentação detalhada de uso do test-utils, mocking Supabase e padrões AAA, consulte as seções abaixo. O antigo `src/__tests__/README.md` foi consolidado neste documento.
 

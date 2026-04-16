@@ -1,7 +1,7 @@
 # 🔌 API Docs - Edge Functions (64 funções)
 
 > MasterQuiz — Documentação das Edge Functions (Supabase/Deno)
-> Versão 2.41.0 | 15 de Abril de 2026
+> Versão 2.42.0 | 16 de Abril de 2026
 
 ---
 
@@ -357,3 +357,12 @@ const corsHeaders = {
 | [TESTING.md](./TESTING.md) | Guia de testes |
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services |
+
+### RPC `get_table_sizes()` (v2.42.0)
+
+- **Tipo:** SECURITY DEFINER (SQL)
+- **Auth:** Autenticado (via Supabase client)
+- **Parâmetros:** Nenhum
+- **Retorno:** `table_name text, total_bytes bigint, total_size text, row_estimate bigint`
+- **Descrição:** Retorna tamanhos reais de todas as tabelas públicas via `pg_total_relation_size`. Usado no DatabaseMonitorTab.

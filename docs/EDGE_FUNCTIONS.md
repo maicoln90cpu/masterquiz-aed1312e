@@ -1,7 +1,7 @@
 # ⚡ EDGE FUNCTIONS — Catálogo Completo (64 funções)
 
 > MasterQuiz — Todas as Edge Functions organizadas por domínio
-> Versão 2.41.0 | 15 de Abril de 2026
+> Versão 2.42.0 | 16 de Abril de 2026
 
 ---
 
