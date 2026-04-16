@@ -259,18 +259,52 @@ const EDGE_FUNCTIONS_CATALOG: EdgeFunctionInfo[] = [
 // ── Components ──────────────────────────────────────────────────
 
 function OverviewPanel() {
+  const { data: sizesMap } = useQuery({
+    queryKey: ['table-sizes'],
+    queryFn: fetchTableSizes,
+    staleTime: 300_000,
+  });
+
   const categories = useMemo(() => {
     const map = new Map<string, number>();
     TABLES_CATALOG.forEach(t => map.set(t.category, (map.get(t.category) ?? 0) + 1));
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, []);
 
+  const totalBytes = useMemo(() => {
+    if (!sizesMap) return 0;
+    let sum = 0;
+    for (const v of sizesMap.values()) sum += v.total_bytes;
+    return sum;
+  }, [sizesMap]);
+
+  const totalRows = useMemo(() => {
+    if (!sizesMap) return 0;
+    let sum = 0;
+    for (const v of sizesMap.values()) sum += v.row_estimate;
+    return sum;
+  }, [sizesMap]);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <p className="text-3xl font-bold">{TABLES_CATALOG.length}</p>
           <p className="text-sm text-muted-foreground">Tabelas</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <p className="text-3xl font-bold">{totalRows.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">Registros Totais</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <p className="text-3xl font-bold">{formatBytes(totalBytes)}</p>
+          <p className="text-sm text-muted-foreground">Tamanho Total</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 text-center">
           <p className="text-3xl font-bold">{EDGE_FUNCTIONS_CATALOG.length}</p>
