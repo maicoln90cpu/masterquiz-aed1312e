@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 15 de Abril de 2026 | Versão 2.41.0
+> Última atualização: 16 de Abril de 2026 | Versão 2.42.0
 
 ---
 
@@ -10,6 +10,7 @@
 - [Visão Geral da Arquitetura](#visão-geral-da-arquitetura)
 - [Fluxo de Dados](#fluxo-de-dados)
 - [Componentes Principais](#componentes-principais)
+- [Painel Administrativo](#painel-administrativo)
 - [Sistema de Blocos](#sistema-de-blocos)
 - [APIs e Edge Functions](#apis-e-edge-functions)
 - [Algoritmos Críticos](#algoritmos-críticos)
@@ -162,6 +163,54 @@ Quiz Lifecycle (useQuizGTMTracking):
 | `QuestionsList` | Sidebar de perguntas (cards compactos) |
 | `CalculatorWizard` | Wizard de calculadoras (3 steps) |
 | `ProtectedRoute` | Guard de rotas por role |
+
+---
+
+## 🖥️ Painel Administrativo
+
+### Estrutura de 6 Abas Funcionais (v2.42.0)
+
+```
+AdminDashboard
+├── 🏠 Início (Dashboard geral)
+├── 👥 Usuários (Gestão + PQL + Growth + Suporte)
+├── 📝 Conteúdo (Quizzes + Leads + Blog + Templates + GTM Events)
+├── 💰 Vendas (Assinaturas + Cupons)
+├── ⚙️ Sistema (5 sub-abas)
+│   ├── 🩺 Saúde (system-health-check)
+│   ├── 📊 Observabilidade (7 painéis)
+│   │   ├── SLA Overview
+│   │   ├── Custos IA
+│   │   ├── Delivery de Email
+│   │   ├── Erros 24h
+│   │   ├── P95/P99 Performance
+│   │   ├── Web Vitals
+│   │   └── Health Check Histórico
+│   ├── 🗄️ Banco de Dados (68 tabelas com tamanhos reais)
+│   ├── ⚙️ Configurações (system_settings, site_settings)
+│   └── 🔍 GTM/Diag (verificação em 3 etapas)
+└── 🛠️ Dev Tools (Editor Layout + Audit Logs)
+```
+
+### Fluxo de Dados — Observabilidade
+
+```
+observabilityService.ts ──▶ Supabase Queries (7 domínios)
+         │                        │
+         ▼                        ▼
+  ObservabilityTab.tsx     Dados agregados por período
+    (7 Cards/Painéis)      (performance_logs, system_health_metrics,
+                            email_recovery_contacts, client_error_logs,
+                            ai_quiz_generations, blog_generation_logs)
+```
+
+### RPC `get_table_sizes()` (SECURITY DEFINER)
+
+```sql
+-- Retorna tamanhos reais das tabelas via pg_total_relation_size
+-- Usado no DatabaseMonitorTab para métricas de banco
+RETURNS TABLE(table_name text, total_bytes bigint, total_size text, row_estimate bigint)
+```
 
 ---
 
@@ -591,3 +640,11 @@ site_mode (system_settings) ──▶ Landing dinâmica
 | [BLOG.md](./BLOG.md) | Guia do blog com IA |
 | [EGOI.md](./EGOI.md) | Guia do email marketing |
 | [MONETIZATION.md](./MONETIZATION.md) | Monetização A/B e custos |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
+| [SECURITY.md](./SECURITY.md) | Práticas de segurança e RLS |
+| [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões obrigatórios de código |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
+| [ADR.md](./ADR.md) | Architecture Decision Records |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services |
+| [MEMOCOPY.md](./MEMOCOPY.md) | Backup de memórias do projeto |

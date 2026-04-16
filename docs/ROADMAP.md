@@ -1,6 +1,6 @@
 # 🗺 ROADMAP - MasterQuiz
 
-> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026 — v2.41.0
+> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026 — v2.42.0
 
 ---
 
@@ -137,6 +137,14 @@ Q4 2025: Expansão Internacional
   - Dashboard GTM com filtros por categoria/status/integração
   - 3 novas Edge Functions (growth-metrics, check-expired-trials, sync-plan-limits)
   - Documentação atualizada: 68 tabelas, 64 Edge Functions
+- **Painel Admin Reorganizado + Monitoramento** (v2.42.0) ✅
+  - Admin reorganizado em 6 domínios funcionais (Início, Usuários, Conteúdo, Vendas, Sistema, Dev Tools)
+  - Aba Sistema com 5 sub-abas (Saúde, Observabilidade, Banco de Dados, Configurações, GTM/Diag)
+  - Observabilidade: 7 painéis (SLA, Custos IA, Delivery, Erros 24h, P95/P99, Web Vitals, Health Check)
+  - DatabaseMonitor com tamanhos reais via RPC `get_table_sizes()`
+  - Diagnóstico GTM automatizado (3 etapas com retry)
+  - Service layer: `observabilityService.ts`, `gtmDiagnosticService.ts`
+  - Documentação overhaul: 20+ docs, MEMOCOPY.md, SERVICES.md, ADR-013/014
 
 ### H2 2026
 - Expansão para EUA
@@ -164,6 +172,7 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-04-16 | **v2.42.0 — Painel Admin Reorganizado + Sistema de Monitoramento + Docs Overhaul** |
 | 2026-04-15 | **v2.41.0 — GTM Centralizado + Growth Dashboard + 3 novas EFs + Docs Overhaul (68 tabelas, 64 EFs)** |
 | 2026-04-14 | **v2.40.0 — Suporte Avançado + Visual Diff + Block Editor + Notificações + PDF Report + 6 novos docs** |
 | 2026-04-08 | **v2.39.0 — Custos Email + Preview Email + Comparação A×B + Preços Modo B + GTM Lifecycle + Batching Users + Doc Overhaul** |
@@ -211,4 +220,5 @@ Q4 2025: Expansão Internacional
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
 | [ADR.md](./ADR.md) | Architecture Decision Records |
-| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services |
+| [MEMOCOPY.md](./MEMOCOPY.md) | Backup de memórias do projeto |

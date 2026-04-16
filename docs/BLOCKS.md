@@ -1,7 +1,7 @@
 # 📦 Catálogo de Blocos — MasterQuizz
 
 > Documentação completa dos 34 tipos de blocos disponíveis no sistema de quiz.
-> Atualizado em: 14/04/2026 | v2.40.0
+> Atualizado em: 16/04/2026 | v2.42.0
 
 ---
 

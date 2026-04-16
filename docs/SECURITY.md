@@ -1,7 +1,7 @@
 # 🔒 SECURITY — Práticas de Segurança
 
 > MasterQuiz — Guia de segurança, RLS, rate limiting e audit
-> Versão 2.41.0 | 15 de Abril de 2026
+> Versão 2.42.0 | 16 de Abril de 2026
 
 ---
 
@@ -267,3 +267,7 @@ Antes de fazer deploy de qualquer feature:
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Auth por endpoint |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de sanitização |
 | [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação |
+| [ADR.md](./ADR.md) | ADR-006: has_role() SECURITY DEFINER |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services |
+
+> **Nota v2.42.0:** RPC `get_table_sizes()` usa SECURITY DEFINER para acessar `pg_class`/`pg_stat_user_tables` sem expor metadados do banco ao client.
