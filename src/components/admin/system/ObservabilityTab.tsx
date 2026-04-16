@@ -111,7 +111,7 @@ function SLAPanel() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-bold">{displayVal}{t.unit}</span>
-                  <span className="text-xs text-muted-foreground">Meta: {t.invert ? '≤' : '≥'}{t.target}{t.unit}</span>
+                  <span className="text-xs text-muted-foreground">Meta: {t.invert ? '≤' : '≥'} {t.target}{t.unit}</span>
                 </div>
                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
                   <div
