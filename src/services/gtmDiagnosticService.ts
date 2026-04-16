@@ -27,18 +27,6 @@ export async function fetchGTMId(): Promise<string | null> {
     .maybeSingle();
 
   return profile?.gtm_container_id ?? null;
-
-  // Fallback: check admin profile
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('gtm_container_id')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  return profile?.gtm_container_id ?? null;
 }
 
 /**
