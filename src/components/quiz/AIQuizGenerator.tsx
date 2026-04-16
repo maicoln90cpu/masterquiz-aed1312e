@@ -645,21 +645,35 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
   }
 
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
             <CardTitle className="text-2xl">Criar Quiz com IA</CardTitle>
           </div>
-          <Button variant="ghost" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
+          {lockedMode ? (
+            <Button variant="outline" size="icon" onClick={onBack} className="h-10 w-10 rounded-full border-2 hover:bg-destructive/10">
+              <X className="h-5 w-5" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+          )}
         </div>
         <CardDescription>
           Use IA para criar um quiz completo: responda perguntas sobre seu produto ou envie um PDF
         </CardDescription>
+        {lockedMode && (
+          <p className="text-sm text-muted-foreground mt-2">
+            Prefere editar um template manualmente?{' '}
+            <button onClick={onBack} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
+              Pular e usar template →
+            </button>
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Usage Info */}

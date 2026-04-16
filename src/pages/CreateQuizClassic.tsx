@@ -283,7 +283,7 @@ const CreateQuizClassic = () => {
           </div>
         </header>
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <AIQuizGenerator onBack={handleBackFromAI} lockedMode={isExpressMode ? "form" : undefined} />
+          <AIQuizGenerator onBack={handleBackFromAI} lockedMode={isExpressMode ? "form" : undefined} existingQuizId={isExpressMode ? editorState.quizId : undefined} />
         </div>
       </main>
     );
