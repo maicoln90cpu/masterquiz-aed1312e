@@ -121,6 +121,8 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════
     try {
       if (quiz.user_id) {
+        console.log(`[Milestone] Checking milestones for owner ${quiz.user_id}, quiz ${quiz_id}`);
+        
         // Count total responses for this quiz owner
         const { data: ownerQuizzes } = await supabase
           .from('quizzes')
@@ -135,6 +137,7 @@ Deno.serve(async (req) => {
             .in('quiz_id', quizIds);
 
           const total = totalResponses || 0;
+          console.log(`[Milestone] Total responses for owner: ${total}`);
 
           // first_response_received — exactly 1 response total
           if (total === 1) {
@@ -149,6 +152,9 @@ Deno.serve(async (req) => {
           // 🎯 first_lead_received — first REAL lead (with email or whatsapp)
           const hasContactInfo = !!(respondent_email || respondent_whatsapp);
           const isTestLead = mergedAnswers && typeof mergedAnswers === 'object' && (mergedAnswers as Record<string, unknown>)._is_test_lead === true;
+          
+          console.log(`[Milestone] Lead check: hasContact=${hasContactInfo}, isExisting=${!!existing}, isTest=${isTestLead}, email=${!!respondent_email}, whatsapp=${!!respondent_whatsapp}`);
+          
           if (hasContactInfo && !existing && !isTestLead) {
             // Count real leads (with contact info) for this owner, excluding test leads
             const { count: totalLeads } = await supabase
@@ -157,13 +163,15 @@ Deno.serve(async (req) => {
               .in('quiz_id', quizIds)
               .or('respondent_email.not.is.null,respondent_whatsapp.not.is.null');
 
+            console.log(`[Milestone] Total leads with contact info: ${totalLeads}`);
+
             if ((totalLeads || 0) === 1) {
-              await supabase.from('gtm_event_logs').insert({
+              const { error: eventError } = await supabase.from('gtm_event_logs').insert({
                 event_name: 'first_lead_received',
                 user_id: quiz.user_id,
                 metadata: { quiz_id, response_id: responseId, email: !!respondent_email, whatsapp: !!respondent_whatsapp },
               });
-              console.log(`🎯 [Milestone] first_lead_received for user ${quiz.user_id}`);
+              console.log(`🎯 [Milestone] first_lead_received for user ${quiz.user_id}, insertError=${eventError?.message || 'none'}`);
 
               // 🔔 Create upgrade notification for quiz owner (first real lead)
               // Check if notification already exists to avoid duplicates
@@ -174,8 +182,10 @@ Deno.serve(async (req) => {
                 .eq('type', 'first_lead_upgrade')
                 .maybeSingle();
 
+              console.log(`[Milestone] Existing notification check: ${existingNotif ? 'found' : 'none'}`);
+
               if (!existingNotif) {
-                await supabase.from('admin_notifications').insert({
+                const { error: notifError } = await supabase.from('admin_notifications').insert({
                   user_id: quiz.user_id,
                   type: 'first_lead_upgrade',
                   title: '🎉 Seu primeiro lead chegou!',
@@ -183,8 +193,10 @@ Deno.serve(async (req) => {
                   metadata: { quiz_id, response_id: responseId, link: '/precos' },
                   read: false,
                 });
-                console.log(`🔔 [Notification] first_lead_upgrade created for user ${quiz.user_id}`);
+                console.log(`🔔 [Notification] first_lead_upgrade created for user ${quiz.user_id}, error=${notifError?.message || 'none'}`);
               }
+            } else {
+              console.log(`[Milestone] Skipped first_lead: totalLeads=${totalLeads} (not 1)`);
             }
           }
 
