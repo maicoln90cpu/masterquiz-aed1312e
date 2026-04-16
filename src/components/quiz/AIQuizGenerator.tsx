@@ -443,21 +443,44 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // Criar quiz no banco
-      const { data: quiz, error: quizError } = await supabase
-        .from('quizzes')
-        .insert({
-          user_id: user.id,
-          title: quizData.title,
-          description: quizData.description,
-          question_count: quizData.questions.length,
-          template: 'moderno',
-          status: 'draft',
-        })
-        .select()
-        .single();
+      let quizId: string;
 
-      if (quizError) throw quizError;
+      if (existingQuizId) {
+        // ═══ EXPRESS MODE: Update existing quiz instead of creating new one ═══
+        quizId = existingQuizId;
+
+        // Update quiz metadata
+        const { error: updateError } = await supabase
+          .from('quizzes')
+          .update({
+            title: quizData.title,
+            description: quizData.description,
+            question_count: quizData.questions.length,
+          })
+          .eq('id', quizId);
+
+        if (updateError) throw updateError;
+
+        // Delete old questions and insert new ones
+        await supabase.from('quiz_questions').delete().eq('quiz_id', quizId);
+      } else {
+        // ═══ NORMAL MODE: Create new quiz ═══
+        const { data: quiz, error: quizError } = await supabase
+          .from('quizzes')
+          .insert({
+            user_id: user.id,
+            title: quizData.title,
+            description: quizData.description,
+            question_count: quizData.questions.length,
+            template: 'moderno',
+            status: 'draft',
+          })
+          .select()
+          .single();
+
+        if (quizError) throw quizError;
+        quizId = quiz.id;
+      }
 
       // ✅ VALIDAÇÃO CRÍTICA: Garantir opções mínimas e blocos válidos
       const questionsData = quizData.questions.map((q, index) => {
@@ -515,7 +538,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
         console.log(`[AI Suggestions] Pergunta ${index + 1}: ${q.aiSuggestions ? 'IA' : 'fallback'} suggestions`);
 
         return {
-          quiz_id: quiz.id,
+          quiz_id: quizId,
           order_number: index,
           question_text: q.question_text,
           answer_format: q.answer_format,
@@ -532,35 +555,46 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
 
       if (questionsError) throw questionsError;
 
-      // Criar configuração de formulário padrão
-      await supabase.from('quiz_form_config').insert({
-        quiz_id: quiz.id,
-        collection_timing: 'after',
-        collect_name: true,
-        collect_email: true,
-        collect_whatsapp: false,
-      });
+      // Criar configuração de formulário padrão (only for new quizzes)
+      if (!existingQuizId) {
+        await supabase.from('quiz_form_config').insert({
+          quiz_id: quizId,
+          collection_timing: 'after',
+          collect_name: true,
+          collect_email: true,
+          collect_whatsapp: false,
+        });
+      }
 
       // Invalidar queries para atualizar dashboard imediatamente
       queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       
       // Disparar evento GTM por tipo de criação IA (legado + unificado)
+      const aiSource = lockedMode ? 'express' : 'manual';
       const iaEventMap: Record<string, string> = { form: 'quiz_ia_form', pdf: 'quiz_ia_pdf', educational: 'quiz_ia_edu' };
       pushGTMEvent(iaEventMap[uploadMode] || 'quiz_ia_form', {
-        quiz_id: quiz.id,
+        quiz_id: quizId,
         questions_count: quizData.questions.length,
         upload_mode: uploadMode,
+        source: aiSource,
       });
       // 🎯 Evento unificado para facilitar análise
       pushGTMEvent('ai_generation_used', {
         type: uploadMode === 'educational' ? 'edu' : uploadMode,
-        quiz_id: quiz.id,
+        quiz_id: quizId,
         questions_count: quizData.questions.length,
+        source: aiSource,
       });
 
       toast.success(t('components.aiGenerator.quizCreated'));
-      navigate('/meus-quizzes');
+      
+      // Express mode: go back to editor; Normal: go to quiz list
+      if (existingQuizId) {
+        onBack();
+      } else {
+        navigate('/meus-quizzes');
+      }
 
     } catch (error) {
       console.error('Error generating quiz:', error);
