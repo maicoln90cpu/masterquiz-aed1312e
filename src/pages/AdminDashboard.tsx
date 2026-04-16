@@ -48,6 +48,8 @@ const SystemHealthDashboard = lazy(() => import("@/components/admin/SystemHealth
 const HealthReport = lazy(() => import("@/components/admin/HealthReport").then(m => ({ default: m.HealthReport })));
 const SystemMonitorTab = lazy(() => import("@/components/admin/system/SystemMonitorTab").then(m => ({ default: m.SystemMonitorTab })));
 const ObservabilityTab = lazy(() => import("@/components/admin/system/ObservabilityTab").then(m => ({ default: m.ObservabilityTab })));
+const DatabaseMonitorTab = lazy(() => import("@/components/admin/system/DatabaseMonitorTab").then(m => ({ default: m.DatabaseMonitorTab })));
+const GTMDiagnosticTab = lazy(() => import("@/components/admin/system/GTMDiagnosticTab").then(m => ({ default: m.GTMDiagnosticTab })));
 const LandingContentEditor = lazy(() => import("@/components/admin/LandingContentEditor").then(m => ({ default: m.LandingContentEditor })));
 const LandingABTestDashboard = lazy(() => import("@/components/admin/LandingABTestDashboard").then(m => ({ default: m.LandingABTestDashboard })));
 const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m => ({ default: m.CustomerRecovery })));
