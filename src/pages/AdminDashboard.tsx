@@ -48,6 +48,8 @@ const SystemHealthDashboard = lazy(() => import("@/components/admin/SystemHealth
 const HealthReport = lazy(() => import("@/components/admin/HealthReport").then(m => ({ default: m.HealthReport })));
 const SystemMonitorTab = lazy(() => import("@/components/admin/system/SystemMonitorTab").then(m => ({ default: m.SystemMonitorTab })));
 const ObservabilityTab = lazy(() => import("@/components/admin/system/ObservabilityTab").then(m => ({ default: m.ObservabilityTab })));
+const DatabaseMonitorTab = lazy(() => import("@/components/admin/system/DatabaseMonitorTab").then(m => ({ default: m.DatabaseMonitorTab })));
+const GTMDiagnosticTab = lazy(() => import("@/components/admin/system/GTMDiagnosticTab").then(m => ({ default: m.GTMDiagnosticTab })));
 const LandingContentEditor = lazy(() => import("@/components/admin/LandingContentEditor").then(m => ({ default: m.LandingContentEditor })));
 const LandingABTestDashboard = lazy(() => import("@/components/admin/LandingABTestDashboard").then(m => ({ default: m.LandingABTestDashboard })));
 const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m => ({ default: m.CustomerRecovery })));
@@ -1745,10 +1747,9 @@ export default function AdminDashboard() {
                     </Suspense>
                   )}
                   {activeTab === 'database' && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <p className="text-lg font-medium">🗄️ Banco de Dados</p>
-                      <p className="text-sm">Será implementado na Etapa 2</p>
-                    </div>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <DatabaseMonitorTab />
+                    </Suspense>
                   )}
                   {activeTab === 'settings' && (
                     <div className="space-y-6">
@@ -1760,6 +1761,9 @@ export default function AdminDashboard() {
                   )}
                   {activeTab === 'gtm' && (
                     <div className="space-y-6">
+                      <Suspense fallback={<ComponentLoader />}>
+                        <GTMDiagnosticTab />
+                      </Suspense>
                       <Suspense fallback={<ComponentLoader />}>
                         <AuditLogsViewer />
                       </Suspense>
