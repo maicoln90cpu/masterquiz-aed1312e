@@ -165,6 +165,8 @@ const CreateQuizClassic = () => {
     updateFormConfig,
     updateEditor,
     setQuestions,
+    loadExistingQuiz,
+    getQuizId: () => editorState.quizId,
   });
 
   useEffect(() => {
