@@ -1,7 +1,7 @@
 # 📋 ADR — Architecture Decision Records
 
 > Registro de decisões arquiteturais do MasterQuiz
-> Versão 2.41.0 | 15 de Abril de 2026
+> Versão 2.42.0 | 16 de Abril de 2026
 
 ---
 
@@ -137,6 +137,28 @@
 
 ---
 
+## ADR-013: Reorganização do Admin por Domínio Funcional
+
+**Data:** Abril 2026  
+**Status:** Aceito  
+**Contexto:** O painel admin tinha 7 abas genéricas sem agrupamento lógico. Funcionalidades relacionadas (ex: usuários e PQL) ficavam em abas separadas, dificultando a navegação.  
+**Decisão:** Reorganizar em 6 domínios funcionais (Início, Usuários, Conteúdo, Vendas, Sistema, Dev Tools) com max 2 níveis de profundidade (aba → sub-aba via `AdminSubTabs`).  
+**Alternativas rejeitadas:** (1) Sidebar lateral — ocupa espaço permanente; (2) Mega menu — complexidade de implementação sem ganho real; (3) Manter 7+ abas — escala mal conforme features crescem.  
+**Consequências:** Navegação previsível, agrupamento por contexto, mas requer refatoração de imports e lazy loading para cada sub-aba.
+
+---
+
+## ADR-014: Catálogos Hardcoded no DatabaseMonitorTab
+
+**Data:** Abril 2026  
+**Status:** Aceito  
+**Contexto:** O cliente Supabase (PostgREST) não permite acesso a `information_schema` ou `pg_catalog` para listar tabelas, triggers e cron jobs. Criar RPCs para cada catálogo seria over-engineering.  
+**Decisão:** Manter catálogos de tabelas (68), triggers (13), cron jobs (15) e Edge Functions (64) como arrays hardcoded no componente. Tamanhos reais obtidos via RPC `get_table_sizes()` (SECURITY DEFINER).  
+**Alternativas rejeitadas:** (1) RPCs para cada catálogo — manutenção alta para dados raramente alterados; (2) Edge Function de introspection — overhead para dados estáticos; (3) Dump do schema — complexo e frágil.  
+**Consequências:** Zero overhead de queries, dados sempre consistentes com o schema real, mas exige atualização manual do catálogo quando tabelas/triggers mudam.
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
@@ -146,3 +168,4 @@
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões derivados das ADRs |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema referenciado (68 tabelas) |
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services |

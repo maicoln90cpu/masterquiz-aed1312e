@@ -1,7 +1,7 @@
 # 🗄️ DATABASE SCHEMA — MasterQuiz
 
 > Schema completo do banco de dados PostgreSQL (Supabase)
-> Versão 2.41.0 | 15 de Abril de 2026
+> Versão 2.42.0 | 16 de Abril de 2026
 
 ---
 
@@ -34,7 +34,7 @@
 - **Total de tabelas:** 68
 - **RLS:** Ativo em TODAS as tabelas
 - **Enums:** 8 tipos customizados
-- **DB Functions:** 16+ (incluindo SECURITY DEFINER)
+- **DB Functions:** 17+ (incluindo SECURITY DEFINER)
 - **Triggers:** 3 no signup (profile, role, subscription)
 
 ---
@@ -311,6 +311,7 @@ CREATE TYPE public.recovery_campaign_status AS ENUM ('draft', 'scheduled', 'runn
 | `generate_slug(text)` | IMMUTABLE | Gera slug único |
 | `get_quiz_for_display(slug)` | SECURITY DEFINER | Busca quiz público |
 | `get_user_quiz_stats(uuid[])` | SECURITY DEFINER | Stats para admin |
+| `get_table_sizes()` | SECURITY DEFINER | Retorna tamanho real de tabelas via `pg_total_relation_size` |
 | `increment_login_count(uuid)` | VOLATILE | Incrementa logins |
 | `delete_user_by_id(uuid)` | SECURITY DEFINER | Deleção de conta |
 | `cleanup_old_audit_logs()` | VOLATILE | Limpa logs > 90 dias |
@@ -368,3 +369,4 @@ gtm_event_logs ──── gtm_event_integrations (referência por event_name)
 | [API_DOCS.md](./API_DOCS.md) | Edge Functions |
 | [ADR.md](./ADR.md) | Decisões arquiteturais |
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services |
