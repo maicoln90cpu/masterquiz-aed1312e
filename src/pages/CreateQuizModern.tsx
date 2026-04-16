@@ -37,7 +37,7 @@ import type { BlockType, QuizBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { MobileEditorToolbar } from "@/components/quiz/MobileEditorToolbar";
-import { PostExpressScreen } from "@/components/quiz/PostExpressScreen";
+
 
 import { useQuizState } from "@/hooks/useQuizState";
 import { useQuizPersistence } from "@/hooks/useQuizPersistence";
@@ -77,7 +77,7 @@ const CreateQuizModern = () => {
   const isExpressMode = searchParams.get('mode') === 'express';
   const isAIAutoOpen = searchParams.get('ai') === 'true';
   const [showCelebration, setShowCelebration] = useState(false);
-  const [showPostExpress, setShowPostExpress] = useState(false);
+  
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCurrentPreviewDialog, setShowCurrentPreviewDialog] = useState(false);
@@ -339,13 +339,6 @@ const CreateQuizModern = () => {
   // RENDERS CONDICIONAIS
   // ============================================
 
-  // Post-Express Screen (shown after celebration)
-  if (showPostExpress && isExpressMode) {
-    return (
-      <PostExpressScreen />
-    );
-  }
-
   // Express Celebration
   if (showCelebration && isExpressMode) {
     return (
@@ -353,8 +346,7 @@ const CreateQuizModern = () => {
         quizUrl={publishedQuizUrl || expressQuizUrl}
         quizTitle={appearanceState.title || t('createQuiz.newQuiz')}
         onGoToDashboard={() => {
-          setShowCelebration(false);
-          setShowPostExpress(true);
+          navigate('/dashboard');
         }}
       />
     );
@@ -802,7 +794,6 @@ const CreateQuizModern = () => {
             )}
 
             {/* COL 1: Question List */}
-            {!isExpressMode && (
               <div className="w-56 shrink-0 hidden lg:flex flex-col border-r bg-card overflow-y-auto">
                 <QuestionsList
                   questions={questions}
@@ -817,7 +808,6 @@ const CreateQuizModern = () => {
                   questionsPerQuizLimit={questionsLimit}
                 />
               </div>
-            )}
 
             {/* COL 2: Block Palette */}
             {!isExpressMode && (
