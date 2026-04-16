@@ -1,6 +1,6 @@
 # 🧪 Guia de Testes — MasterQuiz
 
-> Infraestrutura de testes, padrões de mock e troubleshooting
+> Infraestrutura de testes, padrões de mock, contratos, CI/CD e troubleshooting
 > Versão 2.42.0 | 16 de Abril de 2026
 >
 > **Nota:** Para documentação detalhada de uso do test-utils, mocking Supabase e padrões AAA, consulte as seções abaixo. O antigo `src/__tests__/README.md` foi consolidado neste documento.
@@ -14,6 +14,14 @@
 - [Estrutura de Arquivos](#estrutura-de-arquivos)
 - [Setup Global](#setup-global)
 - [Padrões de Mock](#padrões-de-mock)
+- [Mock Factory Supabase](#mock-factory-supabase)
+- [Testes de Contrato (Zod)](#testes-de-contrato-zod)
+- [Testes de Regressão](#testes-de-regressão)
+- [Testes de Service](#testes-de-service)
+- [Thresholds por Camada](#thresholds-por-camada)
+- [CI/CD](#cicd)
+- [Anti-Patterns](#anti-patterns)
+- [E2E (Playwright — Futuro)](#e2e-playwright--futuro)
 - [Troubleshooting](#troubleshooting)
 - [Cobertura](#cobertura)
 
@@ -28,6 +36,8 @@
 | @testing-library/user-event | 14.x | Simulação de interações |
 | @testing-library/jest-dom | 6.x | Matchers de DOM |
 | jsdom | 27.x | Ambiente de navegador |
+| Zod | 3.x | Validação de contratos RPC/API |
+| Playwright | — | E2E (fixtures prontas, CI futuro) |
 
 ---
 
@@ -35,10 +45,11 @@
 
 ```bash
 npm run test                    # Single run
-npm run test -- --watch         # Watch mode
-npm run test -- --ui            # Interface visual
-npm run test -- --coverage      # Com cobertura
+npm run test:watch              # Watch mode
+npm run test:ui                 # Interface visual
+npm run test:coverage           # Com cobertura
 npm run test -- src/hooks/      # Rodar apenas hooks
+npm run test -- src/services/   # Rodar apenas services
 ```
 
 ---
@@ -48,13 +59,26 @@ npm run test -- src/hooks/      # Rodar apenas hooks
 ```
 src/
 ├── __tests__/
-│   ├── setup.ts              # Mocks globais (CRÍTICO)
-│   └── test-utils.tsx         # Renders customizados
-├── lib/__tests__/             # Utilitários (~165 testes)
-├── hooks/__tests__/           # Hooks (~80 testes)
-├── contexts/__tests__/        # AuthContext
-├── components/quiz/__tests__/ # Componentes de quiz
-└── pages/__tests__/           # Páginas
+│   ├── setup.ts                # Mocks globais (CRÍTICO)
+│   ├── test-utils.tsx          # Renders customizados
+│   ├── mocks/
+│   │   └── supabase.ts         # Mock factory reutilizável
+│   ├── contracts/
+│   │   └── rpc-schema.test.ts  # Validação de schemas RPC
+│   └── regression/
+│       └── README.md           # Template para testes de regressão
+├── services/__tests__/         # observabilityService, gtmDiagnosticService
+├── lib/__tests__/              # Utilitários (~165 testes)
+├── hooks/__tests__/            # Hooks (~80 testes)
+├── contexts/__tests__/         # AuthContext
+├── components/quiz/__tests__/  # Componentes de quiz
+└── pages/__tests__/            # Páginas
+e2e/
+├── fixtures/
+│   ├── auth.ts                 # Mock roles & sessions
+│   ├── api-mocks.ts            # Route interceptors Supabase
+│   ├── seed-data.ts            # Dados determinísticos
+│   └── test-fixtures.ts        # authenticatedTest fixture
 ```
 
 ---
@@ -99,8 +123,6 @@ vi.mock('@/contexts/AuthContext', () => ({
 
 ### 2. Mock de `DashboardLayout` (para testes de páginas)
 
-Páginas como Dashboard, CRM, Analytics usam `DashboardLayout` que tem `DashboardSidebar` com dependências complexas de auth. **Mock obrigatório:**
-
 ```typescript
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
@@ -129,30 +151,168 @@ Quando precisar testar a implementação real (ex: `useUserRole`), desfaça o mo
 ```typescript
 vi.unmock('@/hooks/useUserRole');
 vi.unmock('@/contexts/AuthContext');
-
-// Defina mock local do supabase com todos os métodos necessários
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-    auth: { getSession: vi.fn(), onAuthStateChange: vi.fn() },
-    functions: { invoke: vi.fn() },
-    rpc: vi.fn(),
-    // ... outros métodos
-  }
-}));
 ```
 
 ### 5. Usar `test-utils.tsx` para renders com providers
 
 ```typescript
 import { render, renderAuthenticated } from '@/__tests__/test-utils';
-
-// Render com MockAuthProvider (user autenticado)
 renderAuthenticated(<Dashboard />);
-
-// Render básico (user null do mock global)
 render(<MyComponent />);
 ```
+
+### 6. Usar `vi.hoisted()` para mocks com variáveis externas
+
+**IMPORTANTE**: `vi.mock` é hoisted para o topo do arquivo. Variáveis declaradas com `const` não estão disponíveis dentro da factory. Use `vi.hoisted()`:
+
+```typescript
+const { mockFrom } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+}));
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: { from: mockFrom },
+}));
+```
+
+---
+
+## Mock Factory Supabase
+
+Arquivo: `src/__tests__/mocks/supabase.ts`
+
+Factory reutilizável com `createMockSupabaseClient()`. Expõe `_mockChain` para configuração por teste:
+
+```typescript
+import { createMockSupabaseClient } from '@/__tests__/mocks/supabase';
+
+const mock = createMockSupabaseClient();
+mock._mockChain.single.mockResolvedValue({ data: { id: '1', name: 'Test' }, error: null });
+```
+
+Inclui: `from`, `rpc`, `functions.invoke`, `auth.*`, `storage.from`, `channel`.
+
+---
+
+## Testes de Contrato (Zod)
+
+Arquivo: `src/__tests__/contracts/rpc-schema.test.ts`
+
+Validam que os schemas de RPCs e APIs estão corretos:
+
+```typescript
+import { z } from 'zod';
+
+const TableSizeSchema = z.object({
+  table_name: z.string(),
+  total_size: z.string(),
+});
+
+it('aceita resposta válida', () => {
+  const result = TableSizeSchema.safeParse({ table_name: 'quizzes', total_size: '2048 kB' });
+  expect(result.success).toBe(true);
+});
+```
+
+**Quando criar**: sempre que uma nova RPC ou endpoint for adicionado.
+
+---
+
+## Testes de Regressão
+
+Pasta: `src/__tests__/regression/`
+
+**Regra**: todo bug fix DEVE incluir um teste que reproduz o bug.
+
+Convenção: `bug-<numero>-<descricao>.test.ts`
+
+```typescript
+describe('Regression: Bug #123 — contagem off-by-one', () => {
+  it('conta corretamente incluindo zero', () => {
+    expect([].length).toBe(0); // NÃO -1
+  });
+});
+```
+
+---
+
+## Testes de Service
+
+Os services do admin têm testes dedicados:
+
+| Service | Testes | Arquivo |
+|---------|--------|---------|
+| `observabilityService` | 11 | `src/services/__tests__/observabilityService.test.ts` |
+| `gtmDiagnosticService` | 7 | `src/services/__tests__/gtmDiagnosticService.test.ts` |
+
+Padrão: mock do Supabase via `vi.hoisted()` + configuração de `mockFrom` por teste.
+
+---
+
+## Thresholds por Camada
+
+### Configuração Global (`vitest.config.ts`)
+
+| Métrica | Mínimo | Alvo |
+|---------|--------|------|
+| Lines | 40% | 60% |
+| Statements | 40% | 60% |
+| Functions | 40% | 60% |
+| Branches | 25% | 50% |
+
+### Por Camada (Referência)
+
+| Camada | Mínimo | Alvo | Justificativa |
+|--------|--------|------|---------------|
+| Utils/Lib | 80% | 90% | Funções puras, fáceis de testar |
+| Services | 60% | 80% | Lógica de negócio crítica |
+| Hooks | 40% | 60% | Precisam de wrapper (QueryClient) |
+| Components | 30% | 50% | Renderização + interação + snapshot |
+
+---
+
+## CI/CD
+
+### GitHub Actions (`.github/workflows/test.yml`)
+
+Executa automaticamente em push/PR para `main` e `develop`:
+- Instala dependências
+- Roda `npm run test:coverage`
+- Upload de cobertura para Codecov
+- Artefato de cobertura retido por 7 dias
+
+### Codecov (`codecov.yml`)
+
+- Project target: `auto` (threshold de 2%)
+- Patch target: `80%` (código novo deve ter cobertura alta)
+
+---
+
+## Anti-Patterns
+
+| ❌ Evitar | ✅ Correto | Por quê |
+|-----------|-----------|---------|
+| `expect(true).toBe(true)` | `expect(result).toEqual(expected)` | Assertion que nunca falha |
+| `const mockFn = vi.fn()` em factory | `vi.hoisted(() => ({ mockFn: vi.fn() }))` | Hoisting causa ReferenceError |
+| `console.log()` em testes | Silenciar ou mock do logger | Poluição no output |
+| `await waitForTimeout(3000)` | `await waitFor(() => expect(...))` | Timing frágil, flaky |
+| Testar implementação interna | Testar comportamento público | Quebra em refactoring |
+| Mocks sem `vi.clearAllMocks()` | `beforeEach(() => vi.clearAllMocks())` | Estado vazado entre testes |
+
+---
+
+## E2E (Playwright — Futuro)
+
+Fixtures prontas em `e2e/fixtures/` para quando Playwright for configurado no CI:
+
+| Arquivo | Propósito |
+|---------|-----------|
+| `auth.ts` | Mock de sessões por role (user, admin, master_admin) |
+| `api-mocks.ts` | Interceptors para auth, REST, RPC e Storage do Supabase |
+| `seed-data.ts` | Dados determinísticos (quizzes, profiles, responses) |
+| `test-fixtures.ts` | `authenticatedTest` fixture com role configurável |
+
+**Status**: Playwright não está instalado. Fixtures estão prontas para uso quando CI suportar browsers.
 
 ---
 
@@ -164,7 +324,11 @@ render(<MyComponent />);
 
 ### "useAuth is not a function"
 
-**Causa:** Conflito entre mock global e `vi.unmock`. Use `vi.unmock('@/contexts/AuthContext')` **antes** dos imports do módulo testado.
+**Causa:** Conflito entre mock global e `vi.unmock`. Use `vi.unmock` **antes** dos imports.
+
+### "Cannot access 'mockX' before initialization"
+
+**Causa:** Variável usada dentro de `vi.mock()` factory sem `vi.hoisted()`. Veja seção [Anti-Patterns](#anti-patterns).
 
 ### Componente não renderiza conteúdo esperado
 
@@ -180,28 +344,19 @@ await waitFor(() => {
 }, { timeout: 3000 });
 ```
 
-### Assertion `getByLabelText` falha
-
-**Causa:** O componente pode renderizar como `<button>` ou `<div>` em vez de `<label>` + `<input>`. Use `getByText` ou `getByRole` em vez de `getByLabelText`.
-
 ---
 
 ## Cobertura
 
-### Thresholds Mínimos
-
-| Métrica | Mínimo | Meta |
-|---------|--------|------|
-| Lines | 50% | 80% |
-| Statements | 50% | 80% |
-| Functions | 50% | 80% |
-| Branches | 40% | 70% |
-
 ### Executar cobertura
 
 ```bash
-npm run test -- --coverage
+npm run test:coverage
 ```
+
+### Relatório HTML
+
+Após rodar cobertura, abra `coverage/index.html` no navegador.
 
 ---
 
@@ -213,3 +368,5 @@ npm run test -- --coverage
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Padrões de código (seção de testes) |
 | [COMPONENTS.md](./COMPONENTS.md) | Componentes documentados |
 | [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
+| [SERVICES.md](./SERVICES.md) | Catálogo de services testados |
+| [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões obrigatórios |
