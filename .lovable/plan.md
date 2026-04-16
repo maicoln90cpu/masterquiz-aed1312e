@@ -1,134 +1,132 @@
 
 
-# Plano de Correção — Eventos GTM Não Disparados
+# Plano — Documentação e Manutenibilidade Completa (v2.42.0)
 
-## Diagnóstico Completo (com dados reais do banco)
+## Diagnóstico Atual
 
-Analisei os logs do usuário teste2 (`50dd1ec3`) no banco. Aqui está a **timeline real**:
+### O Que Já Temos (20 docs em `docs/` + README na raiz)
+Todos os docs existentes estão na versão **2.41.0** (15/04/2026), mas faltam registrar as mudanças recentes:
+- Reorganização do painel admin (6 abas funcionais)
+- Aba Sistema expandida (5 sub-abas: Saúde, Observabilidade, Banco de Dados, Configurações, GTM)
+- `ObservabilityTab.tsx`, `DatabaseMonitorTab.tsx`, `GTMDiagnosticTab.tsx` — novos componentes
+- `observabilityService.ts`, `gtmDiagnosticService.ts` — novos services
+- RPC `get_table_sizes()` — nova função de banco
+- 64 Edge Functions (sem mudança) / 68 tabelas (sem mudança)
 
-```text
-02:17:01 → AccountCreated         ✅ Disparou
-02:17:07 → objective_selected     ✅ Disparou (value: ON)
-02:17:07 → express_started        ✅ Disparou
-02:17:31 → quiz_published         ✅ Disparou (express)
-02:17:31 → express_first_published ✅ Disparou
-         → STAGE PROMOVIDO PARA "construtor" ← AQUI ESTÁ O PROBLEMA
-02:18:01 → quiz_created           ✅ Disparou (manual)
-02:18:01 → quiz_published         ✅ Disparou (manual)
-02:18:01 → quiz_first_publishedB  ❌ NÃO disparou
-02:18:01 → first_quiz_createdB    ❌ NÃO disparou
-```
+### Arquivos .md Fora de `docs/`
+| Arquivo | Ação |
+|---------|------|
+| `README.md` (raiz) | **Manter na raiz** — é convenção universal |
+| `src/__tests__/README.md` | **Manter** — já é ponteiro para `docs/TESTING.md` |
+| `analytics_2026-03-21.xlsx` | **Não é .md/.pdf** — deixar onde está |
 
-### Causa Raiz
+### O Que Falta Criar
+| Arquivo | Descrição |
+|---------|-----------|
+| `docs/MEMOCOPY.md` | Cópia completa de todas as memórias do projeto |
+| `docs/SERVICES.md` | Catálogo de services (novo, pedido no prompt do Sistema) |
 
-**O quiz Express promove o user_stage para `construtor` imediatamente.** Quando o usuário cria o quiz manual logo depois, o sistema verifica `earlyStages = ['explorador', 'iniciado', 'engajado']` — mas o usuário já é `construtor`. Logo, os eventos condicionais são bloqueados.
-
-### Problema "perfilON"
-O evento `objective_selected` **disparou corretamente** no banco com `value: ON`. O que pode ter ocorrido é que no GTM Preview as tags não estão configuradas para escutar `objective_selected`. **Não é um bug de código — é configuração GTM.**
-
----
-
-## Erros Identificados
-
-| # | Problema | Causa | Gravidade |
-|---|---------|-------|-----------|
-| 1 | `quiz_first_publishedB` não dispara para quiz manual | Stage já é `construtor` após express | 🔴 Alta |
-| 2 | `first_quiz_createdB` não dispara para quiz manual | Mesma causa — guard `earlyStages` | 🔴 Alta |
-| 3 | Express promove para `construtor` antes do quiz manual | Promoção prematura de stage | 🟡 Média |
-| 4 | Eventos milestone ignoram quizzes manuais pós-express | Lógica de "primeiro quiz" não distingue express de manual | 🟡 Média |
+### Docs que NÃO precisam de novo arquivo
+- Knowledge prompt: será entregue via chat (não é arquivo do projeto)
+- Storybook: projeto não usa Storybook — documentação de componentes já está em `COMPONENTS.md`
 
 ---
 
-## Como funciona HOJE vs Como ficará
+## Implementação em 3 Etapas Seguras
 
-```text
-HOJE:
-  Express → stage=construtor → Manual → (guard bloqueia eventos milestone)
-  
-DEPOIS:
-  Express → stage=engajado (não construtor!)
-  Manual → stage=construtor + dispara quiz_first_publishedB + first_quiz_createdB
-```
+### Etapa 1 — Bump de Versão + Changelog + MEMOCOPY
+**Arquivos alterados:** `docs/PENDENCIAS.md`, `docs/MEMOCOPY.md` (novo)
 
-### Mudança principal: **Separar promoção de stage entre Express e Manual**
+1. **PENDENCIAS.md** — Adicionar entrada v2.42.0 com changelog completo:
+   - Reorganização admin (7→6 abas por domínio funcional)
+   - Aba Sistema expandida (5 sub-abas)
+   - ObservabilityTab (7 painéis: SLA, AI Costs, Delivery, Erros 24h, P95/P99, Web Vitals, Health Check)
+   - DatabaseMonitorTab (catálogo de 68 tabelas com tamanhos reais via RPC `get_table_sizes`)
+   - GTMDiagnosticTab (verificação em 3 etapas)
+   - Novos services: `observabilityService.ts`, `gtmDiagnosticService.ts`
+   - Nova RPC: `get_table_sizes()`
 
-- Express deve promover apenas até `engajado` (não `construtor`)
-- Somente quiz MANUAL (non-express) promove para `construtor`
-- Eventos `quiz_first_published` / `first_quiz_created` são para quizzes MANUAIS — express já tem seus próprios eventos (`express_first_published`)
+2. **MEMOCOPY.md** — Cópia de TODAS as 30 memórias do `mem://index.md`:
+   - Core rules (8 regras)
+   - 30 memories com descrição completa de cada um
+   - Organizado por categoria (features, integrations, analytics, etc.)
+
+### Etapa 2 — Atualizar Docs Core (README, PRD, ROADMAP, SYSTEM_DESIGN, DATABASE_SCHEMA, ADR)
+**Arquivos alterados:** 6 arquivos existentes
+
+1. **README.md** — Bump para v2.42.0, adicionar:
+   - Menção à reorganização do admin (6 abas)
+   - Aba Sistema com 5 sub-abas
+   - RPC `get_table_sizes` na seção Database
+   - Badge de status (se aplicável)
+   - Link para `docs/SERVICES.md`
+
+2. **PRD.md** — Bump versão, adicionar ao backlog:
+   - RF: Painel admin reorganizado por domínio funcional
+   - RF: Observabilidade do sistema (SLA, AI Costs, Web Vitals)
+   - RF: Catálogo de banco de dados com tamanhos reais
+   - RF: Diagnóstico GTM automatizado
+
+3. **ROADMAP.md** — Bump versão, adicionar em H1 2026:
+   - Reorganização admin (6 abas funcionais) ✅
+   - Aba Sistema expandida (5 sub-abas de monitoramento) ✅
+   - Atualizar histórico de atualizações
+
+4. **SYSTEM_DESIGN.md** — Bump versão, adicionar:
+   - Seção "Painel Administrativo" com a hierarquia de 6 abas
+   - Fluxo de dados da Observabilidade (service → hook → component)
+   - RPC `get_table_sizes()` como padrão SECURITY DEFINER
+   - Diagrama da aba Sistema (5 sub-abas)
+
+5. **DATABASE_SCHEMA.md** — Bump versão, adicionar:
+   - RPC `get_table_sizes()` na seção DB Functions
+   - Nota sobre catálogo hardcoded no DatabaseMonitorTab
+
+6. **ADR.md** — Adicionar 2 novas ADRs:
+   - **ADR-013**: Reorganização do Admin por Domínio Funcional (6 abas, max 2 níveis)
+   - **ADR-014**: Catálogos Hardcoded no DatabaseMonitorTab (sem `information_schema` via client)
+
+### Etapa 3 — Docs Secundários + SERVICES.md + Knowledge Prompt + Cross-References
+**Arquivos alterados/criados:** ~10 arquivos
+
+1. **EDGE_FUNCTIONS.md** — Bump versão (64 funções, sem alteração real)
+2. **SECURITY.md** — Bump versão, adicionar nota sobre `get_table_sizes` SECURITY DEFINER
+3. **CODE_STANDARDS.md** — Bump versão, adicionar padrão de service layer para admin
+4. **ONBOARDING.md** — Bump versão, atualizar estrutura do admin (6 abas)
+5. **COMPONENTS.md** — Bump versão, adicionar: ObservabilityTab, DatabaseMonitorTab, GTMDiagnosticTab, AdminSubTabs
+6. **API_DOCS.md** — Adicionar RPC `get_table_sizes()` com parâmetros e retorno
+7. **TESTING.md** — Bump para v2.42.0
+8. **BLOCKS.md** — Bump para v2.42.0
+9. **BLOG.md**, **EGOI.md**, **MONETIZATION.md** — Bump versão
+10. **STYLE_GUIDE.md**, **CHECKLIST.md**, **AUDIT_TEMPLATE.md** — Bump versão
+11. **docs/SERVICES.md** (novo) — Catálogo de services do projeto:
+    - `observabilityService.ts` (7 queries)
+    - `gtmDiagnosticService.ts` (diagnóstico GTM)
+    - `systemMonitorService.ts` (saúde do sistema)
+    - Outros services existentes
+12. **Cross-references** — Validar todos os links entre docs, adicionar SERVICES.md e MEMOCOPY.md nas tabelas de documentação relacionada
+13. **Knowledge prompt** — Entregar via chat: prompt completo e atualizado (~9500 chars) para o knowledge do projeto, incluindo checklist pós-implementação
 
 ---
 
-## Etapa 1 — Correção da lógica de promoção de stage
-
-### Arquivo: `src/hooks/useQuizPersistence.ts`
-
-**UPDATE branch (L442-448):** Promoção para `construtor` NÃO deve acontecer se é express
-```text
-ANTES: Promove para construtor sempre que earlyStages
-DEPOIS: 
-  - Se isExpressMode → promove apenas para 'engajado'
-  - Se manual → promove para 'construtor'
-```
-
-**INSERT branch (L582-589):** Mesma lógica
-```text
-ANTES: Promove para construtor sempre que earlyStages  
-DEPOIS:
-  - Se isExpressMode → promove apenas para 'engajado'
-  - Se manual → promove para 'construtor'
-```
-
-**UPDATE branch (L409):** `quiz_first_publishedB` no UPDATE deve disparar para `construtor` também (não só earlyStages), DESDE que seja o primeiro quiz manual
-```text
-ANTES: if (earlyStages.includes(currentStage))
-DEPOIS: if ([...earlyStages, 'construtor'].includes(currentStage))
-  — Isso permite que um user que publicou express (agora engajado/construtor) 
-    ainda dispare o evento ao publicar seu primeiro quiz manual
-```
-
-### Arquivo: `src/pages/Start.tsx`
-Nenhuma mudança — o express_started e objective_selected já estão corretos.
-
----
-
-## Etapa 2 — Adicionar flag `first_manual_quiz_published` para deduplicação
-
-Para evitar que `quiz_first_publishedB` dispare em TODA publicação manual (só queremos na primeira):
-
-**No useQuizPersistence.ts:**
-- Antes de disparar `quiz_first_publishedB`, verificar no localStorage se já disparou: `mq_first_manual_published_{userId}`
-- Após disparar, salvar a flag
-
-Isso é um guard leve que não depende de stage.
+## O Que NÃO Fazer
+- **Não mover** `README.md` para `docs/` — convenção universal é manter na raiz
+- **Não mover** `src/__tests__/README.md` — já é ponteiro, funciona bem onde está
+- **Não mover** `.xlsx` — não é doc de projeto
+- **Não criar Storybook** — projeto não usa, `COMPONENTS.md` cobre essa necessidade
+- **Não criar** tabelas novas no banco — nenhuma alteração de schema necessária
 
 ---
 
 ## Resumo de Arquivos
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/hooks/useQuizPersistence.ts` | Separar promoção express (→engajado) vs manual (→construtor). Expandir guard de milestone events para incluir `construtor` em quizzes manuais. Adicionar dedup flag. |
+| Ação | Quantidade | Arquivos |
+|------|-----------|----------|
+| **Criar** | 2 | `docs/MEMOCOPY.md`, `docs/SERVICES.md` |
+| **Atualizar** | 20 | Todos os docs existentes (bump v2.42.0 + conteúdo novo) |
+| **Não tocar** | — | `README.md` fica na raiz, `src/__tests__/README.md` fica onde está |
 
-**Total: 1 arquivo, ~30 linhas alteradas**
-
----
-
-## Resumo para Leigos
-
-**O que acontece hoje:** Quando você cria um quiz rápido (Express), o sistema "marca" seu perfil como "usuário avançado" (construtor). Quando depois você cria um quiz manual, o sistema pensa "esse usuário já é avançado, não preciso rastrear a primeira vez dele" — e não envia o evento para o Google Analytics.
-
-**Como ficará:** O quiz Express vai marcar o perfil apenas como "engajado" (um nível abaixo). Assim, quando criar o quiz manual, o sistema ainda reconhece que é a "primeira vez real" e envia o evento corretamente.
-
-**Sobre o "perfilON":** O evento `objective_selected` com valor `ON` **já está disparando corretamente** no banco. Se não apareceu no GTM Preview, é porque a TAG no GTM precisa ser configurada para escutar o evento `objective_selected` (configuração no painel do GTM, não no código).
-
-## Vantagens
-- Eventos de milestone ficam precisos para usuários que passam por Express → Manual
-- Dados de conversão no GA4/GTM refletem a realidade
-- Sem risco de quebrar fluxo existente (mudança apenas na ordem de promoção)
-
-## Checklist Manual Pós-Implementação
-- [ ] Criar conta teste, escolher objetivo, publicar express → verificar stage = `engajado`
-- [ ] Criar quiz manual e publicar → verificar `quiz_first_publishedB` no GTM Preview
-- [ ] Verificar no banco que stage final = `construtor`
-- [ ] Confirmar que `objective_selected` aparece no banco (ON ou OFF)
+## Riscos
+- Volume alto de alterações em docs (20+ arquivos) — mitigado por etapas seguras
+- Knowledge prompt tem limite de 9500 chars — será compactado ao máximo
 
