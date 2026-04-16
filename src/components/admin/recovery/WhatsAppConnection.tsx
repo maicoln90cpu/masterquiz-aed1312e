@@ -94,8 +94,9 @@ export function WhatsAppConnection() {
       if (error) throw error;
 
       if (data) {
-        setStatus(data);
+        setStatus(data as ConnectionStatus);
         setSettingsId(data.id);
+        setForwardPhone(data.forward_to_phone || '');
         // Não usar QR do banco - sempre buscar novo quando necessário
       } else {
         // Cria registro inicial se não existir
