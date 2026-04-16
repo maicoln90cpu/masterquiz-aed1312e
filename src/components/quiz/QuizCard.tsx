@@ -396,6 +396,11 @@ export function QuizCard({
           {/* Linha 1: Título + Badge + Tags */}
           <div className="flex items-center gap-3 overflow-hidden">
             <h3 className="font-semibold truncate min-w-0 flex-shrink">{quiz.title}</h3>
+            {(quiz as any).creation_source === 'express_auto' && (
+              <Badge variant="outline" className="shrink-0 border-amber-400 text-amber-600 text-xs">
+                ⚡ Express
+              </Badge>
+            )}
             <Badge variant={statusVariant} className="shrink-0">
               {statusLabel}
             </Badge>
