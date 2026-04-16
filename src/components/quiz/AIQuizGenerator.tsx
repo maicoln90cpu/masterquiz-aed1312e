@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, ArrowLeft, FileText, Upload, ChevronDown, Settings2, GraduationCap } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeft, FileText, Upload, ChevronDown, Settings2, GraduationCap, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAIGenerationLimits } from "@/hooks/useAIGenerationLimits";
 import { useResourceLimits } from "@/hooks/useResourceLimits";
