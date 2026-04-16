@@ -8,6 +8,7 @@ import { Users, TrendingUp, DollarSign, BarChart3, Activity, Zap, Bot, Eye, Targ
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSubTabs } from "./AdminSubTabs";
+import { PostExpressConversionCard } from "./PostExpressConversionCard";
 
 interface GrowthData {
   sectionA: {
@@ -769,6 +770,9 @@ function SectionD({ data }: { data: NonNullable<GrowthData['sectionD']> }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Post-Express Conversion Tracking */}
+      <PostExpressConversionCard />
     </div>
   );
 }
