@@ -57,6 +57,7 @@ const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCosts
 import { TrialModal } from "@/components/admin/TrialModal";
 const TrialLogsViewer = lazy(() => import("@/components/admin/TrialLogsViewer").then(m => ({ default: m.TrialLogsViewer })));
 const GrowthDashboard = lazy(() => import("@/components/admin/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
+const LoginVsCadastrosTable = lazy(() => import("@/components/admin/LoginVsCadastrosTable").then(m => ({ default: m.LoginVsCadastrosTable })));
 // Loading fallback for lazy components
 const ComponentLoader = () => (
   <div className="flex items-center justify-center py-8">
@@ -791,6 +792,11 @@ export default function AdminDashboard() {
       {/* ✅ FASE 14: Charts lazy loaded */}
       <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
         <AdminDashboardCharts chartData={chartData} />
+      </Suspense>
+
+      {/* Logins vs Cadastros */}
+      <Suspense fallback={<Skeleton className="h-[350px] w-full rounded-lg" />}>
+        <LoginVsCadastrosTable />
       </Suspense>
     </>
   );

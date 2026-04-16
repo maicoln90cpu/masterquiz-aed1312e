@@ -113,6 +113,34 @@ Deno.serve(async (req) => {
 
       console.log(`[EVOLUTION-WEBHOOK] Message from: ${phoneNumber}, text: ${messageText.substring(0, 50)}`);
 
+      // ========== FORWARD MESSAGE TO ADMIN (fire-and-forget) ==========
+      try {
+        const { data: fwdSettings } = await supabase
+          .from('recovery_settings')
+          .select('forward_to_phone, instance_name')
+          .limit(1)
+          .maybeSingle();
+
+        if (fwdSettings?.forward_to_phone) {
+          const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL');
+          const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY');
+          const instanceName = fwdSettings.instance_name || 'masterquizz';
+          const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+          const forwardText = `📩 *Nova msg no MasterQuiz*\nDe: ${phoneNumber}\nHora: ${now}\n\n${messageText.substring(0, 500)}`;
+
+          if (evolutionApiUrl && evolutionApiKey) {
+            await fetch(`${evolutionApiUrl}/message/sendText/${instanceName}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'apikey': evolutionApiKey },
+              body: JSON.stringify({ number: fwdSettings.forward_to_phone, text: forwardText }),
+            });
+            console.log(`[EVOLUTION-WEBHOOK] Message forwarded to ${fwdSettings.forward_to_phone}`);
+          }
+        }
+      } catch (fwdErr) {
+        console.warn('[EVOLUTION-WEBHOOK] Forward failed (non-blocking):', fwdErr);
+      }
       // ========== CHECK "SAIR" OPT-OUT ==========
       if (messageText.trim().toUpperCase().includes('SAIR')) {
         console.log(`[EVOLUTION-WEBHOOK] SAIR opt-out from ${phoneNumber}`);

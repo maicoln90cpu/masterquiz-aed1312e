@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Smartphone, RefreshCw, CheckCircle, XCircle, QrCode, Wifi, WifiOff, RotateCcw, Send, MessageSquare } from "lucide-react";
+import { Loader2, Smartphone, RefreshCw, CheckCircle, XCircle, QrCode, Wifi, WifiOff, RotateCcw, Send, MessageSquare, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ interface ConnectionStatus {
   qr_code_base64: string | null;
   last_connection_check: string | null;
   evolution_api_url: string | null;
+  forward_to_phone: string | null;
 }
 
 interface EvolutionResponse {
@@ -66,6 +67,10 @@ export function WhatsAppConnection() {
   const [testPhone, setTestPhone] = useState("");
   const [testTemplateId, setTestTemplateId] = useState<string>("");
   const [sendingTest, setSendingTest] = useState(false);
+
+  // Forward phone state
+  const [forwardPhone, setForwardPhone] = useState("");
+  const [savingForward, setSavingForward] = useState(false);
   
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -82,15 +87,16 @@ export function WhatsAppConnection() {
     try {
       const { data, error } = await supabase
         .from('recovery_settings')
-        .select('id, is_connected, connection_status, instance_name, qr_code_base64, last_connection_check, evolution_api_url')
+        .select('id, is_connected, connection_status, instance_name, qr_code_base64, last_connection_check, evolution_api_url, forward_to_phone')
         .limit(1)
         .maybeSingle();
 
       if (error) throw error;
 
       if (data) {
-        setStatus(data);
+        setStatus(data as ConnectionStatus);
         setSettingsId(data.id);
+        setForwardPhone(data.forward_to_phone || '');
         // Não usar QR do banco - sempre buscar novo quando necessário
       } else {
         // Cria registro inicial se não existir
@@ -576,6 +582,60 @@ export function WhatsAppConnection() {
           )}
         </CardContent>
       </Card>
+
+      {/* Forward Config - Só aparece quando conectado */}
+      {status?.is_connected && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Phone className="h-5 w-5" />
+              Encaminhamento de Mensagens
+            </CardTitle>
+            <CardDescription>
+              Receba no seu WhatsApp pessoal uma cópia de cada mensagem que chegar no número do MasterQuiz
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                type="tel"
+                placeholder="5511999999999"
+                value={forwardPhone}
+                onChange={(e) => setForwardPhone(e.target.value)}
+                className="max-w-xs"
+              />
+              <Button
+                size="sm"
+                disabled={savingForward}
+                onClick={async () => {
+                  if (!settingsId) return;
+                  setSavingForward(true);
+                  try {
+                    const { error } = await supabase
+                      .from('recovery_settings')
+                      .update({ forward_to_phone: forwardPhone || null } as any)
+                      .eq('id', settingsId);
+                    if (error) throw error;
+                    toast.success(forwardPhone ? 'Encaminhamento ativado!' : 'Encaminhamento desativado');
+                  } catch (err) {
+                    toast.error('Erro ao salvar');
+                    console.error(err);
+                  } finally {
+                    setSavingForward(false);
+                  }
+                }}
+              >
+                {savingForward ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {forwardPhone
+                ? `✅ Mensagens serão encaminhadas para ${forwardPhone}`
+                : 'Deixe vazio para desativar o encaminhamento'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Test Message Card - Só aparece quando conectado */}
       {status?.is_connected && (

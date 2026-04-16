@@ -1107,6 +1107,24 @@ export type Database = {
         }
         Relationships: []
       }
+      login_events: {
+        Row: {
+          id: string
+          logged_in_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          logged_in_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          logged_in_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       master_admin_emails: {
         Row: {
           created_at: string
@@ -2173,6 +2191,7 @@ export type Database = {
           delay_max_seconds: number | null
           evolution_api_url: string | null
           exclude_plan_types: Json | null
+          forward_to_phone: string | null
           hourly_message_limit: number | null
           id: string
           inactivity_days_trigger: number | null
@@ -2200,6 +2219,7 @@ export type Database = {
           delay_max_seconds?: number | null
           evolution_api_url?: string | null
           exclude_plan_types?: Json | null
+          forward_to_phone?: string | null
           hourly_message_limit?: number | null
           id?: string
           inactivity_days_trigger?: number | null
@@ -2227,6 +2247,7 @@ export type Database = {
           delay_max_seconds?: number | null
           evolution_api_url?: string | null
           exclude_plan_types?: Json | null
+          forward_to_phone?: string | null
           hourly_message_limit?: number | null
           id?: string
           inactivity_days_trigger?: number | null
@@ -3182,6 +3203,7 @@ export type Database = {
       }
       increment_blog_views: { Args: { p_slug: string }; Returns: undefined }
       increment_login_count: { Args: { p_user_id: string }; Returns: undefined }
+      record_login_event: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       answer_format:

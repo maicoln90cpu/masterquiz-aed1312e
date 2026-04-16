@@ -63,9 +63,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Incrementar login_count apenas no primeiro SIGNED_IN (login real, não token refresh)
           if (session.user?.id && !hasCountedLogin) {
             hasCountedLogin = true;
-            (supabase.rpc as Function)('increment_login_count', { p_user_id: session.user.id })
-              .then(() => console.log('[Auth] login_count incremented'))
-              .catch((err: unknown) => console.error('[Auth] Failed to increment login_count:', err));
+            (supabase.rpc as Function)('record_login_event', { p_user_id: session.user.id })
+              .then(() => console.log('[Auth] login event recorded'))
+              .catch((err: unknown) => console.error('[Auth] Failed to record login event:', err));
           }
         }
       }
