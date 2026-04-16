@@ -3252,6 +3252,15 @@ export type Database = {
         Args: { p_company_slug?: string; p_quiz_slug?: string }
         Returns: Json
       }
+      get_table_sizes: {
+        Args: never
+        Returns: {
+          row_estimate: number
+          table_name: string
+          total_bytes: number
+          total_size: string
+        }[]
+      }
       get_user_quiz_stats: {
         Args: { user_ids: string[] }
         Returns: {
