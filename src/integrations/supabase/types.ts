@@ -1249,14 +1249,18 @@ export type Database = {
           analytics_viewed_at: string | null
           company_slug: string | null
           created_at: string
+          crm_interactions_count: number
           crm_viewed_at: string | null
           deleted_at: string | null
           editor_sessions_count: number
           email: string | null
           facebook_pixel_id: string | null
+          first_lead_received_at: string | null
+          form_collection_configured_at: string | null
           full_name: string | null
           gtm_container_id: string | null
           id: string
+          landing_variant_seen: string | null
           login_count: number | null
           paywall_hit_count: number
           plan_limit_hit_type: string | null
@@ -1278,14 +1282,18 @@ export type Database = {
           analytics_viewed_at?: string | null
           company_slug?: string | null
           created_at?: string
+          crm_interactions_count?: number
           crm_viewed_at?: string | null
           deleted_at?: string | null
           editor_sessions_count?: number
           email?: string | null
           facebook_pixel_id?: string | null
+          first_lead_received_at?: string | null
+          form_collection_configured_at?: string | null
           full_name?: string | null
           gtm_container_id?: string | null
           id: string
+          landing_variant_seen?: string | null
           login_count?: number | null
           paywall_hit_count?: number
           plan_limit_hit_type?: string | null
@@ -1307,14 +1315,18 @@ export type Database = {
           analytics_viewed_at?: string | null
           company_slug?: string | null
           created_at?: string
+          crm_interactions_count?: number
           crm_viewed_at?: string | null
           deleted_at?: string | null
           editor_sessions_count?: number
           email?: string | null
           facebook_pixel_id?: string | null
+          first_lead_received_at?: string | null
+          form_collection_configured_at?: string | null
           full_name?: string | null
           gtm_container_id?: string | null
           id?: string
+          landing_variant_seen?: string | null
           login_count?: number | null
           paywall_hit_count?: number
           plan_limit_hit_type?: string | null
@@ -3301,6 +3313,10 @@ export type Database = {
       increment_login_count: { Args: { p_user_id: string }; Returns: undefined }
       increment_profile_counter: {
         Args: { _column: string }
+        Returns: undefined
+      }
+      mark_first_lead_received: {
+        Args: { _owner_id: string }
         Returns: undefined
       }
       record_login_event: { Args: { p_user_id: string }; Returns: undefined }
