@@ -23,6 +23,8 @@ interface AIQuizGeneratorProps {
   onBack: () => void;
   /** When true, locks the mode to "form" and hides the tab switcher */
   lockedMode?: "form" | "pdf" | "educational";
+  /** When provided, updates existing quiz instead of creating a new one (Express mode) */
+  existingQuizId?: string;
 }
 
 interface GeneratedQuestion {
@@ -76,7 +78,7 @@ interface EducationalSettings {
   explanationMode: 'per_question' | 'end_of_quiz';
 }
 
-export const AIQuizGenerator = ({ onBack, lockedMode }: AIQuizGeneratorProps) => {
+export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGeneratorProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

@@ -87,9 +87,10 @@ const Dashboard = () => {
 
         // Redirect early-stage users sem quiz publicado para /start
         // Guard: só redirecionar quando stats já carregou (evita loop infinito)
+        // Guard: skip if user already completed /start flow (cameFromStart)
         const earlyStages = ['explorador', 'iniciado'];
         const stage = profile?.user_stage || 'explorador';
-        if (!statsLoading && earlyStages.includes(stage) && (stats?.activeQuizzes ?? 0) === 0) {
+        if (!cameFromStart && !statsLoading && earlyStages.includes(stage) && (stats?.activeQuizzes ?? 0) === 0) {
           navigate('/start', { replace: true });
           return;
         }
