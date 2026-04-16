@@ -583,6 +583,60 @@ export function WhatsAppConnection() {
         </CardContent>
       </Card>
 
+      {/* Forward Config - Só aparece quando conectado */}
+      {status?.is_connected && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Phone className="h-5 w-5" />
+              Encaminhamento de Mensagens
+            </CardTitle>
+            <CardDescription>
+              Receba no seu WhatsApp pessoal uma cópia de cada mensagem que chegar no número do MasterQuiz
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                type="tel"
+                placeholder="5511999999999"
+                value={forwardPhone}
+                onChange={(e) => setForwardPhone(e.target.value)}
+                className="max-w-xs"
+              />
+              <Button
+                size="sm"
+                disabled={savingForward}
+                onClick={async () => {
+                  if (!settingsId) return;
+                  setSavingForward(true);
+                  try {
+                    const { error } = await supabase
+                      .from('recovery_settings')
+                      .update({ forward_to_phone: forwardPhone || null } as any)
+                      .eq('id', settingsId);
+                    if (error) throw error;
+                    toast.success(forwardPhone ? 'Encaminhamento ativado!' : 'Encaminhamento desativado');
+                  } catch (err) {
+                    toast.error('Erro ao salvar');
+                    console.error(err);
+                  } finally {
+                    setSavingForward(false);
+                  }
+                }}
+              >
+                {savingForward ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {forwardPhone
+                ? `✅ Mensagens serão encaminhadas para ${forwardPhone}`
+                : 'Deixe vazio para desativar o encaminhamento'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Test Message Card - Só aparece quando conectado */}
       {status?.is_connected && (
         <Card>
