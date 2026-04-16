@@ -17,6 +17,7 @@ interface ConnectionStatus {
   qr_code_base64: string | null;
   last_connection_check: string | null;
   evolution_api_url: string | null;
+  forward_to_phone: string | null;
 }
 
 interface EvolutionResponse {
