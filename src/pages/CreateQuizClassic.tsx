@@ -268,7 +268,6 @@ const CreateQuizClassic = () => {
       />
     );
   }
-  }
 
   // AI Generator
   if (uiState.showAIGenerator) {
