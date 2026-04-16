@@ -1,0 +1,19 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+  round: down
+  precision: 2
+ignore:
+  - "src/**/*.test.ts"
+  - "src/**/*.test.tsx"
+  - "src/__tests__/**"
+  - "src/integrations/**"
+  - "src/types/**"
+  - "e2e/**"
+  - "node_modules/**"
