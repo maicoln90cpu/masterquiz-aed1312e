@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen, ArrowUpDown, ArrowUp, ArrowDown, Eye, Timer } from "lucide-react";
+import { Loader2, Users, FileText, MessageSquare, CheckCircle, XCircle, DollarSign, TrendingUp, BarChart3, Settings, ArrowLeft, Trash2, Shield, Sparkles, LayoutDashboard, Package, Palette, Cog, Activity, Globe, FlaskConical, Search, ChevronLeft, ChevronRight, RefreshCw, Pencil, Download, BookOpen, ArrowUpDown, ArrowUp, ArrowDown, Eye, Timer, Target } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
@@ -58,6 +58,7 @@ const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
 const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
 const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
+const ICPInsightsTab = lazy(() => import("@/components/admin/users/ICPInsightsTab"));
 import { TrialModal } from "@/components/admin/TrialModal";
 const TrialLogsViewer = lazy(() => import("@/components/admin/TrialLogsViewer").then(m => ({ default: m.TrialLogsViewer })));
 const GrowthDashboard = lazy(() => import("@/components/admin/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
@@ -1649,6 +1650,7 @@ export default function AdminDashboard() {
               tabs={[
                 { id: 'administrators', label: 'Administradores', icon: <Users className="h-4 w-4" />, color: 'purple' },
                 { id: 'respondents', label: 'Respondentes', icon: <MessageSquare className="h-4 w-4" />, color: 'cyan' },
+                { id: 'icp-insights', label: 'ICP Insights', icon: <Target className="h-4 w-4" />, color: 'emerald' },
                 { id: 'validations', label: 'Validações', icon: <CheckCircle className="h-4 w-4" />, color: 'green' },
                 { id: 'support', label: 'Suporte', icon: <MessageSquare className="h-4 w-4" />, color: 'red', badge: openTicketsCount },
               ]}
@@ -1658,6 +1660,11 @@ export default function AdminDashboard() {
                 <>
                   {activeTab === 'administrators' && renderAdministratorsContent()}
                   {activeTab === 'respondents' && renderRespondentsContent()}
+                  {activeTab === 'icp-insights' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <ICPInsightsTab />
+                    </Suspense>
+                  )}
                   {activeTab === 'validations' && renderValidationsContent()}
                   {activeTab === 'support' && <SupportTicketsManager />}
                 </>
