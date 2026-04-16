@@ -1747,10 +1747,9 @@ export default function AdminDashboard() {
                     </Suspense>
                   )}
                   {activeTab === 'database' && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <p className="text-lg font-medium">🗄️ Banco de Dados</p>
-                      <p className="text-sm">Será implementado na Etapa 2</p>
-                    </div>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <DatabaseMonitorTab />
+                    </Suspense>
                   )}
                   {activeTab === 'settings' && (
                     <div className="space-y-6">
@@ -1762,6 +1761,9 @@ export default function AdminDashboard() {
                   )}
                   {activeTab === 'gtm' && (
                     <div className="space-y-6">
+                      <Suspense fallback={<ComponentLoader />}>
+                        <GTMDiagnosticTab />
+                      </Suspense>
                       <Suspense fallback={<ComponentLoader />}>
                         <AuditLogsViewer />
                       </Suspense>
