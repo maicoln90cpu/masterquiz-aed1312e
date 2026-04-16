@@ -263,7 +263,7 @@ function RecentErrorsPanel() {
         </Badge>
         {data.hasSpikeAlert && (
           <Badge variant="destructive" className="animate-pulse">
-            ⚠️ Pico detectado (>10 erros/hora)
+            {'⚠️ Pico detectado (>10 erros/hora)'}
           </Badge>
         )}
       </div>
