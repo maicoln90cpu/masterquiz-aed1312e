@@ -1,5 +1,55 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.42.0 - Painel Admin Reorganizado + Sistema de Monitoramento + Docs Overhaul (16/04/2026)
+
+### Feature: Reorganização do Painel Admin (6 abas funcionais)
+- Admin reorganizado de 7 abas genéricas para 6 domínios funcionais
+- Abas: 🏠 Início, 👥 Usuários, 📝 Conteúdo, 💰 Vendas, ⚙️ Sistema, 🛠️ Dev Tools
+- Componente `AdminSubTabs` reutilizável para sub-navegação
+- Max 2 níveis de profundidade (aba → sub-aba)
+
+### Feature: Aba Sistema Expandida (5 sub-abas de monitoramento)
+- **🩺 Saúde:** Health check do sistema (system-health-check EF)
+- **📊 Observabilidade:** 7 painéis — SLA, Custos IA, Delivery Email, Erros 24h, P95/P99 Performance, Web Vitals, Health Check histórico
+- **🗄️ Banco de Dados:** Catálogo de 68 tabelas com tamanhos reais via RPC `get_table_sizes()`, 13 triggers, 15 cron jobs, 64 Edge Functions
+- **⚙️ Configurações:** Settings do sistema (system_settings, site_settings)
+- **🔍 GTM/Diag:** Diagnóstico GTM em 3 etapas (ID configurado → Script no DOM → DataLayer ativo) com retry 3x
+
+### Feature: Observabilidade Service Layer
+- `observabilityService.ts`: 7 queries de observabilidade (SLA, AI costs, delivery, erros, performance, web vitals, health)
+- `gtmDiagnosticService.ts`: Diagnóstico GTM automatizado com 3 verificações sequenciais
+
+### Feature: RPC get_table_sizes()
+- Função PostgreSQL `SECURITY DEFINER` que retorna tamanho real de tabelas via `pg_total_relation_size`
+- Retorna: table_name, total_bytes, total_size (pretty), row_estimate
+- Usado no DatabaseMonitorTab para métricas reais do banco
+
+### Docs: Overhaul Completo v2.42.0
+- 20+ docs atualizados para v2.42.0
+- Novos docs: `MEMOCOPY.md` (backup de memórias), `SERVICES.md` (catálogo de services)
+- ADR-013: Reorganização Admin por Domínio Funcional
+- ADR-014: Catálogos Hardcoded no DatabaseMonitorTab
+- Cross-references atualizados com novos docs
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/AdminDashboard.tsx` | Reorganizado em 6 abas funcionais com sub-abas |
+| `src/components/admin/system/SystemHealthTab.tsx` | NOVO — sub-aba Saúde |
+| `src/components/admin/system/ObservabilityTab.tsx` | NOVO — 7 painéis de observabilidade |
+| `src/components/admin/system/DatabaseMonitorTab.tsx` | NOVO — catálogo de DB com tamanhos reais |
+| `src/components/admin/system/SystemSettingsTab.tsx` | NOVO — configurações do sistema |
+| `src/components/admin/system/GTMDiagnosticTab.tsx` | NOVO — diagnóstico GTM 3 etapas |
+| `src/services/observabilityService.ts` | NOVO — service layer de observabilidade |
+| `src/services/gtmDiagnosticService.ts` | NOVO — service de diagnóstico GTM |
+| `supabase/migrations/*_get_table_sizes.sql` | NOVO — RPC get_table_sizes() |
+| `docs/MEMOCOPY.md` | NOVO — backup de todas as memórias |
+| `docs/SERVICES.md` | NOVO — catálogo de services |
+| `docs/ADR.md` | +ADR-013, +ADR-014 |
+| `docs/*.md` (20+ arquivos) | Bump para v2.42.0, cross-references |
+
+---
+
 ## ✅ v2.41.0 - GTM Centralizado + Growth Dashboard + Docs Overhaul (15/04/2026)
 
 ### Feature: Migração GTM Centralizada (Etapa 1)
