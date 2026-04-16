@@ -18,6 +18,9 @@ interface UseQuizTemplateSelectionOptions {
   updateFormConfig: (updates: Partial<QuizFormConfigState>) => void;
   updateEditor: (updates: { questionCount?: number }) => void;
   setQuestions: (questions: EditorQuestion[]) => void;
+  /** When provided, handleBackFromAI will reload quiz from DB to sync AI-generated questions */
+  loadExistingQuiz?: (quizId: string) => Promise<void>;
+  getQuizId?: () => string | null;
 }
 
 // ============================================
@@ -30,6 +33,8 @@ export function useQuizTemplateSelection({
   updateFormConfig,
   updateEditor,
   setQuestions,
+  loadExistingQuiz,
+  getQuizId,
 }: UseQuizTemplateSelectionOptions) {
   const { t } = useTranslation();
   
@@ -146,17 +151,25 @@ export function useQuizTemplateSelection({
     }, 100);
   }, [updateUI]);
 
-  // ✅ Voltar do gerador de IA
+  // ✅ Voltar do gerador de IA — recarregar perguntas do banco
   const handleBackFromAI = useCallback(() => {
     if (isProcessingRef.current) return;
     isProcessingRef.current = true;
     
-    updateUI({ showAIGenerator: false, showTemplateSelector: true });
-    
-    setTimeout(() => {
-      isProcessingRef.current = false;
-    }, 100);
-  }, [updateUI]);
+    updateUI({ showAIGenerator: false, showTemplateSelector: false });
+
+    // Recarregar quiz do banco para sincronizar perguntas geradas pela IA
+    const quizId = getQuizId?.();
+    if (quizId && loadExistingQuiz) {
+      loadExistingQuiz(quizId).finally(() => {
+        isProcessingRef.current = false;
+      });
+    } else {
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 100);
+    }
+  }, [updateUI, loadExistingQuiz, getQuizId]);
 
   return {
     handleSelectTemplate,
