@@ -147,7 +147,7 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
         {/* Title */}
         <div className="space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-            {t('express.celebration.title', 'Seu quiz está no ar! 🎉')}
+            {t('express.celebration.title', 'Seu quiz de demonstração está no ar! 🎉')}
           </h1>
           <p className="text-muted-foreground text-lg">
             {t('express.celebration.subtitle', '"{{title}}" foi publicado com sucesso.', { title: quizTitle })}

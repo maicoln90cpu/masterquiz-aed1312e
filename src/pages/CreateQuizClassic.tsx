@@ -38,7 +38,7 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
-import { PostExpressScreen } from "@/components/quiz/PostExpressScreen";
+
 
 import { useQuizState } from "@/hooks/useQuizState";
 import { useQuizPersistence } from "@/hooks/useQuizPersistence";
@@ -66,7 +66,7 @@ const CreateQuizClassic = () => {
   const isExpressMode = searchParams.get('mode') === 'express';
   const isAIAutoOpen = searchParams.get('ai') === 'true';
   const [showCelebration, setShowCelebration] = useState(false);
-  const [showPostExpress, setShowPostExpress] = useState(false);
+  
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
     const stored = localStorage.getItem('quiz_auto_save_enabled');
@@ -256,13 +256,6 @@ const CreateQuizClassic = () => {
       : `${window.location.origin}/quiz/${editorState.quizSlug}`;
   }, [editorState.quizSlug, profile?.company_slug]);
 
-  // Post-Express Screen (shown after celebration)
-  if (showPostExpress && isExpressMode) {
-    return (
-      <PostExpressScreen />
-    );
-  }
-
   // Express Celebration Screen
   if (showCelebration && isExpressMode) {
     return (
@@ -270,8 +263,7 @@ const CreateQuizClassic = () => {
         quizUrl={publishedQuizUrl || expressQuizUrl}
         quizTitle={appearanceState.title || t('createQuiz.newQuiz')}
         onGoToDashboard={() => {
-          setShowCelebration(false);
-          setShowPostExpress(true);
+          navigate('/dashboard');
         }}
       />
     );
