@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.41.0** | Última atualização: 15 de Abril de 2026
+**Versão 2.42.0** | Última atualização: 16 de Abril de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -628,6 +628,8 @@ logger.api('API call', { endpoint, status });
 | [docs/EDGE_FUNCTIONS.md](./docs/EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
 | [docs/ONBOARDING.md](./docs/ONBOARDING.md) | Guia para novos desenvolvedores |
 | [docs/ADR.md](./docs/ADR.md) | Architecture Decision Records |
+| [docs/SERVICES.md](./docs/SERVICES.md) | Catálogo de services do projeto |
+| [docs/MEMOCOPY.md](./docs/MEMOCOPY.md) | Backup de memórias do projeto |
 
 ---
 

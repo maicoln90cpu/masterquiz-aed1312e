@@ -2,8 +2,8 @@
 
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
-**Versão:** 2.41.0  
-**Última atualização:** 15 de Abril de 2026  
+**Versão:** 2.42.0  
+**Última atualização:** 16 de Abril de 2026  
 **Owner:** Product Team
 
 ---
@@ -498,6 +498,16 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | Como admin, quero preview de email antes de envio em massa | Média | ✅ |
 | Como admin, quero comparar métricas históricas entre modos A e B | Média | ✅ |
 | Como admin, quero preços independentes por modo de monetização | Alta | ✅ |
+
+### Épico 7: Painel Admin e Monitoramento (H1 2026) ✅
+
+| User Story | Prioridade | Status |
+|------------|------------|--------|
+| Como admin, quero painel reorganizado por domínio funcional (6 abas) | Alta | ✅ |
+| Como admin, quero observabilidade do sistema (SLA, custos IA, Web Vitals) | Alta | ✅ |
+| Como admin, quero catálogo de banco de dados com tamanhos reais | Média | ✅ |
+| Como admin, quero diagnóstico GTM automatizado (3 etapas) | Média | ✅ |
+| Como admin, quero ver triggers, cron jobs e Edge Functions catalogados | Baixa | ✅ |
 | Como admin, quero GTM lifecycle tracking completo nos quizzes | Alta | ✅ |
 | Como admin, quero que a aba de usuários mostre dados reais mesmo com 400+ users | Alta | ✅ |
 
@@ -667,9 +677,11 @@ PRs que não atingem 50% de cobertura média falham automaticamente.
 - [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Schema completo do banco
 - [SECURITY.md](./SECURITY.md) - Práticas de segurança e RLS
 - [CODE_STANDARDS.md](./CODE_STANDARDS.md) - Padrões obrigatórios de código
-- [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) - Catálogo das 61 Edge Functions
+- [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) - Catálogo das 64 Edge Functions
 - [ONBOARDING.md](./ONBOARDING.md) - Guia para novos desenvolvedores
 - [ADR.md](./ADR.md) - Architecture Decision Records
+- [SERVICES.md](./SERVICES.md) - Catálogo de services
+- [MEMOCOPY.md](./MEMOCOPY.md) - Backup de memórias do projeto
 
 ---
 
