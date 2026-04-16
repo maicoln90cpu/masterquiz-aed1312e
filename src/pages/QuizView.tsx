@@ -178,7 +178,7 @@ export default function QuizView({ previewMode = false, previewData }: QuizViewP
         {!state.quiz.hide_branding && (
           <div className="text-center py-4">
             <a 
-              href="https://masterquiz.app" 
+              href="https://masterquiz.com.br" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-xs text-muted-foreground hover:text-primary transition-colors"

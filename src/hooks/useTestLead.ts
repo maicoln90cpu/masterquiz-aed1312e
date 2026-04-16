@@ -75,6 +75,13 @@ export function useTestLead() {
 
       if (error) throw error;
 
+      // 🎯 GTM: test_lead_generated
+      const { pushGTMEvent } = await import('@/lib/gtmLogger');
+      pushGTMEvent('test_lead_generated', {
+        quiz_id: quizId,
+        lead_id: lead?.id || null,
+      });
+
       // Invalidar queries para atualizar dados
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
