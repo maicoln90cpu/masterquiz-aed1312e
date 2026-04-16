@@ -2191,6 +2191,7 @@ export type Database = {
           delay_max_seconds: number | null
           evolution_api_url: string | null
           exclude_plan_types: Json | null
+          forward_to_phone: string | null
           hourly_message_limit: number | null
           id: string
           inactivity_days_trigger: number | null
@@ -2218,6 +2219,7 @@ export type Database = {
           delay_max_seconds?: number | null
           evolution_api_url?: string | null
           exclude_plan_types?: Json | null
+          forward_to_phone?: string | null
           hourly_message_limit?: number | null
           id?: string
           inactivity_days_trigger?: number | null
@@ -2245,6 +2247,7 @@ export type Database = {
           delay_max_seconds?: number | null
           evolution_api_url?: string | null
           exclude_plan_types?: Json | null
+          forward_to_phone?: string | null
           hourly_message_limit?: number | null
           id?: string
           inactivity_days_trigger?: number | null
