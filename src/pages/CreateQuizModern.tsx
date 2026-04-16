@@ -185,6 +185,8 @@ const CreateQuizModern = () => {
     updateFormConfig,
     updateEditor,
     setQuestions,
+    loadExistingQuiz,
+    getQuizId: () => editorState.quizId,
   });
 
   // ✅ Load limits
