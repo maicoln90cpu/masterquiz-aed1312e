@@ -91,14 +91,21 @@ export function QuizCard({
     <Card className="hover:shadow-lg transition-all group overflow-hidden">
       {/* ========== MOBILE LAYOUT (< 640px) - ULTRA COMPACTO ========== */}
       <div className="block sm:hidden p-3 space-y-2">
-        {/* Linha 1: Título + Badge */}
+        {/* Linha 1: Título + Badges */}
         <div className="flex items-start justify-between gap-1.5">
           <h3 className="font-medium text-sm leading-snug line-clamp-1 flex-1 min-w-0">
             {quiz.title}
           </h3>
-          <Badge variant={statusVariant} className="shrink-0 text-[10px] px-1.5 py-0">
-            {statusLabel}
-          </Badge>
+          <div className="flex items-center gap-1 shrink-0">
+            {quiz.creation_source === 'express_auto' && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-400 text-amber-600">
+                ⚡ Express
+              </Badge>
+            )}
+            <Badge variant={statusVariant} className="text-[10px] px-1.5 py-0">
+              {statusLabel}
+            </Badge>
+          </div>
         </div>
 
         {/* Linha 2: Descrição - mais compacta */}
