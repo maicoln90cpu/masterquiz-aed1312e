@@ -67,6 +67,10 @@ export function WhatsAppConnection() {
   const [testPhone, setTestPhone] = useState("");
   const [testTemplateId, setTestTemplateId] = useState<string>("");
   const [sendingTest, setSendingTest] = useState(false);
+
+  // Forward phone state
+  const [forwardPhone, setForwardPhone] = useState("");
+  const [savingForward, setSavingForward] = useState(false);
   
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
