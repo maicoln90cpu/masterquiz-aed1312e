@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { logQuizAction } from "@/lib/auditLogger";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { incrementProfileCounter } from "@/lib/icpTracking";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import type { QuizBlock } from "@/types/blocks";
@@ -80,6 +81,7 @@ export function useQuizPersistence({
           editor_mode: editorMode,
           is_express: isExpressMode,
         });
+        incrementProfileCounter('editor_sessions_count'); // M07
       }
     };
   }, [quizId, editorMode, isExpressMode]);

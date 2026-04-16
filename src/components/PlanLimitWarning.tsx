@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { incrementProfileCounter, setProfileFirstText } from "@/lib/icpTracking";
 import { useEffect, useRef } from "react";
 
 interface PlanLimitWarningProps {
@@ -34,6 +35,7 @@ export const PlanLimitWarning = ({ current, limit, type }: PlanLimitWarningProps
         limit,
         plan_type: subscription?.plan_type || 'free',
       });
+      setProfileFirstText('plan_limit_hit_type', type); // M05
     }
   }, [isAtLimit, roleLoading, subLoading]);
   
@@ -70,6 +72,7 @@ export const PlanLimitWarning = ({ current, limit, type }: PlanLimitWarningProps
               limit_type: type,
               plan_type: subscription?.plan_type || 'free',
             });
+            incrementProfileCounter('upgrade_clicked_count'); // M06
             navigate('/precos');
           }}
           className="ml-4 whitespace-nowrap"

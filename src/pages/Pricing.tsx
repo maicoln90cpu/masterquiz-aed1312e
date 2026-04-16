@@ -13,6 +13,7 @@ import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { incrementProfileCounter } from "@/lib/icpTracking";
 
 export default function Pricing() {
   
@@ -44,6 +45,7 @@ export default function Pricing() {
           user_id: user.id,
           current_plan: currentPlan || 'unknown',
         });
+        incrementProfileCounter('paywall_hit_count'); // M04
       }
     };
     firePaywallViewed();
