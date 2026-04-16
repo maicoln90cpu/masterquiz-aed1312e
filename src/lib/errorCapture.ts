@@ -23,7 +23,7 @@ export async function logClientError(payload: ErrorPayload) {
       url: payload.url ?? window.location.href,
       user_id: user?.id ?? null,
       user_agent: navigator.userAgent,
-      metadata: payload.metadata ?? {},
+      metadata: (payload.metadata ?? {}) as Record<string, string>,
     }]);
   } catch {
     // Silently fail
