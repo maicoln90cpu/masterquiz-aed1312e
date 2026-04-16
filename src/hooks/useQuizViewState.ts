@@ -540,43 +540,23 @@ export function useQuizViewState({
       const finalEmail = leadEmail || extracted.email || null;
       const finalWhatsapp = leadWhatsapp || extracted.phone || null;
 
-      if (!quizShowResults) {
-        // Funnel mode: use Edge Function (service_role bypasses RLS for SELECT+UPDATE)
-        const { error: fnError } = await supabase.functions.invoke('save-quiz-response', {
-          body: {
-            quiz_id: quiz.id,
-            session_id: sessionId,
-            answers: sanitizedAnswers,
-            respondent_name: leadName || null,
-            respondent_email: finalEmail,
-            respondent_whatsapp: finalWhatsapp,
-            custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
-            result_id: result?.id,
-            is_final: true,
-          }
-        });
-        if (fnError) {
-          console.error('Error saving quiz response via Edge Function:', fnError);
-          throw fnError;
-        }
-      } else {
-        // Normal mode: standard insert (anon can INSERT)
-        const responsePayload: Record<string, any> = {
+      // Always use Edge Function to save responses (ensures milestone detection runs)
+      const { error: fnError } = await supabase.functions.invoke('save-quiz-response', {
+        body: {
           quiz_id: quiz.id,
+          session_id: sessionId,
           answers: sanitizedAnswers,
           respondent_name: leadName || null,
           respondent_email: finalEmail,
           respondent_whatsapp: finalWhatsapp,
           custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
-          result_id: result?.id
-        };
-        const { error } = await supabase
-          .from('quiz_responses')
-          .insert(responsePayload as any);
-        if (error) {
-          console.error('Error saving quiz response:', error);
-          throw error;
+          result_id: result?.id,
+          is_final: true,
         }
+      });
+      if (fnError) {
+        console.error('Error saving quiz response via Edge Function:', fnError);
+        throw fnError;
       }
 
       // Trigger webhook
