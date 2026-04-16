@@ -256,13 +256,6 @@ const CreateQuizClassic = () => {
       : `${window.location.origin}/quiz/${editorState.quizSlug}`;
   }, [editorState.quizSlug, profile?.company_slug]);
 
-  // Post-Express Screen (shown after celebration)
-  if (showPostExpress && isExpressMode) {
-    return (
-      <PostExpressScreen />
-    );
-  }
-
   // Express Celebration Screen
   if (showCelebration && isExpressMode) {
     return (
@@ -270,11 +263,11 @@ const CreateQuizClassic = () => {
         quizUrl={publishedQuizUrl || expressQuizUrl}
         quizTitle={appearanceState.title || t('createQuiz.newQuiz')}
         onGoToDashboard={() => {
-          setShowCelebration(false);
-          setShowPostExpress(true);
+          navigate('/dashboard');
         }}
       />
     );
+  }
   }
 
   // AI Generator
