@@ -527,7 +527,13 @@ const CRM = () => {
             <CRMKanbanBoard
               leads={paginatedLeads}
               columns={columns}
-              onLeadClick={setSelectedLead}
+              onLeadClick={(lead) => {
+                setSelectedLead(lead);
+                // M10: trigger crm_interaction (clique em lead — abertura de detalhes)
+                import('@/lib/icpTracking').then(({ incrementProfileCounter }) => {
+                  incrementProfileCounter('crm_interactions_count');
+                });
+              }}
               onMoveLeadToStatus={moveLeadToStatus}
               selectedLeadsForComparison={selectedLeadsForComparison}
               onToggleLeadSelection={toggleLeadSelection}
