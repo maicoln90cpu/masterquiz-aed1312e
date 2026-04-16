@@ -1650,6 +1650,7 @@ export default function AdminDashboard() {
               tabs={[
                 { id: 'administrators', label: 'Administradores', icon: <Users className="h-4 w-4" />, color: 'purple' },
                 { id: 'respondents', label: 'Respondentes', icon: <MessageSquare className="h-4 w-4" />, color: 'cyan' },
+                { id: 'icp-insights', label: 'ICP Insights', icon: <Target className="h-4 w-4" />, color: 'emerald' },
                 { id: 'validations', label: 'Validações', icon: <CheckCircle className="h-4 w-4" />, color: 'green' },
                 { id: 'support', label: 'Suporte', icon: <MessageSquare className="h-4 w-4" />, color: 'red', badge: openTicketsCount },
               ]}
@@ -1659,6 +1660,11 @@ export default function AdminDashboard() {
                 <>
                   {activeTab === 'administrators' && renderAdministratorsContent()}
                   {activeTab === 'respondents' && renderRespondentsContent()}
+                  {activeTab === 'icp-insights' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <ICPInsightsTab />
+                    </Suspense>
+                  )}
                   {activeTab === 'validations' && renderValidationsContent()}
                   {activeTab === 'support' && <SupportTicketsManager />}
                 </>
