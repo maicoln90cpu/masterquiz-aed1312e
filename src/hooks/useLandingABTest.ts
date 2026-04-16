@@ -55,6 +55,12 @@ const storeAssignment = (testId: string, variant: 'A' | 'B') => {
   const assignments = getStoredAssignments();
   assignments[testId] = variant;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
+  // M09: também guarda a última variante vista para gravar em profiles após signup
+  try {
+    localStorage.setItem('mq_landing_variant_seen', variant);
+  } catch {
+    /* noop */
+  }
 };
 
 export const useLandingABTest = (targetElement?: string) => {

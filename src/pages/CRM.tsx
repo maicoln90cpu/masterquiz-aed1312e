@@ -187,6 +187,12 @@ const CRM = () => {
         lead.id === leadId ? { ...lead, status: newStatus } : lead
       )
     );
+
+    // M10: trigger crm_interaction (mudança de status kanban)
+    import('@/lib/icpTracking').then(({ incrementProfileCounter }) => {
+      incrementProfileCounter('crm_interactions_count');
+    });
+
     toast.success(t('crm.toast.leadUpdated'));
   };
 
@@ -264,6 +270,11 @@ const CRM = () => {
       
       // GTM: LeadExported
       pushGTMEvent('LeadExported', { source: 'crm', count: leads.length });
+
+      // M10: trigger crm_interaction (exportação CSV/Excel)
+      import('@/lib/icpTracking').then(({ incrementProfileCounter }) => {
+        incrementProfileCounter('crm_interactions_count');
+      });
       
       toast.success(t('crm.toast.exportSuccess', { count: leads.length }));
     } catch (error) {
@@ -516,7 +527,13 @@ const CRM = () => {
             <CRMKanbanBoard
               leads={paginatedLeads}
               columns={columns}
-              onLeadClick={setSelectedLead}
+              onLeadClick={(lead) => {
+                setSelectedLead(lead);
+                // M10: trigger crm_interaction (clique em lead — abertura de detalhes)
+                import('@/lib/icpTracking').then(({ incrementProfileCounter }) => {
+                  incrementProfileCounter('crm_interactions_count');
+                });
+              }}
               onMoveLeadToStatus={moveLeadToStatus}
               selectedLeadsForComparison={selectedLeadsForComparison}
               onToggleLeadSelection={toggleLeadSelection}

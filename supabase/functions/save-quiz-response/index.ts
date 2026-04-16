@@ -173,6 +173,14 @@ Deno.serve(async (req) => {
               });
               console.log(`🎯 [Milestone] first_lead_received for user ${quiz.user_id}, insertError=${eventError?.message || 'none'}`);
 
+              // 🎯 M01: marca first_lead_received_at no profile (idempotente via RPC)
+              const { error: rpcError } = await supabase.rpc('mark_first_lead_received', { _owner_id: quiz.user_id });
+              if (rpcError) {
+                console.warn(`[M01] mark_first_lead_received failed: ${rpcError.message}`);
+              } else {
+                console.log(`🎯 [M01] first_lead_received_at marcado para ${quiz.user_id}`);
+              }
+
               // 🔔 Create upgrade notification for quiz owner (first real lead)
               // Check if notification already exists to avoid duplicates
               const { data: existingNotif } = await supabase
