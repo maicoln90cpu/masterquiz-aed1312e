@@ -1570,53 +1570,48 @@ export default function AdminDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="overview" className="w-full">
-          {/* 6 ABAS PRINCIPAIS */}
+          {/* 6 ABAS PRINCIPAIS — Reorganizadas por domínio funcional */}
           <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="overview" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
-              <span className="hidden sm:inline">Visão Geral</span>
+              <span className="hidden sm:inline">📊 Painel Geral</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2">
+            <TabsTrigger value="users" className="gap-2 relative">
               <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Usuários</span>
-            </TabsTrigger>
-            <TabsTrigger value="commercial" className="gap-2">
-              <DollarSign className="h-4 w-4" />
-              <span className="hidden sm:inline">Comercial</span>
-            </TabsTrigger>
-            <TabsTrigger value="content" className="gap-2">
-              <Palette className="h-4 w-4" />
-              <span className="hidden sm:inline">Conteúdo</span>
-            </TabsTrigger>
-            <TabsTrigger value="security" className="gap-2">
-              <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Segurança</span>
-            </TabsTrigger>
-            <TabsTrigger value="system" className="gap-2 relative">
-              <Cog className="h-4 w-4" />
-              <span className="hidden sm:inline">Sistema</span>
+              <span className="hidden sm:inline">👥 Usuários</span>
               {openTicketsCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-destructive rounded-full">
                   {openTicketsCount}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="observability" className="gap-2">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Observabilidade</span>
+            <TabsTrigger value="financial" className="gap-2">
+              <DollarSign className="h-4 w-4" />
+              <span className="hidden sm:inline">💰 Financeiro</span>
+            </TabsTrigger>
+            <TabsTrigger value="communications" className="gap-2">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">💬 Comunicações</span>
+            </TabsTrigger>
+            <TabsTrigger value="content" className="gap-2">
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">📝 Conteúdo & Marketing</span>
+            </TabsTrigger>
+            <TabsTrigger value="system" className="gap-2">
+              <Cog className="h-4 w-4" />
+              <span className="hidden sm:inline">⚙️ Sistema</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Alerta Global de Saúde do Sistema */}
           <SystemHealthAlert />
 
-          {/* ========== 1. VISÃO GERAL ========== */}
+          {/* ========== 1. 📊 PAINEL GERAL ========== */}
           <TabsContent value="overview">
             <AdminSubTabs
               tabs={[
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, color: 'blue' },
                 { id: 'growth', label: 'Growth', icon: <TrendingUp className="h-4 w-4" />, color: 'green' },
-                { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'emerald' },
                 { id: 'pql', label: 'PQL Analytics', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
                 { id: 'comparison', label: 'Comparação A×B', icon: <TrendingUp className="h-4 w-4" />, color: 'orange' },
               ]}
@@ -1630,7 +1625,6 @@ export default function AdminDashboard() {
                       <GrowthDashboard />
                     </Suspense>
                   )}
-                  {activeTab === 'reports' && renderReportsContent()}
                   {activeTab === 'pql' && (
                     <Suspense fallback={<ComponentLoader />}>
                       <PQLAnalytics />
@@ -1646,13 +1640,14 @@ export default function AdminDashboard() {
             </AdminSubTabs>
           </TabsContent>
 
-          {/* ========== 2. USUÁRIOS ========== */}
+          {/* ========== 2. 👥 USUÁRIOS ========== */}
           <TabsContent value="users">
             <AdminSubTabs
               tabs={[
                 { id: 'administrators', label: 'Administradores', icon: <Users className="h-4 w-4" />, color: 'purple' },
                 { id: 'respondents', label: 'Respondentes', icon: <MessageSquare className="h-4 w-4" />, color: 'cyan' },
                 { id: 'validations', label: 'Validações', icon: <CheckCircle className="h-4 w-4" />, color: 'green' },
+                { id: 'support', label: 'Suporte', icon: <MessageSquare className="h-4 w-4" />, color: 'red', badge: openTicketsCount },
               ]}
               defaultTab="administrators"
             >
@@ -1661,19 +1656,21 @@ export default function AdminDashboard() {
                   {activeTab === 'administrators' && renderAdministratorsContent()}
                   {activeTab === 'respondents' && renderRespondentsContent()}
                   {activeTab === 'validations' && renderValidationsContent()}
+                  {activeTab === 'support' && <SupportTicketsManager />}
                 </>
               )}
             </AdminSubTabs>
           </TabsContent>
 
-          {/* ========== 3. COMERCIAL ========== */}
-          <TabsContent value="commercial">
+          {/* ========== 3. 💰 FINANCEIRO ========== */}
+          <TabsContent value="financial">
             <AdminSubTabs
               tabs={[
                 { id: 'plans', label: 'Planos', icon: <Package className="h-4 w-4" />, color: 'yellow' },
                 { id: 'trials', label: 'Trials', icon: <Timer className="h-4 w-4" />, color: 'blue' },
-                { id: 'gateway', label: 'Gateway Pagamento', icon: <DollarSign className="h-4 w-4" />, color: 'green' },
-                { id: 'recovery', label: 'Recuperação de Clientes', icon: <RefreshCw className="h-4 w-4" />, color: 'cyan' },
+                { id: 'gateway', label: 'Pagamentos', icon: <DollarSign className="h-4 w-4" />, color: 'green' },
+                { id: 'reports', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, color: 'emerald' },
+                { id: 'costs', label: 'Custos', icon: <DollarSign className="h-4 w-4" />, color: 'orange' },
               ]}
               defaultTab="plans"
             >
@@ -1682,20 +1679,30 @@ export default function AdminDashboard() {
                   {activeTab === 'plans' && <PlanManagement />}
                   {activeTab === 'trials' && <TrialLogsViewer />}
                   {activeTab === 'gateway' && <PaymentGatewaySettings />}
-                  {activeTab === 'recovery' && <CustomerRecovery />}
+                  {activeTab === 'reports' && renderReportsContent()}
+                  {activeTab === 'costs' && <UnifiedCostsDashboard />}
                 </>
               )}
             </AdminSubTabs>
           </TabsContent>
 
-          {/* ========== 4. CONTEÚDO ========== */}
+          {/* ========== 4. 💬 COMUNICAÇÕES ========== */}
+          <TabsContent value="communications">
+            <Suspense fallback={<ComponentLoader />}>
+              <CustomerRecovery />
+            </Suspense>
+          </TabsContent>
+
+          {/* ========== 5. 📝 CONTEÚDO & MARKETING ========== */}
           <TabsContent value="content">
             <AdminSubTabs
               tabs={[
                 { id: 'templates', label: 'Templates', icon: <FileText className="h-4 w-4" />, color: 'pink' },
-                { id: 'ai', label: 'Configurações IA', icon: <Sparkles className="h-4 w-4" />, color: 'purple' },
+                { id: 'ai', label: 'Inteligência Artificial', icon: <Sparkles className="h-4 w-4" />, color: 'purple' },
                 { id: 'blog', label: 'Blog', icon: <BookOpen className="h-4 w-4" />, color: 'emerald' },
-                { id: 'costs', label: 'Custos', icon: <DollarSign className="h-4 w-4" />, color: 'green' },
+                { id: 'landing', label: 'Landing Page', icon: <Globe className="h-4 w-4" />, color: 'blue' },
+                { id: 'ab-testing', label: 'Testes A/B', icon: <FlaskConical className="h-4 w-4" />, color: 'orange' },
+                { id: 'tracking', label: 'Rastreamento', icon: <BarChart3 className="h-4 w-4" />, color: 'cyan' },
               ]}
               defaultTab="templates"
             >
@@ -1704,66 +1711,47 @@ export default function AdminDashboard() {
                   {activeTab === 'templates' && <TemplateManagement />}
                   {activeTab === 'ai' && <AISettings />}
                   {activeTab === 'blog' && <BlogManager />}
-                  {activeTab === 'costs' && <UnifiedCostsDashboard />}
+                  {activeTab === 'landing' && <LandingContentEditor />}
+                  {activeTab === 'ab-testing' && <LandingABTestDashboard />}
+                  {activeTab === 'tracking' && <TrackingConfiguration />}
                 </>
               )}
             </AdminSubTabs>
           </TabsContent>
 
-          {/* ========== 5. SEGURANÇA ========== */}
-          <TabsContent value="security">
-            <AdminSubTabs
-              tabs={[
-                { id: 'audit', label: 'Audit Logs', icon: <Shield className="h-4 w-4" />, color: 'red' },
-                { id: 'tracking', label: 'Tracking & CSP', icon: <BarChart3 className="h-4 w-4" />, color: 'orange' },
-              ]}
-              defaultTab="audit"
-            >
-              {(activeTab) => (
-                <>
-                  {activeTab === 'audit' && <AuditLogsViewer />}
-                  {activeTab === 'tracking' && (
-                    <div className="space-y-6">
-                      <TrackingConfiguration />
-                      <CSPViolationsPanel />
-                    </div>
-                  )}
-                </>
-              )}
-            </AdminSubTabs>
-          </TabsContent>
-
-          {/* ========== 6. SISTEMA ========== */}
+          {/* ========== 6. ⚙️ SISTEMA (última posição) ========== */}
           <TabsContent value="system">
             <AdminSubTabs
               tabs={[
-                { id: 'settings', label: 'Configurações', icon: <Settings className="h-4 w-4" />, color: 'blue' },
-                { id: 'landing', label: 'Landing Page', icon: <Globe className="h-4 w-4" />, color: 'emerald' },
-                { id: 'ab-testing', label: 'A/B Testing', icon: <FlaskConical className="h-4 w-4" />, color: 'purple' },
+                { id: 'settings', label: 'Configurações Gerais', icon: <Settings className="h-4 w-4" />, color: 'blue' },
                 { id: 'storage', label: 'Armazenamento', icon: <Package className="h-4 w-4" />, color: 'purple' },
-                { id: 'performance', label: 'Bundle Size', icon: <BarChart3 className="h-4 w-4" />, color: 'green' },
-                { id: 'support', label: 'Suporte', icon: <MessageSquare className="h-4 w-4" />, color: 'cyan', badge: openTicketsCount },
+                { id: 'security', label: 'Segurança', icon: <Shield className="h-4 w-4" />, color: 'red' },
+                { id: 'observability', label: 'Observabilidade', icon: <Activity className="h-4 w-4" />, color: 'green' },
               ]}
               defaultTab="settings"
             >
               {(activeTab) => (
                 <>
                   {activeTab === 'settings' && renderSettingsContent()}
-                  {activeTab === 'landing' && <LandingContentEditor />}
-                  {activeTab === 'ab-testing' && <LandingABTestDashboard />}
                   {activeTab === 'storage' && <BunnyStorageSettings />}
-                  {activeTab === 'performance' && <BundleSizeMonitor />}
-                  {activeTab === 'support' && <SupportTicketsManager />}
+                  {activeTab === 'security' && (
+                    <div className="space-y-6">
+                      <Suspense fallback={<ComponentLoader />}>
+                        <AuditLogsViewer />
+                      </Suspense>
+                      <Suspense fallback={<ComponentLoader />}>
+                        <CSPViolationsPanel />
+                      </Suspense>
+                    </div>
+                  )}
+                  {activeTab === 'observability' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <SystemMonitorTab />
+                    </Suspense>
+                  )}
                 </>
               )}
             </AdminSubTabs>
-          </TabsContent>
-
-          {/* ========== 7. OBSERVABILIDADE ========== */}
-          <TabsContent value="observability">
-            <Suspense fallback={<ComponentLoader />}>
-              <SystemMonitorTab />
-            </Suspense>
           </TabsContent>
         </Tabs>
       </div>
