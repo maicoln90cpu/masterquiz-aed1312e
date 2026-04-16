@@ -16,14 +16,17 @@ export interface GTMDiagnosticResult {
  * Step 1: Busca GTM ID configurado no banco (profiles do admin ou system_settings)
  */
 export async function fetchGTMId(): Promise<string | null> {
-  // Try system_settings first
-  const { data: settings } = await supabase
-    .from('system_settings' as any)
-    .select('value')
-    .eq('key', 'gtm_container_id')
+  // Check admin profile for GTM container ID
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('gtm_container_id')
+    .eq('id', user.id)
     .maybeSingle();
 
-  if (settings?.value) return settings.value as string;
+  return profile?.gtm_container_id ?? null;
 
   // Fallback: check admin profile
   const { data: { user } } = await supabase.auth.getUser();
