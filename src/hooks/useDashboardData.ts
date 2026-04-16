@@ -41,7 +41,8 @@ export const useDashboardStats = () => {
       const { data: quizzes, error: quizzesError } = await supabase
         .from('quizzes')
         .select('id, status')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .neq('creation_source', 'express_auto');
 
       if (quizzesError) throw quizzesError;
 

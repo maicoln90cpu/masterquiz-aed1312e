@@ -261,7 +261,7 @@ export function QuizViewResult({ quiz, finalResult, calculatorResult, questions,
             className="text-center py-4"
           >
             <a 
-              href="https://masterquiz.app" 
+              href="https://masterquiz.com.br" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
