@@ -47,6 +47,7 @@ const BundleSizeMonitor = lazy(() => import("@/components/admin/BundleSizeMonito
 const SystemHealthDashboard = lazy(() => import("@/components/admin/SystemHealthDashboard").then(m => ({ default: m.SystemHealthDashboard })));
 const HealthReport = lazy(() => import("@/components/admin/HealthReport").then(m => ({ default: m.HealthReport })));
 const SystemMonitorTab = lazy(() => import("@/components/admin/system/SystemMonitorTab").then(m => ({ default: m.SystemMonitorTab })));
+const ObservabilityTab = lazy(() => import("@/components/admin/system/ObservabilityTab").then(m => ({ default: m.ObservabilityTab })));
 const LandingContentEditor = lazy(() => import("@/components/admin/LandingContentEditor").then(m => ({ default: m.LandingContentEditor })));
 const LandingABTestDashboard = lazy(() => import("@/components/admin/LandingABTestDashboard").then(m => ({ default: m.LandingABTestDashboard })));
 const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m => ({ default: m.CustomerRecovery })));
@@ -1723,18 +1724,41 @@ export default function AdminDashboard() {
           <TabsContent value="system">
             <AdminSubTabs
               tabs={[
-                { id: 'settings', label: 'Configurações Gerais', icon: <Settings className="h-4 w-4" />, color: 'blue' },
-                { id: 'storage', label: 'Armazenamento', icon: <Package className="h-4 w-4" />, color: 'purple' },
-                { id: 'security', label: 'Segurança', icon: <Shield className="h-4 w-4" />, color: 'red' },
-                { id: 'observability', label: 'Observabilidade', icon: <Activity className="h-4 w-4" />, color: 'green' },
+                { id: 'health', label: '🩺 Saúde', icon: <Activity className="h-4 w-4" />, color: 'green' },
+                { id: 'observability', label: '📊 Observabilidade', icon: <BarChart3 className="h-4 w-4" />, color: 'blue' },
+                { id: 'database', label: '🗄️ Banco de Dados', icon: <FileText className="h-4 w-4" />, color: 'purple' },
+                { id: 'settings', label: '⚙️ Configurações', icon: <Settings className="h-4 w-4" />, color: 'orange' },
+                { id: 'gtm', label: '🔍 GTM / Diag.', icon: <Globe className="h-4 w-4" />, color: 'cyan' },
               ]}
-              defaultTab="settings"
+              defaultTab="health"
             >
               {(activeTab) => (
                 <>
-                  {activeTab === 'settings' && renderSettingsContent()}
-                  {activeTab === 'storage' && <BunnyStorageSettings />}
-                  {activeTab === 'security' && (
+                  {activeTab === 'health' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <SystemMonitorTab />
+                    </Suspense>
+                  )}
+                  {activeTab === 'observability' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <ObservabilityTab />
+                    </Suspense>
+                  )}
+                  {activeTab === 'database' && (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <p className="text-lg font-medium">🗄️ Banco de Dados</p>
+                      <p className="text-sm">Será implementado na Etapa 2</p>
+                    </div>
+                  )}
+                  {activeTab === 'settings' && (
+                    <div className="space-y-6">
+                      {renderSettingsContent()}
+                      <Suspense fallback={<ComponentLoader />}>
+                        <BunnyStorageSettings />
+                      </Suspense>
+                    </div>
+                  )}
+                  {activeTab === 'gtm' && (
                     <div className="space-y-6">
                       <Suspense fallback={<ComponentLoader />}>
                         <AuditLogsViewer />
@@ -1743,11 +1767,6 @@ export default function AdminDashboard() {
                         <CSPViolationsPanel />
                       </Suspense>
                     </div>
-                  )}
-                  {activeTab === 'observability' && (
-                    <Suspense fallback={<ComponentLoader />}>
-                      <SystemMonitorTab />
-                    </Suspense>
                   )}
                 </>
               )}
