@@ -189,14 +189,16 @@ const CreateQuizClassic = () => {
   useEffect(() => {
     const editQuizId = searchParams.get('id');
     if (editQuizId) {
-      loadExistingQuiz(editQuizId);
-      if (isExpressMode) {
-        updateEditor({ step: 3 });
-        updateUI({ showTemplateSelector: false, showAIGenerator: true });
-        fireOnce('express_started', { quiz_id: editQuizId });
-      } else if (isAIAutoOpen) {
-        updateUI({ showAIGenerator: true });
-      }
+      loadExistingQuiz(editQuizId).then(() => {
+        // ✅ Só abrir AI Generator APÓS quiz carregar (evita race condition onde quizId=null)
+        if (isExpressMode) {
+          updateEditor({ step: 3 });
+          updateUI({ showTemplateSelector: false, showAIGenerator: true });
+          fireOnce('express_started', { quiz_id: editQuizId });
+        } else if (isAIAutoOpen) {
+          updateUI({ showAIGenerator: true });
+        }
+      });
     }
   }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI, fireOnce]);
 

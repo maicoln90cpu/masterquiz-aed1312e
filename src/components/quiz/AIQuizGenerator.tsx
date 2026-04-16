@@ -669,7 +669,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
         {lockedMode && (
           <p className="text-sm text-muted-foreground mt-2">
             Prefere editar um template manualmente?{' '}
-            <button onClick={onBack} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
+            <button onClick={onBack} className="text-destructive font-semibold text-base hover:underline inline-flex items-center gap-1">
               Pular e usar template →
             </button>
           </p>
