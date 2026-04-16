@@ -83,7 +83,7 @@ export function WhatsAppConnection() {
     try {
       const { data, error } = await supabase
         .from('recovery_settings')
-        .select('id, is_connected, connection_status, instance_name, qr_code_base64, last_connection_check, evolution_api_url')
+        .select('id, is_connected, connection_status, instance_name, qr_code_base64, last_connection_check, evolution_api_url, forward_to_phone')
         .limit(1)
         .maybeSingle();
 
