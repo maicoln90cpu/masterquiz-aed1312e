@@ -185,6 +185,8 @@ const CreateQuizModern = () => {
     updateFormConfig,
     updateEditor,
     setQuestions,
+    loadExistingQuiz,
+    getQuizId: () => editorState.quizId,
   });
 
   // ✅ Load limits
@@ -202,14 +204,15 @@ const CreateQuizModern = () => {
     if (editQuizId) {
       loadExistingQuiz(editQuizId).then(() => {
         quizLoadedRef.current = true;
+        // ✅ Só abrir AI Generator APÓS quiz carregar (evita race condition onde quizId=null)
+        if (isExpressMode) {
+          updateEditor({ step: 3 });
+          updateUI({ showTemplateSelector: false, showAIGenerator: true });
+          fireOnce('express_started', { quiz_id: editQuizId });
+        } else if (isAIAutoOpen) {
+          updateUI({ showAIGenerator: true });
+        }
       });
-      if (isExpressMode) {
-        updateEditor({ step: 3 });
-        updateUI({ showTemplateSelector: false, showAIGenerator: true });
-        fireOnce('express_started', { quiz_id: editQuizId });
-      } else if (isAIAutoOpen) {
-        updateUI({ showAIGenerator: true });
-      }
     }
   }, [searchParams, loadExistingQuiz, isExpressMode, updateEditor, updateUI, fireOnce]);
 
