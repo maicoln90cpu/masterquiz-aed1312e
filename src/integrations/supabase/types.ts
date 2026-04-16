@@ -1245,68 +1245,89 @@ export type Database = {
       profiles: {
         Row: {
           account_created_event_sent: boolean | null
+          ai_used_on_real_quiz: boolean
           analytics_viewed_at: string | null
           company_slug: string | null
           created_at: string
           crm_viewed_at: string | null
           deleted_at: string | null
+          editor_sessions_count: number
           email: string | null
           facebook_pixel_id: string | null
           full_name: string | null
           gtm_container_id: string | null
           id: string
           login_count: number | null
+          paywall_hit_count: number
+          plan_limit_hit_type: string | null
+          quiz_shared_count: number
           stage_updated_at: string | null
           updated_at: string
+          upgrade_clicked_count: number
           user_objectives: string[] | null
           user_stage: string | null
           utm_campaign: string | null
           utm_medium: string | null
           utm_source: string | null
+          utm_term: string | null
           whatsapp: string | null
         }
         Insert: {
           account_created_event_sent?: boolean | null
+          ai_used_on_real_quiz?: boolean
           analytics_viewed_at?: string | null
           company_slug?: string | null
           created_at?: string
           crm_viewed_at?: string | null
           deleted_at?: string | null
+          editor_sessions_count?: number
           email?: string | null
           facebook_pixel_id?: string | null
           full_name?: string | null
           gtm_container_id?: string | null
           id: string
           login_count?: number | null
+          paywall_hit_count?: number
+          plan_limit_hit_type?: string | null
+          quiz_shared_count?: number
           stage_updated_at?: string | null
           updated_at?: string
+          upgrade_clicked_count?: number
           user_objectives?: string[] | null
           user_stage?: string | null
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
+          utm_term?: string | null
           whatsapp?: string | null
         }
         Update: {
           account_created_event_sent?: boolean | null
+          ai_used_on_real_quiz?: boolean
           analytics_viewed_at?: string | null
           company_slug?: string | null
           created_at?: string
           crm_viewed_at?: string | null
           deleted_at?: string | null
+          editor_sessions_count?: number
           email?: string | null
           facebook_pixel_id?: string | null
           full_name?: string | null
           gtm_container_id?: string | null
           id?: string
           login_count?: number | null
+          paywall_hit_count?: number
+          plan_limit_hit_type?: string | null
+          quiz_shared_count?: number
           stage_updated_at?: string | null
           updated_at?: string
+          upgrade_clicked_count?: number
           user_objectives?: string[] | null
           user_stage?: string | null
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
+          utm_term?: string | null
           whatsapp?: string | null
         }
         Relationships: []
@@ -3278,7 +3299,15 @@ export type Database = {
       }
       increment_blog_views: { Args: { p_slug: string }; Returns: undefined }
       increment_login_count: { Args: { p_user_id: string }; Returns: undefined }
+      increment_profile_counter: {
+        Args: { _column: string }
+        Returns: undefined
+      }
       record_login_event: { Args: { p_user_id: string }; Returns: undefined }
+      set_profile_first_value: {
+        Args: { _column: string; _value: string }
+        Returns: undefined
+      }
     }
     Enums: {
       answer_format:

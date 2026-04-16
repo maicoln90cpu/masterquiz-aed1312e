@@ -1068,6 +1068,7 @@ const CreateQuizClassic = () => {
                       navigator.clipboard.writeText(quizPublicUrl);
                       toast.success(t('createQuiz.linkCopied'));
                       pushGTMEvent('QuizShared', { method: 'link', quiz_id: quizId });
+                      import('@/lib/icpTracking').then(m => m.incrementProfileCounter('quiz_shared_count')); // M02
                     }}
                   >
                     <Copy className="h-4 w-4" />

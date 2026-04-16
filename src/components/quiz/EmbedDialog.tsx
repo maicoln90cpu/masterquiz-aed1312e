@@ -7,6 +7,7 @@ import { Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { incrementProfileCounter } from "@/lib/icpTracking";
 
 interface EmbedDialogProps {
   open: boolean;
@@ -39,6 +40,7 @@ export const EmbedDialog = ({ open, onOpenChange, quizSlug, companySlug }: Embed
     setCopied(true);
     toast.success("Código copiado!");
     pushGTMEvent('QuizShared', { method: 'embed', quiz_slug: quizSlug });
+    incrementProfileCounter('quiz_shared_count'); // M02
     setTimeout(() => setCopied(false), 2000);
   };
 

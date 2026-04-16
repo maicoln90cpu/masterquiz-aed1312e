@@ -586,6 +586,10 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
         questions_count: quizData.questions.length,
         source: aiSource,
       });
+      // M11: marcar uso de IA em quiz "real" (não Express)
+      if (aiSource !== 'express') {
+        import('@/lib/icpTracking').then(m => m.setProfileFlagTrue('ai_used_on_real_quiz'));
+      }
 
       toast.success(t('components.aiGenerator.quizCreated'));
       

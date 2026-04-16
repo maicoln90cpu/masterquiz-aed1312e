@@ -10,6 +10,7 @@ import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useTranslation } from "react-i18next";
 import { useSiteMode } from "@/hooks/useSiteMode";
+import { incrementProfileCounter } from "@/lib/icpTracking";
 
 interface Plan {
   id: string;
@@ -50,6 +51,7 @@ export default function Checkout() {
           source: 'checkout_page',
           mode: isModeB ? 'B' : 'A',
         });
+        incrementProfileCounter('paywall_hit_count'); // M04
       } catch {}
     })();
 
@@ -92,6 +94,7 @@ export default function Checkout() {
         price: plan.price_monthly,
         source: 'checkout_page',
       });
+      incrementProfileCounter('upgrade_clicked_count'); // M06
 
       // Use Mode B checkout URL if available
       const checkoutUrl = isModeB && plan.kiwify_checkout_url_mode_b
