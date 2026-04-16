@@ -187,6 +187,12 @@ const CRM = () => {
         lead.id === leadId ? { ...lead, status: newStatus } : lead
       )
     );
+
+    // M10: trigger crm_interaction (mudança de status kanban)
+    import('@/lib/icpTracking').then(({ incrementProfileCounter }) => {
+      incrementProfileCounter('crm_interactions_count');
+    });
+
     toast.success(t('crm.toast.leadUpdated'));
   };
 
@@ -264,6 +270,11 @@ const CRM = () => {
       
       // GTM: LeadExported
       pushGTMEvent('LeadExported', { source: 'crm', count: leads.length });
+
+      // M10: trigger crm_interaction (exportação CSV/Excel)
+      import('@/lib/icpTracking').then(({ incrementProfileCounter }) => {
+        incrementProfileCounter('crm_interactions_count');
+      });
       
       toast.success(t('crm.toast.exportSuccess', { count: leads.length }));
     } catch (error) {

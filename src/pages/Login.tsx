@@ -199,6 +199,15 @@ const Login = () => {
      
      // Flag para disparar evento GTM account_created no Dashboard
      localStorage.setItem('mq_just_registered', 'true');
+
+     // M09: grava landing_variant_seen no profile (idempotente — só grava se IS NULL)
+     try {
+       const variant = localStorage.getItem('mq_landing_variant_seen');
+       if (variant === 'A' || variant === 'B') {
+         const { setProfileFirstText } = await import('@/lib/icpTracking');
+         setProfileFirstText('landing_variant_seen', variant);
+       }
+     } catch { /* fire-and-forget */ }
      
     // No Modo B, novos usuários vão para /precos (checkout flow)
     // No Modo A, vão para /start (fast-path para criar primeiro quiz)
