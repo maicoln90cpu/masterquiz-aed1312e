@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock supabase BEFORE importing service
-const mockFrom = vi.fn();
-const mockRpc = vi.fn();
+const { mockFrom, mockRpc } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+  mockRpc: vi.fn(),
+}));
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: mockFrom,
