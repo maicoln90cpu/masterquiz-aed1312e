@@ -100,6 +100,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_activity_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       ai_quiz_generations: {
@@ -766,6 +773,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_recovery_contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_activity_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2275,6 +2289,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "recovery_contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_activity_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       recovery_settings: {
@@ -3263,11 +3284,49 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "whatsapp_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_activity_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      user_activity_summary: {
+        Row: {
+          active_quiz_count: number | null
+          ai_used_on_real_quiz: boolean | null
+          created_at: string | null
+          crm_interactions_count: number | null
+          days_since_signup: number | null
+          editor_sessions_count: number | null
+          email: string | null
+          first_lead_received_at: string | null
+          form_collection_configured_at: string | null
+          full_name: string | null
+          icp_score: number | null
+          landing_variant_seen: string | null
+          lead_count: number | null
+          login_count: number | null
+          payment_confirmed: boolean | null
+          paywall_hit_count: number | null
+          plan_limit_hit_type: string | null
+          plan_type: Database["public"]["Enums"]["plan_type"] | null
+          quiz_count: number | null
+          quiz_shared_count: number | null
+          upgrade_clicked_count: number | null
+          user_id: string | null
+          user_stage: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       anonymize_old_ips: { Args: never; Returns: number }
