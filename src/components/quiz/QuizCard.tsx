@@ -97,7 +97,7 @@ export function QuizCard({
             {quiz.title}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
-            {quiz.creation_source === 'express_auto' && (
+            {(quiz as any).creation_source === 'express_auto' && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-400 text-amber-600">
                 ⚡ Express
               </Badge>
