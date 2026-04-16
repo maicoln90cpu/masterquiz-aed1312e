@@ -47,15 +47,15 @@ export function useTestLead() {
       const randomEmail = `teste.${Date.now()}@exemplo.com`;
       const randomWhatsapp = `+5511${Math.floor(900000000 + Math.random() * 99999999)}`;
 
-      // Inserir lead de teste
-      const { data: lead, error } = await supabase
-        .from('quiz_responses')
-        .insert({
+      // Usar Edge Function para garantir que milestone events disparam
+      const sessionId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const { data: fnData, error } = await supabase.functions.invoke('save-quiz-response', {
+        body: {
           quiz_id: quizId,
+          session_id: sessionId,
           respondent_name: `🧪 ${randomName}`,
           respondent_email: randomEmail,
           respondent_whatsapp: randomWhatsapp,
-          lead_status: 'new',
           result_id: resultId,
           answers: { 
             _is_test_lead: true,
@@ -65,10 +65,13 @@ export function useTestLead() {
               version: '1.0'
             }
           },
-          custom_field_data: {}
-        })
-        .select('id')
-        .single();
+          custom_field_data: {},
+          is_final: true,
+        },
+      });
+
+      if (error) throw error;
+      const lead = fnData as { id?: string };
 
       if (error) throw error;
 
