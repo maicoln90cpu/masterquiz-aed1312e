@@ -458,6 +458,42 @@ export type Database = {
         }
         Relationships: []
       }
+      client_error_logs: {
+        Row: {
+          component_name: string | null
+          created_at: string
+          error_message: string
+          id: string
+          metadata: Json | null
+          stack_trace: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          component_name?: string | null
+          created_at?: string
+          error_message: string
+          id?: string
+          metadata?: Json | null
+          stack_trace?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          component_name?: string | null
+          created_at?: string
+          error_message?: string
+          id?: string
+          metadata?: Json | null
+          stack_trace?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       cookie_consents: {
         Row: {
           accepted_at: string
@@ -1173,6 +1209,36 @@ export type Database = {
           notify_weekly_report?: boolean | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      performance_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          id: string
+          is_slow: boolean | null
+          metadata: Json | null
+          operation_name: string
+          operation_type: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms: number
+          id?: string
+          is_slow?: boolean | null
+          metadata?: Json | null
+          operation_name: string
+          operation_type: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          is_slow?: boolean | null
+          metadata?: Json | null
+          operation_name?: string
+          operation_type?: string
         }
         Relationships: []
       }
