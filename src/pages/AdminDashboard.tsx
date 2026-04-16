@@ -46,6 +46,7 @@ const BunnyStorageSettings = lazy(() => import("@/components/admin/BunnyStorageS
 const BundleSizeMonitor = lazy(() => import("@/components/admin/BundleSizeMonitor").then(m => ({ default: m.BundleSizeMonitor })));
 const SystemHealthDashboard = lazy(() => import("@/components/admin/SystemHealthDashboard").then(m => ({ default: m.SystemHealthDashboard })));
 const HealthReport = lazy(() => import("@/components/admin/HealthReport").then(m => ({ default: m.HealthReport })));
+const SystemMonitorTab = lazy(() => import("@/components/admin/system/SystemMonitorTab").then(m => ({ default: m.SystemMonitorTab })));
 const LandingContentEditor = lazy(() => import("@/components/admin/LandingContentEditor").then(m => ({ default: m.LandingContentEditor })));
 const LandingABTestDashboard = lazy(() => import("@/components/admin/LandingABTestDashboard").then(m => ({ default: m.LandingABTestDashboard })));
 const CustomerRecovery = lazy(() => import("@/components/admin/recovery").then(m => ({ default: m.CustomerRecovery })));
@@ -1760,22 +1761,9 @@ export default function AdminDashboard() {
 
           {/* ========== 7. OBSERVABILIDADE ========== */}
           <TabsContent value="observability">
-            <AdminSubTabs
-              tabs={[
-                { id: 'health', label: 'Saúde do Sistema', icon: <Activity className="h-4 w-4" />, color: 'green' },
-                { id: 'report', label: 'Relatório Consolidado', icon: <FileText className="h-4 w-4" />, color: 'blue' },
-                { id: 'gtm-events', label: 'Eventos GTM', icon: <BarChart3 className="h-4 w-4" />, color: 'purple' },
-              ]}
-              defaultTab="health"
-            >
-              {(activeTab) => (
-                <>
-                  {activeTab === 'health' && <SystemHealthDashboard />}
-                  {activeTab === 'report' && <HealthReport />}
-                  {activeTab === 'gtm-events' && <Suspense fallback={<ComponentLoader />}><GTMEventsDashboard /></Suspense>}
-                </>
-              )}
-            </AdminSubTabs>
+            <Suspense fallback={<ComponentLoader />}>
+              <SystemMonitorTab />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>
