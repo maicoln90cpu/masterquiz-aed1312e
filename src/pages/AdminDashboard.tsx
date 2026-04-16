@@ -58,6 +58,7 @@ const BlogManager = lazy(() => import("@/components/admin/blog/BlogManager"));
 const GTMEventsDashboard = lazy(() => import("@/components/admin/GTMEventsDashboard"));
 const AdminDashboardCharts = lazy(() => import("@/components/admin/AdminDashboardCharts").then(m => ({ default: m.AdminDashboardCharts })));
 const UnifiedCostsDashboard = lazy(() => import("@/components/admin/UnifiedCostsDashboard").then(m => ({ default: m.UnifiedCostsDashboard })));
+const ICPInsightsTab = lazy(() => import("@/components/admin/users/ICPInsightsTab"));
 import { TrialModal } from "@/components/admin/TrialModal";
 const TrialLogsViewer = lazy(() => import("@/components/admin/TrialLogsViewer").then(m => ({ default: m.TrialLogsViewer })));
 const GrowthDashboard = lazy(() => import("@/components/admin/GrowthDashboard").then(m => ({ default: m.GrowthDashboard })));
