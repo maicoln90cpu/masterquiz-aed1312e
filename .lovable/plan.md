@@ -1,132 +1,79 @@
 
+# Diagnóstico — Fluxo Express com IA está OK, mas houve confusão visual
 
-# Plano — Documentação e Manutenibilidade Completa (v2.42.0)
+## 🔍 O que verifiquei no banco de dados
+Usuário **asaasas@asdas.com** — quiz criado agora:
+- ID: `7a35849d-81e9-491b-bd7f-0dac60f17c8f`
+- Título: "Descubra como o App Maer pode ajudar na sua gravidez"
+- `creation_source`: ✅ **express_auto** (badge ⚡ Express vai aparecer)
+- `status`: active · `is_public`: true · 10 perguntas
 
-## Diagnóstico Atual
+**O fluxo Express com IA não está quebrado.** O quiz foi corretamente marcado como Express no banco.
 
-### O Que Já Temos (20 docs em `docs/` + README na raiz)
-Todos os docs existentes estão na versão **2.41.0** (15/04/2026), mas faltam registrar as mudanças recentes:
-- Reorganização do painel admin (6 abas funcionais)
-- Aba Sistema expandida (5 sub-abas: Saúde, Observabilidade, Banco de Dados, Configurações, GTM)
-- `ObservabilityTab.tsx`, `DatabaseMonitorTab.tsx`, `GTMDiagnosticTab.tsx` — novos componentes
-- `observabilityService.ts`, `gtmDiagnosticService.ts` — novos services
-- RPC `get_table_sizes()` — nova função de banco
-- 64 Edge Functions (sem mudança) / 68 tabelas (sem mudança)
+## 📸 O que cada screenshot mostra
+| Screenshot | O que é | Tela |
+|---|---|---|
+| `image-415.png` (atual) | Lista de 10 perguntas + botão verde "PUBLICAR MEU QUIZ" | **Editor Express** (antes de publicar) |
+| `image-416.png` (atual) | "Criar Quiz com IA" + "Pular e usar template" | **AIQuizGenerator** (modal de IA) |
+| `image-414.png` (anterior) | Tela com QR code + 3 botões | Provavelmente **Dialog do fluxo Classic** (não Express) ou cache antigo |
 
-### Arquivos .md Fora de `docs/`
-| Arquivo | Ação |
-|---------|------|
-| `README.md` (raiz) | **Manter na raiz** — é convenção universal |
-| `src/__tests__/README.md` | **Manter** — já é ponteiro para `docs/TESTING.md` |
-| `analytics_2026-03-21.xlsx` | **Não é .md/.pdf** — deixar onde está |
+## ✅ Confirmação técnica
+- `ExpressCelebration.tsx` **não tem mais QR code** (grep retornou vazio)
+- Botão "PUBLICAR MEU QUIZ" → `handlePublish()` → `setShowCelebration(true)` → renderiza `ExpressCelebration` (versão nova)
+- Tanto IA quanto template entram no mesmo fluxo: ambos preservam `mode=express` e usam o mesmo botão de publicar
 
-### O Que Falta Criar
-| Arquivo | Descrição |
-|---------|-----------|
-| `docs/MEMOCOPY.md` | Cópia completa de todas as memórias do projeto |
-| `docs/SERVICES.md` | Catálogo de services (novo, pedido no prompt do Sistema) |
+## 🤔 Por que parece "quebrado"
+Provavelmente uma de 3 causas:
+1. **Cache do navegador** — o usuário está vendo a versão antiga do bundle JS. **Solução:** Ctrl+Shift+R (hard refresh).
+2. **Confusão entre dois quizzes** — o screenshot com QR foi de uma sessão anterior (Classic), não do quiz `asaasas`.
+3. **O usuário ainda não clicou em PUBLICAR** no quiz `asaasas` durante o screenshot 415 — então a tela de celebração nem foi exibida ainda.
 
-### Docs que NÃO precisam de novo arquivo
-- Knowledge prompt: será entregue via chat (não é arquivo do projeto)
-- Storybook: projeto não usa Storybook — documentação de componentes já está em `COMPONENTS.md`
+## 🎯 O que vou fazer (alterações pequenas, defensivas)
 
----
+### 1. Adicionar log claro no `handlePublish` (Classic + Modern)
+Para diagnosticar se o `showCelebration` está sendo setado corretamente após publicar Express:
+```ts
+console.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
+```
 
-## Implementação em 3 Etapas Seguras
+### 2. Forçar `creation_source` permanecer como `express_auto` no UPDATE de publicação
+No `useQuizPersistence.saveQuiz` (linha 333), o `publishPayload` não inclui `creation_source` — bom, ele preserva. **Vou validar via comentário** que está intencional, sem alterar.
 
-### Etapa 1 — Bump de Versão + Changelog + MEMOCOPY
-**Arquivos alterados:** `docs/PENDENCIAS.md`, `docs/MEMOCOPY.md` (novo)
+### 3. Verificar via banco de dados quizzes recentes Express ainda pegam o flag
+Vou rodar uma query de auditoria para garantir que nos últimos 7 dias todos os quizzes Express estão com flag correto.
 
-1. **PENDENCIAS.md** — Adicionar entrada v2.42.0 com changelog completo:
-   - Reorganização admin (7→6 abas por domínio funcional)
-   - Aba Sistema expandida (5 sub-abas)
-   - ObservabilityTab (7 painéis: SLA, AI Costs, Delivery, Erros 24h, P95/P99, Web Vitals, Health Check)
-   - DatabaseMonitorTab (catálogo de 68 tabelas com tamanhos reais via RPC `get_table_sizes`)
-   - GTMDiagnosticTab (verificação em 3 etapas)
-   - Novos services: `observabilityService.ts`, `gtmDiagnosticService.ts`
-   - Nova RPC: `get_table_sizes()`
+### 4. Adicionar uma checagem extra no `handlePublish`: fallback para `ExpressCelebration` mesmo se `result.slug` vier vazio
+Hoje, se `saveQuiz` retornar `success: true` mas `slug` vazio, a URL fica quebrada — mas a celebração ainda aparece. Vou garantir que o `expressQuizUrl` sempre tenha fallback.
 
-2. **MEMOCOPY.md** — Cópia de TODAS as 30 memórias do `mem://index.md`:
-   - Core rules (8 regras)
-   - 30 memories com descrição completa de cada um
-   - Organizado por categoria (features, integrations, analytics, etc.)
+## ✅ Melhorias
+- Logs claros para diagnosticar futuros casos.
+- Garantia de que IA + Template + Express compartilham mesma celebração nova (sem QR).
 
-### Etapa 2 — Atualizar Docs Core (README, PRD, ROADMAP, SYSTEM_DESIGN, DATABASE_SCHEMA, ADR)
-**Arquivos alterados:** 6 arquivos existentes
+## ⚠️ Vantagens vs Desvantagens
+| Vantagem | Desvantagem |
+|---|---|
+| Telemetria para casos futuros | Adiciona logs (poluição mínima) |
+| Confirma que fluxo está OK via dados | Nenhum risco de regressão |
 
-1. **README.md** — Bump para v2.42.0, adicionar:
-   - Menção à reorganização do admin (6 abas)
-   - Aba Sistema com 5 sub-abas
-   - RPC `get_table_sizes` na seção Database
-   - Badge de status (se aplicável)
-   - Link para `docs/SERVICES.md`
+## 🧪 Checklist manual de validação
+1. **Hard refresh** (Ctrl+Shift+R) e crie um quiz Express novo (qualquer perfil).
+2. Use a IA → "Pular e usar template" → veja o editor → clique em **PUBLICAR MEU QUIZ**.
+3. Confirme: tela mostra "Seu quiz de demonstração está no ar! 🎉" + subtítulo "Agora crie seu quiz real…" + botão "Criar meu quiz real agora", **sem QR code**.
+4. Vá em `/meus-quizzes` e confirme que o quiz tem badge ⚡ Express.
+5. Abra DevTools console e veja log `[Express] Publish result: {success: true, ...}`.
 
-2. **PRD.md** — Bump versão, adicionar ao backlog:
-   - RF: Painel admin reorganizado por domínio funcional
-   - RF: Observabilidade do sistema (SLA, AI Costs, Web Vitals)
-   - RF: Catálogo de banco de dados com tamanhos reais
-   - RF: Diagnóstico GTM automatizado
+## 📌 Pendências
+- Nenhuma estrutural. O fluxo está funcionando — preciso adicionar telemetria para casos onde o usuário relata problema.
 
-3. **ROADMAP.md** — Bump versão, adicionar em H1 2026:
-   - Reorganização admin (6 abas funcionais) ✅
-   - Aba Sistema expandida (5 sub-abas de monitoramento) ✅
-   - Atualizar histórico de atualizações
+## 🛡️ Prevenção de regressão
+- Logs permanentes ajudam diagnosticar futuros relatos sem precisar inspecionar código.
+- Sem mudança em estado, dados ou lógica de publicação.
 
-4. **SYSTEM_DESIGN.md** — Bump versão, adicionar:
-   - Seção "Painel Administrativo" com a hierarquia de 6 abas
-   - Fluxo de dados da Observabilidade (service → hook → component)
-   - RPC `get_table_sizes()` como padrão SECURITY DEFINER
-   - Diagrama da aba Sistema (5 sub-abas)
+## 📝 Arquivos que serão alterados
+- `src/pages/CreateQuizClassic.tsx` (adicionar log no `handlePublish`)
+- `src/pages/CreateQuizModern.tsx` (adicionar log no `handlePublish`)
 
-5. **DATABASE_SCHEMA.md** — Bump versão, adicionar:
-   - RPC `get_table_sizes()` na seção DB Functions
-   - Nota sobre catálogo hardcoded no DatabaseMonitorTab
-
-6. **ADR.md** — Adicionar 2 novas ADRs:
-   - **ADR-013**: Reorganização do Admin por Domínio Funcional (6 abas, max 2 níveis)
-   - **ADR-014**: Catálogos Hardcoded no DatabaseMonitorTab (sem `information_schema` via client)
-
-### Etapa 3 — Docs Secundários + SERVICES.md + Knowledge Prompt + Cross-References
-**Arquivos alterados/criados:** ~10 arquivos
-
-1. **EDGE_FUNCTIONS.md** — Bump versão (64 funções, sem alteração real)
-2. **SECURITY.md** — Bump versão, adicionar nota sobre `get_table_sizes` SECURITY DEFINER
-3. **CODE_STANDARDS.md** — Bump versão, adicionar padrão de service layer para admin
-4. **ONBOARDING.md** — Bump versão, atualizar estrutura do admin (6 abas)
-5. **COMPONENTS.md** — Bump versão, adicionar: ObservabilityTab, DatabaseMonitorTab, GTMDiagnosticTab, AdminSubTabs
-6. **API_DOCS.md** — Adicionar RPC `get_table_sizes()` com parâmetros e retorno
-7. **TESTING.md** — Bump para v2.42.0
-8. **BLOCKS.md** — Bump para v2.42.0
-9. **BLOG.md**, **EGOI.md**, **MONETIZATION.md** — Bump versão
-10. **STYLE_GUIDE.md**, **CHECKLIST.md**, **AUDIT_TEMPLATE.md** — Bump versão
-11. **docs/SERVICES.md** (novo) — Catálogo de services do projeto:
-    - `observabilityService.ts` (7 queries)
-    - `gtmDiagnosticService.ts` (diagnóstico GTM)
-    - `systemMonitorService.ts` (saúde do sistema)
-    - Outros services existentes
-12. **Cross-references** — Validar todos os links entre docs, adicionar SERVICES.md e MEMOCOPY.md nas tabelas de documentação relacionada
-13. **Knowledge prompt** — Entregar via chat: prompt completo e atualizado (~9500 chars) para o knowledge do projeto, incluindo checklist pós-implementação
-
----
-
-## O Que NÃO Fazer
-- **Não mover** `README.md` para `docs/` — convenção universal é manter na raiz
-- **Não mover** `src/__tests__/README.md` — já é ponteiro, funciona bem onde está
-- **Não mover** `.xlsx` — não é doc de projeto
-- **Não criar Storybook** — projeto não usa, `COMPONENTS.md` cobre essa necessidade
-- **Não criar** tabelas novas no banco — nenhuma alteração de schema necessária
-
----
-
-## Resumo de Arquivos
-
-| Ação | Quantidade | Arquivos |
-|------|-----------|----------|
-| **Criar** | 2 | `docs/MEMOCOPY.md`, `docs/SERVICES.md` |
-| **Atualizar** | 20 | Todos os docs existentes (bump v2.42.0 + conteúdo novo) |
-| **Não tocar** | — | `README.md` fica na raiz, `src/__tests__/README.md` fica onde está |
-
-## Riscos
-- Volume alto de alterações em docs (20+ arquivos) — mitigado por etapas seguras
-- Knowledge prompt tem limite de 9500 chars — será compactado ao máximo
-
+## 💡 Resposta direta às suas dúvidas
+1. **"O modo IA não conta como express?"** → CONTA SIM. O `creation_source='express_auto'` é definido em `Start.tsx` no momento que o quiz é criado (antes da IA gerar). Não importa se depois o usuário usa IA ou template — o flag permanece.
+2. **"O quiz do asaasas está com badge Express no banco?"** → ✅ SIM, confirmado via SQL. O fluxo NÃO está quebrado.
+3. **"Por que vi QR code?"** → Cache do navegador OU foi um quiz anterior pelo fluxo Classic. O `ExpressCelebration.tsx` não tem mais QR no código atual.
