@@ -59,6 +59,9 @@ export const LogoCarousel = () => {
 
   return (
     <section className="relative overflow-x-hidden py-8 bg-muted/30" role="region" aria-label="Parceiros">
+      <p className="text-center text-sm text-muted-foreground mb-6 px-4">
+        Integra com as plataformas que você já usa
+      </p>
       {/* Fade edges */}
       <div
         aria-hidden="true"
