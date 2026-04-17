@@ -145,6 +145,16 @@ Q4 2025: Expansão Internacional
   - Diagnóstico GTM automatizado (3 etapas com retry)
   - Service layer: `observabilityService.ts`, `gtmDiagnosticService.ts`
   - Documentação overhaul: 20+ docs, MEMOCOPY.md, SERVICES.md, ADR-013/014
+- **Página `/compare` SEO + A/B Test + Doc Overhaul** (v2.42.0 → 17/04/2026) ✅
+  - Landing page comparativa estática (hero + tabela 18×4 + FAQ + CTA)
+  - JSON-LD Schema.org (Product + Offer) para rich snippets
+  - A/B test no CTA reusando `landing_ab_tests`
+  - Inclusão automática em `blog-sitemap.xml`
+  - JSDoc completo nos 6 hooks core (useCurrentUser, useEffectiveUser, useUserRole, useEditorLayout, useSiteMode, useRateLimit)
+  - TypeDoc configurado (`npm run docs:api` → `docs/api/`)
+  - Novo doc `HOOKS.md` (catálogo de 60+ hooks)
+  - ADR-015 (compare estático), ADR-016 (reuso A/B infra)
+  - CHANGELOG.md na raiz seguindo Keep a Changelog
 
 ### H2 2026
 - Expansão para EUA
@@ -172,6 +182,7 @@ Q4 2025: Expansão Internacional
 
 | Data | Alteração |
 |------|-----------|
+| 2026-04-17 | **v2.42.0 — `/compare` SEO + A/B + JSDoc + TypeDoc + HOOKS.md + CHANGELOG.md** |
 | 2026-04-16 | **v2.42.0 — Painel Admin Reorganizado + Sistema de Monitoramento + Docs Overhaul** |
 | 2026-04-15 | **v2.41.0 — GTM Centralizado + Growth Dashboard + 3 novas EFs + Docs Overhaul (68 tabelas, 64 EFs)** |
 | 2026-04-14 | **v2.40.0 — Suporte Avançado + Visual Diff + Block Editor + Notificações + PDF Report + 6 novos docs** |

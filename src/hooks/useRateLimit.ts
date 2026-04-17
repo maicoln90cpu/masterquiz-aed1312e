@@ -8,8 +8,20 @@ interface RateLimitResult {
 }
 
 /**
- * Hook para verificar rate limiting antes de ações críticas
- * @returns {Object} Objeto com função checkRateLimit
+ * Hook para verificar rate limiting antes de ações críticas (signup, AI gen, webhooks).
+ *
+ * Invoca a Edge Function `rate-limiter`, que persiste contadores em
+ * `rate_limit_tracker`. Estratégia **fail-open**: em caso de erro de rede,
+ * a ação é permitida (preferimos UX a bloqueio falso).
+ *
+ * @returns `{ checkRateLimit(action, identifier): Promise<{ allowed, retryAfter? }> }`
+ *
+ * @example
+ * ```tsx
+ * const { checkRateLimit } = useRateLimit();
+ * const { allowed } = await checkRateLimit('ai_generation', user.id);
+ * if (!allowed) return; // toast de erro já foi exibido pelo hook
+ * ```
  */
 export const useRateLimit = () => {
   const { t } = useTranslation();
