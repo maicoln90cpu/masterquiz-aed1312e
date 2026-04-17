@@ -3170,6 +3170,18 @@ const pt = {
       tip: "Dica: No dashboard você pode acompanhar respostas, configurar integrações e muito mais.",
     },
   },
+  planLimitBanner: {
+    title: "{{count}} {{label}} bloqueados{{context}}",
+    description: "Esses {{label}} estão salvos na sua conta, mas o seu plano atual não permite visualizá-los. Faça upgrade para liberar o acesso completo.",
+    cta: "Ver planos",
+    labels: {
+      leads: "leads",
+      responses: "respostas",
+      sessions: "sessões",
+      completions: "conclusões",
+      starts: "sessões iniciadas",
+    },
+  },
 };
 
 const en = {
