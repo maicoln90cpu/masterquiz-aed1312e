@@ -724,10 +724,10 @@ Consultar histórico detalhado nos commits e no ROADMAP.md.
 ## 🔄 Pendências Abertas
 
 ### Prioridade Alta
-- [ ] Internacionalização: remover strings hardcoded restantes
+- [ ] Internacionalização: remover strings hardcoded do painel admin (51 arquivos, ~1160 strings — só PT-BR)
 - [ ] 2FA implementation
-- [ ] Migrar eventos GTM legados para pushGTMEvent (landing, tracking, vitals)
-- [ ] Testar rotação de prompts de imagem em produção (validar variedade visual)
+- [x] ~~Migrar eventos GTM legados para pushGTMEvent~~ ✅ **Validado em 2026-04-17**: 100% migrado. Apenas `gtmLogger.ts` (helper), `gtmDiagnosticService.ts` (leitura) e `GTMDiagnosticTab.tsx` (UI) referenciam dataLayer. Proteção ESLint `no-restricted-syntax` adicionada.
+- [x] ~~Testar rotação de prompts de imagem em produção~~ ✅ **Validado em 2026-04-17**: 6 estilos cadastrados, 4 já usados (Flat Lay 4×, Conceitual 4×, 3D 3×, Pessoa Real 3×), 2 virgens (Gradiente, Bold Flat). Anti-repetição funcionando, `usage_count` incrementando corretamente.
 
 ### Prioridade Média
 - [ ] API pública v1
