@@ -254,7 +254,7 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
           transition={{ delay: 0.9 }}
           className="text-xs text-muted-foreground"
         >
-          {t('express.celebration.tip', 'Dica: No dashboard você pode acompanhar respostas, configurar integrações e muito mais.')}
+          {t('express.celebration.demoActiveTip', 'Seu quiz de demonstração continua ativo e pode ser editado no painel quando quiser.')}
         </motion.p>
       </motion.div>
     </div>
