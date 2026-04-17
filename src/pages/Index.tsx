@@ -69,7 +69,7 @@ const Index = () => {
   const { isModeB } = useSiteMode();
 
   useEffect(() => {
-    document.title = "MasterQuizz - Quizzes que qualificam leads antes do checkout";
+    document.title = "MasterQuiz - Quizzes que qualificam leads antes do checkout";
   }, []);
 
   const personas = [

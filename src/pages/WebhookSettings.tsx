@@ -93,7 +93,7 @@ const WebhookSettings = () => {
         timestamp: new Date().toISOString(),
         data: {
           test: true,
-          message: 'Este é um webhook de teste do MasterQuizz'
+          message: 'Este é um webhook de teste do MasterQuiz'
         }
       };
 

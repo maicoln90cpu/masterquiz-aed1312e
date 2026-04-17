@@ -23,7 +23,7 @@ async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ s
 
 async function sendBulk(apiKey: string, batch: Array<{ senderId: string; senderName: string; to: string; subject: string; htmlBody: string }>): Promise<number> {
   const payload = batch.map(item => ({
-    domain: 'masterquizz.com',
+    domain: 'masterquiz.com',
     senderId: item.senderId,
     senderName: item.senderName,
     to: [item.to],
@@ -115,8 +115,8 @@ Deno.serve(async (req) => {
     const { subject: baseSubject, html: baseHtml } = await genResponse.json();
 
     const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
-    const senderEmail = settings?.sender_email || 'noreply@masterquizz.com';
-    const senderName = settings?.sender_name || 'MasterQuizz';
+    const senderEmail = settings?.sender_email || 'noreply@masterquiz.com';
+    const senderName = settings?.sender_name || 'MasterQuiz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) throw new Error('No sender in E-goi');
 

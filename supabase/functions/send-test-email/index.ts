@@ -59,8 +59,8 @@ Deno.serve(async (req) => {
 
     // Load settings
     const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
-    const senderEmail = settings?.sender_email || 'noreply@masterquizz.com';
-    const senderName = settings?.sender_name || 'MasterQuizz';
+    const senderEmail = settings?.sender_email || 'noreply@masterquiz.com';
+    const senderName = settings?.sender_name || 'MasterQuiz';
 
     // Resolve senderId from E-goi
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
       '{quiz_count}': '3',
       '{lead_count}': '42',
       '{plan_name}': 'Pro',
-      '{company_name}': 'MasterQuizz',
+      '{company_name}': 'MasterQuiz',
       '{login_link}': 'https://masterquiz.lovable.app/login',
       '{support_link}': 'https://masterquiz.lovable.app/faq',
     };

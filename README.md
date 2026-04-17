@@ -91,7 +91,7 @@
 ## 🏗 Arquitetura
 
 ```
-masterquizz/
+masterquiz/
 ├── docs/
 │   ├── SYSTEM_DESIGN.md      # Arquitetura e fluxos técnicos
 │   ├── AUDIT_TEMPLATE.md     # Template de auditoria
@@ -666,7 +666,7 @@ chore: atualiza dependências
 
 ## 📄 Licença
 
-Proprietary - MasterQuizz © 2025-2026
+Proprietary - MasterQuiz © 2025-2026
 
 ---
 

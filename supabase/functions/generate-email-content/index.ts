@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const LOGO_URL = 'https://kmmdzwoidakmbekqvkmq.supabase.co/storage/v1/object/public/quiz-media/brand/masterquizz-logo.png';
+const LOGO_URL = 'https://kmmdzwoidakmbekqvkmq.supabase.co/storage/v1/object/public/quiz-media/brand/masterquiz-logo.png';
 const LOGIN_URL = 'https://masterquiz.lovable.app/login';
 const BLOG_URL = 'https://masterquiz.lovable.app/blog';
 const SUPABASE_URL = 'https://kmmdzwoidakmbekqvkmq.supabase.co';
@@ -27,7 +27,7 @@ function wrapInEmailLayout(bodyHtml: string, preheader: string = '', email: stri
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MasterQuizz</title>
+<title>MasterQuiz</title>
 <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 </head>
 <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
@@ -38,7 +38,7 @@ ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;">${prehead
 
 <!-- Header -->
 <tr><td style="background:linear-gradient(135deg,#0f9b6e,#0d8b62);padding:30px;text-align:center;">
-<img src="${LOGO_URL}" alt="MasterQuizz" width="180" style="max-width:180px;height:auto;">
+<img src="${LOGO_URL}" alt="MasterQuiz" width="180" style="max-width:180px;height:auto;">
 </td></tr>
 
 <!-- Body -->
@@ -48,8 +48,8 @@ ${bodyHtml}
 
 <!-- Footer -->
 <tr><td style="background-color:#f8f9fa;padding:20px 40px;text-align:center;border-top:1px solid #e9ecef;">
-<p style="margin:0;color:#6c757d;font-size:12px;">© ${new Date().getFullYear()} MasterQuizz — Todos os direitos reservados</p>
-<p style="margin:8px 0 0;color:#999;font-size:11px;">Você recebeu este email porque é usuário da plataforma MasterQuizz.</p>
+<p style="margin:0;color:#6c757d;font-size:12px;">© ${new Date().getFullYear()} MasterQuiz — Todos os direitos reservados</p>
+<p style="margin:8px 0 0;color:#999;font-size:11px;">Você recebeu este email porque é usuário da plataforma MasterQuiz.</p>
 <p style="margin:8px 0 0;"><a href="${unsub}" style="color:#999;font-size:11px;text-decoration:underline;">Cancelar inscrição</a></p>
 </td></tr>
 
@@ -272,7 +272,7 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
           body: JSON.stringify({
             model: 'google/gemini-3-flash-preview',
             messages: [
-              { role: 'system', content: 'Você cria cases de sucesso fictícios mas realistas para a plataforma MasterQuizz. Os cases devem ser sobre empresas/profissionais que usaram quizzes interativos para captar leads. Use métricas realistas. Responda em JSON com a estrutura: {"company":"Nome da Empresa","industry":"Setor","challenge":"Desafio em 1 frase","solution":"Como usou MasterQuizz em 2 frases","results":[{"metric":"Nome da métrica","value":"Valor","improvement":"% melhora"}],"quote":"Depoimento fictício em 1 frase"}' },
+              { role: 'system', content: 'Você cria cases de sucesso fictícios mas realistas para a plataforma MasterQuiz. Os cases devem ser sobre empresas/profissionais que usaram quizzes interativos para captar leads. Use métricas realistas. Responda em JSON com a estrutura: {"company":"Nome da Empresa","industry":"Setor","challenge":"Desafio em 1 frase","solution":"Como usou MasterQuiz em 2 frases","results":[{"metric":"Nome da métrica","value":"Valor","improvement":"% melhora"}],"quote":"Depoimento fictício em 1 frase"}' },
               { role: 'user', content: `Crie um case de sucesso. Métricas médias da plataforma: ${JSON.stringify(context.platformStats || { avg_leads: 85, avg_quizzes: 3 })}` },
             ],
             tools: [{
@@ -296,7 +296,7 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
           }),
         });
 
-        let caseData = { company: 'DigitalBoost', industry: 'Marketing', challenge: 'Baixa conversão de leads', solution: 'Criou quizzes de qualificação com MasterQuizz.', results: [{ metric: 'Leads', value: '340%', improvement: '+240%' }], quote: 'MasterQuizz transformou nossa captação.' };
+        let caseData = { company: 'DigitalBoost', industry: 'Marketing', challenge: 'Baixa conversão de leads', solution: 'Criou quizzes de qualificação com MasterQuiz.', results: [{ metric: 'Leads', value: '340%', improvement: '+240%' }], quote: 'MasterQuiz transformou nossa captação.' };
         if (aiResponse.ok) {
           const aiResp = await aiResponse.json();
           // Log AI cost
@@ -323,7 +323,7 @@ ${makeButton('Acessar meu painel', LOGIN_URL)}`;
 <p style="margin:8px 0 0;color:#555;line-height:1.7;">${caseData.challenge}</p>
 </div>
 <div style="background:#f0faf6;border-radius:8px;padding:20px 24px;margin:20px 0;">
-<p style="margin:0;font-weight:bold;color:#0f9b6e;">✅ Solução com MasterQuizz:</p>
+<p style="margin:0;font-weight:bold;color:#0f9b6e;">✅ Solução com MasterQuiz:</p>
 <p style="margin:8px 0 0;color:#555;line-height:1.7;">${caseData.solution}</p>
 </div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;background:#f8f9fa;border-radius:8px;">
@@ -347,7 +347,7 @@ ${makeButton('Criar meu quiz agora', LOGIN_URL)}`;
         const growthEmoji = growthPct > 0 ? '📈' : growthPct < 0 ? '📉' : '➡️';
         const monthName = context.monthName || 'mês anterior';
 
-        subject = `📊 Seu resumo de ${monthName} — MasterQuizz`;
+        subject = `📊 Seu resumo de ${monthName} — MasterQuiz`;
         preheader = `${leads} leads captados, ${quizzes} quizzes ativos`;
 
         let insight = 'Continue criando quizzes de qualidade para manter seus resultados!';
@@ -424,7 +424,7 @@ ${makeButton('Ver meu painel completo', LOGIN_URL)}`;
           }
         } catch { /* use raw list */ }
 
-        subject = `🚀 Novidades MasterQuizz${version ? ` — ${version}` : ''}`;
+        subject = `🚀 Novidades MasterQuiz${version ? ` — ${version}` : ''}`;
         preheader = `Confira o que há de novo na plataforma`;
         bodyHtml = `
 <h1 style="margin:0 0 12px;color:#1a1a2e;font-size:24px;line-height:1.3;">Olá, ${firstName}! 🚀</h1>

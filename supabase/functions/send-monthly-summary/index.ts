@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
     const monthName = MONTH_NAMES[prevMonthStart.getMonth()];
 
     const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
-    const senderEmail = settings?.sender_email || 'noreply@masterquizz.com';
-    const senderName = settings?.sender_name || 'MasterQuizz';
+    const senderEmail = settings?.sender_email || 'noreply@masterquiz.com';
+    const senderName = settings?.sender_name || 'MasterQuiz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) throw new Error('No sender in E-goi');
 

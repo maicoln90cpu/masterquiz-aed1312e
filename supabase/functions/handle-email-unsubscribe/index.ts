@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 h1{color:#0f9b6e;font-size:24px}p{color:#555;line-height:1.6}</style></head>
 <body><div class="card">
 <h1>✅ Cancelamento confirmado</h1>
-<p>Você não receberá mais emails da MasterQuizz.</p>
+<p>Você não receberá mais emails da MasterQuiz.</p>
 <p style="font-size:13px;color:#999;margin-top:20px;">Se mudou de ideia, entre em contato pelo nosso suporte.</p>
 </div></body></html>`, {
       headers: { ...corsHeaders, 'Content-Type': 'text/html' },

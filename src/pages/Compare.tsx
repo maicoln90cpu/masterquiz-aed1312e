@@ -162,7 +162,7 @@ export default function Compare() {
                     {t("landing.compare.table.feature")}
                   </TableHead>
                   <TableHead className="bg-primary text-primary-foreground font-bold text-center">
-                    MasterQuizz
+                    MasterQuiz
                   </TableHead>
                   <TableHead className="text-center font-semibold">InLead</TableHead>
                   <TableHead className="text-center font-semibold">Typeform</TableHead>
@@ -176,7 +176,7 @@ export default function Compare() {
                       {row.feature}
                     </TableCell>
                     <TableCell className="bg-primary/5 text-center">
-                      <CellValue value={row.masterquizz} highlight />
+                      <CellValue value={row.masterquiz} highlight />
                     </TableCell>
                     <TableCell className="text-center">
                       <CellValue value={row.inlead} />
@@ -233,7 +233,7 @@ export default function Compare() {
                 </CardContent>
               </Card>
 
-              {/* MasterQuizz — destacado */}
+              {/* MasterQuiz — destacado */}
               <Card
                 variant="elevated"
                 className="h-full border-2 border-primary relative"
@@ -244,14 +244,14 @@ export default function Compare() {
                 <CardContent className="pt-6 space-y-4">
                   <div>
                     <h3 className="text-2xl font-bold text-primary">
-                      {VS_INLEAD.masterquizz.title}
+                      {VS_INLEAD.masterquiz.title}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {VS_INLEAD.masterquizz.subtitle}
+                      {VS_INLEAD.masterquiz.subtitle}
                     </p>
                   </div>
                   <ul className="space-y-3">
-                    {VS_INLEAD.masterquizz.points.map((point) => (
+                    {VS_INLEAD.masterquiz.points.map((point) => (
                       <li key={point} className="flex items-start gap-2 text-sm">
                         <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                         <span className="text-foreground">{point}</span>

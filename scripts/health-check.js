@@ -99,7 +99,7 @@ async function runHealthCheck() {
   
   console.log('');
   log('╔════════════════════════════════════════════╗', 'blue');
-  log('║         🏥 HEALTH CHECK - MasterQuizz       ║', 'blue');
+  log('║         🏥 HEALTH CHECK - MasterQuiz       ║', 'blue');
   log('╚════════════════════════════════════════════╝', 'blue');
   console.log('');
   log(`🌐 URL Base: ${baseUrl}`, 'blue');

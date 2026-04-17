@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Script de Validação de Documentação - MasterQuizz
+ * Script de Validação de Documentação - MasterQuiz
  * v2.41.0 — Inclui validação de contagens (tabelas, EFs) contra o código real
  * 
  * Uso: node scripts/validate-docs.js
@@ -256,7 +256,7 @@ function validateCrossRefs() {
 
 function main() {
   console.log();
-  log('🔍 VALIDAÇÃO DE DOCUMENTAÇÃO - MasterQuizz v2.41.0', 'bold');
+  log('🔍 VALIDAÇÃO DE DOCUMENTAÇÃO - MasterQuiz v2.41.0', 'bold');
   log(`   Executado em: ${new Date().toLocaleString('pt-BR')}`, 'cyan');
   
   let totalErrors = 0;

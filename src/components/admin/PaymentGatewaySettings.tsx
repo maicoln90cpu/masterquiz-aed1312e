@@ -44,7 +44,7 @@ export default function PaymentGatewaySettings() {
   // Test webhook state
   const [testEvent, setTestEvent] = useState('order_paid');
   const [testEmail, setTestEmail] = useState('');
-  const [testProduct, setTestProduct] = useState('MasterQuizz Pro');
+  const [testProduct, setTestProduct] = useState('MasterQuiz Pro');
   const [testLoading, setTestLoading] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
@@ -364,7 +364,7 @@ export default function PaymentGatewaySettings() {
                   id="test_product"
                   value={testProduct}
                   onChange={(e) => setTestProduct(e.target.value)}
-                  placeholder="MasterQuizz Pro"
+                  placeholder="MasterQuiz Pro"
                 />
                 <p className="text-xs text-muted-foreground">
                   Use nomes como "Pro", "Partner" ou "Premium" para testar diferentes planos

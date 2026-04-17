@@ -46,7 +46,7 @@ export const PlatformGallery = () => {
         <div className="text-center mb-16 landing-animate">
           <h2 className="text-4xl font-bold mb-4">Plataforma Completa em Ação</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Veja como o MasterQuizz simplifica sua geração de leads com funcionalidades poderosas
+            Veja como o MasterQuiz simplifica sua geração de leads com funcionalidades poderosas
           </p>
         </div>
 

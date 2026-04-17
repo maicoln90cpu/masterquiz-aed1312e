@@ -54,7 +54,7 @@ export default function KiwifyCancel() {
             <p className="text-xs text-center text-muted-foreground">
               {t('kiwifyCancel.problemDuringPayment')}{" "}
               <a 
-                href="mailto:suporte@masterquizz.com" 
+                href="mailto:suporte@masterquiz.com" 
                 className="text-primary hover:underline"
               >
                 {t('kiwifyCancel.contactSupport')}
