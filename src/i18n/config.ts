@@ -9002,6 +9002,18 @@ const es = {
       tip: "Consejo: En el dashboard puedes seguir respuestas, configurar integraciones y mucho más.",
     },
   },
+  planLimitBanner: {
+    title: "{{count}} {{label}} bloqueados{{context}}",
+    description: "Estos {{label}} están guardados en tu cuenta, pero tu plan actual no permite visualizarlos. Actualiza para desbloquear el acceso completo.",
+    cta: "Ver planes",
+    labels: {
+      leads: "leads",
+      responses: "respuestas",
+      sessions: "sesiones",
+      completions: "finalizaciones",
+      starts: "sesiones iniciadas",
+    },
+  },
 };
 
 i18n
