@@ -345,7 +345,7 @@ Deno.serve(async (req) => {
       }
 
       // --- BLOCO C — DRAFT ABANDONED: rascunho não-express há 7+ dias + login_count >= 2 ---
-      if (draftAbandonedTemplates.length > 0 && (profile.login_count ?? 0) >= 2) {
+      if (!skipNewBlocksInstitutional && draftAbandonedTemplates.length > 0 && (profile.login_count ?? 0) >= 2) {
         const userQuizzes = quizzesByUser.get(profile.id) || [];
         const hasOldDraft = userQuizzes.some(q => {
           if (q.status !== 'draft') return false;
