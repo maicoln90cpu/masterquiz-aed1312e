@@ -411,9 +411,11 @@ Deno.serve(async (req) => {
       console.log(`Dedup: ${queuedContacts.length} → ${dedupedContacts.length} after removing existing active contacts (by user_id+phone_number)`);
 
       if (dedupedContacts.length > 0) {
+        // upsert com ignoreDuplicates: a constraint UNIQUE (user_id, template_id) pode disparar
+        // mesmo após o dedup por (user_id, phone_number). Ignorar duplicatas evita falha do batch.
         const { error: insertError } = await supabase
           .from('recovery_contacts')
-          .insert(dedupedContacts);
+          .upsert(dedupedContacts, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
         if (insertError) throw insertError;
       }
 
