@@ -3978,6 +3978,11 @@ const en = {
       relationship: "Relationship",
       lost: "Lost",
     },
+    temperature: {
+      hot: "Hot lead",
+      warm: "Warm lead",
+      cold: "Cold lead",
+    },
     toast: {
       errorLoading: "Error loading leads",
       errorUpdating: "Error updating lead status",
@@ -6797,6 +6802,11 @@ const es = {
       converted: "Convertido",
       relationship: "Relación",
       lost: "Perdido",
+    },
+    temperature: {
+      hot: "Lead caliente",
+      warm: "Lead tibio",
+      cold: "Lead frío",
     },
     toast: {
       errorLoading: "Error al cargar leads",
