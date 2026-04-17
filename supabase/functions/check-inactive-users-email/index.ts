@@ -389,6 +389,10 @@ Deno.serve(async (req) => {
         survey: surveyTemplates.length,
         plan_compare: planCompareTemplates.length,
         integration_guide: integrationGuideTemplates.length,
+        zombie: zombieTemplates.length,
+        no_response: noResponseTemplates.length,
+        draft_abandoned: draftAbandonedTemplates.length,
+        upgrade_nudge: upgradeNudgeTemplates.length,
       }
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
