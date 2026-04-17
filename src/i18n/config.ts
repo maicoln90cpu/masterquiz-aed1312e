@@ -5979,6 +5979,18 @@ const en = {
       tip: "Tip: In the dashboard you can track responses, set up integrations and much more.",
     },
   },
+  planLimitBanner: {
+    title: "{{count}} {{label}} blocked{{context}}",
+    description: "These {{label}} are saved in your account, but your current plan doesn't allow viewing them. Upgrade to unlock full access.",
+    cta: "See plans",
+    labels: {
+      leads: "leads",
+      responses: "responses",
+      sessions: "sessions",
+      completions: "completions",
+      starts: "started sessions",
+    },
+  },
 };
 
 const es = {
