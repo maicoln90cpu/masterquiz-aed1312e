@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
     let directCampaign = false;
     let targetCriteria: TargetCriteria = {};
     let isAutoRegeneration = false;
+    let dryRun = false;
 
     try {
       const body = await req.json();
@@ -76,6 +77,7 @@ Deno.serve(async (req) => {
       directCampaign = body.directCampaign || false;
       targetCriteria = body.targetCriteria || {};
       isAutoRegeneration = body.isAutoRegeneration || false;
+      dryRun = body.dryRun === true;
     } catch {
       // No body provided
     }
@@ -107,42 +109,45 @@ Deno.serve(async (req) => {
 
     const typedSettings = settings as RecoverySettings;
 
-    if (!typedSettings.is_active || !typedSettings.is_connected) {
+    if (!dryRun && (!typedSettings.is_active || !typedSettings.is_connected)) {
       return new Response(
         JSON.stringify({ message: 'Sistema inativo ou desconectado', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verificar horário permitido
-    const now = new Date();
-    const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    const currentTimeMinutes = brasilTime.getHours() * 60 + brasilTime.getMinutes();
+    // Verificar horário permitido (skip em dryRun)
+    let remainingLimit = Number.MAX_SAFE_INTEGER;
+    if (!dryRun) {
+      const now = new Date();
+      const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+      const currentTimeMinutes = brasilTime.getHours() * 60 + brasilTime.getMinutes();
 
-    const [startHour, startMin] = typedSettings.allowed_hours_start.split(':').map(Number);
-    const [endHour, endMin] = typedSettings.allowed_hours_end.split(':').map(Number);
+      const [startHour, startMin] = typedSettings.allowed_hours_start.split(':').map(Number);
+      const [endHour, endMin] = typedSettings.allowed_hours_end.split(':').map(Number);
 
-    if (currentTimeMinutes < startHour * 60 + startMin || currentTimeMinutes > endHour * 60 + endMin) {
-      return new Response(
-        JSON.stringify({ message: 'Fora do horário permitido', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+      if (currentTimeMinutes < startHour * 60 + startMin || currentTimeMinutes > endHour * 60 + endMin) {
+        return new Response(
+          JSON.stringify({ message: 'Fora do horário permitido', queued: 0 }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    // Contar mensagens já enviadas hoje
-    const today = new Date().toISOString().split('T')[0];
-    const { count: sentToday } = await supabase
-      .from('recovery_contacts')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', `${today}T00:00:00`)
-      .in('status', ['sent', 'delivered', 'read', 'responded']);
+      // Contar mensagens já enviadas hoje
+      const today = new Date().toISOString().split('T')[0];
+      const { count: sentToday } = await supabase
+        .from('recovery_contacts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', `${today}T00:00:00`)
+        .in('status', ['sent', 'delivered', 'read', 'responded']);
 
-    const remainingLimit = typedSettings.daily_message_limit - (sentToday || 0);
-    if (remainingLimit <= 0) {
-      return new Response(
-        JSON.stringify({ message: 'Limite diário atingido', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      remainingLimit = typedSettings.daily_message_limit - (sentToday || 0);
+      if (remainingLimit <= 0) {
+        return new Response(
+          JSON.stringify({ message: 'Limite diário atingido', queued: 0 }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // ===== DECISÃO: filtrar por inatividade ou buscar todos? =====
@@ -305,6 +310,30 @@ Deno.serve(async (req) => {
 
     // Ordenar por prioridade
     eligibleUsers.sort((a, b) => b.lead_count - a.lead_count);
+
+    // ===== DRY RUN: retornar lista sem enfileirar =====
+    if (dryRun) {
+      console.log(`Dry run: ${eligibleUsers.length} eligible users (criteria=${JSON.stringify(targetCriteria)})`);
+      return new Response(
+        JSON.stringify({
+          message: `${eligibleUsers.length} destinatário(s) elegível(is)`,
+          dryRun: true,
+          total_eligible: eligibleUsers.length,
+          recipients: eligibleUsers.slice(0, 500).map(u => ({
+            user_id: u.id,
+            full_name: u.full_name,
+            whatsapp: u.whatsapp,
+            days_inactive: u.days_inactive,
+            plan_type: u.plan_type,
+            quiz_count: u.quiz_count,
+            lead_count: u.lead_count,
+            user_stage: u.user_stage,
+          })),
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const usersToQueue = eligibleUsers.slice(0, remainingLimit);
 
     // Template selection
