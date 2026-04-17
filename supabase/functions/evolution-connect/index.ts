@@ -282,8 +282,122 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ========== ACTION: WEBHOOK DIAGNOSTICS ==========
+    if (action === 'webhook_diagnostics') {
+      console.log('=== WEBHOOK DIAGNOSTICS ===');
+      const expectedWebhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/evolution-webhook`;
+      const requiredEvents = ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE'];
+
+      try {
+        const webhookRes = await fetch(`${evolutionApiUrl}/webhook/find/${instanceName}`, {
+          method: 'GET',
+          headers: { 'apikey': evolutionApiKey },
+        });
+
+        let webhookConfig: any = null;
+        let configuredUrl: string | null = null;
+        let configuredEvents: string[] = [];
+        let webhookEnabled = false;
+
+        if (webhookRes.ok) {
+          webhookConfig = await webhookRes.json();
+          configuredUrl = webhookConfig?.url || webhookConfig?.webhook?.url || null;
+          configuredEvents = webhookConfig?.events || webhookConfig?.webhook?.events || [];
+          webhookEnabled = webhookConfig?.enabled ?? webhookConfig?.webhook?.enabled ?? false;
+        }
+
+        const urlMatches = configuredUrl === expectedWebhookUrl;
+        const missingEvents = requiredEvents.filter((e) => !configuredEvents.includes(e));
+        const allEventsPresent = missingEvents.length === 0;
+
+        // Buscar saúde do webhook do banco
+        const { data: health } = await supabase
+          .from('v_evolution_webhook_health')
+          .select('*')
+          .single();
+
+        return new Response(
+          JSON.stringify({
+            expected_url: expectedWebhookUrl,
+            configured_url: configuredUrl,
+            url_matches: urlMatches,
+            webhook_enabled: webhookEnabled,
+            required_events: requiredEvents,
+            configured_events: configuredEvents,
+            missing_events: missingEvents,
+            all_events_present: allEventsPresent,
+            health: health || null,
+            recommendation: !configuredUrl
+              ? 'Webhook não configurado na Evolution API. Use action=fix_webhook para configurar.'
+              : !urlMatches
+              ? 'URL do webhook está apontando para outro lugar. Use action=fix_webhook para corrigir.'
+              : !allEventsPresent
+              ? `Faltam eventos: ${missingEvents.join(', ')}. Use action=fix_webhook para adicionar.`
+              : 'Webhook está corretamente configurado. Se ainda não chegam confirmações, verifique a instância na Evolution API.',
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error) {
+        console.error('Webhook diagnostics error:', error);
+        return new Response(
+          JSON.stringify({
+            error: 'Falha ao consultar webhook',
+            details: error instanceof Error ? error.message : 'Unknown',
+            expected_url: expectedWebhookUrl,
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ========== ACTION: FIX WEBHOOK ==========
+    if (action === 'fix_webhook') {
+      console.log('=== FIX WEBHOOK ===');
+      const expectedWebhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/evolution-webhook`;
+      const requiredEvents = ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE'];
+
+      try {
+        const setRes = await fetch(`${evolutionApiUrl}/webhook/set/${instanceName}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': evolutionApiKey,
+          },
+          body: JSON.stringify({
+            url: expectedWebhookUrl,
+            enabled: true,
+            webhookByEvents: false,
+            events: requiredEvents,
+          }),
+        });
+
+        const result = await setRes.text();
+        if (!setRes.ok) {
+          return new Response(
+            JSON.stringify({ error: 'Falha ao configurar webhook', status: setRes.status, details: result }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            url: expectedWebhookUrl,
+            events: requiredEvents,
+            message: 'Webhook configurado. Próximas mensagens devem receber confirmações de entrega.',
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ error: 'Erro ao corrigir webhook', details: error instanceof Error ? error.message : 'Unknown' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     return new Response(
-      JSON.stringify({ error: 'Ação inválida. Use: connect, status, disconnect' }),
+      JSON.stringify({ error: 'Ação inválida. Use: connect, status, disconnect, webhook_diagnostics, fix_webhook' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
