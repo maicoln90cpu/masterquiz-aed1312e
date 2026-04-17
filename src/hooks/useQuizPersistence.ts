@@ -560,11 +560,13 @@ export function useQuizPersistence({
         logQuizAction("quiz:created", quiz.id, { title: quiz.title, template });
 
         // 🎯 GTM: quiz_published — disparado ao publicar quiz novo (INSERT)
+        // Inclui creation_source para permitir filtros no GTM/Google Ads (manual vs express_auto)
         pushGTMEvent('quiz_published', {
           quiz_id: quiz.id,
           quiz_title: quiz.title,
           user_id: user.id,
           editor_mode: editorMode,
+          creation_source: isExpressMode ? 'express_auto' : 'manual',
         });
 
         // 🎯 GTM: quiz_created — disparado toda vez que um quiz é criado
