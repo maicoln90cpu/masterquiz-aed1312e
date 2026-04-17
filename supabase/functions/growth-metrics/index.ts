@@ -75,24 +75,36 @@ Deno.serve(async (req) => {
     // SECTION A — Activation Funnel
     // ═══════════════════════════════════════════
 
-    // Total users by plan
+    // Total users — FONTE ÚNICA (Etapa 1): usuários reais com auth válido E profile ativo
+    // Usa RPC count_real_users() para garantir consistência em todo o painel
+    const { data: realUserCount } = await supabase.rpc('count_real_users')
+    const totalUsers = Number(realUserCount || 0)
+
+    // IDs reais (auth ∩ profiles ativos) para filtrar planCounts e excluir órfãos/duplicados
+    const { data: realProfiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .is('deleted_at', null)
+    const realUserIds = new Set((realProfiles || []).map((r: any) => r.id))
+
+    // Plan counts: deduplica por user_id e considera apenas usuários reais
     const { data: usersByPlan } = await supabase
       .from('user_subscriptions')
       .select('plan_type, user_id')
 
     const planCounts: Record<string, number> = {}
-    let totalUsers = 0
+    const seenPlanUsers = new Set<string>()
     for (const row of usersByPlan || []) {
+      if (!realUserIds.has(row.user_id)) continue // ignora órfãos
+      if (seenPlanUsers.has(row.user_id)) continue // ignora duplicados
+      seenPlanUsers.add(row.user_id)
       planCounts[row.plan_type] = (planCounts[row.plan_type] || 0) + 1
-      totalUsers++
     }
 
-    // 7d variation
+    // 7d variation — também via fonte canônica
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const { count: newUsers7d } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', sevenDaysAgo)
+    const { data: newUsers7dCount } = await supabase.rpc('count_real_users_since', { _since: sevenDaysAgo })
+    const newUsers7d = Number(newUsers7dCount || 0)
 
     // Funnel queries — EXCLUDE express_auto quizzes
     const { data: creators } = await supabase

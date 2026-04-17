@@ -3371,6 +3371,8 @@ export type Database = {
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
       cleanup_old_gtm_events: { Args: never; Returns: undefined }
       cleanup_old_health_metrics: { Args: never; Returns: number }
+      count_real_users: { Args: never; Returns: number }
+      count_real_users_since: { Args: { _since: string }; Returns: number }
       delete_user_by_id: {
         Args: { target_user_id: string }
         Returns: undefined
@@ -3447,6 +3449,13 @@ export type Database = {
           nome: string
           user_id: string
           whatsapp: string
+        }[]
+      }
+      real_users_daily: {
+        Args: { _days?: number }
+        Returns: {
+          cadastros: number
+          day: string
         }[]
       }
       record_login_event: { Args: { p_user_id: string }; Returns: undefined }

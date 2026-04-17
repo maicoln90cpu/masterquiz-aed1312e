@@ -21,37 +21,27 @@ function useLoginsVsCadastros() {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const since = thirtyDaysAgo.toISOString();
 
-      // Fetch cadastros (profiles.created_at) and logins (login_events) in parallel
-      const [profilesRes, loginsRes] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('created_at')
-          .gte('created_at', since)
-          .is('deleted_at', null),
-        supabase
-          .from('login_events')
-          .select('logged_in_at')
-          .gte('logged_in_at', since),
+      // Etapa 1: cadastros via fonte canônica (auth.users ∩ profiles ativos)
+      const [dailyRes, loginsRes, totalRealRes] = await Promise.all([
+        supabase.rpc('real_users_daily', { _days: 30 }),
+        supabase.from('login_events').select('logged_in_at').gte('logged_in_at', since),
+        supabase.rpc('count_real_users_since', { _since: since }),
       ]);
 
-      // Group cadastros by day
       const cadastrosByDay: Record<string, number> = {};
-      for (const p of profilesRes.data || []) {
-        const day = new Date(p.created_at).toISOString().split('T')[0];
-        cadastrosByDay[day] = (cadastrosByDay[day] || 0) + 1;
+      for (const row of (dailyRes.data as Array<{ day: string; cadastros: number }> | null) || []) {
+        cadastrosByDay[row.day] = row.cadastros;
       }
 
-      // Group logins by day
       const loginsByDay: Record<string, number> = {};
       for (const l of loginsRes.data || []) {
         const day = new Date(l.logged_in_at).toISOString().split('T')[0];
         loginsByDay[day] = (loginsByDay[day] || 0) + 1;
       }
 
-      // Merge into unified rows for last 30 days
       const rows: DayRow[] = [];
-      let totalCadastros = 0;
       let totalLogins = 0;
+      const totalCadastros = Number(totalRealRes.data || 0);
 
       for (let i = 0; i < 30; i++) {
         const d = new Date();
@@ -59,10 +49,8 @@ function useLoginsVsCadastros() {
         const dateStr = d.toISOString().split('T')[0];
         const cadastros = cadastrosByDay[dateStr] || 0;
         const logins = loginsByDay[dateStr] || 0;
-        totalCadastros += cadastros;
         totalLogins += logins;
 
-        // Only include days with any activity
         if (cadastros > 0 || logins > 0) {
           rows.push({
             date: dateStr,
@@ -110,7 +98,9 @@ export function LoginVsCadastrosTable() {
           <Users className="h-5 w-5 text-primary" />
           <CardTitle className="text-sm">Logins vs Cadastros — Últimos 30 dias</CardTitle>
         </div>
-        <CardDescription>Compara quantos se cadastraram vs quantos voltaram a logar por dia</CardDescription>
+        <CardDescription>
+          Cadastros = usuários reais (auth + perfil ativo). Compara quantos voltaram a logar por dia.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary cards */}
