@@ -143,6 +143,21 @@ Deno.serve(async (req) => {
       .in('user_id', allUserIds);
     const usersWithIntegrations = new Set((integrations || []).map(i => i.user_id));
 
+    // Quizzes (para Blocos B e C — Etapa 5)
+    const needsQuizzes = noResponseTemplates.length > 0 || draftAbandonedTemplates.length > 0;
+    const quizzesByUser = new Map<string, Array<{ id: string; status: string; updated_at: string; creation_source: string | null; created_at: string }>>();
+    if (needsQuizzes) {
+      const { data: quizzes } = await supabase
+        .from('quizzes')
+        .select('id, user_id, status, updated_at, creation_source, created_at')
+        .in('user_id', allUserIds);
+      for (const q of quizzes || []) {
+        const list = quizzesByUser.get(q.user_id) || [];
+        list.push(q);
+        quizzesByUser.set(q.user_id, list);
+      }
+    }
+
     const contacts: any[] = [];
 
     for (const profile of profiles) {
