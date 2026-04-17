@@ -133,6 +133,7 @@ Setup global em `src/__tests__/setup.ts`. Padrões em [TESTING.md](./TESTING.md)
 | [SECURITY.md](./SECURITY.md) | RLS, auth, rate limiting |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de código |
 | [HOOKS.md](./HOOKS.md) | Catálogo de 60+ hooks (`npm run docs:api`) |
+| [STORYBOOK.md](./STORYBOOK.md) | Stories CSF 3.0 para UI base |
 | [SERVICES.md](./SERVICES.md) | Service layer (observability, GTM diag) |
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 funções |
 | [API_DOCS.md](./API_DOCS.md) | Payloads detalhados |

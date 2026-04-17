@@ -1,5 +1,39 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.42.0 — Storybook + Memórias Reorganizadas (Etapa 5 — 17/04/2026)
+
+### Feature: Storybook para UI Base
+- 5 componentes core com stories CSF 3.0: **Button** (9), **Input** (4), **Card** (1), **Badge** (4), **Alert** (2) — total 20 stories
+- Configs prontos: `.storybook/main.ts`, `.storybook/preview.ts` (Tailwind via index.css)
+- Type shim local (`src/types/storybook-shim.d.ts`) para typecheck sem instalar Storybook
+- Doc `STORYBOOK.md` com guia de setup e padrões
+
+### Feature: Memórias Reorganizadas
+- `mem://index.md` reescrito por categoria (Architecture, Features, Messaging, Integrations, Analytics, CRM, Marketing, Tracking, Database/Admin, UI, Preferences)
+- Core rules consolidadas em 9 linhas (top: formato resposta, auth, GTM, logger, tokens HSL, fetch, ICP, RTE scope, toasts, text block lock)
+- Knowledge block já compactado abaixo de 9500 chars
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `.storybook/main.ts` | NOVO — config Storybook + Vite |
+| `.storybook/preview.ts` | NOVO — preview com Tailwind tokens |
+| `src/components/ui/button.stories.tsx` | NOVO — 9 stories |
+| `src/components/ui/input.stories.tsx` | NOVO — 4 stories |
+| `src/components/ui/card.stories.tsx` | NOVO — story composta |
+| `src/components/ui/badge.stories.tsx` | NOVO — 4 variantes |
+| `src/components/ui/alert.stories.tsx` | NOVO — default + destructive |
+| `src/types/storybook-shim.d.ts` | NOVO — shim de tipos para CSF 3.0 |
+| `docs/STORYBOOK.md` | NOVO — guia de uso |
+| `mem://index.md` | Reorganizado por categoria |
+
+### Próximos passos sugeridos (não críticos)
+- Instalar Storybook real quando necessário (`npx storybook init`) — shim de tipos pode ser removido
+- Adicionar stories para mais componentes (Tabs, Dialog, Form, Select)
+- Deploy do Storybook estático (storybook-static) em CDN
+
+---
+
 ## ✅ v2.42.0 — `/compare` + JSDoc + TypeDoc + HOOKS.md (17/04/2026)
 
 ### Feature: Página `/compare` (SEO + A/B Test)
