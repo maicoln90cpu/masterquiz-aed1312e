@@ -123,8 +123,9 @@ const Settings = () => {
     if (!profile?.id) return;
     setCheckingSlug(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase.rpc('generate_company_slug', {
-        p_email: profile.email || '',
+        p_email: user?.email || '',
         p_user_id: profile.id,
       });
       if (error) throw error;
