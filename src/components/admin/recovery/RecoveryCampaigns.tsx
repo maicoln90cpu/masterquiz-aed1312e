@@ -169,35 +169,60 @@ export function RecoveryCampaigns() {
       const rawCampaigns = campaignsRes.data || [];
 
       // Fetch dynamic counters for each campaign from recovery_contacts
+      // Os 7 cards são mutuamente exclusivos: cada contato cai em UMA categoria.
+      // Alvos = soma total = Pendentes + Enviadas + Entregues + Responderam + Reativados + Falhas
       const campaignIds = rawCampaigns.map(c => c.id);
       if (campaignIds.length > 0) {
         const { data: contacts } = await supabase
           .from('recovery_contacts')
-          .select('campaign_id, status')
+          .select('campaign_id, status, reactivated')
           .in('campaign_id', campaignIds);
 
         if (contacts) {
-          const counters: Record<string, Record<string, number>> = {};
+          const counters: Record<string, {
+            pending: number;
+            sent: number;
+            delivered: number;
+            responded: number;
+            reactivated: number;
+            failed: number;
+            total: number;
+          }> = {};
+
           for (const c of contacts) {
             if (!c.campaign_id) continue;
-            if (!counters[c.campaign_id]) counters[c.campaign_id] = {};
-            counters[c.campaign_id][c.status] = (counters[c.campaign_id][c.status] || 0) + 1;
+            if (!counters[c.campaign_id]) {
+              counters[c.campaign_id] = { pending: 0, sent: 0, delivered: 0, responded: 0, reactivated: 0, failed: 0, total: 0 };
+            }
+            const bucket = counters[c.campaign_id];
+            bucket.total += 1;
+
+            // Reativados é dimensão ortogonal — mas para mutual exclusion priorizamos
+            if (c.reactivated) {
+              bucket.reactivated += 1;
+            } else if (c.status === 'responded') {
+              bucket.responded += 1;
+            } else if (c.status === 'failed') {
+              bucket.failed += 1;
+            } else if (c.status === 'delivered' || c.status === 'read') {
+              bucket.delivered += 1;
+            } else if (c.status === 'sent') {
+              bucket.sent += 1;
+            } else if (c.status === 'pending' || c.status === 'queued') {
+              bucket.pending += 1;
+            }
           }
 
           for (const campaign of rawCampaigns) {
-            const c = counters[campaign.id] || {};
-            const realSent = (c.sent || 0) + (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
-            const realFailed = c.failed || 0;
-            const realQueued = (c.pending || 0) + (c.queued || 0);
-            const realTotal = Object.values(c).reduce((a, b) => a + b, 0);
-
-            campaign.sent_count = realSent;
-            campaign.delivered_count = (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
-            campaign.responded_count = c.responded || 0;
-            campaign.failed_count = realFailed;
-            // Use DB values as fallback when real contacts are fewer (due to deduplication)
-            campaign.queued_count = Math.max(realQueued, campaign.queued_count || 0);
-            campaign.total_targets = Math.max(realTotal, campaign.total_targets || 0);
+            const c = counters[campaign.id];
+            if (!c) continue;
+            campaign.queued_count = c.pending;
+            campaign.sent_count = c.sent;
+            campaign.delivered_count = c.delivered;
+            campaign.responded_count = c.responded;
+            campaign.reactivated_count = c.reactivated;
+            campaign.failed_count = c.failed;
+            campaign.total_targets = Math.max(c.total, campaign.total_targets || 0);
           }
         }
       }
