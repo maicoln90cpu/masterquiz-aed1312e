@@ -597,18 +597,41 @@ export function useQuizPersistence({
               });
             }
           } else {
-            // Manual quiz: milestone com dedup via localStorage
+            // Manual quiz: dispara SEMPRE na 1ª publicação manual (sem filtro de stage)
+            // Dedup global via banco (gtm_event_logs) — funciona em qualquer navegador
             const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-            const dedupKey = `mq_first_manual_published_${user.id}`;
-            if (milestoneStages.includes(currentStage) && !localStorage.getItem(dedupKey)) {
+            const { data: alreadyFiredDB } = await supabase
+              .rpc('has_user_fired_event' as any, { _user_id: user.id, _event_name: publishEventName });
+            if (!alreadyFiredDB) {
               pushGTMEvent(publishEventName, {
                 quiz_id: quiz.id,
                 quiz_title: quiz.title,
                 user_id: user.id,
                 publish_source: 'manual',
                 editor_mode: editorMode,
-              });
-              localStorage.setItem(dedupKey, new Date().toISOString());
+              }, { persist: true });
+            }
+
+            // 🎯 NOVO: quiz_real_published — primeira publicação manual real do usuário
+            const { data: realPublishedFired } = await supabase
+              .rpc('has_user_fired_event' as any, { _user_id: user.id, _event_name: 'quiz_real_published' });
+            if (!realPublishedFired) {
+              const { count: manualPublishedCount } = await supabase
+                .from('quizzes')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('is_public', true)
+                .neq('creation_source', 'express_auto');
+              if ((manualPublishedCount ?? 0) >= 1) {
+                pushGTMEvent('quiz_real_published', {
+                  quiz_id: quiz.id,
+                  user_id: user.id,
+                  quiz_title: quiz.title,
+                  creation_source: 'manual',
+                  questions_count: questionCount,
+                  editor_mode: editorMode,
+                }, { persist: true });
+              }
             }
           }
 
