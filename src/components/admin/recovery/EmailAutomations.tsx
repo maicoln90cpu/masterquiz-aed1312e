@@ -217,14 +217,14 @@ export function EmailAutomations() {
       // Count recipients by segment
       const segmentLabels: Record<string, string> = { all: 'Todos', active: 'Ativos (30d)', free: 'Plano Free', paid: 'Planos Pagos' };
 
-      // Quick estimate from profiles + unsubscribes
-      const [{ count: profileCount }, { count: unsubCount }, { count: blacklistCount }] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).not('email', 'is', null),
+      // Etapa 1: usar fonte canônica de cadastros (auth ∩ profiles ativos)
+      const [{ data: realCount }, { count: unsubCount }, { count: blacklistCount }] = await Promise.all([
+        supabase.rpc('count_real_users'),
         supabase.from('email_unsubscribes').select('id', { count: 'exact', head: true }),
         supabase.from('recovery_blacklist').select('id', { count: 'exact', head: true }),
       ]);
 
-      const estimatedRecipients = Math.max(0, (profileCount || 0) - (unsubCount || 0) - (blacklistCount || 0));
+      const estimatedRecipients = Math.max(0, Number(realCount || 0) - (unsubCount || 0) - (blacklistCount || 0));
 
       setEmailPreview({
         subject,
