@@ -42,9 +42,12 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
   // A/B Testing: separate tests for free and paid plan CTAs
   const isFreePlan = plan.id === 'free';
   const abElement = isFreePlan ? 'pricing_free_cta' : 'pricing_paid_cta';
-  const { getContentForElement, getTestByElement, trackConversion } = useLandingABTest(abElement);
-  const ctaAB = getContentForElement(abElement);
+  const cmsKey = isFreePlan ? 'pricing_free_cta_text' : 'pricing_paid_cta_text';
+  const { getTestByElement, trackConversion } = useLandingABTest(abElement);
+  const { getCopy } = useLandingCopy();
   const ctaTest = getTestByElement(abElement);
+  // Prioridade: A/B ativo > landing_content > plan.ctaText (default do componente)
+  const ctaText = getCopy(abElement, cmsKey, plan.ctaText);
 
   const handleCTA = async () => {
     console.log('[PricingCard] handleCTA - 100% Kiwify mode', {
