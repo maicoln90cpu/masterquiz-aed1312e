@@ -27,6 +27,7 @@ import { PerQuizAnalytics } from "@/components/analytics/PerQuizAnalytics";
 import { AnalyticsTour } from "@/components/onboarding/AnalyticsTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useTrackPageView } from "@/hooks/useUserStage";
+import { useResourceLimits } from "@/hooks/useResourceLimits";
 // ✅ CORREÇÃO: Lazy load Recharts
 const AnalyticsLineChart = lazy(() => import("@/components/lazy/AnalyticsChartsBundle").then(m => ({ default: m.AnalyticsLineChart })));
 const AnalyticsPieChart = lazy(() => import("@/components/lazy/AnalyticsChartsBundle").then(m => ({ default: m.AnalyticsPieChart })));
@@ -41,12 +42,15 @@ const Analytics = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const { limits: resourceLimits } = useResourceLimits();
   const [stats, setStats] = useState({
     totalViews: 0,
     totalStarts: 0,
     totalCompletions: 0,
     conversionRate: 0,
     uniqueSessions: 0,
+    blockedCompletions: 0,
+    blockedStarts: 0,
   });
   const [chartData, setChartData] = useState<any[]>([]);
   const [quizPerformance, setQuizPerformance] = useState<any[]>([]);
@@ -64,7 +68,7 @@ const Analytics = () => {
 
   useEffect(() => {
     loadAnalytics();
-  }, [period, startDate, endDate, user]);
+  }, [period, startDate, endDate, user, resourceLimits?.leads.limit, resourceLimits?.leads.isUnlimited]);
 
   const loadAnalytics = async () => {
     setLoading(true);
@@ -119,14 +123,32 @@ const Analytics = () => {
           { totalViews: 0, totalStarts: 0, totalCompletions: 0 }
         );
 
+        // 🔒 Bloqueio de visualização por limite de plano (banco mantém os dados reais)
+        const planLeadLimit = resourceLimits?.leads.isUnlimited
+          ? Infinity
+          : (resourceLimits?.leads.limit ?? Infinity);
+
+        const visibleCompletions = planLeadLimit === Infinity
+          ? totals.totalCompletions
+          : Math.min(totals.totalCompletions, planLeadLimit);
+        const visibleStarts = planLeadLimit === Infinity
+          ? totals.totalStarts
+          : Math.min(totals.totalStarts, planLeadLimit);
+        const blockedCompletions = Math.max(0, totals.totalCompletions - visibleCompletions);
+        const blockedStarts = Math.max(0, totals.totalStarts - visibleStarts);
+
         const conversionRate = totals.totalViews > 0
-          ? ((totals.totalCompletions / totals.totalViews) * 100).toFixed(1)
+          ? ((visibleCompletions / totals.totalViews) * 100).toFixed(1)
           : 0;
 
         setStats({
-          ...totals,
+          totalViews: totals.totalViews,
+          totalStarts: visibleStarts,
+          totalCompletions: visibleCompletions,
           conversionRate: Number(conversionRate),
-          uniqueSessions: totals.totalStarts, // Simplificado
+          uniqueSessions: visibleStarts, // Simplificado
+          blockedCompletions,
+          blockedStarts,
         });
 
         // Preparar visitas detalhadas
@@ -516,6 +538,15 @@ const Analytics = () => {
                 <CardHeader className="pb-3">
                   <CardDescription>{t('analytics.uniqueSessions')}</CardDescription>
                   <CardTitle className="text-4xl">{stats.uniqueSessions.toLocaleString()}</CardTitle>
+                  {stats.blockedStarts > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/precos')}
+                      className="mt-1 text-xs text-warning hover:underline text-left"
+                    >
+                      + {stats.blockedStarts} bloqueadas — fazer upgrade
+                    </button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <Users className="h-8 w-8 text-primary opacity-20" />
@@ -545,6 +576,15 @@ const Analytics = () => {
                       ? ((stats.totalCompletions / stats.totalStarts) * 100).toFixed(1)
                       : 0}%
                   </CardTitle>
+                  {stats.blockedCompletions > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/precos')}
+                      className="mt-1 text-xs text-warning hover:underline text-left"
+                    >
+                      + {stats.blockedCompletions} conclusões bloqueadas
+                    </button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2">
