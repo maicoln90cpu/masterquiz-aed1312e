@@ -49,6 +49,7 @@ function buildSitemap(posts: any[]): Response {
   const staticPages = [
     { loc: '', priority: '1.0', changefreq: 'weekly' },
     { loc: '/blog', priority: '0.9', changefreq: 'daily' },
+    { loc: '/compare', priority: '0.9', changefreq: 'monthly' },
     { loc: '/precos', priority: '0.8', changefreq: 'monthly' },
     { loc: '/faq', priority: '0.7', changefreq: 'monthly' },
   ];
