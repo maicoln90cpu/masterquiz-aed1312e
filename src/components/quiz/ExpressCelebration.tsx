@@ -147,29 +147,17 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
           <PartyPopper className="h-10 w-10 text-green-500" />
         </motion.div>
 
-        {/* Title */}
+        {/* Title + subtitle CTA */}
         <div className="space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
             {t('express.celebration.title', 'Seu quiz de demonstração está no ar! 🎉')}
           </h1>
-          <p className="text-muted-foreground text-lg">
-            {t('express.celebration.subtitle', '"{{title}}" foi publicado com sucesso.', { title: quizTitle })}
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            {t('express.celebration.realQuizCta', 'Agora crie seu quiz real e comece a capturar leads qualificados para o seu negócio.')}
           </p>
         </div>
 
-        {/* QR Code */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="flex justify-center"
-        >
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <QRCodeSVG value={quizUrl} size={140} level="H" includeMargin />
-          </div>
-        </motion.div>
-
-        {/* Link + Copy */}
+        {/* Link + Copy + CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -185,6 +173,17 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
             </Button>
           </div>
 
+          {/* Primary CTA — Create real quiz */}
+          <Button
+            size="lg"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-6 text-base shadow-lg"
+            onClick={handleCreateRealQuiz}
+          >
+            <Sparkles className="h-5 w-5 mr-2" />
+            {t('express.celebration.createRealQuiz', 'Criar meu quiz real agora')}
+          </Button>
+
+          {/* Secondary actions */}
           <div className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
@@ -195,12 +194,12 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
               {t('express.celebration.openQuiz', 'Ver meu quiz')}
             </Button>
             <Button
-              size="lg"
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              variant="ghost"
+              className="flex-1"
               onClick={onGoToDashboard}
             >
               <LayoutDashboard className="h-4 w-4 mr-2" />
-              {t('express.celebration.goDashboard', 'Ir para o Dashboard')}
+              {t('express.celebration.goDashboard', 'Ir para o dashboard')}
             </Button>
           </div>
         </motion.div>
