@@ -3333,6 +3333,7 @@ export type Database = {
     }
     Functions: {
       anonymize_old_ips: { Args: never; Returns: number }
+      check_slug_available: { Args: { _slug: string }; Returns: Json }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
       cleanup_old_gtm_events: { Args: never; Returns: undefined }
@@ -3401,6 +3402,7 @@ export type Database = {
         Args: { _column: string }
         Returns: undefined
       }
+      is_reserved_slug: { Args: { _slug: string }; Returns: boolean }
       mark_first_lead_received: {
         Args: { _owner_id: string }
         Returns: undefined
