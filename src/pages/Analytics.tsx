@@ -27,6 +27,7 @@ import { PerQuizAnalytics } from "@/components/analytics/PerQuizAnalytics";
 import { AnalyticsTour } from "@/components/onboarding/AnalyticsTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useTrackPageView } from "@/hooks/useUserStage";
+import { useResourceLimits } from "@/hooks/useResourceLimits";
 // ✅ CORREÇÃO: Lazy load Recharts
 const AnalyticsLineChart = lazy(() => import("@/components/lazy/AnalyticsChartsBundle").then(m => ({ default: m.AnalyticsLineChart })));
 const AnalyticsPieChart = lazy(() => import("@/components/lazy/AnalyticsChartsBundle").then(m => ({ default: m.AnalyticsPieChart })));
