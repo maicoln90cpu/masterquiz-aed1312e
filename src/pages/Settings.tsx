@@ -469,22 +469,40 @@ const Settings = () => {
                             : ""
                         }
                       />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={suggestSlug}
+                        disabled={checkingSlug}
+                        className="whitespace-nowrap"
+                      >
+                        Sugerir
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2 min-h-[20px]">
                       {checkingSlug && (
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <span className="animate-spin">⏳</span>
                           <span>{t("settings.checking")}</span>
                         </div>
                       )}
-                      {slugAvailable === true && (
+                      {!checkingSlug && slugAvailable === true && (
                         <div className="flex items-center gap-1 text-xs text-green-600">
                           <span>✓</span>
                           <span>{t("settings.available")}</span>
                         </div>
                       )}
-                      {slugAvailable === false && (
+                      {!checkingSlug && slugAvailable === false && (
                         <div className="flex items-center gap-1 text-xs text-destructive">
                           <span>✗</span>
-                          <span>{t("settings.notAvailable")}</span>
+                          <span>
+                            {slugReason === 'reserved'
+                              ? 'Este slug é reservado pelo sistema. Escolha outro.'
+                              : slugReason === 'invalid_format'
+                                ? 'Formato inválido (use a-z, 0-9, hífens, 2-50 caracteres)'
+                                : t("settings.notAvailable")}
+                          </span>
                         </div>
                       )}
                     </div>
