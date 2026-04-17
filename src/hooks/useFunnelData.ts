@@ -9,19 +9,29 @@ interface FunnelStep {
   questionId?: string;
 }
 
+export interface FunnelDataResult {
+  steps: FunnelStep[];
+  totalSessions: number;
+  visibleSessions: number;
+  blockedSessions: number;
+}
+
 interface UseFunnelDataOptions {
   quizId?: string;
   startDate?: string;
   endDate?: string;
+  /** Limite de visualização do plano (Infinity = sem corte) */
+  planLimit?: number;
 }
 
 export function useFunnelData(options: UseFunnelDataOptions = {}) {
-  const { quizId, startDate, endDate } = options;
+  const { quizId, startDate, endDate, planLimit = Infinity } = options;
   const { user } = useCurrentUser();
 
   return useQuery({
-    queryKey: ['funnel-data', quizId, startDate, endDate, user?.id],
-    queryFn: async (): Promise<FunnelStep[]> => {
+    queryKey: ['funnel-data', quizId, startDate, endDate, user?.id, planLimit],
+    queryFn: async (): Promise<FunnelDataResult> => {
+      const empty: FunnelDataResult = { steps: [], totalSessions: 0, visibleSessions: 0, blockedSessions: 0 };
       try {
         if (!user) throw new Error('Not authenticated');
 
@@ -34,13 +44,13 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
         const { data: userQuizzes, error: quizError } = await quizQuery;
         
         if (quizError || !userQuizzes || userQuizzes.length === 0) {
-          return [];
+          return empty;
         }
 
         const userQuizIds = userQuizzes.map(q => q.id);
         const targetQuizIds = quizId ? [quizId].filter(id => userQuizIds.includes(id)) : userQuizIds;
 
-        if (targetQuizIds.length === 0) return [];
+        if (targetQuizIds.length === 0) return empty;
 
         // Buscar step analytics filtrado pelos quizzes do usuário
         let stepQuery = supabase
@@ -60,11 +70,11 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
 
         if (rawError) {
           console.error('Error fetching funnel data:', rawError);
-          return [];
+          return empty;
         }
 
         if (!rawData || rawData.length === 0) {
-          return [];
+          return empty;
         }
 
         // Agregar por step_number contando sessões únicas
@@ -113,7 +123,7 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
         }
 
         // Converter para array ordenado
-        const funnelSteps: FunnelStep[] = Array.from(stepMap.entries())
+        let funnelSteps: FunnelStep[] = Array.from(stepMap.entries())
           .sort(([a], [b]) => a - b)
           .map(([stepNumber, data]) => ({
             stepNumber,
@@ -126,10 +136,31 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
             questionId: data.questionId
           }));
 
-        return funnelSteps;
+        // 🔒 Bloqueio por limite de plano: escala proporcionalmente todos os steps
+        const totalSessions = funnelSteps[0]?.count
+          ?? Math.max(...funnelSteps.map(s => s.count), 0);
+        let visibleSessions = totalSessions;
+        let blockedSessions = 0;
+
+        if (planLimit !== Infinity && totalSessions > planLimit) {
+          const ratio = planLimit / totalSessions;
+          funnelSteps = funnelSteps.map(s => ({
+            ...s,
+            count: Math.floor(s.count * ratio),
+          }));
+          visibleSessions = planLimit;
+          blockedSessions = totalSessions - planLimit;
+        }
+
+        return {
+          steps: funnelSteps,
+          totalSessions,
+          visibleSessions,
+          blockedSessions,
+        };
       } catch (error) {
         console.error('Error in useFunnelData:', error);
-        return [];
+        return empty;
       }
     },
     enabled: !!user,
