@@ -3463,6 +3463,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_user_fired_event: {
+        Args: { _event_name: string; _user_id: string }
+        Returns: boolean
+      }
       increment_blog_views: { Args: { p_slug: string }; Returns: undefined }
       increment_login_count: { Args: { p_user_id: string }; Returns: undefined }
       increment_profile_counter: {
