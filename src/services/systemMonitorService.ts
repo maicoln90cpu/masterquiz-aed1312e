@@ -138,21 +138,23 @@ export async function fetchPerformanceLogs(days: number): Promise<PerformanceRow
   return (data ?? []) as PerformanceRow[];
 }
 
-// ── Email Automation (Cron Monitor) ─────────────────────────────
+// ── Cron Monitor (unified: cron.job + email_automation_config) ──
 export interface CronJobRow {
-  automation_key: string;
+  jobid: number;
+  jobname: string;
+  schedule: string;
+  active: boolean;
   display_name: string;
-  frequency: string | null;
-  is_enabled: boolean;
-  last_executed_at: string | null;
-  execution_count: number;
+  description: string | null;
+  last_run_at: string | null;
+  last_run_status: string | null;
+  last_run_duration_ms: number | null;
+  total_runs_24h: number;
+  total_failures_24h: number;
 }
 
 export async function fetchCronJobs(): Promise<CronJobRow[]> {
-  const { data, error } = await supabase
-    .from('email_automation_config')
-    .select('automation_key, display_name, frequency, is_enabled, last_executed_at, execution_count')
-    .order('display_name');
+  const { data, error } = await supabase.rpc('get_all_cron_jobs');
   if (error) throw error;
   return (data ?? []) as CronJobRow[];
 }
