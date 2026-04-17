@@ -62,17 +62,25 @@ Deno.serve(async (req) => {
 
     // Separate templates by type
     // Categories handled by SQL triggers (skip here): welcome, milestone, tutorial
-    const triggerCategories = ['welcome', 'milestone', 'tutorial', 'webinar'];
     const inactivityCategories = ['check_in', 'reminder', 'recovery', 'special_offer', 'reactivation', 're_engagement'];
     const signupAgeCategories = ['survey']; // based on signup date, not inactivity
-    const conditionCategories = ['plan_compare', 'integration_guide']; // based on user conditions
 
     const inactivityTemplates = activeTemplates.filter(t => inactivityCategories.includes(t.category) && t.trigger_days > 0);
     const surveyTemplates = activeTemplates.filter(t => signupAgeCategories.includes(t.category));
     const planCompareTemplates = activeTemplates.filter(t => t.category === 'plan_compare');
     const integrationGuideTemplates = activeTemplates.filter(t => t.category === 'integration_guide');
+    // ETAPA 5 — 4 novos blocos
+    const zombieTemplates = activeTemplates.filter(t => t.category === 'zombie');
+    const noResponseTemplates = activeTemplates.filter(t => t.category === 'no_response');
+    const draftAbandonedTemplates = activeTemplates.filter(t => t.category === 'draft_abandoned');
+    const upgradeNudgeTemplates = activeTemplates.filter(t => t.category === 'upgrade_nudge');
 
-    if (!inactivityTemplates.length && !surveyTemplates.length && !planCompareTemplates.length && !integrationGuideTemplates.length) {
+    const hasAnyTemplate = inactivityTemplates.length || surveyTemplates.length ||
+      planCompareTemplates.length || integrationGuideTemplates.length ||
+      zombieTemplates.length || noResponseTemplates.length ||
+      draftAbandonedTemplates.length || upgradeNudgeTemplates.length;
+
+    if (!hasAnyTemplate) {
       return new Response(JSON.stringify({ message: 'Nenhum template processável ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -84,7 +92,7 @@ Deno.serve(async (req) => {
     const allUserIds = authUsers.users.map(u => u.id);
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name, email, user_stage, user_objectives, created_at, facebook_pixel_id, gtm_container_id, whatsapp')
+      .select('id, full_name, email, user_stage, user_objectives, created_at, facebook_pixel_id, gtm_container_id, whatsapp, login_count, plan_limit_hit_type')
       .in('id', allUserIds)
       .not('email', 'is', null);
 
@@ -134,6 +142,21 @@ Deno.serve(async (req) => {
       .select('user_id')
       .in('user_id', allUserIds);
     const usersWithIntegrations = new Set((integrations || []).map(i => i.user_id));
+
+    // Quizzes (para Blocos B e C — Etapa 5)
+    const needsQuizzes = noResponseTemplates.length > 0 || draftAbandonedTemplates.length > 0;
+    const quizzesByUser = new Map<string, Array<{ id: string; status: string; updated_at: string; creation_source: string | null; created_at: string }>>();
+    if (needsQuizzes) {
+      const { data: quizzes } = await supabase
+        .from('quizzes')
+        .select('id, user_id, status, updated_at, creation_source, created_at')
+        .in('user_id', allUserIds);
+      for (const q of quizzes || []) {
+        const list = quizzesByUser.get(q.user_id) || [];
+        list.push(q);
+        quizzesByUser.set(q.user_id, list);
+      }
+    }
 
     const contacts: any[] = [];
 
@@ -253,6 +276,95 @@ Deno.serve(async (req) => {
           }
         }
       }
+
+      // --- BLOCO A — ZOMBIE: login_count <= 1 + 30+ dias signup + sem quiz real ---
+      if (zombieTemplates.length > 0 && (profile.login_count ?? 0) <= 1 && daysSinceSignup >= 30) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const hasRealQuiz = userQuizzes.some(q => (q.creation_source || 'manual') !== 'express_auto');
+        if (!hasRealQuiz) {
+          for (const tmpl of zombieTemplates) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                status: 'pending', priority: 20,
+                days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                user_quiz_count: quizCount, user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
+
+      // --- BLOCO B — NO RESPONSE: quiz publicado há 7+ dias com 0 leads ---
+      if (noResponseTemplates.length > 0 && leadCount === 0) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const hasOldActiveQuiz = userQuizzes.some(q => {
+          if (q.status !== 'active') return false;
+          const ageDays = Math.floor((Date.now() - new Date(q.updated_at).getTime()) / 86400000);
+          return ageDays >= 7;
+        });
+        if (hasOldActiveQuiz) {
+          for (const tmpl of noResponseTemplates) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                status: 'pending', priority: 15,
+                days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                user_quiz_count: quizCount, user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
+
+      // --- BLOCO C — DRAFT ABANDONED: rascunho não-express há 7+ dias + login_count >= 2 ---
+      if (draftAbandonedTemplates.length > 0 && (profile.login_count ?? 0) >= 2) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const hasOldDraft = userQuizzes.some(q => {
+          if (q.status !== 'draft') return false;
+          if ((q.creation_source || 'manual') === 'express_auto') return false;
+          const ageDays = Math.floor((Date.now() - new Date(q.updated_at).getTime()) / 86400000);
+          return ageDays >= 7;
+        });
+        if (hasOldDraft) {
+          for (const tmpl of draftAbandonedTemplates) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                status: 'pending', priority: 10,
+                days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                user_quiz_count: quizCount, user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
+
+      // --- BLOCO D — UPGRADE NUDGE (rede de segurança): plan_limit_hit_type='lead' ---
+      if (upgradeNudgeTemplates.length > 0 && profile.plan_limit_hit_type === 'lead') {
+        for (const tmpl of upgradeNudgeTemplates) {
+          const key = `${profile.id}|${tmpl.id}`;
+          if (!sentSet.has(key)) {
+            contacts.push({
+              user_id: profile.id, email: profile.email, template_id: tmpl.id,
+              status: 'pending', priority: 100,
+              days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+              user_quiz_count: quizCount, user_lead_count: leadCount,
+              scheduled_at: new Date().toISOString(),
+            });
+            sentSet.add(key);
+          }
+        }
+      }
     }
 
     // Respect daily limit
@@ -277,6 +389,10 @@ Deno.serve(async (req) => {
         survey: surveyTemplates.length,
         plan_compare: planCompareTemplates.length,
         integration_guide: integrationGuideTemplates.length,
+        zombie: zombieTemplates.length,
+        no_response: noResponseTemplates.length,
+        draft_abandoned: draftAbandonedTemplates.length,
+        upgrade_nudge: upgradeNudgeTemplates.length,
       }
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
