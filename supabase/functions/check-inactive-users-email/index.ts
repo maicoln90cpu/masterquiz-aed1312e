@@ -100,6 +100,21 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Nenhum perfil com email', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Institutional domains — query DB (single source of truth, fallback hardcoded)
+    const FALLBACK_INSTITUTIONAL = ['gov.br','edu.br','mil.br','jus.br','mp.br','leg.br'];
+    const { data: instDomainsData } = await supabase
+      .from('institutional_email_domains')
+      .select('domain')
+      .eq('is_active', true);
+    const institutionalDomains: string[] = (instDomainsData?.map((d: { domain: string }) => d.domain.toLowerCase()) || FALLBACK_INSTITUTIONAL);
+    const isInstitutional = (email: string | null | undefined): boolean => {
+      if (!email) return false;
+      const host = email.toLowerCase().split('@')[1] || '';
+      if (!host) return false;
+      return institutionalDomains.some(d => host === d || host.endsWith('.' + d));
+    };
+    let institutionalSkipped = 0;
+
     // Blacklist
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('user_id');
     const blacklistedIds = new Set((blacklist || []).map(b => b.user_id));
@@ -277,8 +292,14 @@ Deno.serve(async (req) => {
         }
       }
 
+      // --- FILTRO INSTITUCIONAL para Blocos A/B/C/D (não aplicado nos blocos antigos para preservar comportamento) ---
+      const skipNewBlocksInstitutional = isInstitutional(profile.email);
+      if (skipNewBlocksInstitutional) {
+        institutionalSkipped++;
+      }
+
       // --- BLOCO A — ZOMBIE: login_count <= 1 + 30+ dias signup + sem quiz real ---
-      if (zombieTemplates.length > 0 && (profile.login_count ?? 0) <= 1 && daysSinceSignup >= 30) {
+      if (!skipNewBlocksInstitutional && zombieTemplates.length > 0 && (profile.login_count ?? 0) <= 1 && daysSinceSignup >= 30) {
         const userQuizzes = quizzesByUser.get(profile.id) || [];
         const hasRealQuiz = userQuizzes.some(q => (q.creation_source || 'manual') !== 'express_auto');
         if (!hasRealQuiz) {
@@ -299,7 +320,7 @@ Deno.serve(async (req) => {
       }
 
       // --- BLOCO B — NO RESPONSE: quiz publicado há 7+ dias com 0 leads ---
-      if (noResponseTemplates.length > 0 && leadCount === 0) {
+      if (!skipNewBlocksInstitutional && noResponseTemplates.length > 0 && leadCount === 0) {
         const userQuizzes = quizzesByUser.get(profile.id) || [];
         const hasOldActiveQuiz = userQuizzes.some(q => {
           if (q.status !== 'active') return false;
@@ -324,7 +345,7 @@ Deno.serve(async (req) => {
       }
 
       // --- BLOCO C — DRAFT ABANDONED: rascunho não-express há 7+ dias + login_count >= 2 ---
-      if (draftAbandonedTemplates.length > 0 && (profile.login_count ?? 0) >= 2) {
+      if (!skipNewBlocksInstitutional && draftAbandonedTemplates.length > 0 && (profile.login_count ?? 0) >= 2) {
         const userQuizzes = quizzesByUser.get(profile.id) || [];
         const hasOldDraft = userQuizzes.some(q => {
           if (q.status !== 'draft') return false;
@@ -350,7 +371,7 @@ Deno.serve(async (req) => {
       }
 
       // --- BLOCO D — UPGRADE NUDGE (rede de segurança): plan_limit_hit_type='lead' ---
-      if (upgradeNudgeTemplates.length > 0 && profile.plan_limit_hit_type === 'lead') {
+      if (!skipNewBlocksInstitutional && upgradeNudgeTemplates.length > 0 && profile.plan_limit_hit_type === 'lead') {
         for (const tmpl of upgradeNudgeTemplates) {
           const key = `${profile.id}|${tmpl.id}`;
           if (!sentSet.has(key)) {
@@ -393,6 +414,8 @@ Deno.serve(async (req) => {
         no_response: noResponseTemplates.length,
         draft_abandoned: draftAbandonedTemplates.length,
         upgrade_nudge: upgradeNudgeTemplates.length,
+        institutional_skipped: institutionalSkipped,
+        institutional_domains_loaded: institutionalDomains.length,
       }
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
