@@ -158,7 +158,8 @@ const pt = {
       errorGenerating: "Erro ao gerar quiz. Tente novamente.",
       quizCreated: "✨ Quiz criado com IA! Acesse 'Seus Quizzes' para editar.",
       notAvailableTitle: "Recurso não disponível no seu plano",
-      notAvailableDesc: "A geração automática de quiz por IA está disponível apenas em planos pagos. Faça upgrade para desbloquear esta funcionalidade!",
+      notAvailableDesc:
+        "A geração automática de quiz por IA está disponível apenas em planos pagos. Faça upgrade para desbloquear esta funcionalidade!",
       seePlans: "Ver Planos",
       numberOfQuestions: "Número de Perguntas",
       questionRange: "Entre {{min}} e {{max}} perguntas",
@@ -1629,7 +1630,8 @@ const pt = {
       optionPlaceholder: "Opção {{index}}",
       scorePlaceholder: "Pts",
       scoreTitle: "Pontuação",
-      emojiHint: "😊 Clique no ícone de emoji para adicionar um emoji visual a cada opção. 💡 Defina pontos para resultados condicionais.",
+      emojiHint:
+        "😊 Clique no ícone de emoji para adicionar um emoji visual a cada opção. 💡 Defina pontos para resultados condicionais.",
       yesNoConfig: "Configuração Sim/Não",
       yesLabel: "Sim",
       noLabel: "Não",
@@ -2023,7 +2025,8 @@ const pt = {
   cookies: {
     title: "Usamos cookies",
     description: "Para melhorar sua experiência e personalizar conteúdo",
-    summary: "Utilizamos cookies para análises, funcionalidades e marketing. Você pode aceitar todos, recusar ou personalizar suas preferências.",
+    summary:
+      "Utilizamos cookies para análises, funcionalidades e marketing. Você pode aceitar todos, recusar ou personalizar suas preferências.",
     learnMore: "Saiba mais",
     customize: "Personalizar",
     rejectAll: "Recusar",
@@ -2071,7 +2074,8 @@ const pt = {
     titlePlaceholder: "Tradução do título para",
     descriptionPlaceholder: "Tradução da descrição para",
     tip: "💡 Dica:",
-    tipText: "As traduções das perguntas podem ser adicionadas futuramente. Por enquanto, foque no título e descrição do quiz.",
+    tipText:
+      "As traduções das perguntas podem ser adicionadas futuramente. Por enquanto, foque no título e descrição do quiz.",
     translationsSaved: "Traduções salvas com sucesso!",
     saveError: "Erro ao salvar traduções:",
   },
@@ -2085,7 +2089,8 @@ const pt = {
     savedDesc: "As configurações de tracking foram atualizadas. Recarregue a página para aplicar.",
     saveError: "Erro ao salvar",
     saveErrorDesc: "Não foi possível salvar as configurações.",
-    configureInfo: "Configure os IDs de tracking centralizadamente. Após salvar, recarregue a página para aplicar as mudanças.",
+    configureInfo:
+      "Configure os IDs de tracking centralizadamente. Após salvar, recarregue a página para aplicar as mudanças.",
     saveButton: "Salvar Configurações",
     cookieConsent: {
       title: "Consentimento de Cookies (LGPD)",
@@ -2093,9 +2098,11 @@ const pt = {
       requireLabel: "Exigir consentimento de cookies",
       requireDesc: "Quando ativado, o banner de cookies aparece e GTM só carrega após aceite",
       lgpdActive: "Modo LGPD ativo:",
-      lgpdActiveDesc: "Banner de cookies aparece para visitantes. GTM/Pixel só carrega após usuário aceitar cookies de analytics/marketing.",
+      lgpdActiveDesc:
+        "Banner de cookies aparece para visitantes. GTM/Pixel só carrega após usuário aceitar cookies de analytics/marketing.",
       warning: "ATENÇÃO:",
-      warningDesc: "Desativar o consentimento pode violar a LGPD. GTM/Pixel carregarão imediatamente para todos os visitantes. Use apenas se tiver outra forma de obter consentimento ou se seu site não opera no Brasil.",
+      warningDesc:
+        "Desativar o consentimento pode violar a LGPD. GTM/Pixel carregarão imediatamente para todos os visitantes. Use apenas se tiver outra forma de obter consentimento ou se seu site não opera no Brasil.",
     },
     gtm: {
       title: "Google Tag Manager",
@@ -2124,7 +2131,8 @@ const pt = {
     benefitSize: "Upload de até 500MB por vídeo",
     benefitStreaming: "Streaming otimizado com adaptive bitrate",
     benefitCost: "Custos reduzidos de armazenamento",
-    warningDisabled: "Com Bunny CDN desativado, os vídeos serão armazenados no Supabase Storage com limite de 100MB por arquivo e sem otimização de CDN global.",
+    warningDisabled:
+      "Com Bunny CDN desativado, os vídeos serão armazenados no Supabase Storage com limite de 100MB por arquivo e sem otimização de CDN global.",
     saveSettings: "Salvar Configurações",
     statsTitle: "Estatísticas Bunny CDN",
     videosInCdn: "Vídeos no CDN",
@@ -2164,20 +2172,17 @@ const pt = {
       agency: {
         title: "Agências de marketing digital",
         problem: "Pare de entregar lead curioso.",
-        solution:
-          "Use quizzes para entregar leads que já entenderam o problema e avançam no funil certos.",
+        solution: "Use quizzes para entregar leads que já entenderam o problema e avançam no funil certos.",
       },
       infoproducer: {
         title: "Infoprodutores e lançadores",
         problem: "Não mande mais tráfego frio direto para VSL ou checkout.",
-        solution:
-          "Faça o lead perceber que precisa da sua solução antes da oferta.",
+        solution: "Faça o lead perceber que precisa da sua solução antes da oferta.",
       },
       traffic_manager: {
         title: "Gestores de tráfego",
         problem: "O anúncio traz gente. O quiz traz decisão.",
-        solution:
-          "Use o MasterQuiz para preparar o lead antes do clique mais caro.",
+        solution: "Use o MasterQuiz para preparar o lead antes do clique mais caro.",
       },
       small_business: {
         title: "Freelancers e consultores",
@@ -2195,7 +2200,8 @@ const pt = {
       step3: "Você joga todo mundo no mesmo fluxo ou no mesmo destino genérico",
       step4: "Seu time (ou você) passa o dia atendendo curiosos, 'só olhando', sem perfil de compra",
       step5: "E no fim, fica a sensação: 'meu tráfego não presta'",
-      conclusion: "Na maioria dos funis, mais de 70% dos leads chegam no checkout sem consciência real. O problema não é o tráfego — é o funil que não qualifica ninguém no caminho.",
+      conclusion:
+        "Na maioria dos funis, mais de 70% dos leads chegam no checkout sem consciência real. O problema não é o tráfego — é o funil que não qualifica ninguém no caminho.",
       action: "A forma mais simples de corrigir isso é adicionar uma etapa de quiz entre o anúncio e a oferta.",
       flowTitle: "❌ Fluxo Tradicional (com problemas)",
       flow1: "Tráfego pago",
@@ -2276,8 +2282,7 @@ const pt = {
         title: "Consultores",
         quizName: "Quiz de diagnóstico: 'Descubra seu nível de maturidade em [tema]'",
         questions: "Perguntas sobre negócio, desafios, momento atual",
-        result:
-          "Leads com diagnóstico pronto, já divididos por nível – fale só com quem tem fit e budget",
+        result: "Leads com diagnóstico pronto, já divididos por nível – fale só com quem tem fit e budget",
       },
       freelancer: {
         title: "Freelancers",
@@ -2405,28 +2410,23 @@ const pt = {
       },
       q2: {
         question: "Preciso de cartão de crédito para testar?",
-        answer:
-          "Não. Você pode criar sua conta e testar o sistema sem informar cartão.",
+        answer: "Não. Você pode criar sua conta e testar o sistema sem informar cartão.",
       },
       q3: {
         question: "Em quanto tempo consigo criar meu primeiro quiz?",
-        answer:
-          "Na maioria dos casos, menos de 10 minutos usando um template.",
+        answer: "Na maioria dos casos, menos de 10 minutos usando um template.",
       },
       q4: {
         question: "Funciona para qualquer nicho?",
-        answer:
-          "Sim. O MasterQuiz funciona para infoprodutos, serviços, consultorias, lançamentos e vendas diretas.",
+        answer: "Sim. O MasterQuiz funciona para infoprodutos, serviços, consultorias, lançamentos e vendas diretas.",
       },
       q5: {
         question: "O quiz substitui minha página de vendas?",
-        answer:
-          "Não. Ele prepara o lead antes da página de vendas ou checkout, aumentando a taxa de decisão.",
+        answer: "Não. Ele prepara o lead antes da página de vendas ou checkout, aumentando a taxa de decisão.",
       },
       q6: {
         question: "Posso integrar com minhas ferramentas?",
-        answer:
-          "Sim. Você pode integrar com Pixel, Google Tag Manager, CRM, e ferramentas de automação.",
+        answer: "Sim. Você pode integrar com Pixel, Google Tag Manager, CRM, e ferramentas de automação.",
       },
     },
     finalCTA: {
@@ -2676,7 +2676,8 @@ const pt = {
   kiwifySuccess: {
     verifyingSubscription: "Verificando sua assinatura...",
     paymentConfirmed: "Pagamento Confirmado!",
-    congratulations: "Parabéns! Sua assinatura foi ativada com sucesso. Você já pode começar a criar quizzes incríveis e capturar leads qualificados.",
+    congratulations:
+      "Parabéns! Sua assinatura foi ativada com sucesso. Você já pode começar a criar quizzes incríveis e capturar leads qualificados.",
     goToDashboard: "Ir para o Dashboard",
     needHelp: "Precisa de ajuda? Entre em contato com nosso suporte a qualquer momento.",
     copyright: "© {{year}} MasterQuizz. Todos os direitos reservados.",
@@ -2684,7 +2685,8 @@ const pt = {
   },
   kiwifyCancel: {
     title: "Pagamento Cancelado",
-    description: "Seu pagamento foi cancelado. Não se preocupe, você pode tentar novamente quando estiver pronto ou continuar usando o plano gratuito.",
+    description:
+      "Seu pagamento foi cancelado. Não se preocupe, você pode tentar novamente quando estiver pronto ou continuar usando o plano gratuito.",
     tryAgain: "Tentar Novamente",
     backToDashboard: "Voltar ao Dashboard",
     helpCenter: "Central de Ajuda",
@@ -2775,11 +2777,23 @@ const pt = {
     dashboardFeatures: {
       title: "Funcionalidades do Dashboard",
       subtitle: "Conheça cada área da plataforma",
-      dashboard: { title: "Dashboard Principal", description: "Visão geral com estatísticas de quizzes, leads e conversões em tempo real." },
-      quizCreator: { title: "Criador de Quiz", description: "Editor visual com blocos drag-and-drop, templates prontos e geração por IA." },
+      dashboard: {
+        title: "Dashboard Principal",
+        description: "Visão geral com estatísticas de quizzes, leads e conversões em tempo real.",
+      },
+      quizCreator: {
+        title: "Criador de Quiz",
+        description: "Editor visual com blocos drag-and-drop, templates prontos e geração por IA.",
+      },
       crm: { title: "CRM Kanban", description: "Gerencie seus leads em um quadro visual com etapas personalizáveis." },
-      analytics: { title: "Analytics Avançado", description: "Gráficos, heatmaps e funil de conversão para entender seu público." },
-      visualEditor: { title: "Editor Visual", description: "Personalize cores, fontes e aparência com preview em tempo real." },
+      analytics: {
+        title: "Analytics Avançado",
+        description: "Gráficos, heatmaps e funil de conversão para entender seu público.",
+      },
+      visualEditor: {
+        title: "Editor Visual",
+        description: "Personalize cores, fontes e aparência com preview em tempo real.",
+      },
       mediaGallery: { title: "Galeria de Mídia", description: "Organize imagens, vídeos e áudios em um só lugar." },
       integrations: { title: "Integrações", description: "Conecte com Zapier, Make, n8n, HubSpot, RD Station e mais." },
       settings: { title: "Configurações", description: "Personalize seu perfil, tracking e preferências do sistema." },
@@ -2790,85 +2804,250 @@ const pt = {
     categories: {
       general: {
         title: "📋 Perguntas Gerais",
-        q1: { q: "O que é o MasterQuizz?", a: "O MasterQuizz é uma plataforma completa para criar quizzes interativos que qualificam leads, segmentam seu público e aumentam suas conversões. Com ele você cria, publica e gerencia quizzes profissionais sem precisar de conhecimento técnico." },
-        q2: { q: "Para quem o MasterQuizz é indicado?", a: "Infoprodutores, agências de marketing, coaches, consultores, e-commerces e qualquer profissional que deseja qualificar melhor seus leads antes de enviar para o checkout ou time de vendas." },
-        q3: { q: "Preciso saber programar para usar?", a: "Não! O MasterQuizz foi criado para ser 100% visual. Você arrasta blocos, personaliza cores e publica com poucos cliques. Nenhum código necessário." },
-        q4: { q: "Posso usar no celular?", a: "Sim! A plataforma é responsiva e funciona em qualquer dispositivo. Seus quizzes também são otimizados para mobile, garantindo ótima experiência para seus respondentes." },
-        q5: { q: "Quantos quizzes posso criar?", a: "Depende do seu plano. O plano gratuito permite criar alguns quizzes para testar. Planos pagos oferecem quizzes ilimitados ou limites maiores." },
-        q6: { q: "Os quizzes funcionam em qualquer dispositivo?", a: "Sim! Todos os quizzes são 100% responsivos e funcionam perfeitamente em desktop, tablet e celular." },
-        q7: { q: "Como funciona o período de teste?", a: "Você pode criar uma conta gratuita e testar as principais funcionalidades. Quando precisar de mais recursos, pode fazer upgrade a qualquer momento." },
-        q8: { q: "Posso cancelar a qualquer momento?", a: "Sim! Não há fidelidade. Você pode cancelar sua assinatura quando quiser, sem multas ou taxas extras." },
-        q9: { q: "Os dados são seguros?", a: "Sim! Utilizamos criptografia de ponta, servidores seguros e seguimos as diretrizes da LGPD para proteção de dados pessoais." },
-        q10: { q: "Posso exportar meus dados?", a: "Sim! Você pode exportar suas respostas e leads para Excel/CSV a qualquer momento, diretamente pelo painel." },
+        q1: {
+          q: "O que é o MasterQuizz?",
+          a: "O MasterQuizz é uma plataforma completa para criar quizzes interativos que qualificam leads, segmentam seu público e aumentam suas conversões. Com ele você cria, publica e gerencia quizzes profissionais sem precisar de conhecimento técnico.",
+        },
+        q2: {
+          q: "Para quem o MasterQuizz é indicado?",
+          a: "Infoprodutores, agências de marketing, coaches, consultores, e-commerces e qualquer profissional que deseja qualificar melhor seus leads antes de enviar para o checkout ou time de vendas.",
+        },
+        q3: {
+          q: "Preciso saber programar para usar?",
+          a: "Não! O MasterQuizz foi criado para ser 100% visual. Você arrasta blocos, personaliza cores e publica com poucos cliques. Nenhum código necessário.",
+        },
+        q4: {
+          q: "Posso usar no celular?",
+          a: "Sim! A plataforma é responsiva e funciona em qualquer dispositivo. Seus quizzes também são otimizados para mobile, garantindo ótima experiência para seus respondentes.",
+        },
+        q5: {
+          q: "Quantos quizzes posso criar?",
+          a: "Depende do seu plano. O plano gratuito permite criar alguns quizzes para testar. Planos pagos oferecem quizzes ilimitados ou limites maiores.",
+        },
+        q6: {
+          q: "Os quizzes funcionam em qualquer dispositivo?",
+          a: "Sim! Todos os quizzes são 100% responsivos e funcionam perfeitamente em desktop, tablet e celular.",
+        },
+        q7: {
+          q: "Como funciona o período de teste?",
+          a: "Você pode criar uma conta gratuita e testar as principais funcionalidades. Quando precisar de mais recursos, pode fazer upgrade a qualquer momento.",
+        },
+        q8: {
+          q: "Posso cancelar a qualquer momento?",
+          a: "Sim! Não há fidelidade. Você pode cancelar sua assinatura quando quiser, sem multas ou taxas extras.",
+        },
+        q9: {
+          q: "Os dados são seguros?",
+          a: "Sim! Utilizamos criptografia de ponta, servidores seguros e seguimos as diretrizes da LGPD para proteção de dados pessoais.",
+        },
+        q10: {
+          q: "Posso exportar meus dados?",
+          a: "Sim! Você pode exportar suas respostas e leads para Excel/CSV a qualquer momento, diretamente pelo painel.",
+        },
       },
       creation: {
         title: "🎯 Criação de Quiz",
-        q1: { q: "Como criar um quiz do zero?", a: "No dashboard, clique em 'Novo Quiz'. Você pode escolher um template pronto, gerar com IA ou começar do zero. Use o editor visual para adicionar perguntas, personalizar a aparência e configurar os resultados." },
-        q2: { q: "Quais tipos de perguntas posso usar?", a: "Sim/Não, Múltipla Escolha (uma resposta), Múltipla Escolha (várias respostas), e Texto Livre. Você também pode adicionar imagens e vídeos às perguntas." },
-        q3: { q: "Como funciona a geração por IA?", a: "Digite o tema do seu quiz e a IA gera automaticamente perguntas, opções de resposta e resultados. Você pode editar tudo depois. É possível também enviar um PDF para a IA usar como base." },
-        q4: { q: "Posso gerar quiz a partir de PDF?", a: "Sim! Na geração por IA, você pode fazer upload de um PDF (e-book, apostila, material) e a IA criará perguntas baseadas no conteúdo." },
-        q5: { q: "Quantas perguntas um quiz pode ter?", a: "Depende do seu plano. Planos pagos permitem mais perguntas por quiz. Recomendamos entre 5-15 perguntas para melhor engajamento." },
-        q6: { q: "Como adicionar vídeos e imagens?", a: "No editor, cada pergunta tem opções para adicionar mídia. Você pode fazer upload de imagens/vídeos ou usar a Galeria de Mídia. Vídeos podem ser hospedados no nosso CDN próprio." },
-        q7: { q: "Posso usar lógica condicional?", a: "Sim! Com a lógica condicional, você pode mostrar perguntas diferentes baseadas nas respostas anteriores, criando experiências personalizadas." },
-        q8: { q: "Como funcionam os resultados por score?", a: "Cada opção de resposta pode ter uma pontuação. Ao final, o sistema soma os pontos e mostra o resultado correspondente à faixa de score do respondente." },
-        q9: { q: "O que são calculadoras de resultado?", a: "Calculadoras permitem criar fórmulas personalizadas com as respostas. Por exemplo: calcular orçamento estimado, economia potencial, índice de compatibilidade, etc." },
-        q10: { q: "Como personalizar a aparência do quiz?", a: "Na etapa de Aparência, você pode escolher templates, cores, fontes, adicionar seu logo e ocultar a marca MasterQuizz (em planos pagos)." },
+        q1: {
+          q: "Como criar um quiz do zero?",
+          a: "No dashboard, clique em 'Novo Quiz'. Você pode escolher um template pronto, gerar com IA ou começar do zero. Use o editor visual para adicionar perguntas, personalizar a aparência e configurar os resultados.",
+        },
+        q2: {
+          q: "Quais tipos de perguntas posso usar?",
+          a: "Sim/Não, Múltipla Escolha (uma resposta), Múltipla Escolha (várias respostas), e Texto Livre. Você também pode adicionar imagens e vídeos às perguntas.",
+        },
+        q3: {
+          q: "Como funciona a geração por IA?",
+          a: "Digite o tema do seu quiz e a IA gera automaticamente perguntas, opções de resposta e resultados. Você pode editar tudo depois. É possível também enviar um PDF para a IA usar como base.",
+        },
+        q4: {
+          q: "Posso gerar quiz a partir de PDF?",
+          a: "Sim! Na geração por IA, você pode fazer upload de um PDF (e-book, apostila, material) e a IA criará perguntas baseadas no conteúdo.",
+        },
+        q5: {
+          q: "Quantas perguntas um quiz pode ter?",
+          a: "Depende do seu plano. Planos pagos permitem mais perguntas por quiz. Recomendamos entre 5-15 perguntas para melhor engajamento.",
+        },
+        q6: {
+          q: "Como adicionar vídeos e imagens?",
+          a: "No editor, cada pergunta tem opções para adicionar mídia. Você pode fazer upload de imagens/vídeos ou usar a Galeria de Mídia. Vídeos podem ser hospedados no nosso CDN próprio.",
+        },
+        q7: {
+          q: "Posso usar lógica condicional?",
+          a: "Sim! Com a lógica condicional, você pode mostrar perguntas diferentes baseadas nas respostas anteriores, criando experiências personalizadas.",
+        },
+        q8: {
+          q: "Como funcionam os resultados por score?",
+          a: "Cada opção de resposta pode ter uma pontuação. Ao final, o sistema soma os pontos e mostra o resultado correspondente à faixa de score do respondente.",
+        },
+        q9: {
+          q: "O que são calculadoras de resultado?",
+          a: "Calculadoras permitem criar fórmulas personalizadas com as respostas. Por exemplo: calcular orçamento estimado, economia potencial, índice de compatibilidade, etc.",
+        },
+        q10: {
+          q: "Como personalizar a aparência do quiz?",
+          a: "Na etapa de Aparência, você pode escolher templates, cores, fontes, adicionar seu logo e ocultar a marca MasterQuizz (em planos pagos).",
+        },
       },
       crm: {
         title: "👥 CRM",
-        q1: { q: "O que é o CRM Kanban?", a: "É um quadro visual estilo Trello onde seus leads aparecem como cards. Você pode organizá-los em colunas (Novo, Em Contato, Qualificado, etc.) arrastando os cards." },
-        q2: { q: "Como mover leads entre etapas?", a: "Basta arrastar o card do lead para a coluna desejada. A mudança é salva automaticamente." },
-        q3: { q: "Posso exportar os leads?", a: "Sim! Na página do CRM ou Respostas, use o botão de exportar para baixar um arquivo Excel com todos os dados." },
-        q4: { q: "Como filtrar por tags?", a: "Você pode adicionar tags aos seus quizzes e leads. Use os filtros na parte superior para ver apenas leads com determinadas tags." },
-        q5: { q: "Os leads são atualizados em tempo real?", a: "Sim! Quando um novo lead responde seu quiz, ele aparece automaticamente no CRM sem precisar recarregar a página." },
+        q1: {
+          q: "O que é o CRM Kanban?",
+          a: "É um quadro visual estilo Trello onde seus leads aparecem como cards. Você pode organizá-los em colunas (Novo, Em Contato, Qualificado, etc.) arrastando os cards.",
+        },
+        q2: {
+          q: "Como mover leads entre etapas?",
+          a: "Basta arrastar o card do lead para a coluna desejada. A mudança é salva automaticamente.",
+        },
+        q3: {
+          q: "Posso exportar os leads?",
+          a: "Sim! Na página do CRM ou Respostas, use o botão de exportar para baixar um arquivo Excel com todos os dados.",
+        },
+        q4: {
+          q: "Como filtrar por tags?",
+          a: "Você pode adicionar tags aos seus quizzes e leads. Use os filtros na parte superior para ver apenas leads com determinadas tags.",
+        },
+        q5: {
+          q: "Os leads são atualizados em tempo real?",
+          a: "Sim! Quando um novo lead responde seu quiz, ele aparece automaticamente no CRM sem precisar recarregar a página.",
+        },
       },
       responses: {
         title: "📊 Respostas",
-        q1: { q: "Onde vejo as respostas recebidas?", a: "No menu lateral, clique em 'Respostas'. Você verá uma tabela com todas as respostas de todos os seus quizzes." },
-        q2: { q: "Posso filtrar por quiz ou período?", a: "Sim! Use os filtros na parte superior para selecionar um quiz específico, período de datas ou buscar por email/nome." },
-        q3: { q: "Como exportar respostas para Excel?", a: "Na página de Respostas, clique no botão 'Exportar' para baixar todas as respostas filtradas em formato Excel." },
-        q4: { q: "Vejo respostas parciais (abandonos)?", a: "Sim! O sistema registra o progresso de cada respondente. No Analytics você pode ver o funil de abandono por etapa." },
-        q5: { q: "Como identificar cada respondente?", a: "Cada resposta mostra nome, email, WhatsApp (se coletados), data/hora, quiz respondido e todas as respostas dadas." },
+        q1: {
+          q: "Onde vejo as respostas recebidas?",
+          a: "No menu lateral, clique em 'Respostas'. Você verá uma tabela com todas as respostas de todos os seus quizzes.",
+        },
+        q2: {
+          q: "Posso filtrar por quiz ou período?",
+          a: "Sim! Use os filtros na parte superior para selecionar um quiz específico, período de datas ou buscar por email/nome.",
+        },
+        q3: {
+          q: "Como exportar respostas para Excel?",
+          a: "Na página de Respostas, clique no botão 'Exportar' para baixar todas as respostas filtradas em formato Excel.",
+        },
+        q4: {
+          q: "Vejo respostas parciais (abandonos)?",
+          a: "Sim! O sistema registra o progresso de cada respondente. No Analytics você pode ver o funil de abandono por etapa.",
+        },
+        q5: {
+          q: "Como identificar cada respondente?",
+          a: "Cada resposta mostra nome, email, WhatsApp (se coletados), data/hora, quiz respondido e todas as respostas dadas.",
+        },
       },
       analytics: {
         title: "📈 Analytics",
-        q1: { q: "Que métricas o Analytics mostra?", a: "Visualizações, inícios, completados, taxa de conversão, tempo médio de resposta, respostas por dia/semana/mês, e muito mais." },
-        q2: { q: "O que é o Heatmap de respostas?", a: "O Heatmap mostra visualmente quais opções são mais escolhidas em cada pergunta. Cores quentes indicam opções populares." },
-        q3: { q: "Como funciona o Funil de conversão?", a: "O funil mostra quantas pessoas chegaram em cada etapa do quiz, ajudando a identificar onde ocorrem os abandonos." },
-        q4: { q: "Posso ver analytics por quiz?", a: "Sim! Você pode filtrar os gráficos por quiz específico ou ver dados consolidados de todos os quizzes." },
-        q5: { q: "Os dados são em tempo real?", a: "Sim! Os gráficos e métricas atualizam automaticamente conforme novas respostas são recebidas." },
+        q1: {
+          q: "Que métricas o Analytics mostra?",
+          a: "Visualizações, inícios, completados, taxa de conversão, tempo médio de resposta, respostas por dia/semana/mês, e muito mais.",
+        },
+        q2: {
+          q: "O que é o Heatmap de respostas?",
+          a: "O Heatmap mostra visualmente quais opções são mais escolhidas em cada pergunta. Cores quentes indicam opções populares.",
+        },
+        q3: {
+          q: "Como funciona o Funil de conversão?",
+          a: "O funil mostra quantas pessoas chegaram em cada etapa do quiz, ajudando a identificar onde ocorrem os abandonos.",
+        },
+        q4: {
+          q: "Posso ver analytics por quiz?",
+          a: "Sim! Você pode filtrar os gráficos por quiz específico ou ver dados consolidados de todos os quizzes.",
+        },
+        q5: {
+          q: "Os dados são em tempo real?",
+          a: "Sim! Os gráficos e métricas atualizam automaticamente conforme novas respostas são recebidas.",
+        },
       },
       gallery: {
         title: "🖼️ Galeria de Mídia",
-        q1: { q: "Que tipos de arquivos posso enviar?", a: "Imagens (JPG, PNG, GIF, WebP), Vídeos (MP4, WebM) e Áudios (MP3, WAV). Tamanho máximo varia por plano." },
-        q2: { q: "Qual o limite de armazenamento?", a: "Depende do seu plano. Planos pagos oferecem mais espaço. Você pode ver seu uso atual nas Configurações." },
-        q3: { q: "Posso usar imagens externas?", a: "Sim! Além do upload, você pode colar URLs de imagens hospedadas externamente." },
-        q4: { q: "Como organizar meus arquivos?", a: "A galeria mostra todos os arquivos com preview. Você pode buscar por nome ou filtrar por tipo de arquivo." },
-        q5: { q: "Os vídeos são hospedados onde?", a: "Vídeos podem ser hospedados no nosso CDN próprio (Bunny CDN) para melhor performance, ou você pode usar links do YouTube/Vimeo." },
+        q1: {
+          q: "Que tipos de arquivos posso enviar?",
+          a: "Imagens (JPG, PNG, GIF, WebP), Vídeos (MP4, WebM) e Áudios (MP3, WAV). Tamanho máximo varia por plano.",
+        },
+        q2: {
+          q: "Qual o limite de armazenamento?",
+          a: "Depende do seu plano. Planos pagos oferecem mais espaço. Você pode ver seu uso atual nas Configurações.",
+        },
+        q3: {
+          q: "Posso usar imagens externas?",
+          a: "Sim! Além do upload, você pode colar URLs de imagens hospedadas externamente.",
+        },
+        q4: {
+          q: "Como organizar meus arquivos?",
+          a: "A galeria mostra todos os arquivos com preview. Você pode buscar por nome ou filtrar por tipo de arquivo.",
+        },
+        q5: {
+          q: "Os vídeos são hospedados onde?",
+          a: "Vídeos podem ser hospedados no nosso CDN próprio (Bunny CDN) para melhor performance, ou você pode usar links do YouTube/Vimeo.",
+        },
       },
       video: {
         title: "🎬 Upload de Vídeo",
-        q1: { q: "Qual tamanho máximo de vídeo?", a: "Depende do seu plano. Planos premium permitem vídeos maiores. O sistema otimiza automaticamente para streaming." },
-        q2: { q: "Como funciona o player integrado?", a: "Vídeos aparecem com um player customizado que mostra controles de play, volume, fullscreen e progresso." },
-        q3: { q: "Os vídeos têm analytics?", a: "Sim! Você pode ver quantas pessoas assistiram, tempo médio de visualização, taxa de conclusão e mais." },
-        q4: { q: "Posso usar vídeos do YouTube?", a: "Sim! Você pode embedar vídeos do YouTube, Vimeo ou usar o upload direto para nosso CDN." },
-        q5: { q: "Qual CDN é utilizado?", a: "Utilizamos Bunny CDN, uma das CDNs mais rápidas do mundo, garantindo carregamento rápido em qualquer região." },
+        q1: {
+          q: "Qual tamanho máximo de vídeo?",
+          a: "Depende do seu plano. Planos premium permitem vídeos maiores. O sistema otimiza automaticamente para streaming.",
+        },
+        q2: {
+          q: "Como funciona o player integrado?",
+          a: "Vídeos aparecem com um player customizado que mostra controles de play, volume, fullscreen e progresso.",
+        },
+        q3: {
+          q: "Os vídeos têm analytics?",
+          a: "Sim! Você pode ver quantas pessoas assistiram, tempo médio de visualização, taxa de conclusão e mais.",
+        },
+        q4: {
+          q: "Posso usar vídeos do YouTube?",
+          a: "Sim! Você pode embedar vídeos do YouTube, Vimeo ou usar o upload direto para nosso CDN.",
+        },
+        q5: {
+          q: "Qual CDN é utilizado?",
+          a: "Utilizamos Bunny CDN, uma das CDNs mais rápidas do mundo, garantindo carregamento rápido em qualquer região.",
+        },
       },
       integrations: {
         title: "🔗 Integrações",
-        q1: { q: "Quais integrações estão disponíveis?", a: "Zapier, Make (Integromat), n8n, HubSpot, RD Station, Pipedrive, Mailchimp, ActiveCampaign, e webhooks personalizados." },
-        q2: { q: "Como conectar ao Zapier/Make?", a: "Na página de Integrações, selecione a plataforma e siga o passo-a-passo. Você receberá uma URL de webhook para configurar." },
-        q3: { q: "Posso integrar com meu CRM externo?", a: "Sim! Via integrações diretas (HubSpot, Pipedrive, RD Station) ou via Zapier/Make/n8n para qualquer outro CRM." },
-        q4: { q: "Como funciona a integração com Kiwify?", a: "O MasterQuizz recebe webhooks do Kiwify para sincronizar compras e atualizar o status de assinatura dos usuários automaticamente." },
-        q5: { q: "Preciso de conhecimento técnico?", a: "Para integrações básicas (Zapier, Make), não. Para webhooks personalizados, conhecimento básico de APIs ajuda." },
+        q1: {
+          q: "Quais integrações estão disponíveis?",
+          a: "Zapier, Make (Integromat), n8n, HubSpot, RD Station, Pipedrive, Mailchimp, ActiveCampaign, e webhooks personalizados.",
+        },
+        q2: {
+          q: "Como conectar ao Zapier/Make?",
+          a: "Na página de Integrações, selecione a plataforma e siga o passo-a-passo. Você receberá uma URL de webhook para configurar.",
+        },
+        q3: {
+          q: "Posso integrar com meu CRM externo?",
+          a: "Sim! Via integrações diretas (HubSpot, Pipedrive, RD Station) ou via Zapier/Make/n8n para qualquer outro CRM.",
+        },
+        q4: {
+          q: "Como funciona a integração com Kiwify?",
+          a: "O MasterQuizz recebe webhooks do Kiwify para sincronizar compras e atualizar o status de assinatura dos usuários automaticamente.",
+        },
+        q5: {
+          q: "Preciso de conhecimento técnico?",
+          a: "Para integrações básicas (Zapier, Make), não. Para webhooks personalizados, conhecimento básico de APIs ajuda.",
+        },
       },
       webhooks: {
         title: "🔧 Webhooks e Tracking",
-        q1: { q: "O que são webhooks?", a: "Webhooks são notificações automáticas enviadas para uma URL quando algo acontece (ex: novo lead). Permitem integrar com qualquer sistema." },
-        q2: { q: "Como configurar o Facebook Pixel?", a: "Nas configurações de cada quiz, você pode adicionar seu Pixel ID. Os eventos de view, lead e conversão são enviados automaticamente." },
-        q3: { q: "Posso usar GTM global?", a: "Sim! Nas suas Configurações de perfil, você pode adicionar o ID do Google Tag Manager que será carregado em todos os seus quizzes." },
-        q4: { q: "Os eventos são enviados em tempo real?", a: "Sim! Assim que um lead responde, os webhooks são disparados imediatamente e os eventos de tracking são enviados." },
-        q5: { q: "Onde vejo os logs de webhook?", a: "Na página de Webhooks você pode ver o histórico de todos os webhooks enviados, com status de sucesso/erro e detalhes." },
+        q1: {
+          q: "O que são webhooks?",
+          a: "Webhooks são notificações automáticas enviadas para uma URL quando algo acontece (ex: novo lead). Permitem integrar com qualquer sistema.",
+        },
+        q2: {
+          q: "Como configurar o Facebook Pixel?",
+          a: "Nas configurações de cada quiz, você pode adicionar seu Pixel ID. Os eventos de view, lead e conversão são enviados automaticamente.",
+        },
+        q3: {
+          q: "Posso usar GTM global?",
+          a: "Sim! Nas suas Configurações de perfil, você pode adicionar o ID do Google Tag Manager que será carregado em todos os seus quizzes.",
+        },
+        q4: {
+          q: "Os eventos são enviados em tempo real?",
+          a: "Sim! Assim que um lead responde, os webhooks são disparados imediatamente e os eventos de tracking são enviados.",
+        },
+        q5: {
+          q: "Onde vejo os logs de webhook?",
+          a: "Na página de Webhooks você pode ver o histórico de todos os webhooks enviados, com status de sucesso/erro e detalhes.",
+        },
       },
     },
     cta: {
@@ -2984,8 +3163,8 @@ const pt = {
     publishButton: "PUBLICAR MEU QUIZ",
     advancedMode: "Modo avançado →",
     celebration: {
-      title: "Seu quiz está no ar! 🎉",
-      subtitle: "\"{{title}}\" foi publicado com sucesso.",
+      title: "Seu quiz de demonstração está no ar! 🎉",
+      subtitle: '"{{title}}" foi publicado com sucesso.',
       openQuiz: "Ver meu quiz",
       goDashboard: "Ir para o Dashboard",
       tip: "Dica: No dashboard você pode acompanhar respostas, configurar integrações e muito mais.",
@@ -4841,7 +5020,8 @@ const en = {
     benefitSize: "Upload up to 500MB per video",
     benefitStreaming: "Optimized streaming with adaptive bitrate",
     benefitCost: "Reduced storage costs",
-    warningDisabled: "With Bunny CDN disabled, videos will be stored in Supabase Storage with a 100MB file limit and no global CDN optimization.",
+    warningDisabled:
+      "With Bunny CDN disabled, videos will be stored in Supabase Storage with a 100MB file limit and no global CDN optimization.",
     saveSettings: "Save Settings",
     statsTitle: "Bunny CDN Statistics",
     videosInCdn: "Videos in CDN",
@@ -4887,14 +5067,12 @@ const en = {
       infoproducer: {
         title: "Info product creators and launchers",
         problem: "Don't send cold traffic straight to VSL or checkout.",
-        solution:
-          "Let the lead realize they need your solution before the offer.",
+        solution: "Let the lead realize they need your solution before the offer.",
       },
       traffic_manager: {
         title: "Traffic managers",
         problem: "The ad brings people. The quiz brings decisions.",
-        solution:
-          "Use MasterQuiz to prepare the lead before the most expensive click.",
+        solution: "Use MasterQuiz to prepare the lead before the most expensive click.",
       },
       small_business: {
         title: "Freelancers and consultants",
@@ -4912,7 +5090,8 @@ const en = {
       step3: "You put everyone in the same flow or the same generic destination",
       step4: "Your team (or you) spends the day serving curious people, 'just looking', with no buying profile",
       step5: "And in the end, the feeling: 'my traffic is bad'",
-      conclusion: "In most funnels, over 70% of leads reach checkout without real awareness. The problem isn't the traffic — it's the funnel that doesn't qualify anyone along the way.",
+      conclusion:
+        "In most funnels, over 70% of leads reach checkout without real awareness. The problem isn't the traffic — it's the funnel that doesn't qualify anyone along the way.",
       action: "The simplest way to fix this is to add a quiz step between the ad and the offer.",
       flowTitle: "❌ Traditional Flow (with problems)",
       flow1: "Paid traffic",
@@ -4993,8 +5172,7 @@ const en = {
         title: "Consultants",
         quizName: "Diagnostic quiz: 'Discover your maturity level in [topic]'",
         questions: "Questions about business, challenges, current moment",
-        result:
-          "Leads with a ready diagnosis, already divided by level — talk only to those with fit and budget",
+        result: "Leads with a ready diagnosis, already divided by level — talk only to those with fit and budget",
       },
       freelancer: {
         title: "Freelancers",
@@ -5122,28 +5300,23 @@ const en = {
       },
       q2: {
         question: "Do I need a credit card to try it?",
-        answer:
-          "No. You can create your account and test the system without entering a credit card.",
+        answer: "No. You can create your account and test the system without entering a credit card.",
       },
       q3: {
         question: "How long does it take to create my first quiz?",
-        answer:
-          "In most cases, less than 10 minutes using a template.",
+        answer: "In most cases, less than 10 minutes using a template.",
       },
       q4: {
         question: "Does it work for any niche?",
-        answer:
-          "Yes. MasterQuiz works for info products, services, consulting, launches and direct sales.",
+        answer: "Yes. MasterQuiz works for info products, services, consulting, launches and direct sales.",
       },
       q5: {
         question: "Does the quiz replace my sales page?",
-        answer:
-          "No. It prepares the lead before the sales page or checkout, increasing the decision rate.",
+        answer: "No. It prepares the lead before the sales page or checkout, increasing the decision rate.",
       },
       q6: {
         question: "Can I integrate with my tools?",
-        answer:
-          "Yes. You can integrate with Pixel, Google Tag Manager, CRM, and automation tools.",
+        answer: "Yes. You can integrate with Pixel, Google Tag Manager, CRM, and automation tools.",
       },
     },
     finalCTA: {
@@ -5184,7 +5357,8 @@ const en = {
   cookies: {
     title: "We use cookies",
     description: "To improve your experience and personalize content",
-    summary: "We use cookies for analytics, functionality and marketing. You can accept all, reject or customize your preferences.",
+    summary:
+      "We use cookies for analytics, functionality and marketing. You can accept all, reject or customize your preferences.",
     learnMore: "Learn more",
     customize: "Customize",
     rejectAll: "Reject",
@@ -5254,9 +5428,11 @@ const en = {
       requireLabel: "Require cookie consent",
       requireDesc: "When enabled, the cookie banner appears and GTM only loads after acceptance",
       lgpdActive: "GDPR mode active:",
-      lgpdActiveDesc: "Cookie banner appears for visitors. GTM/Pixel only loads after user accepts analytics/marketing cookies.",
+      lgpdActiveDesc:
+        "Cookie banner appears for visitors. GTM/Pixel only loads after user accepts analytics/marketing cookies.",
       warning: "WARNING:",
-      warningDesc: "Disabling consent may violate GDPR. GTM/Pixel will load immediately for all visitors. Only use if you have another way to obtain consent or if your site doesn't operate in the EU.",
+      warningDesc:
+        "Disabling consent may violate GDPR. GTM/Pixel will load immediately for all visitors. Only use if you have another way to obtain consent or if your site doesn't operate in the EU.",
     },
     gtm: {
       title: "Google Tag Manager",
@@ -5294,7 +5470,8 @@ const en = {
   kiwifySuccess: {
     verifyingSubscription: "Verifying your subscription...",
     paymentConfirmed: "Payment Confirmed!",
-    congratulations: "Congratulations! Your subscription has been activated successfully. You can now start creating amazing quizzes and capturing qualified leads.",
+    congratulations:
+      "Congratulations! Your subscription has been activated successfully. You can now start creating amazing quizzes and capturing qualified leads.",
     goToDashboard: "Go to Dashboard",
     needHelp: "Need help? Contact our support anytime.",
     copyright: "© {{year}} MasterQuizz. All rights reserved.",
@@ -5302,7 +5479,8 @@ const en = {
   },
   kiwifyCancel: {
     title: "Payment Cancelled",
-    description: "Your payment was cancelled. Don't worry, you can try again when you're ready or continue using the free plan.",
+    description:
+      "Your payment was cancelled. Don't worry, you can try again when you're ready or continue using the free plan.",
     tryAgain: "Try Again",
     backToDashboard: "Back to Dashboard",
     helpCenter: "Help Center",
@@ -5393,13 +5571,28 @@ const en = {
     dashboardFeatures: {
       title: "Dashboard Features",
       subtitle: "Get to know each area of the platform",
-      dashboard: { title: "Main Dashboard", description: "Overview with real-time quiz, leads and conversion statistics." },
-      quizCreator: { title: "Quiz Creator", description: "Visual editor with drag-and-drop blocks, ready templates and AI generation." },
+      dashboard: {
+        title: "Main Dashboard",
+        description: "Overview with real-time quiz, leads and conversion statistics.",
+      },
+      quizCreator: {
+        title: "Quiz Creator",
+        description: "Visual editor with drag-and-drop blocks, ready templates and AI generation.",
+      },
       crm: { title: "Kanban CRM", description: "Manage your leads on a visual board with customizable stages." },
-      analytics: { title: "Advanced Analytics", description: "Charts, heatmaps and conversion funnel to understand your audience." },
-      visualEditor: { title: "Visual Editor", description: "Customize colors, fonts and appearance with real-time preview." },
+      analytics: {
+        title: "Advanced Analytics",
+        description: "Charts, heatmaps and conversion funnel to understand your audience.",
+      },
+      visualEditor: {
+        title: "Visual Editor",
+        description: "Customize colors, fonts and appearance with real-time preview.",
+      },
       mediaGallery: { title: "Media Gallery", description: "Organize images, videos and audio in one place." },
-      integrations: { title: "Integrations", description: "Connect with Zapier, Make, n8n, HubSpot, RD Station and more." },
+      integrations: {
+        title: "Integrations",
+        description: "Connect with Zapier, Make, n8n, HubSpot, RD Station and more.",
+      },
       settings: { title: "Settings", description: "Personalize your profile, tracking and system preferences." },
     },
     faqTitle: "Frequently Asked Questions",
@@ -5408,85 +5601,250 @@ const en = {
     categories: {
       general: {
         title: "📋 General Questions",
-        q1: { q: "What is MasterQuizz?", a: "MasterQuizz is a complete platform for creating interactive quizzes that qualify leads, segment your audience and increase your conversions. With it you create, publish and manage professional quizzes without technical knowledge." },
-        q2: { q: "Who is MasterQuizz for?", a: "Infoproduct creators, marketing agencies, coaches, consultants, e-commerces and any professional who wants to better qualify their leads before sending to checkout or sales team." },
-        q3: { q: "Do I need to know programming?", a: "No! MasterQuizz was created to be 100% visual. You drag blocks, customize colors and publish with a few clicks. No code required." },
-        q4: { q: "Can I use it on mobile?", a: "Yes! The platform is responsive and works on any device. Your quizzes are also optimized for mobile, ensuring great experience for your respondents." },
-        q5: { q: "How many quizzes can I create?", a: "Depends on your plan. The free plan allows creating some quizzes to test. Paid plans offer unlimited quizzes or higher limits." },
-        q6: { q: "Do quizzes work on any device?", a: "Yes! All quizzes are 100% responsive and work perfectly on desktop, tablet and mobile." },
-        q7: { q: "How does the trial period work?", a: "You can create a free account and test the main features. When you need more resources, you can upgrade anytime." },
-        q8: { q: "Can I cancel anytime?", a: "Yes! There's no commitment. You can cancel your subscription whenever you want, without fines or extra fees." },
-        q9: { q: "Is the data secure?", a: "Yes! We use state-of-the-art encryption, secure servers and follow GDPR guidelines for personal data protection." },
-        q10: { q: "Can I export my data?", a: "Yes! You can export your responses and leads to Excel/CSV anytime, directly from the panel." },
+        q1: {
+          q: "What is MasterQuizz?",
+          a: "MasterQuizz is a complete platform for creating interactive quizzes that qualify leads, segment your audience and increase your conversions. With it you create, publish and manage professional quizzes without technical knowledge.",
+        },
+        q2: {
+          q: "Who is MasterQuizz for?",
+          a: "Infoproduct creators, marketing agencies, coaches, consultants, e-commerces and any professional who wants to better qualify their leads before sending to checkout or sales team.",
+        },
+        q3: {
+          q: "Do I need to know programming?",
+          a: "No! MasterQuizz was created to be 100% visual. You drag blocks, customize colors and publish with a few clicks. No code required.",
+        },
+        q4: {
+          q: "Can I use it on mobile?",
+          a: "Yes! The platform is responsive and works on any device. Your quizzes are also optimized for mobile, ensuring great experience for your respondents.",
+        },
+        q5: {
+          q: "How many quizzes can I create?",
+          a: "Depends on your plan. The free plan allows creating some quizzes to test. Paid plans offer unlimited quizzes or higher limits.",
+        },
+        q6: {
+          q: "Do quizzes work on any device?",
+          a: "Yes! All quizzes are 100% responsive and work perfectly on desktop, tablet and mobile.",
+        },
+        q7: {
+          q: "How does the trial period work?",
+          a: "You can create a free account and test the main features. When you need more resources, you can upgrade anytime.",
+        },
+        q8: {
+          q: "Can I cancel anytime?",
+          a: "Yes! There's no commitment. You can cancel your subscription whenever you want, without fines or extra fees.",
+        },
+        q9: {
+          q: "Is the data secure?",
+          a: "Yes! We use state-of-the-art encryption, secure servers and follow GDPR guidelines for personal data protection.",
+        },
+        q10: {
+          q: "Can I export my data?",
+          a: "Yes! You can export your responses and leads to Excel/CSV anytime, directly from the panel.",
+        },
       },
       creation: {
         title: "🎯 Quiz Creation",
-        q1: { q: "How to create a quiz from scratch?", a: "On the dashboard, click 'New Quiz'. You can choose a ready template, generate with AI or start from scratch. Use the visual editor to add questions, customize appearance and configure results." },
-        q2: { q: "What types of questions can I use?", a: "Yes/No, Multiple Choice (single answer), Multiple Choice (multiple answers), and Free Text. You can also add images and videos to questions." },
-        q3: { q: "How does AI generation work?", a: "Type your quiz topic and AI automatically generates questions, answer options and results. You can edit everything afterwards. You can also upload a PDF for AI to use as a base." },
-        q4: { q: "Can I generate quiz from PDF?", a: "Yes! In AI generation, you can upload a PDF (ebook, handout, material) and AI will create questions based on the content." },
-        q5: { q: "How many questions can a quiz have?", a: "Depends on your plan. Paid plans allow more questions per quiz. We recommend 5-15 questions for best engagement." },
-        q6: { q: "How to add videos and images?", a: "In the editor, each question has options to add media. You can upload images/videos or use the Media Gallery. Videos can be hosted on our own CDN." },
-        q7: { q: "Can I use conditional logic?", a: "Yes! With conditional logic, you can show different questions based on previous answers, creating personalized experiences." },
-        q8: { q: "How do score results work?", a: "Each answer option can have a score. At the end, the system adds up points and shows the result corresponding to the respondent's score range." },
-        q9: { q: "What are result calculators?", a: "Calculators allow creating custom formulas with answers. For example: calculate estimated budget, potential savings, compatibility index, etc." },
-        q10: { q: "How to customize quiz appearance?", a: "In the Appearance step, you can choose templates, colors, fonts, add your logo and hide MasterQuizz branding (on paid plans)." },
+        q1: {
+          q: "How to create a quiz from scratch?",
+          a: "On the dashboard, click 'New Quiz'. You can choose a ready template, generate with AI or start from scratch. Use the visual editor to add questions, customize appearance and configure results.",
+        },
+        q2: {
+          q: "What types of questions can I use?",
+          a: "Yes/No, Multiple Choice (single answer), Multiple Choice (multiple answers), and Free Text. You can also add images and videos to questions.",
+        },
+        q3: {
+          q: "How does AI generation work?",
+          a: "Type your quiz topic and AI automatically generates questions, answer options and results. You can edit everything afterwards. You can also upload a PDF for AI to use as a base.",
+        },
+        q4: {
+          q: "Can I generate quiz from PDF?",
+          a: "Yes! In AI generation, you can upload a PDF (ebook, handout, material) and AI will create questions based on the content.",
+        },
+        q5: {
+          q: "How many questions can a quiz have?",
+          a: "Depends on your plan. Paid plans allow more questions per quiz. We recommend 5-15 questions for best engagement.",
+        },
+        q6: {
+          q: "How to add videos and images?",
+          a: "In the editor, each question has options to add media. You can upload images/videos or use the Media Gallery. Videos can be hosted on our own CDN.",
+        },
+        q7: {
+          q: "Can I use conditional logic?",
+          a: "Yes! With conditional logic, you can show different questions based on previous answers, creating personalized experiences.",
+        },
+        q8: {
+          q: "How do score results work?",
+          a: "Each answer option can have a score. At the end, the system adds up points and shows the result corresponding to the respondent's score range.",
+        },
+        q9: {
+          q: "What are result calculators?",
+          a: "Calculators allow creating custom formulas with answers. For example: calculate estimated budget, potential savings, compatibility index, etc.",
+        },
+        q10: {
+          q: "How to customize quiz appearance?",
+          a: "In the Appearance step, you can choose templates, colors, fonts, add your logo and hide MasterQuizz branding (on paid plans).",
+        },
       },
       crm: {
         title: "👥 CRM",
-        q1: { q: "What is Kanban CRM?", a: "It's a visual Trello-style board where your leads appear as cards. You can organize them in columns (New, In Contact, Qualified, etc.) by dragging cards." },
-        q2: { q: "How to move leads between stages?", a: "Just drag the lead card to the desired column. The change is saved automatically." },
-        q3: { q: "Can I export leads?", a: "Yes! On the CRM or Responses page, use the export button to download an Excel file with all data." },
-        q4: { q: "How to filter by tags?", a: "You can add tags to your quizzes and leads. Use filters at the top to see only leads with certain tags." },
-        q5: { q: "Are leads updated in real time?", a: "Yes! When a new lead answers your quiz, they automatically appear in CRM without needing to reload the page." },
+        q1: {
+          q: "What is Kanban CRM?",
+          a: "It's a visual Trello-style board where your leads appear as cards. You can organize them in columns (New, In Contact, Qualified, etc.) by dragging cards.",
+        },
+        q2: {
+          q: "How to move leads between stages?",
+          a: "Just drag the lead card to the desired column. The change is saved automatically.",
+        },
+        q3: {
+          q: "Can I export leads?",
+          a: "Yes! On the CRM or Responses page, use the export button to download an Excel file with all data.",
+        },
+        q4: {
+          q: "How to filter by tags?",
+          a: "You can add tags to your quizzes and leads. Use filters at the top to see only leads with certain tags.",
+        },
+        q5: {
+          q: "Are leads updated in real time?",
+          a: "Yes! When a new lead answers your quiz, they automatically appear in CRM without needing to reload the page.",
+        },
       },
       responses: {
         title: "📊 Responses",
-        q1: { q: "Where do I see responses received?", a: "In the side menu, click 'Responses'. You'll see a table with all responses from all your quizzes." },
-        q2: { q: "Can I filter by quiz or period?", a: "Yes! Use filters at the top to select a specific quiz, date period or search by email/name." },
-        q3: { q: "How to export responses to Excel?", a: "On the Responses page, click the 'Export' button to download all filtered responses in Excel format." },
-        q4: { q: "Do I see partial responses (abandonments)?", a: "Yes! The system records each respondent's progress. In Analytics you can see the abandonment funnel by stage." },
-        q5: { q: "How to identify each respondent?", a: "Each response shows name, email, WhatsApp (if collected), date/time, quiz answered and all answers given." },
+        q1: {
+          q: "Where do I see responses received?",
+          a: "In the side menu, click 'Responses'. You'll see a table with all responses from all your quizzes.",
+        },
+        q2: {
+          q: "Can I filter by quiz or period?",
+          a: "Yes! Use filters at the top to select a specific quiz, date period or search by email/name.",
+        },
+        q3: {
+          q: "How to export responses to Excel?",
+          a: "On the Responses page, click the 'Export' button to download all filtered responses in Excel format.",
+        },
+        q4: {
+          q: "Do I see partial responses (abandonments)?",
+          a: "Yes! The system records each respondent's progress. In Analytics you can see the abandonment funnel by stage.",
+        },
+        q5: {
+          q: "How to identify each respondent?",
+          a: "Each response shows name, email, WhatsApp (if collected), date/time, quiz answered and all answers given.",
+        },
       },
       analytics: {
         title: "📈 Analytics",
-        q1: { q: "What metrics does Analytics show?", a: "Views, starts, completions, conversion rate, average response time, responses per day/week/month, and much more." },
-        q2: { q: "What is the Response Heatmap?", a: "The Heatmap visually shows which options are most chosen in each question. Warm colors indicate popular options." },
-        q3: { q: "How does the Conversion Funnel work?", a: "The funnel shows how many people reached each stage of the quiz, helping identify where abandonments occur." },
-        q4: { q: "Can I see analytics per quiz?", a: "Yes! You can filter charts by specific quiz or see consolidated data from all quizzes." },
-        q5: { q: "Is data in real time?", a: "Yes! Charts and metrics update automatically as new responses are received." },
+        q1: {
+          q: "What metrics does Analytics show?",
+          a: "Views, starts, completions, conversion rate, average response time, responses per day/week/month, and much more.",
+        },
+        q2: {
+          q: "What is the Response Heatmap?",
+          a: "The Heatmap visually shows which options are most chosen in each question. Warm colors indicate popular options.",
+        },
+        q3: {
+          q: "How does the Conversion Funnel work?",
+          a: "The funnel shows how many people reached each stage of the quiz, helping identify where abandonments occur.",
+        },
+        q4: {
+          q: "Can I see analytics per quiz?",
+          a: "Yes! You can filter charts by specific quiz or see consolidated data from all quizzes.",
+        },
+        q5: {
+          q: "Is data in real time?",
+          a: "Yes! Charts and metrics update automatically as new responses are received.",
+        },
       },
       gallery: {
         title: "🖼️ Media Gallery",
-        q1: { q: "What file types can I upload?", a: "Images (JPG, PNG, GIF, WebP), Videos (MP4, WebM) and Audios (MP3, WAV). Maximum size varies by plan." },
-        q2: { q: "What's the storage limit?", a: "Depends on your plan. Paid plans offer more space. You can see your current usage in Settings." },
-        q3: { q: "Can I use external images?", a: "Yes! Besides uploading, you can paste URLs of externally hosted images." },
-        q4: { q: "How to organize my files?", a: "The gallery shows all files with preview. You can search by name or filter by file type." },
-        q5: { q: "Where are videos hosted?", a: "Videos can be hosted on our own CDN (Bunny CDN) for better performance, or you can use YouTube/Vimeo links." },
+        q1: {
+          q: "What file types can I upload?",
+          a: "Images (JPG, PNG, GIF, WebP), Videos (MP4, WebM) and Audios (MP3, WAV). Maximum size varies by plan.",
+        },
+        q2: {
+          q: "What's the storage limit?",
+          a: "Depends on your plan. Paid plans offer more space. You can see your current usage in Settings.",
+        },
+        q3: {
+          q: "Can I use external images?",
+          a: "Yes! Besides uploading, you can paste URLs of externally hosted images.",
+        },
+        q4: {
+          q: "How to organize my files?",
+          a: "The gallery shows all files with preview. You can search by name or filter by file type.",
+        },
+        q5: {
+          q: "Where are videos hosted?",
+          a: "Videos can be hosted on our own CDN (Bunny CDN) for better performance, or you can use YouTube/Vimeo links.",
+        },
       },
       video: {
         title: "🎬 Video Upload",
-        q1: { q: "What's the maximum video size?", a: "Depends on your plan. Premium plans allow larger videos. The system automatically optimizes for streaming." },
-        q2: { q: "How does the integrated player work?", a: "Videos appear with a custom player showing play controls, volume, fullscreen and progress." },
-        q3: { q: "Do videos have analytics?", a: "Yes! You can see how many people watched, average viewing time, completion rate and more." },
-        q4: { q: "Can I use YouTube videos?", a: "Yes! You can embed YouTube, Vimeo videos or use direct upload to our CDN." },
-        q5: { q: "Which CDN is used?", a: "We use Bunny CDN, one of the fastest CDNs in the world, ensuring fast loading in any region." },
+        q1: {
+          q: "What's the maximum video size?",
+          a: "Depends on your plan. Premium plans allow larger videos. The system automatically optimizes for streaming.",
+        },
+        q2: {
+          q: "How does the integrated player work?",
+          a: "Videos appear with a custom player showing play controls, volume, fullscreen and progress.",
+        },
+        q3: {
+          q: "Do videos have analytics?",
+          a: "Yes! You can see how many people watched, average viewing time, completion rate and more.",
+        },
+        q4: {
+          q: "Can I use YouTube videos?",
+          a: "Yes! You can embed YouTube, Vimeo videos or use direct upload to our CDN.",
+        },
+        q5: {
+          q: "Which CDN is used?",
+          a: "We use Bunny CDN, one of the fastest CDNs in the world, ensuring fast loading in any region.",
+        },
       },
       integrations: {
         title: "🔗 Integrations",
-        q1: { q: "What integrations are available?", a: "Zapier, Make (Integromat), n8n, HubSpot, RD Station, Pipedrive, Mailchimp, ActiveCampaign, and custom webhooks." },
-        q2: { q: "How to connect to Zapier/Make?", a: "On the Integrations page, select the platform and follow the step-by-step. You'll receive a webhook URL to configure." },
-        q3: { q: "Can I integrate with my external CRM?", a: "Yes! Via direct integrations (HubSpot, Pipedrive, RD Station) or via Zapier/Make/n8n for any other CRM." },
-        q4: { q: "How does Kiwify integration work?", a: "MasterQuizz receives webhooks from Kiwify to sync purchases and automatically update users' subscription status." },
-        q5: { q: "Do I need technical knowledge?", a: "For basic integrations (Zapier, Make), no. For custom webhooks, basic API knowledge helps." },
+        q1: {
+          q: "What integrations are available?",
+          a: "Zapier, Make (Integromat), n8n, HubSpot, RD Station, Pipedrive, Mailchimp, ActiveCampaign, and custom webhooks.",
+        },
+        q2: {
+          q: "How to connect to Zapier/Make?",
+          a: "On the Integrations page, select the platform and follow the step-by-step. You'll receive a webhook URL to configure.",
+        },
+        q3: {
+          q: "Can I integrate with my external CRM?",
+          a: "Yes! Via direct integrations (HubSpot, Pipedrive, RD Station) or via Zapier/Make/n8n for any other CRM.",
+        },
+        q4: {
+          q: "How does Kiwify integration work?",
+          a: "MasterQuizz receives webhooks from Kiwify to sync purchases and automatically update users' subscription status.",
+        },
+        q5: {
+          q: "Do I need technical knowledge?",
+          a: "For basic integrations (Zapier, Make), no. For custom webhooks, basic API knowledge helps.",
+        },
       },
       webhooks: {
         title: "🔧 Webhooks and Tracking",
-        q1: { q: "What are webhooks?", a: "Webhooks are automatic notifications sent to a URL when something happens (e.g., new lead). They allow integration with any system." },
-        q2: { q: "How to configure Facebook Pixel?", a: "In each quiz settings, you can add your Pixel ID. View, lead and conversion events are sent automatically." },
-        q3: { q: "Can I use global GTM?", a: "Yes! In your profile Settings, you can add the Google Tag Manager ID that will be loaded on all your quizzes." },
-        q4: { q: "Are events sent in real time?", a: "Yes! As soon as a lead responds, webhooks are triggered immediately and tracking events are sent." },
-        q5: { q: "Where do I see webhook logs?", a: "On the Webhooks page you can see the history of all webhooks sent, with success/error status and details." },
+        q1: {
+          q: "What are webhooks?",
+          a: "Webhooks are automatic notifications sent to a URL when something happens (e.g., new lead). They allow integration with any system.",
+        },
+        q2: {
+          q: "How to configure Facebook Pixel?",
+          a: "In each quiz settings, you can add your Pixel ID. View, lead and conversion events are sent automatically.",
+        },
+        q3: {
+          q: "Can I use global GTM?",
+          a: "Yes! In your profile Settings, you can add the Google Tag Manager ID that will be loaded on all your quizzes.",
+        },
+        q4: {
+          q: "Are events sent in real time?",
+          a: "Yes! As soon as a lead responds, webhooks are triggered immediately and tracking events are sent.",
+        },
+        q5: {
+          q: "Where do I see webhook logs?",
+          a: "On the Webhooks page you can see the history of all webhooks sent, with success/error status and details.",
+        },
       },
     },
     cta: {
@@ -5603,7 +5961,7 @@ const en = {
     advancedMode: "Advanced mode →",
     celebration: {
       title: "Your quiz is live! 🎉",
-      subtitle: "\"{{title}}\" was published successfully.",
+      subtitle: '"{{title}}" was published successfully.',
       openQuiz: "View my quiz",
       goDashboard: "Go to Dashboard",
       tip: "Tip: In the dashboard you can track responses, set up integrations and much more.",
@@ -5768,7 +6126,8 @@ const es = {
       errorGenerating: "Error al generar quiz. Intenta de nuevo.",
       quizCreated: "✨ ¡Quiz creado con IA! Accede a 'Tus Quizzes' para editar.",
       notAvailableTitle: "Función no disponible en tu plan",
-      notAvailableDesc: "La generación automática de quiz por IA está disponible solo en planes pagos. ¡Mejora para desbloquear esta funcionalidad!",
+      notAvailableDesc:
+        "La generación automática de quiz por IA está disponible solo en planes pagos. ¡Mejora para desbloquear esta funcionalidad!",
       seePlans: "Ver Planes",
       numberOfQuestions: "Número de Preguntas",
       questionRange: "Entre {{min}} y {{max}} preguntas",
@@ -7278,7 +7637,8 @@ const es = {
       optionPlaceholder: "Opción {{index}}",
       scorePlaceholder: "Pts",
       scoreTitle: "Puntuación",
-      emojiHint: "😊 Haz clic en el ícono de emoji para añadir un emoji visual a cada opción. 💡 Define puntos para resultados condicionales.",
+      emojiHint:
+        "😊 Haz clic en el ícono de emoji para añadir un emoji visual a cada opción. 💡 Define puntos para resultados condicionales.",
       yesNoConfig: "Configuración Sí/No",
       yesLabel: "Sí",
       noLabel: "No",
@@ -7402,7 +7762,8 @@ const es = {
     benefitSize: "Subida de hasta 500MB por video",
     benefitStreaming: "Streaming optimizado con adaptive bitrate",
     benefitCost: "Costos reducidos de almacenamiento",
-    warningDisabled: "Con Bunny CDN desactivado, los videos se almacenarán en Supabase Storage con límite de 100MB por archivo y sin optimización de CDN global.",
+    warningDisabled:
+      "Con Bunny CDN desactivado, los videos se almacenarán en Supabase Storage con límite de 100MB por archivo y sin optimización de CDN global.",
     saveSettings: "Guardar Configuración",
     statsTitle: "Estadísticas Bunny CDN",
     videosInCdn: "Videos en CDN",
@@ -7661,7 +8022,8 @@ const es = {
   cookies: {
     title: "Usamos cookies",
     description: "Para mejorar tu experiencia y personalizar contenido",
-    summary: "Utilizamos cookies para análisis, funcionalidades y marketing. Puedes aceptar todas, rechazar o personalizar tus preferencias.",
+    summary:
+      "Utilizamos cookies para análisis, funcionalidades y marketing. Puedes aceptar todas, rechazar o personalizar tus preferencias.",
     learnMore: "Saber más",
     customize: "Personalizar",
     rejectAll: "Rechazar",
@@ -7709,7 +8071,8 @@ const es = {
     titlePlaceholder: "Traducción del título a",
     descriptionPlaceholder: "Traducción de la descripción a",
     tip: "💡 Consejo:",
-    tipText: "Las traducciones de las preguntas se pueden agregar más tarde. Por ahora, enfócate en el título y descripción del quiz.",
+    tipText:
+      "Las traducciones de las preguntas se pueden agregar más tarde. Por ahora, enfócate en el título y descripción del quiz.",
     translationsSaved: "¡Traducciones guardadas con éxito!",
     saveError: "Error al guardar traducciones:",
   },
@@ -7723,7 +8086,8 @@ const es = {
     savedDesc: "Las configuraciones de tracking fueron actualizadas. Recarga la página para aplicar.",
     saveError: "Error al guardar",
     saveErrorDesc: "No se pudieron guardar las configuraciones.",
-    configureInfo: "Configura los IDs de tracking de forma centralizada. Después de guardar, recarga la página para aplicar los cambios.",
+    configureInfo:
+      "Configura los IDs de tracking de forma centralizada. Después de guardar, recarga la página para aplicar los cambios.",
     saveButton: "Guardar Configuraciones",
     cookieConsent: {
       title: "Consentimiento de Cookies (LGPD)",
@@ -7731,9 +8095,11 @@ const es = {
       requireLabel: "Exigir consentimiento de cookies",
       requireDesc: "Cuando está activado, el banner de cookies aparece y GTM solo carga después del aceite",
       lgpdActive: "Modo LGPD activo:",
-      lgpdActiveDesc: "El banner de cookies aparece para visitantes. GTM/Pixel solo carga después de que el usuario acepte cookies de analytics/marketing.",
+      lgpdActiveDesc:
+        "El banner de cookies aparece para visitantes. GTM/Pixel solo carga después de que el usuario acepte cookies de analytics/marketing.",
       warning: "ATENCIÓN:",
-      warningDesc: "Desactivar el consentimiento puede violar la LGPD. GTM/Pixel cargarán inmediatamente para todos los visitantes. Usa solo si tienes otra forma de obtener consentimiento o si tu sitio no opera en Brasil.",
+      warningDesc:
+        "Desactivar el consentimiento puede violar la LGPD. GTM/Pixel cargarán inmediatamente para todos los visitantes. Usa solo si tienes otra forma de obtener consentimiento o si tu sitio no opera en Brasil.",
     },
     gtm: {
       title: "Google Tag Manager",
@@ -7781,19 +8147,18 @@ const es = {
       infoproducer: {
         title: "Infoproductores y lanzadores",
         problem: "No mandes más tráfico frío directo a VSL o checkout.",
-        solution:
-          "Haz que el lead perciba que necesita tu solución antes de la oferta.",
+        solution: "Haz que el lead perciba que necesita tu solución antes de la oferta.",
       },
       traffic_manager: {
         title: "Gestores de tráfico",
         problem: "El anuncio trae gente. El quiz trae decisiones.",
-        solution:
-          "Usa MasterQuiz para preparar al lead antes del clic más caro.",
+        solution: "Usa MasterQuiz para preparar al lead antes del clic más caro.",
       },
       small_business: {
         title: "Freelancers y consultores",
         problem: "No tienes tiempo para convencer uno por uno.",
-        solution: "Deja que el quiz haga la calificación por ti. El lead llega sabiendo por qué necesita hablar contigo.",
+        solution:
+          "Deja que el quiz haga la calificación por ti. El lead llega sabiendo por qué necesita hablar contigo.",
       },
     },
     problem: {
@@ -7806,7 +8171,8 @@ const es = {
       step3: "Pones a todos en el mismo flujo o el mismo destino genérico",
       step4: "Tu equipo (o tú) pasa el día atendiendo curiosos, 'solo mirando', sin perfil de compra",
       step5: "Y al final, la sensación: 'mi tráfico no sirve'",
-      conclusion: "En la mayoría de los embudos, más del 70% de los leads llegan al checkout sin consciencia real. El problema no es el tráfico — es el embudo que no califica a nadie en el camino.",
+      conclusion:
+        "En la mayoría de los embudos, más del 70% de los leads llegan al checkout sin consciencia real. El problema no es el tráfico — es el embudo que no califica a nadie en el camino.",
       action: "La forma más simple de corregir esto es agregar un paso de quiz entre el anuncio y la oferta.",
       flowTitle: "❌ Flujo Tradicional (con problemas)",
       flow1: "Tráfico pagado",
@@ -7887,8 +8253,7 @@ const es = {
         title: "Consultores",
         quizName: "Quiz de diagnóstico: 'Descubre tu nivel de madurez en [tema]'",
         questions: "Preguntas sobre negocio, desafíos, momento actual",
-        result:
-          "Leads con diagnóstico listo, ya divididos por nivel — habla solo con quien tiene fit y presupuesto",
+        result: "Leads con diagnóstico listo, ya divididos por nivel — habla solo con quien tiene fit y presupuesto",
       },
       freelancer: {
         title: "Freelancers",
@@ -8016,28 +8381,23 @@ const es = {
       },
       q2: {
         question: "¿Necesito tarjeta de crédito para probar?",
-        answer:
-          "No. Puedes crear tu cuenta y probar el sistema sin ingresar tarjeta.",
+        answer: "No. Puedes crear tu cuenta y probar el sistema sin ingresar tarjeta.",
       },
       q3: {
         question: "¿En cuánto tiempo puedo crear mi primer quiz?",
-        answer:
-          "En la mayoría de los casos, menos de 10 minutos usando un template.",
+        answer: "En la mayoría de los casos, menos de 10 minutos usando un template.",
       },
       q4: {
         question: "¿Funciona para cualquier nicho?",
-        answer:
-          "Sí. MasterQuiz funciona para infoproductos, servicios, consultorías, lanzamientos y ventas directas.",
+        answer: "Sí. MasterQuiz funciona para infoproductos, servicios, consultorías, lanzamientos y ventas directas.",
       },
       q5: {
         question: "¿El quiz reemplaza mi página de ventas?",
-        answer:
-          "No. Prepara al lead antes de la página de ventas o checkout, aumentando la tasa de decisión.",
+        answer: "No. Prepara al lead antes de la página de ventas o checkout, aumentando la tasa de decisión.",
       },
       q6: {
         question: "¿Puedo integrar con mis herramientas?",
-        answer:
-          "Sí. Puedes integrar con Pixel, Google Tag Manager, CRM, y herramientas de automatización.",
+        answer: "Sí. Puedes integrar con Pixel, Google Tag Manager, CRM, y herramientas de automatización.",
       },
     },
     finalCTA: {
@@ -8121,7 +8481,8 @@ const es = {
   kiwifySuccess: {
     verifyingSubscription: "Verificando tu suscripción...",
     paymentConfirmed: "¡Pago Confirmado!",
-    congratulations: "¡Felicidades! Tu suscripción ha sido activada con éxito. Ya puedes empezar a crear quizzes increíbles y capturar leads calificados.",
+    congratulations:
+      "¡Felicidades! Tu suscripción ha sido activada con éxito. Ya puedes empezar a crear quizzes increíbles y capturar leads calificados.",
     goToDashboard: "Ir al Panel",
     needHelp: "¿Necesitas ayuda? Contacta con nuestro soporte en cualquier momento.",
     copyright: "© {{year}} MasterQuizz. Todos los derechos reservados.",
@@ -8129,7 +8490,8 @@ const es = {
   },
   kiwifyCancel: {
     title: "Pago Cancelado",
-    description: "Tu pago fue cancelado. No te preocupes, puedes intentarlo de nuevo cuando estés listo o continuar usando el plan gratuito.",
+    description:
+      "Tu pago fue cancelado. No te preocupes, puedes intentarlo de nuevo cuando estés listo o continuar usando el plan gratuito.",
     tryAgain: "Intentar de Nuevo",
     backToDashboard: "Volver al Panel",
     helpCenter: "Centro de Ayuda",
@@ -8220,13 +8582,28 @@ const es = {
     dashboardFeatures: {
       title: "Funcionalidades del Panel",
       subtitle: "Conoce cada área de la plataforma",
-      dashboard: { title: "Panel Principal", description: "Visión general con estadísticas de quizzes, leads y conversiones en tiempo real." },
-      quizCreator: { title: "Creador de Quiz", description: "Editor visual con bloques arrastrar y soltar, plantillas listas y generación por IA." },
+      dashboard: {
+        title: "Panel Principal",
+        description: "Visión general con estadísticas de quizzes, leads y conversiones en tiempo real.",
+      },
+      quizCreator: {
+        title: "Creador de Quiz",
+        description: "Editor visual con bloques arrastrar y soltar, plantillas listas y generación por IA.",
+      },
       crm: { title: "CRM Kanban", description: "Gestiona tus leads en un tablero visual con etapas personalizables." },
-      analytics: { title: "Analytics Avanzado", description: "Gráficos, heatmaps y embudo de conversión para entender tu audiencia." },
-      visualEditor: { title: "Editor Visual", description: "Personaliza colores, fuentes y apariencia con vista previa en tiempo real." },
+      analytics: {
+        title: "Analytics Avanzado",
+        description: "Gráficos, heatmaps y embudo de conversión para entender tu audiencia.",
+      },
+      visualEditor: {
+        title: "Editor Visual",
+        description: "Personaliza colores, fuentes y apariencia con vista previa en tiempo real.",
+      },
       mediaGallery: { title: "Galería de Medios", description: "Organiza imágenes, videos y audios en un solo lugar." },
-      integrations: { title: "Integraciones", description: "Conecta con Zapier, Make, n8n, HubSpot, RD Station y más." },
+      integrations: {
+        title: "Integraciones",
+        description: "Conecta con Zapier, Make, n8n, HubSpot, RD Station y más.",
+      },
       settings: { title: "Configuración", description: "Personaliza tu perfil, tracking y preferencias del sistema." },
     },
     faqTitle: "Preguntas Frecuentes",
@@ -8235,85 +8612,250 @@ const es = {
     categories: {
       general: {
         title: "📋 Preguntas Generales",
-        q1: { q: "¿Qué es MasterQuizz?", a: "MasterQuizz es una plataforma completa para crear quizzes interactivos que califican leads, segmentan tu audiencia y aumentan tus conversiones. Con él creas, publicas y gestionas quizzes profesionales sin necesidad de conocimiento técnico." },
-        q2: { q: "¿Para quién es MasterQuizz?", a: "Creadores de infoproductos, agencias de marketing, coaches, consultores, e-commerces y cualquier profesional que desee calificar mejor sus leads antes de enviar al checkout o equipo de ventas." },
-        q3: { q: "¿Necesito saber programar?", a: "¡No! MasterQuizz fue creado para ser 100% visual. Arrastras bloques, personalizas colores y publicas con pocos clics. No se requiere código." },
-        q4: { q: "¿Puedo usarlo en el celular?", a: "¡Sí! La plataforma es responsive y funciona en cualquier dispositivo. Tus quizzes también están optimizados para móvil, garantizando excelente experiencia para tus respondentes." },
-        q5: { q: "¿Cuántos quizzes puedo crear?", a: "Depende de tu plan. El plan gratuito permite crear algunos quizzes para probar. Los planes pagos ofrecen quizzes ilimitados o límites mayores." },
-        q6: { q: "¿Los quizzes funcionan en cualquier dispositivo?", a: "¡Sí! Todos los quizzes son 100% responsive y funcionan perfectamente en desktop, tablet y móvil." },
-        q7: { q: "¿Cómo funciona el período de prueba?", a: "Puedes crear una cuenta gratuita y probar las principales funcionalidades. Cuando necesites más recursos, puedes hacer upgrade en cualquier momento." },
-        q8: { q: "¿Puedo cancelar en cualquier momento?", a: "¡Sí! No hay compromiso. Puedes cancelar tu suscripción cuando quieras, sin multas ni cargos extras." },
-        q9: { q: "¿Los datos son seguros?", a: "¡Sí! Utilizamos encriptación de última generación, servidores seguros y seguimos las directrices de GDPR para protección de datos personales." },
-        q10: { q: "¿Puedo exportar mis datos?", a: "¡Sí! Puedes exportar tus respuestas y leads a Excel/CSV en cualquier momento, directamente desde el panel." },
+        q1: {
+          q: "¿Qué es MasterQuizz?",
+          a: "MasterQuizz es una plataforma completa para crear quizzes interactivos que califican leads, segmentan tu audiencia y aumentan tus conversiones. Con él creas, publicas y gestionas quizzes profesionales sin necesidad de conocimiento técnico.",
+        },
+        q2: {
+          q: "¿Para quién es MasterQuizz?",
+          a: "Creadores de infoproductos, agencias de marketing, coaches, consultores, e-commerces y cualquier profesional que desee calificar mejor sus leads antes de enviar al checkout o equipo de ventas.",
+        },
+        q3: {
+          q: "¿Necesito saber programar?",
+          a: "¡No! MasterQuizz fue creado para ser 100% visual. Arrastras bloques, personalizas colores y publicas con pocos clics. No se requiere código.",
+        },
+        q4: {
+          q: "¿Puedo usarlo en el celular?",
+          a: "¡Sí! La plataforma es responsive y funciona en cualquier dispositivo. Tus quizzes también están optimizados para móvil, garantizando excelente experiencia para tus respondentes.",
+        },
+        q5: {
+          q: "¿Cuántos quizzes puedo crear?",
+          a: "Depende de tu plan. El plan gratuito permite crear algunos quizzes para probar. Los planes pagos ofrecen quizzes ilimitados o límites mayores.",
+        },
+        q6: {
+          q: "¿Los quizzes funcionan en cualquier dispositivo?",
+          a: "¡Sí! Todos los quizzes son 100% responsive y funcionan perfectamente en desktop, tablet y móvil.",
+        },
+        q7: {
+          q: "¿Cómo funciona el período de prueba?",
+          a: "Puedes crear una cuenta gratuita y probar las principales funcionalidades. Cuando necesites más recursos, puedes hacer upgrade en cualquier momento.",
+        },
+        q8: {
+          q: "¿Puedo cancelar en cualquier momento?",
+          a: "¡Sí! No hay compromiso. Puedes cancelar tu suscripción cuando quieras, sin multas ni cargos extras.",
+        },
+        q9: {
+          q: "¿Los datos son seguros?",
+          a: "¡Sí! Utilizamos encriptación de última generación, servidores seguros y seguimos las directrices de GDPR para protección de datos personales.",
+        },
+        q10: {
+          q: "¿Puedo exportar mis datos?",
+          a: "¡Sí! Puedes exportar tus respuestas y leads a Excel/CSV en cualquier momento, directamente desde el panel.",
+        },
       },
       creation: {
         title: "🎯 Creación de Quiz",
-        q1: { q: "¿Cómo crear un quiz desde cero?", a: "En el panel, haz clic en 'Nuevo Quiz'. Puedes elegir una plantilla lista, generar con IA o empezar desde cero. Usa el editor visual para agregar preguntas, personalizar la apariencia y configurar los resultados." },
-        q2: { q: "¿Qué tipos de preguntas puedo usar?", a: "Sí/No, Opción Múltiple (una respuesta), Opción Múltiple (varias respuestas), y Texto Libre. También puedes agregar imágenes y videos a las preguntas." },
-        q3: { q: "¿Cómo funciona la generación por IA?", a: "Escribe el tema de tu quiz y la IA genera automáticamente preguntas, opciones de respuesta y resultados. Puedes editar todo después. También puedes subir un PDF para que la IA lo use como base." },
-        q4: { q: "¿Puedo generar quiz desde PDF?", a: "¡Sí! En la generación por IA, puedes subir un PDF (ebook, material, guía) y la IA creará preguntas basadas en el contenido." },
-        q5: { q: "¿Cuántas preguntas puede tener un quiz?", a: "Depende de tu plan. Los planes pagos permiten más preguntas por quiz. Recomendamos entre 5-15 preguntas para mejor engagement." },
-        q6: { q: "¿Cómo agregar videos e imágenes?", a: "En el editor, cada pregunta tiene opciones para agregar medios. Puedes subir imágenes/videos o usar la Galería de Medios. Los videos pueden alojarse en nuestro propio CDN." },
-        q7: { q: "¿Puedo usar lógica condicional?", a: "¡Sí! Con la lógica condicional, puedes mostrar preguntas diferentes basadas en respuestas anteriores, creando experiencias personalizadas." },
-        q8: { q: "¿Cómo funcionan los resultados por puntaje?", a: "Cada opción de respuesta puede tener un puntaje. Al final, el sistema suma los puntos y muestra el resultado correspondiente al rango de puntaje del respondente." },
-        q9: { q: "¿Qué son las calculadoras de resultado?", a: "Las calculadoras permiten crear fórmulas personalizadas con las respuestas. Por ejemplo: calcular presupuesto estimado, ahorro potencial, índice de compatibilidad, etc." },
-        q10: { q: "¿Cómo personalizar la apariencia del quiz?", a: "En el paso de Apariencia, puedes elegir plantillas, colores, fuentes, agregar tu logo y ocultar la marca MasterQuizz (en planes pagos)." },
+        q1: {
+          q: "¿Cómo crear un quiz desde cero?",
+          a: "En el panel, haz clic en 'Nuevo Quiz'. Puedes elegir una plantilla lista, generar con IA o empezar desde cero. Usa el editor visual para agregar preguntas, personalizar la apariencia y configurar los resultados.",
+        },
+        q2: {
+          q: "¿Qué tipos de preguntas puedo usar?",
+          a: "Sí/No, Opción Múltiple (una respuesta), Opción Múltiple (varias respuestas), y Texto Libre. También puedes agregar imágenes y videos a las preguntas.",
+        },
+        q3: {
+          q: "¿Cómo funciona la generación por IA?",
+          a: "Escribe el tema de tu quiz y la IA genera automáticamente preguntas, opciones de respuesta y resultados. Puedes editar todo después. También puedes subir un PDF para que la IA lo use como base.",
+        },
+        q4: {
+          q: "¿Puedo generar quiz desde PDF?",
+          a: "¡Sí! En la generación por IA, puedes subir un PDF (ebook, material, guía) y la IA creará preguntas basadas en el contenido.",
+        },
+        q5: {
+          q: "¿Cuántas preguntas puede tener un quiz?",
+          a: "Depende de tu plan. Los planes pagos permiten más preguntas por quiz. Recomendamos entre 5-15 preguntas para mejor engagement.",
+        },
+        q6: {
+          q: "¿Cómo agregar videos e imágenes?",
+          a: "En el editor, cada pregunta tiene opciones para agregar medios. Puedes subir imágenes/videos o usar la Galería de Medios. Los videos pueden alojarse en nuestro propio CDN.",
+        },
+        q7: {
+          q: "¿Puedo usar lógica condicional?",
+          a: "¡Sí! Con la lógica condicional, puedes mostrar preguntas diferentes basadas en respuestas anteriores, creando experiencias personalizadas.",
+        },
+        q8: {
+          q: "¿Cómo funcionan los resultados por puntaje?",
+          a: "Cada opción de respuesta puede tener un puntaje. Al final, el sistema suma los puntos y muestra el resultado correspondiente al rango de puntaje del respondente.",
+        },
+        q9: {
+          q: "¿Qué son las calculadoras de resultado?",
+          a: "Las calculadoras permiten crear fórmulas personalizadas con las respuestas. Por ejemplo: calcular presupuesto estimado, ahorro potencial, índice de compatibilidad, etc.",
+        },
+        q10: {
+          q: "¿Cómo personalizar la apariencia del quiz?",
+          a: "En el paso de Apariencia, puedes elegir plantillas, colores, fuentes, agregar tu logo y ocultar la marca MasterQuizz (en planes pagos).",
+        },
       },
       crm: {
         title: "👥 CRM",
-        q1: { q: "¿Qué es el CRM Kanban?", a: "Es un tablero visual estilo Trello donde tus leads aparecen como tarjetas. Puedes organizarlos en columnas (Nuevo, En Contacto, Calificado, etc.) arrastrando las tarjetas." },
-        q2: { q: "¿Cómo mover leads entre etapas?", a: "Solo arrastra la tarjeta del lead a la columna deseada. El cambio se guarda automáticamente." },
-        q3: { q: "¿Puedo exportar los leads?", a: "¡Sí! En la página del CRM o Respuestas, usa el botón de exportar para descargar un archivo Excel con todos los datos." },
-        q4: { q: "¿Cómo filtrar por etiquetas?", a: "Puedes agregar etiquetas a tus quizzes y leads. Usa los filtros en la parte superior para ver solo leads con ciertas etiquetas." },
-        q5: { q: "¿Los leads se actualizan en tiempo real?", a: "¡Sí! Cuando un nuevo lead responde tu quiz, aparece automáticamente en el CRM sin necesidad de recargar la página." },
+        q1: {
+          q: "¿Qué es el CRM Kanban?",
+          a: "Es un tablero visual estilo Trello donde tus leads aparecen como tarjetas. Puedes organizarlos en columnas (Nuevo, En Contacto, Calificado, etc.) arrastrando las tarjetas.",
+        },
+        q2: {
+          q: "¿Cómo mover leads entre etapas?",
+          a: "Solo arrastra la tarjeta del lead a la columna deseada. El cambio se guarda automáticamente.",
+        },
+        q3: {
+          q: "¿Puedo exportar los leads?",
+          a: "¡Sí! En la página del CRM o Respuestas, usa el botón de exportar para descargar un archivo Excel con todos los datos.",
+        },
+        q4: {
+          q: "¿Cómo filtrar por etiquetas?",
+          a: "Puedes agregar etiquetas a tus quizzes y leads. Usa los filtros en la parte superior para ver solo leads con ciertas etiquetas.",
+        },
+        q5: {
+          q: "¿Los leads se actualizan en tiempo real?",
+          a: "¡Sí! Cuando un nuevo lead responde tu quiz, aparece automáticamente en el CRM sin necesidad de recargar la página.",
+        },
       },
       responses: {
         title: "📊 Respuestas",
-        q1: { q: "¿Dónde veo las respuestas recibidas?", a: "En el menú lateral, haz clic en 'Respuestas'. Verás una tabla con todas las respuestas de todos tus quizzes." },
-        q2: { q: "¿Puedo filtrar por quiz o período?", a: "¡Sí! Usa los filtros en la parte superior para seleccionar un quiz específico, período de fechas o buscar por email/nombre." },
-        q3: { q: "¿Cómo exportar respuestas a Excel?", a: "En la página de Respuestas, haz clic en el botón 'Exportar' para descargar todas las respuestas filtradas en formato Excel." },
-        q4: { q: "¿Veo respuestas parciales (abandonos)?", a: "¡Sí! El sistema registra el progreso de cada respondente. En Analytics puedes ver el embudo de abandono por etapa." },
-        q5: { q: "¿Cómo identificar cada respondente?", a: "Cada respuesta muestra nombre, email, WhatsApp (si se recopilaron), fecha/hora, quiz respondido y todas las respuestas dadas." },
+        q1: {
+          q: "¿Dónde veo las respuestas recibidas?",
+          a: "En el menú lateral, haz clic en 'Respuestas'. Verás una tabla con todas las respuestas de todos tus quizzes.",
+        },
+        q2: {
+          q: "¿Puedo filtrar por quiz o período?",
+          a: "¡Sí! Usa los filtros en la parte superior para seleccionar un quiz específico, período de fechas o buscar por email/nombre.",
+        },
+        q3: {
+          q: "¿Cómo exportar respuestas a Excel?",
+          a: "En la página de Respuestas, haz clic en el botón 'Exportar' para descargar todas las respuestas filtradas en formato Excel.",
+        },
+        q4: {
+          q: "¿Veo respuestas parciales (abandonos)?",
+          a: "¡Sí! El sistema registra el progreso de cada respondente. En Analytics puedes ver el embudo de abandono por etapa.",
+        },
+        q5: {
+          q: "¿Cómo identificar cada respondente?",
+          a: "Cada respuesta muestra nombre, email, WhatsApp (si se recopilaron), fecha/hora, quiz respondido y todas las respuestas dadas.",
+        },
       },
       analytics: {
         title: "📈 Analytics",
-        q1: { q: "¿Qué métricas muestra Analytics?", a: "Visualizaciones, inicios, completados, tasa de conversión, tiempo promedio de respuesta, respuestas por día/semana/mes, y mucho más." },
-        q2: { q: "¿Qué es el Heatmap de respuestas?", a: "El Heatmap muestra visualmente qué opciones son más elegidas en cada pregunta. Los colores cálidos indican opciones populares." },
-        q3: { q: "¿Cómo funciona el Embudo de conversión?", a: "El embudo muestra cuántas personas llegaron a cada etapa del quiz, ayudando a identificar dónde ocurren los abandonos." },
-        q4: { q: "¿Puedo ver analytics por quiz?", a: "¡Sí! Puedes filtrar los gráficos por quiz específico o ver datos consolidados de todos los quizzes." },
-        q5: { q: "¿Los datos son en tiempo real?", a: "¡Sí! Los gráficos y métricas se actualizan automáticamente conforme se reciben nuevas respuestas." },
+        q1: {
+          q: "¿Qué métricas muestra Analytics?",
+          a: "Visualizaciones, inicios, completados, tasa de conversión, tiempo promedio de respuesta, respuestas por día/semana/mes, y mucho más.",
+        },
+        q2: {
+          q: "¿Qué es el Heatmap de respuestas?",
+          a: "El Heatmap muestra visualmente qué opciones son más elegidas en cada pregunta. Los colores cálidos indican opciones populares.",
+        },
+        q3: {
+          q: "¿Cómo funciona el Embudo de conversión?",
+          a: "El embudo muestra cuántas personas llegaron a cada etapa del quiz, ayudando a identificar dónde ocurren los abandonos.",
+        },
+        q4: {
+          q: "¿Puedo ver analytics por quiz?",
+          a: "¡Sí! Puedes filtrar los gráficos por quiz específico o ver datos consolidados de todos los quizzes.",
+        },
+        q5: {
+          q: "¿Los datos son en tiempo real?",
+          a: "¡Sí! Los gráficos y métricas se actualizan automáticamente conforme se reciben nuevas respuestas.",
+        },
       },
       gallery: {
         title: "🖼️ Galería de Medios",
-        q1: { q: "¿Qué tipos de archivos puedo subir?", a: "Imágenes (JPG, PNG, GIF, WebP), Videos (MP4, WebM) y Audios (MP3, WAV). El tamaño máximo varía según el plan." },
-        q2: { q: "¿Cuál es el límite de almacenamiento?", a: "Depende de tu plan. Los planes pagos ofrecen más espacio. Puedes ver tu uso actual en Configuración." },
-        q3: { q: "¿Puedo usar imágenes externas?", a: "¡Sí! Además de subir, puedes pegar URLs de imágenes alojadas externamente." },
-        q4: { q: "¿Cómo organizar mis archivos?", a: "La galería muestra todos los archivos con vista previa. Puedes buscar por nombre o filtrar por tipo de archivo." },
-        q5: { q: "¿Dónde se alojan los videos?", a: "Los videos pueden alojarse en nuestro propio CDN (Bunny CDN) para mejor rendimiento, o puedes usar enlaces de YouTube/Vimeo." },
+        q1: {
+          q: "¿Qué tipos de archivos puedo subir?",
+          a: "Imágenes (JPG, PNG, GIF, WebP), Videos (MP4, WebM) y Audios (MP3, WAV). El tamaño máximo varía según el plan.",
+        },
+        q2: {
+          q: "¿Cuál es el límite de almacenamiento?",
+          a: "Depende de tu plan. Los planes pagos ofrecen más espacio. Puedes ver tu uso actual en Configuración.",
+        },
+        q3: {
+          q: "¿Puedo usar imágenes externas?",
+          a: "¡Sí! Además de subir, puedes pegar URLs de imágenes alojadas externamente.",
+        },
+        q4: {
+          q: "¿Cómo organizar mis archivos?",
+          a: "La galería muestra todos los archivos con vista previa. Puedes buscar por nombre o filtrar por tipo de archivo.",
+        },
+        q5: {
+          q: "¿Dónde se alojan los videos?",
+          a: "Los videos pueden alojarse en nuestro propio CDN (Bunny CDN) para mejor rendimiento, o puedes usar enlaces de YouTube/Vimeo.",
+        },
       },
       video: {
         title: "🎬 Subida de Video",
-        q1: { q: "¿Cuál es el tamaño máximo de video?", a: "Depende de tu plan. Los planes premium permiten videos más grandes. El sistema optimiza automáticamente para streaming." },
-        q2: { q: "¿Cómo funciona el reproductor integrado?", a: "Los videos aparecen con un reproductor personalizado que muestra controles de reproducción, volumen, pantalla completa y progreso." },
-        q3: { q: "¿Los videos tienen analytics?", a: "¡Sí! Puedes ver cuántas personas miraron, tiempo promedio de visualización, tasa de finalización y más." },
-        q4: { q: "¿Puedo usar videos de YouTube?", a: "¡Sí! Puedes incrustar videos de YouTube, Vimeo o usar la subida directa a nuestro CDN." },
-        q5: { q: "¿Qué CDN se utiliza?", a: "Utilizamos Bunny CDN, uno de los CDNs más rápidos del mundo, garantizando carga rápida en cualquier región." },
+        q1: {
+          q: "¿Cuál es el tamaño máximo de video?",
+          a: "Depende de tu plan. Los planes premium permiten videos más grandes. El sistema optimiza automáticamente para streaming.",
+        },
+        q2: {
+          q: "¿Cómo funciona el reproductor integrado?",
+          a: "Los videos aparecen con un reproductor personalizado que muestra controles de reproducción, volumen, pantalla completa y progreso.",
+        },
+        q3: {
+          q: "¿Los videos tienen analytics?",
+          a: "¡Sí! Puedes ver cuántas personas miraron, tiempo promedio de visualización, tasa de finalización y más.",
+        },
+        q4: {
+          q: "¿Puedo usar videos de YouTube?",
+          a: "¡Sí! Puedes incrustar videos de YouTube, Vimeo o usar la subida directa a nuestro CDN.",
+        },
+        q5: {
+          q: "¿Qué CDN se utiliza?",
+          a: "Utilizamos Bunny CDN, uno de los CDNs más rápidos del mundo, garantizando carga rápida en cualquier región.",
+        },
       },
       integrations: {
         title: "🔗 Integraciones",
-        q1: { q: "¿Qué integraciones están disponibles?", a: "Zapier, Make (Integromat), n8n, HubSpot, RD Station, Pipedrive, Mailchimp, ActiveCampaign, y webhooks personalizados." },
-        q2: { q: "¿Cómo conectar con Zapier/Make?", a: "En la página de Integraciones, selecciona la plataforma y sigue el paso a paso. Recibirás una URL de webhook para configurar." },
-        q3: { q: "¿Puedo integrar con mi CRM externo?", a: "¡Sí! Vía integraciones directas (HubSpot, Pipedrive, RD Station) o vía Zapier/Make/n8n para cualquier otro CRM." },
-        q4: { q: "¿Cómo funciona la integración con Kiwify?", a: "MasterQuizz recibe webhooks de Kiwify para sincronizar compras y actualizar automáticamente el estado de suscripción de los usuarios." },
-        q5: { q: "¿Necesito conocimiento técnico?", a: "Para integraciones básicas (Zapier, Make), no. Para webhooks personalizados, conocimiento básico de APIs ayuda." },
+        q1: {
+          q: "¿Qué integraciones están disponibles?",
+          a: "Zapier, Make (Integromat), n8n, HubSpot, RD Station, Pipedrive, Mailchimp, ActiveCampaign, y webhooks personalizados.",
+        },
+        q2: {
+          q: "¿Cómo conectar con Zapier/Make?",
+          a: "En la página de Integraciones, selecciona la plataforma y sigue el paso a paso. Recibirás una URL de webhook para configurar.",
+        },
+        q3: {
+          q: "¿Puedo integrar con mi CRM externo?",
+          a: "¡Sí! Vía integraciones directas (HubSpot, Pipedrive, RD Station) o vía Zapier/Make/n8n para cualquier otro CRM.",
+        },
+        q4: {
+          q: "¿Cómo funciona la integración con Kiwify?",
+          a: "MasterQuizz recibe webhooks de Kiwify para sincronizar compras y actualizar automáticamente el estado de suscripción de los usuarios.",
+        },
+        q5: {
+          q: "¿Necesito conocimiento técnico?",
+          a: "Para integraciones básicas (Zapier, Make), no. Para webhooks personalizados, conocimiento básico de APIs ayuda.",
+        },
       },
       webhooks: {
         title: "🔧 Webhooks y Tracking",
-        q1: { q: "¿Qué son los webhooks?", a: "Los webhooks son notificaciones automáticas enviadas a una URL cuando algo sucede (ej: nuevo lead). Permiten integrar con cualquier sistema." },
-        q2: { q: "¿Cómo configurar el Facebook Pixel?", a: "En la configuración de cada quiz, puedes agregar tu Pixel ID. Los eventos de vista, lead y conversión se envían automáticamente." },
-        q3: { q: "¿Puedo usar GTM global?", a: "¡Sí! En tu Configuración de perfil, puedes agregar el ID de Google Tag Manager que se cargará en todos tus quizzes." },
-        q4: { q: "¿Los eventos se envían en tiempo real?", a: "¡Sí! Tan pronto como un lead responde, los webhooks se disparan inmediatamente y los eventos de tracking se envían." },
-        q5: { q: "¿Dónde veo los logs de webhook?", a: "En la página de Webhooks puedes ver el historial de todos los webhooks enviados, con estado de éxito/error y detalles." },
+        q1: {
+          q: "¿Qué son los webhooks?",
+          a: "Los webhooks son notificaciones automáticas enviadas a una URL cuando algo sucede (ej: nuevo lead). Permiten integrar con cualquier sistema.",
+        },
+        q2: {
+          q: "¿Cómo configurar el Facebook Pixel?",
+          a: "En la configuración de cada quiz, puedes agregar tu Pixel ID. Los eventos de vista, lead y conversión se envían automáticamente.",
+        },
+        q3: {
+          q: "¿Puedo usar GTM global?",
+          a: "¡Sí! En tu Configuración de perfil, puedes agregar el ID de Google Tag Manager que se cargará en todos tus quizzes.",
+        },
+        q4: {
+          q: "¿Los eventos se envían en tiempo real?",
+          a: "¡Sí! Tan pronto como un lead responde, los webhooks se disparan inmediatamente y los eventos de tracking se envían.",
+        },
+        q5: {
+          q: "¿Dónde veo los logs de webhook?",
+          a: "En la página de Webhooks puedes ver el historial de todos los webhooks enviados, con estado de éxito/error y detalles.",
+        },
       },
     },
     cta: {
@@ -8430,7 +8972,7 @@ const es = {
     advancedMode: "Modo avanzado →",
     celebration: {
       title: "¡Tu quiz está en vivo! 🎉",
-      subtitle: "\"{{title}}\" fue publicado con éxito.",
+      subtitle: '"{{title}}" fue publicado con éxito.',
       openQuiz: "Ver mi quiz",
       goDashboard: "Ir al Dashboard",
       tip: "Consejo: En el dashboard puedes seguir respuestas, configurar integraciones y mucho más.",
