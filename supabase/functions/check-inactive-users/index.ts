@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
     let directCampaign = false;
     let targetCriteria: TargetCriteria = {};
     let isAutoRegeneration = false;
+    let dryRun = false;
 
     try {
       const body = await req.json();
@@ -76,6 +77,7 @@ Deno.serve(async (req) => {
       directCampaign = body.directCampaign || false;
       targetCriteria = body.targetCriteria || {};
       isAutoRegeneration = body.isAutoRegeneration || false;
+      dryRun = body.dryRun === true;
     } catch {
       // No body provided
     }
