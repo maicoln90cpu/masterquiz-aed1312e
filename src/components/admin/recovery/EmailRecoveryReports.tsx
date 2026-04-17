@@ -69,12 +69,24 @@ export function EmailRecoveryReports() {
 
   const load = async () => {
     try {
-      const { data, error } = await supabase
-        .from('email_recovery_contacts')
-        .select('*, email_recovery_templates(name, category)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setContacts((data || []) as unknown as EmailContact[]);
+      // Paginação manual para superar limite default de 1000 do PostgREST
+      const PAGE = 1000;
+      let from = 0;
+      const all: EmailContact[] = [];
+      // hard cap de segurança: 50k registros (50 páginas)
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await supabase
+          .from('email_recovery_contacts')
+          .select('*, email_recovery_templates(name, category)')
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const page = (data || []) as unknown as EmailContact[];
+        all.push(...page);
+        if (page.length < PAGE) break;
+        from += PAGE;
+      }
+      setContacts(all);
     } catch {
       toast.error('Erro ao carregar relatórios');
     } finally {
