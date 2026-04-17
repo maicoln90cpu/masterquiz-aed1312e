@@ -1,24 +1,39 @@
 # 📝 MEMOCOPY — Backup de Memórias do Projeto
 
-> Cópia completa de todas as memórias persistidas na sessão de desenvolvimento
-> Versão 2.42.0 | 16 de Abril de 2026
+> Cópia completa de todas as memórias persistidas na sessão de desenvolvimento.
+> **Versão 2.42.0 | 17 de Abril de 2026**
+>
+> Este arquivo é regenerado a cada release importante para servir como backup
+> caso a memória do projeto seja perdida ou precise ser auditada.
 
 ---
 
-## Core Rules (aplicadas a TODA ação)
+## 🧭 Como ler este arquivo
 
-1. Use `useCurrentUser` instead of `supabase.auth.getUser()`.
-2. Use `fetch` with `keepalive: true` and `apikey` header instead of `navigator.sendBeacon`.
-3. Batch PostgREST `.in()` queries up to 150 IDs to avoid URL length limits.
-4. Scope `RichTextEditor` CSS with `useId()` (e.g., `.rte-r1`) to prevent style bleeding.
-5. Persist detailed DB errors in toasts (not generic messages) to aid debugging.
-6. Use `useEffectiveUser()` to handle context for admin support impersonation.
-7. Text block color customizability is removed for visual consistency; do not re-add.
-8. Respostas sempre em PT-BR leigo: antes/depois, checklist, pendências, prevenção de regressão.
+- **Core Rules**: regras aplicadas a TODA ação (sempre em contexto)
+- **Memories por Categoria**: detalhes específicos consultados quando relevantes
+- **Preferences**: configurações do usuário e do projeto sobre formato de resposta
 
 ---
 
-## Memories por Categoria
+## ⚡ Core Rules (aplicadas a TODA ação)
+
+> Ordem reflete prioridade de consulta na hora de implementar.
+
+1. **Formato de resposta obrigatório**: Sempre responda em linguagem leiga e por etapas seguras. Para cada etapa, informe: 1) o que mudou (antes vs depois), 2) o que melhorou, 3) vantagens e desvantagens, 4) checklist manual de validação, 5) o que ficou pendente agora ou só para o futuro. Se reportado um problema, além de corrigir, diga se vale criar proteção permanente (função, componente, teste ou monitoramento) para evitar regressão. Se houver próximos passos, explique como está hoje, como ficará depois e qual ganho isso traz.
+2. **Idioma**: Respostas sempre em PT-BR leigo: antes/depois, checklist, pendências, prevenção de regressão.
+3. **Auth**: Use `useCurrentUser` instead of `supabase.auth.getUser()`.
+4. **Impersonation**: Use `useEffectiveUser()` to handle context for admin support impersonation.
+5. **Network**: Use `fetch` with `keepalive: true` and `apikey` header instead of `navigator.sendBeacon`.
+6. **PostgREST**: Batch `.in()` queries up to 150 IDs to avoid URL length limits.
+7. **ICP counters**: ICP counters em `profiles` devem usar `src/lib/icpTracking.ts` (RPCs SECURITY DEFINER atômicas), nunca UPDATE direto.
+8. **Editor CSS**: Scope `RichTextEditor` CSS with `useId()` (e.g., `.rte-r1`) to prevent style bleeding.
+9. **Errors**: Persist detailed DB errors in toasts (not generic messages) to aid debugging.
+10. **UI lock**: Text block color customizability is removed for visual consistency; do not re-add.
+
+---
+
+## 📚 Memories por Categoria
 
 ### 🏗️ Architecture
 
@@ -37,7 +52,7 @@ O sistema de blog utiliza uma arquitetura de 4 camadas: Frontend (React), Banco 
 O sistema suporta disparos de webhooks no nível de campos individuais (TextInput, NPS, Slider) antes da conclusão do quiz. `webhookOnSubmit` fires on individual field blur/select for early lead capture.
 
 #### Redefinição de Conclusão do Funil (`mem://analytics/redefinicao-conclusao-funil`)
-A métrica de conclusão para quizzes no modo funil foi redefinida: o evento 'complete' de analytics é disparado assim que o respondente atinge a última pergunta, não no momento da submissão do formulário.
+A métrica de conclusão para quizzes no modo funil foi redefinida: o evento `complete` de analytics é disparado assim que o respondente atinge a última pergunta, não no momento da submissão do formulário.
 
 #### Email Costs Logic e Deduplication (`mem://analytics/email-costs-logic-deduplication`)
 O dashboard de custos de email calcula despesas com base em um custo unitário de R$ 0,00469 (R$ 190 para 40.533 emails). Conta apenas envio inicial (`sent_at` not null) para evitar custos duplicados.
@@ -76,6 +91,12 @@ No fluxo Express, o AIQuizGenerator abre automaticamente fixado no modo `quiz_ia
 #### Site Mode B — Detalhes Arquiteturais (`mem://features/site-mode-b-detalhes-arquiteturais`)
 O 'Modo B' (Apenas Pago) suporta precificação independente via `price_monthly_mode_b` e inclui dashboard de Comparação A×B com métricas históricas.
 
+#### ICP Tracking System (`mem://features/icp-tracking`)
+12 métricas em `profiles` para identificar ICP pagante antes do checkout. Etapas 1 + 2 concluídas (M02/04/05/06/07/08/11). Helper `icpTracking.ts` com RPCs atômicas SECURITY DEFINER.
+
+#### Quiz Público Navegação Inteligente (`mem://features/quiz-publico-navegacao-inteligente`)
+A navegação no quiz público é integrada ao renderizador de blocos de pergunta (`QuestionBlockRenderer`). Botão "próximo" visível conforme lógica de auto-advance e blocos de botão.
+
 ### 🎯 Tracking
 
 #### Arquitetura GTM e Pixel Inteligente (`mem://tracking/arquitetura-gtm-e-pixel-inteligente`)
@@ -85,9 +106,6 @@ A estratégia de rastreamento distingue fluxo automático de intenção real. O 
 
 #### Jornada PQL e Fluxo Onboarding v2 (`mem://ux/jornada-pql-e-fluxo-onboarding-v2`)
 O sistema utiliza PQL de 8 estágios discretos (Explorador, Iniciado, Engajado, Construtor, Operador, Potencial Pagante, Ativado, Inativo). Estágios iniciais redirecionam para fluxo Express.
-
-#### Quiz Público Navegação Inteligente (`mem://features/quiz-publico-navegacao-inteligente`)
-A navegação no quiz público é integrada ao renderizador de blocos de pergunta (`QuestionBlockRenderer`). Botão "próximo" visível conforme lógica de auto-advance e blocos de botão.
 
 #### Icon List Color Logic (`mem://ui/editor/icon-list-color-logic`)
 No bloco IconList, a propriedade `iconColor` é aplicada à tipografia dos itens, não ao ícone (emojis são imutáveis).
@@ -126,7 +144,7 @@ Toda ação em Modo Suporte é registrada em `audit_logs` (prefixo 'support:') e
 ### ⚙️ Preferences
 
 #### Output Format Rules (`mem://preferences/output-format`)
-Toda resposta deve seguir estrutura leiga com antes/depois, checklist, pendências e prevenção de regressão.
+Toda resposta deve seguir estrutura leiga com antes/depois, melhorias, vantagens/desvantagens, checklist, pendências e prevenção de regressão.
 
 ---
 
@@ -134,7 +152,23 @@ Toda resposta deve seguir estrutura leiga com antes/depois, checklist, pendênci
 
 | Documento | Descrição |
 |-----------|-----------|
+| [README.md](../README.md) | Setup, stack e visão geral |
+| [CHANGELOG.md](../CHANGELOG.md) | Histórico oficial por versão |
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
-| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema do banco |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema do banco (68 tabelas) |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo (64 funções) |
 | [ADR.md](./ADR.md) | Decisões arquiteturais |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de código |
+| [PRD.md](./PRD.md) | Product Requirements |
+| [ROADMAP.md](./ROADMAP.md) | Planejamento estratégico |
+| [PENDENCIAS.md](./PENDENCIAS.md) | Backlog e changelog detalhado |
+
+---
+
+## 🔄 Histórico de regeneração deste arquivo
+
+| Versão | Data | Notas |
+|--------|------|-------|
+| 2.42.0 | 17/04/2026 | Reorganização Core por prioridade + adição de regra de formato obrigatório no topo |
+| 2.41.0 | 16/04/2026 | Adicionado ICP Tracking + reorganização painel admin (6 abas) |
+| 2.40.0 | 10/04/2026 | Adicionado Modo B + Express AI Mode Lock |
