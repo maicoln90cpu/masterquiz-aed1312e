@@ -9,16 +9,32 @@ export interface GTMDiagnosticResult {
   step2_scriptLoaded: boolean | null;
   step3_dataLayerReady: boolean | null;
   gtmId: string | null;
+  gtmSource: 'system' | 'profile' | null;
   error: string | null;
 }
 
 /**
- * Step 1: Busca GTM ID configurado no banco (profiles do admin ou system_settings)
+ * Step 1: Busca GTM ID configurado no sistema.
+ * Prioridade:
+ *   1) system_settings.gtm_container_id (global — usado pelo site inteiro)
+ *   2) profiles.gtm_container_id do admin logado (fallback / override individual)
  */
-export async function fetchGTMId(): Promise<string | null> {
-  // Check admin profile for GTM container ID
+export async function fetchGTMId(): Promise<{ id: string | null; source: 'system' | 'profile' | null }> {
+  // 1) System-wide setting (where the real GTM lives)
+  const { data: systemRow } = await supabase
+    .from('system_settings')
+    .select('setting_value')
+    .eq('setting_key', 'gtm_container_id')
+    .maybeSingle();
+
+  const systemId = (systemRow?.setting_value as string | undefined)?.trim();
+  if (systemId) {
+    return { id: systemId, source: 'system' };
+  }
+
+  // 2) Fallback: admin profile
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) return { id: null, source: null };
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -26,7 +42,10 @@ export async function fetchGTMId(): Promise<string | null> {
     .eq('id', user.id)
     .maybeSingle();
 
-  return profile?.gtm_container_id ?? null;
+  const profileId = profile?.gtm_container_id?.trim();
+  return profileId
+    ? { id: profileId, source: 'profile' }
+    : { id: null, source: null };
 }
 
 /**
@@ -60,14 +79,16 @@ export async function runGTMDiagnostic(maxRetries = 3, retryDelayMs = 2000): Pro
     step2_scriptLoaded: null,
     step3_dataLayerReady: null,
     gtmId: null,
+    gtmSource: null,
     error: null,
   };
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       // Step 1
-      const gtmId = await fetchGTMId();
+      const { id: gtmId, source } = await fetchGTMId();
       lastResult.gtmId = gtmId;
+      lastResult.gtmSource = source;
       lastResult.step1_configured = !!gtmId;
 
       if (!gtmId) {
