@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
 import { useCurrentUser } from "./useCurrentUser";
+import { trackOperation } from "@/lib/performanceCapture";
 import type { UserSubscription, PlanType } from "@/types";
 
 /** Extended subscription for master admin simulation */
@@ -52,11 +53,13 @@ export const useSubscriptionLimits = () => {
         };
       }
 
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const { data, error } = await trackOperation('user_subscription_fetch', 'query', async () =>
+        await supabase
+          .from('user_subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+      );
 
       if (error) throw error;
       

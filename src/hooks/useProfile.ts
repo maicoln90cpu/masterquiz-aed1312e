@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { trackOperation } from '@/lib/performanceCapture';
 import type { Profile } from '@/types';
 
 export const useProfile = () => {
@@ -19,11 +20,13 @@ export const useProfile = () => {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        const { data, error } = await trackOperation('profile_fetch', 'query', async () =>
+          await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+        );
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error fetching profile:', error);

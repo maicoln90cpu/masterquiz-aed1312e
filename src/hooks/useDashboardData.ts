@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { handleError, showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { useTranslation } from 'react-i18next';
 import { useCurrentUser } from './useCurrentUser';
+import { trackOperation } from '@/lib/performanceCapture';
 import type { Quiz, QuizTag } from '@/types';
 
 interface DashboardStats {
@@ -38,30 +39,32 @@ export const useDashboardStats = () => {
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data: quizzes, error: quizzesError } = await supabase
-        .from('quizzes')
-        .select('id, status')
-        .eq('user_id', user.id)
-        .neq('creation_source', 'express_auto');
+      return await trackOperation('dashboard_stats', 'query', async () => {
+        const { data: quizzes, error: quizzesError } = await supabase
+          .from('quizzes')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .neq('creation_source', 'express_auto');
 
-      if (quizzesError) throw quizzesError;
+        if (quizzesError) throw quizzesError;
 
-      const quizIds = quizzes?.map(q => q.id) || [];
-      
-      const { count: totalResponses, error: responsesError } = await supabase
-        .from('quiz_responses')
-        .select('*', { count: 'exact', head: true })
-        .in('quiz_id', quizIds);
+        const quizIds = quizzes?.map(q => q.id) || [];
 
-      if (responsesError) throw responsesError;
+        const { count: totalResponses, error: responsesError } = await supabase
+          .from('quiz_responses')
+          .select('*', { count: 'exact', head: true })
+          .in('quiz_id', quizIds);
 
-      const activeQuizzes = quizzes?.filter(q => q.status === 'active').length || 0;
+        if (responsesError) throw responsesError;
 
-      return {
-        totalQuizzes: quizzes?.length || 0,
-        totalResponses: totalResponses || 0,
-        activeQuizzes
-      };
+        const activeQuizzes = quizzes?.filter(q => q.status === 'active').length || 0;
+
+        return {
+          totalQuizzes: quizzes?.length || 0,
+          totalResponses: totalResponses || 0,
+          activeQuizzes
+        };
+      });
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
