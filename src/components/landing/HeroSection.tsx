@@ -160,6 +160,18 @@ export const HeroSection = () => {
                   </span>
                 </p>
               )}
+
+              {/* Diferencial competitivo */}
+              {!isModeB && (
+                <div className="pt-2">
+                  <Badge
+                    variant="outline"
+                    className="border-primary/40 bg-primary/5 text-primary text-xs sm:text-sm font-medium px-3 py-1.5"
+                  >
+                    🇧🇷 Único com plano 100% gratuito — concorrentes cobram a partir de R$97/mês
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Subheadline */}
@@ -236,6 +248,17 @@ export const HeroSection = () => {
                 </span>
               )}
             </div>
+
+            {/* Social proof */}
+            {!isModeB && (
+              <p
+                className={`text-sm font-medium text-primary transition-all duration-500 delay-700 ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                }`}
+              >
+                ✦ +500 negócios já qualificando leads
+              </p>
+            )}
           </div>
 
           {/* Right Column: Interactive Demo - Lazy animations */}

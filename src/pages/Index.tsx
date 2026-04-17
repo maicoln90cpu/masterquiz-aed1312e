@@ -82,9 +82,9 @@ const Index = () => {
     },
     {
       icon: TrendingUp,
-      title: t('landing.personas.infoproducer.title'),
-      problem: t('landing.personas.infoproducer.problem'),
-      solution: t('landing.personas.infoproducer.solution'),
+      title: "Infoprodutores",
+      problem: "Seu lead chega no checkout sem entender o produto.",
+      solution: "O quiz faz a qualificação antes da oferta — lead chega pronto.",
     },
     {
       icon: LineChart,
