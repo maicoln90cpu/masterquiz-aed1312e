@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { trackOperation } from "@/lib/performanceCapture";
 import type { 
   Quiz, 
   QuizQuestion, 
@@ -48,10 +49,12 @@ async function loadQuizViaRPC(
   company?: string
 ): Promise<LoadQuizResult> {
   try {
-    const { data, error } = await supabase.rpc('get_quiz_for_display', {
-      p_company_slug: company || null,
-      p_quiz_slug: slug
-    });
+    const { data, error } = await trackOperation('load_quiz_public', 'rpc', () =>
+      supabase.rpc('get_quiz_for_display', {
+        p_company_slug: company || null,
+        p_quiz_slug: slug
+      })
+    );
 
     if (error) {
       console.error('[RPC] Error calling get_quiz_for_display:', error);
