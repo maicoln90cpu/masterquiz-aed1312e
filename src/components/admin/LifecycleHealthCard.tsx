@@ -17,9 +17,9 @@ type Row = {
 };
 
 // Rótulos amigáveis por trigger
+// Nota: Welcome unificado em 1 trigger (Etapa 5.D) — cobre INSERT + UPDATE de whatsapp.
 const LABELS: Record<string, { label: string; tag: string }> = {
-  trg_profiles_welcome_message: { label: "Boas-vindas (Email + WhatsApp)", tag: "T1+T2" },
-  trg_profiles_welcome_on_whatsapp: { label: "Boas-vindas no WhatsApp ao salvar telefone", tag: "T7" },
+  trg_profiles_welcome_message: { label: "Boas-vindas (cadastro + WhatsApp tardio)", tag: "T1+T2+T7" },
   trg_profiles_auto_company_slug: { label: "Slug automático no cadastro", tag: "T8" },
   trg_quizzes_first_quiz_message: { label: "WhatsApp ao publicar 1º quiz", tag: "T4" },
   trg_quizzes_first_quiz_tutorial: { label: "Tutorial por email (3 dias após 1º quiz)", tag: "T3" },
@@ -59,7 +59,7 @@ export const LifecycleHealthCard = () => {
             <div>
               <CardTitle className="text-xl">Saúde do Ciclo de Vida</CardTitle>
               <CardDescription>
-                8 triggers automáticos que disparam emails e WhatsApp em momentos-chave do usuário
+                7 triggers automáticos que disparam emails e WhatsApp em momentos-chave do usuário
               </CardDescription>
             </div>
           </div>
