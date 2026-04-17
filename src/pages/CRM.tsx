@@ -524,8 +524,7 @@ const CRM = () => {
         {/* 🔒 Bloqueio por limite de plano */}
         <PlanLimitBlockedBanner
           blockedCount={blockedLeadsCount}
-          label="leads"
-          context="no CRM"
+          labelKey="leads"
           className="mb-4"
         />
 

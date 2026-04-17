@@ -3170,6 +3170,18 @@ const pt = {
       tip: "Dica: No dashboard você pode acompanhar respostas, configurar integrações e muito mais.",
     },
   },
+  planLimitBanner: {
+    title: "{{count}} {{label}} bloqueados{{context}}",
+    description: "Esses {{label}} estão salvos na sua conta, mas o seu plano atual não permite visualizá-los. Faça upgrade para liberar o acesso completo.",
+    cta: "Ver planos",
+    labels: {
+      leads: "leads",
+      responses: "respostas",
+      sessions: "sessões",
+      completions: "conclusões",
+      starts: "sessões iniciadas",
+    },
+  },
 };
 
 const en = {
@@ -5965,6 +5977,18 @@ const en = {
       openQuiz: "View my quiz",
       goDashboard: "Go to Dashboard",
       tip: "Tip: In the dashboard you can track responses, set up integrations and much more.",
+    },
+  },
+  planLimitBanner: {
+    title: "{{count}} {{label}} blocked{{context}}",
+    description: "These {{label}} are saved in your account, but your current plan doesn't allow viewing them. Upgrade to unlock full access.",
+    cta: "See plans",
+    labels: {
+      leads: "leads",
+      responses: "responses",
+      sessions: "sessions",
+      completions: "completions",
+      starts: "started sessions",
     },
   },
 };
@@ -8976,6 +9000,18 @@ const es = {
       openQuiz: "Ver mi quiz",
       goDashboard: "Ir al Dashboard",
       tip: "Consejo: En el dashboard puedes seguir respuestas, configurar integraciones y mucho más.",
+    },
+  },
+  planLimitBanner: {
+    title: "{{count}} {{label}} bloqueados{{context}}",
+    description: "Estos {{label}} están guardados en tu cuenta, pero tu plan actual no permite visualizarlos. Actualiza para desbloquear el acceso completo.",
+    cta: "Ver planes",
+    labels: {
+      leads: "leads",
+      responses: "respuestas",
+      sessions: "sesiones",
+      completions: "finalizaciones",
+      starts: "sesiones iniciadas",
     },
   },
 };
