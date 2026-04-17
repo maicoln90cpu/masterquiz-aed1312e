@@ -2225,6 +2225,7 @@ export type Database = {
           custom_link: string | null
           days_inactive_at_contact: number | null
           delivered_at: string | null
+          delivery_assumed: boolean
           error_message: string | null
           evolution_message_id: string | null
           id: string
@@ -2253,6 +2254,7 @@ export type Database = {
           custom_link?: string | null
           days_inactive_at_contact?: number | null
           delivered_at?: string | null
+          delivery_assumed?: boolean
           error_message?: string | null
           evolution_message_id?: string | null
           id?: string
@@ -2281,6 +2283,7 @@ export type Database = {
           custom_link?: string | null
           days_inactive_at_contact?: number | null
           delivered_at?: string | null
+          delivery_assumed?: boolean
           error_message?: string | null
           evolution_message_id?: string | null
           id?: string
@@ -3360,6 +3363,19 @@ export type Database = {
           utm_medium: string | null
           utm_source: string | null
           utm_term: string | null
+        }
+        Relationships: []
+      }
+      v_evolution_webhook_health: {
+        Row: {
+          confirmed_delivered_real: number | null
+          confirmed_read: number | null
+          delivered_assumed_count: number | null
+          last_read_ack_at: string | null
+          last_real_delivery_ack_at: string | null
+          stuck_sent_no_ack: number | null
+          total_sent_or_more: number | null
+          webhook_health: string | null
         }
         Relationships: []
       }
