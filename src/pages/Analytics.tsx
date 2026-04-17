@@ -18,6 +18,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChartEmptyState } from "@/components/analytics/ChartEmptyState";
 import { VideoAnalytics } from "@/components/analytics/VideoAnalytics";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { AnalyticsSkeleton } from "@/components/ui/analytics-skeleton";
