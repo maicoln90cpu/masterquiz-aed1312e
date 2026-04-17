@@ -42,7 +42,7 @@ export const FinalCTA = () => {
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold text-white">
-            {titleAB?.text || t('landing.finalCTA.title')}
+            {titleText}
           </h2>
 
           <p className="text-xl text-white/90">
