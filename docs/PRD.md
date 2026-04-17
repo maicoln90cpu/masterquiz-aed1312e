@@ -3,7 +3,7 @@
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
 **Versão:** 2.42.0  
-**Última atualização:** 16 de Abril de 2026  
+**Última atualização:** 17 de Abril de 2026  
 **Owner:** Product Team
 
 ---
@@ -365,6 +365,21 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 | RF13.3 | Header List-Unsubscribe | Alta | ✅ |
 | RF13.4 | Footer com opt-out obrigatório | Alta | ✅ |
 | RF13.5 | Página de confirmação de unsubscribe | Média | ✅ |
+
+### RF14 - Páginas Públicas de SEO e Aquisição (v2.42.0)
+
+| ID | Requisito | Prioridade | Status |
+|----|-----------|------------|--------|
+| RF14.1 | Landing principal `/` com Modo A/B | Alta | ✅ |
+| RF14.2 | Página `/precos` com comparativo de planos | Alta | ✅ |
+| RF14.3 | Blog automatizado `/blog` (auto-publish, IA, 5 estilos visuais) | Alta | ✅ |
+| RF14.4 | FAQ `/faq` | Média | ✅ |
+| RF14.5 | **Página `/compare`** — comparativo MasterQuiz vs InLead (hero, 3 cards, tabela 18×4, vs InLead, CTA) | Alta | ✅ |
+| RF14.6 | JSON-LD Schema.org (`Product` + `Offer`) na `/compare` para SEO estruturado | Alta | ✅ |
+| RF14.7 | A/B test do CTA final da `/compare` ("Criar conta grátis" vs "Testar 7 dias grátis") | Média | ✅ |
+| RF14.8 | Sitemap dinâmico XML via Edge Function `blog-sitemap` (inclui `/compare`) | Alta | ✅ |
+| RF14.9 | Hook `useDocumentMeta` para `<title>`, meta description e JSON-LD por página | Média | ✅ |
+| RF14.10 | i18n PT/EN/ES em todas as páginas públicas | Alta | ✅ |
 
 ---
 
