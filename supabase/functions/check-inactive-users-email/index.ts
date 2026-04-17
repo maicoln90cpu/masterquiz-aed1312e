@@ -371,7 +371,7 @@ Deno.serve(async (req) => {
       }
 
       // --- BLOCO D — UPGRADE NUDGE (rede de segurança): plan_limit_hit_type='lead' ---
-      if (upgradeNudgeTemplates.length > 0 && profile.plan_limit_hit_type === 'lead') {
+      if (!skipNewBlocksInstitutional && upgradeNudgeTemplates.length > 0 && profile.plan_limit_hit_type === 'lead') {
         for (const tmpl of upgradeNudgeTemplates) {
           const key = `${profile.id}|${tmpl.id}`;
           if (!sentSet.has(key)) {
