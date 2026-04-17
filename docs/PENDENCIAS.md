@@ -1,5 +1,45 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.42.0 — `/compare` + JSDoc + TypeDoc + HOOKS.md (17/04/2026)
+
+### Feature: Página `/compare` (SEO + A/B Test)
+- Landing comparativa estática (hero + tabela 18 features × 4 colunas + FAQ + CTA)
+- JSON-LD Schema.org (`Product` + `Offer`) para rich snippets do Google
+- A/B test no CTA ("Criar conta" vs "Testar 7 dias") reusando `landing_ab_tests`
+- Inclusão automática em `blog-sitemap.xml`
+- ADR-015 (compare estático) + ADR-016 (reuso A/B)
+
+### Feature: Documentação Técnica de Hooks (etapa 4)
+- **JSDoc completo** nos 6 hooks core: `useCurrentUser`, `useEffectiveUser`, `useUserRole`, `useEditorLayout`, `useSiteMode`, `useRateLimit`
+- Padrão JSDoc: descrição + `@returns` + `@example` + `@see`
+- **TypeDoc** configurado (`typedoc.json`) — gera markdown navegável em `docs/api/`
+- Novo script: `npm run docs:api`
+- Novo script: `npm run docs:validate`
+- Novo doc `HOOKS.md`: catálogo de 60+ hooks por categoria
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `typedoc.json` | NOVO — config TypeDoc + plugin markdown |
+| `docs/HOOKS.md` | NOVO — catálogo de hooks por categoria |
+| `src/hooks/useCurrentUser.ts` | JSDoc completo (PT-BR) |
+| `src/hooks/useEffectiveUser.ts` | JSDoc completo (PT-BR) |
+| `src/hooks/useUserRole.ts` | JSDoc completo (PT-BR) |
+| `src/hooks/useEditorLayout.ts` | JSDoc completo (PT-BR) |
+| `src/hooks/useSiteMode.ts` | JSDoc completo (PT-BR) |
+| `src/hooks/useRateLimit.ts` | JSDoc completo (PT-BR) |
+| `package.json` | +scripts `docs:api`, `docs:validate` |
+| `docs/ROADMAP.md` | Entrada 17/04/2026 |
+| `docs/ONBOARDING.md` | Mapa de docs atualizado (+HOOKS, +CHANGELOG, +SERVICES, +MEMOCOPY) |
+
+### Pendentes para Etapa 5
+- Storybook para componentes UI base (`src/components/ui/`)
+- Memory reorganization + Knowledge block compacto (≤9500 chars)
+- JSDoc para os hooks restantes (incremental)
+- Diagrama Mermaid expandido em SYSTEM_DESIGN (sub-fluxos)
+
+---
+
 ## ✅ v2.42.0 - Painel Admin Reorganizado + Sistema de Monitoramento + Docs Overhaul (16/04/2026)
 
 ### Feature: Reorganização do Painel Admin (6 abas funcionais)

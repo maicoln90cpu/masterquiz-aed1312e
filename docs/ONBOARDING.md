@@ -1,7 +1,7 @@
 # 🚀 ONBOARDING — Guia para Novos Desenvolvedores
 
 > Configure o ambiente e entenda o projeto em menos de 1 dia
-> Versão 2.42.0 | 16 de Abril de 2026
+> Versão 2.42.0 | 17 de Abril de 2026
 
 ---
 
@@ -127,22 +127,26 @@ Setup global em `src/__tests__/setup.ts`. Padrões em [TESTING.md](./TESTING.md)
 | Doc | Para quê |
 |-----|----------|
 | [README.md](../README.md) | Setup e visão geral |
-| [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
-| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema do banco |
+| [CHANGELOG.md](../CHANGELOG.md) | Histórico de versões (Keep a Changelog) |
+| [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica + diagrama Mermaid |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema do banco (68 tabelas) |
 | [SECURITY.md](./SECURITY.md) | RLS, auth, rate limiting |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de código |
+| [HOOKS.md](./HOOKS.md) | Catálogo de 60+ hooks (`npm run docs:api`) |
+| [SERVICES.md](./SERVICES.md) | Service layer (observability, GTM diag) |
 | [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 funções |
 | [API_DOCS.md](./API_DOCS.md) | Payloads detalhados |
 | [COMPONENTS.md](./COMPONENTS.md) | Componentes React |
 | [BLOCKS.md](./BLOCKS.md) | 34 tipos de blocos |
 | [TESTING.md](./TESTING.md) | Testes automatizados |
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Formatação e linting |
-| [ADR.md](./ADR.md) | Decisões arquiteturais |
+| [ADR.md](./ADR.md) | Decisões arquiteturais (016 ADRs) |
 | [PRD.md](./PRD.md) | Requisitos do produto |
 | [ROADMAP.md](./ROADMAP.md) | Planejamento |
-| [PENDENCIAS.md](./PENDENCIAS.md) | Changelog |
+| [PENDENCIAS.md](./PENDENCIAS.md) | Changelog interno |
 | [BLOG.md](./BLOG.md) | Blog com IA |
 | [EGOI.md](./EGOI.md) | Email marketing |
 | [MONETIZATION.md](./MONETIZATION.md) | Modos A/B |
 | [CHECKLIST.md](./CHECKLIST.md) | Checklist de validação |
 | [AUDIT_TEMPLATE.md](./AUDIT_TEMPLATE.md) | Template de auditoria |
+| [MEMOCOPY.md](./MEMOCOPY.md) | Backup de memórias |
