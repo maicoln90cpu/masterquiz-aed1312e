@@ -213,7 +213,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
                 {t('pricing.processing')}
               </>
             ) : (
-              ctaAB?.text || plan.ctaText
+              ctaText
             )}
           </Button>
         </CardFooter>
