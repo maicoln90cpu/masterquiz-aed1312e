@@ -352,47 +352,83 @@ export function EmailRecoveryReports() {
         </CardContent>
       </Card>
 
-      {/* A/B Test Results */}
-      {abResults && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Resultado Teste A/B de Subject Lines</CardTitle>
-            <CardDescription>Comparação entre variantes A e B dos assuntos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="p-4 bg-muted rounded-lg text-center">
-                <p className="font-bold text-lg mb-1">Variante A</p>
-                <p className="text-sm text-muted-foreground mb-2">{abResults.a.sent} enviados</p>
-                <div className="flex justify-center gap-6">
-                  <div>
-                    <p className="text-2xl font-bold text-blue-600">{pct(abResults.a.opened, abResults.a.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Open Rate</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-purple-600">{pct(abResults.a.clicked, abResults.a.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Click Rate</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-muted rounded-lg text-center">
-                <p className="font-bold text-lg mb-1">Variante B</p>
-                <p className="text-sm text-muted-foreground mb-2">{abResults.b.sent} enviados</p>
-                <div className="flex justify-center gap-6">
-                  <div>
-                    <p className="text-2xl font-bold text-blue-600">{pct(abResults.b.opened, abResults.b.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Open Rate</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-purple-600">{pct(abResults.b.clicked, abResults.b.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Click Rate</p>
-                  </div>
-                </div>
-              </div>
+      {/* A/B Test Results — POR TEMPLATE */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Teste A/B por Template</CardTitle>
+          <CardDescription>
+            Comparação subject line A vs B. Vencedor declarado apenas com ≥ {MIN_SAMPLE_FOR_WINNER} envios em cada variante.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {abPerTemplate.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">Nenhum template ativo encontrado</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">Template</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-center">Variante A</TableHead>
+                    <TableHead className="text-center">Variante B</TableHead>
+                    <TableHead className="text-center">Vencedora</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {abPerTemplate.map(({ template: t, a, b, hasVariantB, enoughSample, winner }) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-medium text-sm">{t.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {CATEGORY_LABELS[t.category] || t.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="text-xs">
+                          <div className="font-semibold">{a.sent} env.</div>
+                          <div className="text-muted-foreground">
+                            Open {pct(a.opened, a.sent)} · Click {pct(a.clicked, a.sent)}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {!hasVariantB ? (
+                          <Badge variant="secondary" className="text-xs">
+                            <Minus className="h-3 w-3 mr-1" /> Sem variante B
+                          </Badge>
+                        ) : (
+                          <div className="text-xs">
+                            <div className="font-semibold">{b.sent} env.</div>
+                            <div className="text-muted-foreground">
+                              Open {pct(b.opened, b.sent)} · Click {pct(b.clicked, b.sent)}
+                            </div>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {!hasVariantB ? (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        ) : !enoughSample ? (
+                          <span className="text-xs text-muted-foreground">
+                            Amostra insuficiente
+                          </span>
+                        ) : winner === 'tie' ? (
+                          <Badge variant="outline" className="text-xs">Empate</Badge>
+                        ) : (
+                          <Badge className="text-xs bg-green-600 hover:bg-green-600">
+                            <Trophy className="h-3 w-3 mr-1" /> {winner}
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filters + Table */}
       <Card>
