@@ -12,7 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "docs:api": "typedoc",
+    "docs:validate": "node scripts/validate-docs.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
