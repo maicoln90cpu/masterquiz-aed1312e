@@ -121,7 +121,7 @@ export const LifecycleHealthCard = () => {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {row.is_active ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
                       ) : (
                         <XCircle className="h-4 w-4 text-destructive shrink-0" />
                       )}
