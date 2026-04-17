@@ -713,13 +713,17 @@ const Analytics = () => {
                   <CardDescription>{t('analytics.viewsStartsCompletions')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
-                    <AnalyticsLineChart 
-                      data={chartData}
-                      dataKeys={['views', 'starts', 'completions']}
-                      colors={['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--secondary))']}
-                    />
-                  </Suspense>
+                  {chartData.every(d => (d.views || 0) + (d.starts || 0) + (d.completions || 0) === 0) ? (
+                    <ChartEmptyState height={300} />
+                  ) : (
+                    <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+                      <AnalyticsLineChart 
+                        data={chartData}
+                        dataKeys={['views', 'starts', 'completions']}
+                        colors={['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--secondary))']}
+                      />
+                    </Suspense>
+                  )}
                 </CardContent>
               </Card>
 
