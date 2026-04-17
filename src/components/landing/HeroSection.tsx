@@ -39,7 +39,7 @@ export const HeroSection = () => {
   const { getContent, isLoading: isLoadingContent } = useLandingContent();
   const { isModeB } = useSiteMode();
   
-  // A/B Testing for CTA
+  // A/B Testing for CTA (legacy: hero_cta) + new tests (headline, subheadline, primary, secondary)
   const { 
     getContentForElement, 
     getVariantForElement, 
@@ -59,6 +59,14 @@ export const HeroSection = () => {
   const abVariant = getVariantForElement('hero_cta');
   const abTest = getTestByElement('hero_cta');
 
+  // New A/B tests (headline, subheadline, CTA primary text/style, CTA secondary text)
+  const headlineAB = getContentForElement('hero_headline');
+  const subheadlineAB = getContentForElement('hero_subheadline');
+  const ctaPrimaryAB = getContentForElement('hero_cta_primary');
+  const ctaSecondaryAB = getContentForElement('hero_cta_secondary');
+  const ctaPrimaryTest = getTestByElement('hero_cta_primary');
+  const ctaSecondaryTest = getTestByElement('hero_cta_secondary');
+
   // Helper to get content with instant fallback
   const c = (key: keyof typeof FALLBACK_CONTENT, i18nKey: string) => {
     const dbValue = getContent(key);
@@ -67,11 +75,18 @@ export const HeroSection = () => {
     return FALLBACK_CONTENT[key] || t(i18nKey);
   };
 
-  // Get CTA text - prioritize A/B test, then CMS, then fallback
+  // Get CTA text - priority: A/B test (new) > A/B test (legacy) > CMS > fallback
   const getCtaText = () => {
+    if (ctaPrimaryAB?.text) return ctaPrimaryAB.text;
     if (abTestContent?.text) return abTestContent.text;
     if (isModeB) return 'Escolher meu plano';
     return c('hero_cta_primary', 'landing.hero.ctaPrimary');
+  };
+
+  const getCtaSecondaryText = () => {
+    if (ctaSecondaryAB?.text) return ctaSecondaryAB.text;
+    if (isModeB) return 'Ver planos';
+    return c('hero_cta_secondary', 'landing.hero.ctaSecondary');
   };
 
   const handleGetStarted = () => {
