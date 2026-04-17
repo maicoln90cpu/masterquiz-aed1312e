@@ -292,8 +292,14 @@ Deno.serve(async (req) => {
         }
       }
 
+      // --- FILTRO INSTITUCIONAL para Blocos A/B/C/D (não aplicado nos blocos antigos para preservar comportamento) ---
+      const skipNewBlocksInstitutional = isInstitutional(profile.email);
+      if (skipNewBlocksInstitutional) {
+        institutionalSkipped++;
+      }
+
       // --- BLOCO A — ZOMBIE: login_count <= 1 + 30+ dias signup + sem quiz real ---
-      if (zombieTemplates.length > 0 && (profile.login_count ?? 0) <= 1 && daysSinceSignup >= 30) {
+      if (!skipNewBlocksInstitutional && zombieTemplates.length > 0 && (profile.login_count ?? 0) <= 1 && daysSinceSignup >= 30) {
         const userQuizzes = quizzesByUser.get(profile.id) || [];
         const hasRealQuiz = userQuizzes.some(q => (q.creation_source || 'manual') !== 'express_auto');
         if (!hasRealQuiz) {
