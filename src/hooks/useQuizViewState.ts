@@ -170,6 +170,7 @@ export function useQuizViewState({
 
   // Load quiz on mount (non-preview mode)
   useEffect(() => {
+    preloadInstitutionalDomains();
     if (!previewMode) {
       loadQuiz();
     }
