@@ -191,14 +191,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Buscar perfis com WhatsApp + stage + objectives
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, full_name, whatsapp, user_stage, user_objectives')
-      .in('id', userPool.map(u => u.id))
-      .not('whatsapp', 'is', null);
+    // Buscar perfis com WhatsApp + stage + objectives (chunked para evitar URL muito longa)
+    const CHUNK_SIZE = 150;
+    const userIds = userPool.map(u => u.id);
+    const profiles: Array<{ id: string; full_name: string | null; whatsapp: string | null; user_stage: string | null; user_objectives: string[] | null }> = [];
 
-    if (profilesError) throw profilesError;
+    for (let i = 0; i < userIds.length; i += CHUNK_SIZE) {
+      const chunk = userIds.slice(i, i + CHUNK_SIZE);
+      const { data: chunkData, error: chunkError } = await supabase
+        .from('profiles')
+        .select('id, full_name, whatsapp, user_stage, user_objectives')
+        .in('id', chunk)
+        .not('whatsapp', 'is', null);
+      if (chunkError) throw chunkError;
+      if (chunkData) profiles.push(...chunkData);
+    }
 
     // Buscar blacklist
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('phone_number, user_id');
@@ -220,16 +227,21 @@ Deno.serve(async (req) => {
       recentlyContactedIds = new Set((recentContacts || []).map(c => c.user_id));
     }
 
-    // Subscriptions
-    const { data: subscriptions } = await supabase
-      .from('user_subscriptions')
-      .select('user_id, plan_type')
-      .in('user_id', userPool.map(u => u.id));
-    const userPlans = new Map((subscriptions || []).map(s => [s.user_id, s.plan_type]));
+    // Subscriptions (chunked)
+    const subscriptions: Array<{ user_id: string; plan_type: string }> = [];
+    for (let i = 0; i < userIds.length; i += CHUNK_SIZE) {
+      const chunk = userIds.slice(i, i + CHUNK_SIZE);
+      const { data: subChunk } = await supabase
+        .from('user_subscriptions')
+        .select('user_id, plan_type')
+        .in('user_id', chunk);
+      if (subChunk) subscriptions.push(...subChunk);
+    }
+    const userPlans = new Map(subscriptions.map(s => [s.user_id, s.plan_type]));
 
-    // Quiz/lead stats
+    // Quiz/lead stats (RPC: array no body, sem limite de URL)
     const userStats = await supabase.rpc('get_user_quiz_stats', {
-      user_ids: userPool.map(u => u.id)
+      user_ids: userIds,
     });
     const statsMap = new Map((userStats.data || []).map((s: { user_id: string; quiz_count: number; lead_count: number }) => [s.user_id, s]));
 
