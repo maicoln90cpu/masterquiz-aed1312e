@@ -3,6 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type EditorLayout = 'classic' | 'modern';
 
+/**
+ * Hook que retorna o layout ativo do editor de quizzes (`classic` ou `modern`).
+ *
+ * Usado pelo Thin Router em `CreateQuiz.tsx` para decidir qual variante carregar
+ * via React.lazy. Cache de 1h via TanStack Query (config global do site, baixa volatilidade).
+ *
+ * @returns `{ editorLayout, isModern, isLoading }`
+ *
+ * @example
+ * ```tsx
+ * const { isModern } = useEditorLayout();
+ * return isModern ? <CreateQuizModern /> : <CreateQuizClassic />;
+ * ```
+ */
 export const useEditorLayout = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['editor-layout'],

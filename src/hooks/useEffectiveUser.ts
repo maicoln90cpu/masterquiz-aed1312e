@@ -2,8 +2,25 @@ import { useSupportMode } from '@/contexts/SupportModeContext';
 import { useCurrentUser } from './useCurrentUser';
 
 /**
- * Returns the effective user ID for data queries.
- * In support mode, returns the target user's ID instead of the logged-in admin's.
+ * Hook que retorna o `userId` efetivo a ser usado em queries.
+ *
+ * Em modo suporte (admin impersonando usuário), retorna o ID do usuário-alvo
+ * em vez do admin logado. Toda query de dados sensíveis em telas que suportam
+ * suporte deve usar `effectiveUserId` ao invés de `user.id` direto.
+ *
+ * @returns `{ effectiveUserId, realUser, isSupportMode, supportTarget, session, loading }`
+ *
+ * @example
+ * ```tsx
+ * const { effectiveUserId } = useEffectiveUser();
+ * const { data } = useQuery({
+ *   queryKey: ['quizzes', effectiveUserId],
+ *   queryFn: () => supabase.from('quizzes').select().eq('user_id', effectiveUserId),
+ * });
+ * ```
+ *
+ * @see {@link useCurrentUser} para o user real (sempre o admin logado)
+ * @see SupportModeContext
  */
 export const useEffectiveUser = () => {
   const { user, session, loading } = useCurrentUser();

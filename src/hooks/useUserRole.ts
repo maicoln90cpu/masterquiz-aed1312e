@@ -3,6 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { AppRole } from '@/types';
 
+/**
+ * Hook que retorna os roles (papéis) do usuário autenticado.
+ *
+ * Faz lookup na tabela `user_roles` (separada de `profiles` por questões de
+ * segurança — ver SECURITY.md) e expõe helpers `isAdmin`, `isMasterAdmin`.
+ *
+ * @returns Objeto com `roles`, `loading`, `hasRole(role)`, `isAdmin`, `isMasterAdmin`, `isUser`.
+ *
+ * @example
+ * ```tsx
+ * const { isAdmin, loading } = useUserRole();
+ * if (loading) return <Spinner />;
+ * if (!isAdmin) return <Navigate to="/" />;
+ * ```
+ *
+ * @see {@link useEffectiveUser} para impersonação em modo suporte
+ */
 export const useUserRole = () => {
   const { user, loading: authLoading } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>([]);
