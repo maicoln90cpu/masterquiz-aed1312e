@@ -42,12 +42,15 @@ const Analytics = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const { limits: resourceLimits } = useResourceLimits();
   const [stats, setStats] = useState({
     totalViews: 0,
     totalStarts: 0,
     totalCompletions: 0,
     conversionRate: 0,
     uniqueSessions: 0,
+    blockedCompletions: 0,
+    blockedStarts: 0,
   });
   const [chartData, setChartData] = useState<any[]>([]);
   const [quizPerformance, setQuizPerformance] = useState<any[]>([]);
@@ -65,7 +68,7 @@ const Analytics = () => {
 
   useEffect(() => {
     loadAnalytics();
-  }, [period, startDate, endDate, user]);
+  }, [period, startDate, endDate, user, resourceLimits?.leads.limit, resourceLimits?.leads.isUnlimited]);
 
   const loadAnalytics = async () => {
     setLoading(true);
@@ -120,14 +123,32 @@ const Analytics = () => {
           { totalViews: 0, totalStarts: 0, totalCompletions: 0 }
         );
 
+        // 🔒 Bloqueio de visualização por limite de plano (banco mantém os dados reais)
+        const planLeadLimit = resourceLimits?.leads.isUnlimited
+          ? Infinity
+          : (resourceLimits?.leads.limit ?? Infinity);
+
+        const visibleCompletions = planLeadLimit === Infinity
+          ? totals.totalCompletions
+          : Math.min(totals.totalCompletions, planLeadLimit);
+        const visibleStarts = planLeadLimit === Infinity
+          ? totals.totalStarts
+          : Math.min(totals.totalStarts, planLeadLimit);
+        const blockedCompletions = Math.max(0, totals.totalCompletions - visibleCompletions);
+        const blockedStarts = Math.max(0, totals.totalStarts - visibleStarts);
+
         const conversionRate = totals.totalViews > 0
-          ? ((totals.totalCompletions / totals.totalViews) * 100).toFixed(1)
+          ? ((visibleCompletions / totals.totalViews) * 100).toFixed(1)
           : 0;
 
         setStats({
-          ...totals,
+          totalViews: totals.totalViews,
+          totalStarts: visibleStarts,
+          totalCompletions: visibleCompletions,
           conversionRate: Number(conversionRate),
-          uniqueSessions: totals.totalStarts, // Simplificado
+          uniqueSessions: visibleStarts, // Simplificado
+          blockedCompletions,
+          blockedStarts,
         });
 
         // Preparar visitas detalhadas
