@@ -3351,6 +3351,22 @@ export type Database = {
       }
       generate_express_slug: { Args: never; Returns: string }
       generate_slug: { Args: { title: string }; Returns: string }
+      get_all_cron_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          description: string
+          display_name: string
+          jobid: number
+          jobname: string
+          last_run_at: string
+          last_run_duration_ms: number
+          last_run_status: string
+          schedule: string
+          total_failures_24h: number
+          total_runs_24h: number
+        }[]
+      }
       get_quiz_for_display: {
         Args: { p_company_slug?: string; p_quiz_slug?: string }
         Returns: Json
