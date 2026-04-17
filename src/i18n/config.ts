@@ -614,6 +614,13 @@ const pt = {
     quizSelectorDesc: "Selecione até 5 quizzes (mínimo 2) para comparar performance",
     evolutionOverTime: "Evolução ao longo do tempo",
     viewsStartsCompletions: "Views, Starts e Completions por dia",
+    emptyChart: {
+      title: "Nenhuma resposta ainda",
+      descNoQuiz: "Publique seu primeiro quiz para começar a ver dados aqui.",
+      descNoResponses: "Compartilhe seu quiz para começar a coletar respostas.",
+      shareCta: "Compartilhar meu quiz",
+      createCta: "Publicar meu primeiro quiz",
+    },
     distributionByOrigin: "Distribuição por Origem",
     top5Quizzes: "Top 5 quizzes",
     mostVisitedPages: "Páginas Mais Visitadas",
@@ -659,6 +666,11 @@ const pt = {
       converted: "Convertido",
       relationship: "Relacionamento",
       lost: "Perdido",
+    },
+    temperature: {
+      hot: "Lead quente",
+      warm: "Lead morno",
+      cold: "Lead frio",
     },
     toast: {
       errorLoading: "Erro ao carregar leads",
@@ -3918,6 +3930,13 @@ const en = {
     quizSelectorTitle: "Quiz Selector for Comparison",
     quizSelectorDesc: "Select up to 5 quizzes (minimum 2) to compare performance",
     evolutionOverTime: "Evolution over time",
+    emptyChart: {
+      title: "No responses yet",
+      descNoQuiz: "Publish your first quiz to start seeing data here.",
+      descNoResponses: "Share your quiz to start collecting responses.",
+      shareCta: "Share my quiz",
+      createCta: "Publish my first quiz",
+    },
     viewsStartsCompletions: "Views, Starts and Completions per day",
     distributionByOrigin: "Distribution by Origin",
     top5Quizzes: "Top 5 quizzes",
@@ -3972,6 +3991,11 @@ const en = {
       converted: "Converted",
       relationship: "Relationship",
       lost: "Lost",
+    },
+    temperature: {
+      hot: "Hot lead",
+      warm: "Warm lead",
+      cold: "Cold lead",
     },
     toast: {
       errorLoading: "Error loading leads",
@@ -6737,6 +6761,13 @@ const es = {
     quizSelectorTitle: "Selector de Quizzes para Comparar",
     quizSelectorDesc: "Selecciona hasta 5 quizzes (mínimo 2) para comparar rendimiento",
     evolutionOverTime: "Evolución a lo largo del tiempo",
+    emptyChart: {
+      title: "Aún no hay respuestas",
+      descNoQuiz: "Publica tu primer quiz para empezar a ver datos aquí.",
+      descNoResponses: "Comparte tu quiz para empezar a recibir respuestas.",
+      shareCta: "Compartir mi quiz",
+      createCta: "Publicar mi primer quiz",
+    },
     viewsStartsCompletions: "Views, Starts y Completions por día",
     distributionByOrigin: "Distribución por Origen",
     top5Quizzes: "Top 5 quizzes",
@@ -6792,6 +6823,11 @@ const es = {
       converted: "Convertido",
       relationship: "Relación",
       lost: "Perdido",
+    },
+    temperature: {
+      hot: "Lead caliente",
+      warm: "Lead tibio",
+      cold: "Lead frío",
     },
     toast: {
       errorLoading: "Error al cargar leads",
