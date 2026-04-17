@@ -38,6 +38,13 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
   const { t } = useTranslation();
   const [processing, setProcessing] = useState(false);
 
+  // A/B Testing: separate tests for free and paid plan CTAs
+  const isFreePlan = plan.id === 'free';
+  const abElement = isFreePlan ? 'pricing_free_cta' : 'pricing_paid_cta';
+  const { getContentForElement, getTestByElement, trackConversion } = useLandingABTest(abElement);
+  const ctaAB = getContentForElement(abElement);
+  const ctaTest = getTestByElement(abElement);
+
   const handleCTA = async () => {
     console.log('[PricingCard] handleCTA - 100% Kiwify mode', {
       planId: plan.id,
