@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, Mail, TrendingUp } from "lucide-react";
+import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, Mail, TrendingUp, Trophy, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -26,8 +26,30 @@ interface EmailContact {
   email_recovery_templates: {
     name: string;
     category: string;
+    subject: string | null;
+    subject_b: string | null;
   } | null;
 }
+
+interface TemplateRow {
+  id: string;
+  name: string;
+  category: string;
+  subject: string | null;
+  subject_b: string | null;
+}
+
+// Min sample size per variant to declare a winner
+const MIN_SAMPLE_FOR_WINNER = 100;
+
+// Period filter (days). 0 = all-time.
+type PeriodKey = '7' | '30' | '90' | '0';
+const PERIOD_LABELS: Record<PeriodKey, string> = {
+  '7': 'Últimos 7 dias',
+  '30': 'Últimos 30 dias',
+  '90': 'Últimos 90 dias',
+  '0': 'Todo o período',
+};
 
 const STATUS_COLORS: Record<string, string> = {
   sent: 'bg-green-100 text-green-700',
@@ -61,31 +83,51 @@ function pct(num: number, den: number): string {
 
 export function EmailRecoveryReports() {
   const [contacts, setContacts] = useState<EmailContact[]>([]);
+  const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [period, setPeriod] = useState<PeriodKey>('30');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(period); }, [period]);
 
-  const load = async () => {
+  const load = async (selectedPeriod: PeriodKey) => {
+    setLoading(true);
     try {
-      // Paginação manual para superar limite default de 1000 do PostgREST
+      const days = parseInt(selectedPeriod, 10);
+      const cutoff = days > 0
+        ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
+      // Load templates list (always full set so categories with 0 sends still render)
+      const tplPromise = supabase
+        .from('email_recovery_templates')
+        .select('id, name, category, subject, subject_b')
+        .eq('is_active', true);
+
+      // Paginated fetch with optional date filter
       const PAGE = 1000;
       let from = 0;
       const all: EmailContact[] = [];
-      // hard cap de segurança: 50k registros (50 páginas)
       for (let i = 0; i < 50; i++) {
-        const { data, error } = await supabase
+        let q = supabase
           .from('email_recovery_contacts')
-          .select('*, email_recovery_templates(name, category)')
+          .select('*, email_recovery_templates(name, category, subject, subject_b)')
           .order('created_at', { ascending: false })
           .range(from, from + PAGE - 1);
+        if (cutoff) q = q.gte('created_at', cutoff);
+        const { data, error } = await q;
         if (error) throw error;
         const page = (data || []) as unknown as EmailContact[];
         all.push(...page);
         if (page.length < PAGE) break;
         from += PAGE;
       }
+
+      const { data: tplData, error: tplErr } = await tplPromise;
+      if (tplErr) throw tplErr;
+
+      setTemplates((tplData || []) as TemplateRow[]);
       setContacts(all);
     } catch {
       toast.error('Erro ao carregar relatórios');
@@ -107,40 +149,79 @@ export function EmailRecoveryReports() {
   const failed = contacts.filter(c => c.status === 'failed').length;
   const pending = contacts.filter(c => c.status === 'pending').length;
 
-  // By category chart data
-  const categoryMap = new Map<string, { sent: number; opened: number; clicked: number; failed: number }>();
-  contacts.forEach(c => {
-    const cat = c.email_recovery_templates?.category || 'unknown';
-    if (!categoryMap.has(cat)) categoryMap.set(cat, { sent: 0, opened: 0, clicked: 0, failed: 0 });
-    const entry = categoryMap.get(cat)!;
-    if (['sent', 'opened', 'clicked'].includes(c.status)) entry.sent++;
-    if (c.opened_at || c.status === 'opened' || c.status === 'clicked') entry.opened++;
-    if (c.clicked_at || c.status === 'clicked') entry.clicked++;
-    if (c.status === 'failed') entry.failed++;
-  });
+  // ──────────────────────────────────────────────────────────
+  // Performance by Category — baseline = todas as categorias de templates
+  // (categorias com 0 envios aparecem zeradas, não somem)
+  // ──────────────────────────────────────────────────────────
+  const categoryPerformance = useMemo(() => {
+    const stats = new Map<string, { sent: number; opened: number; clicked: number; failed: number }>();
+    for (const t of templates) {
+      if (!stats.has(t.category)) stats.set(t.category, { sent: 0, opened: 0, clicked: 0, failed: 0 });
+    }
+    for (const c of contacts) {
+      const cat = c.email_recovery_templates?.category || 'unknown';
+      if (!stats.has(cat)) stats.set(cat, { sent: 0, opened: 0, clicked: 0, failed: 0 });
+      const e = stats.get(cat)!;
+      if (['sent', 'opened', 'clicked'].includes(c.status)) e.sent++;
+      if (c.opened_at || c.status === 'opened' || c.status === 'clicked') e.opened++;
+      if (c.clicked_at || c.status === 'clicked') e.clicked++;
+      if (c.status === 'failed') e.failed++;
+    }
+    return Array.from(stats.entries())
+      .map(([cat, s]) => ({
+        cat,
+        category: CATEGORY_LABELS[cat] || cat,
+        sent: s.sent,
+        opened: s.opened,
+        clicked: s.clicked,
+        failed: s.failed,
+        openRate: pct(s.opened, s.sent),
+        clickRate: pct(s.clicked, s.sent),
+        failRate: pct(s.failed, s.sent + s.failed),
+      }))
+      .sort((a, b) => b.sent - a.sent);
+  }, [contacts, templates]);
 
-  const categoryChartData = Array.from(categoryMap.entries()).map(([cat, stats]) => ({
-    name: CATEGORY_LABELS[cat] || cat,
-    ...stats,
-  }));
+  const categoryChartData = categoryPerformance
+    .filter(r => r.sent > 0 || r.failed > 0) // chart só com dados (tabela mostra todas)
+    .map(r => ({ name: r.category, sent: r.sent, opened: r.opened, clicked: r.clicked, failed: r.failed }));
 
-  // Performance by category table
-  const categoryPerformance = Array.from(categoryMap.entries()).map(([cat, stats]) => ({
-    category: CATEGORY_LABELS[cat] || cat,
-    sent: stats.sent,
-    openRate: pct(stats.opened, stats.sent),
-    clickRate: pct(stats.clicked, stats.sent),
-    failRate: pct(stats.failed, stats.sent + stats.failed),
-  })).sort((a, b) => b.sent - a.sent);
-
-  // A/B test results
-  const abContacts = contacts.filter(c => c.ab_variant && ['sent', 'opened', 'clicked'].includes(c.status));
-  const abA = abContacts.filter(c => c.ab_variant === 'A');
-  const abB = abContacts.filter(c => c.ab_variant === 'B');
-  const abResults = abContacts.length > 0 ? {
-    a: { sent: abA.length, opened: abA.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length, clicked: abA.filter(c => c.clicked_at || c.status === 'clicked').length },
-    b: { sent: abB.length, opened: abB.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length, clicked: abB.filter(c => c.clicked_at || c.status === 'clicked').length },
-  } : null;
+  // ──────────────────────────────────────────────────────────
+  // A/B test results POR TEMPLATE
+  // - Templates sem subject_b => "Sem variante B"
+  // - Indicador de vencedor só quando A e B >= MIN_SAMPLE_FOR_WINNER
+  // ──────────────────────────────────────────────────────────
+  const abPerTemplate = useMemo(() => {
+    const byTpl = new Map<string, { A: EmailContact[]; B: EmailContact[] }>();
+    for (const c of contacts) {
+      if (!c.template_id || !c.ab_variant) continue;
+      if (!['sent', 'opened', 'clicked'].includes(c.status)) continue;
+      if (!byTpl.has(c.template_id)) byTpl.set(c.template_id, { A: [], B: [] });
+      const slot = byTpl.get(c.template_id)!;
+      if (c.ab_variant === 'A') slot.A.push(c);
+      else if (c.ab_variant === 'B') slot.B.push(c);
+    }
+    return templates.map(t => {
+      const buckets = byTpl.get(t.id) || { A: [], B: [] };
+      const calc = (arr: EmailContact[]) => {
+        const s = arr.length;
+        const o = arr.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length;
+        const cl = arr.filter(c => c.clicked_at || c.status === 'clicked').length;
+        return { sent: s, opened: o, clicked: cl, openRate: s > 0 ? o / s : 0, clickRate: s > 0 ? cl / s : 0 };
+      };
+      const a = calc(buckets.A);
+      const b = calc(buckets.B);
+      const hasVariantB = !!t.subject_b && t.subject_b.trim().length > 0;
+      const enoughSample = hasVariantB && a.sent >= MIN_SAMPLE_FOR_WINNER && b.sent >= MIN_SAMPLE_FOR_WINNER;
+      let winner: 'A' | 'B' | 'tie' | null = null;
+      if (enoughSample) {
+        if (a.openRate > b.openRate) winner = 'A';
+        else if (b.openRate > a.openRate) winner = 'B';
+        else winner = 'tie';
+      }
+      return { template: t, a, b, hasVariantB, enoughSample, winner };
+    }).sort((x, y) => (y.a.sent + y.b.sent) - (x.a.sent + x.b.sent));
+  }, [contacts, templates]);
 
   // Pie chart data
   const pieData = [
@@ -155,6 +236,27 @@ export function EmailRecoveryReports() {
 
   return (
     <div className="space-y-6">
+      {/* Period selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">Período de análise</h3>
+          <p className="text-xs text-muted-foreground">Filtra todos os gráficos e tabelas abaixo</p>
+        </div>
+        <div className="flex gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(PERIOD_LABELS) as PeriodKey[]).map(k => (
+                <SelectItem key={k} value={k}>{PERIOD_LABELS[k]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={() => load(period)} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-blue-100 text-blue-600"><Mail className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{total}</p><p className="text-xs text-muted-foreground">Total</p></div></CardContent></Card>
@@ -250,47 +352,83 @@ export function EmailRecoveryReports() {
         </CardContent>
       </Card>
 
-      {/* A/B Test Results */}
-      {abResults && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Resultado Teste A/B de Subject Lines</CardTitle>
-            <CardDescription>Comparação entre variantes A e B dos assuntos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="p-4 bg-muted rounded-lg text-center">
-                <p className="font-bold text-lg mb-1">Variante A</p>
-                <p className="text-sm text-muted-foreground mb-2">{abResults.a.sent} enviados</p>
-                <div className="flex justify-center gap-6">
-                  <div>
-                    <p className="text-2xl font-bold text-blue-600">{pct(abResults.a.opened, abResults.a.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Open Rate</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-purple-600">{pct(abResults.a.clicked, abResults.a.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Click Rate</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-muted rounded-lg text-center">
-                <p className="font-bold text-lg mb-1">Variante B</p>
-                <p className="text-sm text-muted-foreground mb-2">{abResults.b.sent} enviados</p>
-                <div className="flex justify-center gap-6">
-                  <div>
-                    <p className="text-2xl font-bold text-blue-600">{pct(abResults.b.opened, abResults.b.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Open Rate</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-purple-600">{pct(abResults.b.clicked, abResults.b.sent)}</p>
-                    <p className="text-xs text-muted-foreground">Click Rate</p>
-                  </div>
-                </div>
-              </div>
+      {/* A/B Test Results — POR TEMPLATE */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Teste A/B por Template</CardTitle>
+          <CardDescription>
+            Comparação subject line A vs B. Vencedor declarado apenas com ≥ {MIN_SAMPLE_FOR_WINNER} envios em cada variante.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {abPerTemplate.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">Nenhum template ativo encontrado</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">Template</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-center">Variante A</TableHead>
+                    <TableHead className="text-center">Variante B</TableHead>
+                    <TableHead className="text-center">Vencedora</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {abPerTemplate.map(({ template: t, a, b, hasVariantB, enoughSample, winner }) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-medium text-sm">{t.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {CATEGORY_LABELS[t.category] || t.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="text-xs">
+                          <div className="font-semibold">{a.sent} env.</div>
+                          <div className="text-muted-foreground">
+                            Open {pct(a.opened, a.sent)} · Click {pct(a.clicked, a.sent)}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {!hasVariantB ? (
+                          <Badge variant="secondary" className="text-xs">
+                            <Minus className="h-3 w-3 mr-1" /> Sem variante B
+                          </Badge>
+                        ) : (
+                          <div className="text-xs">
+                            <div className="font-semibold">{b.sent} env.</div>
+                            <div className="text-muted-foreground">
+                              Open {pct(b.opened, b.sent)} · Click {pct(b.clicked, b.sent)}
+                            </div>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {!hasVariantB ? (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        ) : !enoughSample ? (
+                          <span className="text-xs text-muted-foreground">
+                            Amostra insuficiente
+                          </span>
+                        ) : winner === 'tie' ? (
+                          <Badge variant="outline" className="text-xs">Empate</Badge>
+                        ) : (
+                          <Badge className="text-xs bg-green-600 hover:bg-green-600">
+                            <Trophy className="h-3 w-3 mr-1" /> {winner}
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filters + Table */}
       <Card>
@@ -319,7 +457,7 @@ export function EmailRecoveryReports() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="icon" onClick={() => { setLoading(true); load(); }}>
+              <Button variant="outline" size="icon" onClick={() => load(period)} disabled={loading}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
