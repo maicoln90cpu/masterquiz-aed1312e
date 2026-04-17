@@ -14,6 +14,7 @@ import {
 import { useSystemHealth } from "@/hooks/useSystemHealth";
 import { ModuleHealthCard } from "./ModuleHealthCard";
 import { HealthScoreGauge } from "./HealthScoreGauge";
+import { LifecycleHealthCard } from "./LifecycleHealthCard";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -300,6 +301,9 @@ export const SystemHealthDashboard = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Etapa 5: Saúde do Ciclo de Vida (8 triggers) */}
+          <LifecycleHealthCard />
         </>
       )}
     </div>
