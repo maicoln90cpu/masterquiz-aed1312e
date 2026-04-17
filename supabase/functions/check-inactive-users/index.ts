@@ -310,6 +310,30 @@ Deno.serve(async (req) => {
 
     // Ordenar por prioridade
     eligibleUsers.sort((a, b) => b.lead_count - a.lead_count);
+
+    // ===== DRY RUN: retornar lista sem enfileirar =====
+    if (dryRun) {
+      console.log(`Dry run: ${eligibleUsers.length} eligible users (criteria=${JSON.stringify(targetCriteria)})`);
+      return new Response(
+        JSON.stringify({
+          message: `${eligibleUsers.length} destinatário(s) elegível(is)`,
+          dryRun: true,
+          total_eligible: eligibleUsers.length,
+          recipients: eligibleUsers.slice(0, 500).map(u => ({
+            user_id: u.id,
+            full_name: u.full_name,
+            whatsapp: u.whatsapp,
+            days_inactive: u.days_inactive,
+            plan_type: u.plan_type,
+            quiz_count: u.quiz_count,
+            lead_count: u.lead_count,
+            user_stage: u.user_stage,
+          })),
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const usersToQueue = eligibleUsers.slice(0, remainingLimit);
 
     // Template selection
