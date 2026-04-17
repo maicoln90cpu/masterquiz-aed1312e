@@ -26,6 +26,19 @@ export function UnifiedCostsDashboard() {
     },
   });
 
+  // ========== BLOG POSTS COUNT (contexto para custos zerados) ==========
+  const { data: blogPostsInfo } = useQuery({
+    queryKey: ["unified-costs-blog-posts-info"],
+    queryFn: async () => {
+      const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const [{ count: total }, { count: last7d }] = await Promise.all([
+        supabase.from("blog_posts").select("id", { count: "exact", head: true }),
+        supabase.from("blog_posts").select("id", { count: "exact", head: true }).gte("created_at", since7d),
+      ]);
+      return { total: total ?? 0, last7d: last7d ?? 0 };
+    },
+  });
+
   // ========== QUIZ AI COSTS ==========
   const { data: quizLogs, isLoading: quizLoading, refetch: refetchQuiz } = useQuery({
     queryKey: ["unified-costs-quiz-detailed"],
@@ -344,9 +357,18 @@ export function UnifiedCostsDashboard() {
           {blogStats.count === 0 && (
             <Alert>
               <Info className="h-4 w-4" />
-              <AlertDescription className="text-sm text-muted-foreground">
-                <strong>Dados históricos indisponíveis:</strong> Os artigos gerados antes da implantação do tracking de custos não possuem registros de log. 
-                Novos artigos gerados a partir de agora terão seus custos registrados automaticamente.
+              <AlertDescription className="text-sm text-muted-foreground space-y-1">
+                <div>
+                  <strong>{blogPostsInfo?.total ?? 0} posts publicados</strong>
+                  {typeof blogPostsInfo?.last7d === 'number' && blogPostsInfo.last7d > 0 && (
+                    <span> ({blogPostsInfo.last7d} {blogPostsInfo.last7d === 1 ? 'novo' : 'novos'} nos últimos 7 dias)</span>
+                  )}
+                  {' '}— sem log de custo (anteriores ao tracking).
+                </div>
+                <div>
+                  <strong>Dados históricos indisponíveis:</strong> Os artigos gerados antes da implantação do tracking de custos não possuem registros de log.
+                  Novos artigos gerados a partir de agora terão seus custos registrados automaticamente.
+                </div>
               </AlertDescription>
             </Alert>
           )}

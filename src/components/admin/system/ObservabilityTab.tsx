@@ -7,7 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronDown, AlertTriangle, CheckCircle, XCircle, Clock, Zap, Globe, Activity } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChevronDown, AlertTriangle, CheckCircle, XCircle, Clock, Zap, Globe, Activity, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   fetchSLAMetrics,
@@ -411,26 +412,61 @@ function MetricsHealthPanel() {
   if (!data) return <p className="text-muted-foreground text-sm">Sem dados</p>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
-      {data.map(ch => (
-        <Card key={ch.channel}>
-          <CardContent className="pt-4 flex items-center gap-3">
-            {ch.hasRecentData
-              ? <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-              : <XCircle className="h-5 w-5 text-red-500 shrink-0" />
-            }
-            <div>
-              <p className="text-sm font-medium">{ch.label}</p>
-              <p className="text-xs text-muted-foreground">
-                {ch.lastDataAt
-                  ? `Último: ${new Date(ch.lastDataAt).toLocaleString('pt-BR')}`
-                  : 'Sem dados'}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <TooltipProvider>
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground flex items-center gap-2">
+          <Info className="h-3 w-3" />
+          <span>
+            <strong className="text-foreground">Verde</strong> = dados recentes (&lt;24h). 
+            <strong className="text-foreground"> Amarelo</strong> = sem registros recentes (normal se ninguém usou). 
+            <strong className="text-foreground"> Vermelho</strong> = falha real de coleta.
+          </span>
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {data.map(ch => {
+            const status: 'ok' | 'idle' | 'error' = ch.hasRecentData
+              ? 'ok'
+              : ch.lastDataAt
+              ? 'idle'   // já houve dado, mas não nas últimas 24h → informativo
+              : 'idle';  // nunca teve dado → também informativo (não é erro)
+            const tooltipText =
+              status === 'ok'
+                ? 'Coleta saudável: dados recebidos nas últimas 24h.'
+                : ch.lastDataAt
+                ? 'Sem registros nas últimas 24h. Normal se não houve uso recente do canal.'
+                : 'Nenhum registro coletado ainda. Normal se este canal nunca foi acionado.';
+            return (
+              <Card key={ch.channel}>
+                <CardContent className="pt-4 flex items-center gap-3">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="shrink-0 cursor-help">
+                        {status === 'ok' ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Info className="h-5 w-5 text-yellow-500" />
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-xs">{tooltipText}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <div>
+                    <p className="text-sm font-medium">{ch.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {ch.lastDataAt
+                        ? `Último: ${new Date(ch.lastDataAt).toLocaleString('pt-BR')}`
+                        : 'Sem registros recentes'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </TooltipProvider>
   );
 }
 
