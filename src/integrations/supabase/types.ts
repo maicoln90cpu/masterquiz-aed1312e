@@ -2189,6 +2189,7 @@ export type Database = {
         Row: {
           campaign_id: string | null
           created_at: string | null
+          custom_link: string | null
           days_inactive_at_contact: number | null
           delivered_at: string | null
           error_message: string | null
@@ -2216,6 +2217,7 @@ export type Database = {
         Insert: {
           campaign_id?: string | null
           created_at?: string | null
+          custom_link?: string | null
           days_inactive_at_contact?: number | null
           delivered_at?: string | null
           error_message?: string | null
@@ -2243,6 +2245,7 @@ export type Database = {
         Update: {
           campaign_id?: string | null
           created_at?: string | null
+          custom_link?: string | null
           days_inactive_at_contact?: number | null
           delivered_at?: string | null
           error_message?: string | null
@@ -3338,6 +3341,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      enqueue_zombie_campaign: {
+        Args: { p_campaign_id: string; p_template_id: string }
+        Returns: number
+      }
       generate_express_slug: { Args: never; Returns: string }
       generate_slug: { Args: { title: string }; Returns: string }
       get_quiz_for_display: {
@@ -3377,6 +3384,15 @@ export type Database = {
       mark_first_lead_received: {
         Args: { _owner_id: string }
         Returns: undefined
+      }
+      preview_zombie_recipients: {
+        Args: never
+        Returns: {
+          email: string
+          nome: string
+          user_id: string
+          whatsapp: string
+        }[]
       }
       record_login_event: { Args: { p_user_id: string }; Returns: undefined }
       set_profile_first_value: {
