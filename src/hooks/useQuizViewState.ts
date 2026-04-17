@@ -93,8 +93,9 @@ const extractContactFromAnswers = (
 
       // Priority 1: explicit validation type on the block
       if (b.validation === 'email' && !email) {
-        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) {
-          email = val.trim();
+        const trimmed = val.trim();
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) && !isInstitutionalEmailSync(trimmed)) {
+          email = trimmed;
         }
       } else if ((b.validation === 'phone' || b.validation === 'cpf') && !phone) {
         const digits = val.replace(/\D/g, '');
@@ -106,7 +107,7 @@ const extractContactFromAnswers = (
       // Priority 2: regex fallback if no validation type set
       if (!email && !b.validation) {
         const emailMatch = val.match(/[^\s@]+@[^\s@]+\.[^\s@]+/);
-        if (emailMatch) email = emailMatch[0];
+        if (emailMatch && !isInstitutionalEmailSync(emailMatch[0])) email = emailMatch[0];
       }
       if (!phone && !b.validation) {
         const digits = val.replace(/\D/g, '');
