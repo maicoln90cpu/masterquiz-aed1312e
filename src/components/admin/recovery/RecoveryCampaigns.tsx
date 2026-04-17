@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter, Pencil, RefreshCw, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { CampaignRecipientsPanel } from "./CampaignRecipientsPanel";
 
 interface Campaign {
   id: string;
@@ -988,6 +989,15 @@ export function RecoveryCampaigns() {
                     <span>Concluída: {new Date(campaign.completed_at).toLocaleDateString('pt-BR')}</span>
                   )}
                 </div>
+
+                <CampaignRecipientsPanel
+                  campaignId={campaign.id}
+                  campaignName={campaign.name}
+                  templateId={campaign.template_id}
+                  status={campaign.status}
+                  isAutomatic={campaign.is_automatic}
+                  onChanged={loadData}
+                />
               </CardContent>
             </Card>
           ))}
