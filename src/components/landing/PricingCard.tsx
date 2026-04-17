@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useLandingABTest } from "@/hooks/useLandingABTest";
 
 interface PricingCardProps {
   plan: {
@@ -37,6 +38,13 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
   const { t } = useTranslation();
   const [processing, setProcessing] = useState(false);
 
+  // A/B Testing: separate tests for free and paid plan CTAs
+  const isFreePlan = plan.id === 'free';
+  const abElement = isFreePlan ? 'pricing_free_cta' : 'pricing_paid_cta';
+  const { getContentForElement, getTestByElement, trackConversion } = useLandingABTest(abElement);
+  const ctaAB = getContentForElement(abElement);
+  const ctaTest = getTestByElement(abElement);
+
   const handleCTA = async () => {
     console.log('[PricingCard] handleCTA - 100% Kiwify mode', {
       planId: plan.id,
@@ -50,6 +58,11 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
       cta_location: 'landing_page',
       payment_gateway: 'kiwify',
     });
+
+    // Track A/B conversion for free/paid pricing CTA
+    if (ctaTest) {
+      trackConversion({ testId: ctaTest.id, conversionType: 'cta_click' });
+    }
 
     try {
       setProcessing(true);
@@ -196,7 +209,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
                 {t('pricing.processing')}
               </>
             ) : (
-              plan.ctaText
+              ctaAB?.text || plan.ctaText
             )}
           </Button>
         </CardFooter>

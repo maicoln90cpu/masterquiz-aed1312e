@@ -4,13 +4,22 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { useLandingABTest } from "@/hooks/useLandingABTest";
 
 export const FinalCTA = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isModeB } = useSiteMode();
 
+  // A/B Test: title of the final CTA section
+  const { getContentForElement, getTestByElement, trackConversion } = useLandingABTest('final_cta_section');
+  const titleAB = getContentForElement('final_cta_section');
+  const titleTest = getTestByElement('final_cta_section');
+
   const handleCTA = () => {
+    if (titleTest) {
+      trackConversion({ testId: titleTest.id, conversionType: 'cta_click' });
+    }
     pushGTMEvent('cta_click', {
       cta_location: 'final_cta',
       cta_text: isModeB ? 'choose_plan_final' : 'start_free_final',
@@ -31,7 +40,7 @@ export const FinalCTA = () => {
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold text-white">
-            {t('landing.finalCTA.title')}
+            {titleAB?.text || t('landing.finalCTA.title')}
           </h2>
 
           <p className="text-xl text-white/90">

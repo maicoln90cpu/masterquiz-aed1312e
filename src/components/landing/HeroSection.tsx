@@ -39,7 +39,7 @@ export const HeroSection = () => {
   const { getContent, isLoading: isLoadingContent } = useLandingContent();
   const { isModeB } = useSiteMode();
   
-  // A/B Testing for CTA
+  // A/B Testing for CTA (legacy: hero_cta) + new tests (headline, subheadline, primary, secondary)
   const { 
     getContentForElement, 
     getVariantForElement, 
@@ -59,6 +59,14 @@ export const HeroSection = () => {
   const abVariant = getVariantForElement('hero_cta');
   const abTest = getTestByElement('hero_cta');
 
+  // New A/B tests (headline, subheadline, CTA primary text/style, CTA secondary text)
+  const headlineAB = getContentForElement('hero_headline');
+  const subheadlineAB = getContentForElement('hero_subheadline');
+  const ctaPrimaryAB = getContentForElement('hero_cta_primary');
+  const ctaSecondaryAB = getContentForElement('hero_cta_secondary');
+  const ctaPrimaryTest = getTestByElement('hero_cta_primary');
+  const ctaSecondaryTest = getTestByElement('hero_cta_secondary');
+
   // Helper to get content with instant fallback
   const c = (key: keyof typeof FALLBACK_CONTENT, i18nKey: string) => {
     const dbValue = getContent(key);
@@ -67,17 +75,27 @@ export const HeroSection = () => {
     return FALLBACK_CONTENT[key] || t(i18nKey);
   };
 
-  // Get CTA text - prioritize A/B test, then CMS, then fallback
+  // Get CTA text - priority: A/B test (new) > A/B test (legacy) > CMS > fallback
   const getCtaText = () => {
+    if (ctaPrimaryAB?.text) return ctaPrimaryAB.text;
     if (abTestContent?.text) return abTestContent.text;
     if (isModeB) return 'Escolher meu plano';
     return c('hero_cta_primary', 'landing.hero.ctaPrimary');
   };
 
+  const getCtaSecondaryText = () => {
+    if (ctaSecondaryAB?.text) return ctaSecondaryAB.text;
+    if (isModeB) return 'Ver planos';
+    return c('hero_cta_secondary', 'landing.hero.ctaSecondary');
+  };
+
   const handleGetStarted = () => {
-    // Track A/B conversion if test is active
+    // Track A/B conversion for legacy + new primary CTA tests
     if (abTest) {
       trackConversion({ testId: abTest.id, conversionType: 'cta_click' });
+    }
+    if (ctaPrimaryTest) {
+      trackConversion({ testId: ctaPrimaryTest.id, conversionType: 'cta_click' });
     }
     
     pushGTMEvent('cta_click', {
@@ -89,6 +107,9 @@ export const HeroSection = () => {
   };
 
   const handleDemo = () => {
+    if (ctaSecondaryTest) {
+      trackConversion({ testId: ctaSecondaryTest.id, conversionType: 'cta_click' });
+    }
     pushGTMEvent('cta_click', {
       cta_location: 'hero',
       cta_text: 'view_demo',
@@ -96,9 +117,9 @@ export const HeroSection = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Get CTA style from A/B test
+  // Get CTA style from A/B test (new takes precedence)
   const getCtaStyle = () => {
-    if (abTestContent?.style === 'gradient') {
+    if (ctaPrimaryAB?.style === 'gradient' || abTestContent?.style === 'gradient') {
       return 'bg-gradient-to-r from-primary to-accent text-primary-foreground';
     }
     return '';
@@ -136,14 +157,16 @@ export const HeroSection = () => {
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-[1.1] tracking-tight">
                 <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text">
-                  {c('hero_headline_main', 'landing.hero.headlineMain')}
+                  {headlineAB?.text || c('hero_headline_main', 'landing.hero.headlineMain')}
                 </span>
               </h1>
-              <p className="text-2xl md:text-3xl lg:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
-                  {c('hero_headline_sub', 'landing.hero.headlineSub')}
-                </span>
-              </p>
+              {!headlineAB?.text && (
+                <p className="text-2xl md:text-3xl lg:text-4xl font-bold">
+                  <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                    {c('hero_headline_sub', 'landing.hero.headlineSub')}
+                  </span>
+                </p>
+              )}
             </div>
 
             {/* Subheadline */}
@@ -152,7 +175,7 @@ export const HeroSection = () => {
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
               }`}
             >
-              {c('hero_subheadline', 'landing.hero.subheadline')}
+              {subheadlineAB?.text || c('hero_subheadline', 'landing.hero.subheadline')}
             </p>
 
             {/* Bullets */}
@@ -192,7 +215,7 @@ export const HeroSection = () => {
                 className="text-lg group hover-scale-sm"
               >
                 <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-smooth" />
-                {isModeB ? 'Ver planos' : c('hero_cta_secondary', 'landing.hero.ctaSecondary')}
+                {getCtaSecondaryText()}
               </Button>
             </div>
 
