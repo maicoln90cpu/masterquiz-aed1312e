@@ -276,6 +276,95 @@ Deno.serve(async (req) => {
           }
         }
       }
+
+      // --- BLOCO A — ZOMBIE: login_count <= 1 + 30+ dias signup + sem quiz real ---
+      if (zombieTemplates.length > 0 && (profile.login_count ?? 0) <= 1 && daysSinceSignup >= 30) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const hasRealQuiz = userQuizzes.some(q => (q.creation_source || 'manual') !== 'express_auto');
+        if (!hasRealQuiz) {
+          for (const tmpl of zombieTemplates) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                status: 'pending', priority: 20,
+                days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                user_quiz_count: quizCount, user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
+
+      // --- BLOCO B — NO RESPONSE: quiz publicado há 7+ dias com 0 leads ---
+      if (noResponseTemplates.length > 0 && leadCount === 0) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const hasOldActiveQuiz = userQuizzes.some(q => {
+          if (q.status !== 'active') return false;
+          const ageDays = Math.floor((Date.now() - new Date(q.updated_at).getTime()) / 86400000);
+          return ageDays >= 7;
+        });
+        if (hasOldActiveQuiz) {
+          for (const tmpl of noResponseTemplates) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                status: 'pending', priority: 15,
+                days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                user_quiz_count: quizCount, user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
+
+      // --- BLOCO C — DRAFT ABANDONED: rascunho não-express há 7+ dias + login_count >= 2 ---
+      if (draftAbandonedTemplates.length > 0 && (profile.login_count ?? 0) >= 2) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const hasOldDraft = userQuizzes.some(q => {
+          if (q.status !== 'draft') return false;
+          if ((q.creation_source || 'manual') === 'express_auto') return false;
+          const ageDays = Math.floor((Date.now() - new Date(q.updated_at).getTime()) / 86400000);
+          return ageDays >= 7;
+        });
+        if (hasOldDraft) {
+          for (const tmpl of draftAbandonedTemplates) {
+            const key = `${profile.id}|${tmpl.id}`;
+            if (!sentSet.has(key)) {
+              contacts.push({
+                user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                status: 'pending', priority: 10,
+                days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                user_quiz_count: quizCount, user_lead_count: leadCount,
+                scheduled_at: new Date().toISOString(),
+              });
+              sentSet.add(key);
+            }
+          }
+        }
+      }
+
+      // --- BLOCO D — UPGRADE NUDGE (rede de segurança): plan_limit_hit_type='lead' ---
+      if (upgradeNudgeTemplates.length > 0 && profile.plan_limit_hit_type === 'lead') {
+        for (const tmpl of upgradeNudgeTemplates) {
+          const key = `${profile.id}|${tmpl.id}`;
+          if (!sentSet.has(key)) {
+            contacts.push({
+              user_id: profile.id, email: profile.email, template_id: tmpl.id,
+              status: 'pending', priority: 100,
+              days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+              user_quiz_count: quizCount, user_lead_count: leadCount,
+              scheduled_at: new Date().toISOString(),
+            });
+            sentSet.add(key);
+          }
+        }
+      }
     }
 
     // Respect daily limit
