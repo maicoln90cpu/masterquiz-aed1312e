@@ -198,7 +198,7 @@ export const HeroSection = () => {
                 onClick={handleGetStarted}
                 className={`text-lg group hover-lift hover-glow ${getCtaStyle()}`}
               >
-                {getCtaText()}
+                {ctaPrimaryText}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-smooth" />
               </Button>
               <Button
@@ -208,7 +208,7 @@ export const HeroSection = () => {
                 className="text-lg group hover-scale-sm"
               >
                 <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-smooth" />
-                {getCtaSecondaryText()}
+                {ctaSecondaryText}
               </Button>
             </div>
 
