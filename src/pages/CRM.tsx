@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useResourceLimits } from "@/hooks/useResourceLimits";
+import { PlanLimitBlockedBanner } from "@/components/ui/PlanLimitBlockedBanner";
 import { FirstLeadUpgradeBanner } from "@/components/FirstLeadUpgradeBanner";
 import { CRMEmptyState } from '@/components/crm/CRMEmptyState';
 import { MobileNav } from "@/components/MobileNav";
@@ -66,8 +68,10 @@ const CRM = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { checkLeadLimit } = useSubscriptionLimits();
+  const { limits } = useResourceLimits();
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [blockedLeadsCount, setBlockedLeadsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [newLeadDialog, setNewLeadDialog] = useState(false);
@@ -102,7 +106,7 @@ const CRM = () => {
 
   useEffect(() => {
     loadLeads();
-  }, [filterQuiz, filterStatus]);
+  }, [filterQuiz, filterStatus, limits?.leads.limit, limits?.leads.isUnlimited]);
 
   const loadLeads = async () => {
     setLoading(true);
@@ -157,10 +161,21 @@ const CRM = () => {
         quiz_questions: (response.quizzes?.quiz_questions || []) as any[],
       }));
 
-      setLeads(leadsData);
-      
-      // Count anonymous responses
-      const anonymousCount = leadsData.filter(l => !hasUsefulContactData(l)).length;
+      // 🔒 Bloqueio de visualização por limite de plano (banco continua salvando tudo)
+      const planLeadLimit = limits?.leads.isUnlimited
+        ? Infinity
+        : (limits?.leads.limit ?? Infinity);
+      const totalFetched = leadsData.length;
+      const visibleLeads = planLeadLimit === Infinity
+        ? leadsData
+        : leadsData.slice(0, planLeadLimit);
+      const blocked = Math.max(0, totalFetched - (planLeadLimit === Infinity ? totalFetched : planLeadLimit));
+
+      setLeads(visibleLeads);
+      setBlockedLeadsCount(blocked);
+
+      // Count anonymous responses (apenas dentro do que está visível)
+      const anonymousCount = visibleLeads.filter(l => !hasUsefulContactData(l)).length;
       setAnonymousResponseCount(anonymousCount);
     } catch (error) {
       console.error('Error loading leads:', error);
@@ -505,6 +520,14 @@ const CRM = () => {
             </SelectContent>
           </Select>
         </div>
+
+        {/* 🔒 Bloqueio por limite de plano */}
+        <PlanLimitBlockedBanner
+          blockedCount={blockedLeadsCount}
+          label="leads"
+          context="no CRM"
+          className="mb-4"
+        />
 
         {/* Banner informativo: respostas anônimas */}
         {anonymousResponseCount > 0 && (
