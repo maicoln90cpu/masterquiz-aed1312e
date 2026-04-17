@@ -2332,7 +2332,7 @@ const pt = {
       },
       integrations: {
         title: "Integrações e Automações",
-        description: "Conecte o MasterQuizz com suas ferramentas favoritas sem complicação.",
+        description: "Conecte o MasterQuiz com suas ferramentas favoritas sem complicação.",
         highlight1: "Facebook Pixel nativo (eventos automáticos)",
         highlight2: "Google Tag Manager nativo",
         highlight3: "Webhooks para conectar com CRM, email, n8n, Make, Zapier etc.",
@@ -2358,21 +2358,21 @@ const pt = {
     },
     compare: {
       seo: {
-        title: "MasterQuizz vs InLead, Typeform e Outgrow — Comparação completa 2026",
+        title: "MasterQuiz vs InLead, Typeform e Outgrow — Comparação completa 2026",
         description:
-          "Compare o MasterQuizz com InLead, Typeform e Outgrow. Veja preços, funcionalidades e diferenciais. Plano gratuito real, CRM integrado, IA e vídeo incluídos a partir de R$ 37/mês.",
+          "Compare o MasterQuiz com InLead, Typeform e Outgrow. Veja preços, funcionalidades e diferenciais. Plano gratuito real, CRM integrado, IA e vídeo incluídos a partir de R$ 37/mês.",
       },
       hero: {
-        title: "Por que o MasterQuizz é a melhor escolha para infoprodutores brasileiros?",
+        title: "Por que o MasterQuiz é a melhor escolha para infoprodutores brasileiros?",
         subtitle:
-          "Compare as principais ferramentas de quiz do mercado e veja por que quem vende online no Brasil escolhe o MasterQuizz.",
+          "Compare as principais ferramentas de quiz do mercado e veja por que quem vende online no Brasil escolhe o MasterQuiz.",
         ctaPrimary: "Começar grátis agora",
         ctaSecondary: "Ver planos e preços",
       },
       cards: {
         free: {
           title: "Comece grátis, sem cartão",
-          text: "Enquanto InLead começa em R$ 97/mês e Typeform limita a 10 respostas no free, o MasterQuizz oferece um plano gratuito real para você testar antes de pagar.",
+          text: "Enquanto InLead começa em R$ 97/mês e Typeform limita a 10 respostas no free, o MasterQuiz oferece um plano gratuito real para você testar antes de pagar.",
         },
         allInOne: {
           title: "Tudo incluído a partir de R$ 37/mês",
@@ -2389,7 +2389,7 @@ const pt = {
         feature: "Funcionalidade",
       },
       vsInlead: {
-        title: "MasterQuizz vs InLead — a comparação que mais importa",
+        title: "MasterQuiz vs InLead — a comparação que mais importa",
         subtitle: "O InLead é a principal alternativa brasileira. Veja por que infoprodutores estão migrando.",
       },
       cta: {
@@ -2443,7 +2443,7 @@ const pt = {
         feature2: "Até 10.000 respostas/mês",
         feature3: "Integrações avançadas (CRM, automações)",
         feature4: "Relatórios em PDF para clientes/gestão",
-        feature5: "White label parcial (remover marca MasterQuizz)",
+        feature5: "White label parcial (remover marca MasterQuiz)",
         feature6: "Suporte prioritário",
         cta: "Assinar plano Premium",
       },
@@ -2738,7 +2738,7 @@ const pt = {
       "Parabéns! Sua assinatura foi ativada com sucesso. Você já pode começar a criar quizzes incríveis e capturar leads qualificados.",
     goToDashboard: "Ir para o Dashboard",
     needHelp: "Precisa de ajuda? Entre em contato com nosso suporte a qualquer momento.",
-    copyright: "© {{year}} MasterQuizz. Todos os direitos reservados.",
+    copyright: "© {{year}} MasterQuiz. Todos os direitos reservados.",
     errorVerifying: "Erro ao verificar assinatura",
   },
   kiwifyCancel: {
@@ -2792,7 +2792,7 @@ const pt = {
     supportContacts: {
       title: "Precisa de Ajuda?",
       email: "Email",
-      emailValue: "suporte@masterquizz.com",
+      emailValue: "suporte@masterquiz.com",
       whatsapp: "WhatsApp",
       whatsappValue: "Atendimento rápido",
       helpCenter: "Central de Ajuda",
@@ -2828,7 +2828,7 @@ const pt = {
     header: {
       helpCenter: "Central de Ajuda",
       title: "Como podemos ajudar?",
-      subtitle: "Encontre respostas para suas dúvidas sobre o MasterQuizz",
+      subtitle: "Encontre respostas para suas dúvidas sobre o MasterQuiz",
       searchPlaceholder: "Buscar pergunta...",
       accessPlatform: "Acessar Plataforma",
     },
@@ -2863,16 +2863,16 @@ const pt = {
       general: {
         title: "📋 Perguntas Gerais",
         q1: {
-          q: "O que é o MasterQuizz?",
-          a: "O MasterQuizz é uma plataforma completa para criar quizzes interativos que qualificam leads, segmentam seu público e aumentam suas conversões. Com ele você cria, publica e gerencia quizzes profissionais sem precisar de conhecimento técnico.",
+          q: "O que é o MasterQuiz?",
+          a: "O MasterQuiz é uma plataforma completa para criar quizzes interativos que qualificam leads, segmentam seu público e aumentam suas conversões. Com ele você cria, publica e gerencia quizzes profissionais sem precisar de conhecimento técnico.",
         },
         q2: {
-          q: "Para quem o MasterQuizz é indicado?",
+          q: "Para quem o MasterQuiz é indicado?",
           a: "Infoprodutores, agências de marketing, coaches, consultores, e-commerces e qualquer profissional que deseja qualificar melhor seus leads antes de enviar para o checkout ou time de vendas.",
         },
         q3: {
           q: "Preciso saber programar para usar?",
-          a: "Não! O MasterQuizz foi criado para ser 100% visual. Você arrasta blocos, personaliza cores e publica com poucos cliques. Nenhum código necessário.",
+          a: "Não! O MasterQuiz foi criado para ser 100% visual. Você arrasta blocos, personaliza cores e publica com poucos cliques. Nenhum código necessário.",
         },
         q4: {
           q: "Posso usar no celular?",
@@ -2943,7 +2943,7 @@ const pt = {
         },
         q10: {
           q: "Como personalizar a aparência do quiz?",
-          a: "Na etapa de Aparência, você pode escolher templates, cores, fontes, adicionar seu logo e ocultar a marca MasterQuizz (em planos pagos).",
+          a: "Na etapa de Aparência, você pode escolher templates, cores, fontes, adicionar seu logo e ocultar a marca MasterQuiz (em planos pagos).",
         },
       },
       crm: {
@@ -3077,7 +3077,7 @@ const pt = {
         },
         q4: {
           q: "Como funciona a integração com Kiwify?",
-          a: "O MasterQuizz recebe webhooks do Kiwify para sincronizar compras e atualizar o status de assinatura dos usuários automaticamente.",
+          a: "O MasterQuiz recebe webhooks do Kiwify para sincronizar compras e atualizar o status de assinatura dos usuários automaticamente.",
         },
         q5: {
           q: "Preciso de conhecimento técnico?",
@@ -3828,13 +3828,13 @@ const en = {
     pixelNotAllowed: "Facebook Pixel only available on paid plans",
     gtmNotAllowed: "Google Tag Manager only available on paid plans",
     whiteLabel: "White Label",
-    whiteLabelDesc: "Remove MasterQuizz branding",
+    whiteLabelDesc: "Remove MasterQuiz branding",
     removeBranding: "Remove Branding",
     brandingActive: "✓ Active for all quizzes",
     brandingUpgrade: "Upgrade to unlock",
-    brandingMessage: "Your quizzes won't show 'Powered by MasterQuizz'",
+    brandingMessage: "Your quizzes won't show 'Powered by MasterQuiz'",
     brandingAvailable: "Available only on Partner and Premium plans",
-    brandingInfo: "With White Label, you can present quizzes with your own brand, without mentioning MasterQuizz.",
+    brandingInfo: "With White Label, you can present quizzes with your own brand, without mentioning MasterQuiz.",
     account: "Account Information",
     accountDesc: "Your subscription details",
     planType: "Current Plan",
@@ -3878,7 +3878,7 @@ const en = {
     whatsappPlaceholder: "(11) 99999-9999",
     gtmContainerPlaceholder: "GTM-XXXXXXX",
     whiteLabelEnabled: "Branding removed",
-    whiteLabelDisabled: "MasterQuizz branding visible",
+    whiteLabelDisabled: "MasterQuiz branding visible",
     plansTitle: "Plans and Subscriptions",
     plansExplore: "Explore our plans and choose the one that best suits your needs:",
     plansFeature1: "Compare features of each plan",
@@ -4221,9 +4221,9 @@ const en = {
       },
     },
     welcome: {
-      title: "Welcome to MasterQuizz! 🎉",
+      title: "Welcome to MasterQuiz! 🎉",
       desc: "Transform visitors into qualified leads with smart quizzes",
-      intro: "MasterQuizz helps you create interactive quizzes that capture leads with",
+      intro: "MasterQuiz helps you create interactive quizzes that capture leads with",
       highlight: "real purchase intent",
       feature1: { title: "Create in minutes", desc: "Set up your first quiz in less than 5 minutes" },
       feature2: { title: "Ready templates", desc: "Choose from templates optimized for conversion" },
@@ -5292,7 +5292,7 @@ const en = {
       },
       integrations: {
         title: "Integrations and Automations",
-        description: "Connect MasterQuizz with your favorite tools without complication.",
+        description: "Connect MasterQuiz with your favorite tools without complication.",
         highlight1: "Native Facebook Pixel (automatic events)",
         highlight2: "Native Google Tag Manager",
         highlight3: "Webhooks to connect with CRM, email, n8n, Make, Zapier, etc.",
@@ -5318,21 +5318,21 @@ const en = {
     },
     compare: {
       seo: {
-        title: "MasterQuizz vs InLead, Typeform and Outgrow — Full comparison 2026",
+        title: "MasterQuiz vs InLead, Typeform and Outgrow — Full comparison 2026",
         description:
-          "Compare MasterQuizz with InLead, Typeform and Outgrow. See pricing, features and differentiators. Real free plan, integrated CRM, AI and video included from R$ 37/month.",
+          "Compare MasterQuiz with InLead, Typeform and Outgrow. See pricing, features and differentiators. Real free plan, integrated CRM, AI and video included from R$ 37/month.",
       },
       hero: {
-        title: "Why MasterQuizz is the best choice for Brazilian digital creators",
+        title: "Why MasterQuiz is the best choice for Brazilian digital creators",
         subtitle:
-          "Compare the main quiz tools in the market and see why those who sell online in Brazil choose MasterQuizz.",
+          "Compare the main quiz tools in the market and see why those who sell online in Brazil choose MasterQuiz.",
         ctaPrimary: "Start free now",
         ctaSecondary: "See plans and pricing",
       },
       cards: {
         free: {
           title: "Start free, no card required",
-          text: "While InLead starts at R$ 97/month and Typeform limits free to 10 responses, MasterQuizz offers a real free plan so you can test before paying.",
+          text: "While InLead starts at R$ 97/month and Typeform limits free to 10 responses, MasterQuiz offers a real free plan so you can test before paying.",
         },
         allInOne: {
           title: "Everything included from R$ 37/month",
@@ -5349,7 +5349,7 @@ const en = {
         feature: "Feature",
       },
       vsInlead: {
-        title: "MasterQuizz vs InLead — the comparison that matters most",
+        title: "MasterQuiz vs InLead — the comparison that matters most",
         subtitle: "InLead is the main Brazilian alternative. See why creators are switching.",
       },
       cta: {
@@ -5403,7 +5403,7 @@ const en = {
         feature2: "Up to 10,000 responses/month",
         feature3: "Advanced integrations (CRM, automations)",
         feature4: "PDF reports for clients/management",
-        feature5: "Partial white label (remove MasterQuizz brand)",
+        feature5: "Partial white label (remove MasterQuiz brand)",
         feature6: "Priority support",
         cta: "Subscribe to Premium plan",
       },
@@ -5602,7 +5602,7 @@ const en = {
       "Congratulations! Your subscription has been activated successfully. You can now start creating amazing quizzes and capturing qualified leads.",
     goToDashboard: "Go to Dashboard",
     needHelp: "Need help? Contact our support anytime.",
-    copyright: "© {{year}} MasterQuizz. All rights reserved.",
+    copyright: "© {{year}} MasterQuiz. All rights reserved.",
     errorVerifying: "Error verifying subscription",
   },
   kiwifyCancel: {
@@ -5656,7 +5656,7 @@ const en = {
     supportContacts: {
       title: "Need Help?",
       email: "Email",
-      emailValue: "support@masterquizz.com",
+      emailValue: "support@masterquiz.com",
       whatsapp: "WhatsApp",
       whatsappValue: "Quick support",
       helpCenter: "Help Center",
@@ -5692,7 +5692,7 @@ const en = {
     header: {
       helpCenter: "Help Center",
       title: "How can we help?",
-      subtitle: "Find answers to your questions about MasterQuizz",
+      subtitle: "Find answers to your questions about MasterQuiz",
       searchPlaceholder: "Search question...",
       accessPlatform: "Access Platform",
     },
@@ -5730,16 +5730,16 @@ const en = {
       general: {
         title: "📋 General Questions",
         q1: {
-          q: "What is MasterQuizz?",
-          a: "MasterQuizz is a complete platform for creating interactive quizzes that qualify leads, segment your audience and increase your conversions. With it you create, publish and manage professional quizzes without technical knowledge.",
+          q: "What is MasterQuiz?",
+          a: "MasterQuiz is a complete platform for creating interactive quizzes that qualify leads, segment your audience and increase your conversions. With it you create, publish and manage professional quizzes without technical knowledge.",
         },
         q2: {
-          q: "Who is MasterQuizz for?",
+          q: "Who is MasterQuiz for?",
           a: "Infoproduct creators, marketing agencies, coaches, consultants, e-commerces and any professional who wants to better qualify their leads before sending to checkout or sales team.",
         },
         q3: {
           q: "Do I need to know programming?",
-          a: "No! MasterQuizz was created to be 100% visual. You drag blocks, customize colors and publish with a few clicks. No code required.",
+          a: "No! MasterQuiz was created to be 100% visual. You drag blocks, customize colors and publish with a few clicks. No code required.",
         },
         q4: {
           q: "Can I use it on mobile?",
@@ -5810,7 +5810,7 @@ const en = {
         },
         q10: {
           q: "How to customize quiz appearance?",
-          a: "In the Appearance step, you can choose templates, colors, fonts, add your logo and hide MasterQuizz branding (on paid plans).",
+          a: "In the Appearance step, you can choose templates, colors, fonts, add your logo and hide MasterQuiz branding (on paid plans).",
         },
       },
       crm: {
@@ -5944,7 +5944,7 @@ const en = {
         },
         q4: {
           q: "How does Kiwify integration work?",
-          a: "MasterQuizz receives webhooks from Kiwify to sync purchases and automatically update users' subscription status.",
+          a: "MasterQuiz receives webhooks from Kiwify to sync purchases and automatically update users' subscription status.",
         },
         q5: {
           q: "Do I need technical knowledge?",
@@ -5982,7 +5982,7 @@ const en = {
       createAccount: "Create Free Account",
     },
     footer: {
-      copyright: "© {{year}} MasterQuizz. All rights reserved.",
+      copyright: "© {{year}} MasterQuiz. All rights reserved.",
     },
   },
   landingDemo: {
@@ -6449,7 +6449,7 @@ const es = {
     createFirstQuiz: "Crear Primer Quiz",
     noQuizzesFoundDesc: "No se encontraron quizzes con los filtros seleccionados",
     adjustFilters: "Intenta ajustar la búsqueda o selecciona otras etiquetas",
-    poweredBy: "Desarrollado con ❤️ por MasterQuizz",
+    poweredBy: "Desarrollado con ❤️ por MasterQuiz",
   },
   quiz: {
     title: "Título",
@@ -6704,13 +6704,13 @@ const es = {
     pixelNotAllowed: "Facebook Pixel solo disponible en planes pagos",
     gtmNotAllowed: "Google Tag Manager solo disponible en planes pagos",
     whiteLabel: "White Label",
-    whiteLabelDesc: "Elimine el branding de MasterQuizz",
+    whiteLabelDesc: "Elimine el branding de MasterQuiz",
     removeBranding: "Eliminar Marca",
     brandingActive: "✓ Activo para todos los quizzes",
     brandingUpgrade: "Mejora para desbloquear",
-    brandingMessage: "Tus quizzes no mostrarán 'Powered by MasterQuizz'",
+    brandingMessage: "Tus quizzes no mostrarán 'Powered by MasterQuiz'",
     brandingAvailable: "Disponible solo en planes Partner y Premium",
-    brandingInfo: "Con White Label, puedes presentar los quizzes con tu propia marca, sin mencionar MasterQuizz.",
+    brandingInfo: "Con White Label, puedes presentar los quizzes con tu propia marca, sin mencionar MasterQuiz.",
     account: "Información de la Cuenta",
     accountDesc: "Detalles de su suscripción",
     planType: "Plan Actual",
@@ -6754,7 +6754,7 @@ const es = {
     whatsappPlaceholder: "(11) 99999-9999",
     gtmContainerPlaceholder: "GTM-XXXXXXX",
     whiteLabelEnabled: "Branding eliminado",
-    whiteLabelDisabled: "Branding MasterQuizz visible",
+    whiteLabelDisabled: "Branding MasterQuiz visible",
     plansTitle: "Planes y Suscripciones",
     plansExplore: "Explora nuestros planes y elige el que mejor se adapte a tus necesidades:",
     plansFeature1: "Compara características de cada plan",
@@ -7098,9 +7098,9 @@ const es = {
       },
     },
     welcome: {
-      title: "¡Bienvenido a MasterQuizz! 🎉",
+      title: "¡Bienvenido a MasterQuiz! 🎉",
       desc: "Transforma visitantes en leads calificados con quizzes inteligentes",
-      intro: "MasterQuizz te ayuda a crear quizzes interactivos que capturan leads con",
+      intro: "MasterQuiz te ayuda a crear quizzes interactivos que capturan leads con",
       highlight: "intención de compra real",
       feature1: { title: "Crea en minutos", desc: "Configura tu primer quiz en menos de 5 minutos" },
       feature2: { title: "Templates listos", desc: "Elige entre modelos optimizados para conversión" },
@@ -7933,7 +7933,7 @@ const es = {
   },
   quizView: {
     result: "Resultado",
-    poweredBy: "Powered by MasterQuizz",
+    poweredBy: "Powered by MasterQuiz",
     yourData: "Sus Datos",
     name: "Nombre",
     email: "Correo Electrónico",
@@ -8056,7 +8056,7 @@ const es = {
     },
     cta: {
       title: "¿Listo para Transformar tu Negocio?",
-      subtitle: "Únete a miles de empresas que ya usan MasterQuizz",
+      subtitle: "Únete a miles de empresas que ya usan MasterQuiz",
       quickCreation: "Creación Rápida",
       quickCreationDescription: "Crea tu primer quiz en menos de 5 minutos",
       professionalResults: "Resultados Profesionales",
@@ -8111,10 +8111,10 @@ const es = {
     },
     faq: {
       sectionTitle: "Preguntas Frecuentes",
-      sectionSubtitle: "Resuelve tus dudas sobre MasterQuizz",
+      sectionSubtitle: "Resuelve tus dudas sobre MasterQuiz",
       question1: "¿Necesito conocimientos técnicos?",
       answer1:
-        "¡No! MasterQuizz fue diseñado para ser extremadamente simple. Cualquiera puede crear quizzes profesionales sin necesidad de saber programar.",
+        "¡No! MasterQuiz fue diseñado para ser extremadamente simple. Cualquiera puede crear quizzes profesionales sin necesidad de saber programar.",
       question2: "¿Puedo usar mi propio dominio?",
       answer2: "¡Sí! En los planes de pago puedes configurar tu propio dominio personalizado para los quizzes.",
       question3: "¿Cómo funciona la captura de leads?",
@@ -8443,7 +8443,7 @@ const es = {
       },
       integrations: {
         title: "Integraciones y Automatizaciones",
-        description: "Conecta MasterQuizz con tus herramientas favoritas sin complicación.",
+        description: "Conecta MasterQuiz con tus herramientas favoritas sin complicación.",
         highlight1: "Facebook Pixel nativo (eventos automáticos)",
         highlight2: "Google Tag Manager nativo",
         highlight3: "Webhooks para conectar con CRM, email, n8n, Make, Zapier, etc.",
@@ -8469,21 +8469,21 @@ const es = {
     },
     compare: {
       seo: {
-        title: "MasterQuizz vs InLead, Typeform y Outgrow — Comparación completa 2026",
+        title: "MasterQuiz vs InLead, Typeform y Outgrow — Comparación completa 2026",
         description:
-          "Compara MasterQuizz con InLead, Typeform y Outgrow. Mira precios, funciones y diferenciales. Plan gratuito real, CRM integrado, IA y vídeo incluidos desde R$ 37/mes.",
+          "Compara MasterQuiz con InLead, Typeform y Outgrow. Mira precios, funciones y diferenciales. Plan gratuito real, CRM integrado, IA y vídeo incluidos desde R$ 37/mes.",
       },
       hero: {
-        title: "Por qué MasterQuizz es la mejor opción para infoproductores brasileños",
+        title: "Por qué MasterQuiz es la mejor opción para infoproductores brasileños",
         subtitle:
-          "Compara las principales herramientas de quiz del mercado y descubre por qué quienes venden en línea en Brasil eligen MasterQuizz.",
+          "Compara las principales herramientas de quiz del mercado y descubre por qué quienes venden en línea en Brasil eligen MasterQuiz.",
         ctaPrimary: "Empezar gratis ahora",
         ctaSecondary: "Ver planes y precios",
       },
       cards: {
         free: {
           title: "Empieza gratis, sin tarjeta",
-          text: "Mientras InLead cuesta desde R$ 97/mes y Typeform limita el plan gratis a 10 respuestas, MasterQuizz ofrece un plan gratuito real para que pruebes antes de pagar.",
+          text: "Mientras InLead cuesta desde R$ 97/mes y Typeform limita el plan gratis a 10 respuestas, MasterQuiz ofrece un plan gratuito real para que pruebes antes de pagar.",
         },
         allInOne: {
           title: "Todo incluido desde R$ 37/mes",
@@ -8500,7 +8500,7 @@ const es = {
         feature: "Funcionalidad",
       },
       vsInlead: {
-        title: "MasterQuizz vs InLead — la comparación que más importa",
+        title: "MasterQuiz vs InLead — la comparación que más importa",
         subtitle: "InLead es la principal alternativa brasileña. Mira por qué los infoproductores están migrando.",
       },
       cta: {
@@ -8545,7 +8545,7 @@ const es = {
         feature2: "Hasta 10.000 respuestas/mes",
         feature3: "Integraciones avanzadas (CRM, automatizaciones)",
         feature4: "Informes en PDF para clientes/gestión",
-        feature5: "White label parcial (remover marca MasterQuizz)",
+        feature5: "White label parcial (remover marca MasterQuiz)",
         feature6: "Soporte prioritario",
         cta: "Suscribirse al plan Premium",
       },
@@ -8683,7 +8683,7 @@ const es = {
       "¡Felicidades! Tu suscripción ha sido activada con éxito. Ya puedes empezar a crear quizzes increíbles y capturar leads calificados.",
     goToDashboard: "Ir al Panel",
     needHelp: "¿Necesitas ayuda? Contacta con nuestro soporte en cualquier momento.",
-    copyright: "© {{year}} MasterQuizz. Todos los derechos reservados.",
+    copyright: "© {{year}} MasterQuiz. Todos los derechos reservados.",
     errorVerifying: "Error al verificar suscripción",
   },
   kiwifyCancel: {
@@ -8737,7 +8737,7 @@ const es = {
     supportContacts: {
       title: "¿Necesitas Ayuda?",
       email: "Email",
-      emailValue: "soporte@masterquizz.com",
+      emailValue: "soporte@masterquiz.com",
       whatsapp: "WhatsApp",
       whatsappValue: "Atención rápida",
       helpCenter: "Centro de Ayuda",
@@ -8773,7 +8773,7 @@ const es = {
     header: {
       helpCenter: "Centro de Ayuda",
       title: "¿Cómo podemos ayudarte?",
-      subtitle: "Encuentra respuestas a tus dudas sobre MasterQuizz",
+      subtitle: "Encuentra respuestas a tus dudas sobre MasterQuiz",
       searchPlaceholder: "Buscar pregunta...",
       accessPlatform: "Acceder a la Plataforma",
     },
@@ -8811,16 +8811,16 @@ const es = {
       general: {
         title: "📋 Preguntas Generales",
         q1: {
-          q: "¿Qué es MasterQuizz?",
-          a: "MasterQuizz es una plataforma completa para crear quizzes interactivos que califican leads, segmentan tu audiencia y aumentan tus conversiones. Con él creas, publicas y gestionas quizzes profesionales sin necesidad de conocimiento técnico.",
+          q: "¿Qué es MasterQuiz?",
+          a: "MasterQuiz es una plataforma completa para crear quizzes interactivos que califican leads, segmentan tu audiencia y aumentan tus conversiones. Con él creas, publicas y gestionas quizzes profesionales sin necesidad de conocimiento técnico.",
         },
         q2: {
-          q: "¿Para quién es MasterQuizz?",
+          q: "¿Para quién es MasterQuiz?",
           a: "Creadores de infoproductos, agencias de marketing, coaches, consultores, e-commerces y cualquier profesional que desee calificar mejor sus leads antes de enviar al checkout o equipo de ventas.",
         },
         q3: {
           q: "¿Necesito saber programar?",
-          a: "¡No! MasterQuizz fue creado para ser 100% visual. Arrastras bloques, personalizas colores y publicas con pocos clics. No se requiere código.",
+          a: "¡No! MasterQuiz fue creado para ser 100% visual. Arrastras bloques, personalizas colores y publicas con pocos clics. No se requiere código.",
         },
         q4: {
           q: "¿Puedo usarlo en el celular?",
@@ -8891,7 +8891,7 @@ const es = {
         },
         q10: {
           q: "¿Cómo personalizar la apariencia del quiz?",
-          a: "En el paso de Apariencia, puedes elegir plantillas, colores, fuentes, agregar tu logo y ocultar la marca MasterQuizz (en planes pagos).",
+          a: "En el paso de Apariencia, puedes elegir plantillas, colores, fuentes, agregar tu logo y ocultar la marca MasterQuiz (en planes pagos).",
         },
       },
       crm: {
@@ -9025,7 +9025,7 @@ const es = {
         },
         q4: {
           q: "¿Cómo funciona la integración con Kiwify?",
-          a: "MasterQuizz recibe webhooks de Kiwify para sincronizar compras y actualizar automáticamente el estado de suscripción de los usuarios.",
+          a: "MasterQuiz recibe webhooks de Kiwify para sincronizar compras y actualizar automáticamente el estado de suscripción de los usuarios.",
         },
         q5: {
           q: "¿Necesito conocimiento técnico?",
@@ -9063,7 +9063,7 @@ const es = {
       createAccount: "Crear Cuenta Gratis",
     },
     footer: {
-      copyright: "© {{year}} MasterQuizz. Todos los derechos reservados.",
+      copyright: "© {{year}} MasterQuiz. Todos los derechos reservados.",
     },
   },
   landingDemo: {

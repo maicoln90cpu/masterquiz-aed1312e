@@ -52,7 +52,7 @@ export function EmailRecoverySettings() {
           id: data.id,
           is_active: data.is_active ?? false,
           sender_email: data.sender_email || '',
-          sender_name: data.sender_name || 'MasterQuizz',
+          sender_name: data.sender_name || 'MasterQuiz',
           daily_email_limit: data.daily_email_limit ?? 100,
           hourly_email_limit: data.hourly_email_limit ?? 30,
           batch_size: data.batch_size ?? 10,

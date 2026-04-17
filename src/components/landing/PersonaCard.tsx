@@ -27,7 +27,7 @@ export const PersonaCard = ({ icon: Icon, title, problem, solution, index }: Per
             <p className="text-sm font-semibold text-destructive mb-2">❌ {problem}</p>
           </div>
           <div>
-            <p className="text-sm font-semibold text-primary mb-2">✅ Com MasterQuizz:</p>
+            <p className="text-sm font-semibold text-primary mb-2">✅ Com MasterQuiz:</p>
             <p className="text-muted-foreground">{solution}</p>
           </div>
         </CardContent>

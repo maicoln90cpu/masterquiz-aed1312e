@@ -653,9 +653,9 @@ Se nenhum prompt ativo na tabela, usa `blog_settings.image_prompt_template`.
 Endpoint: POST https://slingshot.egoiapp.com/api/v2/email/messages/action/send
 Payload (array de até 100 itens):
 [{
-  "domain": "masterquizz.com",
+  "domain": "masterquiz.com",
   "senderId": "...",
-  "senderName": "MasterQuizz",
+  "senderName": "MasterQuiz",
   "to": ["user@email.com"],
   "subject": "...",
   "htmlBody": "<html>...(personalizado por user)...</html>",

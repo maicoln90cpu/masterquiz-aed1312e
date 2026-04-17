@@ -16,7 +16,7 @@ interface FeatureTooltipProps {
   className?: string;
 }
 
-const STORAGE_KEY = 'masterquizz_tooltips_seen';
+const STORAGE_KEY = 'masterquiz_tooltips_seen';
 
 const getSeenTooltips = (): string[] => {
   try {

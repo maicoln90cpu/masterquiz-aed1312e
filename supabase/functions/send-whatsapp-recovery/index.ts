@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       .replace(/{quiz_count}/g, String(contact.user_quiz_count || 0))
       .replace(/{lead_count}/g, String(contact.user_lead_count || 0))
       .replace(/{plan_name}/g, contact.user_plan_at_contact || 'Free')
-      .replace(/{company_name}/g, 'MasterQuizz')
+      .replace(/{company_name}/g, 'MasterQuiz')
       .replace(/{login_link}/g, 'https://masterquiz.lovable.app/login')
       .replace(/{support_link}/g, 'https://masterquiz.lovable.app/faq');
 

@@ -65,7 +65,7 @@ export const MobileNav = () => {
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-xl">
             <span className="text-2xl">🎯</span>
-            MasterQuizz
+            MasterQuiz
           </SheetTitle>
         </SheetHeader>
 

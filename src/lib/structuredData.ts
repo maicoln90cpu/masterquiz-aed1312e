@@ -11,12 +11,12 @@ export function buildCompareJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: "MasterQuizz",
+    name: "MasterQuiz",
     description:
       "Plataforma brasileira de quizzes interativos para qualificação de leads, com CRM integrado, IA, vídeo hospedado, analytics avançado e 8 integrações nativas. A partir de R$ 37/mês.",
     brand: {
       "@type": "Brand",
-      name: "MasterQuizz",
+      name: "MasterQuiz",
     },
     url: `${SITE_URL}/compare`,
     image: `${SITE_URL}/og-image.png`,

@@ -1,4 +1,4 @@
-# 📜 CHANGELOG — MasterQuizz
+# 📜 CHANGELOG — MasterQuiz
 
 > Todas as mudanças notáveis deste projeto serão documentadas aqui.
 >
@@ -10,7 +10,7 @@
 ## [2.42.0] — 2026-04-17
 
 ### ✨ Adicionado
-- **Página `/compare`** pública com hero, 3 cards de proposta de valor, tabela comparativa (18 linhas × 4 colunas) e seção MasterQuizz vs InLead.
+- **Página `/compare`** pública com hero, 3 cards de proposta de valor, tabela comparativa (18 linhas × 4 colunas) e seção MasterQuiz vs InLead.
 - **A/B test** no CTA final da página `/compare` ("Criar conta grátis" vs "Testar 7 dias grátis") via tabela `landing_ab_tests` com `target_element='compare_cta_final'`.
 - **JSON-LD Schema.org** (`Product` + `Offer`) injetado no `<head>` da página `/compare` para SEO estruturado.
 - **Helper `buildCompareJsonLd()`** em `src/lib/structuredData.ts` reutilizável.

@@ -12,7 +12,7 @@ export type CompareValue = {
 export type CompareRow = {
   id: string;
   feature: string;
-  masterquizz: CompareValue;
+  masterquiz: CompareValue;
   inlead: CompareValue;
   typeform: CompareValue;
   outgrow: CompareValue;
@@ -23,7 +23,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "free_plan",
     feature: "Plano gratuito real",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "no", text: "Não" },
     typeform: { type: "warn", text: "10 respostas/mês" },
     outgrow: { type: "warn", text: "Sem quiz no free" },
@@ -31,7 +31,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "min_price",
     feature: "Menor plano pago",
-    masterquizz: { type: "text", text: "R$ 37/mês" },
+    masterquiz: { type: "text", text: "R$ 37/mês" },
     inlead: { type: "text", text: "R$ 97/mês" },
     typeform: { type: "text", text: "~R$ 165/mês" },
     outgrow: { type: "text", text: "~R$ 80/mês" },
@@ -39,7 +39,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "lang_pt",
     feature: "Interface em português",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "yes", text: "Sim" },
     typeform: { type: "no", text: "Inglês" },
     outgrow: { type: "no", text: "Inglês" },
@@ -47,7 +47,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "br_focus",
     feature: "Foco em infoprodutores BR",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "yes", text: "Sim" },
     typeform: { type: "no", text: "Não" },
     outgrow: { type: "no", text: "Não" },
@@ -55,7 +55,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "ai_quiz",
     feature: "Geração de quiz com IA",
-    masterquizz: { type: "yes", text: "Nativo" },
+    masterquiz: { type: "yes", text: "Nativo" },
     inlead: { type: "no", text: "Não tem" },
     typeform: { type: "warn", text: "Limitado" },
     outgrow: { type: "yes", text: "Sim" },
@@ -63,7 +63,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "crm",
     feature: "CRM visual integrado",
-    masterquizz: { type: "yes", text: "Kanban completo" },
+    masterquiz: { type: "yes", text: "Kanban completo" },
     inlead: { type: "no", text: "Só download" },
     typeform: { type: "no", text: "Não tem" },
     outgrow: { type: "no", text: "Não tem" },
@@ -71,7 +71,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "video",
     feature: "Vídeo hospedado integrado",
-    masterquizz: { type: "yes", text: "Incluído" },
+    masterquiz: { type: "yes", text: "Incluído" },
     inlead: { type: "no", text: "Externo" },
     typeform: { type: "no", text: "Não tem" },
     outgrow: { type: "no", text: "Não tem" },
@@ -79,7 +79,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "funnel",
     feature: "Analytics com funil",
-    masterquizz: { type: "yes", text: "Por pergunta" },
+    masterquiz: { type: "yes", text: "Por pergunta" },
     inlead: { type: "no", text: "Básico" },
     typeform: { type: "warn", text: "Limitado" },
     outgrow: { type: "yes", text: "Sim" },
@@ -87,7 +87,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "heatmap",
     feature: "Heatmap de respostas",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "no", text: "Não" },
     typeform: { type: "no", text: "Não" },
     outgrow: { type: "no", text: "Não" },
@@ -95,7 +95,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "ab",
     feature: "A/B testing de quiz",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "no", text: "Não" },
     typeform: { type: "no", text: "Não" },
     outgrow: { type: "yes", text: "Sim" },
@@ -103,7 +103,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "conditional",
     feature: "Perguntas condicionais",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "yes", text: "Sim" },
     typeform: { type: "yes", text: "Sim" },
     outgrow: { type: "yes", text: "Sim" },
@@ -111,7 +111,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "recovery",
     feature: "Recuperação automática de leads",
-    masterquizz: { type: "yes", text: "WhatsApp + Email" },
+    masterquiz: { type: "yes", text: "WhatsApp + Email" },
     inlead: { type: "no", text: "Não" },
     typeform: { type: "no", text: "Não" },
     outgrow: { type: "no", text: "Não" },
@@ -119,7 +119,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "integrations",
     feature: "Integrações nativas",
-    masterquizz: { type: "yes", text: "8 ferramentas" },
+    masterquiz: { type: "yes", text: "8 ferramentas" },
     inlead: { type: "warn", text: "Webhook apenas" },
     typeform: { type: "yes", text: "300+" },
     outgrow: { type: "yes", text: "1.000+" },
@@ -127,7 +127,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "fb_pixel",
     feature: "Facebook Pixel por quiz",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "yes", text: "Sim" },
     typeform: { type: "yes", text: "Sim" },
     outgrow: { type: "yes", text: "Sim" },
@@ -135,7 +135,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "gtm",
     feature: "Google Tag Manager",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "yes", text: "Sim" },
     typeform: { type: "yes", text: "Sim" },
     outgrow: { type: "yes", text: "Sim" },
@@ -143,7 +143,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "white_label",
     feature: "White label",
-    masterquizz: { type: "yes", text: "Plano Partner+" },
+    masterquiz: { type: "yes", text: "Plano Partner+" },
     inlead: { type: "yes", text: "Todos os planos" },
     typeform: { type: "yes", text: "Plano Plus+" },
     outgrow: { type: "yes", text: "Sim" },
@@ -151,7 +151,7 @@ export const COMPARE_ROWS: CompareRow[] = [
   {
     id: "support_pt",
     feature: "Suporte em português",
-    masterquizz: { type: "yes", text: "Sim" },
+    masterquiz: { type: "yes", text: "Sim" },
     inlead: { type: "yes", text: "Sim" },
     typeform: { type: "no", text: "Inglês" },
     outgrow: { type: "no", text: "Inglês" },
@@ -172,8 +172,8 @@ export const VS_INLEAD = {
       "Menor plano: 2 funis, 5.000 leads",
     ],
   },
-  masterquizz: {
-    title: "MasterQuizz",
+  masterquiz: {
+    title: "MasterQuiz",
     subtitle: "Grátis para começar — plano pago a partir de R$ 37/mês",
     points: [
       "CRM Kanban visual integrado com drag-and-drop",
@@ -186,7 +186,7 @@ export const VS_INLEAD = {
     ],
   },
   conclusion:
-    "Se você usa quiz no funil de vendas para qualificar leads antes do checkout, o MasterQuizz entrega tudo que precisa em uma plataforma só — por menos da metade do preço de entrada do InLead, e com um plano gratuito para começar sem risco.",
+    "Se você usa quiz no funil de vendas para qualificar leads antes do checkout, o MasterQuiz entrega tudo que precisa em uma plataforma só — por menos da metade do preço de entrada do InLead, e com um plano gratuito para começar sem risco.",
 };
 
 export const COMPARE_TABLE_FOOTNOTE =

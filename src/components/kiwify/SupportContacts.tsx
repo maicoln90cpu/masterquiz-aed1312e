@@ -11,7 +11,7 @@ export function SupportContacts() {
       icon: Mail,
       title: t('kiwify.supportContacts.email'),
       value: t('kiwify.supportContacts.emailValue'),
-      action: () => window.location.href = "mailto:suporte@masterquizz.com"
+      action: () => window.location.href = "mailto:suporte@masterquiz.com"
     },
     {
       icon: MessageCircle,

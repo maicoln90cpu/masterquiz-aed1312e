@@ -1550,8 +1550,8 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <MobileNav />
               <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <img src={logo} alt="MasterQuizz" className="h-8 w-8 rounded-md object-contain" />
-                <span className="font-bold text-lg hidden md:inline">MasterQuizz</span>
+                <img src={logo} alt="MasterQuiz" className="h-8 w-8 rounded-md object-contain" />
+                <span className="font-bold text-lg hidden md:inline">MasterQuiz</span>
               </Link>
               <span className="text-muted-foreground hidden md:inline">|</span>
               <h1 className="text-lg md:text-xl font-semibold">Admin Master</h1>

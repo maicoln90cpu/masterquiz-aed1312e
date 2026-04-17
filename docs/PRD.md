@@ -86,7 +86,7 @@ Para garantir clareza conceitual, é importante definir o que o produto **não �
 
 ### A Solução
 
-**MasterQuizz cria funis de auto-convencimento:**
+**MasterQuiz cria funis de auto-convencimento:**
 
 1. **Revelação de dores**
    - Perguntas que expõem problemas latentes

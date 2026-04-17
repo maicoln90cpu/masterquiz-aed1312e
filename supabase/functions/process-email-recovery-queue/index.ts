@@ -69,8 +69,8 @@ Deno.serve(async (req) => {
     }
 
     // Resolve sender
-    const senderEmail = settings.sender_email || 'noreply@masterquizz.com';
-    const senderName = settings.sender_name || 'MasterQuizz';
+    const senderEmail = settings.sender_email || 'noreply@masterquiz.com';
+    const senderName = settings.sender_name || 'MasterQuiz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) {
       return new Response(JSON.stringify({ error: 'Nenhum sender configurado na E-goi' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
           .replace(/{quiz_count}/g, String(contact.user_quiz_count || 0))
           .replace(/{lead_count}/g, String(contact.user_lead_count || 0))
           .replace(/{plan_name}/g, contact.user_plan_at_contact || 'Free')
-          .replace(/{company_name}/g, 'MasterQuizz')
+          .replace(/{company_name}/g, 'MasterQuiz')
           .replace(/{login_link}/g, 'https://masterquiz.lovable.app/login')
           .replace(/{support_link}/g, 'https://masterquiz.lovable.app/faq')
           .replace(/{unsubscribe_link}/g, unsubLink);

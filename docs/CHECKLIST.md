@@ -117,7 +117,7 @@
 | Item | Status | Observações |
 |------|--------|-------------|
 | [ ] Página carrega corretamente | | |
-| [ ] Logo MasterQuizz exibe | | |
+| [ ] Logo MasterQuiz exibe | | |
 | [ ] Tabs Login/Cadastro funcionam | | |
 | [ ] Campo de email funciona | | |
 | [ ] Campo de senha funciona | | |
@@ -1203,7 +1203,7 @@
 
 Talvez o problema seja o funil, não o anúncio.
 
-MasterQuizz transforma visitantes em leads qualificados com quizzes interativos.
+MasterQuiz transforma visitantes em leads qualificados com quizzes interativos.
 
 ✅ Editor visual (sem código)
 ✅ Geração com IA em minutos
@@ -1221,7 +1221,7 @@ Comece GRÁTIS hoje 👇
 
 Antes de abrir o carrinho, descubra QUEM realmente vai comprar.
 
-Com MasterQuizz você cria um quiz de qualificação em minutos:
+Com MasterQuiz você cria um quiz de qualificação em minutos:
 
 → Segmente por interesse
 → Identifique nível de consciência
@@ -1235,7 +1235,7 @@ Seu próximo lançamento agradece 🙏
 #### Google Ads - Busca
 
 ```
-Título: Qualifique Leads com Quiz Interativo | MasterQuizz
+Título: Qualifique Leads com Quiz Interativo | MasterQuiz
 Descrição: Saiba quem vai comprar ANTES de abrir o carrinho. 
 Crie quizzes em minutos com IA. Comece grátis!
 
@@ -1247,7 +1247,7 @@ direto pro seu CRM. Editor visual sem código.
 
 ---
 
-Título: Ferramenta de Quiz Marketing | MasterQuizz
+Título: Ferramenta de Quiz Marketing | MasterQuiz
 Descrição: +10.000 leads qualificados/mês. Integra com 
 Zapier, HubSpot, RD Station. Plano grátis disponível.
 ```
@@ -1413,7 +1413,7 @@ SLIDE 6: Pergunta 5
 SLIDE 7: "Essas 5 perguntas em um quiz de 2 minutos
 eliminam 60% dos leads que nunca iriam comprar.
 
-Ferramenta que uso: MasterQuizz
+Ferramenta que uso: MasterQuiz
 (link nos comentários)"
 ```
 
@@ -1424,7 +1424,7 @@ Ferramenta que uso: MasterQuizz
 #### Email 1 - Boas-Vindas (Imediato)
 
 ```
-Assunto: 🎉 Bem-vindo ao MasterQuizz!
+Assunto: 🎉 Bem-vindo ao MasterQuiz!
 
 Olá [NOME],
 
@@ -1452,7 +1452,7 @@ Assunto: 📊 3 erros que matam a conversão do seu quiz
 
 Olá [NOME],
 
-Ontem você criou sua conta no MasterQuizz. Já fez seu primeiro quiz?
+Ontem você criou sua conta no MasterQuiz. Já fez seu primeiro quiz?
 
 Se não, sem problemas. Antes de criar, evite esses 3 erros:
 
@@ -1537,7 +1537,7 @@ Assunto: ⚡ Hora de fazer upgrade?
 
 Olá [NOME],
 
-Você está no MasterQuizz há 10 dias.
+Você está no MasterQuiz há 10 dias.
 
 Se já testou a plataforma, provavelmente percebeu que:
 ✅ É fácil criar quizzes
@@ -1622,7 +1622,7 @@ Válido até [DATA].
 
 ## ✅ Conclusão
 
-Este checklist cobre **100% dos fluxos críticos** do MasterQuizz.
+Este checklist cobre **100% dos fluxos críticos** do MasterQuiz.
 
 **Prioridade de validação:**
 

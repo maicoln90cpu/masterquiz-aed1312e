@@ -341,7 +341,7 @@ Copie e adapte as 6 funções:
 
 **Adapte:**
 - URLs do projeto Supabase (`PROJECT_REF`)
-- Nome da plataforma (ex: `MasterQuizz` → `SeuApp`)
+- Nome da plataforma (ex: `MasterQuiz` → `SeuApp`)
 - Links de login/suporte
 - Variáveis de template conforme seu domínio
 
