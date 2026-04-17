@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     const allUserIds = authUsers.users.map(u => u.id);
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name, email, user_stage, user_objectives, created_at, facebook_pixel_id, gtm_container_id, whatsapp')
+      .select('id, full_name, email, user_stage, user_objectives, created_at, facebook_pixel_id, gtm_container_id, whatsapp, login_count, plan_limit_hit_type')
       .in('id', allUserIds)
       .not('email', 'is', null);
 
