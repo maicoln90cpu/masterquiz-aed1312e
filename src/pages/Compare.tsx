@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { ABTestVariant, ABTestTracker } from "@/components/landing/ABTestVariant";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { buildCompareJsonLd } from "@/lib/structuredData";
 import {
