@@ -791,10 +791,10 @@ Deno.serve(async (req: Request) => {
     console.error(`${PREFIX} ❌ Error:`, error);
 
     await supabase.from('blog_generation_logs').update({
-      status: 'error',
+      status: 'failed',
       error_message: error instanceof Error ? error.message : 'Unknown error',
       post_id: postId,
-    }).eq('id', logId).catch(() => {});
+    }).eq('id', logId);
 
     return new Response(JSON.stringify({
       success: false,
