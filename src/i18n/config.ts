@@ -660,6 +660,11 @@ const pt = {
       relationship: "Relacionamento",
       lost: "Perdido",
     },
+    temperature: {
+      hot: "Lead quente",
+      warm: "Lead morno",
+      cold: "Lead frio",
+    },
     toast: {
       errorLoading: "Erro ao carregar leads",
       errorUpdating: "Erro ao atualizar status do lead",
