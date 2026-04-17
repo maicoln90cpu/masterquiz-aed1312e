@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Smartphone, RefreshCw, CheckCircle, XCircle, QrCode, Wifi, WifiOff, RotateCcw, Send, MessageSquare, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { EvolutionWebhookDiagnostics } from "./EvolutionWebhookDiagnostics";
 
 interface ConnectionStatus {
   id?: string;
@@ -699,6 +700,9 @@ export function WhatsAppConnection() {
           </CardContent>
         </Card>
       )}
+
+      {/* Diagnóstico do Webhook (Etapa 2) */}
+      <EvolutionWebhookDiagnostics />
 
       {/* Instructions Card */}
       <Card>

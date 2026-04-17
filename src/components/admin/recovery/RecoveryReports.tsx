@@ -9,6 +9,8 @@ interface ReportData {
   total_contacts: number;
   sent_count: number;
   delivered_count: number;
+  delivered_real_count: number;
+  delivered_assumed_count: number;
   read_count: number;
   responded_count: number;
   reactivated_count: number;
@@ -40,6 +42,7 @@ export function RecoveryReports() {
           status,
           reactivated,
           sent_at,
+          delivery_assumed,
           template_id,
           recovery_templates:template_id (name)
         `);
@@ -49,6 +52,8 @@ export function RecoveryReports() {
       const total = contacts?.length || 0;
       const sent = contacts?.filter(c => ['sent', 'delivered', 'read', 'responded'].includes(c.status)).length || 0;
       const delivered = contacts?.filter(c => ['delivered', 'read', 'responded'].includes(c.status)).length || 0;
+      const deliveredReal = contacts?.filter(c => ['delivered', 'read', 'responded'].includes(c.status) && !c.delivery_assumed).length || 0;
+      const deliveredAssumed = contacts?.filter(c => c.delivery_assumed).length || 0;
       const read = contacts?.filter(c => ['read', 'responded'].includes(c.status)).length || 0;
       const responded = contacts?.filter(c => c.status === 'responded').length || 0;
       const reactivated = contacts?.filter(c => c.reactivated).length || 0;
@@ -108,6 +113,8 @@ export function RecoveryReports() {
         total_contacts: total,
         sent_count: sent,
         delivered_count: delivered,
+        delivered_real_count: deliveredReal,
+        delivered_assumed_count: deliveredAssumed,
         read_count: read,
         responded_count: responded,
         reactivated_count: reactivated,
@@ -175,6 +182,11 @@ export function RecoveryReports() {
             <p className="text-xs text-muted-foreground mt-2">
               {data.delivered_count} de {data.sent_count} enviadas
             </p>
+            {data.delivered_assumed_count > 0 && (
+              <p className="text-[11px] text-yellow-700 mt-1">
+                ⚠ {data.delivered_assumed_count} presumidas (sem ack do WhatsApp){data.delivered_real_count > 0 ? ` · ${data.delivered_real_count} confirmadas` : ''}
+              </p>
+            )}
           </CardContent>
         </Card>
 
