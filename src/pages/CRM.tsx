@@ -79,6 +79,8 @@ const CRM = () => {
   const [configDialog, setConfigDialog] = useState(false);
   const [filterQuiz, setFilterQuiz] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebounce(searchQuery, 250);
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [selectedLeadsForComparison, setSelectedLeadsForComparison] = useState<string[]>([]);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
@@ -231,11 +233,22 @@ const CRM = () => {
 
   // Filter: only show leads with useful contact data in the kanban
   const identifiedLeads = leads.filter(lead => hasUsefulContactData(lead));
-  
-  const filteredLeads = filterStatus !== "all" 
+
+  const statusFilteredLeads = filterStatus !== "all"
     ? identifiedLeads.filter(lead => lead.status === filterStatus)
     : identifiedLeads;
-  
+
+  // Busca em memória por nome ou email (não faz nova query)
+  const filteredLeads = debouncedSearch.trim()
+    ? statusFilteredLeads.filter(lead => {
+        const q = debouncedSearch.trim().toLowerCase();
+        return (
+          lead.respondent_name?.toLowerCase().includes(q) ||
+          lead.respondent_email?.toLowerCase().includes(q)
+        );
+      })
+    : statusFilteredLeads;
+
   // Paginação
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const paginatedLeads = filteredLeads.slice(
@@ -246,7 +259,7 @@ const CRM = () => {
   // Reset página quando filtros mudam
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterQuiz, filterStatus]);
+  }, [filterQuiz, filterStatus, debouncedSearch]);
 
 
   const getStats = () => {
@@ -497,6 +510,18 @@ const CRM = () => {
 
         {/* Filtros */}
         <div id="crm-filters" className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative w-full sm:flex-1 sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('crm.searchPlaceholder')}
+              className="pl-9"
+              aria-label={t('crm.searchPlaceholder')}
+            />
+          </div>
+
           <Select value={filterQuiz} onValueChange={setFilterQuiz}>
             <SelectTrigger className="w-full sm:w-64">
               <SelectValue placeholder={t('crm.filterByQuiz')} />
