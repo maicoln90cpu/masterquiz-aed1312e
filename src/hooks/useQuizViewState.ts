@@ -10,6 +10,7 @@ import { useABTest } from "@/hooks/useABTest";
 import { calculateQuizResult } from "@/lib/calculatorEngine";
 import { loadQuizForDisplay } from "@/hooks/useQuizViewRPC";
 import { trackOperation } from "@/lib/performanceCapture";
+import { isInstitutionalEmailSync, preloadInstitutionalDomains } from "@/lib/institutionalDomains";
 import type { 
   Quiz, 
   QuizQuestion, 
