@@ -1,0 +1,12 @@
+/** Storybook main config — Vite + React, Tailwind via index.css */
+import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
+  stories: ['../src/components/ui/**/*.stories.@(ts|tsx)'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-a11y'],
+  framework: { name: '@storybook/react-vite', options: {} },
+  docs: { autodocs: 'tag' },
+  typescript: { check: false, reactDocgen: 'react-docgen-typescript' },
+};
+
+export default config;
