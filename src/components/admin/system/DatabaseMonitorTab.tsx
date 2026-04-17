@@ -260,7 +260,8 @@ const EDGE_FUNCTIONS_CATALOG: EdgeFunctionInfo[] = [
 // ── Components ──────────────────────────────────────────────────
 
 function OverviewPanel() {
-  const { data: sizesMap } = useQuery({
+  const queryClient = useQueryClient();
+  const { data: sizesMap, isFetching, dataUpdatedAt, refetch } = useQuery({
     queryKey: ['table-sizes'],
     queryFn: fetchTableSizes,
     staleTime: 300_000,
@@ -292,8 +293,27 @@ function OverviewPanel() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleRefresh = () => {
+    // Invalida também o cache da aba Tabelas, que usa a mesma fonte
+    queryClient.invalidateQueries({ queryKey: ['table-sizes'] });
+    refetch();
+  };
+
+  const lastUpdatedLabel = dataUpdatedAt
+    ? new Date(dataUpdatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : '—';
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-xs text-muted-foreground">
+          Última atualização: <span className="font-mono">{lastUpdatedLabel}</span>
+        </p>
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isFetching}>
+          <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} />
+          Atualizar agora
+        </Button>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <p className="text-3xl font-bold">{TABLES_CATALOG.length}</p>
