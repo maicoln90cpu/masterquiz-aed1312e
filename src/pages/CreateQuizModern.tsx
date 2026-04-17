@@ -267,15 +267,16 @@ const CreateQuizModern = () => {
   // ✅ Handler para publicar
   const handlePublish = useCallback(async () => {
     const result = await saveQuiz();
+    console.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
     if (result?.success && isExpressMode) {
-      const slug = result.slug;
+      const slug = result.slug || editorState.quizSlug;
       const url = profile?.company_slug
         ? `${window.location.origin}/${profile.company_slug}/${slug}`
         : `${window.location.origin}/quiz/${slug}`;
       setPublishedQuizUrl(url);
       setShowCelebration(true);
     }
-  }, [saveQuiz, isExpressMode, profile?.company_slug]);
+  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug]);
 
   const expressQuizUrl = useMemo(() => {
     if (!editorState.quizSlug) return '';
