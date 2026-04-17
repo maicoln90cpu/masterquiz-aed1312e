@@ -3345,6 +3345,10 @@ export type Database = {
         Args: { p_campaign_id: string; p_template_id: string }
         Returns: number
       }
+      generate_company_slug: {
+        Args: { p_email: string; p_user_id: string }
+        Returns: string
+      }
       generate_express_slug: { Args: never; Returns: string }
       generate_slug: { Args: { title: string }; Returns: string }
       get_quiz_for_display: {
