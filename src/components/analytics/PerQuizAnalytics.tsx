@@ -479,8 +479,7 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
               {blockedResponsesInList > 0 && (
                 <PlanLimitBlockedBanner
                   blockedCount={blockedResponsesInList}
-                  label="respostas"
-                  context="nesta lista"
+                  labelKey="responses"
                 />
               )}
               {responsesLoading ? (
