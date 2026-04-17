@@ -157,14 +157,16 @@ export const HeroSection = () => {
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-[1.1] tracking-tight">
                 <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text">
-                  {c('hero_headline_main', 'landing.hero.headlineMain')}
+                  {headlineAB?.text || c('hero_headline_main', 'landing.hero.headlineMain')}
                 </span>
               </h1>
-              <p className="text-2xl md:text-3xl lg:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
-                  {c('hero_headline_sub', 'landing.hero.headlineSub')}
-                </span>
-              </p>
+              {!headlineAB?.text && (
+                <p className="text-2xl md:text-3xl lg:text-4xl font-bold">
+                  <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                    {c('hero_headline_sub', 'landing.hero.headlineSub')}
+                  </span>
+                </p>
+              )}
             </div>
 
             {/* Subheadline */}
@@ -173,7 +175,7 @@ export const HeroSection = () => {
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
               }`}
             >
-              {c('hero_subheadline', 'landing.hero.subheadline')}
+              {subheadlineAB?.text || c('hero_subheadline', 'landing.hero.subheadline')}
             </p>
 
             {/* Bullets */}
