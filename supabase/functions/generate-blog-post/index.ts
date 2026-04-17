@@ -352,13 +352,17 @@ Deno.serve(async (req: Request) => {
 
     console.log(`${PREFIX} Generating article about: "${topic}" using model: ${aiModel}`);
 
-    // 4. Create initial log entry
-    await supabase.from('blog_generation_logs').insert({
+    // 4. Create initial log entry (status will be updated at the end)
+    // NOTE: status must be 'success'|'failed'|'partial' and generation_type must be 'article'|'image'|'both' (DB CHECK constraints)
+    const { error: logInsertError } = await supabase.from('blog_generation_logs').insert({
       id: logId,
       model_used: aiModel,
-      status: 'generating',
-      generation_type: 'text',
+      status: 'partial', // updated to 'success' on completion or 'failed' on error
+      generation_type: 'both', // text + image
     });
+    if (logInsertError) {
+      console.error(`${PREFIX} ⚠️ Failed to create initial log entry:`, logInsertError);
+    }
 
     // 5. Generate article text via OpenAI
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
@@ -752,7 +756,7 @@ Deno.serve(async (req: Request) => {
     postId = newPost.id;
 
     // 13. Update generation log
-    await supabase.from('blog_generation_logs').update({
+    const { error: logUpdateError } = await supabase.from('blog_generation_logs').update({
       post_id: postId,
       status: 'success',
       prompt_tokens: promptTokens,
@@ -762,6 +766,9 @@ Deno.serve(async (req: Request) => {
       image_cost_usd: imageCostUsd,
       total_cost_usd: totalCost,
     }).eq('id', logId);
+    if (logUpdateError) {
+      console.error(`${PREFIX} ⚠️ Failed to update generation log:`, logUpdateError);
+    }
 
     console.log(`${PREFIX} ✅ Post created: "${newPost.title}" (${newPost.slug}) - $${totalCost.toFixed(4)}`);
 
@@ -784,10 +791,10 @@ Deno.serve(async (req: Request) => {
     console.error(`${PREFIX} ❌ Error:`, error);
 
     await supabase.from('blog_generation_logs').update({
-      status: 'error',
+      status: 'failed',
       error_message: error instanceof Error ? error.message : 'Unknown error',
       post_id: postId,
-    }).eq('id', logId).catch(() => {});
+    }).eq('id', logId);
 
     return new Response(JSON.stringify({
       success: false,
