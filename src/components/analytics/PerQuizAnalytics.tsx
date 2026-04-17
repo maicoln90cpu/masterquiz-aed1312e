@@ -48,6 +48,10 @@ interface QuizResponse {
 export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQuizAnalyticsProps) => {
   const { t } = useTranslation();
   const { allowAdvancedAnalytics, isLoading: planLoading } = usePlanFeatures();
+  const { limits: resourceLimits } = useResourceLimits();
+  const planLeadLimit = resourceLimits?.leads.isUnlimited
+    ? Infinity
+    : (resourceLimits?.leads.limit ?? Infinity);
   const [selectedQuizId, setSelectedQuizId] = useState<string>(quizzes[0]?.id || "");
 
   // Calculate filter dates
@@ -112,12 +116,17 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
     enabled: !!selectedQuizId,
   });
 
-  // Funnel data
-  const { data: funnelData, isLoading: funnelLoading } = useFunnelData({
+  // Funnel data (com bloqueio por limite de plano)
+  const { data: funnelResult, isLoading: funnelLoading } = useFunnelData({
     quizId: selectedQuizId,
     startDate: filterDates.start,
     endDate: filterDates.end,
+    planLimit: planLeadLimit,
   });
+  const funnelSteps = funnelResult?.steps ?? [];
+  const blockedSessions = funnelResult?.blockedSessions ?? 0;
+  const totalSessions = funnelResult?.totalSessions ?? 0;
+  const visibleSessions = funnelResult?.visibleSessions ?? 0;
 
   // CTA click analytics for funnel quizzes
   const { data: ctaPerformance } = useQuery({
@@ -389,8 +398,15 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
                 {t('analytics.funnelDescription')} - {selectedQuiz?.title}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <FunnelChart data={funnelData || []} loading={funnelLoading} />
+            <CardContent className="space-y-4">
+              {blockedSessions > 0 && (
+                <PlanLimitBlockedBanner
+                  blockedCount={blockedSessions}
+                  label="sessões"
+                  context={`(funil baseado em ${visibleSessions} de ${totalSessions})`}
+                />
+              )}
+              <FunnelChart data={funnelSteps} loading={funnelLoading} />
             </CardContent>
           </Card>
 
