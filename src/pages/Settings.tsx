@@ -86,21 +86,26 @@ const Settings = () => {
     checkScheduledDeletion();
   }, []);
 
-  // Validar disponibilidade do slug
+  // Validar disponibilidade do slug (RPC: reservado + unicidade + formato)
+  const [slugReason, setSlugReason] = useState<string | null>(null);
   const checkSlugAvailability = async (slug: string) => {
     if (!slug || slug === profile?.company_slug) {
       setSlugAvailable(null);
+      setSlugReason(null);
       return;
     }
 
     setCheckingSlug(true);
     try {
-      const { data, error } = await supabase.from("profiles").select("id").eq("company_slug", slug).maybeSingle();
-
-      if (error && error.code !== "PGRST116") throw error;
-      setSlugAvailable(!data);
+      const { data, error } = await supabase.rpc('check_slug_available', { _slug: slug });
+      if (error) throw error;
+      const result = data as { available: boolean; reason: string };
+      setSlugAvailable(result.available);
+      setSlugReason(result.reason);
     } catch (error) {
       console.error("Error checking slug:", error);
+      setSlugAvailable(null);
+      setSlugReason(null);
     } finally {
       setCheckingSlug(false);
     }
@@ -109,10 +114,32 @@ const Settings = () => {
   const handleSlugChange = (value: string) => {
     const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
     setFormData({ ...formData, company_slug: sanitized });
-
-    // Debounce check
     const timer = setTimeout(() => checkSlugAvailability(sanitized), 500);
     return () => clearTimeout(timer);
+  };
+
+  // Sugerir slug automático baseado no email do usuário
+  const suggestSlug = async () => {
+    if (!profile?.id) return;
+    setCheckingSlug(true);
+    try {
+      const { data, error } = await supabase.rpc('generate_company_slug', {
+        p_email: profile.email || '',
+        p_user_id: profile.id,
+      });
+      if (error) throw error;
+      const suggested = String(data || '');
+      if (suggested) {
+        setFormData((prev) => ({ ...prev, company_slug: suggested }));
+        await checkSlugAvailability(suggested);
+        toast.success(`Sugestão: ${suggested}`);
+      }
+    } catch (e) {
+      console.error('suggestSlug error', e);
+      toast.error('Não foi possível gerar uma sugestão.');
+    } finally {
+      setCheckingSlug(false);
+    }
   };
 
   const handleSave = async () => {
