@@ -227,15 +227,13 @@ export const HeroSection = () => {
                   <span>🎯 Suporte prioritário</span>
                 </>
               ) : (
-                <>
-                  <span className="flex items-center gap-2">
-                    🔒 {c('hero_trust_1', 'landing.hero.trust1')}
-                  </span>
-                  <span className="hidden sm:inline">•</span>
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span>🔒 {c('hero_trust_1', 'landing.hero.trust1')}</span>
+                  <span aria-hidden="true">•</span>
                   <span>{c('hero_trust_2', 'landing.hero.trust2')}</span>
-                  <span className="hidden sm:inline">•</span>
+                  <span aria-hidden="true">•</span>
                   <span>{c('hero_trust_3', 'landing.hero.trust3')}</span>
-                </>
+                </span>
               )}
             </div>
           </div>
