@@ -3474,6 +3474,20 @@ export type Database = {
           day: string
         }[]
       }
+      recalc_recovery_campaign_counts: {
+        Args: { _campaign_id?: string }
+        Returns: {
+          campaign_id: string
+          delivered_count: number
+          failed_count: number
+          name: string
+          queued_count: number
+          read_count: number
+          responded_count: number
+          sent_count: number
+          total_targets: number
+        }[]
+      }
       record_login_event: { Args: { p_user_id: string }; Returns: undefined }
       set_profile_first_value: {
         Args: { _column: string; _value: string }
