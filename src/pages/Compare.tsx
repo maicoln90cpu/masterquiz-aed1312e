@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { ABTestVariant, ABTestTracker } from "@/components/landing/ABTestVariant";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { buildCompareJsonLd } from "@/lib/structuredData";
 import {
@@ -278,14 +279,37 @@ export default function Compare() {
                 {t("landing.compare.cta.subtitle")}
               </p>
               <div className="pt-2">
-                <Button
-                  size="xl"
-                  variant="hero"
-                  onClick={() => navigate("/login")}
-                >
-                  {t("landing.compare.cta.button")}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                <ABTestTracker element="compare_cta_final" conversionType="signup">
+                  {(track) => (
+                    <ABTestVariant
+                      element="compare_cta_final"
+                      fallback={
+                        <Button
+                          size="xl"
+                          variant="hero"
+                          onClick={() => navigate("/login")}
+                        >
+                          {t("landing.compare.cta.button")}
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      }
+                    >
+                      {(content) => (
+                        <Button
+                          size="xl"
+                          variant="hero"
+                          onClick={() => {
+                            track();
+                            navigate("/login");
+                          }}
+                        >
+                          {content?.text || t("landing.compare.cta.button")}
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </ABTestVariant>
+                  )}
+                </ABTestTracker>
               </div>
               <p className="text-sm text-muted-foreground">
                 {t("landing.compare.cta.loginHint")}{" "}
