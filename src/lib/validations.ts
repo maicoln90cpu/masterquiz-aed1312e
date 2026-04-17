@@ -17,8 +17,25 @@ export const whatsappSchema = z.union([
   z.literal('')
 ]);
 
+// Lista de slugs reservados — DEVE espelhar public.is_reserved_slug() do banco
+export const RESERVED_SLUGS = new Set([
+  'admin','app','api','dashboard','blog','support','masteradm','auth','login','signup',
+  'settings','quiz','public','www','mail','help','docs','status','about','contact',
+  'pricing','precos','privacy','terms','assets','static','root','system','undefined','null',
+  'masterquiz','masterquizz','master','administrator','administrador','config','configuracoes',
+  'webhook','webhooks','functions','cron','health','metrics','analytics','crm','dev','test'
+]);
+
+export const isReservedSlug = (slug: string): boolean =>
+  RESERVED_SLUGS.has((slug || '').toLowerCase().trim());
+
 export const slugSchema = z.union([
-  z.string().trim().regex(/^[a-z0-9-]+$/, "Slug deve conter apenas letras minúsculas, números e hífens").max(50, "Slug deve ter no máximo 50 caracteres"),
+  z.string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/, "Slug deve conter apenas letras minúsculas, números e hífens")
+    .min(2, "Slug deve ter pelo menos 2 caracteres")
+    .max(50, "Slug deve ter no máximo 50 caracteres")
+    .refine((s) => !isReservedSlug(s), { message: "Este slug é reservado pelo sistema. Escolha outro." }),
   z.literal('')
 ]);
 
