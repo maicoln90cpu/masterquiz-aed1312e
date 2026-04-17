@@ -95,26 +95,41 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
     enabled: !!selectedQuizId,
   });
 
-  // Fetch recent responses for selected quiz
-  const { data: responsesData, isLoading: responsesLoading } = useQuery({
-    queryKey: ['quiz-responses', selectedQuizId, filterDates],
+  // Fetch recent responses for selected quiz (com bloqueio por limite de plano)
+  const { data: responsesPayload, isLoading: responsesLoading } = useQuery({
+    queryKey: ['quiz-responses', selectedQuizId, filterDates, planLeadLimit],
     queryFn: async () => {
-      if (!selectedQuizId) return [];
+      if (!selectedQuizId) return { items: [] as QuizResponse[], total: 0 };
 
-      const { data, error } = await supabase
+      // Quanto buscar: nunca passa de 20 (limite técnico do componente)
+      // e nunca passa do limite do plano.
+      const fetchLimit = planLeadLimit === Infinity
+        ? 20
+        : Math.min(20, planLeadLimit);
+
+      const { data, error, count } = await supabase
         .from('quiz_responses')
-        .select('id, completed_at, respondent_name, respondent_email, respondent_whatsapp, lead_status, result_id')
+        .select('id, completed_at, respondent_name, respondent_email, respondent_whatsapp, lead_status, result_id', { count: 'exact' })
         .eq('quiz_id', selectedQuizId)
         .gte('completed_at', filterDates.start)
         .lte('completed_at', filterDates.end + 'T23:59:59')
         .order('completed_at', { ascending: false })
-        .limit(20);
+        .limit(fetchLimit);
 
       if (error) throw error;
-      return data as QuizResponse[];
+      return {
+        items: (data as QuizResponse[]) ?? [],
+        total: count ?? 0,
+      };
     },
     enabled: !!selectedQuizId,
   });
+
+  const responsesData = responsesPayload?.items ?? [];
+  const totalResponsesInPeriod = responsesPayload?.total ?? 0;
+  const blockedResponsesInList = planLeadLimit === Infinity
+    ? 0
+    : Math.max(0, totalResponsesInPeriod - planLeadLimit);
 
   // Funnel data (com bloqueio por limite de plano)
   const { data: funnelResult, isLoading: funnelLoading } = useFunnelData({
@@ -460,7 +475,14 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
                 {t('analytics.recentResponsesDescription')} - {selectedQuiz?.title}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {blockedResponsesInList > 0 && (
+                <PlanLimitBlockedBanner
+                  blockedCount={blockedResponsesInList}
+                  label="respostas"
+                  context="nesta lista"
+                />
+              )}
               {responsesLoading ? (
                 <div className="space-y-2">
                   {[...Array(5)].map((_, i) => (
