@@ -65,6 +65,27 @@ export default tseslint.config(
       
       // Sem imports duplicados
       "import/no-duplicates": "warn",
+
+      // 🚫 Proteção: nunca push direto no dataLayer fora de gtmLogger.ts
+      // Use pushGTMEvent() de @/lib/gtmLogger para garantir persistência em gtm_event_logs
+      "no-restricted-syntax": [
+        "error",
+        {
+          "selector": "CallExpression[callee.object.property.name='dataLayer'][callee.property.name='push']",
+          "message": "🚫 Não use window.dataLayer.push() direto. Use pushGTMEvent() de @/lib/gtmLogger para garantir persistência em gtm_event_logs e padronização do pipeline."
+        },
+        {
+          "selector": "CallExpression[callee.object.name='dataLayer'][callee.property.name='push']",
+          "message": "🚫 Não use dataLayer.push() direto. Use pushGTMEvent() de @/lib/gtmLogger."
+        }
+      ],
+    },
+  },
+  // Exceção: o próprio helper precisa fazer o push real
+  {
+    files: ["src/lib/gtmLogger.ts"],
+    rules: {
+      "no-restricted-syntax": "off",
     },
   },
 );
