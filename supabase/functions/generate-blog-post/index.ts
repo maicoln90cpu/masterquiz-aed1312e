@@ -352,13 +352,17 @@ Deno.serve(async (req: Request) => {
 
     console.log(`${PREFIX} Generating article about: "${topic}" using model: ${aiModel}`);
 
-    // 4. Create initial log entry
-    await supabase.from('blog_generation_logs').insert({
+    // 4. Create initial log entry (status will be updated at the end)
+    // NOTE: status must be 'success'|'failed'|'partial' and generation_type must be 'article'|'image'|'both' (DB CHECK constraints)
+    const { error: logInsertError } = await supabase.from('blog_generation_logs').insert({
       id: logId,
       model_used: aiModel,
-      status: 'generating',
-      generation_type: 'text',
+      status: 'partial', // updated to 'success' on completion or 'failed' on error
+      generation_type: 'both', // text + image
     });
+    if (logInsertError) {
+      console.error(`${PREFIX} ⚠️ Failed to create initial log entry:`, logInsertError);
+    }
 
     // 5. Generate article text via OpenAI
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
