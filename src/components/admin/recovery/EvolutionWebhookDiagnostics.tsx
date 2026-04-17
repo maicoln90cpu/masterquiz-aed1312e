@@ -24,7 +24,7 @@ interface DiagnosticsResult {
     confirmed_read: number;
     last_real_delivery_ack_at: string | null;
     last_read_ack_at: string | null;
-    webhook_health: 'critical_no_ack_ever' | 'warning_no_recent_ack' | 'healthy';
+    webhook_health: 'critical_no_ack_ever' | 'warning_no_recent_ack' | 'healthy' | 'idle_no_recent_messages';
   } | null;
   recommendation: string;
   error?: string;
@@ -72,6 +72,7 @@ export function EvolutionWebhookDiagnostics() {
 
   const healthBadge = (health: string | undefined) => {
     if (health === 'healthy') return <Badge className="bg-green-100 text-green-700 border-green-300">Saudável</Badge>;
+    if (health === 'idle_no_recent_messages') return <Badge className="bg-blue-100 text-blue-700 border-blue-300">Aguardando primeiro envio</Badge>;
     if (health === 'warning_no_recent_ack') return <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">Atenção — sem confirmações recentes</Badge>;
     return <Badge variant="destructive">Crítico — nenhum ack recebido</Badge>;
   };
