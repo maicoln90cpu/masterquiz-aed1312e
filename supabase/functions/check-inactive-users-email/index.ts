@@ -100,6 +100,21 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Nenhum perfil com email', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Institutional domains — query DB (single source of truth, fallback hardcoded)
+    const FALLBACK_INSTITUTIONAL = ['gov.br','edu.br','mil.br','jus.br','mp.br','leg.br'];
+    const { data: instDomainsData } = await supabase
+      .from('institutional_email_domains')
+      .select('domain')
+      .eq('is_active', true);
+    const institutionalDomains: string[] = (instDomainsData?.map((d: { domain: string }) => d.domain.toLowerCase()) || FALLBACK_INSTITUTIONAL);
+    const isInstitutional = (email: string | null | undefined): boolean => {
+      if (!email) return false;
+      const host = email.toLowerCase().split('@')[1] || '';
+      if (!host) return false;
+      return institutionalDomains.some(d => host === d || host.endsWith('.' + d));
+    };
+    let institutionalSkipped = 0;
+
     // Blacklist
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('user_id');
     const blacklistedIds = new Set((blacklist || []).map(b => b.user_id));
