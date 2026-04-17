@@ -2350,10 +2350,55 @@ const pt = {
       home: "Início",
       features: "Recursos",
       pricing: "Preços",
+      compare: "Comparar",
       blog: "Blog",
       faq: "FAQ",
       contact: "Contato",
       login: "Entrar",
+    },
+    compare: {
+      seo: {
+        title: "MasterQuizz vs InLead, Typeform e Outgrow — Comparação completa 2026",
+        description:
+          "Compare o MasterQuizz com InLead, Typeform e Outgrow. Veja preços, funcionalidades e diferenciais. Plano gratuito real, CRM integrado, IA e vídeo incluídos a partir de R$ 37/mês.",
+      },
+      hero: {
+        title: "Por que o MasterQuizz é a melhor escolha para infoprodutores brasileiros?",
+        subtitle:
+          "Compare as principais ferramentas de quiz do mercado e veja por que quem vende online no Brasil escolhe o MasterQuizz.",
+        ctaPrimary: "Começar grátis agora",
+        ctaSecondary: "Ver planos e preços",
+      },
+      cards: {
+        free: {
+          title: "Comece grátis, sem cartão",
+          text: "Enquanto InLead começa em R$ 97/mês e Typeform limita a 10 respostas no free, o MasterQuizz oferece um plano gratuito real para você testar antes de pagar.",
+        },
+        allInOne: {
+          title: "Tudo incluído a partir de R$ 37/mês",
+          text: "CRM de leads, IA para criar quiz, vídeo hospedado, analytics avançado e 8 integrações nativas. No InLead você paga R$ 97/mês e ainda precisa contratar outras plataformas para ter vídeo e CRM.",
+        },
+        brazil: {
+          title: "Feito para o Brasil, em português",
+          text: "Interface, suporte e documentação 100% em português. Integração nativa com Kiwify. Typeform e Outgrow são ferramentas gringas sem foco no mercado brasileiro.",
+        },
+      },
+      table: {
+        title: "Comparação completa",
+        subtitle: "Os critérios que realmente importam para quem vende online no Brasil",
+        feature: "Funcionalidade",
+      },
+      vsInlead: {
+        title: "MasterQuizz vs InLead — a comparação que mais importa",
+        subtitle: "O InLead é a principal alternativa brasileira. Veja por que infoprodutores estão migrando.",
+      },
+      cta: {
+        title: "Pronto para testar sem compromisso?",
+        subtitle: "Crie sua conta grátis em menos de 1 minuto. Sem cartão de crédito. Cancele quando quiser.",
+        button: "Criar conta grátis",
+        loginHint: "Já tem conta?",
+        loginLink: "Faça login →",
+      },
     },
     pricing: {
       title: "Planos e Preços",
