@@ -70,6 +70,10 @@ export const ExpressCelebration = ({ quizUrl, quizTitle, onGoToDashboard }: Expr
   const navigate = useNavigate();
   const confettiFired = useRef(false);
 
+  const handleCreateRealQuiz = () => {
+    navigate('/create-quiz');
+  };
+
   useEffect(() => {
     if (confettiFired.current) return;
     confettiFired.current = true;
