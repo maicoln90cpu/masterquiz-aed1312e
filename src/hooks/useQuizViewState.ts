@@ -9,6 +9,7 @@ import { evaluateConditions } from "@/lib/conditionEvaluator";
 import { useABTest } from "@/hooks/useABTest";
 import { calculateQuizResult } from "@/lib/calculatorEngine";
 import { loadQuizForDisplay } from "@/hooks/useQuizViewRPC";
+import { trackOperation } from "@/lib/performanceCapture";
 import type { 
   Quiz, 
   QuizQuestion, 
@@ -541,19 +542,21 @@ export function useQuizViewState({
       const finalWhatsapp = leadWhatsapp || extracted.phone || null;
 
       // Always use Edge Function to save responses (ensures milestone detection runs)
-      const { error: fnError } = await supabase.functions.invoke('save-quiz-response', {
-        body: {
-          quiz_id: quiz.id,
-          session_id: sessionId,
-          answers: sanitizedAnswers,
-          respondent_name: leadName || null,
-          respondent_email: finalEmail,
-          respondent_whatsapp: finalWhatsapp,
-          custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
-          result_id: result?.id,
-          is_final: true,
-        }
-      });
+      const { error: fnError } = await trackOperation('save_quiz_response', 'edge_function', async () =>
+        await supabase.functions.invoke('save-quiz-response', {
+          body: {
+            quiz_id: quiz.id,
+            session_id: sessionId,
+            answers: sanitizedAnswers,
+            respondent_name: leadName || null,
+            respondent_email: finalEmail,
+            respondent_whatsapp: finalWhatsapp,
+            custom_field_data: Object.keys(onlyCustomFields).length > 0 ? onlyCustomFields : null,
+            result_id: result?.id,
+            is_final: true,
+          }
+        })
+      );
       if (fnError) {
         console.error('Error saving quiz response via Edge Function:', fnError);
         throw fnError;
