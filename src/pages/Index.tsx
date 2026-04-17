@@ -620,6 +620,9 @@ const Index = () => {
           <FinalCTAWrapper />
         </DeferredSection>
       </main>
+
+      {/* Mobile sticky CTA — só aparece em telas <lg após scrollar 15% */}
+      <MobileStickyCTA />
     </div>
   );
 };
