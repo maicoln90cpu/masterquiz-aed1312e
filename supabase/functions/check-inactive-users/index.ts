@@ -360,11 +360,41 @@ Deno.serve(async (req) => {
     }
 
     if (queuedContacts.length > 0) {
-      // Always use upsert with ignoreDuplicates to prevent 23505 UNIQUE constraint errors
-      const { error: insertError } = await supabase
-        .from('recovery_contacts')
-        .upsert(queuedContacts, { onConflict: 'user_id,template_id', ignoreDuplicates: true });
-      if (insertError) throw insertError;
+      // Pre-filter: remove users that already have a non-final contact for the same template
+      // (the partial unique index `idx_recovery_contacts_unique_pending` covers active statuses
+      // and doesn't match a simple onConflict target, so we dedupe in-memory).
+      const pairKeys = queuedContacts.map(c => `${c.user_id}|${c.template_id}`);
+      const existingPairs = new Set<string>();
+
+      for (let i = 0; i < queuedContacts.length; i += CHUNK_SIZE) {
+        const chunk = queuedContacts.slice(i, i + CHUNK_SIZE);
+        const userIdsChunk = chunk.map(c => c.user_id);
+        const templateIdsChunk = Array.from(new Set(chunk.map(c => c.template_id)));
+        const { data: existing } = await supabase
+          .from('recovery_contacts')
+          .select('user_id, template_id, status')
+          .in('user_id', userIdsChunk)
+          .in('template_id', templateIdsChunk)
+          .in('status', ['pending', 'sent', 'delivered', 'read', 'responded']);
+        (existing || []).forEach(e => existingPairs.add(`${e.user_id}|${e.template_id}`));
+      }
+
+      const dedupedContacts = queuedContacts.filter(
+        (c) => !existingPairs.has(`${c.user_id}|${c.template_id}`)
+      );
+
+      console.log(`Dedup: ${queuedContacts.length} → ${dedupedContacts.length} after removing existing active contacts`);
+
+      if (dedupedContacts.length > 0) {
+        const { error: insertError } = await supabase
+          .from('recovery_contacts')
+          .insert(dedupedContacts);
+        if (insertError) throw insertError;
+      }
+
+      // Use deduped count for downstream campaign metrics
+      queuedContacts.length = 0;
+      queuedContacts.push(...dedupedContacts);
 
       if (campaignId) {
         if (isAutoRegeneration) {
