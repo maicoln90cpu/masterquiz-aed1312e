@@ -62,17 +62,25 @@ Deno.serve(async (req) => {
 
     // Separate templates by type
     // Categories handled by SQL triggers (skip here): welcome, milestone, tutorial
-    const triggerCategories = ['welcome', 'milestone', 'tutorial', 'webinar'];
     const inactivityCategories = ['check_in', 'reminder', 'recovery', 'special_offer', 'reactivation', 're_engagement'];
     const signupAgeCategories = ['survey']; // based on signup date, not inactivity
-    const conditionCategories = ['plan_compare', 'integration_guide']; // based on user conditions
 
     const inactivityTemplates = activeTemplates.filter(t => inactivityCategories.includes(t.category) && t.trigger_days > 0);
     const surveyTemplates = activeTemplates.filter(t => signupAgeCategories.includes(t.category));
     const planCompareTemplates = activeTemplates.filter(t => t.category === 'plan_compare');
     const integrationGuideTemplates = activeTemplates.filter(t => t.category === 'integration_guide');
+    // ETAPA 5 — 4 novos blocos
+    const zombieTemplates = activeTemplates.filter(t => t.category === 'zombie');
+    const noResponseTemplates = activeTemplates.filter(t => t.category === 'no_response');
+    const draftAbandonedTemplates = activeTemplates.filter(t => t.category === 'draft_abandoned');
+    const upgradeNudgeTemplates = activeTemplates.filter(t => t.category === 'upgrade_nudge');
 
-    if (!inactivityTemplates.length && !surveyTemplates.length && !planCompareTemplates.length && !integrationGuideTemplates.length) {
+    const hasAnyTemplate = inactivityTemplates.length || surveyTemplates.length ||
+      planCompareTemplates.length || integrationGuideTemplates.length ||
+      zombieTemplates.length || noResponseTemplates.length ||
+      draftAbandonedTemplates.length || upgradeNudgeTemplates.length;
+
+    if (!hasAnyTemplate) {
       return new Response(JSON.stringify({ message: 'Nenhum template processável ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
