@@ -18,7 +18,7 @@ function persistLog(payload: {
 }) {
   supabase
     .from('performance_logs')
-    .insert([payload])
+    .insert([payload as never])
     .then(({ error }) => {
       if (error) {
         logger.warn('[performanceCapture] insert failed', {
