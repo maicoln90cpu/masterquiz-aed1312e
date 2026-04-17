@@ -450,7 +450,46 @@ export function useQuizPersistence({
           }
 
           // first_quiz_created — SOMENTE se houve interação real
-...
+          const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
+          const createDedupKey = `mq_first_manual_created_${user.id}`;
+          const createAlreadyFired = localStorage.getItem(createDedupKey);
+          if ([...earlyStages, 'construtor'].includes(currentStage) && hasUserInteracted && !createAlreadyFired) {
+            pushGTMEvent(createEventName, {
+              quiz_id: quiz.id,
+              quiz_title: quiz.title,
+              user_id: user.id,
+              editor_mode: editorMode,
+            });
+            localStorage.setItem(createDedupKey, new Date().toISOString());
+
+            if (currentStage === 'explorador' || currentStage === 'iniciado') {
+              await supabase
+                .from('profiles')
+                .update({ user_stage: 'engajado', stage_updated_at: new Date().toISOString() })
+                .eq('id', user.id)
+                .in('user_stage', ['explorador', 'iniciado']);
+              console.log('🎯 [PQL] User stage upgraded to engajado (UPDATE branch)');
+            }
+          }
+
+          if (earlyStages.includes(currentStage) || currentStage === 'construtor') {
+            const targetStage = isExpressQuiz ? 'engajado' : 'construtor';
+            const allowedFrom = isExpressQuiz
+              ? ['explorador', 'iniciado']
+              : ['explorador', 'iniciado', 'engajado'];
+            await supabase
+              .from('profiles')
+              .update({ user_stage: targetStage, stage_updated_at: new Date().toISOString() })
+              .eq('id', user.id)
+              .in('user_stage', allowedFrom);
+            console.log(`🎯 [PQL] User stage upgraded to ${targetStage} (UPDATE branch, express=${isExpressQuiz})`);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+              .from('onboarding_status')
+              .update({ first_quiz_created: true })
+              .eq('id', user.id);
+          }
         } catch (stageErr) {
           console.warn('⚠️ Failed to update user_stage in UPDATE branch:', stageErr);
         }
