@@ -23,6 +23,7 @@ import { PlanLimitWarning } from "@/components/PlanLimitWarning";
 import { FirstLeadUpgradeBanner } from "@/components/FirstLeadUpgradeBanner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useResourceLimits } from "@/hooks/useResourceLimits";
 import { ResourceMonitoringPanel } from "@/components/ResourceMonitoringPanel";
 import { useUserStage } from "@/hooks/useUserStage";
 import type { Profile } from "@/types/quiz";
@@ -50,7 +51,18 @@ const Dashboard = () => {
   const { user } = useCurrentUser();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { quizLimit, responseLimit } = useSubscriptionLimits();
+  const { limits: resourceLimits } = useResourceLimits();
   const { shouldShowDashboardTour, updateOnboardingStep } = useOnboarding();
+
+  // 🔒 Bloqueio de visualização por limite de plano (banco continua salvando tudo)
+  const totalResponsesRaw = stats?.totalResponses ?? 0;
+  const planLeadLimit = resourceLimits?.leads.isUnlimited
+    ? Infinity
+    : (resourceLimits?.leads.limit ?? Infinity);
+  const visibleResponses = planLeadLimit === Infinity
+    ? totalResponsesRaw
+    : Math.min(totalResponsesRaw, planLeadLimit);
+  const blockedResponses = Math.max(0, totalResponsesRaw - visibleResponses);
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<Pick<Profile, 'full_name' | 'company_slug'> | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -195,7 +207,16 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>{t('dashboard.totalResponses')}</CardDescription>
-              <CardTitle className="text-3xl">{stats?.totalResponses ?? 0}</CardTitle>
+              <CardTitle className="text-3xl">{visibleResponses}</CardTitle>
+              {blockedResponses > 0 && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/precos')}
+                  className="mt-1 text-xs text-warning hover:underline text-left"
+                >
+                  + {blockedResponses} bloqueadas — fazer upgrade
+                </button>
+              )}
             </CardHeader>
           </Card>
 
