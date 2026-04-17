@@ -93,12 +93,18 @@ Deno.serve(async (req) => {
         .eq('is_active', true)
         .single();
 
+      if (!originalPlan) {
+        return new Response(JSON.stringify({ error: `Original plan "${currentSub.original_plan_type}" not configured` }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       const { data, error } = await supabase
         .from('user_subscriptions')
         .update({
           plan_type: currentSub.original_plan_type,
-          quiz_limit: originalPlan?.quiz_limit || 3,
-          response_limit: originalPlan?.response_limit || 100,
+          quiz_limit: originalPlan.quiz_limit,
+          response_limit: originalPlan.response_limit,
           original_plan_type: null,
           trial_end_date: null,
           trial_started_at: null,
@@ -154,12 +160,18 @@ Deno.serve(async (req) => {
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + trial_days);
 
+      if (!trialPlan) {
+        return new Response(JSON.stringify({ error: `Trial plan "${trial_plan_type}" not configured` }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       const { data, error } = await supabase
         .from('user_subscriptions')
         .update({
           plan_type: trial_plan_type,
-          quiz_limit: trialPlan?.quiz_limit || 10,
-          response_limit: trialPlan?.response_limit || 500,
+          quiz_limit: trialPlan.quiz_limit,
+          response_limit: trialPlan.response_limit,
           original_plan_type: realOriginalPlan,
           trial_end_date: trialEndDate.toISOString(),
           trial_started_at: new Date().toISOString(),
