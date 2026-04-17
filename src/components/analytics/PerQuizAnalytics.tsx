@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlanFeatureGate } from "@/components/PlanFeatureGate";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useResourceLimits } from "@/hooks/useResourceLimits";
+import { PlanLimitBlockedBanner } from "@/components/ui/PlanLimitBlockedBanner";
 
 const AnalyticsLineChart = lazy(() => 
   import("@/components/lazy/AnalyticsChartsBundle").then(m => ({ default: m.AnalyticsLineChart }))
