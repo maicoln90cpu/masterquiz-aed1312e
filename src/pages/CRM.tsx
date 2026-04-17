@@ -106,7 +106,7 @@ const CRM = () => {
 
   useEffect(() => {
     loadLeads();
-  }, [filterQuiz, filterStatus]);
+  }, [filterQuiz, filterStatus, limits?.leads.limit, limits?.leads.isUnlimited]);
 
   const loadLeads = async () => {
     setLoading(true);
@@ -161,10 +161,21 @@ const CRM = () => {
         quiz_questions: (response.quizzes?.quiz_questions || []) as any[],
       }));
 
-      setLeads(leadsData);
-      
-      // Count anonymous responses
-      const anonymousCount = leadsData.filter(l => !hasUsefulContactData(l)).length;
+      // 🔒 Bloqueio de visualização por limite de plano (banco continua salvando tudo)
+      const planLeadLimit = limits?.leads.isUnlimited
+        ? Infinity
+        : (limits?.leads.limit ?? Infinity);
+      const totalFetched = leadsData.length;
+      const visibleLeads = planLeadLimit === Infinity
+        ? leadsData
+        : leadsData.slice(0, planLeadLimit);
+      const blocked = Math.max(0, totalFetched - (planLeadLimit === Infinity ? totalFetched : planLeadLimit));
+
+      setLeads(visibleLeads);
+      setBlockedLeadsCount(blocked);
+
+      // Count anonymous responses (apenas dentro do que está visível)
+      const anonymousCount = visibleLeads.filter(l => !hasUsefulContactData(l)).length;
       setAnonymousResponseCount(anonymousCount);
     } catch (error) {
       console.error('Error loading leads:', error);
@@ -509,6 +520,14 @@ const CRM = () => {
             </SelectContent>
           </Select>
         </div>
+
+        {/* 🔒 Bloqueio por limite de plano */}
+        <PlanLimitBlockedBanner
+          blockedCount={blockedLeadsCount}
+          label="leads"
+          context="no CRM"
+          className="mb-4"
+        />
 
         {/* Banner informativo: respostas anônimas */}
         {anonymousResponseCount > 0 && (
