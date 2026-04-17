@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,6 +7,74 @@ const corsHeaders = {
 
 function getRandomDelay(minSeconds: number, maxSeconds: number): number {
   return Math.floor(Math.random() * (maxSeconds - minSeconds + 1)) + minSeconds;
+}
+
+// Background worker — não bloqueia a resposta HTTP
+async function processBatch(
+  supabase: ReturnType<typeof createClient>,
+  supabaseUrl: string,
+  anonKey: string,
+  batchSize: number,
+  delayMin: number,
+  delayMax: number,
+  randomizeDelay: boolean,
+) {
+  for (let i = 0; i < batchSize; i++) {
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/send-whatsapp-recovery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
+      });
+      if (i < batchSize - 1) {
+        const d = randomizeDelay ? getRandomDelay(delayMin, delayMax) : delayMin;
+        await new Promise(r => setTimeout(r, d * 1000));
+      }
+    } catch (error) {
+      console.error('[process-recovery-queue] send error:', error);
+    }
+  }
+
+  // Auto-regenerate targets para campanhas em execução
+  try {
+    const { data: runningCampaigns } = await supabase
+      .from('recovery_campaigns')
+      .select('id, target_criteria, template_id')
+      .eq('status', 'running');
+
+    if (runningCampaigns && runningCampaigns.length > 0) {
+      for (const camp of runningCampaigns) {
+        const tc = (camp.target_criteria || {}) as Record<string, unknown>;
+        if (tc.direct_campaign) continue;
+
+        const { count: pendingForCampaign } = await supabase
+          .from('recovery_contacts')
+          .select('*', { count: 'exact', head: true })
+          .eq('campaign_id', camp.id)
+          .eq('status', 'pending');
+
+        if (!pendingForCampaign || pendingForCampaign === 0) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/check-inactive-users`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
+              body: JSON.stringify({
+                campaignId: camp.id,
+                templateId: camp.template_id,
+                ignoreCooldown: true,
+                directCampaign: false,
+                targetCriteria: tc,
+                isAutoRegeneration: true,
+              }),
+            });
+          } catch (e) {
+            console.error(`Failed to auto-regenerate for campaign ${camp.id}:`, e);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error in auto-regeneration:', e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -34,7 +102,7 @@ Deno.serve(async (req) => {
     const [endH, endM] = endRaw.split(':').map(Number);
 
     if (currentTimeMinutes < startH * 60 + startM || currentTimeMinutes > endH * 60 + endM) {
-      return new Response(JSON.stringify({ message: 'Fora do horário', processed: 0, debug: { brasilTime: brasilTime.toISOString(), currentTimeMinutes, start: startH * 60 + startM, end: endH * 60 + endM } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ message: 'Fora do horário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const todayBrasil = new Date(brasilTime); todayBrasil.setHours(0, 0, 0, 0);
@@ -51,71 +119,20 @@ Deno.serve(async (req) => {
     if (!pendingCount) return new Response(JSON.stringify({ message: 'Nenhuma pendente', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const batchSize = Math.min(settings.batch_size || 10, pendingCount, dailyLimit - (sentToday || 0), hourlyLimit - (sentLastHour || 0));
-    const results = [];
     const delayMin = settings.message_delay_seconds || 30;
     const delayMax = settings.delay_max_seconds || 120;
     const randomizeDelay = settings.randomize_delay ?? true;
 
-    for (let i = 0; i < batchSize; i++) {
-      try {
-        const response = await fetch(`${supabaseUrl}/functions/v1/send-whatsapp-recovery`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
-        });
-        results.push(await response.json());
-        if (i < batchSize - 1) {
-          const d = randomizeDelay ? getRandomDelay(delayMin, delayMax) : delayMin;
-          await new Promise(r => setTimeout(r, d * 1000));
-        }
-      } catch (error) { results.push({ error: error instanceof Error ? error.message : 'Erro' }); }
-    }
+    // @ts-ignore EdgeRuntime exists in Deno Deploy edge runtime
+    EdgeRuntime.waitUntil(
+      processBatch(supabase, supabaseUrl, anonKey, batchSize, delayMin, delayMax, randomizeDelay)
+        .catch(e => console.error('[process-recovery-queue] background error:', e))
+    );
 
-    const successCount = results.filter((r: any) => r.sent === 1).length;
-
-    // Auto-regenerate targets for running non-direct campaigns with no pending contacts
-    try {
-      const { data: runningCampaigns } = await supabase
-        .from('recovery_campaigns')
-        .select('id, target_criteria, template_id')
-        .eq('status', 'running');
-
-      if (runningCampaigns && runningCampaigns.length > 0) {
-        for (const camp of runningCampaigns) {
-          const tc = (camp.target_criteria || {}) as Record<string, unknown>;
-          if (tc.direct_campaign) continue; // Skip direct campaigns
-
-          const { count: pendingForCampaign } = await supabase
-            .from('recovery_contacts')
-            .select('*', { count: 'exact', head: true })
-            .eq('campaign_id', camp.id)
-            .eq('status', 'pending');
-
-          if (!pendingForCampaign || pendingForCampaign === 0) {
-            // Auto-regenerate: call check-inactive-users for this campaign
-            try {
-              await fetch(`${supabaseUrl}/functions/v1/check-inactive-users`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
-                body: JSON.stringify({
-                  campaignId: camp.id,
-                  templateId: camp.template_id,
-                  ignoreCooldown: true,
-                  directCampaign: false,
-                  targetCriteria: tc,
-                  isAutoRegeneration: true,
-                }),
-              });
-              console.log(`Auto-regenerated targets for campaign ${camp.id}`);
-            } catch (e) {
-              console.error(`Failed to auto-regenerate for campaign ${camp.id}:`, e);
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error in auto-regeneration:', e);
-    }
-
-    return new Response(JSON.stringify({ processed: successCount, batchSize, results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(
+      JSON.stringify({ message: 'Processamento iniciado em background', batchSize, queued: pendingCount }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Error:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
