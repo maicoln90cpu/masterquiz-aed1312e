@@ -83,31 +83,51 @@ function pct(num: number, den: number): string {
 
 export function EmailRecoveryReports() {
   const [contacts, setContacts] = useState<EmailContact[]>([]);
+  const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [period, setPeriod] = useState<PeriodKey>('30');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(period); }, [period]);
 
-  const load = async () => {
+  const load = async (selectedPeriod: PeriodKey) => {
+    setLoading(true);
     try {
-      // Paginação manual para superar limite default de 1000 do PostgREST
+      const days = parseInt(selectedPeriod, 10);
+      const cutoff = days > 0
+        ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
+      // Load templates list (always full set so categories with 0 sends still render)
+      const tplPromise = supabase
+        .from('email_recovery_templates')
+        .select('id, name, category, subject, subject_b')
+        .eq('is_active', true);
+
+      // Paginated fetch with optional date filter
       const PAGE = 1000;
       let from = 0;
       const all: EmailContact[] = [];
-      // hard cap de segurança: 50k registros (50 páginas)
       for (let i = 0; i < 50; i++) {
-        const { data, error } = await supabase
+        let q = supabase
           .from('email_recovery_contacts')
-          .select('*, email_recovery_templates(name, category)')
+          .select('*, email_recovery_templates(name, category, subject, subject_b)')
           .order('created_at', { ascending: false })
           .range(from, from + PAGE - 1);
+        if (cutoff) q = q.gte('created_at', cutoff);
+        const { data, error } = await q;
         if (error) throw error;
         const page = (data || []) as unknown as EmailContact[];
         all.push(...page);
         if (page.length < PAGE) break;
         from += PAGE;
       }
+
+      const { data: tplData, error: tplErr } = await tplPromise;
+      if (tplErr) throw tplErr;
+
+      setTemplates((tplData || []) as TemplateRow[]);
       setContacts(all);
     } catch {
       toast.error('Erro ao carregar relatórios');
@@ -129,40 +149,79 @@ export function EmailRecoveryReports() {
   const failed = contacts.filter(c => c.status === 'failed').length;
   const pending = contacts.filter(c => c.status === 'pending').length;
 
-  // By category chart data
-  const categoryMap = new Map<string, { sent: number; opened: number; clicked: number; failed: number }>();
-  contacts.forEach(c => {
-    const cat = c.email_recovery_templates?.category || 'unknown';
-    if (!categoryMap.has(cat)) categoryMap.set(cat, { sent: 0, opened: 0, clicked: 0, failed: 0 });
-    const entry = categoryMap.get(cat)!;
-    if (['sent', 'opened', 'clicked'].includes(c.status)) entry.sent++;
-    if (c.opened_at || c.status === 'opened' || c.status === 'clicked') entry.opened++;
-    if (c.clicked_at || c.status === 'clicked') entry.clicked++;
-    if (c.status === 'failed') entry.failed++;
-  });
+  // ──────────────────────────────────────────────────────────
+  // Performance by Category — baseline = todas as categorias de templates
+  // (categorias com 0 envios aparecem zeradas, não somem)
+  // ──────────────────────────────────────────────────────────
+  const categoryPerformance = useMemo(() => {
+    const stats = new Map<string, { sent: number; opened: number; clicked: number; failed: number }>();
+    for (const t of templates) {
+      if (!stats.has(t.category)) stats.set(t.category, { sent: 0, opened: 0, clicked: 0, failed: 0 });
+    }
+    for (const c of contacts) {
+      const cat = c.email_recovery_templates?.category || 'unknown';
+      if (!stats.has(cat)) stats.set(cat, { sent: 0, opened: 0, clicked: 0, failed: 0 });
+      const e = stats.get(cat)!;
+      if (['sent', 'opened', 'clicked'].includes(c.status)) e.sent++;
+      if (c.opened_at || c.status === 'opened' || c.status === 'clicked') e.opened++;
+      if (c.clicked_at || c.status === 'clicked') e.clicked++;
+      if (c.status === 'failed') e.failed++;
+    }
+    return Array.from(stats.entries())
+      .map(([cat, s]) => ({
+        cat,
+        category: CATEGORY_LABELS[cat] || cat,
+        sent: s.sent,
+        opened: s.opened,
+        clicked: s.clicked,
+        failed: s.failed,
+        openRate: pct(s.opened, s.sent),
+        clickRate: pct(s.clicked, s.sent),
+        failRate: pct(s.failed, s.sent + s.failed),
+      }))
+      .sort((a, b) => b.sent - a.sent);
+  }, [contacts, templates]);
 
-  const categoryChartData = Array.from(categoryMap.entries()).map(([cat, stats]) => ({
-    name: CATEGORY_LABELS[cat] || cat,
-    ...stats,
-  }));
+  const categoryChartData = categoryPerformance
+    .filter(r => r.sent > 0 || r.failed > 0) // chart só com dados (tabela mostra todas)
+    .map(r => ({ name: r.category, sent: r.sent, opened: r.opened, clicked: r.clicked, failed: r.failed }));
 
-  // Performance by category table
-  const categoryPerformance = Array.from(categoryMap.entries()).map(([cat, stats]) => ({
-    category: CATEGORY_LABELS[cat] || cat,
-    sent: stats.sent,
-    openRate: pct(stats.opened, stats.sent),
-    clickRate: pct(stats.clicked, stats.sent),
-    failRate: pct(stats.failed, stats.sent + stats.failed),
-  })).sort((a, b) => b.sent - a.sent);
-
-  // A/B test results
-  const abContacts = contacts.filter(c => c.ab_variant && ['sent', 'opened', 'clicked'].includes(c.status));
-  const abA = abContacts.filter(c => c.ab_variant === 'A');
-  const abB = abContacts.filter(c => c.ab_variant === 'B');
-  const abResults = abContacts.length > 0 ? {
-    a: { sent: abA.length, opened: abA.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length, clicked: abA.filter(c => c.clicked_at || c.status === 'clicked').length },
-    b: { sent: abB.length, opened: abB.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length, clicked: abB.filter(c => c.clicked_at || c.status === 'clicked').length },
-  } : null;
+  // ──────────────────────────────────────────────────────────
+  // A/B test results POR TEMPLATE
+  // - Templates sem subject_b => "Sem variante B"
+  // - Indicador de vencedor só quando A e B >= MIN_SAMPLE_FOR_WINNER
+  // ──────────────────────────────────────────────────────────
+  const abPerTemplate = useMemo(() => {
+    const byTpl = new Map<string, { A: EmailContact[]; B: EmailContact[] }>();
+    for (const c of contacts) {
+      if (!c.template_id || !c.ab_variant) continue;
+      if (!['sent', 'opened', 'clicked'].includes(c.status)) continue;
+      if (!byTpl.has(c.template_id)) byTpl.set(c.template_id, { A: [], B: [] });
+      const slot = byTpl.get(c.template_id)!;
+      if (c.ab_variant === 'A') slot.A.push(c);
+      else if (c.ab_variant === 'B') slot.B.push(c);
+    }
+    return templates.map(t => {
+      const buckets = byTpl.get(t.id) || { A: [], B: [] };
+      const calc = (arr: EmailContact[]) => {
+        const s = arr.length;
+        const o = arr.filter(c => c.opened_at || c.status === 'opened' || c.status === 'clicked').length;
+        const cl = arr.filter(c => c.clicked_at || c.status === 'clicked').length;
+        return { sent: s, opened: o, clicked: cl, openRate: s > 0 ? o / s : 0, clickRate: s > 0 ? cl / s : 0 };
+      };
+      const a = calc(buckets.A);
+      const b = calc(buckets.B);
+      const hasVariantB = !!t.subject_b && t.subject_b.trim().length > 0;
+      const enoughSample = hasVariantB && a.sent >= MIN_SAMPLE_FOR_WINNER && b.sent >= MIN_SAMPLE_FOR_WINNER;
+      let winner: 'A' | 'B' | 'tie' | null = null;
+      if (enoughSample) {
+        if (a.openRate > b.openRate) winner = 'A';
+        else if (b.openRate > a.openRate) winner = 'B';
+        else winner = 'tie';
+      }
+      return { template: t, a, b, hasVariantB, enoughSample, winner };
+    }).sort((x, y) => (y.a.sent + y.b.sent) - (x.a.sent + x.b.sent));
+  }, [contacts, templates]);
 
   // Pie chart data
   const pieData = [
