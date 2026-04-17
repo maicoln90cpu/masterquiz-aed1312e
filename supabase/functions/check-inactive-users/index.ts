@@ -227,16 +227,21 @@ Deno.serve(async (req) => {
       recentlyContactedIds = new Set((recentContacts || []).map(c => c.user_id));
     }
 
-    // Subscriptions
-    const { data: subscriptions } = await supabase
-      .from('user_subscriptions')
-      .select('user_id, plan_type')
-      .in('user_id', userPool.map(u => u.id));
-    const userPlans = new Map((subscriptions || []).map(s => [s.user_id, s.plan_type]));
+    // Subscriptions (chunked)
+    const subscriptions: Array<{ user_id: string; plan_type: string }> = [];
+    for (let i = 0; i < userIds.length; i += CHUNK_SIZE) {
+      const chunk = userIds.slice(i, i + CHUNK_SIZE);
+      const { data: subChunk } = await supabase
+        .from('user_subscriptions')
+        .select('user_id, plan_type')
+        .in('user_id', chunk);
+      if (subChunk) subscriptions.push(...subChunk);
+    }
+    const userPlans = new Map(subscriptions.map(s => [s.user_id, s.plan_type]));
 
-    // Quiz/lead stats
+    // Quiz/lead stats (RPC: array no body, sem limite de URL)
     const userStats = await supabase.rpc('get_user_quiz_stats', {
-      user_ids: userPool.map(u => u.id)
+      user_ids: userIds,
     });
     const statsMap = new Map((userStats.data || []).map((s: { user_id: string; quiz_count: number; lead_count: number }) => [s.user_id, s]));
 
