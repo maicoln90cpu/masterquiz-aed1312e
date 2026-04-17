@@ -19,7 +19,7 @@ export const FinalCTA = () => {
   const titleText = getCopy('final_cta_section', 'final_cta_text', t('landing.finalCTA.title'));
 
   const handleCTA = () => {
-    if (titleTest) {
+    if (titleTest?.is_active) {
       trackConversion({ testId: titleTest.id, conversionType: 'cta_click' });
     }
     pushGTMEvent('cta_click', {
