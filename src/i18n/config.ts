@@ -2350,10 +2350,55 @@ const pt = {
       home: "Início",
       features: "Recursos",
       pricing: "Preços",
+      compare: "Comparar",
       blog: "Blog",
       faq: "FAQ",
       contact: "Contato",
       login: "Entrar",
+    },
+    compare: {
+      seo: {
+        title: "MasterQuizz vs InLead, Typeform e Outgrow — Comparação completa 2026",
+        description:
+          "Compare o MasterQuizz com InLead, Typeform e Outgrow. Veja preços, funcionalidades e diferenciais. Plano gratuito real, CRM integrado, IA e vídeo incluídos a partir de R$ 37/mês.",
+      },
+      hero: {
+        title: "Por que o MasterQuizz é a melhor escolha para infoprodutores brasileiros?",
+        subtitle:
+          "Compare as principais ferramentas de quiz do mercado e veja por que quem vende online no Brasil escolhe o MasterQuizz.",
+        ctaPrimary: "Começar grátis agora",
+        ctaSecondary: "Ver planos e preços",
+      },
+      cards: {
+        free: {
+          title: "Comece grátis, sem cartão",
+          text: "Enquanto InLead começa em R$ 97/mês e Typeform limita a 10 respostas no free, o MasterQuizz oferece um plano gratuito real para você testar antes de pagar.",
+        },
+        allInOne: {
+          title: "Tudo incluído a partir de R$ 37/mês",
+          text: "CRM de leads, IA para criar quiz, vídeo hospedado, analytics avançado e 8 integrações nativas. No InLead você paga R$ 97/mês e ainda precisa contratar outras plataformas para ter vídeo e CRM.",
+        },
+        brazil: {
+          title: "Feito para o Brasil, em português",
+          text: "Interface, suporte e documentação 100% em português. Integração nativa com Kiwify. Typeform e Outgrow são ferramentas gringas sem foco no mercado brasileiro.",
+        },
+      },
+      table: {
+        title: "Comparação completa",
+        subtitle: "Os critérios que realmente importam para quem vende online no Brasil",
+        feature: "Funcionalidade",
+      },
+      vsInlead: {
+        title: "MasterQuizz vs InLead — a comparação que mais importa",
+        subtitle: "O InLead é a principal alternativa brasileira. Veja por que infoprodutores estão migrando.",
+      },
+      cta: {
+        title: "Pronto para testar sem compromisso?",
+        subtitle: "Crie sua conta grátis em menos de 1 minuto. Sem cartão de crédito. Cancele quando quiser.",
+        button: "Criar conta grátis",
+        loginHint: "Já tem conta?",
+        loginLink: "Faça login →",
+      },
     },
     pricing: {
       title: "Planos e Preços",
@@ -5265,10 +5310,55 @@ const en = {
       home: "Home",
       features: "Features",
       pricing: "Pricing",
+      compare: "Compare",
       blog: "Blog",
       faq: "FAQ",
       contact: "Contact",
       login: "Login",
+    },
+    compare: {
+      seo: {
+        title: "MasterQuizz vs InLead, Typeform and Outgrow — Full comparison 2026",
+        description:
+          "Compare MasterQuizz with InLead, Typeform and Outgrow. See pricing, features and differentiators. Real free plan, integrated CRM, AI and video included from R$ 37/month.",
+      },
+      hero: {
+        title: "Why MasterQuizz is the best choice for Brazilian digital creators",
+        subtitle:
+          "Compare the main quiz tools in the market and see why those who sell online in Brazil choose MasterQuizz.",
+        ctaPrimary: "Start free now",
+        ctaSecondary: "See plans and pricing",
+      },
+      cards: {
+        free: {
+          title: "Start free, no card required",
+          text: "While InLead starts at R$ 97/month and Typeform limits free to 10 responses, MasterQuizz offers a real free plan so you can test before paying.",
+        },
+        allInOne: {
+          title: "Everything included from R$ 37/month",
+          text: "Lead CRM, AI quiz generation, hosted video, advanced analytics and 8 native integrations. With InLead you pay R$ 97/month and still need other platforms for video and CRM.",
+        },
+        brazil: {
+          title: "Built for Brazil, in Portuguese",
+          text: "Interface, support and documentation 100% in Portuguese. Native Kiwify integration. Typeform and Outgrow are foreign tools without focus on the Brazilian market.",
+        },
+      },
+      table: {
+        title: "Full comparison",
+        subtitle: "The criteria that really matter for those selling online in Brazil",
+        feature: "Feature",
+      },
+      vsInlead: {
+        title: "MasterQuizz vs InLead — the comparison that matters most",
+        subtitle: "InLead is the main Brazilian alternative. See why creators are switching.",
+      },
+      cta: {
+        title: "Ready to try with no commitment?",
+        subtitle: "Create your free account in under 1 minute. No credit card. Cancel whenever.",
+        button: "Create free account",
+        loginHint: "Already have an account?",
+        loginLink: "Log in →",
+      },
     },
     pricing: {
       title: "Plans & Pricing",
@@ -8371,10 +8461,55 @@ const es = {
       home: "Inicio",
       features: "Recursos",
       pricing: "Precios",
+      compare: "Comparar",
       blog: "Blog",
       faq: "FAQ",
       contact: "Contacto",
       login: "Entrar",
+    },
+    compare: {
+      seo: {
+        title: "MasterQuizz vs InLead, Typeform y Outgrow — Comparación completa 2026",
+        description:
+          "Compara MasterQuizz con InLead, Typeform y Outgrow. Mira precios, funciones y diferenciales. Plan gratuito real, CRM integrado, IA y vídeo incluidos desde R$ 37/mes.",
+      },
+      hero: {
+        title: "Por qué MasterQuizz es la mejor opción para infoproductores brasileños",
+        subtitle:
+          "Compara las principales herramientas de quiz del mercado y descubre por qué quienes venden en línea en Brasil eligen MasterQuizz.",
+        ctaPrimary: "Empezar gratis ahora",
+        ctaSecondary: "Ver planes y precios",
+      },
+      cards: {
+        free: {
+          title: "Empieza gratis, sin tarjeta",
+          text: "Mientras InLead cuesta desde R$ 97/mes y Typeform limita el plan gratis a 10 respuestas, MasterQuizz ofrece un plan gratuito real para que pruebes antes de pagar.",
+        },
+        allInOne: {
+          title: "Todo incluido desde R$ 37/mes",
+          text: "CRM de leads, IA para crear quiz, vídeo alojado, analítica avanzada y 8 integraciones nativas. Con InLead pagas R$ 97/mes y aún necesitas otras plataformas para vídeo y CRM.",
+        },
+        brazil: {
+          title: "Hecho para Brasil, en portugués",
+          text: "Interfaz, soporte y documentación 100% en portugués. Integración nativa con Kiwify. Typeform y Outgrow son herramientas extranjeras sin foco en el mercado brasileño.",
+        },
+      },
+      table: {
+        title: "Comparación completa",
+        subtitle: "Los criterios que realmente importan para quien vende en línea en Brasil",
+        feature: "Funcionalidad",
+      },
+      vsInlead: {
+        title: "MasterQuizz vs InLead — la comparación que más importa",
+        subtitle: "InLead es la principal alternativa brasileña. Mira por qué los infoproductores están migrando.",
+      },
+      cta: {
+        title: "¿Listo para probar sin compromiso?",
+        subtitle: "Crea tu cuenta gratis en menos de 1 minuto. Sin tarjeta. Cancela cuando quieras.",
+        button: "Crear cuenta gratis",
+        loginHint: "¿Ya tienes cuenta?",
+        loginLink: "Inicia sesión →",
+      },
     },
     plans: {
       title: "Comienza gratis. Escala conforme aumentan tus resultados.",
