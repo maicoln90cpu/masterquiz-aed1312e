@@ -43,6 +43,7 @@ const SupportTicketsManager = lazy(() => import("@/components/admin/SupportTicke
 const TemplateManagement = lazy(() => import("@/components/admin/TemplateManagement"));
 const PaymentGatewaySettings = lazy(() => import("@/components/admin/PaymentGatewaySettings"));
 const BunnyStorageSettings = lazy(() => import("@/components/admin/BunnyStorageSettings").then(m => ({ default: m.BunnyStorageSettings })));
+const InstitutionalDomainsPanel = lazy(() => import("@/components/admin/system/InstitutionalDomainsPanel").then(m => ({ default: m.InstitutionalDomainsPanel })));
 const BundleSizeMonitor = lazy(() => import("@/components/admin/BundleSizeMonitor").then(m => ({ default: m.BundleSizeMonitor })));
 const SystemHealthDashboard = lazy(() => import("@/components/admin/SystemHealthDashboard").then(m => ({ default: m.SystemHealthDashboard })));
 const HealthReport = lazy(() => import("@/components/admin/HealthReport").then(m => ({ default: m.HealthReport })));
