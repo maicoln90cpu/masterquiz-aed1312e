@@ -29,6 +29,17 @@ interface ZombieRow {
   whatsapp: string | null;
 }
 
+interface DryRunRecipient {
+  user_id: string;
+  full_name: string | null;
+  whatsapp: string | null;
+  days_inactive: number;
+  plan_type: string;
+  quiz_count: number;
+  lead_count: number;
+  user_stage: string | null;
+}
+
 const QUIZ_SEM_RESPOSTA_NAME = 'Abril 2026 — Quiz Sem Resposta';
 const ZOMBIES_NAME = 'Abril 2026 — Reativação Zombies';
 
@@ -46,6 +57,7 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
   const isQuizSemResposta = campaignName === QUIZ_SEM_RESPOSTA_NAME;
   const isZombies = campaignName === ZOMBIES_NAME;
   const showZombieActions = isZombies && !isAutomatic && status === 'draft';
+  const showGenericPreview = !isQuizSemResposta && !isZombies && status === 'draft';
 
   const [loadingTargets, setLoadingTargets] = useState(false);
   const [targets, setTargets] = useState<QuizSemRespostaRow[]>([]);
@@ -55,6 +67,12 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
   const [zombieRows, setZombieRows] = useState<ZombieRow[]>([]);
   const [enqueueLoading, setEnqueueLoading] = useState(false);
   const [enqueued, setEnqueued] = useState(false);
+
+  // Genérico (dryRun via edge function)
+  const [genericOpen, setGenericOpen] = useState(false);
+  const [genericLoading, setGenericLoading] = useState(false);
+  const [genericRows, setGenericRows] = useState<DryRunRecipient[]>([]);
+  const [genericTotal, setGenericTotal] = useState(0);
 
   useEffect(() => {
     if (isQuizSemResposta) loadQuizSemRespostaTargets();
@@ -143,6 +161,25 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
       toast.error(e?.message || 'Erro ao enfileirar destinatários');
     } finally {
       setEnqueueLoading(false);
+    }
+  };
+
+  const handleGenericPreview = async () => {
+    setGenericOpen(true);
+    setGenericLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-inactive-users', {
+        body: { campaignId, dryRun: true },
+      });
+      if (error) throw error;
+      setGenericRows((data?.recipients || []) as DryRunRecipient[]);
+      setGenericTotal(data?.total_eligible || 0);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'Erro ao buscar destinatários');
+      setGenericOpen(false);
+    } finally {
+      setGenericLoading(false);
     }
   };
 
@@ -251,6 +288,81 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
                   <><Send className="h-4 w-4 mr-1" /> Confirmar e enfileirar</>
                 )}
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  if (showGenericPreview) {
+    return (
+      <>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={handleGenericPreview} disabled={genericLoading}>
+            <Eye className="h-4 w-4 mr-1" />
+            {genericLoading ? 'Buscando...' : 'Pré-visualizar destinatários'}
+          </Button>
+        </div>
+
+        <Dialog open={genericOpen} onOpenChange={setGenericOpen}>
+          <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Destinatários elegíveis — {campaignName}</DialogTitle>
+              <DialogDescription>
+                Lista simulada com base nos critérios atuais da campanha. Nenhuma mensagem é enfileirada nesta etapa.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto border rounded-md">
+              {genericLoading ? (
+                <div className="flex items-center justify-center p-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : genericRows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
+                  <AlertTriangle className="h-8 w-8 mb-2" />
+                  <p className="text-sm">Nenhum usuário elegível encontrado para os critérios atuais.</p>
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="text-left p-2">Nome</th>
+                      <th className="text-left p-2">WhatsApp</th>
+                      <th className="text-left p-2">Plano</th>
+                      <th className="text-right p-2">Quizzes</th>
+                      <th className="text-right p-2">Leads</th>
+                      <th className="text-right p-2">Inativo (dias)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {genericRows.map((r) => (
+                      <tr key={r.user_id} className="border-t">
+                        <td className="p-2">{r.full_name || '—'}</td>
+                        <td className="p-2 font-mono text-xs">{r.whatsapp || '—'}</td>
+                        <td className="p-2">
+                          <Badge variant="outline" className="text-xs">{r.plan_type}</Badge>
+                        </td>
+                        <td className="p-2 text-right">{r.quiz_count}</td>
+                        <td className="p-2 text-right">{r.lead_count}</td>
+                        <td className="p-2 text-right">{r.days_inactive}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="text-sm text-muted-foreground pt-2">
+              Total: <span className="font-semibold text-foreground">{genericTotal}</span> destinatário(s) elegível(is)
+              {genericRows.length < genericTotal && (
+                <span className="ml-1">(mostrando os primeiros {genericRows.length})</span>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGenericOpen(false)}>Fechar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
