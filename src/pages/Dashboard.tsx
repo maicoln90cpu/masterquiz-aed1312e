@@ -23,6 +23,7 @@ import { PlanLimitWarning } from "@/components/PlanLimitWarning";
 import { FirstLeadUpgradeBanner } from "@/components/FirstLeadUpgradeBanner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useResourceLimits } from "@/hooks/useResourceLimits";
 import { ResourceMonitoringPanel } from "@/components/ResourceMonitoringPanel";
 import { useUserStage } from "@/hooks/useUserStage";
 import type { Profile } from "@/types/quiz";
