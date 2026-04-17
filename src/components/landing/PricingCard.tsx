@@ -63,8 +63,8 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
       payment_gateway: 'kiwify',
     });
 
-    // Track A/B conversion for free/paid pricing CTA
-    if (ctaTest) {
+    // Track A/B conversion only when test is active
+    if (ctaTest?.is_active) {
       trackConversion({ testId: ctaTest.id, conversionType: 'cta_click' });
     }
 
