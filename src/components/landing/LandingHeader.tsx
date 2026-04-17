@@ -30,6 +30,8 @@ export const LandingHeader = () => {
     { label: t('landing.header.home'), href: '#hero' },
     { label: t('landing.header.features'), href: '#features' },
     { label: t('landing.header.pricing'), href: '#pricing' },
+    // Item /compare — importante para SEO + Google Ads sitelink. Não remover sem aprovação de marketing.
+    { label: t('landing.header.compare'), href: '/compare', isRoute: true },
     { label: t('landing.header.blog'), href: '/blog', isRoute: true },
     { label: t('landing.header.faq'), href: '/faq', isRoute: true },
   ];
