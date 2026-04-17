@@ -20,8 +20,8 @@ export const useProfile = () => {
       }
 
       try {
-        const { data, error } = await trackOperation('profile_fetch', 'query', () =>
-          supabase
+        const { data, error } = await trackOperation('profile_fetch', 'query', async () =>
+          await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)

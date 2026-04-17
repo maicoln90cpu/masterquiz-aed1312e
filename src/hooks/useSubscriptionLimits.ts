@@ -53,8 +53,8 @@ export const useSubscriptionLimits = () => {
         };
       }
 
-      const { data, error } = await trackOperation('user_subscription_fetch', 'query', () =>
-        supabase
+      const { data, error } = await trackOperation('user_subscription_fetch', 'query', async () =>
+        await supabase
           .from('user_subscriptions')
           .select('*')
           .eq('user_id', user.id)

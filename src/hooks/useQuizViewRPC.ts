@@ -49,8 +49,8 @@ async function loadQuizViaRPC(
   company?: string
 ): Promise<LoadQuizResult> {
   try {
-    const { data, error } = await trackOperation('load_quiz_public', 'rpc', () =>
-      supabase.rpc('get_quiz_for_display', {
+    const { data, error } = await trackOperation('load_quiz_public', 'rpc', async () =>
+      await supabase.rpc('get_quiz_for_display', {
         p_company_slug: company || null,
         p_quiz_slug: slug
       })
