@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, Mail, TrendingUp } from "lucide-react";
+import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, Mail, TrendingUp, Trophy, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -26,8 +26,30 @@ interface EmailContact {
   email_recovery_templates: {
     name: string;
     category: string;
+    subject: string | null;
+    subject_b: string | null;
   } | null;
 }
+
+interface TemplateRow {
+  id: string;
+  name: string;
+  category: string;
+  subject: string | null;
+  subject_b: string | null;
+}
+
+// Min sample size per variant to declare a winner
+const MIN_SAMPLE_FOR_WINNER = 100;
+
+// Period filter (days). 0 = all-time.
+type PeriodKey = '7' | '30' | '90' | '0';
+const PERIOD_LABELS: Record<PeriodKey, string> = {
+  '7': 'Últimos 7 dias',
+  '30': 'Últimos 30 dias',
+  '90': 'Últimos 90 dias',
+  '0': 'Todo o período',
+};
 
 const STATUS_COLORS: Record<string, string> = {
   sent: 'bg-green-100 text-green-700',
