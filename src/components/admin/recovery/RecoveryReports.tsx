@@ -182,6 +182,11 @@ export function RecoveryReports() {
             <p className="text-xs text-muted-foreground mt-2">
               {data.delivered_count} de {data.sent_count} enviadas
             </p>
+            {data.delivered_assumed_count > 0 && (
+              <p className="text-[11px] text-yellow-700 mt-1">
+                ⚠ {data.delivered_assumed_count} presumidas (sem ack do WhatsApp){data.delivered_real_count > 0 ? ` · ${data.delivered_real_count} confirmadas` : ''}
+              </p>
+            )}
           </CardContent>
         </Card>
 
