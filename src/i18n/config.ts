@@ -649,6 +649,7 @@ const pt = {
     allQuizzes: "Todos os quizzes",
     filterByStatus: "Filtrar por status",
     allStatus: "Todos os status",
+    searchPlaceholder: "Buscar por nome ou email...",
     loadingLeads: "Carregando leads...",
     noLeads: "Nenhum lead nesta coluna",
     columns: {
@@ -3961,6 +3962,7 @@ const en = {
     allQuizzes: "All quizzes",
     filterByStatus: "Filter by status",
     allStatus: "All statuses",
+    searchPlaceholder: "Search by name or email...",
     loadingLeads: "Loading leads...",
     noLeads: "No leads in this column",
     columns: {
@@ -6780,6 +6782,7 @@ const es = {
     allQuizzes: "Todos los quizzes",
     filterByStatus: "Filtrar por estado",
     allStatus: "Todos los estados",
+    searchPlaceholder: "Buscar por nombre o email...",
     loadingLeads: "Cargando leads...",
     noLeads: "No hay leads en esta columna",
     columns: {
