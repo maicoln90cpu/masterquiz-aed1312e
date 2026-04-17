@@ -756,7 +756,7 @@ Deno.serve(async (req: Request) => {
     postId = newPost.id;
 
     // 13. Update generation log
-    await supabase.from('blog_generation_logs').update({
+    const { error: logUpdateError } = await supabase.from('blog_generation_logs').update({
       post_id: postId,
       status: 'success',
       prompt_tokens: promptTokens,
@@ -766,6 +766,9 @@ Deno.serve(async (req: Request) => {
       image_cost_usd: imageCostUsd,
       total_cost_usd: totalCost,
     }).eq('id', logId);
+    if (logUpdateError) {
+      console.error(`${PREFIX} ⚠️ Failed to update generation log:`, logUpdateError);
+    }
 
     console.log(`${PREFIX} ✅ Post created: "${newPost.title}" (${newPost.slug}) - $${totalCost.toFixed(4)}`);
 
