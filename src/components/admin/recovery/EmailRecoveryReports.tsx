@@ -236,6 +236,27 @@ export function EmailRecoveryReports() {
 
   return (
     <div className="space-y-6">
+      {/* Period selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">Período de análise</h3>
+          <p className="text-xs text-muted-foreground">Filtra todos os gráficos e tabelas abaixo</p>
+        </div>
+        <div className="flex gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(PERIOD_LABELS) as PeriodKey[]).map(k => (
+                <SelectItem key={k} value={k}>{PERIOD_LABELS[k]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={() => load(period)} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <Card><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-full bg-blue-100 text-blue-600"><Mail className="h-5 w-5" /></div><div><p className="text-2xl font-bold">{total}</p><p className="text-xs text-muted-foreground">Total</p></div></CardContent></Card>
