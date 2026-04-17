@@ -1,6 +1,6 @@
 # 🎯 MasterQuiz
 
-**Versão 2.42.0** | Última atualização: 16 de Abril de 2026
+**Versão 2.42.0** | Última atualização: 17 de Abril de 2026
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
@@ -549,6 +549,14 @@ src/
 - ✅ Undo/Redo + Autosave (30s debounce)
 - ✅ Embed via iframe + QR Code
 
+### Páginas Públicas (Landing & SEO)
+- ✅ Landing principal `/` com Modo A/B (Apenas Pago vs Híbrido)
+- ✅ `/precos` — Comparativo de planos
+- ✅ `/blog` — Blog automatizado com IA (5 estilos visuais rotativos)
+- ✅ `/faq` — Perguntas frequentes
+- ✅ **`/compare`** — Página comparativa MasterQuiz vs concorrentes (InLead) com tabela 18×4, JSON-LD Schema.org `Product`+`Offer`, A/B test no CTA final, sitemap automático ⭐ v2.42.0
+- ✅ Sitemap dinâmico via Edge Function `blog-sitemap`
+
 ### Para Admins
 - ✅ Gestão de templates e planos
 - ✅ Listagem de usuários (Edge Function)
@@ -630,6 +638,7 @@ logger.api('API call', { endpoint, status });
 | [docs/ADR.md](./docs/ADR.md) | Architecture Decision Records |
 | [docs/SERVICES.md](./docs/SERVICES.md) | Catálogo de services do projeto |
 | [docs/MEMOCOPY.md](./docs/MEMOCOPY.md) | Backup de memórias do projeto |
+| [CHANGELOG.md](./CHANGELOG.md) | Histórico oficial por versão (Keep a Changelog) |
 
 ---
 

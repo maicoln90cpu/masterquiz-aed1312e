@@ -1,7 +1,9 @@
 # ⚡ EDGE FUNCTIONS — Catálogo Completo (64 funções)
 
 > MasterQuiz — Todas as Edge Functions organizadas por domínio
-> Versão 2.42.0 | 16 de Abril de 2026
+> Versão 2.42.0 | 17 de Abril de 2026
+
+> ℹ️ A função `blog-sitemap` agora inclui automaticamente a página `/compare` (priority 0.9, weekly) — v2.42.0.
 
 ---
 
