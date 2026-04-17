@@ -191,14 +191,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Buscar perfis com WhatsApp + stage + objectives
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, full_name, whatsapp, user_stage, user_objectives')
-      .in('id', userPool.map(u => u.id))
-      .not('whatsapp', 'is', null);
+    // Buscar perfis com WhatsApp + stage + objectives (chunked para evitar URL muito longa)
+    const CHUNK_SIZE = 150;
+    const userIds = userPool.map(u => u.id);
+    const profiles: Array<{ id: string; full_name: string | null; whatsapp: string | null; user_stage: string | null; user_objectives: string[] | null }> = [];
 
-    if (profilesError) throw profilesError;
+    for (let i = 0; i < userIds.length; i += CHUNK_SIZE) {
+      const chunk = userIds.slice(i, i + CHUNK_SIZE);
+      const { data: chunkData, error: chunkError } = await supabase
+        .from('profiles')
+        .select('id, full_name, whatsapp, user_stage, user_objectives')
+        .in('id', chunk)
+        .not('whatsapp', 'is', null);
+      if (chunkError) throw chunkError;
+      if (chunkData) profiles.push(...chunkData);
+    }
 
     // Buscar blacklist
     const { data: blacklist } = await supabase.from('recovery_blacklist').select('phone_number, user_id');
