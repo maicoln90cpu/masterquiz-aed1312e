@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter, Pencil, RefreshCw, Shield } from "lucide-react";
+import { Loader2, Plus, Play, Pause, Square, Megaphone, Users, Send, CheckCircle, Trash2, ChevronDown, Filter, Pencil, RefreshCw, Shield, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CampaignRecipientsPanel } from "./CampaignRecipientsPanel";
@@ -169,35 +169,60 @@ export function RecoveryCampaigns() {
       const rawCampaigns = campaignsRes.data || [];
 
       // Fetch dynamic counters for each campaign from recovery_contacts
+      // Os 7 cards são mutuamente exclusivos: cada contato cai em UMA categoria.
+      // Alvos = soma total = Pendentes + Enviadas + Entregues + Responderam + Reativados + Falhas
       const campaignIds = rawCampaigns.map(c => c.id);
       if (campaignIds.length > 0) {
         const { data: contacts } = await supabase
           .from('recovery_contacts')
-          .select('campaign_id, status')
+          .select('campaign_id, status, reactivated')
           .in('campaign_id', campaignIds);
 
         if (contacts) {
-          const counters: Record<string, Record<string, number>> = {};
+          const counters: Record<string, {
+            pending: number;
+            sent: number;
+            delivered: number;
+            responded: number;
+            reactivated: number;
+            failed: number;
+            total: number;
+          }> = {};
+
           for (const c of contacts) {
             if (!c.campaign_id) continue;
-            if (!counters[c.campaign_id]) counters[c.campaign_id] = {};
-            counters[c.campaign_id][c.status] = (counters[c.campaign_id][c.status] || 0) + 1;
+            if (!counters[c.campaign_id]) {
+              counters[c.campaign_id] = { pending: 0, sent: 0, delivered: 0, responded: 0, reactivated: 0, failed: 0, total: 0 };
+            }
+            const bucket = counters[c.campaign_id];
+            bucket.total += 1;
+
+            // Reativados é dimensão ortogonal — mas para mutual exclusion priorizamos
+            if (c.reactivated) {
+              bucket.reactivated += 1;
+            } else if (c.status === 'responded') {
+              bucket.responded += 1;
+            } else if (c.status === 'failed') {
+              bucket.failed += 1;
+            } else if (c.status === 'delivered' || c.status === 'read') {
+              bucket.delivered += 1;
+            } else if (c.status === 'sent') {
+              bucket.sent += 1;
+            } else if (c.status === 'pending' || c.status === 'queued') {
+              bucket.pending += 1;
+            }
           }
 
           for (const campaign of rawCampaigns) {
-            const c = counters[campaign.id] || {};
-            const realSent = (c.sent || 0) + (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
-            const realFailed = c.failed || 0;
-            const realQueued = (c.pending || 0) + (c.queued || 0);
-            const realTotal = Object.values(c).reduce((a, b) => a + b, 0);
-
-            campaign.sent_count = realSent;
-            campaign.delivered_count = (c.delivered || 0) + (c.read || 0) + (c.responded || 0);
-            campaign.responded_count = c.responded || 0;
-            campaign.failed_count = realFailed;
-            // Use DB values as fallback when real contacts are fewer (due to deduplication)
-            campaign.queued_count = Math.max(realQueued, campaign.queued_count || 0);
-            campaign.total_targets = Math.max(realTotal, campaign.total_targets || 0);
+            const c = counters[campaign.id];
+            if (!c) continue;
+            campaign.queued_count = c.pending;
+            campaign.sent_count = c.sent;
+            campaign.delivered_count = c.delivered;
+            campaign.responded_count = c.responded;
+            campaign.reactivated_count = c.reactivated;
+            campaign.failed_count = c.failed;
+            campaign.total_targets = Math.max(c.total, campaign.total_targets || 0);
           }
         }
       }
@@ -941,39 +966,38 @@ export function RecoveryCampaigns() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                  <div className="text-center p-2 bg-muted rounded">
+                <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
+                  <div className="text-center p-2 bg-muted rounded" title="Total de contatos da campanha (soma das 6 categorias)">
                     <Users className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
                     <p className="text-lg font-bold">{campaign.total_targets}</p>
                     <p className="text-xs text-muted-foreground">Alvos</p>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Aguardando envio (pending/queued)">
+                    <Clock className="h-4 w-4 mx-auto mb-1 text-amber-500" />
+                    <p className="text-lg font-bold">{campaign.queued_count}</p>
+                    <p className="text-xs text-muted-foreground">Pendentes</p>
+                  </div>
+                  <div className="text-center p-2 bg-muted rounded" title="Enviadas mas sem confirmação de entrega ainda">
                     <Send className="h-4 w-4 mx-auto mb-1 text-blue-500" />
                     <p className="text-lg font-bold">{campaign.sent_count}</p>
                     <p className="text-xs text-muted-foreground">Enviadas</p>
-                    {(campaign as any).globalSent > campaign.sent_count && (
-                      <p className="text-[10px] text-blue-500 mt-0.5">{(campaign as any).globalSent} total template</p>
-                    )}
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Entregues no WhatsApp do destinatário (sem resposta ainda)">
                     <CheckCircle className="h-4 w-4 mx-auto mb-1 text-green-500" />
                     <p className="text-lg font-bold">{campaign.delivered_count}</p>
                     <p className="text-xs text-muted-foreground">Entregues</p>
-                    {(campaign as any).globalDelivered > campaign.delivered_count && (
-                      <p className="text-[10px] text-green-500 mt-0.5">{(campaign as any).globalDelivered} total template</p>
-                    )}
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Destinatário respondeu à mensagem">
                     <Megaphone className="h-4 w-4 mx-auto mb-1 text-purple-500" />
                     <p className="text-lg font-bold">{campaign.responded_count}</p>
                     <p className="text-xs text-muted-foreground">Responderam</p>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Voltaram a usar a plataforma após a mensagem">
                     <Users className="h-4 w-4 mx-auto mb-1 text-emerald-500" />
                     <p className="text-lg font-bold">{campaign.reactivated_count}</p>
                     <p className="text-xs text-muted-foreground">Reativados</p>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Falhas no envio (número inválido, bloqueio etc.)">
                     <Users className="h-4 w-4 mx-auto mb-1 text-red-500" />
                     <p className="text-lg font-bold">{campaign.failed_count}</p>
                     <p className="text-xs text-muted-foreground">Falhas</p>
