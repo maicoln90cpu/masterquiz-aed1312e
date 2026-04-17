@@ -414,6 +414,8 @@ Deno.serve(async (req) => {
         no_response: noResponseTemplates.length,
         draft_abandoned: draftAbandonedTemplates.length,
         upgrade_nudge: upgradeNudgeTemplates.length,
+        institutional_skipped: institutionalSkipped,
+        institutional_domains_loaded: institutionalDomains.length,
       }
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
