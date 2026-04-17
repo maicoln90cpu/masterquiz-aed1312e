@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
+import { useLandingCopy } from "@/hooks/useLandingCopy";
 
 interface PricingCardProps {
   plan: {
@@ -41,9 +42,12 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
   // A/B Testing: separate tests for free and paid plan CTAs
   const isFreePlan = plan.id === 'free';
   const abElement = isFreePlan ? 'pricing_free_cta' : 'pricing_paid_cta';
-  const { getContentForElement, getTestByElement, trackConversion } = useLandingABTest(abElement);
-  const ctaAB = getContentForElement(abElement);
+  const cmsKey = isFreePlan ? 'pricing_free_cta_text' : 'pricing_paid_cta_text';
+  const { getTestByElement, trackConversion } = useLandingABTest(abElement);
+  const { getCopy } = useLandingCopy();
   const ctaTest = getTestByElement(abElement);
+  // Prioridade: A/B ativo > landing_content > plan.ctaText (default do componente)
+  const ctaText = getCopy(abElement, cmsKey, plan.ctaText);
 
   const handleCTA = async () => {
     console.log('[PricingCard] handleCTA - 100% Kiwify mode', {
@@ -59,8 +63,8 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
       payment_gateway: 'kiwify',
     });
 
-    // Track A/B conversion for free/paid pricing CTA
-    if (ctaTest) {
+    // Track A/B conversion only when test is active
+    if (ctaTest?.is_active) {
       trackConversion({ testId: ctaTest.id, conversionType: 'cta_click' });
     }
 
@@ -209,7 +213,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
                 {t('pricing.processing')}
               </>
             ) : (
-              ctaAB?.text || plan.ctaText
+              ctaText
             )}
           </Button>
         </CardFooter>

@@ -5,19 +5,21 @@ import { useNavigate } from "react-router-dom";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
+import { useLandingCopy } from "@/hooks/useLandingCopy";
 
 export const FinalCTA = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isModeB } = useSiteMode();
 
-  // A/B Test: title of the final CTA section
-  const { getContentForElement, getTestByElement, trackConversion } = useLandingABTest('final_cta_section');
-  const titleAB = getContentForElement('final_cta_section');
+  // Helper unificado: A/B ativo > landing_content > fallback i18n
+  const { getCopy } = useLandingCopy();
+  const { getTestByElement, trackConversion } = useLandingABTest('final_cta_section');
   const titleTest = getTestByElement('final_cta_section');
+  const titleText = getCopy('final_cta_section', 'final_cta_text', t('landing.finalCTA.title'));
 
   const handleCTA = () => {
-    if (titleTest) {
+    if (titleTest?.is_active) {
       trackConversion({ testId: titleTest.id, conversionType: 'cta_click' });
     }
     pushGTMEvent('cta_click', {
@@ -40,7 +42,7 @@ export const FinalCTA = () => {
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold text-white">
-            {titleAB?.text || t('landing.finalCTA.title')}
+            {titleText}
           </h2>
 
           <p className="text-xl text-white/90">
