@@ -53,12 +53,18 @@ Deno.serve(async (req) => {
           .eq('is_active', true)
           .single();
 
+        if (!plan) {
+          console.error(`[CHECK-EXPIRED-TRIALS] Plan "${trial.original_plan_type}" not found in subscription_plans (is_active=true). Skipping ${trial.user_id}.`);
+          results.push({ user_id: trial.user_id, status: 'error', error: `Plan "${trial.original_plan_type}" not configured` });
+          continue;
+        }
+
         const { error: updateError } = await supabase
           .from('user_subscriptions')
           .update({
             plan_type: trial.original_plan_type,
-            quiz_limit: plan?.quiz_limit || 3,
-            response_limit: plan?.response_limit || 100,
+            quiz_limit: plan.quiz_limit,
+            response_limit: plan.response_limit,
             original_plan_type: null,
             trial_end_date: null,
             trial_started_at: null,

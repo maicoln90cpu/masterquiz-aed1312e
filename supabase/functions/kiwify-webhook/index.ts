@@ -101,8 +101,14 @@ Deno.serve(async (req) => {
     }
 
     const { data: planData } = await supabaseAdmin.from('subscription_plans').select('quiz_limit, response_limit').eq('plan_type', newPlanType).eq('is_active', true).maybeSingle();
-    const quizLimit = planData?.quiz_limit || (newPlanType === 'free' ? 3 : 10);
-    const responseLimit = planData?.response_limit || (newPlanType === 'free' ? 100 : 1000);
+    // ✅ Sem fallback hardcoded — subscription_plans é fonte única de verdade.
+    // Se plano não existir, aborta para evitar atribuir limites incorretos.
+    if (!planData) {
+      console.error(`[kiwify-webhook] Plano "${newPlanType}" não encontrado em subscription_plans (is_active=true). Abortando.`);
+      return new Response(JSON.stringify({ error: `Plan "${newPlanType}" not configured` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const quizLimit = planData.quiz_limit;
+    const responseLimit = planData.response_limit;
 
     const updatePayload: Record<string, any> = {
       plan_type: newPlanType, status: newStatus, quiz_limit: quizLimit, response_limit: responseLimit, updated_at: new Date().toISOString()

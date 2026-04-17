@@ -174,7 +174,11 @@ export const useSubscriptionLimits = () => {
       .eq('is_active', true)
       .single();
 
-    return plan?.questions_per_quiz_limit || 10;
+    // ✅ Sem fallback hardcoded — subscription_plans é fonte única de verdade
+    if (!plan?.questions_per_quiz_limit) {
+      console.warn(`[useSubscriptionLimits] questions_per_quiz_limit ausente para plano "${subscription.plan_type}".`);
+    }
+    return plan?.questions_per_quiz_limit ?? 0;
   };
 
   return {
@@ -186,8 +190,10 @@ export const useSubscriptionLimits = () => {
     checkQuestionsPerQuizLimit,
     getQuestionsPerQuizLimit,
     planType: isMasterAdmin ? 'Admin' : subscription?.plan_type || 'free',
-    quizLimit: isMasterAdmin ? 999999 : subscription?.quiz_limit || 3,
-    responseLimit: isMasterAdmin ? 999999 : subscription?.response_limit || 100,
+    // ✅ Sem fallback numérico — usa o valor já sincronizado de user_subscriptions
+    // (mantido em sync via trigger sync_user_subscription_limits_on_plan_update)
+    quizLimit: isMasterAdmin ? 999999 : (subscription?.quiz_limit ?? 0),
+    responseLimit: isMasterAdmin ? 999999 : (subscription?.response_limit ?? 0),
     isMasterAdmin
   };
 };
