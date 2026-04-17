@@ -215,7 +215,7 @@ export const HeroSection = () => {
                 className="text-lg group hover-scale-sm"
               >
                 <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-smooth" />
-                {isModeB ? 'Ver planos' : c('hero_cta_secondary', 'landing.hero.ctaSecondary')}
+                {getCtaSecondaryText()}
               </Button>
             </div>
 
