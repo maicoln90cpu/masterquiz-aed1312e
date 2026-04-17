@@ -1311,6 +1311,7 @@ export type Database = {
           login_count: number | null
           paywall_hit_count: number
           plan_limit_hit_type: string | null
+          plan_limit_warning_sent_at: string | null
           quiz_shared_count: number
           stage_updated_at: string | null
           updated_at: string
@@ -1344,6 +1345,7 @@ export type Database = {
           login_count?: number | null
           paywall_hit_count?: number
           plan_limit_hit_type?: string | null
+          plan_limit_warning_sent_at?: string | null
           quiz_shared_count?: number
           stage_updated_at?: string | null
           updated_at?: string
@@ -1377,6 +1379,7 @@ export type Database = {
           login_count?: number | null
           paywall_hit_count?: number
           plan_limit_hit_type?: string | null
+          plan_limit_warning_sent_at?: string | null
           quiz_shared_count?: number
           stage_updated_at?: string | null
           updated_at?: string
@@ -3376,6 +3379,19 @@ export type Database = {
           stuck_sent_no_ack: number | null
           total_sent_or_more: number | null
           webhook_health: string | null
+        }
+        Relationships: []
+      }
+      v_lifecycle_health: {
+        Row: {
+          emails_enqueued_24h: number | null
+          emails_enqueued_7d: number | null
+          function_name: unknown
+          is_active: boolean | null
+          table_name: unknown
+          trigger_name: unknown
+          whatsapp_enqueued_24h: number | null
+          whatsapp_enqueued_7d: number | null
         }
         Relationships: []
       }
