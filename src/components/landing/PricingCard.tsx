@@ -59,6 +59,11 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
       payment_gateway: 'kiwify',
     });
 
+    // Track A/B conversion for free/paid pricing CTA
+    if (ctaTest) {
+      trackConversion({ testId: ctaTest.id, conversionType: 'cta_click' });
+    }
+
     try {
       setProcessing(true);
       const { data: { user } } = await supabase.auth.getUser();
