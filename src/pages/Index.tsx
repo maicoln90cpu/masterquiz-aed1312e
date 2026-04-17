@@ -9,6 +9,7 @@ import { useLandingPlans } from "@/hooks/useLandingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
+import { MobileStickyCTA } from "@/components/landing/MobileStickyCTA";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 // Lazy loaded components
 import { 
