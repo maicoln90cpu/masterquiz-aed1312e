@@ -538,6 +538,15 @@ const Analytics = () => {
                 <CardHeader className="pb-3">
                   <CardDescription>{t('analytics.uniqueSessions')}</CardDescription>
                   <CardTitle className="text-4xl">{stats.uniqueSessions.toLocaleString()}</CardTitle>
+                  {stats.blockedStarts > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/precos')}
+                      className="mt-1 text-xs text-warning hover:underline text-left"
+                    >
+                      + {stats.blockedStarts} bloqueadas — fazer upgrade
+                    </button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <Users className="h-8 w-8 text-primary opacity-20" />
@@ -567,6 +576,15 @@ const Analytics = () => {
                       ? ((stats.totalCompletions / stats.totalStarts) * 100).toFixed(1)
                       : 0}%
                   </CardTitle>
+                  {stats.blockedCompletions > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/precos')}
+                      className="mt-1 text-xs text-warning hover:underline text-left"
+                    >
+                      + {stats.blockedCompletions} conclusões bloqueadas
+                    </button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2">
