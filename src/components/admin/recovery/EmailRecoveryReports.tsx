@@ -457,7 +457,7 @@ export function EmailRecoveryReports() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="icon" onClick={() => { setLoading(true); load(); }}>
+              <Button variant="outline" size="icon" onClick={() => load(period)} disabled={loading}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
