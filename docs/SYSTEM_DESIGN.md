@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 16 de Abril de 2026 | Versão 2.42.0
+> Última atualização: 17 de Abril de 2026 | Versão 2.42.0
 
 ---
 
@@ -21,7 +21,83 @@
 
 ---
 
-## 🎯 Visão Geral da Arquitetura
+## 🗺️ Diagrama Mermaid — Visão Macro
+
+```mermaid
+graph TB
+    subgraph "Visitantes Públicos"
+        V[Visitor]
+        R[Respondent]
+    end
+
+    subgraph "Frontend React 18 + Vite"
+        LP["/ Landing A/B"]
+        CMP["/compare ⭐ v2.42"]
+        BLG["/blog"]
+        QV["/q/:slug QuizView"]
+        AUTH["/login Auth"]
+        DASH[Dashboard]
+        EDT[CreateQuiz Editor]
+        CRM[CRM Kanban]
+        ANL[Analytics]
+        ADM[Admin Panel - 6 abas]
+    end
+
+    subgraph "Supabase Backend"
+        SBA[Auth - JWT]
+        DB[("PostgreSQL<br/>68 tabelas + RLS")]
+        EF["Edge Functions<br/>64 Deno funcs"]
+        STG[Storage quiz-media]
+    end
+
+    subgraph "Integrações Externas"
+        KW[Kiwify - Pagamento]
+        BUN[Bunny CDN - Vídeo]
+        EVO[Evolution API - WhatsApp]
+        EGI[E-goi - Email Bulk]
+        GMI[Gemini - IA]
+        GTM[Google Tag Manager]
+    end
+
+    V --> LP
+    V --> CMP
+    V --> BLG
+    R --> QV
+
+    LP --> AUTH
+    CMP --> AUTH
+    AUTH --> SBA
+    SBA --> DASH
+
+    DASH --> EDT
+    DASH --> CRM
+    DASH --> ANL
+    DASH --> ADM
+
+    EDT -- "save-quiz-draft" --> EF
+    EDT -- "generate-quiz-ai" --> EF
+    EF --> GMI
+
+    QV -- "save-quiz-response" --> EF
+    QV -- "track-quiz-analytics" --> EF
+    EF --> DB
+
+    CRM --> DB
+    ANL --> DB
+    ADM --> DB
+    ADM -- "growth-metrics" --> EF
+
+    EF -- "kiwify-webhook" --> KW
+    EF -- "send-whatsapp-recovery" --> EVO
+    EF -- "send-blog-digest" --> EGI
+    EDT -- "bunny-upload-video" --> BUN
+    QV -- "pushGTMEvent" --> GTM
+```
+
+> **Como ler:** Visitantes públicos chegam pela landing `/`, `/compare` ou `/blog`. Após autenticação, criadores acessam o Dashboard e seus 4 módulos (Editor, CRM, Analytics, Admin). Toda comunicação com banco e integrações externas passa por Edge Functions Deno.
+
+---
+
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐

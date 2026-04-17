@@ -1,7 +1,7 @@
 # 📋 ADR — Architecture Decision Records
 
 > Registro de decisões arquiteturais do MasterQuiz
-> Versão 2.42.0 | 16 de Abril de 2026
+> Versão 2.42.0 | 17 de Abril de 2026
 
 ---
 
@@ -158,6 +158,29 @@
 **Consequências:** Zero overhead de queries, dados sempre consistentes com o schema real, mas exige atualização manual do catálogo quando tabelas/triggers mudam.
 
 ---
+
+## ADR-015: Página `/compare` Estática para SEO + Ads
+
+**Data:** Abril 2026 (v2.42.0)  
+**Status:** Aceito  
+**Contexto:** Usuários pesquisam por "MasterQuiz vs InLead" e variantes. Precisamos de uma página comparativa otimizada para SEO orgânico e como landing para campanhas pagas (Google Ads), sem dependência do CMS de blog.  
+**Decisão:** Criar `/compare` como página React estática, com conteúdo hardcoded em `src/data/compareContent.ts` (tabela 18×4 + blocos vs InLead), JSON-LD Schema.org `Product`+`Offer` injetado via hook `useDocumentMeta`, e entrada no sitemap dinâmico (`blog-sitemap` Edge Function).  
+**Alternativas rejeitadas:** (1) Post de blog comum — perde flexibilidade de layout (tabela complexa) e dilui autoridade do domínio em comparações; (2) CMS dedicado para landings — over-engineering para 1 página; (3) Página em landing externa (Unbounce/etc) — perde integração com auth/i18n e adiciona custo recorrente.  
+**Consequências:** Controle total sobre layout/SEO, atualização via deploy (versionado em git), JSON-LD reutilizável via `buildCompareJsonLd()`, mas conteúdo da tabela exige PR para mudanças (não editável pelo admin).
+
+---
+
+## ADR-016: A/B Test no CTA da `/compare` via `landing_ab_tests`
+
+**Data:** Abril 2026 (v2.42.0)  
+**Status:** Aceito  
+**Contexto:** O CTA final da página `/compare` é o ponto de conversão crítico. Precisamos validar empiricamente qual texto gera mais cliques: "Criar conta grátis" (foco no preço) vs "Testar 7 dias grátis" (foco no risco zero).  
+**Decisão:** Reutilizar a infraestrutura existente de A/B test (`landing_ab_tests` + componentes `<ABTestTracker>`/`<ABTestVariant>`) com `target_element='compare_cta_final'`, traffic_split 50/50, conversion_type `signup`. Sessões registradas em `landing_ab_sessions` (UPDATE restrito a 24h via RLS).  
+**Alternativas rejeitadas:** (1) Google Optimize — descontinuado; (2) PostHog Experiments — adiciona dependência externa para 1 teste; (3) A/B server-side via Edge Function — overhead desnecessário (decisão é puramente visual); (4) Hardcoded fallback sem teste — perde aprendizado contínuo.  
+**Consequências:** Aproveitamento da infra existente (zero código novo de A/B), métricas no mesmo dashboard de outros testes de landing, fallback gracioso para texto i18n se a tabela estiver desativada, mas exige migração SQL para criar/desativar testes (não há UI admin ainda — ver pendências).
+
+---
+
 
 ## 📚 Documentação Relacionada
 

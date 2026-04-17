@@ -1,7 +1,7 @@
 # 🔒 SECURITY — Práticas de Segurança
 
 > MasterQuiz — Guia de segurança, RLS, rate limiting e audit
-> Versão 2.42.0 | 16 de Abril de 2026
+> Versão 2.42.0 | 17 de Abril de 2026
 
 ---
 
