@@ -116,9 +116,14 @@ export const useResourceLimits = () => {
         responseCount = count || 0;
       }
 
-      const quizLimit = plan?.quiz_limit || 3;
-      const responseLimit = plan?.response_limit || 100;
-      const leadLimit = plan?.lead_limit || 1000;
+      // ✅ Sem fallback hardcoded: subscription_plans é a fonte única de verdade.
+      // Se plano não existir/desativado, retorna 0 (bloqueia ação) e loga warning.
+      if (!plan) {
+        console.warn(`[useResourceLimits] Plano "${subscription.plan_type}" não encontrado em subscription_plans (is_active=true). Limites serão 0.`);
+      }
+      const quizLimit = plan?.quiz_limit ?? 0;
+      const responseLimit = plan?.response_limit ?? 0;
+      const leadLimit = plan?.lead_limit ?? 0;
 
       const calculateMetrics = (current: number, limit: number): Omit<ResourceLimit, 'current' | 'limit'> => {
         const percentage = Math.min((current / limit) * 100, 100);
@@ -145,7 +150,7 @@ export const useResourceLimits = () => {
           limit: leadLimit,
           ...calculateMetrics(responseCount, leadLimit)
         },
-        questionsPerQuizLimit: plan?.questions_per_quiz_limit || 10,
+        questionsPerQuizLimit: plan?.questions_per_quiz_limit ?? 0,
         planType: subscription.plan_type
       };
 
