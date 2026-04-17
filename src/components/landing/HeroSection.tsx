@@ -90,9 +90,12 @@ export const HeroSection = () => {
   };
 
   const handleGetStarted = () => {
-    // Track A/B conversion if test is active
+    // Track A/B conversion for legacy + new primary CTA tests
     if (abTest) {
       trackConversion({ testId: abTest.id, conversionType: 'cta_click' });
+    }
+    if (ctaPrimaryTest) {
+      trackConversion({ testId: ctaPrimaryTest.id, conversionType: 'cta_click' });
     }
     
     pushGTMEvent('cta_click', {
