@@ -376,11 +376,14 @@ export function useQuizPersistence({
         logQuizAction("quiz:updated", quiz.id, { title: quiz.title });
 
         // 🎯 GTM: quiz_published — disparado ao publicar um quiz existente
+        // Inclui creation_source para permitir filtros no GTM/Google Ads (manual vs express_auto)
+        const publishCreationSource = quiz.creation_source || (isExpressMode ? 'express_auto' : 'manual');
         pushGTMEvent('quiz_published', {
           quiz_id: quiz.id,
           quiz_title: quiz.title,
           user_id: user.id,
           editor_mode: editorMode,
+          creation_source: publishCreationSource,
         });
 
         // PQL v2: Promoção de estágio + eventos condicionais
@@ -407,65 +410,47 @@ export function useQuizPersistence({
               editor_mode: editorMode,
             });
           } else {
-            // Manual quiz: dispara milestone se stage permite E ainda não disparou (dedup via localStorage)
+            // Manual quiz: dispara SEMPRE que o usuário publica pela 1ª vez (sem filtro de stage)
+            // Dedup global via banco (gtm_event_logs) — funciona em qualquer navegador
             const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
-            const dedupKey = `mq_first_manual_published_${user.id}`;
-            const alreadyFired = localStorage.getItem(dedupKey);
-            if ([...earlyStages, 'construtor'].includes(currentStage) && !alreadyFired) {
+            const { data: alreadyFiredDB } = await supabase
+              .rpc('has_user_fired_event' as any, { _user_id: user.id, _event_name: publishEventName });
+            if (!alreadyFiredDB) {
               pushGTMEvent(publishEventName, {
                 quiz_id: quiz.id,
                 quiz_title: quiz.title,
                 user_id: user.id,
                 publish_source: 'manual',
                 editor_mode: editorMode,
-              });
-              localStorage.setItem(dedupKey, new Date().toISOString());
+              }, { persist: true });
+            }
+
+            // 🎯 NOVO: quiz_real_published — primeira publicação manual real do usuário
+            // Dispara apenas 1x, baseado em contagem real no banco (não localStorage)
+            const { data: realPublishedFired } = await supabase
+              .rpc('has_user_fired_event' as any, { _user_id: user.id, _event_name: 'quiz_real_published' });
+            if (!realPublishedFired) {
+              const { count: manualPublishedCount } = await supabase
+                .from('quizzes')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('is_public', true)
+                .neq('creation_source', 'express_auto');
+              if ((manualPublishedCount ?? 0) >= 1) {
+                pushGTMEvent('quiz_real_published', {
+                  quiz_id: quiz.id,
+                  user_id: user.id,
+                  quiz_title: quiz.title,
+                  creation_source: 'manual',
+                  questions_count: questionCount,
+                  editor_mode: editorMode,
+                }, { persist: true });
+              }
             }
           }
 
           // first_quiz_created — SOMENTE se houve interação real
-          const createEventName = editorMode === 'modern' ? 'first_quiz_createdB' : 'first_quiz_created';
-          const createDedupKey = `mq_first_manual_created_${user.id}`;
-          const createAlreadyFired = localStorage.getItem(createDedupKey);
-          if ([...earlyStages, 'construtor'].includes(currentStage) && hasUserInteracted && !createAlreadyFired) {
-            pushGTMEvent(createEventName, {
-              quiz_id: quiz.id,
-              quiz_title: quiz.title,
-              user_id: user.id,
-              editor_mode: editorMode,
-            });
-            localStorage.setItem(createDedupKey, new Date().toISOString());
-
-            // Promover para engajado se ainda não passou
-            if (currentStage === 'explorador' || currentStage === 'iniciado') {
-              await supabase
-                .from('profiles')
-                .update({ user_stage: 'engajado', stage_updated_at: new Date().toISOString() })
-                .eq('id', user.id)
-                .in('user_stage', ['explorador', 'iniciado']);
-              console.log('🎯 [PQL] User stage upgraded to engajado (UPDATE branch)');
-            }
-          }
-
-          // Promover stage ao publicar
-          if (earlyStages.includes(currentStage) || currentStage === 'construtor') {
-            const targetStage = isExpressQuiz ? 'engajado' : 'construtor';
-            const allowedFrom = isExpressQuiz
-              ? ['explorador', 'iniciado']
-              : ['explorador', 'iniciado', 'engajado'];
-            await supabase
-              .from('profiles')
-              .update({ user_stage: targetStage, stage_updated_at: new Date().toISOString() })
-              .eq('id', user.id)
-              .in('user_stage', allowedFrom);
-            console.log(`🎯 [PQL] User stage upgraded to ${targetStage} (UPDATE branch, express=${isExpressQuiz})`);
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (supabase as any)
-              .from('onboarding_status')
-              .update({ first_quiz_created: true })
-              .eq('id', user.id);
-          }
+...
         } catch (stageErr) {
           console.warn('⚠️ Failed to update user_stage in UPDATE branch:', stageErr);
         }
