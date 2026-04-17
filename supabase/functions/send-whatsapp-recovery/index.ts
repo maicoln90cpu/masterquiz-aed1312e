@@ -45,10 +45,35 @@ Deno.serve(async (req) => {
 
     if (!contact.template_id) await supabase.from('recovery_contacts').update({ template_id: template.id }).eq('id', contact.id);
 
-    const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', contact.user_id).single();
+    const { data: profile } = await supabase.from('profiles').select('full_name, company_slug').eq('id', contact.user_id).single();
     const firstName = profile?.full_name?.split(' ')[0] || 'Usuário';
 
-    const msg = template.message_content
+    // Buscar quiz mais recente NÃO-express do usuário (para {{quiz_titulo}} e {{link}})
+    const { data: latestQuiz } = await supabase
+      .from('quizzes')
+      .select('title, slug')
+      .eq('user_id', contact.user_id)
+      .neq('creation_source', 'express_auto')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const quizTitulo = latestQuiz?.title || 'seu quiz';
+    const quizSlug = latestQuiz?.slug || '';
+    const companySlug = profile?.company_slug || '';
+    const quizLink = contact.custom_link
+      || (companySlug && quizSlug
+        ? `https://masterquiz.com.br/${companySlug}/${quizSlug}`
+        : 'https://masterquiz.com.br/dashboard');
+
+    // NOVAS variáveis (duplas chaves) — aplicadas ANTES das antigas
+    let msg = template.message_content
+      .replace(/\{\{nome\}\}/g, firstName)
+      .replace(/\{\{quiz_titulo\}\}/g, quizTitulo)
+      .replace(/\{\{link\}\}/g, quizLink);
+
+    // ANTIGAS (chave simples) — retrocompat preservada
+    msg = msg
       .replace(/{name}/g, profile?.full_name || 'Usuário')
       .replace(/{first_name}/g, firstName)
       .replace(/{days_inactive}/g, String(days))
