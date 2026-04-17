@@ -360,30 +360,26 @@ Deno.serve(async (req) => {
     }
 
     if (queuedContacts.length > 0) {
-      // Pre-filter: remove users that already have a non-final contact for the same template
-      // (the partial unique index `idx_recovery_contacts_unique_pending` covers active statuses
-      // and doesn't match a simple onConflict target, so we dedupe in-memory).
-      const pairKeys = queuedContacts.map(c => `${c.user_id}|${c.template_id}`);
+      // Pre-filter: the partial unique index `idx_recovery_contacts_unique_pending` is on
+      // (user_id, phone_number) for active statuses. Remove pairs already present.
       const existingPairs = new Set<string>();
+      const userIdsToCheck = Array.from(new Set(queuedContacts.map(c => c.user_id)));
 
-      for (let i = 0; i < queuedContacts.length; i += CHUNK_SIZE) {
-        const chunk = queuedContacts.slice(i, i + CHUNK_SIZE);
-        const userIdsChunk = chunk.map(c => c.user_id);
-        const templateIdsChunk = Array.from(new Set(chunk.map(c => c.template_id)));
+      for (let i = 0; i < userIdsToCheck.length; i += CHUNK_SIZE) {
+        const chunk = userIdsToCheck.slice(i, i + CHUNK_SIZE);
         const { data: existing } = await supabase
           .from('recovery_contacts')
-          .select('user_id, template_id, status')
-          .in('user_id', userIdsChunk)
-          .in('template_id', templateIdsChunk)
+          .select('user_id, phone_number')
+          .in('user_id', chunk)
           .in('status', ['pending', 'sent', 'delivered', 'read', 'responded']);
-        (existing || []).forEach(e => existingPairs.add(`${e.user_id}|${e.template_id}`));
+        (existing || []).forEach(e => existingPairs.add(`${e.user_id}|${e.phone_number}`));
       }
 
       const dedupedContacts = queuedContacts.filter(
-        (c) => !existingPairs.has(`${c.user_id}|${c.template_id}`)
+        (c) => !existingPairs.has(`${c.user_id}|${c.phone_number}`)
       );
 
-      console.log(`Dedup: ${queuedContacts.length} → ${dedupedContacts.length} after removing existing active contacts`);
+      console.log(`Dedup: ${queuedContacts.length} → ${dedupedContacts.length} after removing existing active contacts (by user_id+phone_number)`);
 
       if (dedupedContacts.length > 0) {
         const { error: insertError } = await supabase
@@ -392,7 +388,6 @@ Deno.serve(async (req) => {
         if (insertError) throw insertError;
       }
 
-      // Use deduped count for downstream campaign metrics
       queuedContacts.length = 0;
       queuedContacts.push(...dedupedContacts);
 
