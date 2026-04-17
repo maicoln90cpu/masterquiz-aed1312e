@@ -171,6 +171,17 @@ const Dashboard = () => {
       
       <div className="container mx-auto px-4 py-8">
         <FirstLeadUpgradeBanner />
+
+        {/*
+          Onboarding Progress Card — visível para TODOS os usuários com onboarding incompleto.
+          NÃO voltar a condicionar com cameFromStart: usuários novos vindos do /start
+          são exatamente quem mais precisa do checklist de ativação.
+          O componente se auto-oculta quando isFullyCompleted === true (ver OnboardingProgress.tsx).
+        */}
+        <div className="mb-6">
+          <OnboardingProgress collapsible />
+        </div>
+
         {/* Header */}
         <div id="dashboard-overview" className="mb-6 flex items-center justify-between">
           <h2 className="text-3xl font-bold flex items-center gap-2">
@@ -263,13 +274,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </motion.div>
-        )}
-
-        {/* Onboarding Progress Card — hide for fast-path users */}
-        {!cameFromStart && (
-          <div className="mb-6">
-            <OnboardingProgress collapsible />
-          </div>
         )}
 
         {/* Resource Monitoring Panel */}
