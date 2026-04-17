@@ -320,7 +320,7 @@ Deno.serve(async (req) => {
       }
 
       // --- BLOCO B — NO RESPONSE: quiz publicado há 7+ dias com 0 leads ---
-      if (noResponseTemplates.length > 0 && leadCount === 0) {
+      if (!skipNewBlocksInstitutional && noResponseTemplates.length > 0 && leadCount === 0) {
         const userQuizzes = quizzesByUser.get(profile.id) || [];
         const hasOldActiveQuiz = userQuizzes.some(q => {
           if (q.status !== 'active') return false;
