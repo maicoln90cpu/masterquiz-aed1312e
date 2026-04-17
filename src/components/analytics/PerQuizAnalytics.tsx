@@ -417,8 +417,8 @@ export const PerQuizAnalytics = ({ quizzes, startDate, endDate, period }: PerQui
               {blockedSessions > 0 && (
                 <PlanLimitBlockedBanner
                   blockedCount={blockedSessions}
-                  label="sessões"
-                  context={`(funil baseado em ${visibleSessions} de ${totalSessions})`}
+                  labelKey="sessions"
+                  context={`(${visibleSessions}/${totalSessions})`}
                 />
               )}
               <FunnelChart data={funnelSteps} loading={funnelLoading} />
