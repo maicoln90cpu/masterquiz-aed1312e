@@ -90,7 +90,7 @@ export const InstitutionalDomainsPanel = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5 text-orange-500" />
+            <ShieldAlert className="h-5 w-5 text-warning" />
             <CardTitle>Domínios bloqueados como lead</CardTitle>
           </div>
           <Badge variant="secondary">{activeCount} ativos</Badge>
