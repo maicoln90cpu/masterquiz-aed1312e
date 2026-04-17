@@ -8,6 +8,7 @@ import { LandingQuizDemo } from "./LandingQuizDemo";
 import { BlockIndicators } from "./BlockIndicators";
 import { useLandingContent } from "@/hooks/useLandingContent";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
+import { useLandingCopy } from "@/hooks/useLandingCopy";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 
