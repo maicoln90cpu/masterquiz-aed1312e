@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LandingHeader } from "@/components/landing/LandingHeader";
-import { LandingFooter } from "@/components/landing/LandingFooter";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { buildCompareJsonLd } from "@/lib/structuredData";
 import {
@@ -301,8 +300,6 @@ export default function Compare() {
           </div>
         </section>
       </main>
-
-      <LandingFooter />
     </div>
   );
 }
