@@ -75,7 +75,14 @@ export const GTMDiagnosticTab = () => {
               : <Badge variant="destructive">❌ Problema Detectado</Badge>
             }
             {data?.gtmId && (
-              <span className="text-xs text-muted-foreground font-mono">ID: {data.gtmId}</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                ID: {data.gtmId}
+                {data.gtmSource && (
+                  <Badge variant="outline" className="ml-2 text-[10px]">
+                    {data.gtmSource === 'system' ? 'Sistema (global)' : 'Perfil do admin'}
+                  </Badge>
+                )}
+              </span>
             )}
           </div>
 
