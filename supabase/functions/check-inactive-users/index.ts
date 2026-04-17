@@ -109,42 +109,45 @@ Deno.serve(async (req) => {
 
     const typedSettings = settings as RecoverySettings;
 
-    if (!typedSettings.is_active || !typedSettings.is_connected) {
+    if (!dryRun && (!typedSettings.is_active || !typedSettings.is_connected)) {
       return new Response(
         JSON.stringify({ message: 'Sistema inativo ou desconectado', queued: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verificar horário permitido
-    const now = new Date();
-    const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    const currentTimeMinutes = brasilTime.getHours() * 60 + brasilTime.getMinutes();
+    // Verificar horário permitido (skip em dryRun)
+    let remainingLimit = Number.MAX_SAFE_INTEGER;
+    if (!dryRun) {
+      const now = new Date();
+      const brasilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+      const currentTimeMinutes = brasilTime.getHours() * 60 + brasilTime.getMinutes();
 
-    const [startHour, startMin] = typedSettings.allowed_hours_start.split(':').map(Number);
-    const [endHour, endMin] = typedSettings.allowed_hours_end.split(':').map(Number);
+      const [startHour, startMin] = typedSettings.allowed_hours_start.split(':').map(Number);
+      const [endHour, endMin] = typedSettings.allowed_hours_end.split(':').map(Number);
 
-    if (currentTimeMinutes < startHour * 60 + startMin || currentTimeMinutes > endHour * 60 + endMin) {
-      return new Response(
-        JSON.stringify({ message: 'Fora do horário permitido', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+      if (currentTimeMinutes < startHour * 60 + startMin || currentTimeMinutes > endHour * 60 + endMin) {
+        return new Response(
+          JSON.stringify({ message: 'Fora do horário permitido', queued: 0 }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    // Contar mensagens já enviadas hoje
-    const today = new Date().toISOString().split('T')[0];
-    const { count: sentToday } = await supabase
-      .from('recovery_contacts')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', `${today}T00:00:00`)
-      .in('status', ['sent', 'delivered', 'read', 'responded']);
+      // Contar mensagens já enviadas hoje
+      const today = new Date().toISOString().split('T')[0];
+      const { count: sentToday } = await supabase
+        .from('recovery_contacts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', `${today}T00:00:00`)
+        .in('status', ['sent', 'delivered', 'read', 'responded']);
 
-    const remainingLimit = typedSettings.daily_message_limit - (sentToday || 0);
-    if (remainingLimit <= 0) {
-      return new Response(
-        JSON.stringify({ message: 'Limite diário atingido', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      remainingLimit = typedSettings.daily_message_limit - (sentToday || 0);
+      if (remainingLimit <= 0) {
+        return new Response(
+          JSON.stringify({ message: 'Limite diário atingido', queued: 0 }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // ===== DECISÃO: filtrar por inatividade ou buscar todos? =====
