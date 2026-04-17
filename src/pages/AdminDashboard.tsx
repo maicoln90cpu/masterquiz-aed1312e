@@ -1765,6 +1765,9 @@ export default function AdminDashboard() {
                       <Suspense fallback={<ComponentLoader />}>
                         <BunnyStorageSettings />
                       </Suspense>
+                      <Suspense fallback={<ComponentLoader />}>
+                        <InstitutionalDomainsPanel />
+                      </Suspense>
                     </div>
                   )}
                   {activeTab === 'gtm' && (
