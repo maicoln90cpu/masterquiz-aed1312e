@@ -966,39 +966,38 @@ export function RecoveryCampaigns() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                  <div className="text-center p-2 bg-muted rounded">
+                <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
+                  <div className="text-center p-2 bg-muted rounded" title="Total de contatos da campanha (soma das 6 categorias)">
                     <Users className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
                     <p className="text-lg font-bold">{campaign.total_targets}</p>
                     <p className="text-xs text-muted-foreground">Alvos</p>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Aguardando envio (pending/queued)">
+                    <Clock className="h-4 w-4 mx-auto mb-1 text-amber-500" />
+                    <p className="text-lg font-bold">{campaign.queued_count}</p>
+                    <p className="text-xs text-muted-foreground">Pendentes</p>
+                  </div>
+                  <div className="text-center p-2 bg-muted rounded" title="Enviadas mas sem confirmação de entrega ainda">
                     <Send className="h-4 w-4 mx-auto mb-1 text-blue-500" />
                     <p className="text-lg font-bold">{campaign.sent_count}</p>
                     <p className="text-xs text-muted-foreground">Enviadas</p>
-                    {(campaign as any).globalSent > campaign.sent_count && (
-                      <p className="text-[10px] text-blue-500 mt-0.5">{(campaign as any).globalSent} total template</p>
-                    )}
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Entregues no WhatsApp do destinatário (sem resposta ainda)">
                     <CheckCircle className="h-4 w-4 mx-auto mb-1 text-green-500" />
                     <p className="text-lg font-bold">{campaign.delivered_count}</p>
                     <p className="text-xs text-muted-foreground">Entregues</p>
-                    {(campaign as any).globalDelivered > campaign.delivered_count && (
-                      <p className="text-[10px] text-green-500 mt-0.5">{(campaign as any).globalDelivered} total template</p>
-                    )}
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Destinatário respondeu à mensagem">
                     <Megaphone className="h-4 w-4 mx-auto mb-1 text-purple-500" />
                     <p className="text-lg font-bold">{campaign.responded_count}</p>
                     <p className="text-xs text-muted-foreground">Responderam</p>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Voltaram a usar a plataforma após a mensagem">
                     <Users className="h-4 w-4 mx-auto mb-1 text-emerald-500" />
                     <p className="text-lg font-bold">{campaign.reactivated_count}</p>
                     <p className="text-xs text-muted-foreground">Reativados</p>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted rounded" title="Falhas no envio (número inválido, bloqueio etc.)">
                     <Users className="h-4 w-4 mx-auto mb-1 text-red-500" />
                     <p className="text-lg font-bold">{campaign.failed_count}</p>
                     <p className="text-xs text-muted-foreground">Falhas</p>
