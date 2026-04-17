@@ -39,76 +39,68 @@ export const HeroSection = () => {
   // CMS content with instant fallback
   const { getContent, isLoading: isLoadingContent } = useLandingContent();
   const { isModeB } = useSiteMode();
-  
-  // A/B Testing for CTA (legacy: hero_cta) + new tests (headline, subheadline, primary, secondary)
-  const { 
-    getContentForElement, 
-    getVariantForElement, 
-    getTestByElement, 
-    trackConversion,
-  } = useLandingABTest('hero_cta');
+
+  // Helper centralizado: respeita prioridade A/B ativo > landing_content > fallback
+  const { getCopy, getActiveVariantContent } = useLandingCopy();
+
+  // A/B Testing — apenas para tracking de conversão (texto vem do helper)
+  const { getTestByElement, trackConversion } = useLandingABTest('hero_cta');
 
   // Trigger animations after mount
   useEffect(() => {
-    // Small delay to ensure CSS is ready
     const timer = setTimeout(() => setIsVisible(true), 50);
     return () => clearTimeout(timer);
   }, []);
 
-  // Get A/B test content for CTA
-  const abTestContent = getContentForElement('hero_cta');
-  const abVariant = getVariantForElement('hero_cta');
-  const abTest = getTestByElement('hero_cta');
-
-  // New A/B tests (headline, subheadline, CTA primary text/style, CTA secondary text)
-  const headlineAB = getContentForElement('hero_headline');
-  const subheadlineAB = getContentForElement('hero_subheadline');
-  const ctaPrimaryAB = getContentForElement('hero_cta_primary');
-  const ctaSecondaryAB = getContentForElement('hero_cta_secondary');
+  // Testes (para tracking de conversão no clique)
+  const heroCtaTest = getTestByElement('hero_cta'); // legado
   const ctaPrimaryTest = getTestByElement('hero_cta_primary');
   const ctaSecondaryTest = getTestByElement('hero_cta_secondary');
 
-  // Helper to get content with instant fallback
+  // Variante ativa do CTA primário (para pegar o `style`)
+  const ctaPrimaryVariant =
+    getActiveVariantContent('hero_cta_primary') ||
+    getActiveVariantContent('hero_cta');
+
+  // Helper antigo para bullets/badge/trust (sem A/B test associado)
   const c = (key: keyof typeof FALLBACK_CONTENT, i18nKey: string) => {
     const dbValue = getContent(key);
     if (dbValue && dbValue.trim() !== '') return dbValue;
-    // Use fallback first, then i18n (avoids loading state)
     return FALLBACK_CONTENT[key] || t(i18nKey);
   };
 
-  // Get CTA text - priority: A/B test (new) > A/B test (legacy) > CMS > fallback
-  const getCtaText = () => {
-    if (ctaPrimaryAB?.text) return ctaPrimaryAB.text;
-    if (abTestContent?.text) return abTestContent.text;
-    if (isModeB) return 'Escolher meu plano';
-    return c('hero_cta_primary', 'landing.hero.ctaPrimary');
-  };
+  // CTAs com prioridade unificada
+  const ctaPrimaryText = isModeB
+    ? 'Escolher meu plano'
+    : getCopy('hero_cta_primary', 'hero_cta_primary', FALLBACK_CONTENT.hero_cta_primary);
 
-  const getCtaSecondaryText = () => {
-    if (ctaSecondaryAB?.text) return ctaSecondaryAB.text;
-    if (isModeB) return 'Ver planos';
-    return c('hero_cta_secondary', 'landing.hero.ctaSecondary');
-  };
+  const ctaSecondaryText = isModeB
+    ? 'Ver planos'
+    : getCopy('hero_cta_secondary', 'hero_cta_secondary', FALLBACK_CONTENT.hero_cta_secondary);
+
+  // Headline e subheadline com prioridade unificada
+  const headlineText = getCopy('hero_headline', 'hero_headline_main', FALLBACK_CONTENT.hero_headline_main);
+  const subheadlineText = getCopy('hero_subheadline', 'hero_subheadline', FALLBACK_CONTENT.hero_subheadline);
+  // A headline secundária só aparece quando NÃO há A/B ativo de headline
+  // (evita duplicar mensagem quando o teste sobrescreve a principal).
+  const showHeadlineSub = !getActiveVariantContent('hero_headline');
 
   const handleGetStarted = () => {
-    // Track A/B conversion for legacy + new primary CTA tests
-    if (abTest) {
-      trackConversion({ testId: abTest.id, conversionType: 'cta_click' });
+    if (heroCtaTest?.is_active) {
+      trackConversion({ testId: heroCtaTest.id, conversionType: 'cta_click' });
     }
-    if (ctaPrimaryTest) {
+    if (ctaPrimaryTest?.is_active) {
       trackConversion({ testId: ctaPrimaryTest.id, conversionType: 'cta_click' });
     }
-    
     pushGTMEvent('cta_click', {
       cta_location: 'hero',
       cta_text: 'start_free',
-      ab_variant: abVariant || 'none',
     });
     navigate(isModeB ? '/precos' : '/login');
   };
 
   const handleDemo = () => {
-    if (ctaSecondaryTest) {
+    if (ctaSecondaryTest?.is_active) {
       trackConversion({ testId: ctaSecondaryTest.id, conversionType: 'cta_click' });
     }
     pushGTMEvent('cta_click', {
@@ -118,9 +110,9 @@ export const HeroSection = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Get CTA style from A/B test (new takes precedence)
+  // Estilo do CTA vem da variante ativa (se houver)
   const getCtaStyle = () => {
-    if (ctaPrimaryAB?.style === 'gradient' || abTestContent?.style === 'gradient') {
+    if (ctaPrimaryVariant?.style === 'gradient') {
       return 'bg-gradient-to-r from-primary to-accent text-primary-foreground';
     }
     return '';
