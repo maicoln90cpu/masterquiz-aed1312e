@@ -989,6 +989,15 @@ export function RecoveryCampaigns() {
                     <span>Concluída: {new Date(campaign.completed_at).toLocaleDateString('pt-BR')}</span>
                   )}
                 </div>
+
+                <CampaignRecipientsPanel
+                  campaignId={campaign.id}
+                  campaignName={campaign.name}
+                  templateId={campaign.template_id}
+                  status={campaign.status}
+                  isAutomatic={campaign.is_automatic}
+                  onChanged={loadData}
+                />
               </CardContent>
             </Card>
           ))}
