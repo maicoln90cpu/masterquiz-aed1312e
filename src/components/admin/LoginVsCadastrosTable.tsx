@@ -98,7 +98,9 @@ export function LoginVsCadastrosTable() {
           <Users className="h-5 w-5 text-primary" />
           <CardTitle className="text-sm">Logins vs Cadastros — Últimos 30 dias</CardTitle>
         </div>
-        <CardDescription>Compara quantos se cadastraram vs quantos voltaram a logar por dia</CardDescription>
+        <CardDescription>
+          Cadastros = usuários reais (auth + perfil ativo). Compara quantos voltaram a logar por dia.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary cards */}

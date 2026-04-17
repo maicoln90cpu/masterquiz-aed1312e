@@ -168,7 +168,7 @@ function SectionA({ data }: { data: GrowthData['sectionA'] }) {
         <MetricCard
           title="Total Cadastrados"
           value={total}
-          subtitle={Object.entries(data.planCounts).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+          subtitle={`Usuários reais (auth + perfil ativo) · ${Object.entries(data.planCounts).map(([k, v]) => `${k}: ${v}`).join(' · ')}`}
           icon={Users}
           trend={data.newUsers7d}
           trendLabel="últimos 7d"
