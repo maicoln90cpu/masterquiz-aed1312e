@@ -984,6 +984,39 @@ export type Database = {
         }
         Relationships: []
       }
+      institutional_email_domains: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          domain: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          reason: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          domain: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          reason?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          reason?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       integration_logs: {
         Row: {
           action: string
