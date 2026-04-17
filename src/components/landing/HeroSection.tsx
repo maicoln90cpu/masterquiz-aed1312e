@@ -107,6 +107,9 @@ export const HeroSection = () => {
   };
 
   const handleDemo = () => {
+    if (ctaSecondaryTest) {
+      trackConversion({ testId: ctaSecondaryTest.id, conversionType: 'cta_click' });
+    }
     pushGTMEvent('cta_click', {
       cta_location: 'hero',
       cta_text: 'view_demo',
@@ -114,9 +117,9 @@ export const HeroSection = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Get CTA style from A/B test
+  // Get CTA style from A/B test (new takes precedence)
   const getCtaStyle = () => {
-    if (abTestContent?.style === 'gradient') {
+    if (ctaPrimaryAB?.style === 'gradient' || abTestContent?.style === 'gradient') {
       return 'bg-gradient-to-r from-primary to-accent text-primary-foreground';
     }
     return '';
