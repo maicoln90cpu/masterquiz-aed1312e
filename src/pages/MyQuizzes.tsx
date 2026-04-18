@@ -59,7 +59,9 @@ const MyQuizzes = () => {
   const { data: allTags = [] } = useTagsData();
   const deleteQuizMutation = useDeleteQuiz();
   const duplicateQuizMutation = useDuplicateQuiz();
-  const { generateTestLead, isGenerating: isGeneratingTestLead } = useTestLead();
+  // Test lead dialog state (substitui chamada direta — Fase G: agora obriga email/whatsapp)
+  const [testLeadDialogOpen, setTestLeadDialogOpen] = useState(false);
+  const [testLeadQuizId, setTestLeadQuizId] = useState<string | undefined>(undefined);
 
   // Local state
   const [searchQuery, setSearchQuery] = useState("");
