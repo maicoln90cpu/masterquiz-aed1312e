@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, FlaskConical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useTestLead } from '@/hooks/useTestLead';
+import { TestLeadDialog } from './TestLeadDialog';
 
 interface EmptyStateProps {
   quizzes: { id: string; title: string }[];
@@ -10,7 +11,7 @@ interface EmptyStateProps {
 
 export const CRMEmptyState = ({ quizzes }: EmptyStateProps) => {
   const { t } = useTranslation();
-  const { generateTestLead, isGenerating } = useTestLead();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <Card className="p-8 text-center border-dashed">
@@ -23,17 +24,18 @@ export const CRMEmptyState = ({ quizzes }: EmptyStateProps) => {
           </p>
         </div>
         {quizzes.length > 0 && (
-          <Button 
-            onClick={() => generateTestLead(quizzes[0].id)}
-            disabled={isGenerating}
-            className="gap-2"
-          >
-            <FlaskConical className="h-4 w-4" />
-            {isGenerating 
-              ? t('common.loading', 'Carregando...') 
-              : t('crm.generateTestLead', 'Gerar Lead de Teste')
-            }
-          </Button>
+          <>
+            <Button onClick={() => setDialogOpen(true)} className="gap-2">
+              <FlaskConical className="h-4 w-4" />
+              {t('crm.generateTestLead', 'Gerar Lead de Teste')}
+            </Button>
+            <TestLeadDialog
+              open={dialogOpen}
+              onOpenChange={setDialogOpen}
+              quizzes={quizzes}
+              defaultQuizId={quizzes[0]?.id}
+            />
+          </>
         )}
       </div>
     </Card>
