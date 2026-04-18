@@ -23,6 +23,7 @@ import { QuestionsList } from "@/components/quiz/QuestionsList";
 import { AppearanceConfigStep } from "@/components/quiz/AppearanceConfigStep";
 import { VisitorFormConfigStep } from "@/components/quiz/VisitorFormConfigStep";
 import { ResultsConfigStep } from "@/components/quiz/ResultsConfigStep";
+import { EditorDataCollectionStep, EditorResultsStep } from "@/components/quiz/EditorFunnelSteps";
 import { QuizTemplateSelector } from "@/components/quiz/QuizTemplateSelector";
 import { AIQuizGenerator } from "@/components/quiz/AIQuizGenerator";
 import { UndoRedoControls } from "@/components/quiz/UndoRedoControls";
