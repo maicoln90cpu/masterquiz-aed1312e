@@ -66,6 +66,11 @@ export default tseslint.config(
       // Sem imports duplicados
       "import/no-duplicates": "warn",
 
+      // 🚫 P5: console.log/warn/error → use logger de @/lib/logger
+      // Permitido apenas em logger.ts, gtmLogger.ts, errorCapture.ts (helpers de baixo nível).
+      // Nível: warn (limpeza incremental — 105 arquivos legados).
+      "no-console": ["warn", { allow: ["info"] }],
+
       // 🚫 Proteção: nunca push direto no dataLayer fora de gtmLogger.ts
       // Use pushGTMEvent() de @/lib/gtmLogger para garantir persistência em gtm_event_logs
       "no-restricted-syntax": [
@@ -85,11 +90,36 @@ export default tseslint.config(
           "message": "🚫 Não use navigator.sendBeacon: Supabase Edge Functions exigem header `apikey` que sendBeacon não envia. Use fetch(url, { method:'POST', keepalive:true, headers:{ apikey, Authorization } })."
         }
       ],
+      // ⚠️ P4 (auth.getUser direto) é validado via teste de baseline em
+      // src/__tests__/contracts/no-direct-auth-getuser.test.ts (não como regra lint
+      // para evitar quebrar build de 172 arquivos legados).
     },
   },
-  // Exceção: o próprio helper precisa fazer o push real
+  // ⚠️ P5: exceção no-console — helpers de logging precisam usar console nativo
+  {
+    files: [
+      "src/lib/logger.ts",
+      "src/lib/gtmLogger.ts",
+      "src/lib/errorCapture.ts",
+    ],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  // Exceção: gtmLogger faz dataLayer.push real + auth.getUser para enriquecer evento
   {
     files: ["src/lib/gtmLogger.ts"],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
+  // ⚠️ P4: exceção auth.getUser — AuthContext e o próprio hook precisam buscar o user real.
+  // Edge functions / supabase client wrapper também são fontes legítimas.
+  {
+    files: [
+      "src/contexts/AuthContext.tsx",
+      "src/hooks/useCurrentUser.ts",
+    ],
     rules: {
       "no-restricted-syntax": "off",
     },
@@ -188,7 +218,7 @@ export default tseslint.config(
           "message": "🚫 Não use navigator.sendBeacon. Use fetch(url,{method:'POST',keepalive:true,headers:{apikey,Authorization}}) — Edge Functions exigem apikey."
         },
         {
-          // Detecta literais de objeto contendo chaves de colunas ICP protegidas
+          // 🚫 P2: Detecta literais de objeto contendo chaves de colunas ICP protegidas
           // (cobre .update({...}) e .insert({...}) em qualquer .from('profiles')).
           "selector": "Property[key.name=/^(quiz_shared_count|paywall_hit_count|upgrade_clicked_count|editor_sessions_count|crm_interactions_count|ai_used_on_real_quiz|plan_limit_hit_type|landing_variant_seen|first_lead_received_at|form_collection_configured_at)$/]",
           "message": "🚫 Não escreva diretamente em colunas ICP de profiles. Use incrementProfileCounter() / setProfileFirstText() / setProfileFlagTrue() / setProfileFirstTimestamp() de @/lib/icpTracking — RPCs SECURITY DEFINER atômicos. Veja mem://features/icp-tracking."
