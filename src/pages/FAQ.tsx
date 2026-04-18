@@ -26,6 +26,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { LandingHeader } from '@/components/landing/LandingHeader';
 import logo from '@/assets/logo.png';
 
 // Imagens reais do sistema
@@ -192,33 +193,11 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate('/')}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div 
-              className="flex items-center gap-2 cursor-pointer"
-              onClick={() => navigate('/')}
-            >
-              <img src={logo} alt="MasterQuiz" className="h-8 w-8" />
-              <span className="text-xl font-bold">MasterQuiz</span>
-            </div>
-          </div>
-          <Button onClick={() => navigate('/login')}>
-            {t('faqPage.header.accessPlatform')}
-          </Button>
-        </div>
-      </header>
+      {/* Header global da landing — navegação cross-page consistente */}
+      <LandingHeader />
 
       {/* Hero */}
-      <section className="py-16 bg-gradient-to-b from-primary/5 to-background">
+      <section className="pt-24 pb-16 bg-gradient-to-b from-primary/5 to-background">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary mb-6">
             <HelpCircle className="h-5 w-5" />
