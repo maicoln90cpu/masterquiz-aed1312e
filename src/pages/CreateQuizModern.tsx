@@ -721,49 +721,31 @@ const CreateQuizModern = () => {
             />
           )}
 
-          {/* STEP 4: Coleta de Dados */}
+          {/* STEP 4: Coleta de Dados (compartilhado com Classic) */}
           {step === 4 && !isExpressMode && (
-            <>
-              {!appearanceState.showResults && (
-                <Alert className="mb-4 border-blue-500/50 bg-blue-500/10">
-                  <AlertTriangle className="h-4 w-4 text-blue-500" />
-                  <AlertDescription className="text-sm">
-                    <strong>Coleta automática desativada:</strong> Você optou pelo formato funil (sem resultados). 
-                    A coleta de dados foi automaticamente desativada. Caso queira coletar dados, altere o formato na Etapa 1.
-                  </AlertDescription>
-                </Alert>
-              )}
-              <VisitorFormConfigStep
-                collectionTiming={collectionTiming as 'before' | 'after' | 'none'}
-                onCollectionTimingChange={(v) => updateFormConfig({ collectionTiming: v })}
-                collectName={collectName}
-                onCollectNameChange={(v) => updateFormConfig({ collectName: v })}
-                collectEmail={collectEmail}
-                onCollectEmailChange={(v) => updateFormConfig({ collectEmail: v })}
-                collectWhatsapp={collectWhatsapp}
-                onCollectWhatsappChange={(v) => updateFormConfig({ collectWhatsapp: v })}
-              />
-            </>
+            <EditorDataCollectionStep
+              showResults={appearanceState.showResults}
+              onBackToQuestions={() => updateEditor({ step: 3 })}
+              collectionTiming={collectionTiming as 'before' | 'after' | 'none'}
+              onCollectionTimingChange={(v) => updateFormConfig({ collectionTiming: v })}
+              collectName={collectName}
+              onCollectNameChange={(v) => updateFormConfig({ collectName: v })}
+              collectEmail={collectEmail}
+              onCollectEmailChange={(v) => updateFormConfig({ collectEmail: v })}
+              collectWhatsapp={collectWhatsapp}
+              onCollectWhatsappChange={(v) => updateFormConfig({ collectWhatsapp: v })}
+            />
           )}
 
-          {/* STEP 5: Resultados */}
+          {/* STEP 5: Resultados (compartilhado com Classic) */}
           {step === 5 && !isExpressMode && (
-            <>
-              {!appearanceState.showResults && (
-                <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  <AlertDescription className="text-sm">
-                    <strong>Resultados desativados:</strong> Você optou pelo formato funil.
-                    Para usar estas configurações, altere o formato na Etapa 1.
-                  </AlertDescription>
-                </Alert>
-              )}
-              <ResultsConfigStep
-                quizId={quizId || undefined}
-                deliveryTiming={deliveryTiming}
-                onDeliveryTimingChange={(v) => updateFormConfig({ deliveryTiming: v })}
-              />
-            </>
+            <EditorResultsStep
+              showResults={appearanceState.showResults}
+              onBackToQuestions={() => updateEditor({ step: 3 })}
+              quizId={quizId || undefined}
+              deliveryTiming={deliveryTiming}
+              onDeliveryTimingChange={(v) => updateFormConfig({ deliveryTiming: v })}
+            />
           )}
         </div>
         )}
