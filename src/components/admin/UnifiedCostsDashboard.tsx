@@ -271,32 +271,33 @@ export function UnifiedCostsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead className="text-right">Gerações</TableHead>
-                  <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className="text-right">Custo (USD)</TableHead>
-                  <TableHead className="text-right">% do Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {modelBreakdown.map((model) => {
-                  const totalModelCost = modelBreakdown.reduce((s, m) => s + m.cost, 0);
-                  const pct = totalModelCost > 0 ? (model.cost / totalModelCost) * 100 : 0;
-                  return (
-                    <TableRow key={model.name}>
-                      <TableCell className="font-medium">{model.name}</TableCell>
-                      <TableCell className="text-right">{model.count}</TableCell>
-                      <TableCell className="text-right">{formatTokens(model.tokens)}</TableCell>
-                      <TableCell className="text-right font-medium">${model.cost.toFixed(4)}</TableCell>
-                      <TableCell className="text-right"><Badge variant="secondary">{pct.toFixed(1)}%</Badge></TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <DataTable
+            data={modelBreakdown}
+            columns={[
+              { key: 'name', label: 'Modelo', sortable: true, searchable: true, filterable: true, className: 'font-medium' },
+              { key: 'count', label: 'Gerações', sortable: true, align: 'right' },
+              { key: 'tokens', label: 'Tokens', sortable: true, align: 'right', render: (m) => formatTokens(m.tokens) },
+              { key: 'cost', label: 'Custo (USD)', sortable: true, align: 'right', render: (m) => `$${m.cost.toFixed(4)}` },
+              {
+                key: 'pct', label: '% do Total', align: 'right',
+                accessor: (m) => {
+                  const total = modelBreakdown.reduce((s, x) => s + x.cost, 0);
+                  return total > 0 ? (m.cost / total) * 100 : 0;
+                },
+                render: (m) => {
+                  const total = modelBreakdown.reduce((s, x) => s + x.cost, 0);
+                  const pct = total > 0 ? (m.cost / total) * 100 : 0;
+                  return <Badge variant="secondary">{pct.toFixed(1)}%</Badge>;
+                },
+              },
+            ]}
+            defaultSortKey="cost"
+            defaultSortDirection="desc"
+            pageSize={10}
+            searchPlaceholder="Buscar modelo…"
+            exportCsv="quiz-ai-by-model"
+            rowKey={(m) => m.name}
+          />
           </CardContent>
         </Card>
       )}
