@@ -1,15 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchFeatureUsage } from '@/services/systemMonitorService';
-import { useTableSort } from '@/hooks/useTableSort';
-import { usePagination } from '@/hooks/usePagination';
-import { SortableTableHeader } from './SortableTableHeader';
-import { PaginationControls } from './PaginationControls';
+import { DataTable, type DataTableColumn } from './DataTable';
 
 interface FeatureRow {
   event_name: string;
@@ -33,12 +28,22 @@ const FeatureUsagePanel = () => {
   });
 
   const features: FeatureRow[] = useMemo(() => data ?? [], [data]);
-  const { sortConfig, handleSort, sortedData } = useTableSort<FeatureRow>(features, 'count', 'desc');
-  const { paginatedData, currentPage, totalPages, totalItems, startIndex, setCurrentPage } = usePagination(sortedData, 10);
+  const chartData = useMemo(
+    () => [...features].sort((a, b) => b.count - a.count).slice(0, 10).map(f => ({ name: f.event_name, total: f.count })),
+    [features]
+  );
 
-  const chartData = useMemo(() => (features.slice(0, 10).map(f => ({ name: f.event_name, total: f.count }))), [features]);
-
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
+  const columns: DataTableColumn<FeatureRow>[] = [
+    { key: 'event_name', label: 'Evento', sortable: true, searchable: true, filterable: true, className: 'font-mono text-xs' },
+    {
+      key: 'count',
+      label: 'Total',
+      sortable: true,
+      align: 'right',
+      render: (r) => <Badge variant="secondary">{r.count}</Badge>,
+    },
+    { key: 'last_seen', label: 'Última Ocorrência', sortable: true, format: 'datetime', className: 'text-sm text-muted-foreground' },
+  ];
 
   return (
     <div className="space-y-4 p-4">
@@ -62,43 +67,17 @@ const FeatureUsagePanel = () => {
         </ResponsiveContainer>
       )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">#</TableHead>
-            <SortableTableHeader<FeatureRow> label="Evento" sortKey="event_name" currentSort={sortConfig} onSort={handleSort} />
-            <SortableTableHeader<FeatureRow> label="Total" sortKey="count" currentSort={sortConfig} onSort={handleSort} />
-            <SortableTableHeader<FeatureRow> label="Última Ocorrência" sortKey="last_seen" currentSort={sortConfig} onSort={handleSort} />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.map((f, i) => (
-            <TableRow key={f.event_name}>
-              <TableCell className="text-muted-foreground">{startIndex + i + 1}</TableCell>
-              <TableCell className="font-mono text-xs">{f.event_name}</TableCell>
-              <TableCell>
-                <Badge variant="secondary">{f.count}</Badge>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {new Date(f.last_seen).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-              </TableCell>
-            </TableRow>
-          ))}
-          {paginatedData.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground py-8">Nenhum evento registrado no período.</TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        startIndex={startIndex}
-        pageSize={10}
-        onPageChange={setCurrentPage}
+      <DataTable<FeatureRow>
+        data={features}
+        columns={columns}
+        defaultSortKey="count"
+        defaultSortDirection="desc"
+        pageSize={15}
+        searchPlaceholder="Buscar evento…"
+        exportCsv="feature-usage"
+        isLoading={isLoading}
+        emptyMessage="Nenhum evento registrado no período."
+        rowKey={(r) => r.event_name}
       />
     </div>
   );

@@ -1,14 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { fetchPerformanceLogs, type PerformanceRow } from '@/services/systemMonitorService';
-import { useTableSort } from '@/hooks/useTableSort';
-import { usePagination } from '@/hooks/usePagination';
-import { SortableTableHeader } from './SortableTableHeader';
-import { PaginationControls } from './PaginationControls';
+import { fetchPerformanceLogs } from '@/services/systemMonitorService';
+import { DataTable, type DataTableColumn } from './DataTable';
 
 interface AggregatedOp {
   operation: string;
@@ -45,7 +40,7 @@ const PerformancePanel = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const aggregated = useMemo(() => {
+  const aggregated = useMemo<AggregatedOp[]>(() => {
     const map = new Map<string, { type: string; durations: number[] }>();
     for (const row of data ?? []) {
       const existing = map.get(row.operation_name);
@@ -65,14 +60,33 @@ const PerformancePanel = () => {
         maxMs,
         executions: v.durations.length,
         status: getStatus(avgMs),
-      } as AggregatedOp;
+      };
     });
   }, [data]);
 
-  const { sortConfig, handleSort, sortedData } = useTableSort<AggregatedOp>(aggregated, 'avgMs', 'desc');
-  const { paginatedData, currentPage, totalPages, totalItems, startIndex, setCurrentPage } = usePagination(sortedData, 10);
-
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
+  const columns: DataTableColumn<AggregatedOp>[] = [
+    { key: 'operation', label: 'Operação', sortable: true, searchable: true, className: 'font-mono text-xs' },
+    {
+      key: 'type',
+      label: 'Tipo',
+      sortable: true,
+      filterable: true,
+      render: (op) => <Badge variant="outline" className="text-xs">{op.type}</Badge>,
+    },
+    { key: 'avgMs', label: 'Média (ms)', sortable: true, align: 'right', className: 'font-mono' },
+    { key: 'maxMs', label: 'Máx (ms)', sortable: true, align: 'right', className: 'font-mono' },
+    { key: 'executions', label: 'Execuções', sortable: true, align: 'right' },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      filterable: true,
+      render: (op) => {
+        const badge = statusBadge[op.status];
+        return <Badge variant={badge.variant}>{badge.label}</Badge>;
+      },
+    },
+  ];
 
   return (
     <div className="space-y-4 p-4">
@@ -84,42 +98,18 @@ const PerformancePanel = () => {
         ))}
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">#</TableHead>
-            <SortableTableHeader<AggregatedOp> label="Operação" sortKey="operation" currentSort={sortConfig} onSort={handleSort} />
-            <SortableTableHeader<AggregatedOp> label="Tipo" sortKey="type" currentSort={sortConfig} onSort={handleSort} />
-            <SortableTableHeader<AggregatedOp> label="Média (ms)" sortKey="avgMs" currentSort={sortConfig} onSort={handleSort} />
-            <SortableTableHeader<AggregatedOp> label="Máx (ms)" sortKey="maxMs" currentSort={sortConfig} onSort={handleSort} />
-            <SortableTableHeader<AggregatedOp> label="Execuções" sortKey="executions" currentSort={sortConfig} onSort={handleSort} />
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.map((op, i) => {
-            const badge = statusBadge[op.status];
-            return (
-              <TableRow key={op.operation}>
-                <TableCell className="text-muted-foreground">{startIndex + i + 1}</TableCell>
-                <TableCell className="font-mono text-xs">{op.operation}</TableCell>
-                <TableCell><Badge variant="outline" className="text-xs">{op.type}</Badge></TableCell>
-                <TableCell className="font-mono">{op.avgMs}</TableCell>
-                <TableCell className="font-mono">{op.maxMs}</TableCell>
-                <TableCell>{op.executions}</TableCell>
-                <TableCell><Badge variant={badge.variant}>{badge.label}</Badge></TableCell>
-              </TableRow>
-            );
-          })}
-          {paginatedData.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum dado de performance registrado.</TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-
-      <PaginationControls currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} startIndex={startIndex} pageSize={10} onPageChange={setCurrentPage} />
+      <DataTable<AggregatedOp>
+        data={aggregated}
+        columns={columns}
+        defaultSortKey="avgMs"
+        defaultSortDirection="desc"
+        pageSize={15}
+        searchPlaceholder="Buscar operação…"
+        exportCsv="performance"
+        isLoading={isLoading}
+        emptyMessage="Nenhum dado de performance registrado."
+        rowKey={(r) => r.operation}
+      />
     </div>
   );
 };

@@ -2,9 +2,18 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { DataTable, type DataTableColumn } from './DataTable';
+
+interface IntegrationRow {
+  id: string;
+  user_id: string;
+  provider: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 const IntegrationsHealthPanel = () => {
   const { data, isLoading } = useQuery({
@@ -14,21 +23,20 @@ const IntegrationsHealthPanel = () => {
         .from('user_integrations')
         .select('id, user_id, provider, is_active, created_at, updated_at')
         .order('updated_at', { ascending: false })
-        .limit(50);
+        .limit(500);
       if (error) throw error;
 
       const providerMap = new Map<string, { total: number; active: number; lastCheck: string }>();
       for (const intg of integrations ?? []) {
-        const provider = intg.provider;
-        const existing = providerMap.get(provider) ?? { total: 0, active: 0, lastCheck: '' };
+        const existing = providerMap.get(intg.provider) ?? { total: 0, active: 0, lastCheck: '' };
         existing.total++;
         if (intg.is_active) existing.active++;
         if (intg.updated_at > existing.lastCheck) existing.lastCheck = intg.updated_at;
-        providerMap.set(provider, existing);
+        providerMap.set(intg.provider, existing);
       }
 
       return {
-        raw: integrations ?? [],
+        raw: (integrations ?? []) as IntegrationRow[],
         byProvider: Array.from(providerMap.entries()).map(([provider, stats]) => ({ provider, ...stats })),
       };
     },
@@ -38,6 +46,30 @@ const IntegrationsHealthPanel = () => {
   if (isLoading) return <Skeleton className="h-48 w-full" />;
 
   const providers = data?.byProvider ?? [];
+  const raw = data?.raw ?? [];
+
+  const columns: DataTableColumn<IntegrationRow>[] = [
+    { key: 'provider', label: 'Provider', sortable: true, filterable: true, searchable: true, className: 'font-mono text-xs' },
+    {
+      key: 'is_active',
+      label: 'Status',
+      sortable: true,
+      filterable: true,
+      accessor: (r) => (r.is_active ? 'Ativo' : 'Inativo'),
+      render: (r) => (
+        <Badge variant={r.is_active ? 'default' : 'secondary'} className="text-xs">
+          {r.is_active ? 'Ativo' : 'Inativo'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'user_id',
+      label: 'User ID',
+      searchable: true,
+      render: (r) => <span className="font-mono text-xs">{r.user_id?.slice(0, 8)}</span>,
+    },
+    { key: 'updated_at', label: 'Última Atualização', sortable: true, format: 'datetime', className: 'text-xs text-muted-foreground' },
+  ];
 
   return (
     <div className="space-y-4 p-4">
@@ -58,37 +90,17 @@ const IntegrationsHealthPanel = () => {
         })}
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">#</TableHead>
-            <TableHead>Provider</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>User ID</TableHead>
-            <TableHead>Última Atualização</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {(data?.raw ?? []).slice(0, 20).map((intg, i) => (
-            <TableRow key={intg.id}>
-              <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-              <TableCell className="font-mono text-xs">{intg.provider}</TableCell>
-              <TableCell>
-                <Badge variant={intg.is_active ? 'default' : 'secondary'} className="text-xs">
-                  {intg.is_active ? 'Ativo' : 'Inativo'}
-                </Badge>
-              </TableCell>
-              <TableCell className="font-mono text-xs truncate max-w-[100px]">{intg.user_id?.slice(0, 8)}</TableCell>
-              <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                {new Date(intg.updated_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-              </TableCell>
-            </TableRow>
-          ))}
-          {(data?.raw ?? []).length === 0 && (
-            <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma integração registrada.</TableCell></TableRow>
-          )}
-        </TableBody>
-      </Table>
+      <DataTable<IntegrationRow>
+        data={raw}
+        columns={columns}
+        defaultSortKey="updated_at"
+        defaultSortDirection="desc"
+        pageSize={15}
+        searchPlaceholder="Buscar provider ou user ID…"
+        exportCsv="integrations"
+        emptyMessage="Nenhuma integração registrada."
+        rowKey={(r) => r.id}
+      />
     </div>
   );
 };
