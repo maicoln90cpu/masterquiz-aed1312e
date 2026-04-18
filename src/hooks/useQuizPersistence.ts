@@ -416,6 +416,15 @@ export function useQuizPersistence({
           const w = window as Window & { dataLayer?: Record<string, unknown>[] };
           w.dataLayer = w.dataLayer || [];
 
+          // ⚠️ TRAVA DE REGRESSÃO (P9 — Fase 3)
+          // Se adicionar/editar evento de publicação aqui, OBRIGATÓRIO:
+          //  1. Incluir nos metadados: creation_source, publish_source, editor_mode
+          //  2. Validar dedup global via RPC `has_user_fired_event` (não localStorage)
+          //  3. Persistir com { persist: true } para gtm_event_logs
+          //  4. Replicar lógica idêntica no branch INSERT (linhas ~620)
+          // Referência: mem://tracking/quiz-publish-events
+          // Teste de proteção: src/__tests__/regression/bug-publish-dedup.test.ts
+
           // Evento quiz_first_published — 1x ao publicar pela primeira vez
           // FILTRO: Express quizzes disparam evento separado (express_first_published)
           const isExpressQuiz = isExpressMode || quiz.creation_source === 'express_auto';
@@ -617,6 +626,13 @@ export function useQuizPersistence({
               });
             }
           } else {
+            // ⚠️ TRAVA DE REGRESSÃO (P9 — Fase 3) — espelho do branch UPDATE (linhas ~419)
+            // Mantenha 100% sincronizado com o outro branch:
+            //  - mesmos metadados (creation_source, publish_source, editor_mode)
+            //  - mesma RPC de dedup (has_user_fired_event)
+            //  - mesmo { persist: true }
+            // Teste: src/__tests__/regression/bug-publish-dedup.test.ts
+
             // Manual quiz: dispara SEMPRE na 1ª publicação manual (sem filtro de stage)
             // Dedup global via banco (gtm_event_logs) — funciona em qualquer navegador
             const publishEventName = editorMode === 'modern' ? 'quiz_first_publishedB' : 'quiz_first_published';
