@@ -404,85 +404,68 @@ export function RecoveryTemplates() {
 
       {/* Templates Table */}
       <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Trigger</TableHead>
-                <TableHead>Uso</TableHead>
-                <TableHead>Taxa Resposta</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {templates.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Nenhum template encontrado
-                  </TableCell>
-                </TableRow>
-              ) : (
-                templates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell className="font-medium">{template.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {CATEGORIES.find(c => c.value === template.category)?.label || template.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{template.trigger_days} dias</TableCell>
-                    <TableCell>{template.usage_count}x</TableCell>
-                    <TableCell>{template.response_rate.toFixed(1)}%</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={template.is_active}
-                        onCheckedChange={(checked) => handleToggleActive(template.id, checked)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Enviar teste"
-                          onClick={() => openTestDialog(template.id, template.name)}
-                        >
-                          <Send className="h-4 w-4 text-primary" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Preview"
-                          onClick={() => handlePreview(template.message_content)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Editar"
-                          onClick={() => handleEdit(template)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Excluir"
-                          onClick={() => handleDelete(template.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+        <CardContent className="p-4">
+          <DataTable
+            data={templates}
+            rowKey={(t) => t.id}
+            defaultSortKey="priority"
+            defaultSortDirection="asc"
+            searchPlaceholder="Buscar template…"
+            emptyMessage="Nenhum template encontrado"
+            exportCsv="recovery-templates"
+            columns={[
+              { key: 'name', label: 'Nome', sortable: true, searchable: true, className: 'font-medium' },
+              {
+                key: 'category',
+                label: 'Categoria',
+                sortable: true,
+                filterable: true,
+                accessor: (t) => CATEGORIES.find(c => c.value === t.category)?.label || t.category,
+                render: (t) => (
+                  <Badge variant="outline">
+                    {CATEGORIES.find(c => c.value === t.category)?.label || t.category}
+                  </Badge>
+                ),
+              },
+              { key: 'trigger_days', label: 'Trigger', sortable: true, render: (t) => `${t.trigger_days} dias` },
+              { key: 'usage_count', label: 'Uso', sortable: true, render: (t) => `${t.usage_count}x` },
+              {
+                key: 'response_rate',
+                label: 'Taxa Resposta',
+                sortable: true,
+                render: (t) => `${t.response_rate.toFixed(1)}%`,
+              },
+              {
+                key: 'is_active',
+                label: 'Status',
+                sortable: true,
+                filterable: true,
+                accessor: (t) => (t.is_active ? 'Ativo' : 'Inativo'),
+                render: (t) => (
+                  <Switch
+                    checked={t.is_active}
+                    onCheckedChange={(checked) => handleToggleActive(t.id, checked)}
+                  />
+                ),
+              },
+            ]}
+            actions={(template) => (
+              <div className="flex justify-end gap-1">
+                <Button variant="ghost" size="icon" title="Enviar teste" onClick={() => openTestDialog(template.id, template.name)}>
+                  <Send className="h-4 w-4 text-primary" />
+                </Button>
+                <Button variant="ghost" size="icon" title="Preview" onClick={() => handlePreview(template.message_content)}>
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" title="Editar" onClick={() => handleEdit(template)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" title="Excluir" onClick={() => handleDelete(template.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            )}
+          />
         </CardContent>
       </Card>
 
