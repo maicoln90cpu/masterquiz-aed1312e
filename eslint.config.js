@@ -110,9 +110,20 @@ export default tseslint.config(
       "no-console": "off",
     },
   },
-  // Exceção: o próprio helper precisa fazer o push real
+  // Exceção: gtmLogger faz dataLayer.push real + auth.getUser para enriquecer evento
   {
     files: ["src/lib/gtmLogger.ts"],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
+  // ⚠️ P4: exceção auth.getUser — AuthContext e o próprio hook precisam buscar o user real.
+  // Edge functions / supabase client wrapper também são fontes legítimas.
+  {
+    files: [
+      "src/contexts/AuthContext.tsx",
+      "src/hooks/useCurrentUser.ts",
+    ],
     rules: {
       "no-restricted-syntax": "off",
     },
