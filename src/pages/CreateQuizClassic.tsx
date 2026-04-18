@@ -38,6 +38,7 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
+import { ExpressIntroModal } from "@/components/quiz/express/ExpressIntroModal";
 
 
 import { useQuizState } from "@/hooks/useQuizState";
@@ -333,6 +334,7 @@ const CreateQuizClassic = () => {
   return (
     <main className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       {isExpressMode && <ExpressProgressBar currentStep={1} />}
+      {isExpressMode && <ExpressIntroModal />}
 
       <header className={cn(
         "sticky z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60",

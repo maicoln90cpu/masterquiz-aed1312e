@@ -52,7 +52,7 @@ const Dashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { quizLimit, responseLimit } = useSubscriptionLimits();
   const { limits: resourceLimits } = useResourceLimits();
-  const { shouldShowDashboardTour, updateOnboardingStep } = useOnboarding();
+  const { status: onboardingStatus, loading: onboardingLoading, shouldShowDashboardTour, updateOnboardingStep } = useOnboarding();
 
   // 🔒 Bloqueio de visualização por limite de plano (banco continua salvando tudo)
   const totalResponsesRaw = stats?.totalResponses ?? 0;
@@ -115,8 +115,16 @@ const Dashboard = () => {
           setShowObjectiveModal(true);
         }
         
-        // Check if first time user (show onboarding) — skip if came from /start
-        if (!startCompleted && (stats?.totalQuizzes ?? 0) === 0 && !localStorage.getItem(`onboarding_completed_${user.id}`)) {
+        // 🎯 Boas-vindas: fonte de verdade = banco (welcome_completed), não contagem de quizzes.
+        // Antes: dependia de totalQuizzes===0 → quem saísse do Express com 1 quiz publicado
+        // nunca via o modal. Agora dispara enquanto welcome_completed=false no banco.
+        // Mantemos localStorage como fallback de compatibilidade (usuários antigos).
+        if (
+          !startCompleted &&
+          !onboardingLoading &&
+          !onboardingStatus.welcome_completed &&
+          !localStorage.getItem(`onboarding_completed_${user.id}`)
+        ) {
           setShowOnboarding(true);
         }
       } catch (error) {
@@ -125,7 +133,7 @@ const Dashboard = () => {
     };
     
     loadUserData();
-  }, [navigate, t, stats?.totalQuizzes, stats?.activeQuizzes, user]);
+  }, [navigate, t, stats?.totalQuizzes, stats?.activeQuizzes, user, onboardingLoading, onboardingStatus.welcome_completed, cameFromStart]);
 
   const handleLogout = async () => {
     try {
