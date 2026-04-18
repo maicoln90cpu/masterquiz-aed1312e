@@ -740,6 +740,11 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Logins vs Cadastros — movido de Financeiro→Relatórios para visibilidade */}
+      <Suspense fallback={<Skeleton className="h-[350px] w-full rounded-lg" />}>
+        <LoginVsCadastrosTable />
+      </Suspense>
     </>
   );
 
