@@ -37,7 +37,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useRecentQuizzes, useDeleteQuiz, useDuplicateQuiz } from "@/hooks/useDashboardData";
 import { useTagsData } from "@/hooks/useTagsData";
-import { useTestLead } from "@/hooks/useTestLead";
+import { TestLeadDialog } from "@/components/crm/TestLeadDialog";
 import { duplicateQuizNameSchema } from "@/lib/formSchemas";
 import { logQuizAction } from "@/lib/auditLogger";
 import { QuizCard } from "@/components/quiz/QuizCard";
@@ -622,6 +622,14 @@ const MyQuizzes = () => {
             />
           )}
         </Suspense>
+
+        {/* Test lead dialog (Fase G — obriga email/whatsapp) */}
+        <TestLeadDialog
+          open={testLeadDialogOpen}
+          onOpenChange={setTestLeadDialogOpen}
+          quizzes={quizzes.map((q) => ({ id: q.id, title: q.title }))}
+          defaultQuizId={testLeadQuizId}
+        />
       </div>
     </DashboardLayout>
   );
