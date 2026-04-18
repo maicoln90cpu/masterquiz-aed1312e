@@ -377,41 +377,31 @@ function ClassicVsModernComparison() {
         {isLoading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Evento</TableHead>
-                <TableHead className="text-center">Classic (A)</TableHead>
-                <TableHead className="text-center">Modern (B)</TableHead>
-                <TableHead className="text-center">Δ%</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {abData?.map((row) => (
-                <TableRow key={row.classic}>
-                  <TableCell className="font-medium">{row.label}</TableCell>
-                  <TableCell className="text-center font-semibold">{row.classicCount}</TableCell>
-                  <TableCell className="text-center font-semibold">{row.modernCount}</TableCell>
-                  <TableCell className="text-center">
-                    {row.delta === null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <Badge variant={row.delta >= 0 ? "default" : "destructive"}>
-                        {row.delta >= 0 ? '+' : ''}{row.delta}%
-                      </Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {(!abData || abData.length === 0) && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    Nenhum dado disponível
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            data={abData || []}
+            rowKey={(r) => r.classic}
+            pageSize={10}
+            emptyMessage="Nenhum dado disponível"
+            columns={[
+              { key: 'label', label: 'Evento', sortable: true, className: 'font-medium' },
+              { key: 'classicCount', label: 'Classic (A)', sortable: true, align: 'center', className: 'font-semibold' },
+              { key: 'modernCount', label: 'Modern (B)', sortable: true, align: 'center', className: 'font-semibold' },
+              {
+                key: 'delta',
+                label: 'Δ%',
+                sortable: true,
+                align: 'center',
+                render: (r) =>
+                  r.delta === null ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    <Badge variant={r.delta >= 0 ? 'default' : 'destructive'}>
+                      {r.delta >= 0 ? '+' : ''}{r.delta}%
+                    </Badge>
+                  ),
+              },
+            ]}
+          />
         )}
       </CardContent>
     </Card>
