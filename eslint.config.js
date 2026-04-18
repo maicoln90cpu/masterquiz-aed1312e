@@ -88,14 +88,11 @@ export default tseslint.config(
           // exigidos por Edge Functions Supabase. Use fetch + keepalive:true.
           "selector": "CallExpression[callee.object.name='navigator'][callee.property.name='sendBeacon']",
           "message": "🚫 Não use navigator.sendBeacon: Supabase Edge Functions exigem header `apikey` que sendBeacon não envia. Use fetch(url, { method:'POST', keepalive:true, headers:{ apikey, Authorization } })."
-        },
+        }
       ],
-      // ⚠️ P4: supabase.auth.getUser() direto causa race conditions e requests duplicados.
-      // Use useCurrentUser() (componentes React) ou useEffectiveUser() (telas com modo suporte).
-      // Em libs fora de React, passe `user` como parâmetro vindo de quem já tem o contexto.
-      // Nível: warn (limpeza incremental — 32 arquivos legados).
-      "no-warning-comments": "off",
-      "@typescript-eslint/no-restricted-imports": "off",
+      // ⚠️ P4 (auth.getUser direto) é validado via teste de baseline em
+      // src/__tests__/contracts/no-direct-auth-getuser.test.ts (não como regra lint
+      // para evitar quebrar build de 172 arquivos legados).
     },
   },
   // ⚠️ P5: exceção no-console — helpers de logging precisam usar console nativo
