@@ -37,7 +37,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useRecentQuizzes, useDeleteQuiz, useDuplicateQuiz } from "@/hooks/useDashboardData";
 import { useTagsData } from "@/hooks/useTagsData";
-import { useTestLead } from "@/hooks/useTestLead";
+import { TestLeadDialog } from "@/components/crm/TestLeadDialog";
 import { duplicateQuizNameSchema } from "@/lib/formSchemas";
 import { logQuizAction } from "@/lib/auditLogger";
 import { QuizCard } from "@/components/quiz/QuizCard";
@@ -59,7 +59,9 @@ const MyQuizzes = () => {
   const { data: allTags = [] } = useTagsData();
   const deleteQuizMutation = useDeleteQuiz();
   const duplicateQuizMutation = useDuplicateQuiz();
-  const { generateTestLead, isGenerating: isGeneratingTestLead } = useTestLead();
+  // Test lead dialog state (substitui chamada direta — Fase G: agora obriga email/whatsapp)
+  const [testLeadDialogOpen, setTestLeadDialogOpen] = useState(false);
+  const [testLeadQuizId, setTestLeadQuizId] = useState<string | undefined>(undefined);
 
   // Local state
   const [searchQuery, setSearchQuery] = useState("");
@@ -468,8 +470,11 @@ const MyQuizzes = () => {
                       onEmbed={handleEmbed}
                       onPreview={handlePreview}
                       onEditSlug={handleEditSlug}
-                      onGenerateTestLead={generateTestLead}
-                      isGeneratingTestLead={isGeneratingTestLead}
+                      onGenerateTestLead={(quizId: string) => {
+                        setTestLeadQuizId(quizId);
+                        setTestLeadDialogOpen(true);
+                      }}
+                      isGeneratingTestLead={false}
                     />
                   </motion.div>
                 ))}
@@ -617,6 +622,14 @@ const MyQuizzes = () => {
             />
           )}
         </Suspense>
+
+        {/* Test lead dialog (Fase G — obriga email/whatsapp) */}
+        <TestLeadDialog
+          open={testLeadDialogOpen}
+          onOpenChange={setTestLeadDialogOpen}
+          quizzes={quizzes.map((q) => ({ id: q.id, title: q.title }))}
+          defaultQuizId={testLeadQuizId}
+        />
       </div>
     </DashboardLayout>
   );
