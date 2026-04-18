@@ -77,6 +77,12 @@ export default tseslint.config(
         {
           "selector": "CallExpression[callee.object.name='dataLayer'][callee.property.name='push']",
           "message": "🚫 Não use dataLayer.push() direto. Use pushGTMEvent() de @/lib/gtmLogger."
+        },
+        {
+          // 🚫 P3: navigator.sendBeacon não envia headers (apikey/Authorization)
+          // exigidos por Edge Functions Supabase. Use fetch + keepalive:true.
+          "selector": "CallExpression[callee.object.name='navigator'][callee.property.name='sendBeacon']",
+          "message": "🚫 Não use navigator.sendBeacon: Supabase Edge Functions exigem header `apikey` que sendBeacon não envia. Use fetch(url, { method:'POST', keepalive:true, headers:{ apikey, Authorization } })."
         }
       ],
     },
