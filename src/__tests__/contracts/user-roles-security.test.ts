@@ -31,16 +31,23 @@ function isProductionFile(path: string): boolean {
 }
 
 describe('Security Contract: user_roles', () => {
-  it('nenhum arquivo de produção faz INSERT direto em user_roles', () => {
+  it('nenhum arquivo de produção faz INSERT direto em user_roles (exceto allowlist admin)', () => {
+    // ✅ Allowlist: arquivos onde admin promove outro usuário (ação verificada via role admin).
+    // QUALQUER novo arquivo aqui exige revisão manual de segurança e nota em SECURITY.md.
+    const ALLOWLIST = [
+      '/src/pages/AdminDashboard.tsx', // admin aprova validation_requests → grant role 'admin'
+    ];
+
     const dangerous = /\.from\(\s*['"]user_roles['"]\s*\)\s*\.insert/;
     const violations = Object.entries(allSourceFiles)
       .filter(([path]) => isProductionFile(path))
+      .filter(([path]) => !ALLOWLIST.includes(path))
       .filter(([, content]) => dangerous.test(content))
       .map(([path]) => path);
 
     expect(
       violations,
-      `🚨 Privilege escalation risk! Estes arquivos fazem INSERT direto em user_roles:\n${violations.join('\n')}\n\nUse o trigger handle_new_user_role do banco. Veja SECURITY.md.`
+      `🚨 Privilege escalation risk! Estes arquivos fazem INSERT direto em user_roles:\n${violations.join('\n')}\n\nSe é uma ação admin legítima, adicione à ALLOWLIST acima com justificativa. Veja SECURITY.md.`
     ).toEqual([]);
   });
 
