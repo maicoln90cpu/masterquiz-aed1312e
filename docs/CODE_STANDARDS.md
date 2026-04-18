@@ -1,7 +1,7 @@
 # 📐 CODE STANDARDS — Padrões Obrigatórios de Código
 
 > MasterQuiz — Regras, convenções e exemplos do/don't
-> Versão 2.42.0 | 17 de Abril de 2026
+> Versão 2.43.0 | 18 de Abril de 2026
 
 ---
 
@@ -236,6 +236,29 @@ window.dataLayer?.push({ event: 'QuizShared' }); // ❌
 // ❌ NUNCA criar hooks dedicados para eventos simples
 // Use pushGTMEvent inline no handler
 ```
+
+---
+
+## 🚨 Lint rules ativas (regressão zero — v2.43.0)
+
+> Todas configuradas em `eslint.config.js`. As que **bloqueiam** falham o build; as que **avisam** ficam como TODO incremental.
+
+| ID | Severidade | Padrão proibido | Forma correta |
+|----|------------|-----------------|---------------|
+| P2 | ❌ error | `window.dataLayer.push(...)` direto | `pushGTMEvent()` de `@/lib/gtmLogger` (ADR-010) |
+| P3 | ❌ error | `.from('profiles').update({ paywall_hit_count: ... })` em colunas ICP | RPCs de `src/lib/icpTracking.ts` |
+| P5 | ❌ error | `navigator.sendBeacon(...)` | `fetch(url, { method:'POST', keepalive:true, headers:{ apikey } })` |
+| P4 | ⚠️ warn | `supabase.auth.getUser()` em componentes | `useCurrentUser()` |
+| P7 | ⚠️ warn | `bg-white`, `text-black`, `bg-[#hex]`, `style={{color:'red'}}` | Tokens semânticos HSL (`bg-background`, `text-foreground`) |
+| — | ⚠️ warn | `console.log` | Logger de `@/lib/logger` |
+
+### Baselines incrementais
+- **P4:** ~30 ocorrências legadas — não bloqueia, deve diminuir a cada PR.
+- **P7:** ~120 ocorrências legadas — mesma estratégia de redução incremental.
+
+### Como adicionar exceção (caso raro)
+1. Adicionar comentário `// eslint-disable-next-line <regra> -- razão concreta`.
+2. Abrir entrada em `docs/PENDENCIAS.md` explicando por quê.
 
 ---
 

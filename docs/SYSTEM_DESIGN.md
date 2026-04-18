@@ -698,6 +698,27 @@ site_mode (system_settings) ──▶ Landing dinâmica
 
 ---
 
+## 🛡️ Camada de proteções automáticas (Lint + Contract Tests)
+
+> Introduzida em v2.43.0 (Fases 1–3). 10 escudos (P1–P10) que falham build/test antes que regressões críticas cheguem em produção.
+
+| ID | Tipo | Onde vive | Bloqueia |
+|----|------|-----------|----------|
+| P1 | Contract test | `src/__tests__/contracts/user-roles-security.test.ts` | INSERT direto em `user_roles`; admin via localStorage |
+| P2 | ESLint rule | `eslint.config.js` (`no-restricted-syntax`) | `window.dataLayer.push` direto — força `pushGTMEvent` |
+| P3 | ESLint rule | `eslint.config.js` | UPDATE direto em colunas ICP de `profiles` — força `icpTracking.ts` |
+| P4 | ESLint warning | `eslint.config.js` | `supabase.auth.getUser()` direto — prefira `useCurrentUser` |
+| P5 | ESLint rule | `eslint.config.js` | `navigator.sendBeacon` — use `fetch` com `keepalive:true` |
+| P6 | Smoke test | `src/__tests__/regression/postgrest-batch.test.ts` | Batch `.in()` >150 IDs |
+| P7 | ESLint warning | `eslint.config.js` | Cores hardcoded fora de tokens HSL |
+| P8 | Contract test | `src/__tests__/contracts/blocks-catalog.test.ts` | `BlockType` sem entrada no catálogo/renderer |
+| P9 | Comentário-trava | `src/hooks/useQuizPersistence.ts` | Novo evento de publicação sem `creation_source`/dedup/persist |
+| P10 | Smoke test | `src/__tests__/regression/gtm-persistence.test.ts` | `pushGTMEvent` sem persistência em `gtm_event_logs` |
+
+**Operação:** todas rodam em `npm run test` + `npm run lint`. Quebra de qualquer P1–P10 falha o CI/CD.
+
+---
+
 ## 📚 Documentação Relacionada
 
 | Documento | Descrição |
