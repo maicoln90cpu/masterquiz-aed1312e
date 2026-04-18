@@ -168,6 +168,7 @@ export default tseslint.config(
     files: ["src/**/*.{ts,tsx}"],
     ignores: [
       "src/lib/icpTracking.ts",
+      "src/lib/gtmLogger.ts",
       "src/__tests__/**",
     ],
     rules: {
