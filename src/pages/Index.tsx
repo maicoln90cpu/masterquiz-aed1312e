@@ -11,6 +11,7 @@ import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { MobileStickyCTA } from "@/components/landing/MobileStickyCTA";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { useScrollToHash } from "@/hooks/useScrollToHash";
 // Lazy loaded components
 import { 
   FeatureShowcaseWrapper, 
@@ -67,6 +68,7 @@ const DeferredSection = ({ children, className, id, fallbackHeight = "400px" }: 
 const Index = () => {
   const { t } = useTranslation();
   const { plans: dynamicPlans, isLoading: plansLoading } = useLandingPlans();
+  useScrollToHash(); // suporta /#features, /#hero, /#pricing vindos de outras rotas
   const { isModeB } = useSiteMode();
 
   useEffect(() => {
