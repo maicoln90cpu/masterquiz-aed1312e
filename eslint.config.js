@@ -66,6 +66,11 @@ export default tseslint.config(
       // Sem imports duplicados
       "import/no-duplicates": "warn",
 
+      // 🚫 P5: console.log/warn/error → use logger de @/lib/logger
+      // Permitido apenas em logger.ts, gtmLogger.ts, errorCapture.ts (helpers de baixo nível).
+      // Nível: warn (limpeza incremental — 105 arquivos legados).
+      "no-console": ["warn", { allow: ["info"] }],
+
       // 🚫 Proteção: nunca push direto no dataLayer fora de gtmLogger.ts
       // Use pushGTMEvent() de @/lib/gtmLogger para garantir persistência em gtm_event_logs
       "no-restricted-syntax": [
@@ -83,8 +88,26 @@ export default tseslint.config(
           // exigidos por Edge Functions Supabase. Use fetch + keepalive:true.
           "selector": "CallExpression[callee.object.name='navigator'][callee.property.name='sendBeacon']",
           "message": "🚫 Não use navigator.sendBeacon: Supabase Edge Functions exigem header `apikey` que sendBeacon não envia. Use fetch(url, { method:'POST', keepalive:true, headers:{ apikey, Authorization } })."
+        },
+        {
+          // ⚠️ P4: supabase.auth.getUser() direto causa race conditions e requests duplicados.
+          // Use useCurrentUser() (componentes React) ou useEffectiveUser() (telas com modo suporte).
+          // Em libs fora de React, passe `user` como parâmetro vindo de quem já tem o contexto.
+          "selector": "CallExpression[callee.object.property.name='auth'][callee.property.name='getUser']",
+          "message": "⚠️ Evite supabase.auth.getUser() direto — causa requests duplicados e race conditions. Use useCurrentUser() (componentes) ou useEffectiveUser() (telas com Suporte). Em libs, receba `user` por parâmetro."
         }
       ],
+    },
+  },
+  // ⚠️ P5: exceção no-console — helpers de logging precisam usar console nativo
+  {
+    files: [
+      "src/lib/logger.ts",
+      "src/lib/gtmLogger.ts",
+      "src/lib/errorCapture.ts",
+    ],
+    rules: {
+      "no-console": "off",
     },
   },
   // Exceção: o próprio helper precisa fazer o push real
