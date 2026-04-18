@@ -174,8 +174,25 @@ export function useQuizPersistence({
           timestamp: new Date().toISOString()
         });
         
+        // ⚠️ NÃO usar navigator.sendBeacon: Supabase Edge Functions exigem header `apikey`
+        // que sendBeacon não consegue enviar (Content-Type fixo + sem headers customizáveis).
+        // Use fetch + keepalive (suportado em beforeunload) com headers completos.
         const beaconUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-quiz-draft`;
-        navigator.sendBeacon(beaconUrl, payload);
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        try {
+          fetch(beaconUrl, {
+            method: 'POST',
+            keepalive: true,
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': anonKey,
+              'Authorization': `Bearer ${anonKey}`,
+            },
+            body: payload,
+          });
+        } catch {
+          // fire-and-forget: nunca bloqueia unload
+        }
       }
     };
 
