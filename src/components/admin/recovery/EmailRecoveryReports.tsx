@@ -8,6 +8,7 @@ import { Loader2, Send, MailOpen, MousePointerClick, AlertTriangle, RefreshCw, M
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { DataTable } from "@/components/admin/system/DataTable";
 
 interface EmailContact {
   id: string;
@@ -430,95 +431,78 @@ export function EmailRecoveryReports() {
         </CardContent>
       </Card>
 
-      {/* Filters + Table */}
+      {/* All Emails Table — DataTable universal */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <CardTitle className="text-base">Todos os Emails Enviados</CardTitle>
-            <div className="flex gap-2">
-              <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="sent">Enviados</SelectItem>
-                  <SelectItem value="opened">Abertos</SelectItem>
-                  <SelectItem value="clicked">Clicados</SelectItem>
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                  <SelectItem value="failed">Falhas</SelectItem>
-                  <SelectItem value="cancelled">Cancelados</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[160px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon" onClick={() => load(period)} disabled={loading}>
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <CardTitle className="text-base">Todos os Emails Enviados</CardTitle>
+          <CardDescription>
+            Lista completa com filtros por status, categoria, A/B e busca por email.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {filtered.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Nenhum email encontrado</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Template</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>A/B</TableHead>
-                    <TableHead>Enviado em</TableHead>
-                    <TableHead>Aberto em</TableHead>
-                    <TableHead>Clicado em</TableHead>
-                    <TableHead>Erro</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.slice(0, 100).map(c => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-mono text-xs max-w-[200px] truncate">{c.email}</TableCell>
-                      <TableCell className="text-sm">{c.email_recovery_templates?.name || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {CATEGORY_LABELS[c.email_recovery_templates?.category || ''] || c.email_recovery_templates?.category || '-'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={`text-xs ${STATUS_COLORS[c.status] || 'bg-gray-100 text-gray-700'}`}>
-                          {c.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs">{c.ab_variant || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {c.sent_at ? new Date(c.sent_at).toLocaleString('pt-BR') : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {c.opened_at ? new Date(c.opened_at).toLocaleString('pt-BR') : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {c.clicked_at ? new Date(c.clicked_at).toLocaleString('pt-BR') : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs text-destructive max-w-[200px] truncate">
-                        {c.error_message || '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {filtered.length > 100 && (
-                <p className="text-xs text-muted-foreground text-center mt-2">Mostrando 100 de {filtered.length} registros</p>
-              )}
-            </div>
-          )}
+          <DataTable
+            data={contacts}
+            rowKey={(c) => c.id}
+            defaultSortKey="sent_at"
+            defaultSortDirection="desc"
+            pageSize={25}
+            searchPlaceholder="Buscar por email…"
+            emptyMessage="Nenhum email encontrado"
+            exportCsv="emails-recovery"
+            columns={[
+              { key: 'email', label: 'Email', sortable: true, searchable: true, className: 'font-mono text-xs max-w-[200px] truncate' },
+              {
+                key: 'template_name',
+                label: 'Template',
+                filterable: true,
+                accessor: (c) => c.email_recovery_templates?.name || '-',
+                render: (c) => <span className="text-sm">{c.email_recovery_templates?.name || '-'}</span>,
+              },
+              {
+                key: 'category',
+                label: 'Categoria',
+                filterable: true,
+                accessor: (c) => CATEGORY_LABELS[c.email_recovery_templates?.category || ''] || c.email_recovery_templates?.category || '-',
+                render: (c) => (
+                  <Badge variant="outline" className="text-xs">
+                    {CATEGORY_LABELS[c.email_recovery_templates?.category || ''] || c.email_recovery_templates?.category || '-'}
+                  </Badge>
+                ),
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                sortable: true,
+                filterable: true,
+                render: (c) => <Badge className={`text-xs ${STATUS_COLORS[c.status] || 'bg-gray-100 text-gray-700'}`}>{c.status}</Badge>,
+              },
+              { key: 'ab_variant', label: 'A/B', filterable: true, accessor: (c) => c.ab_variant || '-', render: (c) => <span className="text-xs">{c.ab_variant || '-'}</span> },
+              {
+                key: 'sent_at',
+                label: 'Enviado em',
+                sortable: true,
+                render: (c) => <span className="text-xs text-muted-foreground">{c.sent_at ? new Date(c.sent_at).toLocaleString('pt-BR') : '-'}</span>,
+              },
+              {
+                key: 'opened_at',
+                label: 'Aberto em',
+                sortable: true,
+                render: (c) => <span className="text-xs text-muted-foreground">{c.opened_at ? new Date(c.opened_at).toLocaleString('pt-BR') : '-'}</span>,
+              },
+              {
+                key: 'clicked_at',
+                label: 'Clicado em',
+                sortable: true,
+                render: (c) => <span className="text-xs text-muted-foreground">{c.clicked_at ? new Date(c.clicked_at).toLocaleString('pt-BR') : '-'}</span>,
+              },
+              {
+                key: 'error_message',
+                label: 'Erro',
+                searchable: true,
+                render: (c) => <span className="text-xs text-destructive max-w-[200px] truncate inline-block">{c.error_message || '-'}</span>,
+              },
+            ]}
+          />
         </CardContent>
       </Card>
     </div>
