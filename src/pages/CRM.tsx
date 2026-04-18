@@ -318,6 +318,14 @@ const CRM = () => {
       return;
     }
 
+    // 🔒 Exigir pelo menos email OU whatsapp para que o lead seja localizável
+    const hasEmail = !!newLead.email?.trim();
+    const hasWhatsapp = !!newLead.whatsapp?.trim();
+    if (!hasEmail && !hasWhatsapp) {
+      toast.error(t('crm.toast.contactRequired', 'Informe email ou WhatsApp para criar o lead'));
+      return;
+    }
+
     // Verificar limite de leads
     const canAddLead = await checkLeadLimit();
     if (!canAddLead) {

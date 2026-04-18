@@ -42,7 +42,11 @@ export function useTestLead() {
       return { success: false, error: 'No quiz selected' };
     }
 
-    if (!email && !whatsapp) {
+    // 🔒 Defesa em profundidade: além da validação do <TestLeadDialog />,
+    // o hook também recusa qualquer tentativa sem email ou WhatsApp.
+    const hasEmail = !!email?.trim();
+    const hasWhatsapp = !!whatsapp?.trim();
+    if (!hasEmail && !hasWhatsapp) {
       toast.error(t('testLead.contactRequired', 'Informe email ou WhatsApp'));
       return { success: false, error: 'Email or WhatsApp required' };
     }
