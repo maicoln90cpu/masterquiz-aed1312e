@@ -158,4 +158,41 @@ export default tseslint.config(
       "no-restricted-imports": "off",
     },
   },
+  // 🚫 P2: Proteção de contadores ICP em profiles.
+  // UPDATE direto em colunas de contador sobrescreve valores acumulados (race condition + perda de dados).
+  // Use sempre os helpers atômicos de @/lib/icpTracking que chamam RPCs SECURITY DEFINER.
+  // Colunas protegidas: quiz_shared_count, paywall_hit_count, upgrade_clicked_count,
+  // editor_sessions_count, crm_interactions_count, ai_used_on_real_quiz,
+  // plan_limit_hit_type, landing_variant_seen, first_lead_received_at, form_collection_configured_at.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/lib/icpTracking.ts",
+      "src/__tests__/**",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        // mantém regras globais (duplicadas aqui porque ESLint substitui o array por config)
+        {
+          "selector": "CallExpression[callee.object.property.name='dataLayer'][callee.property.name='push']",
+          "message": "🚫 Não use window.dataLayer.push() direto. Use pushGTMEvent() de @/lib/gtmLogger."
+        },
+        {
+          "selector": "CallExpression[callee.object.name='dataLayer'][callee.property.name='push']",
+          "message": "🚫 Não use dataLayer.push() direto. Use pushGTMEvent() de @/lib/gtmLogger."
+        },
+        {
+          "selector": "CallExpression[callee.object.name='navigator'][callee.property.name='sendBeacon']",
+          "message": "🚫 Não use navigator.sendBeacon. Use fetch(url,{method:'POST',keepalive:true,headers:{apikey,Authorization}}) — Edge Functions exigem apikey."
+        },
+        {
+          // Detecta literais de objeto contendo chaves de colunas ICP protegidas
+          // (cobre .update({...}) e .insert({...}) em qualquer .from('profiles')).
+          "selector": "Property[key.name=/^(quiz_shared_count|paywall_hit_count|upgrade_clicked_count|editor_sessions_count|crm_interactions_count|ai_used_on_real_quiz|plan_limit_hit_type|landing_variant_seen|first_lead_received_at|form_collection_configured_at)$/]",
+          "message": "🚫 Não escreva diretamente em colunas ICP de profiles. Use incrementProfileCounter() / setProfileFirstText() / setProfileFlagTrue() / setProfileFirstTimestamp() de @/lib/icpTracking — RPCs SECURITY DEFINER atômicos. Veja mem://features/icp-tracking."
+        }
+      ],
+    },
+  },
 );
