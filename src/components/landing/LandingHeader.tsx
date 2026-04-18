@@ -53,6 +53,8 @@ export const LandingHeader = () => {
   };
 
   // Manipulador unificado: decide entre scroll local e navegação cross-page.
+  // Regra de scroll: apenas "#features" preserva comportamento de rolar até a seção.
+  // Todos os outros itens (rotas ou âncoras) forçam scroll ao topo após navegar.
   const handleNavClick = (item: { href: string; isRoute?: boolean }) => {
     pushGTMEvent('header_nav_click', {
       section: item.href.replace(/^[#/]/, ''),
@@ -62,15 +64,29 @@ export const LandingHeader = () => {
 
     if (item.isRoute) {
       navigate(item.href);
+      window.scrollTo({ top: 0, behavior: 'instant' });
       setIsMobileMenuOpen(false);
       return;
     }
 
-    // Âncora: se já está na home, faz scroll; senão navega para "/#anchor".
+    // Âncora: se já está na home, faz scroll local; senão navega cross-page.
     if (isHome) {
-      scrollToSection(item.href);
+      // Em home, "#features" rola até seção; demais âncoras vão pro topo.
+      if (item.href === '#features') {
+        scrollToSection(item.href);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsMobileMenuOpen(false);
+      }
     } else {
-      navigate(`/${item.href}`); // ex.: "/#features"
+      // Cross-page: "#features" preserva hash (useScrollToHash rola lá),
+      // demais âncoras vão pra home no topo.
+      if (item.href === '#features') {
+        navigate(`/${item.href}`);
+      } else {
+        navigate('/');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
       setIsMobileMenuOpen(false);
     }
   };
@@ -78,6 +94,7 @@ export const LandingHeader = () => {
   const handleBackHome = () => {
     pushGTMEvent('header_back_home_click', { from_route: location.pathname });
     navigate('/');
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleLoginClick = () => {
