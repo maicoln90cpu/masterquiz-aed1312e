@@ -1,17 +1,16 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { usePricingPlans } from "@/hooks/usePricingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { PricingCard } from "@/components/landing/PricingCard";
 import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
+import { LandingHeader } from "@/components/landing/LandingHeader";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { incrementProfileCounter } from "@/lib/icpTracking";
 
@@ -78,22 +77,10 @@ export default function Pricing() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/dashboard')}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t('pricing.backToDashboard')}
-          </Button>
-          <LanguageSwitch />
-        </div>
-      </header>
+      {/* Header global da landing — garante navegação cross-page consistente */}
+      <LandingHeader />
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 pt-28">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
