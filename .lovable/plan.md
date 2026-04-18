@@ -1,159 +1,136 @@
 
 
-## Plano — Etapa F: DataTable universal + retorno do "Logins vs Cadastros"
+# Plano — Atualização de Documentação v2.43.0 (manutenibilidade pós-fases 1-3)
 
-Dois itens. O segundo é trivial; o primeiro é maior e por isso será entregue em fases.
+## Visão leiga
+A documentação do projeto **já existe quase toda** (24 docs em `docs/` + README + CHANGELOG na raiz, todos na versão 2.42.0). O que falta é:
+1. **Refletir o que foi feito recentemente** (Fases A-I do editor + 10 proteções de regressão P1-P10 das fases 1-3) nos docs principais.
+2. **Pequenos arquivos faltantes** mencionados no pedido.
+3. **Reorganizar a memória** colocando as regras mais críticas no topo.
+4. **Gravar a memo obrigatória** de formato de resposta no topo absoluto.
 
----
+Não vou recriar docs que já existem nem mover arquivos que já estão no lugar certo. O pedido pede uma "limpeza geral" — minha resposta é cirúrgica em cima do que realmente está desatualizado ou faltando.
 
-### Item 2 (rápido) — "Logins vs Cadastros" não desapareceu, está escondido
+## Diagnóstico — o que já existe vs o que falta
 
-**Onde está hoje:** Admin → 💰 **Financeiro** → sub-aba **Relatórios**. Você provavelmente não procurou nessa aba porque o nome não sugere "comparativo de cadastros".
-
-**O que fazer (escolha uma das duas):**
-
-- **Opção A (recomendada):** mover o `<LoginVsCadastrosTable />` para **📊 Painel Geral → sub-aba Dashboard** (junto dos outros KPIs de visão geral). Faz mais sentido contextual.
-- **Opção B:** manter onde está, mas adicionar um atalho/duplicata em "Painel Geral".
-
-Vou assumir **Opção A** salvo se você pedir Opção B.
-
----
-
-### Item 1 — Componente `<DataTable />` universal
-
-#### Diagnóstico do que existe hoje
-
-Já temos peças soltas:
-- `useTableSort` — ordenação por coluna ✅
-- `usePagination` — paginação ✅
-- `SortableTableHeader` — cabeçalho clicável ✅
-- `PaginationControls` — controles de página ✅
-- `useDebounce` — para busca ✅
-
-**Problema:** cada tabela monta esse quebra-cabeça à mão. Algumas esquecem paginação (ICP, LoginVsCadastros, RecoveryQueue, TrialLogsViewer, EmailRecoveryReports, PQLAnalytics, AuditLogsViewer, ModeComparison, etc.). Não existe **filtro por valores da coluna** (tipo Excel: clicar no cabeçalho e marcar quais valores incluir).
-
-#### O que vamos criar
-
-Um único componente `DataTable<T>` em `src/components/admin/system/DataTable.tsx` que junta tudo:
-
-```ts
-<DataTable
-  data={rows}
-  columns={[
-    { key: 'email', label: 'Email', sortable: true, filterable: true, searchable: true },
-    { key: 'plan_type', label: 'Plano', filterable: true, render: (r) => <Badge>{r.plan_type}</Badge> },
-    { key: 'icp_score', label: 'Score', sortable: true, align: 'right' },
-    { key: 'created_at', label: 'Cadastro', sortable: true, format: 'date' },
-  ]}
-  defaultSortKey="icp_score"
-  defaultSortDirection="desc"
-  pageSize={15}
-  searchPlaceholder="Buscar por email ou nome…"
-  exportCsv               // botão de export opcional
-  emptyMessage="Nenhum registro"
-/>
-```
-
-#### Funcionalidades incluídas
-
-1. **Ordenação** por qualquer coluna marcada `sortable` (clicar alterna asc/desc).
-2. **Filtro por coluna estilo Excel:** ícone de funil no cabeçalho de colunas marcadas `filterable`. Abre popover listando **todos os valores únicos da coluna em todo o dataset** (não só da página atual) com checkboxes. Funciona como o Excel.
-3. **Busca global** debounced (300ms) sobre colunas marcadas `searchable`.
-4. **Paginação** automática (configurável: 10/15/25/50/100 por página).
-5. **Renderizadores customizados** por coluna (`render`) — para badges, links, ícones.
-6. **Formatadores prontos** (`format: 'date' | 'datetime' | 'currency' | 'percent' | 'number'`).
-7. **Estados:** loading (skeleton), vazio (mensagem), erro (badge).
-8. **Export CSV** opcional (respeita filtros e ordenação aplicados).
-9. **Persistência opcional** de filtros/ordenação na URL via query params (ex.: `?sort=icp_score:desc&filter_plan=free`) — fase 2.
-10. **Acessibilidade:** ARIA, navegação teclado nos headers e popovers.
-
-#### Importante: filtro inclui dados de todas as páginas
-
-Hoje, quando uma tabela tem paginação, o filtro/busca só vê a página atual. O `DataTable` resolve isso aplicando **filtro → ordenação → paginação nessa ordem** sobre o dataset completo. Ou seja: você filtra por "plan_type = pro" e a paginação se reorganiza nos resultados filtrados, vendo o universo inteiro.
-
-#### Tabelas migradas — Fases
-
-**Fase 1 — Criar o componente + migrar 3 tabelas críticas (mais ganho/risco baixo):**
-1. `ICPInsightsTab` (sem paginação hoje, 500 linhas — pesado)
-2. `LoginVsCadastrosTable` (sem paginação, 30 dias)
-3. `TrialLogsViewer` (sem paginação)
-
-**Fase 2 — Migrar tabelas de recovery e relatórios:**
-4. `RecoveryQueue`
-5. `RecoveryTemplates`
-6. `RecoveryBlacklist`
-7. `EmailRecoveryReports` (3 tabelas internas)
-8. `PQLAnalytics` (3 tabelas internas)
-9. `AuditLogsViewer`
-10. `ModeComparison` (tabela `<table>` HTML pura)
-
-**Fase 3 — Migrar painéis de sistema (já têm sort+paginação, ganham filtro de coluna):**
-11. `ClientErrorsPanel`, `PerformancePanel`, `FeatureUsagePanel`, `CronMonitorPanel`, `IntegrationsHealthPanel`, `AuditLogPanel`
-
-**Fase 4 — Custos e Observability:**
-12. `UnifiedCostsDashboard` (3 tabelas), `ObservabilityTab` (3 tabelas)
-
-**Fora de escopo (não-admin):** `Compare.tsx` (página pública estática), `CampaignRecipientsPanel` (usa `<table>` HTML simples, opcional).
-
----
-
-### Arquivos novos / alterados
-
-**Fase 1 (entrega imediata desta etapa):**
-- **NOVO:** `src/components/admin/system/DataTable.tsx`
-- **NOVO:** `src/components/admin/system/ColumnFilter.tsx` (popover de filtro por valores)
-- **NOVO:** `src/lib/dataTableFormatters.ts` (formatadores comuns)
-- **EDITA:** `src/components/admin/users/ICPInsightsTab.tsx` (migra para DataTable)
-- **EDITA:** `src/components/admin/LoginVsCadastrosTable.tsx` (migra para DataTable + ganha paginação)
-- **EDITA:** `src/components/admin/TrialLogsViewer.tsx` (migra)
-- **EDITA:** `src/pages/AdminDashboard.tsx` (move `LoginVsCadastrosTable` para a aba Dashboard)
-
-Fases 2-4 ficam para próximas etapas sob aprovação (evita PR gigante e regressão).
-
----
-
-### Antes vs Depois
-
-| Aspecto | Antes | Depois |
+| Item pedido | Status atual | Ação |
 |---|---|---|
-| Tabela ICP | Sem paginação, 500 linhas, filtros básicos | Paginada, filtro Excel por plano/UTM/variante, busca debounced |
-| Logins vs Cadastros | Escondida em "Relatórios", scroll interno 30 dias | Visível em "Painel Geral", paginada, filtro por taxa |
-| Padrão para novas tabelas | Cada dev replica `<Table>` na mão, esquece paginação | Importa `DataTable`, configura colunas, pronto |
-| Filtro por coluna | Não existe | Tipo Excel, vê todo dataset |
+| README.md | ✅ existe (681 linhas, v2.42.0) | Atualizar versão + seção "Proteções de regressão" |
+| PRD.md | ✅ existe (704 linhas) | Bump versão |
+| ROADMAP.md | ✅ existe (235 linhas, v2.42.0) | Adicionar entrada v2.43.0 |
+| PENDENCIAS.md | ✅ existe (829 linhas) | Adicionar bloco v2.43.0 |
+| SYSTEM_DESIGN.md | ✅ existe (726 linhas) | Bump versão + seção "Camada de proteções automáticas" |
+| DATABASE_SCHEMA.md | ✅ existe (372 linhas) | Bump versão (sem mudanças de schema) |
+| SECURITY.md | ✅ existe (273 linhas) | Adicionar seção "Testes de contrato de segurança" (P1) |
+| CODE_STANDARDS.md | ✅ existe (250 linhas) | Adicionar bloco "Lint rules ativas" (P2/P3/P5/P7) |
+| EDGE_FUNCTIONS.md | ✅ existe (150 linhas, 64 funções) | Bump versão |
+| CHANGELOG.md | ✅ existe (raiz, 111 linhas) | Adicionar `[2.43.0]` |
+| ONBOARDING.md | ✅ existe (153 linhas) | Bump versão + nota sobre `npm run test` cobrir contratos |
+| ADR.md | ✅ existe (194 linhas) | Adicionar **ADR-013 — Proteções de regressão como código** |
+| MEMOCOPY.md | ✅ existe (174 linhas) | Regenerar com snapshot v2.43.0 |
+| Memo "linguagem leiga" | ✅ já está em `.lovable/user-preferences` e core memory | **Reordenar para ser item #1 absoluto** |
+| Knowledge ≤9500 chars | ❌ não existe arquivo dedicado | Criar `docs/KNOWLEDGE.md` (resumo executivo) |
+| Mover .md soltos para `docs/` | ⚠️ README.md e CHANGELOG.md ficam na raiz por convenção (npm/GitHub esperam ali); `src/__tests__/README.md` é local de testes | **Não mover** — explicar por quê |
+| Storybook | ✅ `docs/STORYBOOK.md` existe | Sem mudanças |
 
-### Vantagens
+## O que vou fazer (5 grupos)
 
-- Padroniza UX em todo o admin (consistência visual e comportamental).
-- Reduz código duplicado em ~60% nas próximas tabelas.
-- Filtro por coluna é o que faltava para investigação rápida ("quero ver só usuários do plano X com score > Y").
-- Performance: paginação obrigatória evita renderizar 500+ linhas.
+### Grupo 1 — Atualizar 5 docs principais para v2.43.0
+- **CHANGELOG.md** (raiz): adicionar bloco `[2.43.0] — 2026-04-18` listando Fases A-I + P1-P10.
+- **docs/PENDENCIAS.md**: adicionar entrada v2.43.0 no topo com mesmo conteúdo detalhado.
+- **docs/ROADMAP.md**: marcar "Proteções de regressão" como entregue, bump versão.
+- **docs/SYSTEM_DESIGN.md**: nova seção "🛡️ Camada de proteções automáticas (Lint + Contract Tests)" descrevendo P1-P10 e onde cada uma vive.
+- **README.md**: bump versão + linha-resumo "10 proteções automáticas ativas (ver SECURITY.md e CODE_STANDARDS.md)".
 
-### Desvantagens / Riscos
+### Grupo 2 — Reforçar SECURITY e CODE_STANDARDS com as proteções
+- **docs/SECURITY.md**: nova seção "🧪 Testes de contrato de segurança" referenciando `src/__tests__/contracts/user-roles-security.test.ts` (P1).
+- **docs/CODE_STANDARDS.md**: nova seção "🚨 Lint rules ativas (regressão zero)" listando as 4 regras do `eslint.config.js`: bloqueio `dataLayer.push` direto, bloqueio UPDATE direto em `profiles` ICP, bloqueio `sendBeacon`, warning `no-console`, warning `useCurrentUser`, warning cores hardcoded.
 
-- Migração de 15+ tabelas é trabalho gradual — risco de quebrar layout específico em alguma se feita tudo de uma vez (por isso fases).
-- Filtros por coluna + busca + ordenação calculados no cliente. Para tabelas >5k linhas seria preciso server-side pagination (não é o caso de nenhuma tabela admin atual).
-- Componente genérico tende a ter casos especiais (ex.: célula com 2 botões de ação) — vou prever `actions?: (row) => ReactNode`.
+### Grupo 3 — Novo ADR-013 e novo KNOWLEDGE.md
+- **docs/ADR.md**: adicionar `ADR-013 — Proteções de regressão como código (Lint + Contract Tests + Comentários-trava)` com contexto, alternativas consideradas (revisão manual, treinamento, code-review), decisão e consequências.
+- **docs/KNOWLEDGE.md** (NOVO, ≤9500 chars): resumo compacto que pode ser colado no campo "Knowledge" do projeto Lovable. Inclui: visão produto, stack, 6 abas admin, regras obrigatórias (`pushGTMEvent`, `useCurrentUser`, `fetch keepalive`, logger, tokens HSL), 10 proteções ativas, formato de resposta obrigatório, links para docs detalhados.
 
-### Checklist manual de validação (pós Fase 1)
+### Grupo 4 — Regenerar MEMOCOPY.md (snapshot v2.43.0)
+- Atualizar `docs/MEMOCOPY.md` cabeçalho para 2.43.0
+- Adicionar bloco "Proteções automáticas (Fases 1-3 — abr/2026)" com P1-P10
+- Mantém estrutura atual de Core Rules + Memories por categoria
+- Adicionar entrada na tabela "Histórico de regeneração"
 
-1. **Logins vs Cadastros:** abrir Admin → Painel Geral → Dashboard. A tabela deve aparecer logo abaixo dos KPIs.
-2. **ICP Insights:** abrir aba, verificar paginação aparece se >15 linhas, clicar no funil da coluna "Plano" → checkbox com valores únicos do dataset inteiro.
-3. **TrialLogsViewer:** verificar paginação e filtro por status do trial.
-4. **Ordenação:** clicar header de coluna → seta muda, dados reordenam.
-5. **Busca:** digitar email parcial → resultado debounced após 300ms, paginação reseta para página 1.
-6. **Export CSV (se habilitado):** baixa CSV com filtros aplicados.
-7. **Mobile:** tabelas continuam com `overflow-x-auto` (sem regressão visual).
+### Grupo 5 — Reorganizar memória (sem deletar nada)
+- Não há `.lovable/memory/index.md` no filesystem (memória vive no sistema interno do Lovable). O índice mostrado nos prompts já tem como **regra #1** o formato de resposta obrigatório.
+- **Ação**: criar/atualizar memória `mem://preferences/output-format` reforçando que é Core Rule #1, e garantir que `mem://index.md` lista ela em primeiro lugar.
+- Adicionar nova memória `mem://quality/regression-shields` documentando as 10 proteções P1-P10 (substitui necessidade de relembrar manualmente).
 
-### Pendências / próximas etapas
+## Arquivos a criar/editar
 
-- **Fase 2-4** sob aprovação posterior.
-- **Persistência de filtros na URL** (fase 2 do componente — útil para compartilhar links).
-- **Filtros numéricos com range** (ex.: score entre 50-80) — fase 2.
-- **Server-side pagination** se alguma tabela passar de 5k linhas no futuro.
+**Criar (2)**:
+- `docs/KNOWLEDGE.md` — resumo ≤9500 chars
+- `mem://quality/regression-shields.md` — descrição das 10 proteções
 
-### Prevenção de regressão permanente
+**Editar (10)**:
+- `README.md` — versão + linha de proteções
+- `CHANGELOG.md` — bloco v2.43.0
+- `docs/PENDENCIAS.md` — bloco v2.43.0
+- `docs/ROADMAP.md` — versão + entrega
+- `docs/SYSTEM_DESIGN.md` — seção proteções
+- `docs/SECURITY.md` — seção testes contrato
+- `docs/CODE_STANDARDS.md` — seção lint rules ativas
+- `docs/ADR.md` — ADR-013
+- `docs/MEMOCOPY.md` — snapshot v2.43.0
+- `mem://index.md` (via update da memória) — output-format como item #1
 
-- Lint rule custom: detectar `<Table>` direto em arquivos novos dentro de `src/components/admin/**` e sugerir `DataTable`. Implementar junto com Fase 4 (quando todas migrarem).
-- README curto em `src/components/admin/system/DataTable.md` com 1 exemplo de uso para devs futuros.
-- Testes unitários básicos do `DataTable` (filtro, sort, paginação) — Vitest.
+## O que NÃO vou fazer (e por quê)
+
+| Item | Por que não |
+|---|---|
+| Mover README.md / CHANGELOG.md para docs/ | Convenção npm/GitHub. Mover quebra badges, links externos e descoberta automática. |
+| Mover `src/__tests__/README.md` | É README local da pasta de testes — boa prática manter junto. |
+| Recriar PRD/ROADMAP/SYSTEM_DESIGN | Já existem com 200-700 linhas cada na v2.42.0. Apenas atualizar. |
+| Storybook docs novos | `docs/STORYBOOK.md` já existe (76 linhas). |
+| Hooks/Components/Services docs novos | `docs/HOOKS.md`, `COMPONENTS.md`, `SERVICES.md` já existem. |
+| Tipos não exportados (refactor) | Análise extensa de TS — fora do escopo "documentação". Sugestão futura. |
+
+## Comparativo antes vs depois
+
+**Antes (v2.42.0)**:
+- 24 docs em `docs/` + README + CHANGELOG (atualizados até Fases A-I do editor)
+- 10 proteções P1-P10 implementadas mas não documentadas
+- Sem ADR para a decisão de "proteções como código"
+- Sem arquivo `KNOWLEDGE.md` compacto para colar no campo Knowledge do Lovable
+- Memo de formato de resposta presente, mas não fixada como #1
+
+**Depois (v2.43.0)**:
+- Mesmos 24 docs + 1 novo (KNOWLEDGE.md) — total 25
+- P1-P10 documentadas em SECURITY, CODE_STANDARDS, SYSTEM_DESIGN, MEMOCOPY
+- ADR-013 explica o porquê e alternativas
+- Knowledge ≤9500 chars pronto para colar
+- Memo formato de resposta confirmada como Core Rule #1
+
+## Vantagens
+- Documentação volta a ser **fonte de verdade** sincronizada com código
+- Novo dev encontra as 10 proteções no SECURITY/CODE_STANDARDS, não precisa garimpar
+- ADR-013 evita questionamento futuro ("por que esses lints existem?")
+- KNOWLEDGE.md acelera onboarding do próprio Lovable em sessões futuras
+
+## Desvantagens / Riscos
+- Nenhum risco de regressão (mudanças só em `.md` + memória)
+- ~10 arquivos editados — diff grande para revisar visualmente
+
+## Checklist manual após implementação
+1. Abrir `CHANGELOG.md` na raiz e confirmar bloco `[2.43.0]` no topo
+2. Abrir `docs/MEMOCOPY.md` e confirmar Core Rule #1 = formato de resposta
+3. Abrir `docs/KNOWLEDGE.md` e confirmar ≤9500 caracteres
+4. Procurar "v2.43.0" em todos os docs editados — deve aparecer
+5. Rodar `npm run test` — todos os 17+ testes (incluindo P1, P6, P8, P10) ainda passam
+6. Confirmar que README.md e CHANGELOG.md ainda estão na raiz (intencional)
+
+## Pendências / sugestões futuras (apenas do que será implementado)
+- **Limpeza incremental** dos 105 arquivos com `console.log` (warning ativo, não bloqueia)
+- **Limpeza incremental** das 120 violações de cores hardcoded (warning ativo)
+- **Reduzir baselines** P4 (auth.getUser=30) e P7 (cores=120) à medida que código for migrado
+- **Adicionar Storybook stories** para os componentes documentados em `docs/COMPONENTS.md` (fora deste escopo)
+
+## Prevenção de regressão da própria documentação
+- Já existe `scripts/validate-docs.cjs` (v2.41.0) que valida contagens de edge functions e tabelas vs documentação. Vou rodar esse script após editar para confirmar consistência.
+- O bloco "Como atualizar" já presente no fim do CHANGELOG.md serve de checklist permanente para próximos bumps.
 
