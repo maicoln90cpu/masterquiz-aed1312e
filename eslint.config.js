@@ -222,7 +222,12 @@ export default tseslint.config(
           "message": "🚫 Não use navigator.sendBeacon. Use fetch(url,{method:'POST',keepalive:true,headers:{apikey,Authorization}}) — Edge Functions exigem apikey."
         },
         {
-          // Detecta literais de objeto contendo chaves de colunas ICP protegidas
+          // ⚠️ P4: re-aplicada aqui porque a config sobrescreve no-restricted-syntax
+          "selector": "CallExpression[callee.object.property.name='auth'][callee.property.name='getUser']",
+          "message": "⚠️ Evite supabase.auth.getUser() direto. Use useCurrentUser() (componentes) ou useEffectiveUser() (telas com Suporte). Em libs, receba `user` por parâmetro."
+        },
+        {
+          // 🚫 P2: Detecta literais de objeto contendo chaves de colunas ICP protegidas
           // (cobre .update({...}) e .insert({...}) em qualquer .from('profiles')).
           "selector": "Property[key.name=/^(quiz_shared_count|paywall_hit_count|upgrade_clicked_count|editor_sessions_count|crm_interactions_count|ai_used_on_real_quiz|plan_limit_hit_type|landing_variant_seen|first_lead_received_at|form_collection_configured_at)$/]",
           "message": "🚫 Não escreva diretamente em colunas ICP de profiles. Use incrementProfileCounter() / setProfileFirstText() / setProfileFlagTrue() / setProfileFirstTimestamp() de @/lib/icpTracking — RPCs SECURITY DEFINER atômicos. Veja mem://features/icp-tracking."
