@@ -421,6 +421,7 @@ export function useQuizPersistence({
                 quiz_title: quiz.title,
                 user_id: user.id,
                 publish_source: 'manual',
+                creation_source: 'manual',
                 editor_mode: editorMode,
               }, { persist: true });
             }
@@ -610,6 +611,7 @@ export function useQuizPersistence({
                 quiz_title: quiz.title,
                 user_id: user.id,
                 publish_source: 'manual',
+                creation_source: 'manual',
                 editor_mode: editorMode,
               }, { persist: true });
             }
