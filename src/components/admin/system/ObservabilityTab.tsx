@@ -6,10 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronDown, AlertTriangle, CheckCircle, XCircle, Clock, Zap, Globe, Activity, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DataTable, type DataTableColumn } from './DataTable';
 import {
   fetchSLAMetrics,
   fetchAICosts,
@@ -175,26 +175,20 @@ function AICostsPanel() {
         </Card>
       </div>
       {data.dailyCosts.length > 0 && (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Gerações</TableHead>
-                <TableHead className="text-right">Custo (USD)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.dailyCosts.slice(-10).map(d => (
-                <TableRow key={d.date}>
-                  <TableCell>{d.date}</TableCell>
-                  <TableCell className="text-right">{d.generations}</TableCell>
-                  <TableCell className="text-right">${d.cost.toFixed(4)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={data.dailyCosts}
+          columns={[
+            { key: 'date', label: 'Data', sortable: true, searchable: true },
+            { key: 'generations', label: 'Gerações', sortable: true, align: 'right' },
+            { key: 'cost', label: 'Custo (USD)', sortable: true, align: 'right', render: (d) => `$${d.cost.toFixed(4)}` },
+          ]}
+          defaultSortKey="date"
+          defaultSortDirection="desc"
+          pageSize={10}
+          searchPlaceholder="Buscar data…"
+          exportCsv="ai-costs-daily"
+          rowKey={(d) => d.date}
+        />
       )}
     </>
   );
@@ -269,30 +263,21 @@ function RecentErrorsPanel() {
         )}
       </div>
       {data.groups.length > 0 && (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>#</TableHead>
-                <TableHead>Componente</TableHead>
-                <TableHead>Mensagem</TableHead>
-                <TableHead className="text-right">Qtd</TableHead>
-                <TableHead>Última</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.groups.slice(0, 10).map((g, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-mono text-xs">{i + 1}</TableCell>
-                  <TableCell className="font-mono text-xs">{g.component}</TableCell>
-                  <TableCell className="text-xs max-w-[300px] truncate">{g.message}</TableCell>
-                  <TableCell className="text-right font-bold">{g.count}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{new Date(g.lastSeen).toLocaleString('pt-BR')}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={data.groups}
+          columns={[
+            { key: 'component', label: 'Componente', sortable: true, filterable: true, searchable: true, className: 'font-mono text-xs' },
+            { key: 'message', label: 'Mensagem', searchable: true, className: 'text-xs max-w-[300px] truncate' },
+            { key: 'count', label: 'Qtd', sortable: true, align: 'right', className: 'font-bold' },
+            { key: 'lastSeen', label: 'Última', sortable: true, format: 'datetime', className: 'text-xs text-muted-foreground' },
+          ]}
+          defaultSortKey="count"
+          defaultSortDirection="desc"
+          pageSize={10}
+          searchPlaceholder="Buscar componente ou mensagem…"
+          exportCsv="recent-errors"
+          rowKey={(g, i) => `${g.component}-${i}`}
+        />
       )}
     </>
   );
@@ -310,36 +295,24 @@ function PerformanceP95Panel() {
   if (!data || data.length === 0) return <p className="text-muted-foreground text-sm">Sem dados de performance</p>;
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>#</TableHead>
-            <TableHead>Operação</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead className="text-right">Média (ms)</TableHead>
-            <TableHead className="text-right">P95 (ms)</TableHead>
-            <TableHead className="text-right">Máx (ms)</TableHead>
-            <TableHead className="text-right">Execuções</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((op, i) => (
-            <TableRow key={i}>
-              <TableCell>{i + 1}</TableCell>
-              <TableCell className="font-mono text-xs">{op.operation}</TableCell>
-              <TableCell><Badge variant="outline">{op.type}</Badge></TableCell>
-              <TableCell className="text-right">{op.avgMs}</TableCell>
-              <TableCell className="text-right font-bold">{op.p95Ms}</TableCell>
-              <TableCell className="text-right">{op.maxMs}</TableCell>
-              <TableCell className="text-right">{op.count}</TableCell>
-              <TableCell>{latencyBadge(op.p95Ms)}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable<PerformanceTopOp>
+      data={data}
+      columns={[
+        { key: 'operation', label: 'Operação', sortable: true, searchable: true, className: 'font-mono text-xs' },
+        { key: 'type', label: 'Tipo', sortable: true, filterable: true, render: (op) => <Badge variant="outline">{op.type}</Badge> },
+        { key: 'avgMs', label: 'Média (ms)', sortable: true, align: 'right' },
+        { key: 'p95Ms', label: 'P95 (ms)', sortable: true, align: 'right', className: 'font-bold' },
+        { key: 'maxMs', label: 'Máx (ms)', sortable: true, align: 'right' },
+        { key: 'count', label: 'Execuções', sortable: true, align: 'right' },
+        { key: 'status', label: 'Status', render: (op) => latencyBadge(op.p95Ms) },
+      ]}
+      defaultSortKey="p95Ms"
+      defaultSortDirection="desc"
+      pageSize={15}
+      searchPlaceholder="Buscar operação…"
+      exportCsv="performance-top"
+      rowKey={(op) => op.operation}
+    />
   );
 }
 

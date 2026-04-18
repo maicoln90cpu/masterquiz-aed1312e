@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable } from "./system/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -271,32 +271,33 @@ export function UnifiedCostsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead className="text-right">Gerações</TableHead>
-                  <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className="text-right">Custo (USD)</TableHead>
-                  <TableHead className="text-right">% do Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {modelBreakdown.map((model) => {
-                  const totalModelCost = modelBreakdown.reduce((s, m) => s + m.cost, 0);
-                  const pct = totalModelCost > 0 ? (model.cost / totalModelCost) * 100 : 0;
-                  return (
-                    <TableRow key={model.name}>
-                      <TableCell className="font-medium">{model.name}</TableCell>
-                      <TableCell className="text-right">{model.count}</TableCell>
-                      <TableCell className="text-right">{formatTokens(model.tokens)}</TableCell>
-                      <TableCell className="text-right font-medium">${model.cost.toFixed(4)}</TableCell>
-                      <TableCell className="text-right"><Badge variant="secondary">{pct.toFixed(1)}%</Badge></TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <DataTable
+            data={modelBreakdown}
+            columns={[
+              { key: 'name', label: 'Modelo', sortable: true, searchable: true, filterable: true, className: 'font-medium' },
+              { key: 'count', label: 'Gerações', sortable: true, align: 'right' },
+              { key: 'tokens', label: 'Tokens', sortable: true, align: 'right', render: (m) => formatTokens(m.tokens) },
+              { key: 'cost', label: 'Custo (USD)', sortable: true, align: 'right', render: (m) => `$${m.cost.toFixed(4)}` },
+              {
+                key: 'pct', label: '% do Total', align: 'right',
+                accessor: (m) => {
+                  const total = modelBreakdown.reduce((s, x) => s + x.cost, 0);
+                  return total > 0 ? (m.cost / total) * 100 : 0;
+                },
+                render: (m) => {
+                  const total = modelBreakdown.reduce((s, x) => s + x.cost, 0);
+                  const pct = total > 0 ? (m.cost / total) * 100 : 0;
+                  return <Badge variant="secondary">{pct.toFixed(1)}%</Badge>;
+                },
+              },
+            ]}
+            defaultSortKey="cost"
+            defaultSortDirection="desc"
+            pageSize={10}
+            searchPlaceholder="Buscar modelo…"
+            exportCsv="quiz-ai-by-model"
+            rowKey={(m) => m.name}
+          />
           </CardContent>
         </Card>
       )}
@@ -311,30 +312,22 @@ export function UnifiedCostsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead className="text-right">Gerações</TableHead>
-                  <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className="text-right">Custo (USD)</TableHead>
-                  <TableHead>Último uso</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topUsers.map((user, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell><Badge variant={idx === 0 ? "default" : idx < 3 ? "secondary" : "outline"}>{idx + 1}º</Badge></TableCell>
-                    <TableCell className="text-sm font-medium">{user.name}</TableCell>
-                    <TableCell className="text-right">{user.generations}</TableCell>
-                    <TableCell className="text-right">{formatTokens(user.tokens)}</TableCell>
-                    <TableCell className="text-right font-medium">${user.cost.toFixed(4)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{user.lastUsed}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              data={topUsers}
+              columns={[
+                { key: 'name', label: 'Usuário', sortable: true, searchable: true, className: 'text-sm font-medium' },
+                { key: 'generations', label: 'Gerações', sortable: true, align: 'right' },
+                { key: 'tokens', label: 'Tokens', sortable: true, align: 'right', render: (u) => formatTokens(u.tokens) },
+                { key: 'cost', label: 'Custo (USD)', sortable: true, align: 'right', render: (u) => `$${u.cost.toFixed(4)}`, className: 'font-medium' },
+                { key: 'lastUsed', label: 'Último uso', sortable: true, className: 'text-sm text-muted-foreground' },
+              ]}
+              defaultSortKey="cost"
+              defaultSortDirection="desc"
+              pageSize={10}
+              searchPlaceholder="Buscar usuário…"
+              exportCsv="quiz-ai-top-users"
+              rowKey={(u, i) => `${u.name}-${i}`}
+            />
           </CardContent>
         </Card>
       )}
@@ -393,26 +386,26 @@ export function UnifiedCostsDashboard() {
                 <StatItem label="Custo Médio / Email" value={`$${emailStats.avgCost.toFixed(6)}`} />
               </div>
               {emailStats.byType.length > 0 && (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tipo de Template</TableHead>
-                      <TableHead className="text-right">Gerações</TableHead>
-                      <TableHead className="text-right">Tokens</TableHead>
-                      <TableHead className="text-right">Custo (USD)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {emailStats.byType.map((row) => (
-                      <TableRow key={row.type}>
-                        <TableCell className="font-medium">{TEMPLATE_LABELS[row.type] || row.type}</TableCell>
-                        <TableCell className="text-right">{row.count}</TableCell>
-                        <TableCell className="text-right">{formatTokens(row.tokens)}</TableCell>
-                        <TableCell className="text-right font-medium">${row.cost.toFixed(4)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <DataTable
+                  data={emailStats.byType}
+                  columns={[
+                    {
+                      key: 'type', label: 'Tipo de Template', sortable: true, filterable: true, searchable: true,
+                      className: 'font-medium',
+                      render: (r) => TEMPLATE_LABELS[r.type] || r.type,
+                      accessor: (r) => TEMPLATE_LABELS[r.type] || r.type,
+                    },
+                    { key: 'count', label: 'Gerações', sortable: true, align: 'right' },
+                    { key: 'tokens', label: 'Tokens', sortable: true, align: 'right', render: (r) => formatTokens(r.tokens) },
+                    { key: 'cost', label: 'Custo (USD)', sortable: true, align: 'right', render: (r) => `$${r.cost.toFixed(4)}`, className: 'font-medium' },
+                  ]}
+                  defaultSortKey="cost"
+                  defaultSortDirection="desc"
+                  pageSize={10}
+                  searchPlaceholder="Buscar template…"
+                  exportCsv="email-ai-by-type"
+                  rowKey={(r) => r.type}
+                />
               )}
             </>
           ) : (
