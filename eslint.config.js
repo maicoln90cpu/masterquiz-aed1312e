@@ -108,4 +108,48 @@ export default tseslint.config(
       ],
     },
   },
+  // 🚫 Componentes admin: proibir <Table> direto — usar <DataTable /> universal.
+  // Padroniza busca, sort, filtros, paginação e CSV em todas as telas administrativas.
+  // Veja src/components/admin/system/DataTable.md para uso.
+  {
+    files: ["src/components/admin/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["warn", {
+        "paths": [
+          {
+            "name": "@/components/ui/table",
+            "message": "🚫 Em src/components/admin/** use <DataTable /> de @/components/admin/system/DataTable. <Table> direto só para casos especiais (colspan complexo, edição inline) — adicione exceção explícita aqui no eslint.config.js."
+          }
+        ]
+      }],
+    },
+  },
+  // Exceções: o próprio DataTable + arquivos legados (a migrar progressivamente).
+  // Ao refatorar um destes para DataTable, REMOVA o caminho desta lista.
+  {
+    files: [
+      "src/components/admin/system/DataTable.tsx",
+      "src/components/admin/system/SortableTableHeader.tsx",
+      "src/components/admin/system/ActivityPanel.tsx",
+      "src/components/admin/system/DatabaseMonitorTab.tsx",
+      "src/components/admin/system/InstitutionalDomainsPanel.tsx",
+      "src/components/admin/system/QueueMonitorPanel.tsx",
+      "src/components/admin/AISettings.tsx",
+      "src/components/admin/GTMEventsDashboard.tsx",
+      "src/components/admin/GrowthDashboard.tsx",
+      "src/components/admin/PaymentWebhookLogs.tsx",
+      "src/components/admin/PostExpressConversionCard.tsx",
+      "src/components/admin/TemplateManagement.tsx",
+      "src/components/admin/blog/BlogPostsManager.tsx",
+      "src/components/admin/recovery/EmailAutomations.tsx",
+      "src/components/admin/recovery/EmailRecoveryCosts.tsx",
+      "src/components/admin/recovery/EmailRecoveryQueue.tsx",
+      "src/components/admin/recovery/EmailRecoveryReports.tsx",
+      "src/components/admin/recovery/EmailRecoveryTemplates.tsx",
+      "src/components/admin/recovery/RecoveryHistory.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
 );
