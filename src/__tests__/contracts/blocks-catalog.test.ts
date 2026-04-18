@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { blockCatalogSections } from '@/components/quiz/blocks/blockPaletteCatalog';
 
 /**
@@ -14,22 +12,20 @@ import { blockCatalogSections } from '@/components/quiz/blocks/blockPaletteCatal
  * é uma regressão recorrente. Este teste falha cedo, no CI.
  */
 
-const SRC_ROOT = join(process.cwd(), 'src');
+const typesFiles = import.meta.glob('/src/types/blocks.ts', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 
-function readTypesFile(): string {
-  return readFileSync(join(SRC_ROOT, 'types/blocks.ts'), 'utf-8');
-}
-
-function readBlockEditor(): string {
-  return readFileSync(
-    join(SRC_ROOT, 'components/quiz/blocks/BlockEditor.tsx'),
-    'utf-8'
-  );
-}
+const editorFiles = import.meta.glob('/src/components/quiz/blocks/BlockEditor.tsx', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 
 function extractBlockTypes(): string[] {
-  const content = readTypesFile();
-  // Captura o bloco `export type BlockType = | 'a' | 'b' ...;`
+  const content = Object.values(typesFiles)[0] ?? '';
   const match = content.match(/export type BlockType\s*=([\s\S]*?);/);
   if (!match) throw new Error('BlockType não encontrado em src/types/blocks.ts');
 
@@ -63,9 +59,8 @@ describe('P8 — Catálogo de blocos completo', () => {
     expect(missing).toEqual([]);
   });
 
-  it('todos os tipos têm renderer no BlockEditor', () => {
-    const editor = readBlockEditor();
-    // Detecta padrões `case 'foo':` ou `type === 'foo'` ou referência ao tipo
+  it('todos os tipos têm renderer detectável no BlockEditor', () => {
+    const editor = Object.values(editorFiles)[0] ?? '';
     const missingRenderers = allTypes.filter((t) => {
       const patterns = [
         new RegExp(`case\\s+['"]${t}['"]`),
