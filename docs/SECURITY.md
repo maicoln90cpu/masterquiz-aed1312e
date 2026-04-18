@@ -1,7 +1,7 @@
 # 🔒 SECURITY — Práticas de Segurança
 
 > MasterQuiz — Guia de segurança, RLS, rate limiting e audit
-> Versão 2.42.0 | 17 de Abril de 2026
+> Versão 2.43.0 | 18 de Abril de 2026
 
 ---
 
@@ -239,6 +239,23 @@ script-src 'self' *.googletagmanager.com;
 img-src 'self' *.b-cdn.net *.supabase.co;
 connect-src 'self' *.supabase.co;
 ```
+
+---
+
+## 🧪 Testes de contrato de segurança (v2.43.0)
+
+> Proteções automáticas que falham o build se um shortcut perigoso entrar no código.
+
+### P1 — `src/__tests__/contracts/user-roles-security.test.ts`
+- ❌ **Bloqueia:** `supabase.from('user_roles').insert(...)` em qualquer arquivo de produção (exceto allowlist auditada).
+- ❌ **Bloqueia:** check de admin via `localStorage`/`sessionStorage`.
+- ✅ **Garante:** `useUserRole.ts` consulta a tabela `user_roles` diretamente (sem cache client-side).
+
+### Allowlist auditada
+Arquivos que podem inserir em `user_roles` (sempre verificando admin server-side):
+- `src/pages/AdminDashboard.tsx` — admin aprova `validation_requests` → grant role 'admin'
+
+> Para adicionar um arquivo à allowlist é obrigatório justificar aqui em `SECURITY.md` e referenciar a verificação de role server-side.
 
 ---
 

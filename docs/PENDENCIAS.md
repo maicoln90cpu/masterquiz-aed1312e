@@ -1,5 +1,50 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.43.0 — Camada de proteções automáticas (Fases 1–3 — 18/04/2026)
+
+### Feature: 10 escudos de regressão (P1–P10)
+- **Contract tests** (Vitest com `import.meta.glob`):
+  - P1 — `user-roles-security.test.ts`: bloqueia INSERT direto em `user_roles` e admin-check via localStorage
+  - P8 — `blocks-catalog.test.ts`: valida 30+ `BlockType` ↔ `blockPaletteCatalog` ↔ renderer
+  - P10 — `gtm-persistence.test.ts`: garante persistência de eventos via `pushGTMEvent`
+  - P6 — smoke test de batch PostgREST `.in()` ≤150
+- **Lint rules** em `eslint.config.js`:
+  - P2 — `no-restricted-syntax`: `window.dataLayer.push` proibido (use `pushGTMEvent`)
+  - P3 — `no-restricted-syntax`: UPDATE direto em ICP cols de `profiles` proibido
+  - P4 — warning `supabase.auth.getUser()` (prefira `useCurrentUser`)
+  - P5 — `navigator.sendBeacon` proibido (use `fetch keepalive`)
+  - P7 — warning para cores hardcoded fora de tokens HSL
+- **Comentários-trava** (P9) em `src/hooks/useQuizPersistence.ts` para qualquer novo evento de publicação.
+
+### Feature: Documentação v2.43.0
+- Novo `docs/KNOWLEDGE.md` (≤9500 chars) — resumo executivo para Knowledge Base
+- Novo **ADR-013** em `docs/ADR.md` — "Proteções de regressão como código"
+- Snapshot completo regenerado em `docs/MEMOCOPY.md`
+- Seções dedicadas em `SECURITY.md`, `CODE_STANDARDS.md`, `SYSTEM_DESIGN.md`
+
+### Arquivos Alterados / Criados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/__tests__/contracts/user-roles-security.test.ts` | (criado nas fases anteriores) |
+| `src/__tests__/contracts/blocks-catalog.test.ts` | (criado nas fases anteriores) |
+| `src/__tests__/regression/gtm-persistence.test.ts` | (criado nas fases anteriores) |
+| `eslint.config.js` | Regras P2/P3/P4/P5/P7 (fases anteriores) |
+| `src/hooks/useQuizPersistence.ts` | Comentários-trava P9 |
+| `docs/KNOWLEDGE.md` | NOVO — resumo ≤9500 chars |
+| `docs/ADR.md` | + ADR-013 |
+| `docs/SECURITY.md` | + seção testes de contrato |
+| `docs/CODE_STANDARDS.md` | + seção lint rules ativas |
+| `docs/SYSTEM_DESIGN.md` | + seção proteções automáticas |
+| `docs/MEMOCOPY.md` | Snapshot v2.43.0 |
+| `CHANGELOG.md`, `README.md`, `ROADMAP.md`, `ONBOARDING.md` | Bump versão |
+
+### Próximos passos sugeridos (não críticos)
+- Limpeza incremental dos 105 arquivos com `console.log` (warning ativo)
+- Limpeza incremental das 120 cores hardcoded (warning ativo)
+- Reduzir baselines P4 (auth.getUser=30) e P7 (cores=120) à medida que código for migrado
+
+---
+
 ## ✅ v2.42.0 — Storybook + Memórias Reorganizadas (Etapa 5 — 17/04/2026)
 
 ### Feature: Storybook para UI Base

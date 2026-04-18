@@ -1,7 +1,7 @@
 # 📋 ADR — Architecture Decision Records
 
 > Registro de decisões arquiteturais do MasterQuiz
-> Versão 2.42.0 | 17 de Abril de 2026
+> Versão 2.43.0 | 18 de Abril de 2026
 
 ---
 
@@ -178,6 +178,29 @@
 **Decisão:** Reutilizar a infraestrutura existente de A/B test (`landing_ab_tests` + componentes `<ABTestTracker>`/`<ABTestVariant>`) com `target_element='compare_cta_final'`, traffic_split 50/50, conversion_type `signup`. Sessões registradas em `landing_ab_sessions` (UPDATE restrito a 24h via RLS).  
 **Alternativas rejeitadas:** (1) Google Optimize — descontinuado; (2) PostHog Experiments — adiciona dependência externa para 1 teste; (3) A/B server-side via Edge Function — overhead desnecessário (decisão é puramente visual); (4) Hardcoded fallback sem teste — perde aprendizado contínuo.  
 **Consequências:** Aproveitamento da infra existente (zero código novo de A/B), métricas no mesmo dashboard de outros testes de landing, fallback gracioso para texto i18n se a tabela estiver desativada, mas exige migração SQL para criar/desativar testes (não há UI admin ainda — ver pendências).
+
+---
+
+## ADR-013: Proteções de regressão como código (Lint + Contract Tests + Comentários-trava)
+
+**Data:** Abril 2026 (v2.43.0)
+**Status:** Aceito
+**Contexto:** Após sucessivas regressões em áreas críticas (privilege escalation por INSERT direto em `user_roles`, eventos GTM duplicados por `dataLayer.push` direto, UPDATEs incorretos em colunas ICP, perda de eventos por `sendBeacon` cancelado, blocos novos sem renderer, eventos de publicação sem dedup), revisão manual mostrou-se insuficiente. Toda regressão tinha um padrão sintático identificável que poderia ser detectado automaticamente.
+**Decisão:** Criar 10 proteções (P1–P10) divididas em três mecanismos:
+1. **Contract tests** (Vitest + `import.meta.glob`) — varrem o codebase em build-time procurando padrões proibidos (P1, P6, P8, P10).
+2. **ESLint rules** (`no-restricted-syntax` customizadas) — bloqueiam padrões sintáticos diretamente no editor e no CI (P2, P3, P4, P5, P7).
+3. **Comentários-trava** em pontos sensíveis do código (`useQuizPersistence.ts`) listando requisitos obrigatórios para qualquer modificação (P9).
+**Alternativas rejeitadas:**
+- *Revisão manual / treinamento* — falhou na prática; novo dev sempre repete o mesmo erro.
+- *Code review humano* — gargalo, não escala, depende de quem revisa.
+- *Husky pre-commit hooks* — fáceis de pular com `--no-verify`; preferimos falhar no CI.
+- *Sentry/observabilidade pós-deploy* — detecta tarde demais, com usuários afetados.
+**Consequências:**
+- ✅ Build/test falha antes do merge se qualquer regra quebrar.
+- ✅ Documentação executável (a regra É o teste).
+- ✅ Allowlists explícitas (P1) forçam justificativa em `SECURITY.md`.
+- ⚠️ Custo de manutenção: cada nova proteção exige PR, baseline e doc.
+- ⚠️ Warnings (P4/P7) acumulam dívida — controlados via baselines decrescentes em `PENDENCIAS.md`.
 
 ---
 

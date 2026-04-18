@@ -1,6 +1,8 @@
 # 🎯 MasterQuiz
 
-**Versão 2.42.0** | Última atualização: 17 de Abril de 2026
+**Versão 2.43.0** | Última atualização: 18 de Abril de 2026
+
+> 🛡️ **10 proteções automáticas ativas** (lint + contract tests) contra regressão de privilégio, GTM, ICP, auth, network, design system e blocos. Veja [`docs/SECURITY.md`](./docs/SECURITY.md) e [`docs/CODE_STANDARDS.md`](./docs/CODE_STANDARDS.md).
 
 **Plataforma de Funis de Auto-Convencimento — Transforme visitantes em compradores através de perguntas estratégicas.**
 
