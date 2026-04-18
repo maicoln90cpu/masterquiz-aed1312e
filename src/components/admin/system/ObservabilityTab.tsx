@@ -175,26 +175,20 @@ function AICostsPanel() {
         </Card>
       </div>
       {data.dailyCosts.length > 0 && (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Gerações</TableHead>
-                <TableHead className="text-right">Custo (USD)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.dailyCosts.slice(-10).map(d => (
-                <TableRow key={d.date}>
-                  <TableCell>{d.date}</TableCell>
-                  <TableCell className="text-right">{d.generations}</TableCell>
-                  <TableCell className="text-right">${d.cost.toFixed(4)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={data.dailyCosts}
+          columns={[
+            { key: 'date', label: 'Data', sortable: true, searchable: true },
+            { key: 'generations', label: 'Gerações', sortable: true, align: 'right' },
+            { key: 'cost', label: 'Custo (USD)', sortable: true, align: 'right', render: (d) => `$${d.cost.toFixed(4)}` },
+          ]}
+          defaultSortKey="date"
+          defaultSortDirection="desc"
+          pageSize={10}
+          searchPlaceholder="Buscar data…"
+          exportCsv="ai-costs-daily"
+          rowKey={(d) => d.date}
+        />
       )}
     </>
   );
