@@ -2355,6 +2355,7 @@ const pt = {
       faq: "FAQ",
       contact: "Contato",
       login: "Entrar",
+      backHome: "Voltar para Home",
     },
     compare: {
       seo: {
@@ -5315,6 +5316,7 @@ const en = {
       faq: "FAQ",
       contact: "Contact",
       login: "Login",
+      backHome: "Back to Home",
     },
     compare: {
       seo: {
@@ -8466,6 +8468,7 @@ const es = {
       faq: "FAQ",
       contact: "Contacto",
       login: "Entrar",
+      backHome: "Volver al Inicio",
     },
     compare: {
       seo: {
