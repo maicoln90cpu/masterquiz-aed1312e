@@ -39,6 +39,7 @@ import { createBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { ExpressIntroModal } from "@/components/quiz/express/ExpressIntroModal";
+import { FunnelStepInfo } from "@/components/quiz/FunnelStepInfo";
 
 
 import { useQuizState } from "@/hooks/useQuizState";
