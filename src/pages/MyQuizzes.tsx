@@ -470,8 +470,11 @@ const MyQuizzes = () => {
                       onEmbed={handleEmbed}
                       onPreview={handlePreview}
                       onEditSlug={handleEditSlug}
-                      onGenerateTestLead={generateTestLead}
-                      isGeneratingTestLead={isGeneratingTestLead}
+                      onGenerateTestLead={(quizId: string) => {
+                        setTestLeadQuizId(quizId);
+                        setTestLeadDialogOpen(true);
+                      }}
+                      isGeneratingTestLead={false}
                     />
                   </motion.div>
                 ))}
