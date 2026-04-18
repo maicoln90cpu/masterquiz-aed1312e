@@ -743,48 +743,68 @@ const CreateQuizClassic = () => {
                   />
                 )}
 
+                {/*
+                  Etapa 4 — Coleta de dados.
+                  Modo Funil (showResults=false): mostra FunnelStepInfo + bloqueia controles
+                  (wrapper com pointer-events-none + opacity), educando que coleta deve vir
+                  de blocos dentro do quiz. Ao reativar showResults, controles voltam ao normal.
+                */}
                 {step === 4 && !isExpressMode && (
                   <>
-                    {!appearanceState.showResults && (
-                      <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
-                        <AlertDescription className="text-sm">
-                          <strong>Coleta de dados desativada:</strong> Na etapa 2 (Aparência), você optou por não exibir a tela de resultados. 
-                          Como o formulário de coleta é exibido junto ao resultado, ele também não será mostrado ao respondente. 
-                          As configurações abaixo só terão efeito se você reativar a exibição de resultados.
-                        </AlertDescription>
-                      </Alert>
+                    {!appearanceState.showResults ? (
+                      <div className="space-y-4">
+                        <FunnelStepInfo
+                          variant="collection"
+                          onBackToQuestions={() => updateEditor({ step: 3 })}
+                        />
+                        <div className="opacity-50 pointer-events-none select-none" aria-hidden="true">
+                          <VisitorFormConfigStep
+                            collectionTiming="none"
+                            onCollectionTimingChange={() => { /* bloqueado em modo funil */ }}
+                            collectName={collectName}
+                            onCollectNameChange={() => { /* bloqueado */ }}
+                            collectEmail={collectEmail}
+                            onCollectEmailChange={() => { /* bloqueado */ }}
+                            collectWhatsapp={collectWhatsapp}
+                            onCollectWhatsappChange={() => { /* bloqueado */ }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <VisitorFormConfigStep
+                        collectionTiming={collectionTiming as 'before' | 'after' | 'none'}
+                        onCollectionTimingChange={(v) => updateFormConfig({ collectionTiming: v })}
+                        collectName={collectName}
+                        onCollectNameChange={(v) => updateFormConfig({ collectName: v })}
+                        collectEmail={collectEmail}
+                        onCollectEmailChange={(v) => updateFormConfig({ collectEmail: v })}
+                        collectWhatsapp={collectWhatsapp}
+                        onCollectWhatsappChange={(v) => updateFormConfig({ collectWhatsapp: v })}
+                      />
                     )}
-                    <VisitorFormConfigStep 
-                      collectionTiming={collectionTiming as 'before' | 'after' | 'none'}
-                      onCollectionTimingChange={(v) => updateFormConfig({ collectionTiming: v })}
-                      collectName={collectName}
-                      onCollectNameChange={(v) => updateFormConfig({ collectName: v })}
-                      collectEmail={collectEmail}
-                      onCollectEmailChange={(v) => updateFormConfig({ collectEmail: v })}
-                      collectWhatsapp={collectWhatsapp}
-                      onCollectWhatsappChange={(v) => updateFormConfig({ collectWhatsapp: v })}
-                    />
                   </>
                 )}
 
+                {/*
+                  Etapa 5 — Resultados.
+                  Modo Funil (showResults=false): substitui ResultsConfigStep por FunnelStepInfo
+                  explicando que redirecionamento deve ser via CTA na última pergunta.
+                  Ao reativar showResults, ResultsConfigStep volta normalmente.
+                */}
                 {step === 5 && !isExpressMode && (
                   <>
-                    {!appearanceState.showResults && (
-                      <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
-                        <AlertDescription className="text-sm">
-                          <strong>Resultados desativados:</strong> Na etapa 2 (Aparência), você optou por não exibir a tela de resultados. 
-                          As configurações de resultado abaixo não serão exibidas ao respondente. 
-                          Para usar estas configurações, reative "Exibir tela de resultados" na etapa 2.
-                        </AlertDescription>
-                      </Alert>
+                    {!appearanceState.showResults ? (
+                      <FunnelStepInfo
+                        variant="results"
+                        onBackToQuestions={() => updateEditor({ step: 3 })}
+                      />
+                    ) : (
+                      <ResultsConfigStep
+                        quizId={quizId || undefined}
+                        deliveryTiming={deliveryTiming}
+                        onDeliveryTimingChange={(v) => updateFormConfig({ deliveryTiming: v })}
+                      />
                     )}
-                    <ResultsConfigStep 
-                      quizId={quizId || undefined}
-                      deliveryTiming={deliveryTiming}
-                      onDeliveryTimingChange={(v) => updateFormConfig({ deliveryTiming: v })}
-                    />
                   </>
                 )}
 
