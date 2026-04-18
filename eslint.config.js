@@ -88,4 +88,24 @@ export default tseslint.config(
       "no-restricted-syntax": "off",
     },
   },
+  // 🚫 Páginas públicas: proibir <header> local — devem usar <LandingHeader />
+  // Evita regressão de navegação cross-page e botão "Voltar para Home".
+  {
+    files: [
+      "src/pages/Pricing.tsx",
+      "src/pages/FAQ.tsx",
+      "src/pages/Compare*.tsx",
+      "src/pages/Blog*.tsx",
+      "src/pages/Index.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          "selector": "JSXOpeningElement[name.name='header']",
+          "message": "🚫 Páginas públicas devem usar <LandingHeader /> de @/components/landing/LandingHeader. Não crie <header> local — quebra navegação cross-page e botão 'Voltar para Home'."
+        }
+      ],
+    },
+  },
 );
