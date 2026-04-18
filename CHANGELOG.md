@@ -7,6 +7,35 @@
 
 ---
 
+## [2.43.0] — 2026-04-18
+
+### ✨ Adicionado
+- **Camada de proteções automáticas (P1–P10)** contra regressão, dividida em 3 fases:
+  - **P1** — Contract test `src/__tests__/contracts/user-roles-security.test.ts` bloqueia INSERT direto em `user_roles` e check de admin via localStorage.
+  - **P2** — ESLint rule bloqueia `window.dataLayer.push` direto (forçar `pushGTMEvent` de `@/lib/gtmLogger`) — ADR-010.
+  - **P3** — ESLint rule bloqueia UPDATE direto em colunas ICP de `profiles` (forçar RPCs de `src/lib/icpTracking.ts`).
+  - **P4** — ESLint warning para `supabase.auth.getUser()` direto (preferir `useCurrentUser`).
+  - **P5** — ESLint rule bloqueia `navigator.sendBeacon` (usar `fetch` com `keepalive:true`).
+  - **P6** — Smoke test de batch PostgREST `.in()` ≤150 IDs.
+  - **P7** — ESLint warning para cores hardcoded fora dos tokens HSL semânticos.
+  - **P8** — Contract test `blocks-catalog.test.ts` valida que todo `BlockType` tem entrada no `blockPaletteCatalog` e renderer no `BlockEditor`.
+  - **P9** — Comentários-trava em `useQuizPersistence.ts` exigindo `creation_source`/`publish_source`/`editor_mode` + dedup global via RPC `has_user_fired_event` em qualquer novo evento de publicação.
+  - **P10** — Smoke test `gtm-persistence.test.ts` garante que `pushGTMEvent` persiste em `gtm_event_logs` (ADR-010) respeitando override `{ persist: false }`.
+- **`docs/KNOWLEDGE.md`** — resumo executivo do projeto (≤9500 caracteres) pronto para colar no campo Knowledge do Lovable.
+- **ADR-013** em `docs/ADR.md` — "Proteções de regressão como código" (decisão, alternativas, consequências).
+
+### 🔄 Alterado
+- **`docs/MEMOCOPY.md`** regenerado como snapshot v2.43.0 com bloco "Proteções automáticas P1–P10".
+- **`docs/SECURITY.md`** ganhou seção "🧪 Testes de contrato de segurança" referenciando P1.
+- **`docs/CODE_STANDARDS.md`** ganhou seção "🚨 Lint rules ativas (regressão zero)" listando P2/P3/P4/P5/P7.
+- **`docs/SYSTEM_DESIGN.md`** ganhou seção "🛡️ Camada de proteções automáticas".
+- **Memória do projeto** reordenada: regra de formato de resposta agora é Core Rule #1 absoluta.
+
+### 📝 Documentação
+- README/PRD/ROADMAP/PENDENCIAS/EDGE_FUNCTIONS/DATABASE_SCHEMA/ONBOARDING — bump para v2.43.0.
+
+---
+
 ## [2.42.0] — 2026-04-17
 
 ### ✨ Adicionado

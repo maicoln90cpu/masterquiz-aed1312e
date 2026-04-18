@@ -1,6 +1,8 @@
 # 🗺 ROADMAP - MasterQuiz
 
-> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026 — v2.42.0
+> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026 — v2.43.0
+>
+> ✅ **Abr/2026 (v2.43.0):** Camada de proteções automáticas P1–P10 entregue (lint + contract tests + comentários-trava).
 
 ---
 
