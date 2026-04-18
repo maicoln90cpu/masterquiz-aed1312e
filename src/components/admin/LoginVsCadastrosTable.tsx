@@ -1,16 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, LogIn, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
+import { useMemo } from "react";
 
 interface DayRow {
   date: string;
   cadastros: number;
   logins: number;
-  taxa: string;
+  taxa_num: number; // numérica para sort
+  taxa: string;     // formatada
 }
 
 function useLoginsVsCadastros() {
@@ -21,7 +23,6 @@ function useLoginsVsCadastros() {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const since = thirtyDaysAgo.toISOString();
 
-      // Etapa 1: cadastros via fonte canônica (auth.users ∩ profiles ativos)
       const [dailyRes, loginsRes, totalRealRes] = await Promise.all([
         supabase.rpc('real_users_daily', { _days: 30 }),
         supabase.from('login_events').select('logged_in_at').gte('logged_in_at', since),
@@ -52,10 +53,12 @@ function useLoginsVsCadastros() {
         totalLogins += logins;
 
         if (cadastros > 0 || logins > 0) {
+          const taxa_num = cadastros > 0 ? Math.round((logins / cadastros) * 100) : (logins > 0 ? 9999 : 0);
           rows.push({
             date: dateStr,
             cadastros,
             logins,
+            taxa_num,
             taxa: cadastros > 0 ? `${Math.round((logins / cadastros) * 100)}%` : logins > 0 ? '∞' : '—',
           });
         }
@@ -74,6 +77,40 @@ function useLoginsVsCadastros() {
 
 export function LoginVsCadastrosTable() {
   const { data, isLoading } = useLoginsVsCadastros();
+
+  const columns: DataTableColumn<DayRow>[] = useMemo(() => [
+    {
+      key: 'date',
+      label: 'Data',
+      sortable: true,
+      render: (r) => (
+        <span className="text-xs">
+          {new Date(r.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', weekday: 'short' })}
+        </span>
+      ),
+    },
+    {
+      key: 'cadastros',
+      label: 'Cadastros',
+      sortable: true,
+      align: 'center',
+      render: (r) => <Badge variant="secondary">{r.cadastros}</Badge>,
+    },
+    {
+      key: 'logins',
+      label: 'Logins',
+      sortable: true,
+      align: 'center',
+      render: (r) => <Badge variant="outline">{r.logins}</Badge>,
+    },
+    {
+      key: 'taxa_num',
+      label: 'Taxa Retorno',
+      sortable: true,
+      align: 'center',
+      render: (r) => <span className="text-xs font-medium">{r.taxa}</span>,
+    },
+  ], []);
 
   if (isLoading) return <Skeleton className="h-[350px] rounded-lg" />;
 
@@ -103,7 +140,6 @@ export function LoginVsCadastrosTable() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Summary cards */}
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center p-3 rounded-lg bg-primary/10">
             <Users className="h-4 w-4 mx-auto mb-1 text-primary" />
@@ -122,35 +158,16 @@ export function LoginVsCadastrosTable() {
           </div>
         </div>
 
-        {/* Daily table */}
-        <div className="max-h-[300px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Data</TableHead>
-                <TableHead className="text-xs text-center">Cadastros</TableHead>
-                <TableHead className="text-xs text-center">Logins</TableHead>
-                <TableHead className="text-xs text-center">Taxa Retorno</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.rows.map((row) => (
-                <TableRow key={row.date}>
-                  <TableCell className="text-xs">
-                    {new Date(row.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', weekday: 'short' })}
-                  </TableCell>
-                  <TableCell className="text-xs text-center">
-                    <Badge variant="secondary">{row.cadastros}</Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-center">
-                    <Badge variant="outline">{row.logins}</Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-center font-medium">{row.taxa}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable<DayRow>
+          data={data.rows}
+          columns={columns}
+          defaultSortKey="date"
+          defaultSortDirection="desc"
+          pageSize={10}
+          exportCsv="logins-vs-cadastros"
+          emptyMessage="Sem registros no período."
+          rowKey={(r) => r.date}
+        />
       </CardContent>
     </Card>
   );
