@@ -740,6 +740,11 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Logins vs Cadastros — movido de Financeiro→Relatórios para visibilidade */}
+      <Suspense fallback={<Skeleton className="h-[350px] w-full rounded-lg" />}>
+        <LoginVsCadastrosTable />
+      </Suspense>
     </>
   );
 
@@ -798,11 +803,6 @@ export default function AdminDashboard() {
       {/* ✅ FASE 14: Charts lazy loaded */}
       <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
         <AdminDashboardCharts chartData={chartData} />
-      </Suspense>
-
-      {/* Logins vs Cadastros */}
-      <Suspense fallback={<Skeleton className="h-[350px] w-full rounded-lg" />}>
-        <LoginVsCadastrosTable />
       </Suspense>
     </>
   );
