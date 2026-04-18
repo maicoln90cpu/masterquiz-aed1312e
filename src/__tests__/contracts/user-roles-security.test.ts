@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 /**
  * Contrato de segurança P1: roles NUNCA podem ser auto-atribuídos.
  *
  * Estes testes validam o contrato de cliente — garantem que o código frontend
- * NÃO contém shortcuts perigosos (ex: client.from('user_roles').insert({...})).
+ * NÃO contém shortcuts perigosos (ex: insert direto em user_roles ou check
+ * de admin via localStorage).
  *
  * Para validação real de RLS server-side, ver migrations e SECURITY.md.
  *
@@ -13,99 +14,57 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  *    (somente trigger handle_new_user_role no banco pode inserir).
  * 2. Verificação de admin SEMPRE via has_role() ou hook useUserRole — nunca via
  *    leitura direta de localStorage / cookie / header.
- * 3. has_role() é SECURITY DEFINER (validado por integração com banco).
+ * 3. useUserRole faz query real em user_roles via supabase.
  */
 
+// Carrega TODOS os arquivos .ts/.tsx de src/ EXCETO os de teste.
+// Vite resolve isso em build time — não precisa de Node fs.
+const allSourceFiles = import.meta.glob('/src/**/*.{ts,tsx}', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+function isProductionFile(path: string): boolean {
+  // ignora arquivos de teste e mocks
+  return !/\.test\.tsx?$/.test(path) && !path.includes('/__tests__/');
+}
+
 describe('Security Contract: user_roles', () => {
-  describe('Frontend não atribui roles', () => {
-    it('nenhum arquivo de produção (não-teste) chama .from("user_roles").insert', async () => {
-      // Lê a árvore de src/ buscando padrões perigosos.
-      // Falha se algum componente tentar inserir roles diretamente.
-      const fs = await import('node:fs/promises');
-      const path = await import('node:path');
+  it('nenhum arquivo de produção faz INSERT direto em user_roles', () => {
+    const dangerous = /\.from\(\s*['"]user_roles['"]\s*\)\s*\.insert/;
+    const violations = Object.entries(allSourceFiles)
+      .filter(([path]) => isProductionFile(path))
+      .filter(([, content]) => dangerous.test(content))
+      .map(([path]) => path);
 
-      const SRC = path.resolve(process.cwd(), 'src');
-      const violations: string[] = [];
-
-      async function walk(dir: string) {
-        const entries = await fs.readdir(dir, { withFileTypes: true });
-        for (const entry of entries) {
-          const full = path.join(dir, entry.name);
-          if (entry.isDirectory()) {
-            // ignora pastas de teste
-            if (entry.name === '__tests__' || entry.name === 'node_modules') continue;
-            await walk(full);
-          } else if (/\.(ts|tsx)$/.test(entry.name)) {
-            // ignora arquivos *.test.ts
-            if (/\.test\.tsx?$/.test(entry.name)) continue;
-            const content = await fs.readFile(full, 'utf-8');
-            // Padrão perigoso: insert direto em user_roles
-            const dangerous = /\.from\(\s*['"]user_roles['"]\s*\)\s*\.insert/;
-            if (dangerous.test(content)) {
-              violations.push(full.replace(SRC, 'src'));
-            }
-          }
-        }
-      }
-
-      await walk(SRC);
-
-      expect(
-        violations,
-        `🚨 Privilege escalation risk! Estes arquivos fazem INSERT direto em user_roles:\n${violations.join('\n')}\n\nUse trigger handle_new_user_role do banco. Veja SECURITY.md.`
-      ).toEqual([]);
-    });
-
-    it('nenhum arquivo verifica admin via localStorage', async () => {
-      const fs = await import('node:fs/promises');
-      const path = await import('node:path');
-
-      const SRC = path.resolve(process.cwd(), 'src');
-      const violations: string[] = [];
-
-      async function walk(dir: string) {
-        const entries = await fs.readdir(dir, { withFileTypes: true });
-        for (const entry of entries) {
-          const full = path.join(dir, entry.name);
-          if (entry.isDirectory()) {
-            if (entry.name === '__tests__' || entry.name === 'node_modules') continue;
-            await walk(full);
-          } else if (/\.(ts|tsx)$/.test(entry.name)) {
-            if (/\.test\.tsx?$/.test(entry.name)) continue;
-            const content = await fs.readFile(full, 'utf-8');
-            // Padrão perigoso: localStorage com palavra "admin" ou "role"
-            const patterns = [
-              /localStorage\.[gs]etItem\(\s*['"][^'"]*\b(is_?admin|user_?role|admin_?role)\b/i,
-              /sessionStorage\.[gs]etItem\(\s*['"][^'"]*\b(is_?admin|user_?role|admin_?role)\b/i,
-            ];
-            if (patterns.some(p => p.test(content))) {
-              violations.push(full.replace(SRC, 'src'));
-            }
-          }
-        }
-      }
-
-      await walk(SRC);
-
-      expect(
-        violations,
-        `🚨 Verificação client-side de admin é insegura. Use useUserRole() (que chama has_role no banco):\n${violations.join('\n')}`
-      ).toEqual([]);
-    });
+    expect(
+      violations,
+      `🚨 Privilege escalation risk! Estes arquivos fazem INSERT direto em user_roles:\n${violations.join('\n')}\n\nUse o trigger handle_new_user_role do banco. Veja SECURITY.md.`
+    ).toEqual([]);
   });
 
-  describe('useUserRole faz query no banco', () => {
-    it('useUserRole busca de user_roles via supabase (não de localStorage)', async () => {
-      const fs = await import('node:fs/promises');
-      const path = await import('node:path');
-      const file = path.resolve(process.cwd(), 'src/hooks/useUserRole.ts');
-      const content = await fs.readFile(file, 'utf-8');
+  it('nenhum arquivo verifica admin via localStorage/sessionStorage', () => {
+    const patterns = [
+      /localStorage\.[gs]etItem\(\s*['"][^'"]*\b(is_?admin|user_?role|admin_?role)\b/i,
+      /sessionStorage\.[gs]etItem\(\s*['"][^'"]*\b(is_?admin|user_?role|admin_?role)\b/i,
+    ];
+    const violations = Object.entries(allSourceFiles)
+      .filter(([path]) => isProductionFile(path))
+      .filter(([, content]) => patterns.some((p) => p.test(content)))
+      .map(([path]) => path);
 
-      // Garante que faz query real
-      expect(content).toMatch(/\.from\(\s*['"]user_roles['"]\s*\)/);
-      expect(content).toMatch(/\.select\(\s*['"]role['"]\s*\)/);
-      // Garante que NÃO usa localStorage para roles
-      expect(content).not.toMatch(/localStorage/);
-    });
+    expect(
+      violations,
+      `🚨 Verificação client-side de admin é insegura. Use useUserRole() (que chama has_role no banco):\n${violations.join('\n')}`
+    ).toEqual([]);
+  });
+
+  it('useUserRole faz query real em user_roles (não usa localStorage)', () => {
+    const file = allSourceFiles['/src/hooks/useUserRole.ts'];
+    expect(file, 'src/hooks/useUserRole.ts não encontrado').toBeTruthy();
+    expect(file).toMatch(/\.from\(\s*['"]user_roles['"]\s*\)/);
+    expect(file).toMatch(/\.select\(\s*['"]role['"]\s*\)/);
+    expect(file).not.toMatch(/localStorage/);
   });
 });
