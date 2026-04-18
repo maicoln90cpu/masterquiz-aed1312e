@@ -804,11 +804,6 @@ export default function AdminDashboard() {
       <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
         <AdminDashboardCharts chartData={chartData} />
       </Suspense>
-
-      {/* Logins vs Cadastros */}
-      <Suspense fallback={<Skeleton className="h-[350px] w-full rounded-lg" />}>
-        <LoginVsCadastrosTable />
-      </Suspense>
     </>
   );
 
