@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, TrendingUp, TrendingDown, Minus, Users, FileText, Target, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DataTable } from "@/components/admin/system/DataTable";
 
 interface ModeLog {
   site_mode: string;
@@ -218,63 +219,53 @@ export function ModeComparison() {
           <CardTitle className="text-base">Taxas de Conversão Comparadas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 font-medium">Métrica</th>
-                  <th className="text-center py-2 font-medium">Modo A</th>
-                  <th className="text-center py-2 font-medium">Modo B</th>
-                  <th className="text-center py-2 font-medium">Delta</th>
-                </tr>
-              </thead>
-              <tbody>
-                {metrics.length >= 5 && (
-                  <>
-                    <tr className="border-b">
-                      <td className="py-2">Quizzes / Cadastro</td>
-                      <td className="text-center py-2">{metrics[0].modeA > 0 ? (metrics[1].modeA / metrics[0].modeA).toFixed(2) : '0'}</td>
-                      <td className="text-center py-2">{metrics[0].modeB > 0 ? (metrics[1].modeB / metrics[0].modeB).toFixed(2) : '0'}</td>
-                      <td className="text-center py-2">
-                        {(() => {
-                          const rA = metrics[0].modeA > 0 ? metrics[1].modeA / metrics[0].modeA : 0;
-                          const rB = metrics[0].modeB > 0 ? metrics[1].modeB / metrics[0].modeB : 0;
-                          const d = rA > 0 ? Math.round(((rB - rA) / rA) * 100) : 0;
-                          return <span className={d > 0 ? 'text-emerald-600' : d < 0 ? 'text-red-600' : ''}>{d > 0 ? '+' : ''}{d}%</span>;
-                        })()}
-                      </td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-2">Leads / Quiz</td>
-                      <td className="text-center py-2">{metrics[1].modeA > 0 ? (metrics[3].modeA / metrics[1].modeA).toFixed(1) : '0'}</td>
-                      <td className="text-center py-2">{metrics[1].modeB > 0 ? (metrics[3].modeB / metrics[1].modeB).toFixed(1) : '0'}</td>
-                      <td className="text-center py-2">
-                        {(() => {
-                          const rA = metrics[1].modeA > 0 ? metrics[3].modeA / metrics[1].modeA : 0;
-                          const rB = metrics[1].modeB > 0 ? metrics[3].modeB / metrics[1].modeB : 0;
-                          const d = rA > 0 ? Math.round(((rB - rA) / rA) * 100) : 0;
-                          return <span className={d > 0 ? 'text-emerald-600' : d < 0 ? 'text-red-600' : ''}>{d > 0 ? '+' : ''}{d}%</span>;
-                        })()}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Conversão Paga (%)</td>
-                      <td className="text-center py-2">{metrics[0].modeA > 0 ? ((metrics[4].modeA / metrics[0].modeA) * 100).toFixed(1) : '0'}%</td>
-                      <td className="text-center py-2">{metrics[0].modeB > 0 ? ((metrics[4].modeB / metrics[0].modeB) * 100).toFixed(1) : '0'}%</td>
-                      <td className="text-center py-2">
-                        {(() => {
-                          const rA = metrics[0].modeA > 0 ? (metrics[4].modeA / metrics[0].modeA) * 100 : 0;
-                          const rB = metrics[0].modeB > 0 ? (metrics[4].modeB / metrics[0].modeB) * 100 : 0;
-                          const d = rA > 0 ? Math.round(((rB - rA) / rA) * 100) : 0;
-                          return <span className={d > 0 ? 'text-emerald-600' : d < 0 ? 'text-red-600' : ''}>{d > 0 ? '+' : ''}{d}%</span>;
-                        })()}
-                      </td>
-                    </tr>
-                  </>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {metrics.length >= 5 && (() => {
+            const ratioRows = [
+              {
+                label: 'Quizzes / Cadastro',
+                modeA: metrics[0].modeA > 0 ? +(metrics[1].modeA / metrics[0].modeA).toFixed(2) : 0,
+                modeB: metrics[0].modeB > 0 ? +(metrics[1].modeB / metrics[0].modeB).toFixed(2) : 0,
+              },
+              {
+                label: 'Leads / Quiz',
+                modeA: metrics[1].modeA > 0 ? +(metrics[3].modeA / metrics[1].modeA).toFixed(1) : 0,
+                modeB: metrics[1].modeB > 0 ? +(metrics[3].modeB / metrics[1].modeB).toFixed(1) : 0,
+              },
+              {
+                label: 'Conversão Paga (%)',
+                modeA: metrics[0].modeA > 0 ? +((metrics[4].modeA / metrics[0].modeA) * 100).toFixed(1) : 0,
+                modeB: metrics[0].modeB > 0 ? +((metrics[4].modeB / metrics[0].modeB) * 100).toFixed(1) : 0,
+              },
+            ].map((r) => ({
+              ...r,
+              delta: r.modeA > 0 ? Math.round(((r.modeB - r.modeA) / r.modeA) * 100) : 0,
+            }));
+
+            return (
+              <DataTable
+                data={ratioRows}
+                rowKey={(r) => r.label}
+                pageSize={10}
+                emptyMessage="Sem dados"
+                columns={[
+                  { key: 'label', label: 'Métrica', sortable: true },
+                  { key: 'modeA', label: 'Modo A', sortable: true, align: 'center' },
+                  { key: 'modeB', label: 'Modo B', sortable: true, align: 'center' },
+                  {
+                    key: 'delta',
+                    label: 'Delta',
+                    sortable: true,
+                    align: 'center',
+                    render: (r) => (
+                      <span className={r.delta > 0 ? 'text-emerald-600' : r.delta < 0 ? 'text-red-600' : ''}>
+                        {r.delta > 0 ? '+' : ''}{r.delta}%
+                      </span>
+                    ),
+                  },
+                ]}
+              />
+            );
+          })()}
         </CardContent>
       </Card>
     </div>

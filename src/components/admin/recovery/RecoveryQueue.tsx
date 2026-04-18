@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, RefreshCw, Play, Trash2, Clock, Send, AlertCircle, XCircle, Timer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DataTable } from "@/components/admin/system/DataTable";
 
 interface QueueItem {
   id: string;
@@ -478,92 +478,76 @@ export function RecoveryQueue() {
             Mensagens aguardando envio ou com falha
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
+        <CardContent className="p-4">
+          <DataTable
+            data={queue}
+            rowKey={(item) => item.id}
+            defaultSortKey="priority"
+            defaultSortDirection="asc"
+            searchPlaceholder="Buscar por telefone ou nome…"
+            emptyMessage="Nenhum item na fila"
+            exportCsv="recovery-queue"
+            columns={[
+              {
+                key: 'select',
+                label: '',
+                accessor: () => '',
+                render: (item) => (
                   <Checkbox
-                    checked={queue.length > 0 && selectedIds.size === queue.length}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Selecionar todos"
+                    checked={selectedIds.has(item.id)}
+                    onCheckedChange={() => toggleSelectItem(item.id)}
+                    aria-label={`Selecionar ${item.phone_number}`}
                   />
-                </TableHead>
-                <TableHead>Usuário</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Template</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Prioridade</TableHead>
-                <TableHead>Tentativas</TableHead>
-                <TableHead>Agendado</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {queue.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                    Nenhum item na fila
-                  </TableCell>
-                </TableRow>
-              ) : (
-                queue.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedIds.has(item.id)}
-                        onCheckedChange={() => toggleSelectItem(item.id)}
-                        aria-label={`Selecionar ${item.phone_number}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {item.profiles?.full_name || 'N/A'}
-                    </TableCell>
-                    <TableCell>{item.phone_number}</TableCell>
-                    <TableCell>
-                      {item.recovery_templates?.name || 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_COLORS[item.status]}>
-                        {item.status}
-                      </Badge>
-                      {item.error_message && (
-                        <div className="mt-1 max-w-[250px]">
-                          <p className="text-xs text-red-500 truncate" title={item.error_message}>
-                            {item.error_message}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {item.error_message.includes('400') && '⚠️ Número possivelmente sem WhatsApp ativo ou formato inválido'}
-                            {item.error_message.includes('401') && '🔑 Chave da API inválida — verifique as credenciais'}
-                            {item.error_message.includes('404') && '❌ Instância não encontrada na Evolution API'}
-                            {item.error_message.includes('429') && '⏳ Limite de envios atingido, tente mais tarde'}
-                            {item.error_message.includes('500') && '🔧 Erro interno no servidor da Evolution API'}
-                          </p>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>{item.priority}</TableCell>
-                    <TableCell>{item.retry_count}</TableCell>
-                    <TableCell>
-                      {item.scheduled_at 
-                        ? new Date(item.scheduled_at).toLocaleString('pt-BR')
-                        : 'Imediato'
-                      }
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => cancelItem(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ),
+              },
+              {
+                key: 'full_name',
+                label: 'Usuário',
+                searchable: true,
+                accessor: (i) => i.profiles?.full_name || '',
+                render: (i) => <span className="font-medium">{i.profiles?.full_name || 'N/A'}</span>,
+              },
+              { key: 'phone_number', label: 'Telefone', sortable: true, searchable: true },
+              {
+                key: 'template',
+                label: 'Template',
+                filterable: true,
+                accessor: (i) => i.recovery_templates?.name || 'N/A',
+                render: (i) => i.recovery_templates?.name || 'N/A',
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                sortable: true,
+                filterable: true,
+                render: (item) => (
+                  <>
+                    <Badge className={STATUS_COLORS[item.status]}>{item.status}</Badge>
+                    {item.error_message && (
+                      <div className="mt-1 max-w-[250px]">
+                        <p className="text-xs text-red-500 truncate" title={item.error_message}>
+                          {item.error_message}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ),
+              },
+              { key: 'priority', label: 'Prioridade', sortable: true, align: 'center' },
+              { key: 'retry_count', label: 'Tentativas', sortable: true, align: 'center' },
+              {
+                key: 'scheduled_at',
+                label: 'Agendado',
+                sortable: true,
+                render: (i) => i.scheduled_at ? new Date(i.scheduled_at).toLocaleString('pt-BR') : 'Imediato',
+              },
+            ]}
+            actions={(item) => (
+              <Button variant="ghost" size="icon" onClick={() => cancelItem(item.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
+          />
         </CardContent>
       </Card>
     </div>

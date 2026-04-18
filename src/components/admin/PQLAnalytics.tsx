@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { DataTable } from "@/components/admin/system/DataTable";
 
 // Intenções possíveis
 const INTENT_LABELS: Record<string, string> = {
@@ -206,96 +206,62 @@ export function PQLAnalytics() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Intenção</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Quizzes</TableHead>
-                <TableHead className="text-center">Publicados</TableHead>
-                <TableHead className="text-center">Com Leads</TableHead>
-                <TableHead className="text-center">🧊 Expl.</TableHead>
-                <TableHead className="text-center">🔥 Constr.</TableHead>
-                <TableHead className="text-center">🚀 Oper.</TableHead>
-                <TableHead className="text-center">% Expl→Constr</TableHead>
-                <TableHead className="text-center">% Constr→Oper</TableHead>
-                <TableHead className="text-center">Free</TableHead>
-                <TableHead className="text-center">Paid</TableHead>
-                <TableHead className="text-center">% Trial→Paid</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {intentTable.map((row) => (
-                <TableRow key={row.intent}>
-                  <TableCell>
-                    <Badge variant="outline" className="font-normal">
-                      {INTENT_LABELS[row.intent] || row.intent}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center font-medium">{row.total}</TableCell>
-                  <TableCell className="text-center">{row.quizzes}</TableCell>
-                  <TableCell className="text-center">{row.published}</TableCell>
-                  <TableCell className="text-center">{row.withLeads}</TableCell>
-                  <TableCell className="text-center">{row.explorador}</TableCell>
-                  <TableCell className="text-center">{row.construtor}</TableCell>
-                  <TableCell className="text-center">{row.operador}</TableCell>
-                  <TableCell className="text-center">{formatPct(row.pctExplConstr)}</TableCell>
-                  <TableCell className="text-center">{formatPct(row.pctConstrOper)}</TableCell>
-                  <TableCell className="text-center">{row.free}</TableCell>
-                  <TableCell className="text-center">{row.paid}</TableCell>
-                  <TableCell className="text-center font-semibold">
-                    {formatPct(row.pctTrialPaid)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {intentTable.length > 0 && (() => {
-                const totals = intentTable.reduce(
-                  (acc, r) => ({
-                    total: acc.total + r.total,
-                    quizzes: acc.quizzes + r.quizzes,
-                    published: acc.published + r.published,
-                    withLeads: acc.withLeads + r.withLeads,
-                    explorador: acc.explorador + r.explorador,
-                    construtor: acc.construtor + r.construtor,
-                    operador: acc.operador + r.operador,
-                    free: acc.free + r.free,
-                    paid: acc.paid + r.paid,
-                  }),
-                  { total: 0, quizzes: 0, published: 0, withLeads: 0, explorador: 0, construtor: 0, operador: 0, free: 0, paid: 0 }
-                );
-                return (
-                  <TableRow className="bg-muted/50 font-bold border-t-2">
-                    <TableCell><Badge variant="default">TOTAL / MÉDIA</Badge></TableCell>
-                    <TableCell className="text-center">{totals.total}</TableCell>
-                    <TableCell className="text-center">{totals.quizzes}</TableCell>
-                    <TableCell className="text-center">{totals.published}</TableCell>
-                    <TableCell className="text-center">{totals.withLeads}</TableCell>
-                    <TableCell className="text-center">{totals.explorador}</TableCell>
-                    <TableCell className="text-center">{totals.construtor}</TableCell>
-                    <TableCell className="text-center">{totals.operador}</TableCell>
-                    <TableCell className="text-center">
-                      {formatPct(pct(totals.construtor + totals.operador, totals.total))}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {formatPct(pct(totals.operador, totals.construtor + totals.operador))}
-                    </TableCell>
-                    <TableCell className="text-center">{totals.free}</TableCell>
-                    <TableCell className="text-center">{totals.paid}</TableCell>
-                    <TableCell className="text-center">
-                      {formatPct(pct(totals.paid, totals.free + totals.paid))}
-                    </TableCell>
-                  </TableRow>
-                );
-              })()}
-              {intentTable.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
-                    Nenhum dado disponível
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            data={intentTable}
+            rowKey={(r) => r.intent}
+            defaultSortKey="total"
+            defaultSortDirection="desc"
+            pageSize={25}
+            searchPlaceholder="Buscar intenção…"
+            emptyMessage="Nenhum dado disponível"
+            exportCsv="pql-intent"
+            columns={[
+              {
+                key: 'intent',
+                label: 'Intenção',
+                sortable: true,
+                filterable: true,
+                searchable: true,
+                accessor: (r) => INTENT_LABELS[r.intent] || r.intent,
+                render: (r) => (
+                  <Badge variant="outline" className="font-normal">
+                    {INTENT_LABELS[r.intent] || r.intent}
+                  </Badge>
+                ),
+              },
+              { key: 'total', label: 'Total', sortable: true, align: 'center', className: 'font-medium' },
+              { key: 'quizzes', label: 'Quizzes', sortable: true, align: 'center' },
+              { key: 'published', label: 'Publicados', sortable: true, align: 'center' },
+              { key: 'withLeads', label: 'Com Leads', sortable: true, align: 'center' },
+              { key: 'explorador', label: '🧊 Expl.', sortable: true, align: 'center' },
+              { key: 'construtor', label: '🔥 Constr.', sortable: true, align: 'center' },
+              { key: 'operador', label: '🚀 Oper.', sortable: true, align: 'center' },
+              {
+                key: 'pctExplConstr',
+                label: '% Expl→Constr',
+                sortable: true,
+                align: 'center',
+                render: (r) => formatPct(r.pctExplConstr),
+              },
+              {
+                key: 'pctConstrOper',
+                label: '% Constr→Oper',
+                sortable: true,
+                align: 'center',
+                render: (r) => formatPct(r.pctConstrOper),
+              },
+              { key: 'free', label: 'Free', sortable: true, align: 'center' },
+              { key: 'paid', label: 'Paid', sortable: true, align: 'center' },
+              {
+                key: 'pctTrialPaid',
+                label: '% Trial→Paid',
+                sortable: true,
+                align: 'center',
+                className: 'font-semibold',
+                render: (r) => formatPct(r.pctTrialPaid),
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -308,34 +274,32 @@ export function PQLAnalytics() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Gerou Lead de Teste?</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Free</TableHead>
-                <TableHead className="text-center">Paid</TableHead>
-                <TableHead className="text-center">% Trial → Paid</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leadImpactTable.map((row) => (
-                <TableRow key={row.label}>
-                  <TableCell>
-                    <Badge variant={row.label === "Sim" ? "default" : "secondary"}>
-                      {row.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center font-medium">{row.total}</TableCell>
-                  <TableCell className="text-center">{row.free}</TableCell>
-                  <TableCell className="text-center">{row.paid}</TableCell>
-                  <TableCell className="text-center font-semibold">
-                    {formatPct(row.pctTrialPaid)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            data={leadImpactTable}
+            rowKey={(r) => r.label}
+            pageSize={10}
+            emptyMessage="Sem dados"
+            columns={[
+              {
+                key: 'label',
+                label: 'Gerou Lead de Teste?',
+                render: (r) => (
+                  <Badge variant={r.label === 'Sim' ? 'default' : 'secondary'}>{r.label}</Badge>
+                ),
+              },
+              { key: 'total', label: 'Total', sortable: true, align: 'center', className: 'font-medium' },
+              { key: 'free', label: 'Free', sortable: true, align: 'center' },
+              { key: 'paid', label: 'Paid', sortable: true, align: 'center' },
+              {
+                key: 'pctTrialPaid',
+                label: '% Trial → Paid',
+                sortable: true,
+                align: 'center',
+                className: 'font-semibold',
+                render: (r) => formatPct(r.pctTrialPaid),
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -413,41 +377,31 @@ function ClassicVsModernComparison() {
         {isLoading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Evento</TableHead>
-                <TableHead className="text-center">Classic (A)</TableHead>
-                <TableHead className="text-center">Modern (B)</TableHead>
-                <TableHead className="text-center">Δ%</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {abData?.map((row) => (
-                <TableRow key={row.classic}>
-                  <TableCell className="font-medium">{row.label}</TableCell>
-                  <TableCell className="text-center font-semibold">{row.classicCount}</TableCell>
-                  <TableCell className="text-center font-semibold">{row.modernCount}</TableCell>
-                  <TableCell className="text-center">
-                    {row.delta === null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <Badge variant={row.delta >= 0 ? "default" : "destructive"}>
-                        {row.delta >= 0 ? '+' : ''}{row.delta}%
-                      </Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {(!abData || abData.length === 0) && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    Nenhum dado disponível
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            data={abData || []}
+            rowKey={(r) => r.classic}
+            pageSize={10}
+            emptyMessage="Nenhum dado disponível"
+            columns={[
+              { key: 'label', label: 'Evento', sortable: true, className: 'font-medium' },
+              { key: 'classicCount', label: 'Classic (A)', sortable: true, align: 'center', className: 'font-semibold' },
+              { key: 'modernCount', label: 'Modern (B)', sortable: true, align: 'center', className: 'font-semibold' },
+              {
+                key: 'delta',
+                label: 'Δ%',
+                sortable: true,
+                align: 'center',
+                render: (r) =>
+                  r.delta === null ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    <Badge variant={r.delta >= 0 ? 'default' : 'destructive'}>
+                      {r.delta >= 0 ? '+' : ''}{r.delta}%
+                    </Badge>
+                  ),
+              },
+            ]}
+          />
         )}
       </CardContent>
     </Card>

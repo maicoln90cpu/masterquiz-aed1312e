@@ -7,10 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, Trash2, Ban, Search, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, Trash2, Ban, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DataTable } from "@/components/admin/system/DataTable";
 
 interface BlacklistItem {
   id: string;
@@ -133,15 +133,6 @@ export function RecoveryBlacklist() {
     }
   };
 
-  const filteredBlacklist = blacklist.filter(item => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.phone_number.toLowerCase().includes(query) ||
-      item.profiles?.full_name?.toLowerCase().includes(query)
-    );
-  });
-
   if (loading) {
     return (
       <Card>
@@ -151,6 +142,7 @@ export function RecoveryBlacklist() {
       </Card>
     );
   }
+
 
   return (
     <div className="space-y-6">
@@ -254,17 +246,6 @@ export function RecoveryBlacklist() {
         </CardContent>
       </Card>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por número ou nome..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
       {/* Blacklist Table */}
       <Card>
         <CardHeader>
@@ -273,59 +254,49 @@ export function RecoveryBlacklist() {
             {blacklist.length} números na blacklist
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Usuário Associado</TableHead>
-                <TableHead>Motivo</TableHead>
-                <TableHead>Observações</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBlacklist.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    {searchQuery ? 'Nenhum resultado encontrado' : 'Nenhum número na blacklist'}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredBlacklist.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-mono">{item.phone_number}</TableCell>
-                    <TableCell>
-                      {item.profiles?.full_name || (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {REASONS.find(r => r.value === item.reason)?.label || item.reason}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate" title={item.notes || ''}>
-                      {item.notes || '-'}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(item.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemove(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+        <CardContent>
+          <DataTable
+            data={blacklist}
+            rowKey={(r) => r.id}
+            defaultSortKey="created_at"
+            defaultSortDirection="desc"
+            searchPlaceholder="Buscar por número ou nome…"
+            emptyMessage="Nenhum número na blacklist"
+            exportCsv="blacklist"
+            columns={[
+              { key: 'phone_number', label: 'Telefone', sortable: true, searchable: true, className: 'font-mono' },
+              {
+                key: 'full_name',
+                label: 'Usuário Associado',
+                searchable: true,
+                accessor: (r) => r.profiles?.full_name || '',
+                render: (r) => r.profiles?.full_name || <span className="text-muted-foreground">-</span>,
+              },
+              {
+                key: 'reason',
+                label: 'Motivo',
+                sortable: true,
+                filterable: true,
+                accessor: (r) => REASONS.find(x => x.value === r.reason)?.label || r.reason,
+                render: (r) => (
+                  <Badge variant="outline">
+                    {REASONS.find(x => x.value === r.reason)?.label || r.reason}
+                  </Badge>
+                ),
+              },
+              {
+                key: 'notes',
+                label: 'Observações',
+                render: (r) => <span className="max-w-[200px] truncate inline-block" title={r.notes || ''}>{r.notes || '-'}</span>,
+              },
+              { key: 'created_at', label: 'Data', sortable: true, format: 'date' },
+            ]}
+            actions={(r) => (
+              <Button variant="ghost" size="icon" onClick={() => handleRemove(r.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
+          />
         </CardContent>
       </Card>
     </div>
