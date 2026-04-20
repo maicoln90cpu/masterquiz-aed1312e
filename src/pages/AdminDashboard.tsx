@@ -17,7 +17,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useQueryPerformance } from "@/hooks/useQueryPerformance";
 import { motion } from "framer-motion";
 // ✅ FASE 14: Recharts removido — charts extraídos para lazy loading
 import { MobileNav } from "@/components/MobileNav";
@@ -35,7 +34,6 @@ import { useSupportMode } from "@/contexts/SupportModeContext";
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
 const ModeComparison = lazy(() => import("@/components/admin/ModeComparison").then(m => ({ default: m.ModeComparison })));
-const PerformanceMetrics = lazy(() => import("@/components/admin/PerformanceMetrics").then(m => ({ default: m.PerformanceMetrics })));
 const AuditLogsViewer = lazy(() => import("@/components/admin/AuditLogsViewer").then(m => ({ default: m.AuditLogsViewer })));
 const TrackingConfiguration = lazy(() => import("@/components/admin/TrackingConfiguration").then(m => ({ default: m.TrackingConfiguration })));
 const CSPViolationsPanel = lazy(() => import("@/components/admin/CSPViolationsPanel").then(m => ({ default: m.CSPViolationsPanel })));
@@ -77,7 +75,6 @@ export default function AdminDashboard() {
   const { t } = useTranslation();
   const { isAdmin } = useUserRole();
   const { enterSupportMode } = useSupportMode();
-  const { measureQuery, getSlowestQueries, getMetrics } = useQueryPerformance();
   const { siteMode, isModeB } = useSiteMode();
   const { updateSiteMode } = useUpdateSiteMode();
   const { editorLayout, isModern } = useEditorLayout();
@@ -345,9 +342,9 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      // Run only non-redundant queries (stats come from allUsersData via service_role)
+      // Métricas técnicas globais ficam na aba Sistema; o Início carrega apenas dados de negócio/admin.
       const [requestsResult, respondentsResult] = await Promise.all([
-        measureQuery('validation-requests', async () => {
+        (async () => {
           try {
             const result = await supabase
               .from('validation_requests')
@@ -359,12 +356,12 @@ export default function AdminDashboard() {
             logger.warn('validation_requests query failed (expected for non-admin):', e);
             return { data: [], error: null, count: null };
           }
-        }),
-        measureQuery('quiz-respondents', async () => {
+        })(),
+        (async () => {
           const result = await supabase.functions.invoke('list-all-respondents');
           if (result.error) return { data: [], error: result.error };
           return { data: result.data?.respondents || [], error: null };
-        })
+        })()
       ]);
 
       setValidationRequests(requestsResult.data || []);
@@ -683,14 +680,7 @@ export default function AdminDashboard() {
   
   const renderOverviewContent = () => (
     <>
-      <Suspense fallback={<ComponentLoader />}>
-        <PerformanceMetrics 
-          slowestQueries={getSlowestQueries(5)}
-          totalQueries={getMetrics().length}
-        />
-      </Suspense>
-      
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mt-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{t('admin.totalUsers')}</CardTitle>
