@@ -236,20 +236,20 @@ export function QuizViewResult({ quiz, finalResult, calculatorResult, questions,
                       <motion.div 
                         key={q.id} 
                         variants={itemVariants}
-                        className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}
+                        className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'}`}
                       >
                         <div className="flex items-start gap-2 mb-2">
                           {isCorrect ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                            <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
                           ) : (
-                            <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                            <XCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
                           )}
                           <p className="font-semibold text-sm">{idx + 1}. {stripHtml(questionBlock?.questionText || q.question_text)}</p>
                         </div>
                         <div className="ml-7 space-y-1 text-sm">
-                          <p><span className="text-muted-foreground">Sua resposta:</span> <span className={isCorrect ? 'text-green-700 dark:text-green-400 font-medium' : 'text-red-700 dark:text-red-400 font-medium'}>{Array.isArray(userAnswer) ? userAnswer.join(', ') : userAnswer || '—'}</span></p>
+                          <p><span className="text-muted-foreground">Sua resposta:</span> <span className={isCorrect ? 'text-success font-medium' : 'text-destructive font-medium'}>{Array.isArray(userAnswer) ? userAnswer.join(', ') : userAnswer || '—'}</span></p>
                           {questionBlock?.correct_answer && !isCorrect && (
-                            <p><span className="text-muted-foreground">Resposta correta:</span> <span className="text-green-700 dark:text-green-400 font-medium">{questionBlock.correct_answer}</span></p>
+                            <p><span className="text-muted-foreground">Resposta correta:</span> <span className="text-success font-medium">{questionBlock.correct_answer}</span></p>
                           )}
                           {questionBlock?.explanation && (
                             <div className="mt-2 p-3 rounded-lg bg-primary/5 border border-primary/20">

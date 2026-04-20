@@ -10,15 +10,15 @@ import { cn } from '@/lib/utils';
 
 function StepStatus({ label, status, detail }: { label: string; status: boolean | null; detail?: string }) {
   const icon = status === true
-    ? <CheckCircle className="h-5 w-5 text-green-500" />
+    ? <CheckCircle className="h-5 w-5 text-success" />
     : status === false
-    ? <XCircle className="h-5 w-5 text-red-500" />
-    : <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+    ? <XCircle className="h-5 w-5 text-destructive" />
+    : <AlertTriangle className="h-5 w-5 text-warning" />;
 
   const badge = status === true
-    ? <Badge variant="outline" className="border-green-500 text-green-600 text-xs">OK</Badge>
+    ? <Badge variant="outline" className="border-success text-success text-xs">OK</Badge>
     : status === false
-    ? <Badge variant="outline" className="border-red-500 text-red-600 text-xs">Falha</Badge>
+    ? <Badge variant="outline" className="border-destructive text-destructive text-xs">Falha</Badge>
     : <Badge variant="outline" className="text-xs">Pendente</Badge>;
 
   return (
@@ -69,9 +69,9 @@ export const GTMDiagnosticTab = () => {
         <CardContent>
           <div className="flex items-center gap-3 mb-4">
             {allPassed
-              ? <Badge className="bg-green-500 text-white">✅ Configurado e Funcional</Badge>
+              ? <Badge className="bg-success text-success-foreground">✅ Configurado e Funcional</Badge>
               : data?.step1_configured === false
-              ? <Badge variant="outline" className="border-yellow-500 text-yellow-600">⚠️ Não Configurado</Badge>
+              ? <Badge variant="outline" className="border-warning text-warning">⚠️ Não Configurado</Badge>
               : <Badge variant="destructive">❌ Problema Detectado</Badge>
             }
             {data?.gtmId && (

@@ -24,7 +24,7 @@ export const ExpressProgressBar = ({ currentStep }: ExpressProgressBarProps) => 
                 <div className={cn(
                   "flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-colors",
                   currentStep > step.number
-                    ? "bg-green-500 text-white"
+                    ? "bg-success text-success-foreground"
                     : currentStep === step.number
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground"
@@ -45,7 +45,7 @@ export const ExpressProgressBar = ({ currentStep }: ExpressProgressBarProps) => 
               {idx < steps.length - 1 && (
                 <div className={cn(
                   "flex-1 h-0.5 rounded-full mx-2",
-                  currentStep > 1 ? "bg-green-500" : "bg-border"
+                  currentStep > 1 ? "bg-success" : "bg-border"
                 )} />
               )}
             </div>

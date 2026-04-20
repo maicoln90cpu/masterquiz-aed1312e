@@ -49,7 +49,7 @@ export const StepNavigation = ({ currentStep, steps, onStepClick }: StepNavigati
                   currentStep === step.number
                     ? "bg-primary text-primary-foreground"
                     : step.completed
-                    ? "bg-green-500 text-white"
+                    ? "bg-success text-success-foreground"
                     : "bg-muted text-muted-foreground"
                 )}>
                   {step.completed ? (
