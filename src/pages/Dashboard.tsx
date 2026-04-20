@@ -267,10 +267,10 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <Card className="border-green-500/30 bg-gradient-to-r from-green-500/5 to-emerald-500/10">
+            <Card className="border-success/30 bg-success/5">
               <CardContent className="py-5">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
+                  <CheckCircle2 className="h-6 w-6 text-success shrink-0" />
                   <div>
                     <p className="font-semibold text-foreground">
                       {t('dashboard.fastPathWelcome', '🎉 Seu quiz está publicado! Agora explore seu painel.')}
