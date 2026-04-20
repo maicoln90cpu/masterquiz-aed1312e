@@ -11,6 +11,7 @@ import { Plus, Trash2, Calculator, FileText, Save, Loader2, CheckCircle2 } from 
 import { ImageUploader } from "@/components/ImageUploader";
 import { VideoUploader } from "@/components/VideoUploader";
 import { BunnyVideoUploader } from "@/components/BunnyVideoUploader";
+import { RichTextEditor } from "./blocks/RichTextEditor";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CalculatorEditor } from "./CalculatorEditor";
@@ -558,13 +559,15 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
 
               <div className="space-y-2">
                 <Label htmlFor="result-text">{t('createQuiz.results.resultText')}</Label>
-                <Textarea
-                  id="result-text"
-                  placeholder={t('createQuiz.results.placeholderResult')}
+                <RichTextEditor
                   value={currentResult.resultText}
-                  onChange={(e) => updateResult({ resultText: e.target.value })}
-                  rows={4}
+                  onChange={(value) => updateResult({ resultText: value })}
+                  placeholder={t('createQuiz.results.placeholderResult')}
+                  minHeight="160px"
                 />
+                <p className="text-xs text-muted-foreground">
+                  💡 Use a barra de ferramentas para formatar (negrito, cor, fonte, alinhamento). Você pode usar <code className="text-foreground">{'{result}'}</code> para inserir o valor calculado.
+                </p>
               </div>
 
               <div className="space-y-2">
