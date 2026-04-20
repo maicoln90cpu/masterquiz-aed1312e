@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,13 +30,13 @@ export const useProfile = () => {
         );
 
         if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching profile:', error);
+          logger.error('Error fetching profile:', error);
         }
 
         setProfile(data || null);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile:', error);
         setProfile(null);
         setLoading(false);
       }

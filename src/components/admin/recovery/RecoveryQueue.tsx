@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -130,7 +131,7 @@ export function RecoveryQueue() {
         total_today: pending + queued,
       });
     } catch (error) {
-      console.error('Error loading queue:', error);
+      logger.error('Error loading queue:', error);
       toast.error('Erro ao carregar fila');
     } finally {
       setLoading(false);
@@ -223,7 +224,7 @@ export function RecoveryQueue() {
 
       toast.success(`Processamento iniciado! Aguarde enquanto as mensagens são enviadas.`);
     } catch (error) {
-      console.error('Error processing queue:', error);
+      logger.error('Error processing queue:', error);
       toast.error('Erro ao processar fila');
       stopPolling();
       setProcessing(false);
@@ -245,7 +246,7 @@ export function RecoveryQueue() {
       toast.success('Item removido da fila');
       loadQueue();
     } catch (error) {
-      console.error('Error canceling item:', error);
+      logger.error('Error canceling item:', error);
       toast.error('Erro ao cancelar item');
     }
   };
@@ -269,7 +270,7 @@ export function RecoveryQueue() {
       setSelectedIds(new Set());
       loadQueue();
     } catch (error) {
-      console.error('Error canceling selected items:', error);
+      logger.error('Error canceling selected items:', error);
       toast.error('Erro ao cancelar itens selecionados');
     } finally {
       setCancelingSelected(false);
@@ -295,7 +296,7 @@ export function RecoveryQueue() {
       toast.success('Itens com falha recolocados na fila (exceto falhas permanentes)');
       loadQueue();
     } catch (error) {
-      console.error('Error retrying failed:', error);
+      logger.error('Error retrying failed:', error);
       toast.error('Erro ao reprocessar falhas');
     }
   };

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { quizTemplates as hardcodedTemplates } from '@/data/quizTemplates';
@@ -46,7 +47,7 @@ export const useQuizTemplates = () => {
         .order('display_order', { ascending: true });
 
       if (error) {
-        console.error('Error fetching templates from database:', error);
+        logger.error('Error fetching templates from database:', error);
         throw error;
       }
 
@@ -131,7 +132,7 @@ export const useAllQuizTemplates = () => {
         .order('display_order', { ascending: true });
 
       if (error) {
-        console.error('Error fetching all templates:', error);
+        logger.error('Error fetching all templates:', error);
         throw error;
       }
 

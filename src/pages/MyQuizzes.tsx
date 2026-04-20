@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -141,7 +142,7 @@ const MyQuizzes = () => {
       setDeleteDialogOpen(false);
       setQuizToDelete(null);
     } catch (error) {
-      console.error('Failed to delete quiz:', error);
+      logger.error('Failed to delete quiz:', error);
     }
   };
 

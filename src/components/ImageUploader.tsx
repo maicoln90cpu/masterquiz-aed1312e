@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useId } from "react";
 import { Upload, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export const ImageUploader = ({
             });
           }
         } catch (optError) {
-          console.warn('Falha ao otimizar, usando original:', optError);
+          logger.warn('Falha ao otimizar, usando original:', optError);
           // Continua com o arquivo original
         } finally {
           setOptimizing(false);
@@ -93,7 +94,7 @@ export const ImageUploader = ({
       onChange(publicUrl);
       toast.success(t('components.uploaders.image.uploadSuccess'));
     } catch (error) {
-      console.error('Error uploading image:', error);
+      logger.error('Error uploading image:', error);
       toast.error(t('components.uploaders.image.uploadError'));
     } finally {
       setUploading(false);

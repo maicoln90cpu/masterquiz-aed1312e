@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,7 +114,7 @@ export const useLandingABTest = (targetElement?: string) => {
           session_id: sessionId,
         });
     } catch (e) {
-      console.error('Failed to record A/B session:', e);
+      logger.error('Failed to record A/B session:', e);
     }
 
     return variant;

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,7 +78,7 @@ export default function Checkout() {
       if (error) throw error;
       setPlans(data || []);
     } catch (error) {
-      console.error('Error loading plans:', error);
+      logger.error('Error loading plans:', error);
       toast.error(t('checkout.loadError'));
     } finally {
       setLoading(false);
@@ -109,7 +110,7 @@ export default function Checkout() {
 
       toast.error(t('checkout.urlNotConfigured'));
     } catch (error: any) {
-      console.error('Error redirecting to Kiwify:', error);
+      logger.error('Error redirecting to Kiwify:', error);
       toast.error(error.message || t('checkout.paymentError'));
     } finally {
       setCheckingOut(null);

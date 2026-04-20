@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ export const UserTicketsList = () => {
       setReply('');
       loadMessages(selectedTicket.id);
     } catch (error: any) {
-      console.error('Error sending reply:', error);
+      logger.error('Error sending reply:', error);
       toast.error(t('components.ticket.replyError') + ': ' + error.message);
     } finally {
       setSending(false);

@@ -2,6 +2,7 @@
  * Utilitário para otimização de imagens com conversão para WebP
  * WebP oferece 20-30% menor tamanho comparado a JPG/PNG
  */
+import { logger } from '@/lib/logger';
 
 export interface OptimizedImage {
   blob: Blob;

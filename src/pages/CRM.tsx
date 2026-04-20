@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, lazy, Suspense } from "react";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { Button } from "@/components/ui/button";
@@ -181,7 +182,7 @@ const CRM = () => {
       const anonymousCount = visibleLeads.filter(l => !hasUsefulContactData(l)).length;
       setAnonymousResponseCount(anonymousCount);
     } catch (error) {
-      console.error('Error loading leads:', error);
+      logger.error('Error loading leads:', error);
       toast.error(t('crm.toast.errorLoading'));
     } finally {
       setLoading(false);
@@ -195,7 +196,7 @@ const CRM = () => {
       .eq('id', leadId);
     
     if (error) {
-      console.error('Error updating lead status:', error);
+      logger.error('Error updating lead status:', error);
       toast.error(t('crm.toast.errorUpdating'));
       return;
     }
@@ -221,7 +222,7 @@ const CRM = () => {
       .eq('id', leadId);
 
     if (error) {
-      console.error('Error deleting lead:', error);
+      logger.error('Error deleting lead:', error);
       toast.error(t('crm.toast.errorDeleting'));
       return;
     }
@@ -307,7 +308,7 @@ const CRM = () => {
       
       toast.success(t('crm.toast.exportSuccess', { count: leads.length }));
     } catch (error) {
-      console.error('Error exporting to Excel:', error);
+      logger.error('Error exporting to Excel:', error);
       toast.error(t('crm.toast.exportError'));
     }
   };
@@ -367,7 +368,7 @@ const CRM = () => {
       setNewLead({ name: "", email: "", whatsapp: "", quizId: "" });
       loadLeads();
     } catch (error) {
-      console.error('Error creating lead:', error);
+      logger.error('Error creating lead:', error);
       toast.error(t('crm.toast.errorCreating'));
     }
   };

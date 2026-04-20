@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -54,7 +55,7 @@ export const BunnyStorageSettings = () => {
       }
 
     } catch (error) {
-      console.error('Error loading Bunny settings:', error);
+      logger.error('Error loading Bunny settings:', error);
       toast.error(t('bunnyStorage.loadError'));
     } finally {
       setLoading(false);
@@ -77,7 +78,7 @@ export const BunnyStorageSettings = () => {
 
       toast.success(t('bunnyStorage.saveSuccess'));
     } catch (error) {
-      console.error('Error saving Bunny settings:', error);
+      logger.error('Error saving Bunny settings:', error);
       toast.error(t('bunnyStorage.saveError'));
     } finally {
       setSaving(false);

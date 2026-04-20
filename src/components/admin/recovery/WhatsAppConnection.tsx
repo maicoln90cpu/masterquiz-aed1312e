@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,14 +115,14 @@ export function WhatsAppConnection() {
           .single();
 
         if (insertError) {
-          console.error('Error creating initial settings:', insertError);
+          logger.error('Error creating initial settings:', insertError);
         } else if (newData) {
           setStatus(newData);
           setSettingsId(newData.id);
         }
       }
     } catch (error) {
-      console.error('Error loading connection status:', error);
+      logger.error('Error loading connection status:', error);
       toast.error('Erro ao carregar status da conexão');
     } finally {
       setLoading(false);
@@ -139,7 +140,7 @@ export function WhatsAppConnection() {
       if (error) throw error;
       setTemplates(data || []);
     } catch (error) {
-      console.error('Error loading templates:', error);
+      logger.error('Error loading templates:', error);
     }
   }, []);
 
@@ -192,11 +193,11 @@ export function WhatsAppConnection() {
 
       if (error) throw error;
 
-      console.log('Status check result:', data);
+      logger.log('Status check result:', data);
 
       // Instância não existe - limpar tudo
       if (data?.exists === false || data?.state === 'deleted') {
-        console.log('Instance deleted externally - clearing state');
+        logger.log('Instance deleted externally - clearing state');
         setInstanceExists(false);
         setLocalQrCode(null);
         
@@ -270,7 +271,7 @@ export function WhatsAppConnection() {
         }
       }
     } catch (error) {
-      console.error('Error checking real status:', error);
+      logger.error('Error checking real status:', error);
       if (!silent) {
         toast.error('Erro ao verificar status');
       }
@@ -289,7 +290,7 @@ export function WhatsAppConnection() {
     try {
       const apiUrl = normalizeUrl(status?.evolution_api_url || DEFAULT_EVOLUTION_API_URL);
       
-      console.log('Connecting with URL:', apiUrl);
+      logger.log('Connecting with URL:', apiUrl);
       
       const { data, error } = await supabase.functions.invoke<EvolutionResponse>('evolution-connect', {
         body: { action: 'connect', apiUrl }
@@ -297,7 +298,7 @@ export function WhatsAppConnection() {
 
       if (error) throw error;
 
-      console.log('Connect response:', data);
+      logger.log('Connect response:', data);
 
       // Já está conectado
       if (data?.state === 'connected') {
@@ -333,11 +334,11 @@ export function WhatsAppConnection() {
           ? 'Instância recriada! Escaneie o novo QR Code' 
           : 'QR Code gerado! Escaneie com o WhatsApp');
       } else {
-        console.warn('No QR code in response:', data);
+        logger.warn('No QR code in response:', data);
         toast.error('QR Code não recebido. Verifique a configuração da API.');
       }
     } catch (error) {
-      console.error('Error connecting:', error);
+      logger.error('Error connecting:', error);
       toast.error('Erro ao conectar. Verifique a URL da API.');
     } finally {
       setConnecting(false);
@@ -385,7 +386,7 @@ export function WhatsAppConnection() {
       
       toast.success('WhatsApp desconectado');
     } catch (error) {
-      console.error('Error disconnecting:', error);
+      logger.error('Error disconnecting:', error);
       toast.error('Erro ao desconectar');
     }
   };
@@ -422,7 +423,7 @@ export function WhatsAppConnection() {
         setTestTemplateId("");
       }
     } catch (error) {
-      console.error('Error sending test:', error);
+      logger.error('Error sending test:', error);
       toast.error('Erro ao enviar mensagem de teste');
     } finally {
       setSendingTest(false);
@@ -482,7 +483,7 @@ export function WhatsAppConnection() {
                     alt="QR Code WhatsApp"
                     className="w-64 h-64"
                     onError={(e) => {
-                      console.error('QR Code image failed to load');
+                      logger.error('QR Code image failed to load');
                     }}
                   />
                 </div>
@@ -620,7 +621,7 @@ export function WhatsAppConnection() {
                     toast.success(forwardPhone ? 'Encaminhamento ativado!' : 'Encaminhamento desativado');
                   } catch (err) {
                     toast.error('Erro ao salvar');
-                    console.error(err);
+                    logger.error(err);
                   } finally {
                     setSavingForward(false);
                   }

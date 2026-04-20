@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -71,7 +72,7 @@ export default function PaymentGatewaySettings() {
         kiwify_api_token: settingsMap.kiwify_api_token || '',
       });
     } catch (error) {
-      console.error('Error loading settings:', error);
+      logger.error('Error loading settings:', error);
       toast.error('Erro ao carregar configurações');
     } finally {
       setLoading(false);
@@ -103,7 +104,7 @@ export default function PaymentGatewaySettings() {
 
       toast.success('Configurações salvas com sucesso!');
     } catch (error) {
-      console.error('Error saving settings:', error);
+      logger.error('Error saving settings:', error);
       toast.error('Erro ao salvar configurações');
     } finally {
       setSaving(false);
@@ -156,7 +157,7 @@ export default function PaymentGatewaySettings() {
         headers['x-kiwify-token'] = settings.kiwify_webhook_token;
       }
 
-      console.log('[WEBHOOK-TEST] Sending payload:', payload);
+      logger.log('[WEBHOOK-TEST] Sending payload:', payload);
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -168,7 +169,7 @@ export default function PaymentGatewaySettings() {
       });
 
       const responseData = await response.json();
-      console.log('[WEBHOOK-TEST] Response:', responseData);
+      logger.log('[WEBHOOK-TEST] Response:', responseData);
 
       setTestResult({
         success: response.ok,
@@ -184,7 +185,7 @@ export default function PaymentGatewaySettings() {
         toast.error('Erro ao processar webhook');
       }
     } catch (error: any) {
-      console.error('[WEBHOOK-TEST] Error:', error);
+      logger.error('[WEBHOOK-TEST] Error:', error);
       setTestResult({
         success: false,
         message: `❌ Erro de conexão: ${error.message}`,

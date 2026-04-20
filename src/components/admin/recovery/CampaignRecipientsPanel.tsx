@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +112,7 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
       });
       setTargets(rows);
     } catch (e) {
-      console.error('Error loading targets', e);
+      logger.error('Error loading targets', e);
     } finally {
       setLoadingTargets(false);
     }
@@ -125,7 +126,7 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
       if (error) throw error;
       setZombieRows((data || []) as ZombieRow[]);
     } catch (e: any) {
-      console.error(e);
+      logger.error(e);
       toast.error(e?.message || 'Erro ao buscar destinatários');
       setPreviewOpen(false);
     } finally {
@@ -157,7 +158,7 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
       setPreviewOpen(false);
       onChanged();
     } catch (e: any) {
-      console.error(e);
+      logger.error(e);
       toast.error(e?.message || 'Erro ao enfileirar destinatários');
     } finally {
       setEnqueueLoading(false);
@@ -175,7 +176,7 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
       setGenericRows((data?.recipients || []) as DryRunRecipient[]);
       setGenericTotal(data?.total_eligible || 0);
     } catch (e: any) {
-      console.error(e);
+      logger.error(e);
       toast.error(e?.message || 'Erro ao buscar destinatários');
       setGenericOpen(false);
     } finally {

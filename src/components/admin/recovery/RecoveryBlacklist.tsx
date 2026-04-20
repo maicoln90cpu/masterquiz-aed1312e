@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export function RecoveryBlacklist() {
       }));
       setBlacklist(itemsWithProfiles);
     } catch (error) {
-      console.error('Error loading blacklist:', error);
+      logger.error('Error loading blacklist:', error);
       toast.error('Erro ao carregar blacklist');
     } finally {
       setLoading(false);
@@ -110,7 +111,7 @@ export function RecoveryBlacklist() {
       setFormData({ phone_number: '', reason: 'opt_out', notes: '' });
       loadBlacklist();
     } catch (error) {
-      console.error('Error adding to blacklist:', error);
+      logger.error('Error adding to blacklist:', error);
       toast.error('Erro ao adicionar à blacklist');
     }
   };
@@ -128,7 +129,7 @@ export function RecoveryBlacklist() {
       toast.success('Número removido da blacklist');
       loadBlacklist();
     } catch (error) {
-      console.error('Error removing from blacklist:', error);
+      logger.error('Error removing from blacklist:', error);
       toast.error('Erro ao remover da blacklist');
     }
   };

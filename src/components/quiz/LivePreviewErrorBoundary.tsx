@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,8 +24,8 @@ export class LivePreviewErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[LivePreview Error]:', error);
-    console.error('[Error Info]:', errorInfo);
+    logger.error('[LivePreview Error]:', error);
+    logger.error('[Error Info]:', errorInfo);
   }
 
   render() {

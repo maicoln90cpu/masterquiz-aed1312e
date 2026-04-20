@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +74,7 @@ export const CreateTicketDialog = ({ open, onOpenChange, onSuccess }: CreateTick
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
-      console.error('Error creating ticket:', error);
+      logger.error('Error creating ticket:', error);
       toast.error(t('components.ticket.sendError') + ': ' + error.message);
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -143,7 +144,7 @@ export default function TemplateManagement() {
       refetch();
       invalidateTemplateCache(); // ✅ Invalidar cache após salvar
     } catch (error: any) {
-      console.error('Error saving template:', error);
+      logger.error('Error saving template:', error);
       toast.error(error.message || 'Erro ao salvar template');
     } finally {
       setSaving(false);
@@ -162,7 +163,7 @@ export default function TemplateManagement() {
       refetch();
       invalidateTemplateCache(); // ✅ Invalidar cache após toggle
     } catch (error: any) {
-      console.error('Error toggling template:', error);
+      logger.error('Error toggling template:', error);
       toast.error(error.message || 'Erro ao atualizar template');
     }
   };
@@ -188,7 +189,7 @@ export default function TemplateManagement() {
       refetch();
       invalidateTemplateCache(); // ✅ Invalidar cache após deletar
     } catch (error: any) {
-      console.error('Error deleting template:', error);
+      logger.error('Error deleting template:', error);
       toast.error(error.message || 'Erro ao deletar template');
     }
   };

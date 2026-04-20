@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ export function WhatsAppAISettings() {
       if (error) throw error;
       if (data) setSettings(data as AISettings);
     } catch (error) {
-      console.error('Error loading AI settings:', error);
+      logger.error('Error loading AI settings:', error);
       toast.error('Erro ao carregar configurações de IA');
     } finally {
       setLoading(false);
@@ -72,7 +73,7 @@ export function WhatsAppAISettings() {
       if (error) throw error;
       toast.success('Configurações de IA salvas!');
     } catch (error) {
-      console.error('Error saving AI settings:', error);
+      logger.error('Error saving AI settings:', error);
       toast.error('Erro ao salvar configurações');
     } finally {
       setSaving(false);

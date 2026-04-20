@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Motor de cálculo para quizzes do tipo calculadora
  * Avalia fórmulas matemáticas com variáveis das respostas do quiz
@@ -196,7 +197,7 @@ export function calculateQuizResult(
       questions
     );
     
-    console.log('📊 Calculator:', {
+    logger.log('📊 Calculator:', {
       originalFormula: formula,
       substitutedFormula,
       variableMapping,
@@ -212,7 +213,7 @@ export function calculateQuizResult(
     // 4. Encontrar a faixa correspondente
     const range = findRange(rawValue, calculatorRanges);
     
-    console.log('✅ Calculator result:', { rawValue, formattedValue, range: range?.label });
+    logger.log('✅ Calculator result:', { rawValue, formattedValue, range: range?.label });
     
     return {
       rawValue,
@@ -221,7 +222,7 @@ export function calculateQuizResult(
       success: true
     };
   } catch (error) {
-    console.error('❌ Calculator error:', error);
+    logger.error('❌ Calculator error:', error);
     return {
       rawValue: 0,
       formattedValue: '—',

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -103,7 +104,7 @@ const Settings = () => {
       setSlugAvailable(result.available);
       setSlugReason(result.reason);
     } catch (error) {
-      console.error("Error checking slug:", error);
+      logger.error("Error checking slug:", error);
       setSlugAvailable(null);
       setSlugReason(null);
     } finally {
@@ -136,7 +137,7 @@ const Settings = () => {
         toast.success(`Sugestão: ${suggested}`);
       }
     } catch (e) {
-      console.error('suggestSlug error', e);
+      logger.error('suggestSlug error', e);
       toast.error('Não foi possível gerar uma sugestão.');
     } finally {
       setCheckingSlug(false);
@@ -262,7 +263,7 @@ const Settings = () => {
 
       toast.success(t("settings.exportSuccess", "Dados exportados com sucesso!"));
     } catch (error: any) {
-      console.error('Erro ao exportar:', error);
+      logger.error('Erro ao exportar:', error);
       toast.error(error.message || t("settings.exportError", "Erro ao exportar dados"));
     } finally {
       setExporting(false);
@@ -289,7 +290,7 @@ const Settings = () => {
       setDeleteDialogOpen(false);
       toast.success(t("settings.deletionScheduled", `Exclusão agendada para ${response.data.days_remaining} dias`));
     } catch (error: any) {
-      console.error('Erro ao agendar exclusão:', error);
+      logger.error('Erro ao agendar exclusão:', error);
       toast.error(error.message || t("settings.deletionError", "Erro ao agendar exclusão"));
     }
   };
@@ -313,7 +314,7 @@ const Settings = () => {
       setScheduledDeletion(null);
       toast.success(t("settings.deletionCancelled", "Exclusão cancelada! Sua conta foi reativada."));
     } catch (error: any) {
-      console.error('Erro ao cancelar exclusão:', error);
+      logger.error('Erro ao cancelar exclusão:', error);
       toast.error(error.message || t("settings.cancelError", "Erro ao cancelar exclusão"));
     } finally {
       setCancellingDeletion(false);
@@ -355,7 +356,7 @@ const Settings = () => {
       toast.success(t("settings.upgradeRequestSent"));
       setUpgradeDialogOpen(false);
     } catch (error: any) {
-      console.error("Error requesting upgrade:", error);
+      logger.error("Error requesting upgrade:", error);
       toast.error(error.message || t("settings.errorRequestingUpgrade"));
     } finally {
       setUpgrading(false);

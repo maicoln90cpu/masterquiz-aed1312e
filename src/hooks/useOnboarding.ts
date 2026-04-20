@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -51,7 +52,7 @@ export const useOnboarding = () => {
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
-          console.error('Error loading onboarding status:', error);
+          logger.error('Error loading onboarding status:', error);
         }
 
         if (data) {
@@ -70,7 +71,7 @@ export const useOnboarding = () => {
           });
         }
       } catch (error) {
-        console.error('Error in loadOnboardingStatus:', error);
+        logger.error('Error in loadOnboardingStatus:', error);
       } finally {
         setLoading(false);
       }
@@ -135,7 +136,7 @@ export const useOnboarding = () => {
         ...(allCompleted ? { completed_at: new Date().toISOString() } : {}),
       }));
     } catch (error) {
-      console.error('Error updating onboarding step:', error);
+      logger.error('Error updating onboarding step:', error);
     }
   }, [userId, status]);
 
@@ -164,7 +165,7 @@ export const useOnboarding = () => {
 
       setStatus(defaultStatus);
     } catch (error) {
-      console.error('Error resetting onboarding:', error);
+      logger.error('Error resetting onboarding:', error);
     }
   }, [userId, status.id]);
 

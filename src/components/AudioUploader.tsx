@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Music, Loader2 } from "lucide-react";
@@ -27,7 +28,7 @@ const AudioPlayer = ({ url }: { url: string }) => {
         const objectUrl = URL.createObjectURL(blob);
         setBlobUrl(objectUrl);
       } catch (err: any) {
-        console.error('Erro ao carregar áudio:', err);
+        logger.error('Erro ao carregar áudio:', err);
         setError(t('components.uploaders.audio.couldNotLoad'));
       } finally {
         setLoading(false);
@@ -116,7 +117,7 @@ export const AudioUploader = ({ value, onChange, onRemove, className = "" }: Aud
       onChange(publicUrl);
       toast.success(t('components.uploaders.audio.uploadSuccess'));
     } catch (error: any) {
-      console.error('Error uploading audio:', error);
+      logger.error('Error uploading audio:', error);
       toast.error(t('components.uploaders.audio.uploadError', { error: error.message || 'Unknown error' }));
     } finally {
       setUploading(false);
@@ -150,7 +151,7 @@ export const AudioUploader = ({ value, onChange, onRemove, className = "" }: Aud
           });
       }
     } catch (error) {
-      console.error('Error updating audio usage:', error);
+      logger.error('Error updating audio usage:', error);
     }
   };
 

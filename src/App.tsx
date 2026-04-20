@@ -1,4 +1,5 @@
 // ✅ FASE 2 - ITEM 5: Imports base permanecem
+import { logger } from '@/lib/logger';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,7 +39,7 @@ const lazyWithRetry = (
         return await componentImport();
       } catch (error) {
         lastError = error as Error;
-        console.warn(`[LazyLoad] Tentativa ${i + 1}/${retries} falhou para ${componentName}:`, error);
+        logger.warn(`[LazyLoad] Tentativa ${i + 1}/${retries} falhou para ${componentName}:`, error);
         
         // Se for erro de módulo não encontrado, tenta limpar cache
         if (lastError.message?.includes('Failed to fetch dynamically imported module') ||
@@ -49,9 +50,9 @@ const lazyWithRetry = (
             try {
               const cacheNames = await caches.keys();
               await Promise.all(cacheNames.map(name => caches.delete(name)));
-              console.log('[LazyLoad] Cache limpo com sucesso');
+              logger.log('[LazyLoad] Cache limpo com sucesso');
             } catch (cacheError) {
-              console.warn('[LazyLoad] Erro ao limpar cache:', cacheError);
+              logger.warn('[LazyLoad] Erro ao limpar cache:', cacheError);
             }
           }
         }
@@ -62,7 +63,7 @@ const lazyWithRetry = (
     }
     
     // Se falhou após retries, oferecer reload ou fallback
-    console.error(`[LazyLoad] Falha permanente ao carregar ${componentName} após ${retries} tentativas`);
+    logger.error(`[LazyLoad] Falha permanente ao carregar ${componentName} após ${retries} tentativas`);
     
     // Retorna um componente de fallback ao invés de recarregar automaticamente
     return {
@@ -248,7 +249,7 @@ const WebVitalsProvider = ({ children }: { children: ReactNode }) => {
 const GlobalErrorHandler = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('[GlobalErrorHandler] Unhandled rejection:', event.reason);
+      logger.error('[GlobalErrorHandler] Unhandled rejection:', event.reason);
       
       // Previne crash total da aplicação
       event.preventDefault();
@@ -262,7 +263,7 @@ const GlobalErrorHandler = ({ children }: { children: ReactNode }) => {
     };
 
     const handleError = (event: ErrorEvent) => {
-      console.error('[GlobalErrorHandler] Uncaught error:', event.error);
+      logger.error('[GlobalErrorHandler] Uncaught error:', event.error);
       // Não previne default aqui para que ErrorBoundary ainda funcione
     };
 

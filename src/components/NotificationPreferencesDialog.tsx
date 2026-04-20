@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -47,7 +48,7 @@ export function NotificationPreferencesDialog({ open, onOpenChange }: Notificati
         });
       }
     } catch (error) {
-      console.error('Error loading preferences:', error);
+      logger.error('Error loading preferences:', error);
       toast.error('Erro ao carregar preferências');
     } finally {
       setLoading(false);
@@ -72,7 +73,7 @@ export function NotificationPreferencesDialog({ open, onOpenChange }: Notificati
       toast.success('Preferências salvas com sucesso!');
       onOpenChange(false);
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      logger.error('Error saving preferences:', error);
       toast.error('Erro ao salvar preferências');
     } finally {
       setSaving(false);

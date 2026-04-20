@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useCallback, useRef } from 'react';
 
 interface QueryMetric {
@@ -29,7 +30,7 @@ export const useQueryPerformance = () => {
 
       // Log queries lentas (> 1s)
       if (duration > 1000) {
-        console.warn(`⚠️ Query lenta detectada: ${queryName} (${duration.toFixed(2)}ms)`);
+        logger.warn(`⚠️ Query lenta detectada: ${queryName} (${duration.toFixed(2)}ms)`);
       }
 
       return result;

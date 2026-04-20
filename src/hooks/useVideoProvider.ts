@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,7 +15,7 @@ export const useVideoProvider = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching video provider:', error);
+        logger.error('Error fetching video provider:', error);
         return 'supabase' as VideoProvider;
       }
 

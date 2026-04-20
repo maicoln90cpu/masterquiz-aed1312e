@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -97,12 +98,12 @@ export const logAudit = async (
     
     // Log apenas em desenvolvimento
     if (import.meta.env.DEV) {
-      console.log(`[AUDIT] ${action}`, { resourceType, resourceId, metadata });
+      logger.log(`[AUDIT] ${action}`, { resourceType, resourceId, metadata });
     }
   } catch (error) {
     // Log de erro apenas em desenvolvimento
     if (import.meta.env.DEV) {
-      console.error('[AUDIT] Failed to log action:', error);
+      logger.error('[AUDIT] Failed to log action:', error);
     }
   }
 };

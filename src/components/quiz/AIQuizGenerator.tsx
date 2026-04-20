@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -195,7 +196,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       });
 
       if (parseError) {
-        console.error('[AIQuizGenerator] Parse PDF error:', parseError);
+        logger.error('[AIQuizGenerator] Parse PDF error:', parseError);
         const errorMsg = parseError.message || '';
         if (errorMsg.includes('404') || errorMsg.includes('not found')) {
           toast.error('Serviço de parsing de PDF indisponível. Tente novamente mais tarde.');
@@ -211,7 +212,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
 
       // Check for semantic error responses (status 4xx returned as data)
       if (parseResult?.error) {
-        console.error('[AIQuizGenerator] Parse PDF semantic error:', parseResult);
+        logger.error('[AIQuizGenerator] Parse PDF semantic error:', parseResult);
         const errCode = parseResult.error;
         if (errCode === 'INVALID_PDF') {
           toast.error('Arquivo inválido. Envie um PDF válido.');
@@ -252,18 +253,18 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       }
 
       // ✅ LOG DETALHADO PARA DEBUG
-      console.log(`[AIQuizGenerator] PDF content extracted successfully`);
-      console.log(`[AIQuizGenerator] Content length: ${extractedContent.length} chars`);
-      console.log(`[AIQuizGenerator] Content preview (first 500 chars):`, extractedContent.substring(0, 500));
+      logger.log(`[AIQuizGenerator] PDF content extracted successfully`);
+      logger.log(`[AIQuizGenerator] Content length: ${extractedContent.length} chars`);
+      logger.log(`[AIQuizGenerator] Content preview (first 500 chars):`, extractedContent.substring(0, 500));
       
       // Verificar qualidade do conteúdo
       if (extractedContent.length < 200) {
-        console.warn(`[AIQuizGenerator] ⚠️ Content seems too short - may be metadata only`);
+        logger.warn(`[AIQuizGenerator] ⚠️ Content seems too short - may be metadata only`);
         toast.warning(t('components.aiGenerator.contentShort'));
       }
       
       if (extractedContent.includes('%PDF-') || extractedContent.includes('endobj')) {
-        console.error(`[AIQuizGenerator] ❌ Content contains raw PDF markers - extraction failed`);
+        logger.error(`[AIQuizGenerator] ❌ Content contains raw PDF markers - extraction failed`);
         toast.error(t('components.aiGenerator.extractionFailed'));
       }
 
@@ -274,7 +275,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       }));
       
     } catch (error) {
-      console.error('Error parsing PDF:', error);
+      logger.error('Error parsing PDF:', error);
       toast.error(t('components.aiGenerator.pdfProcessError'));
       setPdfFile(null);
     } finally {
@@ -351,7 +352,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       });
 
       if (error) {
-        console.error('AI generation error:', error);
+        logger.error('AI generation error:', error);
         
         if (error.message?.includes('429')) {
           toast.error(t('components.aiGenerator.limitReached', { used: '', limit: '' }));
@@ -373,7 +374,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
 
       // ✅ Verificar se a resposta contém erro de limite (status 429 retorna como data)
       if (data?.error) {
-        console.error('AI generation data error:', data);
+        logger.error('AI generation data error:', data);
         
         if (data.error === 'Monthly AI generation limit reached') {
           toast.error(t('components.aiGenerator.limitReached', { used: data.used, limit: data.limit }), {
@@ -395,7 +396,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
 
       // ✅ NORMALIZAÇÃO CRÍTICA: Garantir formato correto do JSON da IA
       const rawData = data;
-      console.log('[AIQuizGenerator] Raw AI response:', JSON.stringify(rawData, null, 2));
+      logger.log('[AIQuizGenerator] Raw AI response:', JSON.stringify(rawData, null, 2));
       
       const quizData: GeneratedQuizData = {
         title: rawData.title || 'Quiz Gerado por IA',
@@ -422,11 +423,11 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
               normalizedOptions = ['Sim', 'Não'];
             } else {
               normalizedOptions = ['Opção 1', 'Opção 2', 'Opção 3', 'Opção 4'];
-              console.warn(`[AIQuizGenerator] Pergunta ${idx + 1} sem opções válidas, usando fallback`);
+              logger.warn(`[AIQuizGenerator] Pergunta ${idx + 1} sem opções válidas, usando fallback`);
             }
           }
           
-          console.log(`[AIQuizGenerator] Pergunta ${idx + 1}: format=${answerFormat}, options=${normalizedOptions.length}`);
+          logger.log(`[AIQuizGenerator] Pergunta ${idx + 1}: format=${answerFormat}, options=${normalizedOptions.length}`);
           
           return {
             question_text: q.question_text || `Pergunta ${idx + 1}`,
@@ -437,7 +438,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
         }),
       };
       
-      console.log('[AIQuizGenerator] Normalized quiz data:', JSON.stringify(quizData, null, 2));
+      logger.log('[AIQuizGenerator] Normalized quiz data:', JSON.stringify(quizData, null, 2));
 
       // Buscar user_id
       const { data: { user } } = await supabase.auth.getUser();
@@ -490,20 +491,20 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
         if (q.answer_format === 'yes_no') {
           // yes_no SEMPRE deve ter exatamente ["Sim", "Não"]
           if (validatedOptions.length !== 2 || !validatedOptions.includes('Sim') || !validatedOptions.includes('Não')) {
-            console.warn(`[AI Validation] Pergunta ${index + 1} (yes_no) sem opções corretas. Corrigindo...`);
+            logger.warn(`[AI Validation] Pergunta ${index + 1} (yes_no) sem opções corretas. Corrigindo...`);
             validatedOptions = ['Sim', 'Não'];
           }
         } else if (q.answer_format === 'single_choice' || q.answer_format === 'multiple_choice') {
           // single_choice/multiple_choice devem ter pelo menos 2 opções
           if (validatedOptions.length < 2) {
-            console.error(`[AI Validation] Pergunta ${index + 1} (${q.answer_format}) tem menos de 2 opções:`, validatedOptions);
+            logger.error(`[AI Validation] Pergunta ${index + 1} (${q.answer_format}) tem menos de 2 opções:`, validatedOptions);
             toast.error(`Erro: Pergunta "${q.question_text.substring(0, 50)}..." não tem opções válidas`);
             throw new Error(`Pergunta ${index + 1} não tem opções suficientes`);
           }
         }
 
         // Log de validação bem-sucedida
-        console.log(`[AI Validation] ✅ Pergunta ${index + 1}: ${q.answer_format}, ${validatedOptions.length} opções`);
+        logger.log(`[AI Validation] ✅ Pergunta ${index + 1}: ${q.answer_format}, ${validatedOptions.length} opções`);
 
         // 🆕 FASE 4: Garantir que TODAS as perguntas tenham sugestões de IA
         const defaultSuggestions = {
@@ -535,7 +536,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
           }
         ];
 
-        console.log(`[AI Suggestions] Pergunta ${index + 1}: ${q.aiSuggestions ? 'IA' : 'fallback'} suggestions`);
+        logger.log(`[AI Suggestions] Pergunta ${index + 1}: ${q.aiSuggestions ? 'IA' : 'fallback'} suggestions`);
 
         return {
           quiz_id: quizId,
@@ -601,7 +602,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       }
 
     } catch (error) {
-      console.error('Error generating quiz:', error);
+      logger.error('Error generating quiz:', error);
       toast.error(t('components.aiGenerator.errorGenerating'));
     } finally {
       setIsGenerating(false);

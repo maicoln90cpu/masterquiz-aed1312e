@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { toast } from "sonner";
 
 interface ErrorDetails {
@@ -31,7 +32,7 @@ export const handleError = (
   };
 
   // Log detailed error for debugging
-  console.error(`[${context}] Error occurred:`, {
+  logger.error(`[${context}] Error occurred:`, {
     error,
     timestamp: new Date().toISOString(),
     context

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -118,7 +119,7 @@ export function useTestLead() {
 
       return { success: true, leadId: lead?.id };
     } catch (error) {
-      console.error('Error generating test lead:', error);
+      logger.error('Error generating test lead:', error);
       toast.error(t('testLead.error', 'Erro ao gerar lead de teste'));
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     } finally {

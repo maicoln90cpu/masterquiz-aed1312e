@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useCallback, useRef } from 'react';
 
 interface TrackEventParams {
@@ -27,7 +28,7 @@ export const useVideoAnalytics = () => {
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       if (!baseUrl || !anonKey) {
-        console.warn('Video analytics: Missing Supabase configuration');
+        logger.warn('Video analytics: Missing Supabase configuration');
         return;
       }
 
@@ -45,10 +46,10 @@ export const useVideoAnalytics = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        console.warn('Video analytics tracking failed:', error);
+        logger.warn('Video analytics tracking failed:', error);
       }
     } catch (error) {
-      console.warn('Video analytics tracking error:', error);
+      logger.warn('Video analytics tracking error:', error);
     }
   }, []);
 

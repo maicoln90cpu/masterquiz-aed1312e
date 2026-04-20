@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,7 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
       if (error) throw error;
       setTags(data || []);
     } catch (error) {
-      console.error('Error loading tags:', error);
+      logger.error('Error loading tags:', error);
       toast.error('Erro ao carregar tags');
     } finally {
       setLoading(false);
@@ -101,7 +102,7 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
       loadTags();
       onTagsUpdate();
     } catch (error) {
-      console.error('Error creating tag:', error);
+      logger.error('Error creating tag:', error);
       toast.error('Erro ao criar tag');
     }
   };
@@ -135,7 +136,7 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
       loadTags();
       onTagsUpdate();
     } catch (error) {
-      console.error('Error updating tag:', error);
+      logger.error('Error updating tag:', error);
       toast.error('Erro ao atualizar tag');
     }
   };
@@ -157,7 +158,7 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
       loadTags();
       onTagsUpdate();
     } catch (error) {
-      console.error('Error deleting tag:', error);
+      logger.error('Error deleting tag:', error);
       toast.error('Erro ao excluir tag');
     }
   };

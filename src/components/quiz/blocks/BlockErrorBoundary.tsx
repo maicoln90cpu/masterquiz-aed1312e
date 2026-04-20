@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle, Trash2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ export class BlockErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`[BlockErrorBoundary] Bloco "${this.props.blockType}" crashou:`, error, errorInfo);
+    logger.error(`[BlockErrorBoundary] Bloco "${this.props.blockType}" crashou:`, error, errorInfo);
   }
 
   handleRetry = () => {

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ const Login = () => {
             return;
           }
         } catch (checkErr) {
-          console.error('[CHECK-IMPORTED] Error:', checkErr);
+          logger.error('[CHECK-IMPORTED] Error:', checkErr);
         }
         toast.error(t('login.invalidCredentials'));
       } else {
@@ -285,7 +286,7 @@ const Login = () => {
       setShowMigrateModal(false);
       navigate('/dashboard');
     } catch (err) {
-      console.error('[MIGRATE] Error:', err);
+      logger.error('[MIGRATE] Error:', err);
       toast.error('Erro inesperado ao migrar conta');
     }
     setIsMigrating(false);

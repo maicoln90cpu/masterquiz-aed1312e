@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ export function RecoverySettings() {
         });
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
+      logger.error('Error loading settings:', error);
       toast.error('Erro ao carregar configurações');
     } finally {
       setLoading(false);
@@ -97,7 +98,7 @@ export function RecoverySettings() {
       if (error) throw error;
       toast.success('Configurações salvas com sucesso!');
     } catch (error) {
-      console.error('Error saving settings:', error);
+      logger.error('Error saving settings:', error);
       toast.error('Erro ao salvar configurações');
     } finally {
       setSaving(false);

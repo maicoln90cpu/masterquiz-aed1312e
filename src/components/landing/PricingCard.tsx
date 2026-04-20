@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
   const ctaText = getCopy(abElement, cmsKey, plan.ctaText);
 
   const handleCTA = async () => {
-    console.log('[PricingCard] handleCTA - 100% Kiwify mode', {
+    logger.log('[PricingCard] handleCTA - 100% Kiwify mode', {
       planId: plan.id,
       planName: plan.name,
       kiwifyCheckoutUrl: plan.kiwifyCheckoutUrl,
@@ -73,21 +74,21 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        console.log('[PricingCard] No user, redirecting to login');
+        logger.log('[PricingCard] No user, redirecting to login');
         navigate('/login');
         return;
       }
 
       // Plano gratuito -> dashboard
       if (plan.id === 'free') {
-        console.log('[PricingCard] Free plan, redirecting to dashboard');
+        logger.log('[PricingCard] Free plan, redirecting to dashboard');
         navigate('/dashboard');
         return;
       }
 
       // Planos pagos -> Kiwify
       if (plan.kiwifyCheckoutUrl) {
-        console.log('[PricingCard] Redirecting to Kiwify:', plan.kiwifyCheckoutUrl);
+        logger.log('[PricingCard] Redirecting to Kiwify:', plan.kiwifyCheckoutUrl);
         
         // Save A/B context for conversion tracking
         try {
@@ -105,7 +106,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
             }));
           }
         } catch (e) {
-          console.warn('[PricingCard] Failed to save AB context:', e);
+          logger.warn('[PricingCard] Failed to save AB context:', e);
         }
         
         // 🎯 GTM: upgrade_clicked
@@ -118,11 +119,11 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
         window.open(plan.kiwifyCheckoutUrl, '_blank');
         toast.success('Redirecionando para Kiwify...');
       } else {
-        console.error('[PricingCard] No Kiwify URL configured for plan:', plan.name);
+        logger.error('[PricingCard] No Kiwify URL configured for plan:', plan.name);
         toast.error('URL de checkout não configurada. Configure no painel admin.');
       }
     } catch (error: any) {
-      console.error('[PricingCard] Error:', error);
+      logger.error('[PricingCard] Error:', error);
       toast.error(error.message || 'Erro ao processar');
     } finally {
       setProcessing(false);

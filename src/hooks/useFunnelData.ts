@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "./useCurrentUser";
@@ -69,7 +70,7 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
         const { data: rawData, error: rawError } = await stepQuery;
 
         if (rawError) {
-          console.error('Error fetching funnel data:', rawError);
+          logger.error('Error fetching funnel data:', rawError);
           return empty;
         }
 
@@ -159,7 +160,7 @@ export function useFunnelData(options: UseFunnelDataOptions = {}) {
           blockedSessions,
         };
       } catch (error) {
-        console.error('Error in useFunnelData:', error);
+        logger.error('Error in useFunnelData:', error);
         return empty;
       }
     },

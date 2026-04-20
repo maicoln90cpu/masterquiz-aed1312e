@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight } from "lucide-react";
@@ -88,7 +89,7 @@ const WebhookLogs = () => {
 
       setLogs(webhookLogs);
     } catch (error) {
-      console.error('Error loading webhook logs:', error);
+      logger.error('Error loading webhook logs:', error);
       toast.error(t('webhookLogs.errorLoading'));
     } finally {
       setLoading(false);

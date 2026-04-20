@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useMemo, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -355,7 +356,7 @@ export default function AdminDashboard() {
               .order('requested_at', { ascending: false });
             return result;
           } catch (e) {
-            console.warn('validation_requests query failed (expected for non-admin):', e);
+            logger.warn('validation_requests query failed (expected for non-admin):', e);
             return { data: [], error: null, count: null };
           }
         }),
@@ -374,7 +375,7 @@ export default function AdminDashboard() {
       await loadSettings();
       setLoading(false);
     } catch (error) {
-      console.error('Error loading admin data:', error);
+      logger.error('Error loading admin data:', error);
       toast.error('Erro ao carregar dados');
     }
   };
@@ -390,7 +391,7 @@ export default function AdminDashboard() {
       });
 
       if (gError || !growthData) {
-        console.error('Error loading growth metrics for reports:', gError);
+        logger.error('Error loading growth metrics for reports:', gError);
         return;
       }
 
@@ -459,7 +460,7 @@ export default function AdminDashboard() {
         monthlyRevenue: revenuePlans
       });
     } catch (error) {
-      console.error('Error loading financial data:', error);
+      logger.error('Error loading financial data:', error);
     }
   };
 
@@ -485,7 +486,7 @@ export default function AdminDashboard() {
         maintenance_message: settingsObj.maintenance_message || ''
       });
     } catch (error) {
-      console.error('Error loading settings:', error);
+      logger.error('Error loading settings:', error);
     }
   };
 
@@ -506,7 +507,7 @@ export default function AdminDashboard() {
 
       toast.success('Configurações salvas com sucesso!');
     } catch (error) {
-      console.error('Error saving settings:', error);
+      logger.error('Error saving settings:', error);
       toast.error('Erro ao salvar configurações');
     }
   };
@@ -557,7 +558,7 @@ export default function AdminDashboard() {
       toast.success(approve ? 'Validação aprovada!' : 'Validação rejeitada');
       loadData();
     } catch (error) {
-      console.error('Error handling validation:', error);
+      logger.error('Error handling validation:', error);
       toast.error('Erro ao processar validação');
     }
   };
@@ -573,7 +574,7 @@ export default function AdminDashboard() {
         .limit(1);
 
       if (planError) {
-        console.error('Error fetching plan limits:', planError);
+        logger.error('Error fetching plan limits:', planError);
         toast.error('Erro ao buscar limites do plano');
         return;
       }
@@ -602,7 +603,7 @@ export default function AdminDashboard() {
       toast.success(`Plano atualizado! Limites: ${planData.quiz_limit} quizzes, ${planData.response_limit} respostas`);
       await refetchUsers();
     } catch (error) {
-      console.error('Error updating plan:', error);
+      logger.error('Error updating plan:', error);
       toast.error('Erro ao atualizar plano');
     }
   };
@@ -631,7 +632,7 @@ export default function AdminDashboard() {
       setEditDialogOpen(false);
       refetchUsers();
     } catch (err: any) {
-      console.error('Error updating user:', err);
+      logger.error('Error updating user:', err);
       toast.error('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'));
     } finally {
       setIsSavingEdit(false);
@@ -647,12 +648,12 @@ export default function AdminDashboard() {
       });
 
       if (error) {
-        console.error('Edge function error:', error);
+        logger.error('Edge function error:', error);
         throw new Error(error.message || 'Erro ao chamar função de exclusão');
       }
 
       if (data?.error) {
-        console.error('Delete user error:', data);
+        logger.error('Delete user error:', data);
         throw new Error(data.error);
       }
 
@@ -664,7 +665,7 @@ export default function AdminDashboard() {
       setUserToDelete(null);
       refetchUsers();
     } catch (error: any) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user:', error);
       const errorMsg = error.message || 'Erro desconhecido ao excluir usuário';
       toast.error(`Erro ao excluir usuário: ${errorMsg}`);
     }
@@ -858,7 +859,7 @@ export default function AdminDashboard() {
 
       toast.success(`CSV GA4 exportado com ${data.length} eventos!`);
     } catch (err) {
-      console.error('Export error:', err);
+      logger.error('Export error:', err);
       toast.error('Erro ao exportar CSV');
     }
   };
@@ -874,7 +875,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       toast.success(`${count ?? 'Todos os'} usuários marcados como enviados!`);
     } catch (err) {
-      console.error('Mark sent error:', err);
+      logger.error('Mark sent error:', err);
       toast.error('Erro ao marcar usuários');
     }
   };

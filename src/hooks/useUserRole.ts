@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,7 +47,7 @@ export const useUserRole = () => {
         }
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching user roles:', error);
+        logger.error('Error fetching user roles:', error);
         setRoles([]);
         setLoading(false);
       }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -157,7 +158,7 @@ const Start = () => {
         .single();
 
       if (quizError || !quiz) {
-        console.error("Error creating quiz:", quizError);
+        logger.error("Error creating quiz:", quizError);
         toast.error(t("common.errorSaving"));
         setLoading(false);
         return;
@@ -181,7 +182,7 @@ const Start = () => {
         .insert(questionsToInsert);
 
       if (questionsError) {
-        console.error("Error inserting questions:", questionsError);
+        logger.error("Error inserting questions:", questionsError);
       }
 
       // 5. Inserir form config padrão
@@ -196,7 +197,7 @@ const Start = () => {
         });
 
       if (formError) {
-        console.error("Error inserting form config:", formError);
+        logger.error("Error inserting form config:", formError);
       }
 
       // 6. Inserir resultado padrão
@@ -214,7 +215,7 @@ const Start = () => {
           .insert(resultsToInsert);
 
         if (resultsError) {
-          console.error("Error inserting results:", resultsError);
+          logger.error("Error inserting results:", resultsError);
         }
       }
 
@@ -225,7 +226,7 @@ const Start = () => {
       // 8. Redirecionar para editor em modo express
       navigate(`/create-quiz?id=${quiz.id}&mode=express`);
     } catch (err) {
-      console.error("Error in start flow:", err);
+      logger.error("Error in start flow:", err);
       toast.error(t("common.errorGeneric"));
       setLoading(false);
     }

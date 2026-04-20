@@ -1,4 +1,5 @@
 // ✅ FASE 2 - ITEM 6: Adicionar imports para filtros de data
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { Button } from "@/components/ui/button";
@@ -112,7 +113,7 @@ const Responses = () => {
       setResponses(responsesData || []);
       setTotalPages(Math.ceil((count || 0) / ITEMS_PER_PAGE));
     } catch (error) {
-      console.error('Error loading responses:', error);
+      logger.error('Error loading responses:', error);
       toast.error(t('responses.errorLoading'));
     } finally {
       setLoading(false);
@@ -179,7 +180,7 @@ const Responses = () => {
       
       toast.success(t('responses.exportSuccess'));
     } catch (error) {
-      console.error('Error exporting to Excel:', error);
+      logger.error('Error exporting to Excel:', error);
       toast.error(t('responses.exportError'));
     }
   };
@@ -228,7 +229,7 @@ const Responses = () => {
       
       toast.success(t('responses.csvDownloaded'), { duration: 8000 });
     } catch (error) {
-      console.error('Error exporting to Google Sheets:', error);
+      logger.error('Error exporting to Google Sheets:', error);
       toast.error(t('responses.exportGoogleSheetsError'));
     }
   };

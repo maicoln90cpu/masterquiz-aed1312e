@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -93,11 +94,11 @@ export function useQuizPersistence({
 
   // ✅ Callbacks estáveis para AutoSave (evita cascata de re-renders)
   const onSaveCompleteStable = useCallback(() => {
-    console.log('[AutoSave] ✅ Rascunho salvo automaticamente');
+    logger.log('[AutoSave] ✅ Rascunho salvo automaticamente');
   }, []);
 
   const onSaveErrorStable = useCallback((error: Error) => {
-    console.error('[AutoSave] ❌ Erro ao salvar:', error);
+    logger.error('[AutoSave] ❌ Erro ao salvar:', error);
   }, []);
 
   // ✅ Hook de AutoSave robusto
@@ -293,7 +294,7 @@ export function useQuizPersistence({
       updateUI({ showTemplateSelector: false, isLoadingQuiz: false });
       toast.success(t('createQuiz.quizLoadedEdit'));
     } catch (error) {
-      console.error('Error loading quiz:', error);
+      logger.error('Error loading quiz:', error);
       updateUI({ isLoadingQuiz: false });
       toast.error(t('createQuiz.errorLoadingQuiz'));
       navigate('/dashboard');
@@ -372,7 +373,7 @@ export function useQuizPersistence({
         
         // Retry once on slug collision (23505) for any quiz
         if (error && error.code === '23505') {
-          console.warn('[QuizPersistence] Slug collision on publish, retrying with new slug...');
+          logger.warn('[QuizPersistence] Slug collision on publish, retrying with new slug...');
           const retrySlug = isExpressMode 
             ? generateExpressSlugClient() 
             : null; // null forces trigger to regenerate
@@ -495,7 +496,7 @@ export function useQuizPersistence({
                 .update({ user_stage: 'engajado', stage_updated_at: new Date().toISOString() })
                 .eq('id', user.id)
                 .in('user_stage', ['explorador', 'iniciado']);
-              console.log('🎯 [PQL] User stage upgraded to engajado (UPDATE branch)');
+              logger.log('🎯 [PQL] User stage upgraded to engajado (UPDATE branch)');
             }
           }
 
@@ -509,7 +510,7 @@ export function useQuizPersistence({
               .update({ user_stage: targetStage, stage_updated_at: new Date().toISOString() })
               .eq('id', user.id)
               .in('user_stage', allowedFrom);
-            console.log(`🎯 [PQL] User stage upgraded to ${targetStage} (UPDATE branch, express=${isExpressQuiz})`);
+            logger.log(`🎯 [PQL] User stage upgraded to ${targetStage} (UPDATE branch, express=${isExpressQuiz})`);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (supabase as any)
@@ -518,7 +519,7 @@ export function useQuizPersistence({
               .eq('id', user.id);
           }
         } catch (stageErr) {
-          console.warn('⚠️ Failed to update user_stage in UPDATE branch:', stageErr);
+          logger.warn('⚠️ Failed to update user_stage in UPDATE branch:', stageErr);
         }
       } else {
         // Verificar user_stage para detectar primeiro quiz (mais robusto que contar quizzes)
@@ -554,7 +555,7 @@ export function useQuizPersistence({
         
         // Retry once on slug collision (23505) for manual quizzes
         if (error && error.code === '23505') {
-          console.warn('[QuizPersistence] Slug collision on manual INSERT, retrying with slug: null...');
+          logger.warn('[QuizPersistence] Slug collision on manual INSERT, retrying with slug: null...');
           const retryResult = await supabase
             .from('quizzes')
             .insert({
@@ -702,7 +703,7 @@ export function useQuizPersistence({
               .eq('id', user.id)
               .in('user_stage', allowedFrom);
             
-            console.log(`🎯 [PQL] User stage upgraded to ${targetStage} (INSERT branch, express=${isExpressQuiz})`);
+            logger.log(`🎯 [PQL] User stage upgraded to ${targetStage} (INSERT branch, express=${isExpressQuiz})`);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (supabase as any)
@@ -710,7 +711,7 @@ export function useQuizPersistence({
               .update({ first_quiz_created: true })
               .eq('id', user.id);
             
-            console.log('🎯 [Onboarding] first_quiz_created milestone marked');
+            logger.log('🎯 [Onboarding] first_quiz_created milestone marked');
           }
         }
       }
@@ -840,7 +841,7 @@ export function useQuizPersistence({
       return { success: true, slug: quiz.slug || '' };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[CreateQuiz] ❌ Erro ao salvar quiz:', errorMessage);
+      logger.error('[CreateQuiz] ❌ Erro ao salvar quiz:', errorMessage);
       toast.error(`${t('createQuiz.errorPublishing')}: ${errorMessage}`);
       updateUI({ isSaving: false });
       return { success: false, slug: '' };
@@ -972,7 +973,7 @@ export function useQuizPersistence({
       toast.success("Salvo com sucesso!");
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('[SaveDraft] ❌ Erro:', msg);
+      logger.error('[SaveDraft] ❌ Erro:', msg);
       toast.error("Erro ao salvar: " + msg);
     }
   }, [quizId, appearanceState, formConfigState, editorState.questionCount, questions, markAsSaved]);

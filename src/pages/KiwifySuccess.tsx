@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
@@ -103,7 +104,7 @@ export default function KiwifySuccess() {
         setLoading(false);
       }
     } catch (error) {
-      console.error(t('kiwifySuccess.errorVerifying'), error);
+      logger.error(t('kiwifySuccess.errorVerifying'), error);
       setLoading(false);
     }
   };

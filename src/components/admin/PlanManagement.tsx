@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -350,7 +351,7 @@ export default function PlanManagement() {
 
     try {
       if (editingPlan) {
-        console.log('📤 Atualizando plano:', editingPlan.id, planData);
+        logger.log('📤 Atualizando plano:', editingPlan.id, planData);
         
         const { data, error } = await supabase
           .from("subscription_plans")
@@ -360,12 +361,12 @@ export default function PlanManagement() {
           .single();
         
         if (error) {
-          console.error('❌ Erro ao atualizar plano:', error);
+          logger.error('❌ Erro ao atualizar plano:', error);
           toast.error(`Erro ao atualizar: ${error.message}`);
           return;
         }
         
-        console.log('✅ Plano atualizado com sucesso:', data);
+        logger.log('✅ Plano atualizado com sucesso:', data);
         toast.success("Plano atualizado!");
       } else {
         const { data, error } = await supabase
@@ -375,12 +376,12 @@ export default function PlanManagement() {
           .single();
         
         if (error) {
-          console.error('❌ Erro ao criar plano:', error);
+          logger.error('❌ Erro ao criar plano:', error);
           toast.error(`Erro ao criar: ${error.message}`);
           return;
         }
         
-        console.log('✅ Plano criado com sucesso:', data);
+        logger.log('✅ Plano criado com sucesso:', data);
         toast.success("Plano criado!");
       }
       
@@ -391,7 +392,7 @@ export default function PlanManagement() {
       await queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       await queryClient.refetchQueries({ queryKey: ['subscription-plans'] });
     } catch (error) {
-      console.error('❌ Erro inesperado:', error);
+      logger.error('❌ Erro inesperado:', error);
       toast.error("Erro ao salvar plano");
     }
   };
@@ -421,7 +422,7 @@ export default function PlanManagement() {
       toast.success('✅ Cache invalidado! Atualizando página...', { duration: 2000 });
       setTimeout(() => { window.location.reload(); }, 1500);
     } catch (error) {
-      console.error('Erro ao invalidar cache:', error);
+      logger.error('Erro ao invalidar cache:', error);
       toast.error('❌ Erro ao invalidar cache. Tente novamente.');
     }
   };
@@ -449,7 +450,7 @@ export default function PlanManagement() {
       queryClient.invalidateQueries({ queryKey: ['resource-limits'] });
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
     } catch (error: any) {
-      console.error('Erro ao sincronizar:', error);
+      logger.error('Erro ao sincronizar:', error);
       toast.error(`❌ Erro: ${error.message || 'Falha ao sincronizar limites'}`);
     } finally {
       setIsSyncing(false);

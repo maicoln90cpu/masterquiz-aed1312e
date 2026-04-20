@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ArrowLeft, Shield } from 'lucide-react';
@@ -34,7 +35,7 @@ const PrivacyPolicy = () => {
         
         setContent(contentWithDate);
       } catch (error) {
-        console.error('Erro ao carregar política de privacidade:', error);
+        logger.error('Erro ao carregar política de privacidade:', error);
         setContent('<p>Erro ao carregar a política de privacidade. Tente novamente mais tarde.</p>');
       } finally {
         setLoading(false);

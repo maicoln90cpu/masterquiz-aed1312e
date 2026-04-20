@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useRef } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
@@ -8,8 +9,8 @@ export const MediaPlayer = ({ url, type }: { url: string; type: 'video' | 'audio
   const [error, setError] = useState(false);
 
   const handleError = (e: React.SyntheticEvent<HTMLVideoElement | HTMLAudioElement, Event>) => {
-    console.error(`❌ ${type} playback error:`, e);
-    console.error(`❌ URL:`, url);
+    logger.error(`❌ ${type} playback error:`, e);
+    logger.error(`❌ URL:`, url);
     setError(true);
   };
 

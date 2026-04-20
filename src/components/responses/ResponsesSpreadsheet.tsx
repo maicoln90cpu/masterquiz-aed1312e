@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -198,7 +199,7 @@ export function ResponsesSpreadsheet({ quizId }: ResponsesSpreadsheetProps) {
       });
 
     } catch (error) {
-      console.error('Error loading spreadsheet data:', error);
+      logger.error('Error loading spreadsheet data:', error);
     } finally {
       setLoading(false);
     }
