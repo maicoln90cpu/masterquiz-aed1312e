@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,7 +104,7 @@ const AdminTemplateEditor = () => {
   const loadTemplate = async (id: string) => {
     try {
       setIsLoading(true);
-      console.log('Loading template:', id);
+      logger.log('Loading template:', id);
       
       const { data, error } = await supabase
         .from('quiz_templates')
@@ -113,7 +114,7 @@ const AdminTemplateEditor = () => {
 
       if (error) throw error;
       
-      console.log('Template data loaded:', data);
+      logger.log('Template data loaded:', data);
 
       // Preencher metadados
       setMetadata({
@@ -131,8 +132,8 @@ const AdminTemplateEditor = () => {
       const config = data.full_config as Record<string, any> | null;
       const previewConfig = data.preview_config as Record<string, any> | null;
       
-      console.log('Full config:', config);
-      console.log('Preview config:', previewConfig);
+      logger.log('Full config:', config);
+      logger.log('Preview config:', previewConfig);
       
       if (config && typeof config === 'object') {
         setTitle(config.title || previewConfig?.title || data.name || '');
@@ -152,7 +153,7 @@ const AdminTemplateEditor = () => {
 
         // Carregar perguntas
         if (config.questions && Array.isArray(config.questions) && config.questions.length > 0) {
-          console.log('Loading questions:', config.questions.length);
+          logger.log('Loading questions:', config.questions.length);
           
           const loadedQuestions: EditorQuestion[] = config.questions.map((q: any, idx: number) => {
             // Processar options - pode ser array de strings ou array de objetos
@@ -179,14 +180,14 @@ const AdminTemplateEditor = () => {
             };
           });
           
-          console.log('Processed questions:', loadedQuestions);
+          logger.log('Processed questions:', loadedQuestions);
           setQuestions(loadedQuestions);
         } else {
-          console.log('No questions found, initializing empty');
+          logger.log('No questions found, initializing empty');
           setQuestions(initializeEmptyQuestions(qCount));
         }
       } else {
-        console.log('No config found, using preview config');
+        logger.log('No config found, using preview config');
         // Se não tem full_config, usar preview_config
         if (previewConfig) {
           setTitle(previewConfig.title || data.name || '');
@@ -199,7 +200,7 @@ const AdminTemplateEditor = () => {
 
       toast.success('Template carregado com sucesso');
     } catch (error) {
-      console.error('Error loading template:', error);
+      logger.error('Error loading template:', error);
       toast.error('Erro ao carregar template');
       navigate('/masteradm');
     } finally {
@@ -284,7 +285,7 @@ const AdminTemplateEditor = () => {
       
       navigate('/masteradm');
     } catch (error: any) {
-      console.error('Error saving template:', error);
+      logger.error('Error saving template:', error);
       toast.error(error.message || 'Erro ao salvar template');
     } finally {
       setIsSaving(false);

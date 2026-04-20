@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -20,8 +21,8 @@ export const PreviewLinkDialog = ({ open, onOpenChange, quizId }: PreviewLinkDia
   const previewUrl = `${origin}/preview/${quizId}`;
   
   // Debug log para verificar URL gerada
-  console.log('[PreviewLinkDialog] Quiz ID:', quizId);
-  console.log('[PreviewLinkDialog] Generated URL:', previewUrl);
+  logger.log('[PreviewLinkDialog] Quiz ID:', quizId);
+  logger.log('[PreviewLinkDialog] Generated URL:', previewUrl);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(previewUrl);

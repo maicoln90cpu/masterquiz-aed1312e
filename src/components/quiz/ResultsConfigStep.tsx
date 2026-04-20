@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -128,7 +129,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
       .order('order_number');
 
     if (error) {
-      console.error('Error loading questions:', error);
+      logger.error('Error loading questions:', error);
       return;
     }
 
@@ -147,7 +148,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
       .order('order_number');
 
     if (error) {
-      console.error('Error loading results:', error);
+      logger.error('Error loading results:', error);
       return;
     }
 
@@ -205,7 +206,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
       };
     });
 
-    console.log('[ResultsConfigStep] 💾 Salvando resultados:', {
+    logger.log('[ResultsConfigStep] 💾 Salvando resultados:', {
       timestamp: new Date().toISOString(),
       quizId,
       resultsCount: upserts.length,
@@ -219,7 +220,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
       .select(); // ✅ Retorna dados salvos para sincronizar IDs
     
     if (error) {
-      console.error('[ResultsConfigStep] ❌ Erro ao salvar resultados:', {
+      logger.error('[ResultsConfigStep] ❌ Erro ao salvar resultados:', {
         timestamp: new Date().toISOString(),
         error: error.message,
         details: error
@@ -228,7 +229,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
       return;
     }
 
-    console.log('[ResultsConfigStep] ✅ Resultados salvos com sucesso:', {
+    logger.log('[ResultsConfigStep] ✅ Resultados salvos com sucesso:', {
       timestamp: new Date().toISOString(),
       savedResults: data
     });
@@ -245,7 +246,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
         }
         return result;
       }));
-      console.log('[ResultsConfigStep] 🔄 IDs sincronizados (estado local mantido)');
+      logger.log('[ResultsConfigStep] 🔄 IDs sincronizados (estado local mantido)');
     }
   };
 
@@ -308,7 +309,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
       setCurrentResultIndex(results.length);
       toast.success(t('createQuiz.results.resultAdded', 'Resultado adicionado'));
     } catch (error) {
-      console.error('[ResultsConfigStep] Failed to add result:', error);
+      logger.error('[ResultsConfigStep] Failed to add result:', error);
       toast.error(t('createQuiz.results.errorAdding', 'Erro ao adicionar resultado'));
     } finally {
       setIsSaving(false);
@@ -323,7 +324,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
       setLastSaved(new Date());
       toast.success(t('createQuiz.results.saved', 'Resultados salvos com sucesso!'));
     } catch (error) {
-      console.error('[ResultsConfigStep] Erro ao salvar manualmente:', error);
+      logger.error('[ResultsConfigStep] Erro ao salvar manualmente:', error);
       toast.error(t('createQuiz.results.errorSaving', 'Erro ao salvar resultados'));
     } finally {
       setIsSaving(false);
@@ -347,12 +348,12 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
           .eq('id', resultToDelete.id);
         
         if (error) {
-          console.error('[ResultsConfigStep] ❌ Erro ao deletar resultado:', error);
+          logger.error('[ResultsConfigStep] ❌ Erro ao deletar resultado:', error);
           toast.error(t('createQuiz.results.errorDeleting', 'Erro ao deletar resultado'));
           return;
         }
       } catch (err) {
-        console.error('[ResultsConfigStep] ❌ Exceção ao deletar:', err);
+        logger.error('[ResultsConfigStep] ❌ Exceção ao deletar:', err);
         toast.error(t('createQuiz.results.errorDeleting', 'Erro ao deletar resultado'));
         return;
       }
@@ -575,7 +576,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
                 <ImageUploader
                   value={currentResult.imageUrl}
                   onChange={async (url) => {
-                    console.log('[ResultsConfigStep] 🖼️ ImageUploader onChange:', {
+                    logger.log('[ResultsConfigStep] 🖼️ ImageUploader onChange:', {
                       timestamp: new Date().toISOString(),
                       currentResultIndex,
                       currentResultId: currentResult.id,

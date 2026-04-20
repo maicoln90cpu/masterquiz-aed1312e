@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -134,7 +135,7 @@ export const useQuizActions = ({
       setLastSavedToSupabase(new Date());
       toast.success(t('components.quizActions.draftSaved'));
     } catch (error: any) {
-      console.error('Erro ao salvar rascunho:', error);
+      logger.error('Erro ao salvar rascunho:', error);
       toast.error(t('components.quizActions.draftError') + ': ' + error.message);
     } finally {
       setIsSavingDraft(false);
@@ -146,7 +147,7 @@ export const useQuizActions = ({
       return;
     }
 
-    console.log('[QuizActions] 🚀 Iniciando salvamento do quiz');
+    logger.log('[QuizActions] 🚀 Iniciando salvamento do quiz');
 
     try {
       setIsSaving(true);
@@ -191,7 +192,7 @@ export const useQuizActions = ({
         
         // Retry once on slug collision (23505)
         if (error && error.code === '23505') {
-          console.warn('[QuizActions] Slug collision on UPDATE, retrying with slug: null...');
+          logger.warn('[QuizActions] Slug collision on UPDATE, retrying with slug: null...');
           const retryResult = await supabase
             .from('quizzes')
             .update({ ...updatePayload, slug: null } as any)
@@ -233,7 +234,7 @@ export const useQuizActions = ({
         
         // Retry once on slug collision (23505)
         if (error && error.code === '23505') {
-          console.warn('[QuizActions] Slug collision on INSERT, retrying with slug: null...');
+          logger.warn('[QuizActions] Slug collision on INSERT, retrying with slug: null...');
           const retryResult = await supabase
             .from('quizzes')
             .insert({ ...insertPayload, slug: null } as any)
@@ -320,7 +321,7 @@ export const useQuizActions = ({
       localStorage.removeItem(getStorageKey(user.id, 'draft_state'));
       setShareDialogOpen(true);
     } catch (error: any) {
-      console.error('[QuizActions] ❌ Erro ao salvar quiz:', error);
+      logger.error('[QuizActions] ❌ Erro ao salvar quiz:', error);
       toast.error(`${t('createQuiz.errorPublishing')}: ${(error as any)?.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         toast.success('Seus dados anteriores foram restaurados com sucesso!');
       }
     } catch (err) {
-      console.error('[MERGE] Error:', err);
+      logger.error('[MERGE] Error:', err);
     }
   };
 
@@ -64,8 +65,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           if (session.user?.id && !hasCountedLogin) {
             hasCountedLogin = true;
             (supabase.rpc as Function)('record_login_event', { p_user_id: session.user.id })
-              .then(() => console.log('[Auth] login event recorded'))
-              .catch((err: unknown) => console.error('[Auth] Failed to record login event:', err));
+              .then(() => logger.log('[Auth] login event recorded'))
+              .catch((err: unknown) => logger.error('[Auth] Failed to record login event:', err));
           }
         }
       }
