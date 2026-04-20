@@ -10,9 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import type { HealthStatus } from '@/hooks/useSystemHealth';
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string; label: string }> = {
-  healthy: { icon: CheckCircle, color: 'text-green-500', label: 'Saudável' },
-  warning: { icon: AlertTriangle, color: 'text-yellow-500', label: 'Atenção' },
-  critical: { icon: XCircle, color: 'text-red-500', label: 'Crítico' },
+  healthy: { icon: CheckCircle, color: 'text-success', label: 'Saudável' },
+  warning: { icon: AlertTriangle, color: 'text-warning', label: 'Atenção' },
+  critical: { icon: XCircle, color: 'text-destructive', label: 'Crítico' },
 };
 
 const getStatus = (score: number): HealthStatus => {

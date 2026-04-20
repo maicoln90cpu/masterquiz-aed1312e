@@ -12,8 +12,8 @@ export default function KiwifyCancel() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center p-4">
       <Card className="max-w-lg w-full">
         <CardHeader className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/30 mx-auto mb-4">
-            <XCircle className="h-8 w-8 text-orange-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-warning/10 mx-auto mb-4">
+            <XCircle className="h-8 w-8 text-warning" />
           </div>
           <CardTitle className="text-2xl">{t('kiwifyCancel.title')}</CardTitle>
         </CardHeader>
