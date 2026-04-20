@@ -132,7 +132,7 @@ export const CRMKanbanBoard = ({
                               type="checkbox"
                               checked={selectedLeadsForComparison.includes(lead.id)}
                               onChange={() => onToggleLeadSelection(lead.id)}
-                              className="absolute top-2 right-2 z-10 h-5 w-5 rounded border-gray-300 cursor-pointer"
+                              className="absolute top-2 right-2 z-10 h-5 w-5 rounded border-border cursor-pointer"
                             />
                             <DraggableLeadCard
                               id={lead.id}
@@ -184,7 +184,7 @@ export const CRMKanbanBoard = ({
                             type="checkbox"
                             checked={selectedLeadsForComparison.includes(lead.id)}
                             onChange={() => onToggleLeadSelection(lead.id)}
-                            className="absolute top-2 right-2 z-10 h-4 w-4 rounded border-gray-300 cursor-pointer"
+                            className="absolute top-2 right-2 z-10 h-4 w-4 rounded border-border cursor-pointer"
                           />
                           <DraggableLeadCard
                             id={lead.id}

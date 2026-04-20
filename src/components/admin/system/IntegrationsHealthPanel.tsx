@@ -82,7 +82,7 @@ const IntegrationsHealthPanel = () => {
                 <CardTitle className="text-xs uppercase text-muted-foreground">{p.provider}</CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-3 flex items-center gap-2">
-                <Icon className={`h-4 w-4 ${p.active === p.total ? 'text-green-500' : 'text-yellow-500'}`} />
+                <Icon className={`h-4 w-4 ${p.active === p.total ? 'text-success' : 'text-warning'}`} />
                 <span className="text-sm">{p.active}/{p.total} ativos</span>
               </CardContent>
             </Card>
