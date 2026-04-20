@@ -97,6 +97,7 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
   const MAX_RESULTS = 20;
 
   const currentResult = results[currentResultIndex];
+  const canAddResult = Boolean(quizId) && !isSaving && results.length < MAX_RESULTS;
   
   const handleDeleteClick = (index: number) => {
     setResultToDeleteIndex(index);
@@ -273,10 +274,20 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
     // Prevent adding while saving
     if (isSaving) return;
     
+    if (!quizId) {
+      toast.error('Não foi possível adicionar resultado: salve o quiz antes de criar novos resultados.');
+      return;
+    }
+    
     // Limit max results
     if (results.length >= MAX_RESULTS) {
       toast.error(t('createQuiz.results.maxResults', `Máximo de ${MAX_RESULTS} resultados permitidos`));
       return;
+    }
+    
+    if (debouncedSaveRef.current) {
+      clearTimeout(debouncedSaveRef.current);
+      debouncedSaveRef.current = null;
     }
     
     setIsSaving(true);
@@ -305,12 +316,20 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
         resultType: 'standard'
       };
       
-      setResults(prev => [...prev, newResult]);
-      setCurrentResultIndex(results.length);
+      setResults(prev => {
+        setCurrentResultIndex(prev.length);
+        return [...prev, newResult];
+      });
       toast.success(t('createQuiz.results.resultAdded', 'Resultado adicionado'));
-    } catch (error) {
-      logger.error('[ResultsConfigStep] Failed to add result:', error);
-      toast.error(t('createQuiz.results.errorAdding', 'Erro ao adicionar resultado'));
+    } catch (error: any) {
+      const message = error?.message || 'Erro desconhecido';
+      logger.error('[ResultsConfigStep] Failed to add result:', {
+        quizId,
+        currentResultsCount: results.length,
+        error: message,
+        details: error,
+      });
+      toast.error(`${t('createQuiz.results.errorAdding', 'Erro ao adicionar resultado')}: ${message}`);
     } finally {
       setIsSaving(false);
     }
@@ -417,9 +436,9 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
                   {t('createQuiz.results.possibleResultsDesc')}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={addResult}>
-                <Plus className="h-4 w-4 mr-2" />
-                {t('createQuiz.results.addResult')}
+              <Button variant="outline" size="sm" onClick={addResult} disabled={!canAddResult}>
+                {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                {isSaving ? t('common.saving', 'Salvando...') : t('createQuiz.results.addResult')}
               </Button>
             </div>
 
