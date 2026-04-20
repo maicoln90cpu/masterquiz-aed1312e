@@ -11,6 +11,8 @@
  *  - HMR do Vite em ambiente de preview (URLs com `?t=` ou `node_modules/.vite/deps`)
  *  - Erros de `ResizeObserver loop` (ruído benigno do navegador)
  *  - Erros de `dynamically imported module` no domínio lovableproject.com (preview HMR)
+ *  - Cancelamentos benignos de request/navegação (`AbortError`, `Signal is aborted`)
+ *  - `Script error.` genérico sem stack útil (normalmente extensão/script externo/CORS)
  */
 import { supabase } from '@/integrations/supabase/client';
 
@@ -50,8 +52,15 @@ function shouldIgnoreError(message: string, url?: string): boolean {
   // 4) Erros de carregamento de chunk em ambiente de preview
   if (msg.includes('failed to fetch dynamically imported module') && u.includes('lovableproject.com')) return true;
 
-  // 5) Erros de extensões com prefixo conhecido
-  if (msg.startsWith('script error.') && !u) return true; // CORS-bloqueado, sem info útil
+  // 5) Cancelamentos benignos de request/navegação (React Query, troca de tela, abort controller)
+  if (msg.includes('signal is aborted without reason')) return true;
+  if (msg.includes('aborterror')) return true;
+  if (msg.includes('the operation was aborted')) return true;
+  if (msg.includes('request aborted')) return true;
+  if (msg.includes('fetch aborted')) return true;
+
+  // 6) Erros genéricos de extensões/scripts externos sem stack útil
+  if (msg === 'script error.' || msg === 'script error') return true; // CORS-bloqueado, sem info útil
 
   return false;
 }
