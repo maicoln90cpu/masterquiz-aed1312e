@@ -32,7 +32,7 @@ const ALLOWLIST = new Set<string>([
 
 // Baseline atual — atualize PARA BAIXO conforme limpa, NUNCA pra cima.
 // Para descobrir o atual, rode o teste e veja "Total: X" no console.
-const MAX_VIOLATIONS_ALLOWED = 30;
+const MAX_VIOLATIONS_ALLOWED = 18;
 
 const DIRECT_GETUSER = /supabase\.auth\.getUser\(\s*\)|\bauth\.getUser\(\s*\)/;
 
