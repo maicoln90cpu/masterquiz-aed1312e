@@ -122,7 +122,7 @@ export const CookieConsentBanner = () => {
                 {/* Cookie Analytics */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
-                    <BarChart3 className="h-5 w-5 text-blue-500" />
+                    <BarChart3 className="h-5 w-5 text-info" />
                     <div>
                       <Label className="font-medium">
                         {t('cookies.analytics', 'Analytics')}
@@ -141,7 +141,7 @@ export const CookieConsentBanner = () => {
                 {/* Cookie Marketing */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
-                    <Megaphone className="h-5 w-5 text-orange-500" />
+                    <Megaphone className="h-5 w-5 text-warning" />
                     <div>
                       <Label className="font-medium">
                         {t('cookies.marketing', 'Marketing')}

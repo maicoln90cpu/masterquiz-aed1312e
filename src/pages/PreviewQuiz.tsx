@@ -140,7 +140,7 @@ export default function PreviewQuiz() {
   return (
     <div className="relative">
       {/* Banner de Preview */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white py-2 px-4 text-center text-sm font-semibold shadow-lg">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-warning text-warning-foreground py-2 px-4 text-center text-sm font-semibold shadow-lg">
         {t('components.preview.previewBanner')}
       </div>
       

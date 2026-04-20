@@ -48,11 +48,11 @@ export function IntegrationLogs() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case "error":
         return <XCircle className="h-4 w-4 text-destructive" />;
       case "pending":
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-warning" />;
       default:
         return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }

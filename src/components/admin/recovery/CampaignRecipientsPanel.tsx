@@ -207,7 +207,7 @@ export function CampaignRecipientsPanel({ campaignId, campaignName, templateId, 
                 {!isValidWhatsapp(t.whatsapp) ? (
                   <Badge variant="destructive" className="shrink-0">WhatsApp não cadastrado</Badge>
                 ) : t.enqueued ? (
-                  <Badge className="bg-green-600 hover:bg-green-600 shrink-0">Enfileirado</Badge>
+                  <Badge className="bg-success text-success-foreground hover:bg-success/90 shrink-0">Enfileirado</Badge>
                 ) : (
                   <Badge variant="outline" className="shrink-0">Não enfileirado</Badge>
                 )}

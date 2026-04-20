@@ -24,10 +24,10 @@ export const PerformanceMetrics = ({ slowestQueries, totalQueries }: Performance
 
   const getPerformanceBadge = (duration: number) => {
     if (duration < 500) {
-      return <Badge variant="default" className="bg-green-500">Rápido</Badge>;
+      return <Badge variant="default" className="bg-success text-success-foreground">Rápido</Badge>;
     }
     if (duration < 1000) {
-      return <Badge variant="default" className="bg-yellow-500">Moderado</Badge>;
+      return <Badge variant="default" className="bg-warning text-warning-foreground">Moderado</Badge>;
     }
     return <Badge variant="destructive">Lento</Badge>;
   };

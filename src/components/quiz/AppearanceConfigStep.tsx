@@ -311,11 +311,11 @@ export const AppearanceConfigStep = ({
                       <CardContent className="p-3 space-y-2">
                         <div className={`w-full h-10 ${tmpl.bgColor} rounded-lg flex items-center justify-center relative`}>
                           {template === tmpl.id && allowed && (
-                            <Check className={`h-5 w-5 ${isEscuro ? 'text-white' : 'text-primary'}`} />
+                            <Check className={`h-5 w-5 ${isEscuro ? 'text-primary-foreground' : 'text-primary'}`} />
                           )}
                           {!allowed && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-                              <Lock className="h-4 w-4 text-white" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-foreground/50 rounded-lg">
+                              <Lock className="h-4 w-4 text-background" />
                             </div>
                           )}
                         </div>

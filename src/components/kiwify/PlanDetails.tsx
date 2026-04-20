@@ -50,7 +50,7 @@ export function PlanDetails({ planName, planType, features = [] }: PlanDetailsPr
   const planFeatures = features.length > 0 ? features : getDefaultFeatures(planType);
 
   const getPlanIcon = () => {
-    if (planType === 'premium') return <Crown className="h-5 w-5 text-yellow-500" />;
+    if (planType === 'premium') return <Crown className="h-5 w-5 text-warning" />;
     return null;
   };
 
@@ -69,7 +69,7 @@ export function PlanDetails({ planName, planType, features = [] }: PlanDetailsPr
         <ul className="space-y-2">
           {planFeatures.map((feature, index) => (
             <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+              <Check className="h-4 w-4 text-success flex-shrink-0" />
               {feature}
             </li>
           ))}

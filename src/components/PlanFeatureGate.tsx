@@ -46,7 +46,7 @@ export const PlanFeatureGate = ({
           <div className="p-4 rounded-full bg-primary/10">
             <Lock className="h-8 w-8 text-primary" />
           </div>
-          <Sparkles className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1" />
+          <Sparkles className="h-4 w-4 text-warning absolute -top-1 -right-1" />
         </div>
         
         <div className="space-y-2">
