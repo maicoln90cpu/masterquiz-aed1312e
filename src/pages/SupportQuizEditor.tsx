@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { SupportBlockEditor } from './support/SupportBlockEditor';
 import { toast } from 'sonner';
+import { RichTextEditor } from '@/components/quiz/blocks/RichTextEditor';
+import { stripHtml } from '@/lib/htmlUtils';
 
 interface QuizData {
   id: string;
@@ -636,7 +638,7 @@ const SupportQuizEditor = () => {
                     onClick={() => setExpandedResultId(expandedResultId === r.id ? null : r.id)}
                   >
                     <Badge variant="outline" className="text-xs shrink-0">#{r.order_number}</Badge>
-                    <span className="font-medium text-sm flex-1 truncate">{r.result_text}</span>
+                    <span className="font-medium text-sm flex-1 truncate">{stripHtml(r.result_text)}</span>
                     <span className="text-xs text-muted-foreground shrink-0">
                       {r.min_score ?? '-'} — {r.max_score ?? '-'}
                     </span>
@@ -650,10 +652,10 @@ const SupportQuizEditor = () => {
                     <CardContent className="pt-0 pb-4 space-y-4">
                       <div className="space-y-2">
                         <Label>Texto do Resultado</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={r.result_text}
-                          onChange={(e) => updateResultField(r.id, 'result_text', e.target.value)}
-                          className="min-h-[60px]"
+                          onChange={(value) => updateResultField(r.id, 'result_text', value)}
+                          minHeight="120px"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">

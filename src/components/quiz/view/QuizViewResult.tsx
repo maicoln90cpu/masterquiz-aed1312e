@@ -8,8 +8,15 @@ import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import type { Quiz, QuizResult, QuizQuestion } from "@/types/quiz";
 import type { CalculatorResultType } from "@/hooks/useQuizViewState";
+import { sanitizeHtml } from "@/lib/sanitize";
 
-const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
+// 🔒 REGRESSION SHIELD: result_text pode conter HTML formatado pelo RichTextEditor (v2.44.0).
+// Sempre sanitizar antes de renderizar com dangerouslySetInnerHTML — sanitizeHtml() bloqueia
+// <script>, <iframe>, on*= e demais vetores XSS. Não remover esta sanitização.
+const stripHtml = (html: string) => (html || '').replace(/<[^>]*>/g, '').trim();
+
+// Detecta se o texto contém tags HTML (resultado novo formato vs texto puro legado)
+const hasHtml = (text: string) => /<[a-z][\s\S]*>/i.test(text || '');
 
 // Stagger animation variants
 const containerVariants = {
@@ -171,12 +178,22 @@ export function QuizViewResult({ quiz, finalResult, calculatorResult, questions,
               )}
               
               <motion.div variants={itemVariants} className="prose max-w-none">
-                <p className="quiz-body-responsive whitespace-pre-wrap">
-                  {isCalculator && calculatorResult 
-                    ? finalResult.result_text.replace(/\{result\}/g, calculatorResult.formattedValue)
-                    : finalResult.result_text
+                {(() => {
+                  const rawText = isCalculator && calculatorResult
+                    ? (finalResult.result_text || '').replace(/\{result\}/g, calculatorResult.formattedValue)
+                    : (finalResult.result_text || '');
+                  // Backward compat: texto puro legado renderiza com whitespace-pre-wrap
+                  if (!hasHtml(rawText)) {
+                    return <p className="quiz-body-responsive whitespace-pre-wrap">{rawText}</p>;
                   }
-                </p>
+                  // Novo formato: HTML do RichTextEditor — sempre sanitizar
+                  return (
+                    <div
+                      className="quiz-body-responsive ql-editor-content"
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(rawText) }}
+                    />
+                  );
+                })()}
               </motion.div>
               
               {finalResult.button_text && finalResult.redirect_url && (

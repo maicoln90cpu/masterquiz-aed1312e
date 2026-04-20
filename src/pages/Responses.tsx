@@ -28,6 +28,7 @@ import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ResponsesSkeleton } from "@/components/ui/responses-skeleton";
 import { logExportAction } from "@/lib/auditLogger";
+import { stripHtml } from "@/lib/htmlUtils";
 import { ResponseAnswersList } from "@/components/responses/ResponseAnswersList";
 import { ResponsesSpreadsheet } from "@/components/responses/ResponsesSpreadsheet";
 import { ResponseHeatmap } from "@/components/analytics/ResponseHeatmap";
