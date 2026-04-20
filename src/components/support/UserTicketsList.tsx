@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { MessageSquare, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface Ticket {
   id: string;
@@ -32,23 +33,18 @@ interface Message {
 
 export const UserTicketsList = () => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [userId, setUserId] = useState<string>('');
+  const userId = user?.id ?? '';
 
   useEffect(() => {
     loadTickets();
-    getUserId();
   }, []);
-
-  const getUserId = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) setUserId(user.id);
-  };
 
   const loadTickets = async () => {
     setLoading(true);
@@ -78,8 +74,6 @@ export const UserTicketsList = () => {
 
     setSending(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
         toast.error(t('components.ticket.authRequired'));
         return;

@@ -12,11 +12,13 @@ import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const WebhookSettings = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { allowWebhook, isLoading: loadingPlan } = usePlanFeatures();
+  const { user } = useCurrentUser();
   const [webhookUrl, setWebhookUrl] = useState('');
   const [webhookSecret, setWebhookSecret] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -24,25 +26,20 @@ const WebhookSettings = () => {
   const [testing, setTesting] = useState(false);
 
   useEffect(() => {
-    loadWebhookConfig();
-  }, []);
-
-  const loadWebhookConfig = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data } = await supabase
-      .from('user_webhooks')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (data) {
-      setWebhookUrl(data.webhook_url);
-      setWebhookSecret(data.webhook_secret || '');
-      setIsActive(data.is_active);
-    }
-  };
+    (async () => {
+      const { data } = await supabase
+        .from('user_webhooks')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setWebhookUrl(data.webhook_url);
+        setWebhookSecret(data.webhook_secret || '');
+        setIsActive(data.is_active);
+      }
+    })();
+  }, [user]);
 
   const handleSave = async () => {
     if (!allowWebhook) {
@@ -57,7 +54,6 @@ const WebhookSettings = () => {
 
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t('webhookSettings.notAuthenticated'));
 
       const { error } = await supabase

@@ -44,6 +44,7 @@ import { logQuizAction } from "@/lib/auditLogger";
 import { QuizCard } from "@/components/quiz/QuizCard";
 import { FeatureTooltip } from "@/components/onboarding/FeatureTooltip";
 import type { Quiz, Profile } from "@/types/quiz";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 // Lazy load dialogs
 const LazyTagManager = lazy(() => import("@/components/TagManager").then(m => ({ default: m.TagManager })));
@@ -53,6 +54,7 @@ const PreviewLinkDialog = lazy(() => import("@/components/quiz/PreviewLinkDialog
 const MyQuizzes = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
 
   // Data hooks - force refetch on mount
   const { data: quizzes = [], isLoading } = useRecentQuizzes();
@@ -95,23 +97,20 @@ const MyQuizzes = () => {
 
   // Load user profile
   useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     const loadProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-      
       const { data: profile } = await supabase
         .from('profiles')
         .select('company_slug')
         .eq('id', user.id)
         .maybeSingle();
-      
       setUserProfile(profile);
     };
     loadProfile();
-  }, [navigate]);
+  }, [navigate, user]);
 
   // Filter quizzes
   const filteredQuizzes = quizzes.filter(quiz => {

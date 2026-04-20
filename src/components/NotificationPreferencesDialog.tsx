@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface NotificationPreferencesDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface NotificationPreferencesDialogProps {
 export function NotificationPreferencesDialog({ open, onOpenChange }: NotificationPreferencesDialogProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { user } = useCurrentUser();
   const [preferences, setPreferences] = useState({
     notify_new_responses: true,
     notify_weekly_report: false,
@@ -30,7 +32,6 @@ export function NotificationPreferencesDialog({ open, onOpenChange }: Notificati
   const loadPreferences = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -58,7 +59,6 @@ export function NotificationPreferencesDialog({ open, onOpenChange }: Notificati
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase
