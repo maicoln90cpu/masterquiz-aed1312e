@@ -146,17 +146,15 @@ export const useQuizPreviewState = ({
       };
     }
 
-    const matchingResult = results.find(r => {
-      if (r.condition_type === 'always') return true;
-      if (r.condition_type === 'score_range') {
-        const min = r.min_score ?? 0;
-        const max = r.max_score ?? Infinity;
-        return totalScore >= min && totalScore <= max;
-      }
-      return false;
+    // Mesma prioridade do quiz público: primeiro faixa de pontuação, depois resultado padrão.
+    const scoreRangeResult = results.find(r => {
+      if (r.condition_type !== 'score_range') return false;
+      const min = r.min_score ?? 0;
+      const max = r.max_score ?? Infinity;
+      return totalScore >= min && totalScore <= max;
     });
 
-    return matchingResult || results[0];
+    return scoreRangeResult || results.find(r => r.condition_type === 'always') || results[0];
   };
 
   // Answer selection handler
