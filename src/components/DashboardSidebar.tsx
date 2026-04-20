@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export function DashboardSidebar() {
   const navigate = useNavigate();
@@ -40,27 +41,23 @@ export function DashboardSidebar() {
   const { t } = useTranslation();
   const { open, setOpen } = useSidebar();
   const [userName, setUserName] = useState("");
+  const { user } = useCurrentUser();
 
   useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      setUserName(profile?.full_name || user.email?.split('@')[0] || 'User');
-    } catch (error) {
-      logger.error('Error loading user data:', error);
-    }
-  };
+    if (!user) return;
+    (async () => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+        setUserName(profile?.full_name || user.email?.split('@')[0] || 'User');
+      } catch (error) {
+        logger.error('Error loading user data:', error);
+      }
+    })();
+  }, [user]);
 
   const handleLogout = async () => {
     try {

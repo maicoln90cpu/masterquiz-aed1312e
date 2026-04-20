@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { useLandingCopy } from "@/hooks/useLandingCopy";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface PricingCardProps {
   plan: {
@@ -39,6 +40,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [processing, setProcessing] = useState(false);
+  const { user } = useCurrentUser();
 
   // A/B Testing: separate tests for free and paid plan CTAs
   const isFreePlan = plan.id === 'free';
@@ -71,7 +73,6 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
 
     try {
       setProcessing(true);
-      const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         logger.log('[PricingCard] No user, redirecting to login');

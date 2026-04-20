@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, MessageSquare } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface CreateTicketDialogProps {
   open: boolean;
@@ -19,6 +20,7 @@ interface CreateTicketDialogProps {
 
 export const CreateTicketDialog = ({ open, onOpenChange, onSuccess }: CreateTicketDialogProps) => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState<'suggestion' | 'bug' | 'question' | 'feature_request' | 'other'>('suggestion');
@@ -33,8 +35,6 @@ export const CreateTicketDialog = ({ open, onOpenChange, onSuccess }: CreateTick
 
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast.error(t('components.ticket.authRequired'));
         return;

@@ -14,6 +14,7 @@ import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { incrementProfileCounter } from "@/lib/icpTracking";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function Pricing() {
   
@@ -21,6 +22,7 @@ export default function Pricing() {
   const { t } = useTranslation();
   const { plans: allPlans, isLoading } = usePricingPlans();
   const { isModeB } = useSiteMode();
+  const { user } = useCurrentUser();
   const plans = useMemo(() => {
     if (!isModeB) return allPlans;
     return allPlans.filter(p => p.planType !== 'free');
@@ -30,43 +32,34 @@ export default function Pricing() {
   const paywallFired = useRef(false);
 
   useEffect(() => {
-    loadCurrentSubscription();
-  }, []);
-
-  // 🎯 GTM: paywall_viewed — dispara 1x ao montar a página de preços
-  useEffect(() => {
-    if (paywallFired.current) return;
-    const firePaywallViewed = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        paywallFired.current = true;
-        pushGTMEvent('paywall_viewed', {
-          source: 'pricing_page',
-          user_id: user.id,
-          current_plan: currentPlan || 'unknown',
-        });
-        incrementProfileCounter('paywall_hit_count'); // M04
-      }
-    };
-    firePaywallViewed();
-  }, [currentPlan]);
-
-  const loadCurrentSubscription = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+    if (!user) return;
+    (async () => {
+      try {
         const { data: subscription } = await supabase
           .from('user_subscriptions')
           .select('plan_type')
           .eq('user_id', user.id)
           .single();
-
         setCurrentPlan(subscription?.plan_type || 'free');
+      } catch (error) {
+        logger.error('Error loading subscription:', error);
       }
-    } catch (error) {
-      logger.error('Error loading subscription:', error);
+    })();
+  }, [user]);
+
+  // 🎯 GTM: paywall_viewed — dispara 1x ao montar a página de preços
+  useEffect(() => {
+    if (paywallFired.current) return;
+    if (user) {
+      paywallFired.current = true;
+      pushGTMEvent('paywall_viewed', {
+        source: 'pricing_page',
+        user_id: user.id,
+        current_plan: currentPlan || 'unknown',
+      });
+      incrementProfileCounter('paywall_hit_count'); // M04
     }
-  };
+  }, [currentPlan, user]);
 
   if (isLoading) {
     return (

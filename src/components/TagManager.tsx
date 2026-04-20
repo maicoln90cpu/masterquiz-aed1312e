@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface Tag {
   id: string;
@@ -24,6 +25,7 @@ interface TagManagerProps {
 export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useCurrentUser();
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#3b82f6");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,7 +52,6 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
   const loadTags = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -76,7 +77,6 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase

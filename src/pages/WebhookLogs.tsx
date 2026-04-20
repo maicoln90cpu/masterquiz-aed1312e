@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface WebhookLog {
   id: string;
@@ -27,18 +28,19 @@ const LOGS_PER_PAGE = 20;
 const WebhookLogs = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadWebhookLogs();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const loadWebhookLogs = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/login');
         return;

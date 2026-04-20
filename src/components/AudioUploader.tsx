@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "react-i18next";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 // 🎵 Audio Player Robusto
 const AudioPlayer = ({ url }: { url: string }) => {
@@ -55,6 +56,7 @@ interface AudioUploaderProps {
 
 export const AudioUploader = ({ value, onChange, onRemove, className = "" }: AudioUploaderProps) => {
   const { t } = useTranslation();
+  const { user } = useCurrentUser();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -79,7 +81,6 @@ export const AudioUploader = ({ value, onChange, onRemove, className = "" }: Aud
       }
 
       // Get user ID
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error(t('components.uploaders.audio.needLogin'));
         return;

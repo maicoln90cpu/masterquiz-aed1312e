@@ -12,6 +12,7 @@ import { Loader2, Plus, Trash2, Ban, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DataTable } from "@/components/admin/system/DataTable";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface BlacklistItem {
   id: string;
@@ -39,6 +40,7 @@ export function RecoveryBlacklist() {
   const [blacklist, setBlacklist] = useState<BlacklistItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useCurrentUser();
   const [formData, setFormData] = useState({
     phone_number: '',
     reason: 'opt_out',
@@ -86,8 +88,6 @@ export function RecoveryBlacklist() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       const { error } = await supabase
         .from('recovery_blacklist')
         .insert({
