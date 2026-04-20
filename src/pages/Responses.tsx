@@ -147,7 +147,7 @@ const Responses = () => {
           [t('responses.name')]: response.respondent_name || t('responses.na'),
           [t('responses.email')]: response.respondent_email || t('responses.na'),
           [t('responses.whatsapp')]: response.respondent_whatsapp || t('responses.na'),
-          [t('responses.result')]: response.quiz_results?.result_text || t('responses.na'),
+          [t('responses.result')]: stripHtml(response.quiz_results?.result_text) || t('responses.na'),
           [t('responses.date')]: new Date(response.completed_at).toLocaleDateString('pt-BR'),
           [t('common.time')]: new Date(response.completed_at).toLocaleTimeString('pt-BR'),
         };
@@ -200,7 +200,7 @@ const Responses = () => {
           [t('responses.name')]: response.respondent_name || t('responses.na'),
           [t('responses.email')]: response.respondent_email || t('responses.na'),
           [t('responses.whatsapp')]: response.respondent_whatsapp || t('responses.na'),
-          [t('responses.result')]: response.quiz_results?.result_text || t('responses.na'),
+          [t('responses.result')]: stripHtml(response.quiz_results?.result_text) || t('responses.na'),
           [t('responses.date')]: new Date(response.completed_at).toLocaleDateString('pt-BR'),
           [t('common.time')]: new Date(response.completed_at).toLocaleTimeString('pt-BR'),
         };
@@ -564,7 +564,7 @@ const Responses = () => {
                 <p className="text-sm text-muted-foreground">{t('responses.result')}</p>
                 <Card>
                   <CardContent className="pt-4">
-                    <p>{selectedResponse.quiz_results?.result_text || "N/A"}</p>
+                    <p>{stripHtml(selectedResponse.quiz_results?.result_text) || "N/A"}</p>
                   </CardContent>
                 </Card>
               </div>
