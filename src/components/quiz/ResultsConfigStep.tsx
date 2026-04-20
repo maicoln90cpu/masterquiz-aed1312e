@@ -425,6 +425,29 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
                 </div>
               </div>
             </RadioGroup>
+
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">Como os resultados são escolhidos</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Use <strong className="text-foreground">1 resultado</strong> quando todo mundo deve ver a mesma mensagem final. Use <strong className="text-foreground">vários resultados</strong> quando quiser finais diferentes conforme a pontuação das respostas.
+                </p>
+              </div>
+              <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                <div className="rounded-md border bg-background/70 p-3">
+                  <span className="font-medium text-foreground">0–10 pontos</span>
+                  <p>Resultado iniciante</p>
+                </div>
+                <div className="rounded-md border bg-background/70 p-3">
+                  <span className="font-medium text-foreground">11–25 pontos</span>
+                  <p>Resultado intermediário</p>
+                </div>
+                <div className="rounded-md border bg-background/70 p-3">
+                  <span className="font-medium text-foreground">26+ pontos</span>
+                  <p>Resultado avançado</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Results Section */}
@@ -472,7 +495,10 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
             {/* Result Type Selector */}
             <div className="space-y-4 border rounded-lg p-4">
               <div className="space-y-2">
-                <Label className="text-base font-semibold">Tipo de Resultado</Label>
+                <Label className="text-base font-semibold">Tipo do resultado {currentResultIndex + 1}</Label>
+                <p className="text-sm text-muted-foreground">
+                  Primeiro escolha se este final é uma mensagem simples ou uma calculadora. A faixa de pontos aparece quando a entrega condicional está ativa.
+                </p>
                 <Tabs 
                   value={currentResult.resultType || 'standard'} 
                   onValueChange={(v) => updateResult({ resultType: v as 'standard' | 'calculator' })}
@@ -538,9 +564,9 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
               {currentResult.resultType !== 'calculator' && deliveryTiming === 'conditional' && (
                 <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
                   <div>
-                    <Label className="text-base font-semibold">Configuração Condicional</Label>
+                    <Label className="text-base font-semibold">Faixa de pontos do resultado {currentResultIndex + 1}</Label>
                     <p className="text-sm text-muted-foreground">
-                      Este resultado será exibido com base na pontuação do participante
+                      Este resultado aparece quando a soma dos pontos do participante ficar entre a pontuação mínima e máxima abaixo.
                     </p>
                   </div>
                   
@@ -569,9 +595,9 @@ export const ResultsConfigStep = ({ deliveryTiming, onDeliveryTimingChange, quiz
                     </div>
                   </div>
                   
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
-                    <p className="text-sm text-blue-900 dark:text-blue-100">
-                      💡 <strong>Dica:</strong> Defina pontos para cada opção de resposta na etapa de perguntas para usar resultados condicionais baseados em pontuação.
+                  <div className="p-3 bg-primary/10 border border-primary/20 rounded-md">
+                    <p className="text-sm text-foreground">
+                      💡 <strong>Dica:</strong> Defina pontos nas opções da Etapa 3. Se dois resultados tiverem faixas iguais ou sobrepostas, o sistema pode escolher o primeiro resultado encontrado.
                     </p>
                   </div>
                 </div>
