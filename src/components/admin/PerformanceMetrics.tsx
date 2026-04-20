@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, TrendingUp, Clock } from "lucide-react";
+import { Activity, TrendingUp, Clock, Info } from "lucide-react";
 
 interface QueryMetric {
   queryName: string;
@@ -40,23 +40,29 @@ export const PerformanceMetrics = ({ slowestQueries, totalQueries }: Performance
           Performance do Sistema
         </CardTitle>
         <CardDescription>
-          Monitoramento de queries em tempo real
+          Mostra apenas as consultas instrumentadas nesta tela, não todas as consultas do sistema.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4 p-3 bg-muted rounded-lg">
           <TrendingUp className="w-5 h-5 text-primary" />
           <div>
-            <p className="text-sm font-medium">Total de Queries</p>
+            <p className="text-sm font-medium">Queries monitoradas nesta tela</p>
             <p className="text-2xl font-bold">{totalQueries}</p>
           </div>
+        </div>
+        <div className="flex gap-2 rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p>
+            Essas métricas vêm de pontos marcados manualmente no código. A operação <span className="font-medium text-foreground">quiz-respondents</span> passa por Edge Function e pode parecer mais lenta que uma query simples.
+          </p>
         </div>
 
         {slowestQueries.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              Queries Mais Lentas
+              Queries monitoradas mais lentas
             </h4>
             {slowestQueries.map((query, index) => (
               <div key={index} className="p-3 border rounded-lg space-y-1">
