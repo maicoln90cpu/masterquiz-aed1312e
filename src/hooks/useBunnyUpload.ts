@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -81,7 +82,7 @@ export const useBunnyUpload = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
-        console.error('Upload error:', errorData);
+        logger.error('Upload error:', errorData);
         toast.error(errorData.error || t('hooks.bunnyUpload.uploadError'));
         return null;
       }
@@ -192,7 +193,7 @@ export const useBunnyUpload = () => {
                     }
                   );
                 } catch (e) {
-                  console.warn('Failed to confirm upload:', e);
+                  logger.warn('Failed to confirm upload:', e);
                 }
                 
                 toast.success(t('hooks.bunnyUpload.uploadSuccess'));
@@ -227,7 +228,7 @@ export const useBunnyUpload = () => {
 
       return null;
     } catch (error) {
-      console.error('Chunked upload error:', error);
+      logger.error('Chunked upload error:', error);
       throw error;
     }
   };
@@ -264,7 +265,7 @@ export const useBunnyUpload = () => {
       }
 
     } catch (error: unknown) {
-      console.error('Bunny upload error:', error);
+      logger.error('Bunny upload error:', error);
       const message = error instanceof Error ? error.message : t('hooks.bunnyUpload.unknownError');
       toast.error(`${t('hooks.bunnyUpload.uploadError')}: ${message}`);
       return null;
@@ -290,7 +291,7 @@ export const useBunnyUpload = () => {
       toast.success(t('hooks.bunnyUpload.deleteSuccess'));
       return true;
     } catch (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
       toast.error(t('hooks.bunnyUpload.deleteError'));
       return false;
     }

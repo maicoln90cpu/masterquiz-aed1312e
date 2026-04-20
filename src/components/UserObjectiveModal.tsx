@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState } from "react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -54,7 +55,7 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
       if (error) throw error;
       onComplete();
     } catch (err) {
-      console.error("Error saving objectives:", err);
+      logger.error("Error saving objectives:", err);
       toast.error(t("common.errorSaving"));
     } finally {
       setSaving(false);

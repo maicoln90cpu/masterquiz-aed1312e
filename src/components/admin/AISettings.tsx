@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,7 +61,7 @@ export const AISettings = () => {
         ai_prompt_pdf: settingsObj.ai_prompt_pdf || ''
       });
     } catch (error) {
-      console.error('Error loading AI settings:', error);
+      logger.error('Error loading AI settings:', error);
       toast.error('Erro ao carregar configurações de IA');
     } finally {
       setLoading(false);
@@ -88,7 +89,7 @@ export const AISettings = () => {
 
       toast.success('✅ Configurações de IA salvas com sucesso!');
     } catch (error) {
-      console.error('Error saving AI settings:', error);
+      logger.error('Error saving AI settings:', error);
       toast.error('Erro ao salvar configurações de IA');
     } finally {
       setSaving(false);

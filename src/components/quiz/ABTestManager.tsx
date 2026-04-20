@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -83,7 +84,7 @@ export const ABTestManager = ({ quizId, abTestActive, onToggleABTest }: ABTestMa
       .order('variant_letter');
 
     if (error) {
-      console.error('Erro ao carregar variantes:', error);
+      logger.error('Erro ao carregar variantes:', error);
       return;
     }
 
@@ -176,7 +177,7 @@ export const ABTestManager = ({ quizId, abTestActive, onToggleABTest }: ABTestMa
       onToggleABTest(active);
       toast.success(active ? 'Teste A/B ativado!' : 'Teste A/B desativado');
     } catch (error) {
-      console.error('Erro ao atualizar A/B test:', error);
+      logger.error('Erro ao atualizar A/B test:', error);
       toast.error('Erro ao atualizar configuração');
     } finally {
       setSaving(false);

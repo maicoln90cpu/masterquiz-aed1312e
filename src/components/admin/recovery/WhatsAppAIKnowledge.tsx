@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ export function WhatsAppAIKnowledge() {
       if (error) throw error;
       setArticles((data || []) as KBArticle[]);
     } catch (error) {
-      console.error('Error loading KB:', error);
+      logger.error('Error loading KB:', error);
       toast.error('Erro ao carregar base de conhecimento');
     } finally {
       setLoading(false);
@@ -120,7 +121,7 @@ export function WhatsAppAIKnowledge() {
       setDialogOpen(false);
       loadArticles();
     } catch (error) {
-      console.error('Error saving article:', error);
+      logger.error('Error saving article:', error);
       toast.error('Erro ao salvar artigo');
     } finally {
       setSaving(false);

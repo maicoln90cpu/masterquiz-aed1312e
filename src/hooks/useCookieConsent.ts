@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -119,9 +120,9 @@ export const useCookieConsent = (): UseCookieConsentReturn => {
         .from('cookie_consents')
         .insert(payload as any);
 
-      console.log('✅ Consentimento de cookies salvo');
+      logger.log('✅ Consentimento de cookies salvo');
     } catch (error) {
-      console.error('Erro ao salvar consentimento:', error);
+      logger.error('Erro ao salvar consentimento:', error);
     }
   }, []);
 

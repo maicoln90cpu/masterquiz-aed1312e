@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,7 +151,7 @@ const SupportQuizEditor = () => {
 
       trackAction('Abriu editor de quiz', quizId, q?.title);
     } catch (err: any) {
-      console.error('Error loading quiz:', err);
+      logger.error('Error loading quiz:', err);
       toast.error('Erro ao carregar quiz');
       navigate('/masteradm/support');
     } finally {
@@ -381,7 +382,7 @@ const SupportQuizEditor = () => {
       setAddedQuestionIds(new Set());
       setDeletedQuestionIds(new Set());
     } catch (err: any) {
-      console.error('Error saving quiz:', err);
+      logger.error('Error saving quiz:', err);
       toast.error('Erro ao salvar alterações');
     } finally {
       setSaving(false);

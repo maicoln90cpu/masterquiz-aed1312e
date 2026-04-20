@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -141,9 +142,9 @@ export const useABTest = (quizId: string | undefined, abTestActive: boolean = fa
         startedAt: new Date(),
       });
       
-      console.log(`🧪 A/B Test: Variante ${selectedVariant.variant_letter} selecionada`);
+      logger.log(`🧪 A/B Test: Variante ${selectedVariant.variant_letter} selecionada`);
     } catch (error) {
-      console.error('Erro ao inicializar A/B test:', error);
+      logger.error('Erro ao inicializar A/B test:', error);
     } finally {
       setIsLoading(false);
     }
@@ -168,9 +169,9 @@ export const useABTest = (quizId: string | undefined, abTestActive: boolean = fa
         .eq('quiz_id', quizId)
         .eq('visitor_id', visitorId);
 
-      console.log(`🧪 A/B Test: Conversão registrada para variante ${session.variant?.variant_letter}`);
+      logger.log(`🧪 A/B Test: Conversão registrada para variante ${session.variant?.variant_letter}`);
     } catch (error) {
-      console.error('Erro ao registrar conversão:', error);
+      logger.error('Erro ao registrar conversão:', error);
     }
   }, [session, quizId]);
 

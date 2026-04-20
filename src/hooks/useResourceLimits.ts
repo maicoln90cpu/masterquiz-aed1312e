@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
@@ -119,7 +120,7 @@ export const useResourceLimits = () => {
       // ✅ Sem fallback hardcoded: subscription_plans é a fonte única de verdade.
       // Se plano não existir/desativado, retorna 0 (bloqueia ação) e loga warning.
       if (!plan) {
-        console.warn(`[useResourceLimits] Plano "${subscription.plan_type}" não encontrado em subscription_plans (is_active=true). Limites serão 0.`);
+        logger.warn(`[useResourceLimits] Plano "${subscription.plan_type}" não encontrado em subscription_plans (is_active=true). Limites serão 0.`);
       }
       const quizLimit = plan?.quiz_limit ?? 0;
       const responseLimit = plan?.response_limit ?? 0;

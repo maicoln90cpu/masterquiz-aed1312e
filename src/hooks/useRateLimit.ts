@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -36,7 +37,7 @@ export const useRateLimit = () => {
       });
 
       if (error) {
-        console.error('[Rate Limit] Error:', error);
+        logger.error('[Rate Limit] Error:', error);
         // Em caso de erro, permitir a ação (fail-open)
         return { allowed: true };
       }
@@ -55,7 +56,7 @@ export const useRateLimit = () => {
 
       return { allowed: true };
     } catch (err) {
-      console.error('[Rate Limit] Exception:', err);
+      logger.error('[Rate Limit] Exception:', err);
       // Em caso de exceção, permitir a ação (fail-open)
       return { allowed: true };
     }

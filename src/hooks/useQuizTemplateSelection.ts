@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -45,7 +46,7 @@ export function useQuizTemplateSelection({
   const handleSelectTemplate = useCallback((template: Template) => {
     // Guard contra chamadas duplicadas
     if (isProcessingRef.current) {
-      console.warn('[useQuizTemplateSelection] Already processing template selection');
+      logger.warn('[useQuizTemplateSelection] Already processing template selection');
       return;
     }
     
@@ -54,7 +55,7 @@ export function useQuizTemplateSelection({
     try {
       // ✅ Validar estrutura do template
       if (!template?.config) {
-        console.error('[useQuizTemplateSelection] Invalid template: missing config');
+        logger.error('[useQuizTemplateSelection] Invalid template: missing config');
         toast.error(t('createQuiz.invalidTemplate', 'Template inválido'));
         return;
       }
@@ -88,7 +89,7 @@ export function useQuizTemplateSelection({
         const sanitizedBlocks = Array.isArray(q.blocks)
           ? (q.blocks as any[]).filter((b: any) => {
               if (b?.type === 'image' && typeof b?.url === 'string' && b.url.startsWith('/templates/')) {
-                console.info(`[useQuizTemplateSelection] Stripped invalid imageBlock: ${b.url}`);
+                logger.info(`[useQuizTemplateSelection] Stripped invalid imageBlock: ${b.url}`);
                 return false;
               }
               return true;
@@ -116,7 +117,7 @@ export function useQuizTemplateSelection({
       setQuestions(processedQuestions);
       toast.success(t('createQuiz.templateLoaded', { name: template.name || 'Template' }));
     } catch (error) {
-      console.error('[useQuizTemplateSelection] Error applying template:', error);
+      logger.error('[useQuizTemplateSelection] Error applying template:', error);
       toast.error(t('createQuiz.templateError', 'Erro ao carregar template'));
     } finally {
       // ✅ Liberar lock após processamento

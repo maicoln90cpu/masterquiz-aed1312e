@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -259,7 +260,7 @@ export function RecoveryCampaigns() {
       setCampaigns(rawCampaigns);
       setTemplates(templatesRes.data || []);
     } catch (error) {
-      console.error('Error loading campaigns:', error);
+      logger.error('Error loading campaigns:', error);
       toast.error('Erro ao carregar campanhas');
     } finally {
       setLoading(false);
@@ -279,7 +280,7 @@ export function RecoveryCampaigns() {
         setCooldownEnabled(days > 0);
       }
     } catch (error) {
-      console.error('Error loading cooldown:', error);
+      logger.error('Error loading cooldown:', error);
     }
   };
 
@@ -296,7 +297,7 @@ export function RecoveryCampaigns() {
       if (error) throw error;
       toast.success(enabled ? `Cooldown definido para ${days} dias` : 'Cooldown desativado');
     } catch (error) {
-      console.error('Error saving cooldown:', error);
+      logger.error('Error saving cooldown:', error);
       toast.error('Erro ao salvar cooldown');
     } finally {
       setSavingCooldown(false);
@@ -324,7 +325,7 @@ export function RecoveryCampaigns() {
         : 'Nenhum novo alvo encontrado com os critérios atuais.');
       loadData();
     } catch (error) {
-      console.error('Error refreshing campaign:', error);
+      logger.error('Error refreshing campaign:', error);
       toast.error('Erro ao atualizar alvos');
     } finally {
       setRefreshingCampaign(null);
@@ -391,7 +392,7 @@ export function RecoveryCampaigns() {
       setFiltersOpen(false);
       loadData();
     } catch (error) {
-      console.error('Error creating campaign:', error);
+      logger.error('Error creating campaign:', error);
       toast.error('Erro ao criar campanha');
     }
   };
@@ -419,7 +420,7 @@ export function RecoveryCampaigns() {
       toast.success(`Status atualizado para: ${STATUS_LABELS[newStatus]?.label}`);
       loadData();
     } catch (error) {
-      console.error('Error updating status:', error);
+      logger.error('Error updating status:', error);
       toast.error('Erro ao atualizar status');
     }
   };
@@ -457,7 +458,7 @@ export function RecoveryCampaigns() {
       
       loadData();
     } catch (error) {
-      console.error('Error starting campaign:', error);
+      logger.error('Error starting campaign:', error);
       toast.error('Erro ao iniciar campanha');
     }
   };
@@ -479,7 +480,7 @@ export function RecoveryCampaigns() {
       toast.success('Campanha excluída com sucesso');
       loadData();
     } catch (error) {
-      console.error('Error deleting campaign:', error);
+      logger.error('Error deleting campaign:', error);
       toast.error('Erro ao excluir campanha');
     }
   };
@@ -539,7 +540,7 @@ export function RecoveryCampaigns() {
       setEditingCampaign(null);
       loadData();
     } catch (error) {
-      console.error('Error updating campaign:', error);
+      logger.error('Error updating campaign:', error);
       toast.error('Erro ao atualizar campanha');
     }
   };

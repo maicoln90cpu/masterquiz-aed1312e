@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -129,7 +130,7 @@ export function RecoveryHistory() {
       setTotalCount(count || 0);
       setSelectedIds(new Set());
     } catch (error) {
-      console.error('Error loading history:', error);
+      logger.error('Error loading history:', error);
       toast.error('Erro ao carregar histórico');
     } finally {
       setLoading(false);
@@ -181,7 +182,7 @@ export function RecoveryHistory() {
       setDeleteDialogOpen(false);
       loadHistory();
     } catch (error) {
-      console.error('Error deleting selected items:', error);
+      logger.error('Error deleting selected items:', error);
       toast.error('Erro ao excluir registros');
     } finally {
       setDeletingSelected(false);

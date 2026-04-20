@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -105,7 +106,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     // ✅ Dedup: skip save if payload hasn't changed
     const snapshot = JSON.stringify(data);
     if (snapshot === lastSavedSnapshotRef.current) {
-      console.log('[AutoSave] ⏭️ Payload não mudou, pulando save');
+      logger.log('[AutoSave] ⏭️ Payload não mudou, pulando save');
       return true;
     }
 
@@ -197,7 +198,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
 
       return true;
     } catch (error: any) {
-      console.error('[AutoSave] Erro ao salvar:', error);
+      logger.error('[AutoSave] Erro ao salvar:', error);
       setStatus('error');
       onSaveErrorRef.current?.(error);
 

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,7 +89,7 @@ export function RecoveryTemplates() {
       if (error) throw error;
       setTemplates(data || []);
     } catch (error) {
-      console.error('Error loading templates:', error);
+      logger.error('Error loading templates:', error);
       toast.error('Erro ao carregar templates');
     } finally {
       setLoading(false);
@@ -126,7 +127,7 @@ export function RecoveryTemplates() {
       resetForm();
       loadTemplates();
     } catch (error) {
-      console.error('Error saving template:', error);
+      logger.error('Error saving template:', error);
       toast.error('Erro ao salvar template');
     }
   };
@@ -157,7 +158,7 @@ export function RecoveryTemplates() {
       toast.success('Template excluído!');
       loadTemplates();
     } catch (error) {
-      console.error('Error deleting template:', error);
+      logger.error('Error deleting template:', error);
       toast.error('Erro ao excluir template');
     }
   };
@@ -172,7 +173,7 @@ export function RecoveryTemplates() {
       if (error) throw error;
       loadTemplates();
     } catch (error) {
-      console.error('Error toggling template:', error);
+      logger.error('Error toggling template:', error);
       toast.error('Erro ao atualizar template');
     }
   };
@@ -245,7 +246,7 @@ export function RecoveryTemplates() {
         setTestDialogOpen(false);
       }
     } catch (error) {
-      console.error('Error sending test:', error);
+      logger.error('Error sending test:', error);
       toast.error('Erro ao enviar teste. Verifique se o WhatsApp está conectado.');
     } finally {
       setSendingTest(false);

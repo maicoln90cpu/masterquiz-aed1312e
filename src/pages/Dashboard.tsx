@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Plus, MessageSquare, Webhook, Settings, Loader2, HelpCircle, FileQuestion, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
@@ -128,7 +129,7 @@ const Dashboard = () => {
           setShowOnboarding(true);
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+        logger.error('Error loading user data:', error);
       }
     };
     

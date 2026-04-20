@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlanFeatures } from "./usePlanFeatures";
@@ -19,7 +20,7 @@ export const useVideoStorage = () => {
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao buscar uso de vídeo:', error);
+        logger.error('Erro ao buscar uso de vídeo:', error);
       }
 
       return data || { 

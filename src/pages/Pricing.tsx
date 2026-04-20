@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +64,7 @@ export default function Pricing() {
         setCurrentPlan(subscription?.plan_type || 'free');
       }
     } catch (error) {
-      console.error('Error loading subscription:', error);
+      logger.error('Error loading subscription:', error);
     }
   };
 

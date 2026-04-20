@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { 
   Plus, 
@@ -57,7 +58,7 @@ export function DashboardSidebar() {
       
       setUserName(profile?.full_name || user.email?.split('@')[0] || 'User');
     } catch (error) {
-      console.error('Error loading user data:', error);
+      logger.error('Error loading user data:', error);
     }
   };
 

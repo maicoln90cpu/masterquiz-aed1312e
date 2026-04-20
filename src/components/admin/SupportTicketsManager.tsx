@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -155,7 +156,7 @@ export const SupportTicketsManager = () => {
       loadMessages(selectedTicket.id);
       loadTickets();
     } catch (error: any) {
-      console.error('Error sending reply:', error);
+      logger.error('Error sending reply:', error);
       toast.error("Erro ao enviar resposta: " + error.message);
     } finally {
       setSending(false);

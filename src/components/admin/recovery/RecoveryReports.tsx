@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, TrendingDown, Users, Send, CheckCircle, MessageSquare, RefreshCw } from "lucide-react";
@@ -127,7 +128,7 @@ export function RecoveryReports() {
         daily_stats: dailyStats,
       });
     } catch (error) {
-      console.error('Error loading reports:', error);
+      logger.error('Error loading reports:', error);
       toast.error('Erro ao carregar relatórios');
     } finally {
       setLoading(false);

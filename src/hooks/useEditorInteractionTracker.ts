@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useCallback, useEffect, useRef } from 'react';
 
 /**
@@ -38,7 +39,7 @@ export function useEditorInteractionTracker(quizId: string | null) {
     if (trackedActionsRef.current.has(actionKey)) return;
     trackedActionsRef.current.add(actionKey);
     setInteractionCount(prev => prev + 1);
-    console.log(`📝 [InteractionTracker] Tracked: ${actionKey} (total: ${trackedActionsRef.current.size})`);
+    logger.log(`📝 [InteractionTracker] Tracked: ${actionKey} (total: ${trackedActionsRef.current.size})`);
   }, []);
 
   return {

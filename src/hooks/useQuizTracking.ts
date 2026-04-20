@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect } from "react";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import type { Quiz, Profile } from "@/types/quiz";
@@ -77,7 +78,7 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
           }
         }
       } else {
-        console.error('Invalid Facebook Pixel ID format');
+        logger.error('Invalid Facebook Pixel ID format');
       }
     }
     }; // end injectPixel
@@ -113,12 +114,12 @@ export function useQuizTracking({ quiz, quizOwnerProfile }: UseQuizTrackingProps
           document.body.insertBefore(gtmNoscript, document.body.firstChild);
           gtmInjected = true;
 
-          console.log('✅ Quiz-specific GTM loaded:', normalizedGTM);
+          logger.log('✅ Quiz-specific GTM loaded:', normalizedGTM);
         }
 
         // quiz_view already pushed above (independent of GTM)
       } else {
-        console.error('Invalid GTM Container ID format:', normalizedGTM);
+        logger.error('Invalid GTM Container ID format:', normalizedGTM);
       }
     }
     }; // end injectGTM

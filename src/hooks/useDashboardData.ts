@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { handleError, showErrorToast, showSuccessToast } from '@/lib/errorHandler';
@@ -215,7 +216,7 @@ export const useDeleteQuiz = () => {
 
         if (error) throw error;
       } catch (error) {
-        console.error('[DELETE QUIZ] Complete error:', error);
+        logger.error('[DELETE QUIZ] Complete error:', error);
         throw error;
       }
     },
@@ -295,7 +296,7 @@ export const useDuplicateQuiz = () => {
           .insert(questionsToInsert);
           
         if (questionsError) {
-          console.error('[Duplicate] Failed to copy questions:', questionsError);
+          logger.error('[Duplicate] Failed to copy questions:', questionsError);
           throw new Error('Failed to duplicate questions');
         }
       }
@@ -332,7 +333,7 @@ export const useDuplicateQuiz = () => {
           .insert(resultsToInsert);
           
         if (resultsError) {
-          console.error('[Duplicate] Failed to copy results:', resultsError);
+          logger.error('[Duplicate] Failed to copy results:', resultsError);
           // Non-critical, continue
         }
       }

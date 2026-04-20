@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * ✅ Etapa 4: Disparo de webhook por campo individual
  * Envia dados do campo para URL configurada no bloco
@@ -19,7 +20,7 @@ export async function fireBlockWebhook(
     const url = new URL(webhookUrl);
     // Whitelist de protocolos
     if (!['http:', 'https:'].includes(url.protocol)) {
-      console.warn('[BlockWebhook] Protocolo não permitido:', url.protocol);
+      logger.warn('[BlockWebhook] Protocolo não permitido:', url.protocol);
       return false;
     }
 
@@ -36,7 +37,7 @@ export async function fireBlockWebhook(
 
     return response.ok;
   } catch (error) {
-    console.warn('[BlockWebhook] Erro ao disparar webhook:', error);
+    logger.warn('[BlockWebhook] Erro ao disparar webhook:', error);
     return false;
   }
 }

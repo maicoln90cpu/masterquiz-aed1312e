@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useState } from 'react';
 
 interface CSPViolation {
@@ -23,7 +24,7 @@ export const useCSPMonitor = () => {
         timestamp: new Date(),
       };
 
-      console.error('🚨 CSP VIOLATION DETECTED:', {
+      logger.error('🚨 CSP VIOLATION DETECTED:', {
         blockedURI: violation.blockedURI,
         directive: violation.violatedDirective,
         effective: violation.effectiveDirective,

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +82,7 @@ export function WhatsAppAIConversations() {
 
       setConversations(Array.from(grouped.values()));
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      logger.error('Error loading conversations:', error);
       toast.error('Erro ao carregar conversas');
     } finally {
       setLoading(false);
@@ -102,7 +103,7 @@ export function WhatsAppAIConversations() {
       if (error) throw error;
       setMessages(data || []);
     } catch (error) {
-      console.error('Error loading messages:', error);
+      logger.error('Error loading messages:', error);
       toast.error('Erro ao carregar mensagens');
     } finally {
       setLoadingMessages(false);

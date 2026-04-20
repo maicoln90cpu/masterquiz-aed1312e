@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -100,7 +101,7 @@ export const BunnyVideoUploader = ({
 
   const handleVideoError = useCallback(() => {
     setVideoError(true);
-    console.error("Video failed to load:", value, "retry count:", retryCount);
+    logger.error("Video failed to load:", value, "retry count:", retryCount);
     
     // Auto-retry if under limit
     if (retryCount < MAX_AUTO_RETRIES) {

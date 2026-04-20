@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ export const TrialModal = ({ open, onOpenChange, user, onSuccess }: TrialModalPr
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
-      console.error('Error activating trial:', err);
+      logger.error('Error activating trial:', err);
       toast.error('Erro ao ativar trial: ' + (err.message || 'Erro desconhecido'));
     } finally {
       setIsLoading(false);

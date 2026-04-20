@@ -1,4 +1,5 @@
 // ✅ FASE 8: Hook para callbacks estáveis (evita re-renders)
+import { logger } from '@/lib/logger';
 import { useCallback, useRef, useEffect } from 'react';
 
 /**
@@ -11,7 +12,7 @@ import { useCallback, useRef, useEffect } from 'react';
  * ```tsx
  * const handleClick = useStableCallback((id: string) => {
  *   // Always has access to latest state
- *   console.log(items.find(i => i.id === id));
+ *   logger.log(items.find(i => i.id === id));
  * });
  * 
  * // handleClick reference never changes

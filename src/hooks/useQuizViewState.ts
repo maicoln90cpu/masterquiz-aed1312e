@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +56,7 @@ const isSyntheticOrNativeEvent = (obj: any): boolean => {
 const sanitizeAnswers = (answers: Record<string, any>): Record<string, any> => {
   // Reject entire object if it's an event (e.g. SyntheticEvent passed as overrideAnswers)
   if (isSyntheticOrNativeEvent(answers)) {
-    console.warn('[sanitizeAnswers] Rejected event object as answers');
+    logger.warn('[sanitizeAnswers] Rejected event object as answers');
     return {};
   }
   const clean: Record<string, any> = {};
@@ -204,7 +205,7 @@ export function useQuizViewState({
         });
       }
     } catch (error) {
-      console.error('Error loading translations:', error);
+      logger.error('Error loading translations:', error);
     }
   };
 
@@ -215,7 +216,7 @@ export function useQuizViewState({
       
       if (!result.success) {
         if (result.error === 'company_not_found') {
-          console.error('[QuizView] Company not found:', company);
+          logger.error('[QuizView] Company not found:', company);
           toast.error(t('quizView.companyNotFound', 'Empresa não encontrada'));
           navigate('/');
           return;
@@ -253,7 +254,7 @@ export function useQuizViewState({
       // Track view event (pode continuar assíncrono)
       supabase.functions.invoke('track-quiz-analytics', {
         body: { quizId: data.quiz.id, event: 'view' }
-      }).catch(err => console.warn('View tracking failed:', err));
+      }).catch(err => logger.warn('View tracking failed:', err));
 
       // Track funnel step 0
       supabase.functions.invoke('track-quiz-step', {
@@ -263,11 +264,11 @@ export function useQuizViewState({
           stepNumber: 0,
           questionId: null
         }
-      }).catch(err => console.warn('Initial step tracking failed:', err));
+      }).catch(err => logger.warn('Initial step tracking failed:', err));
 
       setLoading(false);
     } catch (error) {
-      console.error('Error loading quiz:', error);
+      logger.error('Error loading quiz:', error);
       toast.error(t('quizView.notFound'));
       navigate('/');
     }
@@ -279,7 +280,7 @@ export function useQuizViewState({
   const handleAnswer = (questionId: string, value: any) => {
     // Guard: reject DOM elements, native Events, and React SyntheticEvents
     if (isSyntheticOrNativeEvent(value)) {
-      console.warn('[handleAnswer] Rejected event object for', questionId);
+      logger.warn('[handleAnswer] Rejected event object for', questionId);
       return;
     }
     const newAnswers = { ...answers, [questionId]: value };
@@ -355,7 +356,7 @@ export function useQuizViewState({
           stepNumber: nextStepNumber,
           questionId: currentQ?.id || null
         }
-      }).catch(err => console.warn('Step tracking failed:', err));
+      }).catch(err => logger.warn('Step tracking failed:', err));
     }
 
     // Progressive save for funnel mode (show_results=false) via Edge Function
@@ -376,13 +377,13 @@ export function useQuizViewState({
           respondent_email: leadEmail || extracted.email || null,
           respondent_whatsapp: leadWhatsapp || extracted.phone || null,
         }
-      }).catch(err => console.warn('[Progressive save] Edge Function error:', err));
+      }).catch(err => logger.warn('[Progressive save] Edge Function error:', err));
 
       // Track completion when reaching last question in funnel mode
       if (nextStepNumber === visibleQuestions.length - 1) {
         supabase.functions.invoke('track-quiz-analytics', {
           body: { quizId: quiz.id, event: 'complete' }
-        }).catch(err => console.warn('Funnel completion tracking failed:', err));
+        }).catch(err => logger.warn('Funnel completion tracking failed:', err));
       }
     }
 
@@ -421,7 +422,7 @@ export function useQuizViewState({
             stepNumber: visibleQuestions.length,
             questionId: lastQ?.id || null
           }
-        }).catch(err => console.warn('Final step tracking failed:', err));
+        }).catch(err => logger.warn('Final step tracking failed:', err));
       }
 
       // Check response limit for quiz owner (maybeSingle: anon users can't SELECT this table)
@@ -561,7 +562,7 @@ export function useQuizViewState({
         })
       );
       if (fnError) {
-        console.error('Error saving quiz response via Edge Function:', fnError);
+        logger.error('Error saving quiz response via Edge Function:', fnError);
         throw fnError;
       }
 
@@ -572,7 +573,7 @@ export function useQuizViewState({
             quiz_id: quiz.id,
             user_id: quiz.user_id
           }
-        }).catch(err => console.error('Webhook error:', err));
+        }).catch(err => logger.error('Webhook error:', err));
       }
 
       // Track completion (skip for funnel mode — already tracked in nextStep)
@@ -592,7 +593,7 @@ export function useQuizViewState({
         toast.success(t('quizView.responseSaved', 'Resposta salva! Obrigado por participar.'), { duration: 3000 });
       }
     } catch (error: any) {
-      console.error('Error submitting quiz:', error);
+      logger.error('Error submitting quiz:', error);
       
       if (error?.code === '42501') {
         toast.error(t('quizView.quizNotActive', 'Este quiz não está mais ativo'));

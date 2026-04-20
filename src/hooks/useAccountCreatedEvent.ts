@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +64,6 @@ export const useAccountCreatedEvent = () => {
       sessionStorage.setItem(SESSION_KEY, 'true');
     };
 
-    run().catch((err) => console.error('[AccountCreatedEvent] Error:', err));
+    run().catch((err) => logger.error('[AccountCreatedEvent] Error:', err));
   }, [user]);
 };

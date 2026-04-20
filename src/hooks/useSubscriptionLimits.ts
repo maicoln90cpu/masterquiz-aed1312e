@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -176,7 +177,7 @@ export const useSubscriptionLimits = () => {
 
     // ✅ Sem fallback hardcoded — subscription_plans é fonte única de verdade
     if (!plan?.questions_per_quiz_limit) {
-      console.warn(`[useSubscriptionLimits] questions_per_quiz_limit ausente para plano "${subscription.plan_type}".`);
+      logger.warn(`[useSubscriptionLimits] questions_per_quiz_limit ausente para plano "${subscription.plan_type}".`);
     }
     return plan?.questions_per_quiz_limit ?? 0;
   };

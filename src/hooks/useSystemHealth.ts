@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useWebVitals } from './useWebVitals';
@@ -55,7 +56,7 @@ export const useSystemHealth = () => {
         .limit(5);
 
       if (dbError) {
-        console.error('[useSystemHealth] DB error:', dbError);
+        logger.error('[useSystemHealth] DB error:', dbError);
         return null;
       }
 

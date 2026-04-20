@@ -87,7 +87,7 @@ export const QuestionConfigStep = ({
     setAllQuestions(prev => {
       // ✅ Verificar se o índice é válido antes de atualizar
       if (!prev[currentQuestionIndex]) {
-        console.warn('[handleConditionsChange] Índice inválido:', currentQuestionIndex, 'total:', prev.length);
+        logger.warn('[handleConditionsChange] Índice inválido:', currentQuestionIndex, 'total:', prev.length);
         return prev;
       }
       
@@ -145,7 +145,7 @@ export const QuestionConfigStep = ({
       .order('order_number');
 
     if (error) {
-      console.error('Error loading questions:', error);
+      logger.error('Error loading questions:', error);
       return;
     }
 
@@ -187,7 +187,7 @@ export const QuestionConfigStep = ({
   const updateCurrentQuestionBlocks = useCallback((blocks: QuizBlock[]) => {
     setAllQuestions(prev => {
       if (!prev[currentQuestionIndex]) {
-        console.warn('[updateCurrentQuestionBlocks] Índice inválido:', currentQuestionIndex, 'total:', prev.length);
+        logger.warn('[updateCurrentQuestionBlocks] Índice inválido:', currentQuestionIndex, 'total:', prev.length);
         return prev;
       }
       
@@ -260,7 +260,7 @@ export const QuestionConfigStep = ({
                 .update({ user_stage: 'iniciado', stage_updated_at: new Date().toISOString() })
                 .eq('id', user.id)
                 .eq('user_stage', 'explorador')
-                .then(() => console.log('🎯 [PQL] Promoted to iniciado (reached Q2)'));
+                .then(() => logger.log('🎯 [PQL] Promoted to iniciado (reached Q2)'));
             }
           });
         });

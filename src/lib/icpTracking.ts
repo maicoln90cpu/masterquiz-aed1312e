@@ -6,6 +6,7 @@
  *
  * Sempre fire-and-forget: nunca bloqueia UX por telemetria.
  */
+import { logger } from '@/lib/logger';
 import { supabase } from "@/integrations/supabase/client";
 
 type CounterColumn =
@@ -24,7 +25,7 @@ export const incrementProfileCounter = (column: CounterColumn): void => {
   supabase
     .rpc('increment_profile_counter', { _column: column })
     .then(({ error }) => {
-      if (error) console.warn(`[ICP] increment ${column} failed:`, error.message);
+      if (error) logger.warn(`[ICP] increment ${column} failed:`, error.message);
     });
 };
 
@@ -33,7 +34,7 @@ export const setProfileFirstText = (column: FirstTextColumn, value: string): voi
   supabase
     .rpc('set_profile_first_value', { _column: column, _value: value })
     .then(({ error }) => {
-      if (error) console.warn(`[ICP] set first ${column} failed:`, error.message);
+      if (error) logger.warn(`[ICP] set first ${column} failed:`, error.message);
     });
 };
 
@@ -42,7 +43,7 @@ export const setProfileFlagTrue = (column: FirstBoolColumn): void => {
   supabase
     .rpc('set_profile_first_value', { _column: column, _value: 'true' })
     .then(({ error }) => {
-      if (error) console.warn(`[ICP] set flag ${column} failed:`, error.message);
+      if (error) logger.warn(`[ICP] set flag ${column} failed:`, error.message);
     });
 };
 
@@ -51,6 +52,6 @@ export const setProfileFirstTimestamp = (column: FirstTimestampColumn): void => 
   supabase
     .rpc('set_profile_first_value', { _column: column, _value: 'now' })
     .then(({ error }) => {
-      if (error) console.warn(`[ICP] set first ts ${column} failed:`, error.message);
+      if (error) logger.warn(`[ICP] set first ts ${column} failed:`, error.message);
     });
 };

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -427,7 +428,7 @@ export function useUserStage(): UserStageData {
         }
         setIntent(deriveIntent(profile?.user_objectives as string[] | null));
       } catch (error) {
-        console.error('Error fetching user stage:', error);
+        logger.error('Error fetching user stage:', error);
       } finally {
         setLoading(false);
       }
@@ -452,7 +453,7 @@ export function useUserStage(): UserStageData {
 
       setStage('operador');
     } catch (error) {
-      console.error('Error upgrading to operador:', error);
+      logger.error('Error upgrading to operador:', error);
     }
   }, [user, stage]);
 
@@ -511,7 +512,7 @@ export function useTrackPageView(page: 'crm' | 'analytics') {
         .is(field, null);
 
       if (!error) {
-        console.log(`🎯 [PQL] Tracked ${page} view, user upgraded to operador`);
+        logger.log(`🎯 [PQL] Tracked ${page} view, user upgraded to operador`);
       }
 
       // 🎯 GTM: crm_viewed / analytics_viewed

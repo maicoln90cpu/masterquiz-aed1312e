@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useCallback, useState, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -241,7 +242,7 @@ const CreateQuizClassic = () => {
 
   const handlePublish = useCallback(async () => {
     const result = await saveQuiz();
-    console.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
+    logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
     if (result?.success && isExpressMode) {
       const slug = result.slug || editorState.quizSlug;
       const url = profile?.company_slug
@@ -825,7 +826,7 @@ const CreateQuizClassic = () => {
                               }
                               updateEditor({ step: step + 1 });
                             } catch (error) {
-                              console.error('[CreateQuiz] Erro na transição de step:', error);
+                              logger.error('[CreateQuiz] Erro na transição de step:', error);
                               toast.error('Erro ao avançar. Tente novamente.');
                             }
                           }}

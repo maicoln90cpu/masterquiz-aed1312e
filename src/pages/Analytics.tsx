@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -213,7 +214,7 @@ const Analytics = () => {
         setChartData(emptyData);
       }
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      logger.error('Error loading analytics:', error);
       toast.error(t('analytics.errorLoading'));
     } finally {
       setLoading(false);
@@ -257,7 +258,7 @@ const Analytics = () => {
       XLSX.writeFile(wb, `analytics_${new Date().toISOString().split('T')[0]}.xlsx`);
       toast.success(t('analytics.exportedSuccess'));
     } catch (error) {
-      console.error('Error exporting to Excel:', error);
+      logger.error('Error exporting to Excel:', error);
       toast.error(t('analytics.errorExporting'));
     }
   };
@@ -322,7 +323,7 @@ const Analytics = () => {
 
       toast.success(t('analytics.pdfSuccess'));
     } catch (error: any) {
-      console.error('Error generating PDF:', error);
+      logger.error('Error generating PDF:', error);
       toast.error(t('analytics.pdfError'));
     } finally {
       setGeneratingPDF(false);

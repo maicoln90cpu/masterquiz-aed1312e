@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -198,7 +199,7 @@ const SupportDashboard = () => {
       trackAction('Visualizou overview', undefined, `${data?.quizzes?.length || 0} quizzes`);
       logAudit('support:view_overview', 'support', target.userId, { target_email: target.email });
     } catch (err: any) {
-      console.error('Error loading overview:', err);
+      logger.error('Error loading overview:', err);
       toast.error('Erro ao carregar dados do usuário');
     } finally {
       setLoading(false);
@@ -215,7 +216,7 @@ const SupportDashboard = () => {
       trackAction('Executou diagnóstico', undefined, `${issues} problemas encontrados`);
       logAudit('support:run_diagnostics', 'support', target.userId, { target_email: target.email });
     } catch (err: any) {
-      console.error('Error loading diagnostics:', err);
+      logger.error('Error loading diagnostics:', err);
       toast.error('Erro ao carregar diagnósticos');
     } finally {
       setDiagLoading(false);
@@ -231,7 +232,7 @@ const SupportDashboard = () => {
       trackAction('Visualizou detalhes do quiz', quizId, quizTitle);
       logAudit('support:view_quiz_detail', 'support', quizId, { target_user_id: target!.userId });
     } catch (err: any) {
-      console.error('Error loading quiz detail:', err);
+      logger.error('Error loading quiz detail:', err);
       toast.error('Erro ao carregar detalhes do quiz');
     } finally {
       setDetailLoading(false);
@@ -322,7 +323,7 @@ const SupportDashboard = () => {
       setSessionHistory(data?.sessions || []);
       trackAction('Visualizou histórico de sessões');
     } catch (err: any) {
-      console.error('Error loading session history:', err);
+      logger.error('Error loading session history:', err);
       toast.error('Erro ao carregar histórico');
     } finally {
       setHistoryLoading(false);
@@ -383,7 +384,7 @@ const SupportDashboard = () => {
       trackAction('Exportou relatório PDF');
       toast.success('PDF exportado com sucesso');
     } catch (err) {
-      console.error('Error generating PDF:', err);
+      logger.error('Error generating PDF:', err);
       toast.error('Erro ao gerar PDF');
     }
   };

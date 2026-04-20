@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,7 +69,7 @@ export default function MediaLibrary() {
         });
 
       if (storageError) {
-        console.error("Erro ao carregar storage:", storageError);
+        logger.error("Erro ao carregar storage:", storageError);
       }
 
       const storageFilesWithUrls: MediaFile[] = (storageFiles || []).map(file => {
@@ -92,7 +93,7 @@ export default function MediaLibrary() {
         .order('created_at', { ascending: false });
 
       if (bunnyError) {
-        console.error("Erro ao carregar vídeos Bunny:", bunnyError);
+        logger.error("Erro ao carregar vídeos Bunny:", bunnyError);
       }
 
       const bunnyFilesFormatted: MediaFile[] = (bunnyVideos || []).map(video => ({
@@ -119,7 +120,7 @@ export default function MediaLibrary() {
 
       setFiles(allFiles);
     } catch (error: any) {
-      console.error("Erro ao carregar arquivos:", error);
+      logger.error("Erro ao carregar arquivos:", error);
       toast.error(t('mediaLibrary.loadError'));
     } finally {
       setLoading(false);
@@ -150,7 +151,7 @@ export default function MediaLibrary() {
         loadFiles();
       }
     } catch (error: any) {
-      console.error("Erro ao excluir arquivo:", error);
+      logger.error("Erro ao excluir arquivo:", error);
       toast.error(t('mediaLibrary.deleteError'));
     }
   };

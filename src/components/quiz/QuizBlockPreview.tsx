@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useRef, useCallback, lazy, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,7 +87,7 @@ export const QuizBlockPreview = ({
           (window as any).fbq('trackCustom', eventName, params);
         }
       } catch (error) {
-        console.error('Erro ao enviar evento para Facebook Pixel:', error);
+        logger.error('Erro ao enviar evento para Facebook Pixel:', error);
       }
     }
   }, []);

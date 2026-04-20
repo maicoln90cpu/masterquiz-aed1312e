@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ export default function PaymentWebhookLogs() {
       setLogs(data || []);
       setTotalCount(count || 0);
     } catch (error) {
-      console.error('Error loading webhook logs:', error);
+      logger.error('Error loading webhook logs:', error);
     } finally {
       setLoading(false);
     }

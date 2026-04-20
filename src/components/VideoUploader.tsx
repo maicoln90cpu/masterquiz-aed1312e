@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +29,7 @@ const VideoPlayer = ({ url }: { url: string }) => {
         const objectUrl = URL.createObjectURL(blob);
         setBlobUrl(objectUrl);
       } catch (err: any) {
-        console.error('Erro ao carregar vídeo:', err);
+        logger.error('Erro ao carregar vídeo:', err);
         setError('Não foi possível carregar o vídeo');
       } finally {
         setLoading(false);
@@ -117,7 +118,7 @@ export const VideoUploader = ({ value, onChange, onRemove, className }: VideoUpl
       onChange(publicUrl);
       toast.success(t('components.videoUploader.uploadSuccess'));
     } catch (error: any) {
-      console.error('Erro ao fazer upload:', error);
+      logger.error('Erro ao fazer upload:', error);
       toast.error(t('components.videoUploader.uploadError') + ': ' + error.message);
     } finally {
       setUploading(false);
@@ -134,7 +135,7 @@ export const VideoUploader = ({ value, onChange, onRemove, className }: VideoUpl
       .maybeSingle();
 
     if (fetchError) {
-      console.error('Erro ao buscar video_usage:', fetchError);
+      logger.error('Erro ao buscar video_usage:', fetchError);
     }
 
     if (usage) {

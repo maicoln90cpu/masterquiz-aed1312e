@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,7 @@ export const TrackingConfiguration = () => {
 
       setSettings(settingsObj);
     } catch (error) {
-      console.error("Error loading settings:", error);
+      logger.error("Error loading settings:", error);
       toast({
         title: t('tracking.loadError', 'Erro ao carregar configurações'),
         description: t('tracking.loadErrorDesc', 'Não foi possível carregar as configurações de tracking.'),
@@ -158,7 +159,7 @@ export const TrackingConfiguration = () => {
         description: t('tracking.savedDesc', 'As configurações de tracking foram atualizadas. Recarregue a página para aplicar.'),
       });
     } catch (error) {
-      console.error("Error saving settings:", error);
+      logger.error("Error saving settings:", error);
       toast({
         title: t('tracking.saveError', 'Erro ao salvar'),
         description: t('tracking.saveErrorDesc', 'Não foi possível salvar as configurações.'),

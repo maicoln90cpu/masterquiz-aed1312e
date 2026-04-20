@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from "@/integrations/supabase/client";
 import { trackOperation } from "@/lib/performanceCapture";
 import type { 
@@ -57,7 +58,7 @@ async function loadQuizViaRPC(
     );
 
     if (error) {
-      console.error('[RPC] Error calling get_quiz_for_display:', error);
+      logger.error('[RPC] Error calling get_quiz_for_display:', error);
       throw error;
     }
 
@@ -90,7 +91,7 @@ async function loadQuizViaRPC(
       }
     };
   } catch (error) {
-    console.error('[RPC] Failed to load quiz via RPC:', error);
+    logger.error('[RPC] Failed to load quiz via RPC:', error);
     throw error; // Re-throw para o fallback capturar
   }
 }
@@ -191,7 +192,7 @@ async function loadQuizLegacy(
       }
     };
   } catch (error) {
-    console.error('[Legacy] Failed to load quiz:', error);
+    logger.error('[Legacy] Failed to load quiz:', error);
     return { success: false, error: 'unknown' };
   }
 }
@@ -213,18 +214,18 @@ export async function loadQuizForDisplay(
   // Se RPC está habilitado, tentar primeiro
   if (USE_RPC) {
     try {
-      console.log('[QuizLoader] Trying RPC method...');
+      logger.log('[QuizLoader] Trying RPC method...');
       const rpcResult = await loadQuizViaRPC(slug, company);
-      console.log('[QuizLoader] RPC succeeded');
+      logger.log('[QuizLoader] RPC succeeded');
       return rpcResult;
     } catch (rpcError) {
       // RPC falhou, tentar fallback
-      console.warn('[QuizLoader] RPC failed, falling back to legacy method:', rpcError);
+      logger.warn('[QuizLoader] RPC failed, falling back to legacy method:', rpcError);
     }
   }
 
   // Fallback para método legado
-  console.log('[QuizLoader] Using legacy method...');
+  logger.log('[QuizLoader] Using legacy method...');
   return loadQuizLegacy(slug, company);
 }
 
