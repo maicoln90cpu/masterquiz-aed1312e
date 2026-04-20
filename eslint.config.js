@@ -67,9 +67,11 @@ export default tseslint.config(
       "import/no-duplicates": "warn",
 
       // 🚫 P5: console.log/warn/error → use logger de @/lib/logger
-      // Permitido apenas em logger.ts, gtmLogger.ts, errorCapture.ts (helpers de baixo nível).
-      // Nível: warn (limpeza incremental — 105 arquivos legados).
-      "no-console": ["warn", { allow: ["info"] }],
+      // Permitido apenas em logger.ts, gtmLogger.ts, errorCapture.ts e useWebVitals.ts (helpers/DEV-only).
+      // Nível: ERROR (v2.44.0 — 0 arquivos legados após Onda 2 da limpeza P5).
+      // Bloqueia novos console.* permanentemente. Para reintroduzir um console legítimo,
+      // adicionar à allowlist abaixo OU usar logger.* de @/lib/logger.
+      "no-console": ["error", { allow: ["info"] }],
 
       // 🚫 Proteção: nunca push direto no dataLayer fora de gtmLogger.ts
       // Use pushGTMEvent() de @/lib/gtmLogger para garantir persistência em gtm_event_logs
@@ -101,6 +103,7 @@ export default tseslint.config(
       "src/lib/logger.ts",
       "src/lib/gtmLogger.ts",
       "src/lib/errorCapture.ts",
+      "src/hooks/useWebVitals.ts",
     ],
     rules: {
       "no-console": "off",
