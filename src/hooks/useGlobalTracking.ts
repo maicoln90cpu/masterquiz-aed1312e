@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -88,7 +89,7 @@ export const useGlobalTracking = () => {
       const requireConsent = consentSetting?.setting_value !== 'false';
 
       if (gtmSetting?.setting_value && !normalizedGTM) {
-        console.warn('⚠️ [GTM] GTM ID failed regex validation! Raw:', gtmSetting.setting_value);
+        logger.warn('⚠️ [GTM] GTM ID failed regex validation! Raw:', gtmSetting.setting_value);
       }
 
       setSettings({
@@ -98,9 +99,9 @@ export const useGlobalTracking = () => {
       });
 
       setLoaded(true);
-      console.log('✅ [GTM] Global tracking settings loaded');
+      logger.log('✅ [GTM] Global tracking settings loaded');
     } catch (error) {
-      console.error('❌ [GTM] Error loading global tracking settings:', error);
+      logger.error('❌ [GTM] Error loading global tracking settings:', error);
       setLoaded(true);
     }
   };
@@ -147,7 +148,7 @@ export const useGlobalTracking = () => {
       height="0" width="0" style="display:none;visibility:hidden"></iframe>`;
     document.body.insertBefore(gtmNoscript, document.body.firstChild);
 
-    console.log('✅ Global GTM loaded:', settings.gtm_container_id);
+    logger.log('✅ Global GTM loaded:', settings.gtm_container_id);
 
     return () => {
       const script = document.getElementById('global-gtm-script');
@@ -189,7 +190,7 @@ export const useGlobalTracking = () => {
     fbNoscript.appendChild(fbImg);
     document.body.appendChild(fbNoscript);
 
-    console.log('✅ Global Facebook Pixel loaded:', settings.facebook_pixel_id);
+    logger.log('✅ Global Facebook Pixel loaded:', settings.facebook_pixel_id);
 
     return () => {
       const script = document.getElementById('global-fb-pixel-script');

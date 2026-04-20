@@ -50,7 +50,7 @@ export const convertToWebP = async (
 
   // Verifica suporte a WebP
   if (!supportsWebP()) {
-    console.warn('Navegador não suporta WebP, mantendo formato original');
+    logger.warn('Navegador não suporta WebP, mantendo formato original');
     const extension = file.type.split('/')[1] || 'jpg';
     return {
       blob: file,
@@ -87,7 +87,7 @@ export const convertToWebP = async (
 
           // Verifica se a conversão resultou em arquivo menor
           if (blob.size >= file.size) {
-            console.log('WebP não é menor que o original, mantendo formato original');
+            logger.log('WebP não é menor que o original, mantendo formato original');
             const extension = file.type.split('/')[1] || 'jpg';
             resolve({
               blob: file,
@@ -98,7 +98,7 @@ export const convertToWebP = async (
           }
 
           const savings = ((file.size - blob.size) / file.size * 100).toFixed(1);
-          console.log(`✅ Imagem otimizada: ${savings}% de redução (${formatBytes(file.size)} → ${formatBytes(blob.size)})`);
+          logger.log(`✅ Imagem otimizada: ${savings}% de redução (${formatBytes(file.size)} → ${formatBytes(blob.size)})`);
 
           resolve({
             blob,
@@ -199,7 +199,7 @@ export const optimizeImage = async (
           }
 
           const savings = ((file.size - blob.size) / file.size * 100).toFixed(1);
-          console.log(`✅ Imagem otimizada: ${savings}% de redução (${formatBytes(file.size)} → ${formatBytes(blob.size)})`);
+          logger.log(`✅ Imagem otimizada: ${savings}% de redução (${formatBytes(file.size)} → ${formatBytes(blob.size)})`);
 
           resolve({ blob, type: outputType, extension });
         },
