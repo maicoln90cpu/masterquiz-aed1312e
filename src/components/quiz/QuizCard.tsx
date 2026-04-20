@@ -98,7 +98,7 @@ export function QuizCard({
           </h3>
           <div className="flex items-center gap-1 shrink-0">
             {(quiz as any).creation_source === 'express_auto' && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-400 text-amber-600">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning text-warning">
                 ⚡ Express
               </Badge>
             )}
@@ -248,7 +248,7 @@ export function QuizCard({
             <h3 className="font-semibold truncate flex-1 min-w-0">{quiz.title}</h3>
             <div className="flex items-center gap-1.5 shrink-0">
               {(quiz as any).creation_source === 'express_auto' && (
-                <Badge variant="outline" className="border-amber-400 text-amber-600 text-xs">
+                <Badge variant="outline" className="border-warning text-warning text-xs">
                   ⚡ Express
                 </Badge>
               )}
@@ -397,7 +397,7 @@ export function QuizCard({
           <div className="flex items-center gap-3 overflow-hidden">
             <h3 className="font-semibold truncate min-w-0 flex-shrink">{quiz.title}</h3>
             {(quiz as any).creation_source === 'express_auto' && (
-              <Badge variant="outline" className="shrink-0 border-amber-400 text-amber-600 text-xs">
+              <Badge variant="outline" className="shrink-0 border-warning text-warning text-xs">
                 ⚡ Express
               </Badge>
             )}

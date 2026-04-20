@@ -151,7 +151,7 @@ export function RecoveryBlacklist() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Ban className="h-5 w-5 text-red-500" />
+            <Ban className="h-5 w-5 text-destructive" />
             Blacklist de Números
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -230,12 +230,12 @@ export function RecoveryBlacklist() {
       </div>
 
       {/* Warning */}
-      <Card className="bg-yellow-500/10 border-yellow-500/30">
+      <Card className="bg-warning/10 border-warning/30">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
             <div>
-              <p className="font-medium text-yellow-700 dark:text-yellow-400">
+              <p className="font-medium text-warning">
                 Atenção: A blacklist é permanente
               </p>
               <p className="text-sm text-muted-foreground">
