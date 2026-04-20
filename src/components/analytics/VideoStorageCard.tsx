@@ -106,7 +106,7 @@ export const VideoStorageCard = () => {
               isAtLimit 
                 ? '[&>div]:bg-destructive' 
                 : isNearLimit 
-                ? '[&>div]:bg-yellow-500' 
+                ? '[&>div]:bg-warning' 
                 : ''
             }`}
           />
@@ -120,7 +120,7 @@ export const VideoStorageCard = () => {
               </Badge>
             )}
             {isNearLimit && !isAtLimit && (
-              <Badge variant="secondary" className="text-xs bg-yellow-500/10 text-yellow-700 dark:text-yellow-300">
+              <Badge variant="secondary" className="text-xs bg-warning/10 text-warning">
                 Próximo ao limite
               </Badge>
             )}

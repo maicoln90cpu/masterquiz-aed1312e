@@ -9,7 +9,7 @@ const cardVariants = cva(
     variants: {
       variant: {
         default: "bg-card shadow-sm",
-        glass: "backdrop-blur-md bg-background/80 border-white/20 shadow-xl",
+        glass: "backdrop-blur-md bg-background/80 border-background/20 shadow-xl",
         elevated: "bg-card shadow-lg hover:shadow-xl transition-shadow duration-200",
       },
     },

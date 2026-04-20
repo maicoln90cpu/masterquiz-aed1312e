@@ -109,7 +109,7 @@ export function FunnelChart({ data, loading = false, completionsOverride }: Funn
                   className={`
                     h-14 rounded-lg flex items-center justify-between px-4
                     ${index === 0 ? 'bg-primary' : 'bg-primary/80'}
-                    ${index === funnelData.length - 1 ? 'bg-green-500 dark:bg-green-600' : ''}
+                    ${index === funnelData.length - 1 ? 'bg-success' : ''}
                   `}
                 >
                   <div className="flex items-center gap-2 text-primary-foreground">
@@ -153,7 +153,7 @@ export function FunnelChart({ data, loading = false, completionsOverride }: Funn
             </p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-green-500">
+            <p className="text-2xl font-bold text-success">
               {(completionsOverride ?? funnelData[funnelData.length - 1]?.count ?? 0).toLocaleString('pt-BR')}
             </p>
             <p className="text-xs text-muted-foreground">

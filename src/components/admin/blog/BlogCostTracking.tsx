@@ -69,10 +69,10 @@ export function BlogCostTracking() {
   }
 
   const cards = [
-    { label: "Total Gasto", value: `$${stats.totalCost.toFixed(4)}`, icon: DollarSign, color: "text-emerald-500" },
-    { label: "Custo Texto (OpenAI)", value: `$${stats.totalText.toFixed(4)}`, icon: FileText, color: "text-blue-500" },
-    { label: "Custo Imagem (Gemini)", value: `$${stats.totalImage.toFixed(4)}`, icon: Zap, color: "text-purple-500" },
-    { label: "Custo Médio / Artigo", value: `$${stats.avgCost.toFixed(4)}`, icon: TrendingUp, color: "text-amber-500" },
+    { label: "Total Gasto", value: `$${stats.totalCost.toFixed(4)}`, icon: DollarSign, color: "text-success" },
+    { label: "Custo Texto (OpenAI)", value: `$${stats.totalText.toFixed(4)}`, icon: FileText, color: "text-info" },
+    { label: "Custo Imagem (Gemini)", value: `$${stats.totalImage.toFixed(4)}`, icon: Zap, color: "text-accent" },
+    { label: "Custo Médio / Artigo", value: `$${stats.avgCost.toFixed(4)}`, icon: TrendingUp, color: "text-warning" },
   ];
 
   return (

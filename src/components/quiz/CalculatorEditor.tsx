@@ -260,11 +260,11 @@ export function CalculatorEditor({
 
       {/* Botão para criar perguntas sugeridas */}
       {selectedTemplate && selectedTemplate.suggestedQuestions.length > 0 && onCreateSuggestedQuestions && (
-        <Card className="border-dashed border-2 border-emerald-500/30 bg-emerald-500/5">
+        <Card className="border-dashed border-2 border-success/30 bg-success/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Plus className="h-5 w-5 text-emerald-600" />
+                <Plus className="h-5 w-5 text-success" />
                 <div>
                   <p className="font-medium">Criar perguntas sugeridas</p>
                   <p className="text-sm text-muted-foreground">
@@ -277,7 +277,7 @@ export function CalculatorEditor({
                 variant="outline" 
                 size="sm"
                 disabled={isCreatingQuestions}
-                className="border-emerald-500 text-emerald-600 hover:bg-emerald-500/10"
+                className="border-success text-success hover:bg-success/10"
               >
                 {isCreatingQuestions ? (
                   <>Criando...</>

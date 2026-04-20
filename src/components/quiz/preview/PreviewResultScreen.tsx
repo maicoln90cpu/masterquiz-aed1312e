@@ -21,8 +21,8 @@ export const PreviewResultScreen = ({
 
   return (
     <div className="text-center space-y-6">
-      <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
-        <CheckCircle2 className="h-8 w-8 text-green-600" />
+      <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
+        <CheckCircle2 className="h-8 w-8 text-success" />
       </div>
 
       <div className="space-y-2">

@@ -479,7 +479,7 @@ export function RecoveryTemplates() {
               Como a mensagem aparecerá no WhatsApp (com dados de exemplo)
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-900">
+          <div className="bg-success/10 p-4 rounded-lg border border-success/30">
             <pre className="whitespace-pre-wrap text-sm font-sans">
               {previewContent}
             </pre>

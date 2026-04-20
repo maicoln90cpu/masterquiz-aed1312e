@@ -209,8 +209,8 @@ export default function KiwifySuccess() {
       {/* Hero Section */}
       <div className="pt-16 pb-12 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
-            <CheckCircle2 className="h-10 w-10 text-green-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-success/10 mb-4">
+            <CheckCircle2 className="h-10 w-10 text-success" />
           </div>
           
           <div className="flex items-center justify-center gap-2">

@@ -147,7 +147,7 @@ export const CalculatorWizard = ({
                     isActive 
                       ? 'text-primary font-medium' 
                       : isCompleted 
-                        ? 'text-green-600' 
+                        ? 'text-success' 
                         : 'text-muted-foreground'
                   }`}
                 >
@@ -155,7 +155,7 @@ export const CalculatorWizard = ({
                     isActive 
                       ? 'border-primary bg-primary/10' 
                       : isCompleted 
-                        ? 'border-green-600 bg-green-50' 
+                        ? 'border-success bg-success/10' 
                         : 'border-muted'
                   }`}>
                     {isCompleted ? (
