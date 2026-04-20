@@ -199,7 +199,7 @@ export default function MediaLibrary() {
 
   const getUsageColor = () => {
     if (usagePercentage >= 90) return "text-destructive";
-    if (usagePercentage >= 70) return "text-yellow-500";
+    if (usagePercentage >= 70) return "text-warning";
     return "text-primary";
   };
 

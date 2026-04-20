@@ -261,7 +261,7 @@ export function EmailRecoveryTemplates() {
                   </TabsList>
 
                   <TabsContent value="visual" className="mt-0">
-                    <div className="border rounded-lg overflow-hidden bg-white">
+                    <div className="border rounded-lg overflow-hidden bg-background">
                       <iframe
                         ref={iframeRef}
                         srcDoc={`

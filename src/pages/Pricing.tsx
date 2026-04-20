@@ -95,7 +95,7 @@ export default function Pricing() {
             return (
               <div key={plan.dbId} className="relative">
                 {isCurrentPlan && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 bg-green-500 shadow-lg">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 bg-success text-success-foreground shadow-lg">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     {t('pricing.currentPlan')}
                   </Badge>

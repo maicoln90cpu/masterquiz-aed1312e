@@ -1586,7 +1586,7 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">👥 Usuários</span>
               {openTicketsCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-destructive rounded-full">
+                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-destructive-foreground bg-destructive rounded-full">
                   {openTicketsCount}
                 </span>
               )}

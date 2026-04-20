@@ -154,7 +154,7 @@ export const QuestionsList = memo(({
                         {index + 1}
                       </div>
                       {isComplete && (
-                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 border border-background" />
+                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-success border border-background" />
                       )}
                     </button>
 

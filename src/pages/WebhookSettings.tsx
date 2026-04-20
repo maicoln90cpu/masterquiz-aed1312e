@@ -120,7 +120,7 @@ const WebhookSettings = () => {
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <h1 className="text-3xl font-bold mb-6">{t('webhookSettings.title')}</h1>
         {!allowWebhook && (
-          <Card className="mb-6 border-yellow-500">
+          <Card className="mb-6 border-warning">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {t('webhookSettings.upgradeTitle')}
