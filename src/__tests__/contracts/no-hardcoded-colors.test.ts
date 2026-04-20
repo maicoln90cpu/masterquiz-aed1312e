@@ -32,7 +32,7 @@ const ALLOWLIST = new Set<string>([
 // Baseline: número MÁXIMO atual de arquivos com cores hardcoded.
 // Atualize PARA BAIXO conforme limpa, NUNCA pra cima.
 // Para descobrir o atual, rode o teste e veja "Total: X" na saída.
-const MAX_VIOLATIONS_ALLOWED = 100;
+const MAX_VIOLATIONS_ALLOWED = 98;
 
 const ABSOLUTE_COLOR_REGEX =
   /\b(bg|text|border|ring|fill|stroke|from|to|via)-(white|black|(?:red|blue|green|yellow|purple|pink|gray|slate|zinc|neutral|stone|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|fuchsia|rose)-(?:50|100|200|300|400|500|600|700|800|900|950))\b/;
