@@ -49,10 +49,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!quiz) {
-      return new Response(
-        JSON.stringify({ error: 'Quiz not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('NOT_FOUND', 'Quiz not found', traceId, corsHeaders);
     }
 
     // Check if response already exists for this session (service_role bypasses RLS)
