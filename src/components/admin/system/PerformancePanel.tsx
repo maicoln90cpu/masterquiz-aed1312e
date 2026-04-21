@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { fetchPerformanceLogs } from '@/services/systemMonitorService';
 import { DataTable, type DataTableColumn } from './DataTable';
 import { Info } from 'lucide-react';
+import { QueryFallback } from './QueryFallback';
 
 interface AggregatedOp {
   operation: string;
@@ -44,7 +45,7 @@ const PERIOD_OPTIONS = [
 const PerformancePanel = () => {
   const [days, setDays] = useState(7);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-performance', days],
     queryFn: () => fetchPerformanceLogs(days),
     staleTime: 5 * 60 * 1000,
@@ -121,18 +122,26 @@ const PerformancePanel = () => {
         </p>
       </div>
 
-      <DataTable<AggregatedOp>
-        data={aggregated}
-        columns={columns}
-        defaultSortKey="p95Ms"
-        defaultSortDirection="desc"
-        pageSize={15}
-        searchPlaceholder="Buscar operação…"
-        exportCsv="performance"
-        isLoading={isLoading}
-        emptyMessage="Nenhum dado de performance registrado."
-        rowKey={(r) => r.operation}
-      />
+      <QueryFallback
+        isLoading={false}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+      >
+        <DataTable<AggregatedOp>
+          data={aggregated}
+          columns={columns}
+          defaultSortKey="p95Ms"
+          defaultSortDirection="desc"
+          pageSize={15}
+          searchPlaceholder="Buscar operação…"
+          exportCsv="performance"
+          isLoading={isLoading}
+          emptyMessage="Nenhum dado de performance registrado."
+          rowKey={(r) => r.operation}
+        />
+      </QueryFallback>
     </div>
   );
 };

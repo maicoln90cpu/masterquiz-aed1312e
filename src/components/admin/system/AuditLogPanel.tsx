@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { fetchAuditLogs, type AuditRow } from '@/services/systemMonitorService';
 import { DataTable, type DataTableColumn } from './DataTable';
+import { QueryFallback } from './QueryFallback';
 
 const AuditLogPanel = () => {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-audit'],
     queryFn: () => fetchAuditLogs(500),
     staleTime: 5 * 60 * 1000,
@@ -51,18 +52,26 @@ const AuditLogPanel = () => {
 
   return (
     <div className="p-4">
-      <DataTable<AuditRow>
-        data={rows}
-        columns={columns}
-        defaultSortKey="created_at"
-        defaultSortDirection="desc"
-        pageSize={15}
-        searchPlaceholder="Buscar ação, entidade ou ator…"
-        exportCsv="audit-log"
-        isLoading={isLoading}
-        emptyMessage="Nenhum log encontrado."
-        rowKey={(r) => r.id}
-      />
+      <QueryFallback
+        isLoading={false}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+      >
+        <DataTable<AuditRow>
+          data={rows}
+          columns={columns}
+          defaultSortKey="created_at"
+          defaultSortDirection="desc"
+          pageSize={15}
+          searchPlaceholder="Buscar ação, entidade ou ator…"
+          exportCsv="audit-log"
+          isLoading={isLoading}
+          emptyMessage="Nenhum log encontrado."
+          rowKey={(r) => r.id}
+        />
+      </QueryFallback>
     </div>
   );
 };
