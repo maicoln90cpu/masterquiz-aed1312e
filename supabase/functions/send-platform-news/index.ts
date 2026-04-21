@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logAutomationAttempt, finalizeAutomationLog } from '../_shared/automation-logger.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -60,33 +61,12 @@ async function sendBulk(apiKey: string, batch: Array<{ senderId: string; senderN
   }
 }
 
-async function logAutomation(supabase: any, key: string, status: string, emailsSent: number, details: any = null, errorMessage: string | null = null) {
-  try {
-    await supabase.from('email_automation_logs').insert({
-      automation_key: key,
-      status,
-      emails_sent: emailsSent,
-      details: details ? JSON.stringify(details) : null,
-      error_message: errorMessage,
-    });
-    const { data: config } = await supabase.from('email_automation_config').select('execution_count').eq('automation_key', key).single();
-    await supabase.from('email_automation_config')
-      .update({
-        last_executed_at: new Date().toISOString(),
-        last_result: { status, emails_sent: emailsSent, timestamp: new Date().toISOString() },
-        execution_count: (config?.execution_count || 0) + 1,
-      })
-      .eq('automation_key', key);
-  } catch (e) {
-    console.error('Failed to log automation:', e);
-  }
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const AUTOMATION_KEY = 'platform_news';
+  let attemptLogId: string | null = null;
 
   try {
     const egoisApiKey = Deno.env.get('EGOI_API_KEY');
@@ -105,6 +85,16 @@ Deno.serve(async (req) => {
     const { updates, version, segment, test, testEmail } = body as { updates: string[]; version?: string; segment?: string; test?: boolean; testEmail?: string };
 
     if (!updates?.length && !test) throw new Error('updates array required');
+
+    // REGRESSION SHIELD (Onda 1.5): salva o input ANTES do envio para que o
+    // botão "Reenviar" do painel admin sempre tenha dados, mesmo se quebrar.
+    if (!test) {
+      attemptLogId = await logAutomationAttempt(supabase, AUTOMATION_KEY, {
+        updates: updates || [],
+        version: version || null,
+        segment: segment || 'all',
+      });
+    }
 
     const genResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-email-content`, {
       method: 'POST',
@@ -178,13 +168,16 @@ Deno.serve(async (req) => {
       if (i + 100 < emailBatch.length) await new Promise(r => setTimeout(r, 2000));
     }
 
-    await logAutomation(supabase, AUTOMATION_KEY, 'success', sentCount, { segment: segment || 'all', total_targets: emailBatch.length });
+    await finalizeAutomationLog(supabase, attemptLogId, 'success', sentCount, {
+      segment: segment || 'all',
+      total_targets: emailBatch.length,
+    });
 
     return new Response(JSON.stringify({ sent: sentCount, segment: segment || 'all', bulk: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('send-platform-news error:', error);
     const errMsg = error instanceof Error ? error.message : 'Erro';
-    await logAutomation(supabase, AUTOMATION_KEY, 'error', 0, null, errMsg);
+    await finalizeAutomationLog(supabase, attemptLogId, 'error', 0, null, errMsg);
     return new Response(JSON.stringify({ error: errMsg }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
