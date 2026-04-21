@@ -454,14 +454,63 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
       });
     }
 
+    // === FASE 2: validação pós-IA — quantidade de perguntas retornadas ===
+    const requested = requestData.numberOfQuestions;
+    const returned = Array.isArray(quizData?.questions) ? quizData.questions.length : 0;
+    let mismatchInfo: { requested: number; returned: number; action: 'ok' | 'truncated' | 'short' } = {
+      requested,
+      returned,
+      action: 'ok',
+    };
+
+    if (returned !== requested) {
+      // Trunca se vier mais que o pedido (segurança)
+      if (returned > requested) {
+        quizData.questions = quizData.questions.slice(0, requested);
+        mismatchInfo.action = 'truncated';
+      } else {
+        mismatchInfo.action = 'short';
+      }
+
+      console.warn(`${PREFIX} ai_quiz_count_mismatch — requested=${requested} returned=${returned} action=${mismatchInfo.action} model=${modelUsed} mode=${funnelMode}`);
+
+      // Persistir warning em gtm_event_logs (fire-and-forget) para monitoramento
+      try {
+        await supabaseClient.from('gtm_event_logs').insert({
+          event_name: 'ai_quiz_count_mismatch',
+          user_id: user.id,
+          metadata: {
+            requested,
+            returned,
+            action: mismatchInfo.action,
+            model: modelUsed,
+            funnel_mode: funnelMode,
+            mode: requestData.mode || 'form',
+            pdf_proposal: requestData.pdfProposal || null,
+            distribution: distribution.phases.map(p => ({ name: p.name, count: p.count })),
+          },
+        });
+      } catch (logErr) {
+        console.error(`${PREFIX} failed to log mismatch:`, logErr);
+      }
+    }
+
     await supabaseClient.from('ai_quiz_generations').insert({
       user_id: user.id, model_used: modelUsed, input_data: requestData,
-      questions_generated: requestData.numberOfQuestions,
+      questions_generated: returned,
       prompt_tokens: promptTokens, completion_tokens: completionTokens,
       total_tokens: totalTokens, estimated_cost_usd: estimatedCostUsd,
     });
 
-    return new Response(JSON.stringify(quizData), {
+    return new Response(JSON.stringify({
+      ...quizData,
+      _meta: {
+        requested_questions: requested,
+        returned_questions: returned,
+        count_mismatch: mismatchInfo.action !== 'ok',
+        mismatch_action: mismatchInfo.action,
+      },
+    }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
