@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./styles/onboarding.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
@@ -26,6 +26,7 @@ import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { supabase } from "@/integrations/supabase/client";
 import { shouldRetryQuery, queryRetryDelay } from "@/lib/queryRetry";
+import { logQueryRetishExhausted_PLACEHOLDER } from "@/lib/queryRetry"; // placeholder removed
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
