@@ -9,18 +9,33 @@ export interface PhaseDistribution {
   mode: FunnelMode;
 }
 
-function distribute(total: number, base: number[], labels: { name: string; label: string; description: string }[]): PhaseDistribution['phases'] {
-  // Última fase absorve sobra; se base exceder o total, retira de trás pra frente.
+function distribute(
+  total: number,
+  base: number[],
+  labels: { name: string; label: string; description: string }[],
+  protectLastMin = 0,
+): PhaseDistribution['phases'] {
+  // Última fase absorve sobra; se base exceder o total, retira de trás pra frente,
+  // MAS preserva `protectLastMin` na última fase (ex: conclusão nunca pode zerar).
   const counts = [...base];
-  let currentSum = counts.reduce((a, b) => a + b, 0);
+  const currentSum = counts.reduce((a, b) => a + b, 0);
   if (currentSum < total) {
     counts[counts.length - 1] += (total - currentSum);
   } else if (currentSum > total) {
     let excess = currentSum - total;
-    for (let i = counts.length - 1; i >= 0 && excess > 0; i--) {
+    const lastIdx = counts.length - 1;
+    const removableFromLast = Math.max(0, counts[lastIdx] - protectLastMin);
+    const takeFromLast = Math.min(removableFromLast, excess);
+    counts[lastIdx] -= takeFromLast;
+    excess -= takeFromLast;
+    for (let i = lastIdx - 1; i >= 0 && excess > 0; i--) {
       const take = Math.min(counts[i], excess);
       counts[i] -= take;
       excess -= take;
+    }
+    if (excess > 0) {
+      const take = Math.min(counts[lastIdx], excess);
+      counts[lastIdx] -= take;
     }
   }
   return labels.map((l, i) => ({ ...l, count: counts[i] }));
@@ -59,7 +74,7 @@ export function calculateQuestionDistribution(total: number, mode: FunnelMode): 
     else if (t <= 10) base = [2, 2, 2, 2, 1];
     else if (t <= 15) base = [2, 3, 3, 3, 2];
     else base = [3, 4, 4, 3, 2];
-    return { total: t, mode, phases: distribute(t, base, labels) };
+    return { total: t, mode, phases: distribute(t, base, labels, t >= 5 ? 1 : 0) };
   }
 
   // commercial (form / pdf infoprodutor) — funil de auto-convencimento
@@ -81,7 +96,8 @@ export function calculateQuestionDistribution(total: number, mode: FunnelMode): 
   else if (t <= 13) base = [3, 3, 2, 2, 1];
   else if (t <= 17) base = [3, 3, 3, 3, 2];
   else base = [3, 4, 4, 4, 2];
-  return { total: t, mode, phases: distribute(t, base, labels) };
+  // Protege conclusão ≥1 quando total ≥ 5 (CTA implícito é obrigatório)
+  return { total: t, mode, phases: distribute(t, base, labels, t >= 5 ? 1 : 0) };
 }
 
 /** Gera um bloco de texto pronto para injetar no prompt do usuário. */
