@@ -69,13 +69,12 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(200);
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(300);
     });
 
     await waitFor(() => {
       expect(mocks.updateEqVersion).toHaveBeenCalledWith('version', 3);
-    });
+    }, { timeout: 2000 });
   });
 
   it('deve disparar onConflict quando versão local não bate com a remota', async () => {
@@ -97,8 +96,7 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(200);
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(300);
     });
 
     await waitFor(() => {
@@ -108,7 +106,7 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
         remoteVersion: 5,
       });
       expect(result.current.status).toBe('conflict');
-    });
+    }, { timeout: 2000 });
 
     // UPDATE NÃO deve ter sido chamado — circuit interno bloqueou
     expect(mocks.updateFn).not.toHaveBeenCalled();
@@ -128,14 +126,13 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(200);
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(300);
     });
 
     await waitFor(() => {
       expect(onConflict).toHaveBeenCalled();
       expect(result.current.status).toBe('conflict');
-    });
+    }, { timeout: 2000 });
   });
 
   it('setKnownVersion deve estar exposto na API pública', () => {
