@@ -329,6 +329,12 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     }
   }, []);
 
+  // 🔒 Onda 6 — Etapa 3: definir/resetar versão conhecida do quiz.
+  // Chamar ao carregar quiz do banco (ou após resolver conflito recarregando).
+  const setKnownVersion = useCallback((version: number | null) => {
+    knownVersionRef.current = version;
+  }, []);
+
   return {
     status,
     lastSavedAt,
@@ -338,6 +344,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     saveNow,
     cancelPendingSave,
     markAsSaved,
+    setKnownVersion,
     isSaving: status === 'saving'
   };
 };
