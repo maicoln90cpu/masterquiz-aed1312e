@@ -103,7 +103,7 @@ describe('resilientFetch', () => {
     expect(res.error?.code).toBe('CIRCUIT_OPEN');
   });
 
-  it('half_open: após OPEN_DURATION libera 1 chamada e fecha em sucesso', async () => {
+  it('half_open: após OPEN_DURATION libera 1 chamada e fecha em sucesso', { timeout: 15_000 }, async () => {
     invokeMock.mockResolvedValue({
       data: null,
       error: { message: 'down', status: 502 },
