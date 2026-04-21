@@ -427,9 +427,9 @@ export function EmailAutomations() {
                   </div>
                   <div>
                     <CardTitle className="text-base">{auto.display_name}</CardTitle>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {FREQUENCY_LABELS[auto.frequency || 'manual'] || auto.frequency}
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <Badge variant="outline" className={`text-xs ${frequencyBadgeClass(auto.frequency)}`}>
+                        {resolveFrequencyLabel(auto.frequency)}
                       </Badge>
                       <Badge variant="secondary" className="text-[10px]">
                         {CRON_LABELS[auto.automation_key] || 'Manual'}
