@@ -2,6 +2,7 @@ import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNetworkStatus } from './useNetworkStatus';
 
 export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline';
 
@@ -71,24 +72,13 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   useEffect(() => { onSaveErrorRef.current = onSaveError; }, [onSaveError]);
   useEffect(() => { showToastRef.current = showToast; }, [showToast]);
 
-  // Verificar se está online
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  // 🛡️ Onda 6 — Etapa 2: usa fonte única de verdade
+  const { isOnline, wentOnlineAt } = useNetworkStatus();
 
+  // Espelha status='offline' quando perde a conexão
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => {
-      setIsOnline(false);
-      setStatus('offline');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+    if (!isOnline) setStatus('offline');
+  }, [isOnline]);
 
   // Limpar timeout ao desmontar
   useEffect(() => {
