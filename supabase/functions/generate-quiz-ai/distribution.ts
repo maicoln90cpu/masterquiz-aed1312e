@@ -37,10 +37,11 @@ export function calculateQuestionDistribution(total: number, mode: FunnelMode): 
       { name: 'sintese', label: 'SÍNTESE', description: 'conexão entre conceitos' },
     ];
     let base: number[];
-    if (t <= 5) base = [2, 2, 1, 0];
-    else if (t <= 10) base = [3, 3, 2, 0];
-    else if (t <= 15) base = [4, 4, 3, 0];
-    else base = [5, 5, 5, 0];
+    if (t <= 4) base = [2, 1, 1, 0];
+    else if (t <= 6) base = [2, 2, 1, 1];
+    else if (t <= 10) base = [3, 3, 2, 1];
+    else if (t <= 15) base = [4, 4, 3, 2];
+    else base = [5, 5, 4, 3];
     return { total: t, mode, phases: distribute(t, base, labels) };
   }
 
@@ -53,10 +54,11 @@ export function calculateQuestionDistribution(total: number, mode: FunnelMode): 
       { name: 'qualificacao', label: 'QUALIFICAÇÃO FINAL', description: 'perfil ideal para a oferta' },
     ];
     let base: number[];
-    if (t <= 5) base = [1, 1, 1, 1, 0];
-    else if (t <= 10) base = [2, 2, 2, 2, 0];
-    else if (t <= 15) base = [2, 3, 3, 3, 0];
-    else base = [3, 4, 4, 4, 0];
+    if (t <= 4) base = [1, 1, 1, 1, 0];
+    else if (t === 5) base = [1, 1, 1, 1, 1];
+    else if (t <= 10) base = [2, 2, 2, 2, 1];
+    else if (t <= 15) base = [2, 3, 3, 3, 2];
+    else base = [3, 4, 4, 3, 2];
     return { total: t, mode, phases: distribute(t, base, labels) };
   }
 
@@ -69,12 +71,16 @@ export function calculateQuestionDistribution(total: number, mode: FunnelMode): 
     { name: 'conclusao', label: 'CONCLUSÃO GUIADA', description: 'a solução passa a fazer sentido (CTA implícito)' },
   ];
   let base: number[];
-  if (t <= 5) base = [2, 1, 1, 0, 0];
-  else if (t <= 7) base = [2, 2, 1, 1, 0];
-  else if (t <= 10) base = [2, 2, 2, 2, 0];
-  else if (t <= 13) base = [3, 3, 2, 2, 0];
-  else if (t <= 17) base = [3, 3, 3, 3, 0];
-  else base = [3, 4, 4, 4, 0];
+  // IMPORTANTE: a partir de 5 perguntas SEMPRE deve haver ≥1 pergunta de
+  // CONCLUSÃO GUIADA (a última fase, que prepara o CTA).
+  // Sem isso, o quiz termina no ar — sem a pergunta de fechamento.
+  if (t <= 4) base = [2, 1, 1, 0, 0];
+  else if (t === 5) base = [2, 1, 1, 0, 1];
+  else if (t <= 7) base = [2, 2, 1, 1, 1];
+  else if (t <= 10) base = [2, 2, 2, 2, 1];
+  else if (t <= 13) base = [3, 3, 2, 2, 1];
+  else if (t <= 17) base = [3, 3, 3, 3, 2];
+  else base = [3, 4, 4, 4, 2];
   return { total: t, mode, phases: distribute(t, base, labels) };
 }
 

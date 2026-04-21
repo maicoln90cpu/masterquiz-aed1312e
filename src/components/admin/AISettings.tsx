@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid, Tooltip } from "recharts";
+import { AIDistributionPreview } from "./AIDistributionPreview";
 
 export const AISettings = () => {
   const [loading, setLoading] = useState(true);
@@ -138,6 +139,9 @@ const SettingsTab = ({ settings, setSettings, saveSettings, saving }: any) => (
         </CardDescription>
       </CardHeader>
     </Card>
+
+    {/* Preview de distribuição (Fase 1) */}
+    <AIDistributionPreview />
 
     {/* Modelo de IA */}
     <Card>
