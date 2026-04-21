@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, TrendingUp, Database } from 'lucide-react';
@@ -16,6 +15,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { useBackgroundAwareInterval } from '@/hooks/useBackgroundAwareInterval';
+import { QueryFallback } from './QueryFallback';
 
 interface SnapshotRow {
   id: string;
@@ -53,7 +53,7 @@ async function fetchThreshold(): Promise<number> {
 export function DBGrowthPanel() {
   const refetchInterval = useBackgroundAwareInterval(120_000);
 
-  const { data: snapshots, isLoading } = useQuery({
+  const { data: snapshots, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['db-snapshots'],
     queryFn: fetchSnapshots,
     refetchInterval,
@@ -112,22 +112,20 @@ export function DBGrowthPanel() {
       .slice(0, 5);
   }, [snapshots, latest, oldest]);
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
-  if (!snapshots || snapshots.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-center text-sm text-muted-foreground">
-          Ainda não há snapshots. O primeiro será criado às 03h UTC.
-        </CardContent>
-      </Card>
-    );
-  }
-
   const showLimitAlert = stats && stats.pctLimit >= 80;
   const showGrowthAlert = stats && stats.growthPct !== null && stats.growthPct >= 20;
 
   return (
-    <div className="space-y-4">
+    <QueryFallback
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      isFetching={isFetching}
+      onRetry={() => refetch()}
+      isEmpty={!snapshots || snapshots.length === 0}
+      emptyMessage="Ainda não há snapshots. O primeiro será criado às 03h UTC."
+    >
+      <div className="space-y-4">
       {(showLimitAlert || showGrowthAlert) && (
         <Alert variant={stats!.pctLimit >= 95 ? 'destructive' : 'default'}>
           <AlertTriangle className="h-4 w-4" />
@@ -246,6 +244,7 @@ export function DBGrowthPanel() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </QueryFallback>
   );
 }

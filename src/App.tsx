@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./styles/onboarding.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
@@ -26,6 +26,7 @@ import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { supabase } from "@/integrations/supabase/client";
 import { shouldRetryQuery, queryRetryDelay } from "@/lib/queryRetry";
+import { logQueryRetryExhausted } from "@/lib/logRetryExhaustion";
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
@@ -233,7 +234,23 @@ const LazyRoute = ({ Component }: { Component: React.ComponentType }) => (
 // - 5xx/network/timeout → até 3 tentativas com backoff (1s → 2s → 4s + jitter)
 // - 4xx (404/401/403/422) → falha imediata (não adianta retentar)
 // - mutations: 1 tentativa (escritas não devem duplicar silenciosamente)
+// QueryCache global onError → loga retries esgotados em client_error_logs (Onda 6 / Etapa 4 estendida)
+const queryCache = new QueryCache({
+  onError: (error, query) => {
+    const failureCount = query.state.fetchFailureCount;
+    if (failureCount >= 3) {
+      logQueryRetryExhausted({
+        queryKey: query.queryKey,
+        error,
+        failureCount,
+        maxAttempts: 3,
+      });
+    }
+  },
+});
+
 const queryClient = new QueryClient({
+  queryCache,
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,

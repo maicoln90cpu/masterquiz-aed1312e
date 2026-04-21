@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataTable, type DataTableColumn } from './DataTable';
+import { QueryFallback } from './QueryFallback';
 
 interface IntegrationRow {
   id: string;
@@ -16,7 +16,7 @@ interface IntegrationRow {
 }
 
 const IntegrationsHealthPanel = () => {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-integrations'],
     queryFn: async () => {
       const { data: integrations, error } = await supabase
@@ -42,8 +42,6 @@ const IntegrationsHealthPanel = () => {
     },
     staleTime: 5 * 60 * 1000,
   });
-
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
 
   const providers = data?.byProvider ?? [];
   const raw = data?.raw ?? [];
@@ -73,7 +71,15 @@ const IntegrationsHealthPanel = () => {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <QueryFallback
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+      >
+        <>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {providers.map(p => {
           const Icon = p.active === p.total ? CheckCircle : XCircle;
           return (
@@ -88,9 +94,9 @@ const IntegrationsHealthPanel = () => {
             </Card>
           );
         })}
-      </div>
+        </div>
 
-      <DataTable<IntegrationRow>
+        <DataTable<IntegrationRow>
         data={raw}
         columns={columns}
         defaultSortKey="updated_at"
@@ -100,7 +106,9 @@ const IntegrationsHealthPanel = () => {
         exportCsv="integrations"
         emptyMessage="Nenhuma integração registrada."
         rowKey={(r) => r.id}
-      />
+        />
+        </>
+      </QueryFallback>
     </div>
   );
 };

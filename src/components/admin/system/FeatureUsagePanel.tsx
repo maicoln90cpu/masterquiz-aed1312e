@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchFeatureUsage } from '@/services/systemMonitorService';
 import { DataTable, type DataTableColumn } from './DataTable';
+import { QueryFallback } from './QueryFallback';
 
 interface FeatureRow {
   event_name: string;
@@ -21,7 +22,7 @@ const PERIOD_OPTIONS = [
 const FeatureUsagePanel = () => {
   const [days, setDays] = useState(7);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-features', days],
     queryFn: () => fetchFeatureUsage(days),
     staleTime: 10 * 60 * 1000,
@@ -67,18 +68,26 @@ const FeatureUsagePanel = () => {
         </ResponsiveContainer>
       )}
 
-      <DataTable<FeatureRow>
-        data={features}
-        columns={columns}
-        defaultSortKey="count"
-        defaultSortDirection="desc"
-        pageSize={15}
-        searchPlaceholder="Buscar evento…"
-        exportCsv="feature-usage"
-        isLoading={isLoading}
-        emptyMessage="Nenhum evento registrado no período."
-        rowKey={(r) => r.event_name}
-      />
+      <QueryFallback
+        isLoading={false}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+      >
+        <DataTable<FeatureRow>
+          data={features}
+          columns={columns}
+          defaultSortKey="count"
+          defaultSortDirection="desc"
+          pageSize={15}
+          searchPlaceholder="Buscar evento…"
+          exportCsv="feature-usage"
+          isLoading={isLoading}
+          emptyMessage="Nenhum evento registrado no período."
+          rowKey={(r) => r.event_name}
+        />
+      </QueryFallback>
     </div>
   );
 };
