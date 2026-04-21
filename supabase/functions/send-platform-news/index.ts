@@ -168,13 +168,16 @@ Deno.serve(async (req) => {
       if (i + 100 < emailBatch.length) await new Promise(r => setTimeout(r, 2000));
     }
 
-    await logAutomation(supabase, AUTOMATION_KEY, 'success', sentCount, { segment: segment || 'all', total_targets: emailBatch.length });
+    await finalizeAutomationLog(supabase, attemptLogId, 'success', sentCount, {
+      segment: segment || 'all',
+      total_targets: emailBatch.length,
+    });
 
     return new Response(JSON.stringify({ sent: sentCount, segment: segment || 'all', bulk: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('send-platform-news error:', error);
     const errMsg = error instanceof Error ? error.message : 'Erro';
-    await logAutomation(supabase, AUTOMATION_KEY, 'error', 0, null, errMsg);
+    await finalizeAutomationLog(supabase, attemptLogId, 'error', 0, null, errMsg);
     return new Response(JSON.stringify({ error: errMsg }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
