@@ -733,6 +733,7 @@ export function EmailAutomations() {
                 <SelectContent>
                   <SelectItem value="all">Todos status</SelectItem>
                   <SelectItem value="success">Sucesso</SelectItem>
+                  <SelectItem value="skipped">Pulado</SelectItem>
                   <SelectItem value="error">Erro</SelectItem>
                 </SelectContent>
               </Select>
