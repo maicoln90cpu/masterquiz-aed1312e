@@ -156,22 +156,28 @@ Deno.serve(async (req) => {
           console.log(`[Milestone] Lead check: hasContact=${hasContactInfo}, isExisting=${!!existing}, isTest=${isTestLead}, email=${!!respondent_email}, whatsapp=${!!respondent_whatsapp}`);
           
           if (hasContactInfo && !existing && !isTestLead) {
-            // Count real leads (with contact info) for this owner, excluding test leads
-            const { count: totalLeads } = await supabase
-              .from('quiz_responses')
-              .select('id', { count: 'exact', head: true })
-              .in('quiz_id', quizIds)
-              .or('respondent_email.not.is.null,respondent_whatsapp.not.is.null');
+            // Dedup PERMANENTE via user_milestones (gtm_event_logs é apagado em 30d)
+            const { data: alreadyFiredFirstLead } = await supabase
+              .from('user_milestones')
+              .select('id')
+              .eq('user_id', quiz.user_id)
+              .eq('milestone_name', 'first_lead_received')
+              .maybeSingle();
 
-            console.log(`[Milestone] Total leads with contact info: ${totalLeads}`);
-
-            if ((totalLeads || 0) === 1) {
+            if (!alreadyFiredFirstLead) {
               const { error: eventError } = await supabase.from('gtm_event_logs').insert({
                 event_name: 'first_lead_received',
                 user_id: quiz.user_id,
                 metadata: { quiz_id, response_id: responseId, email: !!respondent_email, whatsapp: !!respondent_whatsapp },
               });
               console.log(`🎯 [Milestone] first_lead_received for user ${quiz.user_id}, insertError=${eventError?.message || 'none'}`);
+
+              // Marca permanente (idempotente via UNIQUE)
+              await supabase.from('user_milestones').insert({
+                user_id: quiz.user_id,
+                milestone_name: 'first_lead_received',
+                metadata: { quiz_id, response_id: responseId },
+              });
 
               // 🎯 M01: marca first_lead_received_at no profile (idempotente via RPC)
               const { error: rpcError } = await supabase.rpc('mark_first_lead_received', { _owner_id: quiz.user_id });
@@ -204,8 +210,75 @@ Deno.serve(async (req) => {
                 console.log(`🔔 [Notification] first_lead_upgrade created for user ${quiz.user_id}, error=${notifError?.message || 'none'}`);
               }
             } else {
-              console.log(`[Milestone] Skipped first_lead: totalLeads=${totalLeads} (not 1)`);
+              console.log(`[Milestone] Skipped first_lead: já registrado em user_milestones`);
             }
+          }
+
+          // ═══════════════════════════════════════════
+          // 🎯 quiz_engaged_5_leads — usuário ON com 5+ respostas reais
+          // ═══════════════════════════════════════════
+          try {
+            const { data: alreadyFiredEngaged } = await supabase
+              .from('user_milestones')
+              .select('id')
+              .eq('user_id', quiz.user_id)
+              .eq('milestone_name', 'quiz_engaged_5_leads')
+              .maybeSingle();
+
+            if (!alreadyFiredEngaged) {
+              const { data: ownerProfile } = await supabase
+                .from('profiles')
+                .select('user_objectives')
+                .eq('id', quiz.user_id)
+                .maybeSingle();
+
+              const ON_OBJECTIVES = ['lead_capture_launch', 'vsl_conversion', 'offer_validation'];
+              const objectives: string[] = Array.isArray(ownerProfile?.user_objectives)
+                ? (ownerProfile!.user_objectives as string[])
+                : [];
+              const isON = objectives.some((o) => ON_OBJECTIVES.includes(o));
+
+              console.log(`[quiz_engaged_5_leads] objectives=${JSON.stringify(objectives)}, isON=${isON}`);
+
+              if (isON) {
+                // Contar respostas reais (excluindo test leads).
+                // Sintaxe PostgREST para JSONB: usar .not() encadeado garante o filtro correto.
+                // Equivalente SQL: AND (answers->>'_is_test_lead' IS NULL OR answers->>'_is_test_lead' != 'true')
+                const { count: realResponses, error: countErr } = await supabase
+                  .from('quiz_responses')
+                  .select('id', { count: 'exact', head: true })
+                  .in('quiz_id', quizIds)
+                  .not('answers->>_is_test_lead', 'eq', 'true');
+
+                if (countErr) {
+                  console.warn(`[quiz_engaged_5_leads] Count error: ${countErr.message}`);
+                }
+
+                console.log(`[quiz_engaged_5_leads] realResponses=${realResponses}`);
+
+                if ((realResponses || 0) >= 5) {
+                  await supabase.from('gtm_event_logs').insert({
+                    event_name: 'quiz_engaged_5_leads',
+                    user_id: quiz.user_id,
+                    metadata: {
+                      quiz_id,
+                      total_responses: realResponses,
+                      objectives,
+                    },
+                  });
+
+                  await supabase.from('user_milestones').insert({
+                    user_id: quiz.user_id,
+                    milestone_name: 'quiz_engaged_5_leads',
+                    metadata: { quiz_id, total_responses: realResponses, objectives },
+                  });
+
+                  console.log(`🎯 [Milestone] quiz_engaged_5_leads disparado para ${quiz.user_id} (${realResponses} respostas)`);
+                }
+              }
+            }
+          } catch (engagedErr) {
+            console.warn('[quiz_engaged_5_leads] Falhou (não-bloqueante):', engagedErr);
           }
 
           // aha_threshold_reached — exactly 20 responses total
