@@ -352,6 +352,52 @@ export function EmailAutomations() {
     }
   };
 
+  /**
+   * Reenvia uma campanha que falhou ou foi pulada, recuperando o input original
+   * salvo em `details`. Para platform_news, reabre o diálogo pré-preenchido.
+   * Para outras, re-invoca direto a edge function.
+   */
+  const handleResend = async (log: AutomationLog) => {
+    const key = log.automation_key;
+
+    // Platform News: reabre diálogo pré-preenchido se houver dados salvos
+    if (key === 'platform_news') {
+      const d = (log.details || {}) as Record<string, unknown>;
+      const updates = Array.isArray(d.updates) ? (d.updates as string[]).join('\n') : '';
+      const version = typeof d.version === 'string' ? d.version : '';
+      const segment = typeof d.segment === 'string' ? d.segment : 'all';
+      if (updates) {
+        setNewsUpdates(updates);
+        setNewsVersion(version);
+        setNewsSegment(segment);
+        setNewsStep('compose');
+        setNewsDialogOpen(true);
+        toast.info('Dados recuperados. Revise e dispare novamente.');
+      } else {
+        setNewsDialogOpen(true);
+        toast.warning('Sem conteúdo salvo desta tentativa. Preencha novamente.');
+      }
+      return;
+    }
+
+    // Outras automações: re-invoca direto
+    setResending(log.id);
+    try {
+      const fnName = EDGE_FUNCTION_MAP[key];
+      if (!fnName) throw new Error('Automação desconhecida');
+      const body: Record<string, unknown> = key === 'blog_digest' ? { force: true } : {};
+      const { data, error } = await supabase.functions.invoke(fnName, { body });
+      if (error) throw error;
+      const sent = data?.sent || 0;
+      toast.success(`Reenvio: ${sent} emails enviados`);
+      await loadData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao reenviar');
+    } finally {
+      setResending(null);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
   return (
