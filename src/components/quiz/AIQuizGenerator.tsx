@@ -668,6 +668,22 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
 
   return (
     <Card className="relative">
+      {feedbackInfo && (
+        <CardContent className="pt-6">
+          <AIQuizFeedbackCard
+            generationId={feedbackInfo.generationId}
+            quizMode={uploadMode === 'educational' ? 'educational' : uploadMode}
+            modelUsed={feedbackInfo.modelUsed}
+            questionsCount={feedbackInfo.questionsCount}
+            onDone={() => {
+              const info = feedbackInfo;
+              setFeedbackInfo(null);
+              if (existingQuizId) onBack();
+              else navigate('/meus-quizzes');
+            }}
+          />
+        </CardContent>
+      )}
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
