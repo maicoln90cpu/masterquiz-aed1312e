@@ -26,8 +26,15 @@ export const EnvelopeErrorCodeSchema = z.enum([
 
 export const EnvelopeSuccessSchema = z.object({
   ok: z.literal(true),
-  data: z.unknown(),
+  // `data` é obrigatório; aceitamos qualquer valor, mas a chave precisa estar presente.
+  data: z.unknown().refine((_v, ctx) => {
+    // Zod só chama refine se a chave existe no objeto pai → presença garantida.
+    return true;
+  }),
   traceId: z.string().min(1),
+}).refine((obj) => 'data' in obj, {
+  message: 'data é obrigatório no envelope de sucesso',
+  path: ['data'],
 });
 
 export const EnvelopeErrorSchema = z.object({
