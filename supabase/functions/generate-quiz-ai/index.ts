@@ -389,13 +389,21 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
 
     const userPrompt = replaceVariables(userPromptTemplate, requestData);
 
+    // === FASE 1: distribuição proporcional por fase do funil ===
+    let funnelMode: FunnelMode = 'commercial';
+    if (isEducationalMode || isPdfEducational) funnelMode = 'educational';
+    else if (isPdfTraffic) funnelMode = 'traffic';
+    const distribution = calculateQuestionDistribution(requestData.numberOfQuestions, funnelMode);
+    const distributionBlock = formatDistributionForPrompt(distribution);
+    const finalUserPrompt = `${userPrompt}\n${distributionBlock}`;
+
     const isOpenAIModel = isDirectOpenAIModel(aiModel);
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     let aiResponse;
     let modelUsed = aiModel;
-    const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }];
+    const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: finalUserPrompt }];
 
     if (isOpenAIModel && OPENAI_API_KEY) {
       modelUsed = aiModel;
