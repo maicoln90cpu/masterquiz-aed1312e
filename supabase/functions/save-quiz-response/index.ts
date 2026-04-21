@@ -299,15 +299,13 @@ Deno.serve(async (req) => {
       console.warn('[save-quiz-response] Milestone check failed:', milestoneErr);
     }
 
-    return new Response(
-      JSON.stringify({ success: true, action: existing ? 'updated' : 'inserted', id: responseId }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    return okResponse(
+      { action: existing ? 'updated' : 'inserted', id: responseId },
+      traceId,
+      corsHeaders
     );
   } catch (error) {
     console.error('[save-quiz-response] Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Unable to save response' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', 'Unable to save response', traceId, corsHeaders);
   }
 });
