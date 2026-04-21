@@ -5,6 +5,7 @@ import {
   CloudOff, 
   Check, 
   AlertCircle,
+  AlertTriangle,
   Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline' | 'disabled';
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline' | 'disabled' | 'conflict';
 
 interface AutoSaveIndicatorProps {
   status: SaveStatus;
@@ -64,6 +65,13 @@ export const AutoSaveIndicator = ({
           label: t('autoSave.error', 'Erro ao salvar'),
           color: 'bg-destructive/10 text-destructive border-destructive/30',
           pulse: false
+        };
+      case 'conflict':
+        return {
+          icon: <AlertTriangle className="h-3.5 w-3.5" />,
+          label: t('autoSave.conflict', 'Conflito de edição — recarregue a página'),
+          color: 'bg-destructive/10 text-destructive border-destructive/30',
+          pulse: true
         };
       case 'offline':
         return {
