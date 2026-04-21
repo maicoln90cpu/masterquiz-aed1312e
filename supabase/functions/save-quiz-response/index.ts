@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,8 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const traceId = getTraceId(req);
 
   try {
     const supabase = createClient(
@@ -30,9 +33,11 @@ Deno.serve(async (req) => {
     } = body;
 
     if (!quiz_id || !session_id) {
-      return new Response(
-        JSON.stringify({ error: 'quiz_id and session_id are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      return errorResponse(
+        'VALIDATION_FAILED',
+        'quiz_id and session_id are required',
+        traceId,
+        corsHeaders
       );
     }
 
