@@ -436,7 +436,7 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
     const aiData = await aiResponse.json();
     const content = aiData.choices[0].message.content;
     const usage = aiData.usage || {};
-    let promptTokens = usage.prompt_tokens || usage.input_tokens || Math.ceil((systemPrompt.length + userPrompt.length) / 4);
+    let promptTokens = usage.prompt_tokens || usage.input_tokens || Math.ceil((systemPrompt.length + finalUserPrompt.length) / 4);
     let completionTokens = usage.completion_tokens || usage.output_tokens || Math.ceil(content.length / 4);
     const totalTokens = usage.total_tokens || (promptTokens + completionTokens);
     const estimatedCostUsd = calculateCost(modelUsed, promptTokens, completionTokens);
