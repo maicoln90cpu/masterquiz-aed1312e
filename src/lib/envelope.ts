@@ -75,9 +75,10 @@ export function unwrapEnvelope<T = unknown>(raw: unknown): T {
   if (parsed.data.ok) {
     return parsed.data.data as T;
   }
+  const errPayload = parsed.data as EnvelopeErrorPayload;
   throw new EnvelopeError(
-    parsed.data.error.code,
-    parsed.data.error.message,
-    parsed.data.traceId
+    errPayload.error.code,
+    errPayload.error.message,
+    errPayload.traceId
   );
 }
