@@ -167,22 +167,32 @@ const CronMonitorPanel = () => {
   return (
     <TooltipProvider>
       <div className="p-4 space-y-3">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="h-3.5 w-3.5" />
-          {rows.length} jobs cadastrados • Próxima execução calculada em UTC • Atualiza a cada 60s
-        </div>
-        <DataTable<CronDisplayRow>
-          data={rows}
-          columns={columns}
-          defaultSortKey="nextRunAt"
-          defaultSortDirection="asc"
-          pageSize={25}
-          searchPlaceholder="Buscar job ou schedule…"
-          exportCsv="cron-jobs"
-          isLoading={loadingJobs}
-          emptyMessage="Nenhum cron job cadastrado."
-          rowKey={(r) => r.jobname}
-        />
+        <QueryFallback
+          isLoading={false}
+          isError={jobsIsError}
+          error={jobsError}
+          isFetching={jobsFetching}
+          onRetry={() => refetchJobs()}
+        >
+          <>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              {rows.length} jobs cadastrados • Próxima execução calculada em UTC • Atualiza a cada 60s
+            </div>
+            <DataTable<CronDisplayRow>
+              data={rows}
+              columns={columns}
+              defaultSortKey="nextRunAt"
+              defaultSortDirection="asc"
+              pageSize={25}
+              searchPlaceholder="Buscar job ou schedule…"
+              exportCsv="cron-jobs"
+              isLoading={loadingJobs}
+              emptyMessage="Nenhum cron job cadastrado."
+              rowKey={(r) => r.jobname}
+            />
+          </>
+        </QueryFallback>
       </div>
     </TooltipProvider>
   );
