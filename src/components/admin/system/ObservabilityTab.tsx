@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ChevronDown, AlertTriangle, CheckCircle, XCircle, Clock, Zap, Globe, Activity, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DataTable, type DataTableColumn } from './DataTable';
+import { TopErrorsPanel } from './TopErrorsPanel';
 import {
   fetchSLAMetrics,
   fetchAICosts,
@@ -449,6 +450,9 @@ export const ObservabilityTab = () => {
     <div className="space-y-3">
       <ObsPanel id="sla" title="SLA / SLO" emoji="🎯" defaultOpen>
         <SLAPanel />
+      </ObsPanel>
+      <ObsPanel id="top-errors" title="Top Errors (Agrupados)" emoji="🧬" defaultOpen>
+        <TopErrorsPanel />
       </ObsPanel>
       <ObsPanel id="ai-costs" title="Custos de IA" emoji="🤖">
         <AICostsPanel />
