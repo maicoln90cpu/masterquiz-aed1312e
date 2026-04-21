@@ -104,7 +104,6 @@ describe('resilientFetch', () => {
   });
 
   it('half_open: após OPEN_DURATION libera 1 chamada e fecha em sucesso', async () => {
-    vi.useFakeTimers();
     invokeMock.mockResolvedValue({
       data: null,
       error: { message: 'down', status: 502 },
@@ -114,15 +113,21 @@ describe('resilientFetch', () => {
     }
     expect(getCircuitState('fn-half')).toBe('open');
 
-    // Avança o tempo além do open duration
-    vi.advanceTimersByTime(RESILIENT_DEFAULTS.OPEN_DURATION_MS + 100);
+    // Em vez de fake timers (que travam o sleep do retry), avançamos Date.now
+    const realNow = Date.now;
+    const advance = RESILIENT_DEFAULTS.OPEN_DURATION_MS + 100;
+    vi.spyOn(Date, 'now').mockImplementation(() => realNow() + advance);
 
-    invokeMock.mockReset();
-    invokeMock.mockResolvedValueOnce({ data: { ok: true }, error: null });
-    const res = await invokeResilient('fn-half', {}, { maxRetries: 1 });
-    expect(invokeMock).toHaveBeenCalledTimes(1);
-    expect(res.data).toEqual({ ok: true });
-    expect(getCircuitState('fn-half')).toBe('closed');
+    try {
+      invokeMock.mockReset();
+      invokeMock.mockResolvedValueOnce({ data: { ok: true }, error: null });
+      const res = await invokeResilient('fn-half', {}, { maxRetries: 1 });
+      expect(invokeMock).toHaveBeenCalledTimes(1);
+      expect(res.data).toEqual({ ok: true });
+      expect(getCircuitState('fn-half')).toBe('closed');
+    } finally {
+      (Date.now as unknown as { mockRestore?: () => void }).mockRestore?.();
+    }
   });
 
   it('disableCircuitBreaker permite testar sem efeito colateral global', async () => {
