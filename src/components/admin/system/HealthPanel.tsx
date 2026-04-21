@@ -8,6 +8,7 @@ import { fetchLatestHealthMetrics } from '@/services/systemMonitorService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { HealthStatus } from '@/hooks/useSystemHealth';
+import { QueryFallback } from './QueryFallback';
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string; label: string }> = {
   healthy: { icon: CheckCircle, color: 'text-success', label: 'Saudável' },
@@ -25,7 +26,7 @@ const HealthPanel = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: metrics, isLoading } = useQuery({
+  const { data: metrics, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-health'],
     queryFn: fetchLatestHealthMetrics,
     staleTime: 5 * 60 * 1000,
@@ -44,8 +45,6 @@ const HealthPanel = () => {
       toast({ title: 'Erro', description: 'Falha ao executar análise.', variant: 'destructive' });
     },
   });
-
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
 
   // Deduplicate by module
   const moduleMap = new Map<string, { module: string; score: number; status: string; details: Record<string, unknown> }>();
@@ -66,6 +65,15 @@ const HealthPanel = () => {
 
   return (
     <div className="space-y-4 p-4">
+      <QueryFallback
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+        loadingFallback={<Skeleton className="h-48 w-full" />}
+      >
+        <>
       {/* Score geral */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -110,6 +118,8 @@ const HealthPanel = () => {
           Nenhuma métrica registrada. Clique em "Executar Análise" para gerar o primeiro relatório.
         </p>
       )}
+        </>
+      </QueryFallback>
     </div>
   );
 };

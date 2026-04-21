@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { fetchClientErrors } from '@/services/systemMonitorService';
 import { DataTable, type DataTableColumn } from './DataTable';
+import { QueryFallback } from './QueryFallback';
 
 interface GroupedError {
   component: string;
@@ -20,7 +21,7 @@ const PERIOD_OPTIONS = [
 const ClientErrorsPanel = () => {
   const [days, setDays] = useState(7);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-errors', days],
     queryFn: () => fetchClientErrors(days),
     staleTime: 5 * 60 * 1000,
@@ -76,18 +77,26 @@ const ClientErrorsPanel = () => {
         </Badge>
       </div>
 
-      <DataTable<GroupedError>
-        data={grouped}
-        columns={columns}
-        defaultSortKey="count"
-        defaultSortDirection="desc"
-        pageSize={15}
-        searchPlaceholder="Buscar componente ou mensagem…"
-        exportCsv="client-errors"
-        isLoading={isLoading}
-        emptyMessage="Nenhum erro registrado no período. 🎉"
-        rowKey={(r) => r.component}
-      />
+      <QueryFallback
+        isLoading={false}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+      >
+        <DataTable<GroupedError>
+          data={grouped}
+          columns={columns}
+          defaultSortKey="count"
+          defaultSortDirection="desc"
+          pageSize={15}
+          searchPlaceholder="Buscar componente ou mensagem…"
+          exportCsv="client-errors"
+          isLoading={isLoading}
+          emptyMessage="Nenhum erro registrado no período. 🎉"
+          rowKey={(r) => r.component}
+        />
+      </QueryFallback>
     </div>
   );
 };
