@@ -2,8 +2,7 @@
  * E2E Test Fixtures — MasterQuiz
  * Custom test fixture com autenticação por role.
  *
- * Uso futuro (quando Playwright estiver instalado no CI):
- *
+ * Uso:
  * ```ts
  * import { authenticatedTest as test, expect } from './fixtures/test-fixtures';
  *
@@ -17,10 +16,6 @@
  * ```
  */
 
-// NOTE: Este arquivo requer @playwright/test.
-// Descomente quando Playwright for adicionado ao projeto.
-
-/*
 import { test as base, type Page } from '@playwright/test';
 import { type MockRole } from './auth';
 import { setupAuthenticatedPage } from './api-mocks';
@@ -39,7 +34,3 @@ export const authenticatedTest = base.extend<AuthFixtures>({
 });
 
 export { expect } from '@playwright/test';
-*/
-
-// Placeholder export para evitar erro de módulo vazio
-export const E2E_READY = false;

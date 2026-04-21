@@ -3,13 +3,7 @@
  * Route interceptors para Supabase no Playwright.
  */
 
-// NOTE: Playwright não está instalado. Estes tipos são inferidos para documentação.
-// Quando Playwright for adicionado ao CI, importe Page de '@playwright/test'.
-type Page = {
-  route: (url: string, handler: (route: any) => void) => Promise<void>;
-  addInitScript: (fn: any, args?: any) => Promise<void>;
-};
-
+import type { Page } from '@playwright/test';
 import { type MockRole, getMockSession } from './auth';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://mock.supabase.co';

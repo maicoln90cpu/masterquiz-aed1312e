@@ -1,7 +1,7 @@
 # 🧪 Guia de Testes — MasterQuiz
 
-> Infraestrutura de testes, padrões de mock, contratos, CI/CD e troubleshooting
-> Versão 2.42.0 | 16 de Abril de 2026
+> Infraestrutura de testes, padrões de mock, contratos, CI/CD, E2E e troubleshooting
+> Versão 2.44.0 | 21 de Abril de 2026 (Onda 5 — Testes Automatizados completa)
 >
 > **Nota:** Para documentação detalhada de uso do test-utils, mocking Supabase e padrões AAA, consulte as seções abaixo. O antigo `src/__tests__/README.md` foi consolidado neste documento.
 
@@ -301,18 +301,50 @@ Executa automaticamente em push/PR para `main` e `develop`:
 
 ---
 
-## E2E (Playwright — Futuro)
+## E2E (Playwright)
 
-Fixtures prontas em `e2e/fixtures/` para quando Playwright for configurado no CI:
+Playwright está instalado e o smoke test mínimo roda no CI (job `e2e-smoke`, não-bloqueante).
+
+### Estrutura
 
 | Arquivo | Propósito |
 |---------|-----------|
-| `auth.ts` | Mock de sessões por role (user, admin, master_admin) |
-| `api-mocks.ts` | Interceptors para auth, REST, RPC e Storage do Supabase |
-| `seed-data.ts` | Dados determinísticos (quizzes, profiles, responses) |
-| `test-fixtures.ts` | `authenticatedTest` fixture com role configurável |
+| `playwright.config.ts` (raiz) | Config: chromium, baseURL `http://localhost:8080`, webServer auto |
+| `e2e/*.e2e.ts` | Specs E2E (testMatch `*.e2e.ts`) |
+| `e2e/fixtures/auth.ts` | Mock de sessões por role (user, admin, master_admin) |
+| `e2e/fixtures/api-mocks.ts` | Interceptors para auth, REST, RPC e Storage do Supabase |
+| `e2e/fixtures/seed-data.ts` | Dados determinísticos (quizzes, profiles, responses) |
+| `e2e/fixtures/test-fixtures.ts` | `authenticatedTest` fixture com role configurável |
 
-**Status**: Playwright não está instalado. Fixtures estão prontas para uso quando CI suportar browsers.
+### Comandos
+
+```bash
+npm run test:e2e:install   # Instala browsers (rodar uma vez)
+npm run test:e2e           # Roda specs em modo headless
+npm run test:e2e:ui        # Modo interativo (debug visual)
+```
+
+### Smoke ativo
+
+`e2e/smoke-public-quiz.e2e.ts` valida:
+- Landing pública carrega sem erros JS críticos
+- Rota `/auth` renderiza inputs de login
+
+### Como adicionar um fluxo autenticado
+
+```ts
+import { authenticatedTest as test, expect } from './fixtures/test-fixtures';
+
+test.use({ role: 'admin' });
+test('admin abre dashboard', async ({ authenticatedPage: page }) => {
+  await page.goto('/admin');
+  await expect(page.locator('h1')).toBeVisible();
+});
+```
+
+### CI
+
+Job `e2e-smoke` em `.github/workflows/test.yml` instala chromium, sobe Vite via `webServer` e roda o smoke. Marcado `continue-on-error: true` para não bloquear PR por flakiness — promova para bloqueante quando a suíte estabilizar.
 
 ---
 
