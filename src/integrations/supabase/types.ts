@@ -1131,6 +1131,39 @@ export type Database = {
         }
         Relationships: []
       }
+      error_fingerprints: {
+        Row: {
+          component_name: string
+          fingerprint: string
+          first_seen_at: string
+          last_seen_at: string
+          last_url: string | null
+          last_user_id: string | null
+          sample_message: string
+          total_count: number
+        }
+        Insert: {
+          component_name: string
+          fingerprint: string
+          first_seen_at?: string
+          last_seen_at?: string
+          last_url?: string | null
+          last_user_id?: string | null
+          sample_message: string
+          total_count?: number
+        }
+        Update: {
+          component_name?: string
+          fingerprint?: string
+          first_seen_at?: string
+          last_seen_at?: string
+          last_url?: string | null
+          last_user_id?: string | null
+          sample_message?: string
+          total_count?: number
+        }
+        Relationships: []
+      }
       gtm_event_integrations: {
         Row: {
           event_name: string
@@ -1262,6 +1295,50 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_integrations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      known_errors: {
+        Row: {
+          description: string | null
+          documented_at: string
+          documented_by: string | null
+          fingerprint: string
+          is_ignored: boolean
+          resolution: string | null
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string | null
+          documented_at?: string
+          documented_by?: string | null
+          fingerprint: string
+          is_ignored?: boolean
+          resolution?: string | null
+          severity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string | null
+          documented_at?: string
+          documented_by?: string | null
+          fingerprint?: string
+          is_ignored?: boolean
+          resolution?: string | null
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "known_errors_fingerprint_fkey"
+            columns: ["fingerprint"]
+            isOneToOne: true
+            referencedRelation: "error_fingerprints"
+            referencedColumns: ["fingerprint"]
           },
         ]
       }
@@ -3652,6 +3729,10 @@ export type Database = {
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
       cleanup_old_gtm_events: { Args: never; Returns: undefined }
       cleanup_old_health_metrics: { Args: never; Returns: number }
+      compute_error_fingerprint: {
+        Args: { p_component: string; p_message: string }
+        Returns: string
+      }
       count_real_users: { Args: never; Returns: number }
       count_real_users_since: { Args: { _since: string }; Returns: number }
       delete_user_by_id: {
@@ -3684,6 +3765,17 @@ export type Database = {
           total_runs_24h: number
         }[]
       }
+      get_error_occurrences: {
+        Args: { p_fingerprint: string; p_limit?: number }
+        Returns: {
+          created_at: string
+          error_message: string
+          id: string
+          url: string
+          user_agent: string
+          user_id: string
+        }[]
+      }
       get_quiz_for_display: {
         Args: { p_company_slug?: string; p_quiz_slug?: string }
         Returns: Json
@@ -3695,6 +3787,24 @@ export type Database = {
           table_name: string
           total_bytes: number
           total_size: string
+        }[]
+      }
+      get_top_errors: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          component_name: string
+          count_period: number
+          fingerprint: string
+          first_seen_at: string
+          is_documented: boolean
+          is_ignored: boolean
+          known_resolution: string
+          known_severity: string
+          known_title: string
+          last_seen_at: string
+          last_url: string
+          sample_message: string
+          total_count: number
         }[]
       }
       get_user_quiz_stats: {
