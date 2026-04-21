@@ -25,6 +25,7 @@ import { useAccountCreatedEvent } from "@/hooks/useAccountCreatedEvent";
 import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { supabase } from "@/integrations/supabase/client";
+import { shouldRetryQuery, queryRetryDelay } from "@/lib/queryRetry";
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
@@ -228,14 +229,22 @@ const LazyRoute = ({ Component }: { Component: React.ComponentType }) => (
   </Suspense>
 );
 
-// ✅ ITEM 4: REACT QUERY CACHE CONFIGURATION
+// ✅ ITEM 4 + ONDA 6/Etapa 4: Cache + RETRY EXPONENCIAL GLOBAL (Proteção P17)
+// - 5xx/network/timeout → até 3 tentativas com backoff (1s → 2s → 4s + jitter)
+// - 4xx (404/401/403/422) → falha imediata (não adianta retentar)
+// - mutations: 1 tentativa (escritas não devem duplicar silenciosamente)
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // ✅ Cache válido por 5 minutos
-      gcTime: 10 * 60 * 1000, // ✅ Mantém em memória por 10 min
-      refetchOnWindowFocus: false, // ✅ Não refaz ao voltar para aba
-      retry: 1, // ✅ Apenas 1 retry (ao invés de 3)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => shouldRetryQuery(failureCount, error, 3),
+      retryDelay: queryRetryDelay,
+    },
+    mutations: {
+      retry: (failureCount, error) => shouldRetryQuery(failureCount, error, 1),
+      retryDelay: queryRetryDelay,
     },
   },
 });
