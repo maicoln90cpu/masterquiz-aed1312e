@@ -10,10 +10,19 @@ export interface PhaseDistribution {
 }
 
 function distribute(total: number, base: number[], labels: { name: string; label: string; description: string }[]): PhaseDistribution['phases'] {
-  // Última fase absorve o resto para garantir soma exata
+  // Última fase absorve sobra; se base exceder o total, retira de trás pra frente.
   const counts = [...base];
-  const sumExceptLast = counts.slice(0, -1).reduce((a, b) => a + b, 0);
-  counts[counts.length - 1] = Math.max(0, total - sumExceptLast);
+  let currentSum = counts.reduce((a, b) => a + b, 0);
+  if (currentSum < total) {
+    counts[counts.length - 1] += (total - currentSum);
+  } else if (currentSum > total) {
+    let excess = currentSum - total;
+    for (let i = counts.length - 1; i >= 0 && excess > 0; i--) {
+      const take = Math.min(counts[i], excess);
+      counts[i] -= take;
+      excess -= take;
+    }
+  }
   return labels.map((l, i) => ({ ...l, count: counts[i] }));
 }
 
