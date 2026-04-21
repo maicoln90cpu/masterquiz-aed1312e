@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTable, type DataTableColumn } from './DataTable';
 import { KnownErrorDialog } from './KnownErrorDialog';
 import { fetchTopErrors, type TopErrorRow } from '@/services/topErrorsService';
+import { QueryFallback } from './QueryFallback';
 
 const severityVariant: Record<string, string> = {
   low: 'border-muted-foreground/40 text-muted-foreground',
@@ -41,7 +41,7 @@ export function TopErrorsPanel() {
   const [selected, setSelected] = useState<TopErrorRow | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['top-errors', days],
     queryFn: () => fetchTopErrors(Number(days), 50),
     staleTime: 60_000,
@@ -121,13 +121,15 @@ export function TopErrorsPanel() {
         </Select>
       </div>
 
-      {isLoading ? (
-        <Skeleton className="h-48 w-full" />
-      ) : filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-6">
-          Nenhum erro agrupado encontrado no período. 🎉
-        </p>
-      ) : (
+      <QueryFallback
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+        isEmpty={filtered.length === 0}
+        emptyMessage="Nenhum erro agrupado encontrado no período. 🎉"
+      >
         <DataTable<TopErrorRow>
           data={filtered}
           columns={columns}
@@ -150,7 +152,7 @@ export function TopErrorsPanel() {
             </Button>
           )}
         />
-      )}
+      </QueryFallback>
 
       <KnownErrorDialog
         open={dialogOpen}
