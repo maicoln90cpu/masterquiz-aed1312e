@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { invokeResilient } from '@/lib/resilientFetch';
 
 interface TestLeadInput {
   quizId: string;
@@ -68,8 +69,10 @@ export function useTestLead() {
 
       // Usar Edge Function para garantir que milestone events disparam
       const sessionId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const { data: fnData, error } = await supabase.functions.invoke('save-quiz-response', {
-        body: {
+      // 🛡️ P15: invokeResilient — perda de lead = perda de receita, retry obrigatório
+      const { data: fnData, error } = await invokeResilient<unknown>(
+        'save-quiz-response',
+        {
           quiz_id: quizId,
           session_id: sessionId,
           respondent_name: `🧪 ${finalName}`,
@@ -87,7 +90,7 @@ export function useTestLead() {
           custom_field_data: {},
           is_final: true,
         },
-      });
+      );
 
       if (error) throw error;
       // 🔒 P11 envelope: save-quiz-response devolve { ok, data: { action, id }, traceId }
