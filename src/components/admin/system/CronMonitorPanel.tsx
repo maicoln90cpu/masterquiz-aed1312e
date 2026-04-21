@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import cronParser from 'cron-parser';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Clock, AlertCircle } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { fetchCronJobs, fetchCronLogs, type CronJobRow } from '@/services/systemMonitorService';
 import { DataTable, type DataTableColumn } from './DataTable';
+import { QueryFallback } from './QueryFallback';
 
 interface CronDisplayRow {
   jobname: string;
@@ -48,7 +49,7 @@ const computeNextRun = (job: CronJobRow): { at: number; label: string } => {
 };
 
 const CronMonitorPanel = () => {
-  const { data: jobs, isLoading: loadingJobs, error: jobsError } = useQuery({
+  const { data: jobs, isLoading: loadingJobs, isError: jobsIsError, error: jobsError, isFetching: jobsFetching, refetch: refetchJobs } = useQuery({
     queryKey: ['system-monitor-cron-jobs'],
     queryFn: fetchCronJobs,
     staleTime: 60 * 1000,
@@ -81,14 +82,6 @@ const CronMonitorPanel = () => {
       };
     });
   }, [jobs, logs]);
-
-  if (jobsError) {
-    return (
-      <div className="p-4 text-sm text-destructive flex items-center gap-2">
-        <AlertCircle className="h-4 w-4" /> Falha ao carregar jobs: {(jobsError as Error).message}
-      </div>
-    );
-  }
 
   const columns: DataTableColumn<CronDisplayRow>[] = [
     {

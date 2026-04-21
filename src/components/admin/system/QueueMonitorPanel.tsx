@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Clock, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { QueryFallback } from './QueryFallback';
 
 const QueueMonitorPanel = () => {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-queue'],
     queryFn: async () => {
       const now = new Date();
@@ -43,14 +43,20 @@ const QueueMonitorPanel = () => {
     staleTime: 2 * 60 * 1000,
   });
 
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
-
   const email = data?.email ?? { pending: 0, processing: 0, sent24h: 0, failed24h: 0 };
   const whatsapp = data?.whatsapp ?? { pending: 0, sent24h: 0 };
 
   return (
     <div className="space-y-4 p-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <QueryFallback
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+      >
+        <>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card>
           <CardHeader className="pb-2 pt-3 px-3">
             <CardTitle className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Pendentes</CardTitle>
@@ -83,9 +89,9 @@ const QueueMonitorPanel = () => {
             <span className="text-2xl font-bold">{email.failed24h}</span>
           </CardContent>
         </Card>
-      </div>
+        </div>
 
-      <Table>
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">#</TableHead>
@@ -111,7 +117,9 @@ const QueueMonitorPanel = () => {
             <TableCell>-</TableCell>
           </TableRow>
         </TableBody>
-      </Table>
+        </Table>
+        </>
+      </QueryFallback>
     </div>
   );
 };
