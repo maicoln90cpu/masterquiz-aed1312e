@@ -39,8 +39,8 @@ export function OfflineBanner() {
         'fixed top-0 left-0 right-0 z-[100] px-4 py-2 text-sm font-medium',
         'flex items-center justify-center gap-2 shadow-md transition-colors',
         offline
-          ? 'bg-yellow-500/95 text-yellow-950 dark:bg-yellow-400 dark:text-yellow-950'
-          : 'bg-green-500/95 text-green-950 dark:bg-green-400 dark:text-green-950',
+          ? 'bg-warning text-warning-foreground'
+          : 'bg-success text-success-foreground',
       )}
     >
       {offline ? (
