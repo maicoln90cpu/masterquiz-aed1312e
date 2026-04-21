@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AdminSubTabs } from '@/components/admin/AdminSubTabs';
-import { Database, Layers, Zap, Clock, Cloud, Search, RefreshCw } from 'lucide-react';
+import { Database, Layers, Zap, Clock, Cloud, Search, RefreshCw, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { DBGrowthPanel } from './DBGrowthPanel';
 
 // ── Fetch real table sizes via RPC ──────────────────────────────
 interface TableSizeRow {
@@ -563,6 +564,7 @@ export const DatabaseMonitorTab = () => {
       tabs={[
         { id: 'overview', label: 'Visão Geral', icon: <Database className="h-4 w-4" />, color: 'blue' },
         { id: 'tables', label: 'Tabelas', icon: <Layers className="h-4 w-4" />, color: 'green' },
+        { id: 'growth', label: 'Crescimento', icon: <TrendingUp className="h-4 w-4" />, color: 'green' },
         { id: 'triggers', label: 'Gatilhos', icon: <Zap className="h-4 w-4" />, color: 'yellow' },
         { id: 'cron', label: 'Tarefas Agendadas', icon: <Clock className="h-4 w-4" />, color: 'orange' },
         { id: 'functions', label: 'Funções na Nuvem', icon: <Cloud className="h-4 w-4" />, color: 'purple' },
@@ -573,6 +575,7 @@ export const DatabaseMonitorTab = () => {
         <>
           {activeTab === 'overview' && <OverviewPanel />}
           {activeTab === 'tables' && <TablesPanel />}
+          {activeTab === 'growth' && <DBGrowthPanel />}
           {activeTab === 'triggers' && <TriggersPanel />}
           {activeTab === 'cron' && <CronJobsPanel />}
           {activeTab === 'functions' && <EdgeFunctionsPanel />}
