@@ -54,11 +54,16 @@ jobs:
       - name: Run distribution regression tests
         run: deno test --allow-net --allow-env supabase/functions/generate-quiz-ai/distribution_test.ts
 
-      - name: Run all edge function tests (if any)
+      - name: Run all edge function smoke tests (P12)
+        # 🔒 PROTEÇÃO P12 — todos os smoke tests Deno são obrigatórios.
+        # Cada *_test.ts em supabase/functions/ valida CORS + validação de
+        # payload + códigos de status. Se algum cair, o build quebra.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           if find supabase/functions -name "*_test.ts" -o -name "*.test.ts" | grep -q .; then
             deno test --allow-net --allow-env supabase/functions/
           else
-            echo "No additional edge function tests found"
+            echo "Nenhum teste de edge function encontrado"
           fi
-        continue-on-error: true
