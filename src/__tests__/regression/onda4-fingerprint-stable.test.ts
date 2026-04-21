@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createHash } from 'crypto';
+// @ts-expect-error - Node built-in disponível no runtime de teste (Vitest/Node)
+import { createHash } from 'node:crypto';
 
 /**
  * Regression — Onda 4 / Etapa 1: fingerprint estável de erros.
