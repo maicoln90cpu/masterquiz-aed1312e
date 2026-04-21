@@ -1504,6 +1504,48 @@ export type Database = {
         }
         Relationships: []
       }
+      metrics_hourly_rollup: {
+        Row: {
+          avg_ms: number
+          computed_at: string
+          count: number
+          hour_bucket: string
+          max_ms: number
+          operation_name: string
+          operation_type: string
+          p50_ms: number
+          p95_ms: number
+          p99_ms: number
+          slow_count: number
+        }
+        Insert: {
+          avg_ms?: number
+          computed_at?: string
+          count?: number
+          hour_bucket: string
+          max_ms?: number
+          operation_name: string
+          operation_type: string
+          p50_ms?: number
+          p95_ms?: number
+          p99_ms?: number
+          slow_count?: number
+        }
+        Update: {
+          avg_ms?: number
+          computed_at?: string
+          count?: number
+          hour_bucket?: string
+          max_ms?: number
+          operation_name?: string
+          operation_type?: string
+          p50_ms?: number
+          p95_ms?: number
+          p99_ms?: number
+          slow_count?: number
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string | null
@@ -3868,6 +3910,8 @@ export type Database = {
         }[]
       }
       record_login_event: { Args: { p_user_id: string }; Returns: undefined }
+      rollup_performance_hour: { Args: { p_hour: string }; Returns: number }
+      run_performance_rollup: { Args: never; Returns: number }
       set_profile_first_value: {
         Args: { _column: string; _value: string }
         Returns: undefined
