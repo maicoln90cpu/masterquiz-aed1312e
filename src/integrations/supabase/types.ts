@@ -109,6 +109,125 @@ export type Database = {
           },
         ]
       }
+      ai_prompt_ab_tests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          ended_at: string | null
+          hypothesis: string | null
+          id: string
+          is_active: boolean
+          mode: string
+          name: string
+          traffic_split_b: number
+          updated_at: string
+          variant_a_id: string
+          variant_b_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          ended_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          is_active?: boolean
+          mode: string
+          name: string
+          traffic_split_b?: number
+          updated_at?: string
+          variant_a_id: string
+          variant_b_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          ended_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          is_active?: boolean
+          mode?: string
+          name?: string
+          traffic_split_b?: number
+          updated_at?: string
+          variant_a_id?: string
+          variant_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_prompt_ab_tests_variant_a_id_fkey"
+            columns: ["variant_a_id"]
+            isOneToOne: false
+            referencedRelation: "ai_prompt_version_performance"
+            referencedColumns: ["version_id"]
+          },
+          {
+            foreignKeyName: "ai_prompt_ab_tests_variant_a_id_fkey"
+            columns: ["variant_a_id"]
+            isOneToOne: false
+            referencedRelation: "ai_prompt_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_prompt_ab_tests_variant_b_id_fkey"
+            columns: ["variant_b_id"]
+            isOneToOne: false
+            referencedRelation: "ai_prompt_version_performance"
+            referencedColumns: ["version_id"]
+          },
+          {
+            foreignKeyName: "ai_prompt_ab_tests_variant_b_id_fkey"
+            columns: ["variant_b_id"]
+            isOneToOne: false
+            referencedRelation: "ai_prompt_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_prompt_versions: {
+        Row: {
+          activated_at: string | null
+          archived_at: string | null
+          change_notes: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          mode: string
+          status: string
+          system_prompt: string
+          updated_at: string
+          user_prompt_template: string
+          version_label: string
+        }
+        Insert: {
+          activated_at?: string | null
+          archived_at?: string | null
+          change_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mode: string
+          status?: string
+          system_prompt: string
+          updated_at?: string
+          user_prompt_template: string
+          version_label: string
+        }
+        Update: {
+          activated_at?: string | null
+          archived_at?: string | null
+          change_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mode?: string
+          status?: string
+          system_prompt?: string
+          updated_at?: string
+          user_prompt_template?: string
+          version_label?: string
+        }
+        Relationships: []
+      }
       ai_quiz_feedback: {
         Row: {
           comment: string | null
@@ -156,6 +275,8 @@ export type Database = {
       }
       ai_quiz_generations: {
         Row: {
+          ab_test_id: string | null
+          ab_variant: string | null
           completion_tokens: number | null
           created_at: string | null
           estimated_cost_usd: number | null
@@ -164,12 +285,15 @@ export type Database = {
           input_data: Json
           model_used: string
           prompt_tokens: number | null
+          prompt_version_id: string | null
           questions_generated: number
           quiz_id: string | null
           total_tokens: number | null
           user_id: string
         }
         Insert: {
+          ab_test_id?: string | null
+          ab_variant?: string | null
           completion_tokens?: number | null
           created_at?: string | null
           estimated_cost_usd?: number | null
@@ -178,12 +302,15 @@ export type Database = {
           input_data: Json
           model_used: string
           prompt_tokens?: number | null
+          prompt_version_id?: string | null
           questions_generated: number
           quiz_id?: string | null
           total_tokens?: number | null
           user_id: string
         }
         Update: {
+          ab_test_id?: string | null
+          ab_variant?: string | null
           completion_tokens?: number | null
           created_at?: string | null
           estimated_cost_usd?: number | null
@@ -192,12 +319,35 @@ export type Database = {
           input_data?: Json
           model_used?: string
           prompt_tokens?: number | null
+          prompt_version_id?: string | null
           questions_generated?: number
           quiz_id?: string | null
           total_tokens?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_quiz_generations_ab_test_id_fkey"
+            columns: ["ab_test_id"]
+            isOneToOne: false
+            referencedRelation: "ai_prompt_ab_tests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_quiz_generations_prompt_version_id_fkey"
+            columns: ["prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "ai_prompt_version_performance"
+            referencedColumns: ["version_id"]
+          },
+          {
+            foreignKeyName: "ai_quiz_generations_prompt_version_id_fkey"
+            columns: ["prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "ai_prompt_versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -3421,6 +3571,21 @@ export type Database = {
       }
     }
     Views: {
+      ai_prompt_version_performance: {
+        Row: {
+          avg_cost_usd: number | null
+          avg_rating: number | null
+          avg_tokens: number | null
+          mode: string | null
+          pct_would_use_as_is: number | null
+          status: string | null
+          total_feedbacks: number | null
+          total_generations: number | null
+          version_id: string | null
+          version_label: string | null
+        }
+        Relationships: []
+      }
       user_activity_summary: {
         Row: {
           active_quiz_count: number | null
