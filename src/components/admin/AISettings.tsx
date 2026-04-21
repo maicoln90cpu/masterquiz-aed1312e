@@ -19,6 +19,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid, Tooltip } from "recharts";
 import { AIDistributionPreview } from "./AIDistributionPreview";
 import { AIFeedbackDashboard } from "./ai/AIFeedbackDashboard";
+import { AIPromptVersionsManager } from "./ai/prompts/AIPromptVersionsManager";
+import { AIPromptABTestsManager } from "./ai/prompts/AIPromptABTestsManager";
 
 export const AISettings = () => {
   const [loading, setLoading] = useState(true);
@@ -960,6 +962,16 @@ const CostsTab = () => {
           Feedback dos Usuários sobre a IA
         </h2>
         <AIFeedbackDashboard />
+      </div>
+
+      {/* Onda 3 — Editor de Prompts com Versionamento + A/B Test */}
+      <div className="pt-4 border-t space-y-6">
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          Versionamento de Prompts (Onda 3)
+        </h2>
+        <AIPromptVersionsManager />
+        <AIPromptABTestsManager />
       </div>
     </div>
   );
