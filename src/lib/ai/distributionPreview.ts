@@ -17,17 +17,30 @@ export interface DistributionPreview {
   phases: PhasePreview[];
 }
 
-function distribute(total: number, base: number[], labels: { name: string; label: string; description: string }[]): { name: string; label: string; description: string; count: number }[] {
+function distribute(
+  total: number,
+  base: number[],
+  labels: { name: string; label: string; description: string }[],
+  protectLastMin = 0,
+): { name: string; label: string; description: string; count: number }[] {
   const counts = [...base];
-  let currentSum = counts.reduce((a, b) => a + b, 0);
+  const currentSum = counts.reduce((a, b) => a + b, 0);
   if (currentSum < total) {
     counts[counts.length - 1] += (total - currentSum);
   } else if (currentSum > total) {
     let excess = currentSum - total;
-    for (let i = counts.length - 1; i >= 0 && excess > 0; i--) {
+    const lastIdx = counts.length - 1;
+    const removableFromLast = Math.max(0, counts[lastIdx] - protectLastMin);
+    const takeFromLast = Math.min(removableFromLast, excess);
+    counts[lastIdx] -= takeFromLast;
+    excess -= takeFromLast;
+    for (let i = lastIdx - 1; i >= 0 && excess > 0; i--) {
       const take = Math.min(counts[i], excess);
       counts[i] -= take;
       excess -= take;
+    }
+    if (excess > 0) {
+      counts[lastIdx] -= Math.min(counts[lastIdx], excess);
     }
   }
   return labels.map((l, i) => ({ ...l, count: counts[i] }));
@@ -82,7 +95,8 @@ export function calculatePreview(total: number, mode: FunnelMode): DistributionP
     else base = [3, 4, 4, 4, 2];
   }
 
-  const distributed = distribute(t, base, labels);
+  const protectLast = (mode !== 'educational' && t >= 5) ? 1 : 0;
+  const distributed = distribute(t, base, labels, protectLast);
 
   let cursor = 1;
   const phases: PhasePreview[] = distributed.map((p) => {
