@@ -358,6 +358,9 @@ REGRAS:
 
     let systemPrompt: string;
     let userPromptTemplate: string;
+    let promptVersionId: string | null = null;
+    let abTestId: string | null = null;
+    let abVariant: 'A' | 'B' | null = null;
 
     if (isEducationalMode) {
       systemPrompt = aiSystemPromptEducational;
@@ -385,6 +388,59 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
     } else {
       systemPrompt = aiSystemPromptForm;
       userPromptTemplate = aiPromptForm;
+    }
+
+    // === ONDA 3: Sobrescrever com versão ativa do banco (ou A/B test) ===
+    const promptModeKey: string =
+      isEducationalMode ? 'educational'
+      : isPdfEducational ? 'pdf_educational'
+      : isPdfTraffic ? 'pdf_traffic'
+      : isPdfMode ? 'pdf'
+      : 'form';
+
+    try {
+      // 1. Verificar se há A/B test ativo para este modo
+      const { data: abTest } = await supabaseClient
+        .from('ai_prompt_ab_tests')
+        .select('id, variant_a_id, variant_b_id, traffic_split_b')
+        .eq('mode', promptModeKey)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      let chosenVersionId: string | null = null;
+      if (abTest) {
+        // Sortear baseado no traffic_split_b
+        const roll = Math.random() * 100;
+        const useB = roll < (abTest.traffic_split_b ?? 50);
+        chosenVersionId = useB ? abTest.variant_b_id : abTest.variant_a_id;
+        abTestId = abTest.id;
+        abVariant = useB ? 'B' : 'A';
+      } else {
+        // 2. Caso contrário, buscar versão ativa simples
+        const { data: activeVersion } = await supabaseClient
+          .from('ai_prompt_versions')
+          .select('id')
+          .eq('mode', promptModeKey)
+          .eq('status', 'active')
+          .maybeSingle();
+        chosenVersionId = activeVersion?.id ?? null;
+      }
+
+      if (chosenVersionId) {
+        const { data: versionRow } = await supabaseClient
+          .from('ai_prompt_versions')
+          .select('id, system_prompt, user_prompt_template')
+          .eq('id', chosenVersionId)
+          .maybeSingle();
+        if (versionRow) {
+          systemPrompt = versionRow.system_prompt;
+          userPromptTemplate = versionRow.user_prompt_template;
+          promptVersionId = versionRow.id;
+          console.log(`${PREFIX} Using prompt version ${promptVersionId} (mode=${promptModeKey}, ab=${abVariant ?? 'none'})`);
+        }
+      }
+    } catch (versionErr) {
+      console.warn(`${PREFIX} Failed to load versioned prompt, using defaults:`, versionErr);
     }
 
     const userPrompt = replaceVariables(userPromptTemplate, requestData);
@@ -503,6 +559,9 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
         questions_generated: returned,
         prompt_tokens: promptTokens, completion_tokens: completionTokens,
         total_tokens: totalTokens, estimated_cost_usd: estimatedCostUsd,
+        prompt_version_id: promptVersionId,
+        ab_test_id: abTestId,
+        ab_variant: abVariant,
       })
       .select('id')
       .single();
