@@ -165,6 +165,7 @@ export function EmailAutomations() {
   const [filterPeriod, setFilterPeriod] = useState<string>('30');
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+  const [resending, setResending] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
