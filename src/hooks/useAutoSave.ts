@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNetworkStatus } from './useNetworkStatus';
 
-export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline';
+export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline' | 'conflict';
 
 interface AutoSaveOptions {
   /** Debounce delay in milliseconds (default: 30000 = 30s) */
