@@ -109,6 +109,51 @@ export type Database = {
           },
         ]
       }
+      ai_quiz_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          generation_id: string
+          id: string
+          model_used: string | null
+          questions_count: number | null
+          quiz_mode: string | null
+          rating: number
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+          would_use_as_is: boolean | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          generation_id: string
+          id?: string
+          model_used?: string | null
+          questions_count?: number | null
+          quiz_mode?: string | null
+          rating: number
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+          would_use_as_is?: boolean | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          generation_id?: string
+          id?: string
+          model_used?: string | null
+          questions_count?: number | null
+          quiz_mode?: string | null
+          rating?: number
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+          would_use_as_is?: boolean | null
+        }
+        Relationships: []
+      }
       ai_quiz_generations: {
         Row: {
           completion_tokens: number | null

@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid, Tooltip } from "recharts";
 import { AIDistributionPreview } from "./AIDistributionPreview";
+import { AIFeedbackDashboard } from "./ai/AIFeedbackDashboard";
 
 export const AISettings = () => {
   const [loading, setLoading] = useState(true);
@@ -951,6 +952,15 @@ const CostsTab = () => {
           Os custos reais podem variar. Gerações anteriores a esta atualização mostrarão $0.00 pois não tinham tracking de tokens.
         </AlertDescription>
       </Alert>
+
+      {/* Onda 2 — Feedback dos usuários sobre a IA */}
+      <div className="pt-4 border-t">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          Feedback dos Usuários sobre a IA
+        </h2>
+        <AIFeedbackDashboard />
+      </div>
     </div>
   );
 };

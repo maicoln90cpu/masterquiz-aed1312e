@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { AIQuizFeedbackCard } from "./feedback/AIQuizFeedbackCard";
 
 interface AIQuizGeneratorProps {
   onBack: () => void;
@@ -91,6 +92,13 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [uploadMode, setUploadMode] = useState<"form" | "pdf" | "educational">(lockedMode || "form");
+  // Onda 2 — feedback após geração bem-sucedida
+  const [feedbackInfo, setFeedbackInfo] = useState<{
+    generationId: string;
+    modelUsed: string;
+    questionsCount: number;
+    quizId: string;
+  } | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfContent, setPdfContent] = useState<string>("");
   const [isParsingPdf, setIsParsingPdf] = useState(false);
@@ -593,12 +601,21 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       }
 
       toast.success(t('components.aiGenerator.quizCreated'));
-      
-      // Express mode: go back to editor; Normal: go to quiz list
-      if (existingQuizId) {
-        onBack();
+
+      // Onda 2 — se a edge function retornou generation_id, mostrar card de feedback
+      const meta = (rawData as any)?._meta;
+      if (meta?.generation_id) {
+        setFeedbackInfo({
+          generationId: meta.generation_id,
+          modelUsed: meta.model_used || 'unknown',
+          questionsCount: meta.questions_count || quizData.questions.length,
+          quizId,
+        });
+        // não redireciona ainda — espera feedback ou skip
       } else {
-        navigate('/meus-quizzes');
+        // Sem generation_id: redireciona como antes
+        if (existingQuizId) onBack();
+        else navigate('/meus-quizzes');
       }
 
     } catch (error) {
@@ -651,6 +668,22 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
 
   return (
     <Card className="relative">
+      {feedbackInfo && (
+        <CardContent className="pt-6">
+          <AIQuizFeedbackCard
+            generationId={feedbackInfo.generationId}
+            quizMode={uploadMode === 'educational' ? 'educational' : uploadMode}
+            modelUsed={feedbackInfo.modelUsed}
+            questionsCount={feedbackInfo.questionsCount}
+            onDone={() => {
+              const info = feedbackInfo;
+              setFeedbackInfo(null);
+              if (existingQuizId) onBack();
+              else navigate('/meus-quizzes');
+            }}
+          />
+        </CardContent>
+      )}
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

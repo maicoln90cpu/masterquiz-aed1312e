@@ -495,12 +495,17 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
       }
     }
 
-    await supabaseClient.from('ai_quiz_generations').insert({
-      user_id: user.id, model_used: modelUsed, input_data: requestData,
-      questions_generated: returned,
-      prompt_tokens: promptTokens, completion_tokens: completionTokens,
-      total_tokens: totalTokens, estimated_cost_usd: estimatedCostUsd,
-    });
+    // Onda 2 — capturar generation_id para correlacionar com feedback do usuário
+    const { data: generationRow } = await supabaseClient
+      .from('ai_quiz_generations')
+      .insert({
+        user_id: user.id, model_used: modelUsed, input_data: requestData,
+        questions_generated: returned,
+        prompt_tokens: promptTokens, completion_tokens: completionTokens,
+        total_tokens: totalTokens, estimated_cost_usd: estimatedCostUsd,
+      })
+      .select('id')
+      .single();
 
     return new Response(JSON.stringify({
       ...quizData,
@@ -509,6 +514,9 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
         returned_questions: returned,
         count_mismatch: mismatchInfo.action !== 'ok',
         mismatch_action: mismatchInfo.action,
+        generation_id: generationRow?.id || null,
+        model_used: modelUsed,
+        questions_count: returned,
       },
     }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
