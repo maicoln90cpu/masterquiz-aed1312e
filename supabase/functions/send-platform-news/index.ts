@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logAutomationAttempt, finalizeAutomationLog } from '../_shared/automation-logger.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
