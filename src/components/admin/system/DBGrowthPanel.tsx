@@ -244,6 +244,7 @@ export function DBGrowthPanel() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </QueryFallback>
   );
 }
