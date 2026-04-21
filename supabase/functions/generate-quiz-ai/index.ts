@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { calculateQuestionDistribution, formatDistributionForPrompt, type FunnelMode } from './distribution.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
