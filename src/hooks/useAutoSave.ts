@@ -133,8 +133,32 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Atualizar metadados do quiz
-      const { error: quizError } = await supabase
+      // 🔒 Onda 6 — Etapa 3: Optimistic locking
+      // Lê versão remota; se primeira vez, registra. Se mudou desde a última leitura → conflito.
+      const { data: remoteRow, error: versionFetchError } = await supabase
+        .from('quizzes')
+        .select('version')
+        .eq('id', data.quizId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (versionFetchError) throw versionFetchError;
+
+      const remoteVersion = (remoteRow?.version ?? null) as number | null;
+      const localVersion = knownVersionRef.current;
+
+      // Se já tínhamos uma versão e ela está obsoleta → conflito (outra aba/dispositivo salvou)
+      if (localVersion !== null && remoteVersion !== null && remoteVersion !== localVersion) {
+        logger.warn('[AutoSave] ⚠️ Conflito de versão detectado', { localVersion, remoteVersion });
+        setStatus('conflict');
+        onConflictRef.current?.({ quizId: data.quizId, localVersion, remoteVersion });
+        return false;
+      }
+
+      // 🔒 PROTEÇÃO P16 — NÃO REMOVER `.eq('version', ...)` deste UPDATE.
+      // Optimistic locking: garante que a aba que salva é dona da versão atual,
+      // detectando edições simultâneas em outra aba/dispositivo.
+      const { error: quizError, count: updatedCount } = await supabase
         .from('quizzes')
         .update({
           title: data.title || 'Novo Quiz',
@@ -148,11 +172,23 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
           question_count: data.questionCount,
           is_public: data.isPublic,
           updated_at: new Date().toISOString()
-        })
+        }, { count: 'exact' })
         .eq('id', data.quizId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('version', remoteVersion ?? 1);
 
       if (quizError) throw quizError;
+
+      // 0 linhas afetadas com versão batendo é raro, mas indica corrida — trata como conflito
+      if (updatedCount === 0) {
+        logger.warn('[AutoSave] ⚠️ UPDATE não afetou nenhuma linha — provável conflito de versão');
+        setStatus('conflict');
+        onConflictRef.current?.({ quizId: data.quizId, localVersion, remoteVersion });
+        return false;
+      }
+
+      // Versão foi incrementada pelo trigger BEFORE UPDATE no banco → +1
+      knownVersionRef.current = (remoteVersion ?? 1) + 1;
 
       // Atualizar form config se existir
       if (data.formConfig) {
