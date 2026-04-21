@@ -39,3 +39,26 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 7
+
+  edge-function-tests:
+    name: Edge Functions (Deno)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Run distribution regression tests
+        run: deno test --allow-net --allow-env supabase/functions/generate-quiz-ai/distribution_test.ts
+
+      - name: Run all edge function tests (if any)
+        run: |
+          if find supabase/functions -name "*_test.ts" -o -name "*.test.ts" | grep -q .; then
+            deno test --allow-net --allow-env supabase/functions/
+          else
+            echo "No additional edge function tests found"
+          fi
+        continue-on-error: true
