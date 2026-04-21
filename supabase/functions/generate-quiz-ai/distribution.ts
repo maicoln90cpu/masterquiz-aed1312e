@@ -74,7 +74,7 @@ export function calculateQuestionDistribution(total: number, mode: FunnelMode): 
     else if (t <= 10) base = [2, 2, 2, 2, 1];
     else if (t <= 15) base = [2, 3, 3, 3, 2];
     else base = [3, 4, 4, 3, 2];
-    return { total: t, mode, phases: distribute(t, base, labels) };
+    return { total: t, mode, phases: distribute(t, base, labels, t >= 5 ? 1 : 0) };
   }
 
   // commercial (form / pdf infoprodutor) — funil de auto-convencimento
@@ -96,7 +96,8 @@ export function calculateQuestionDistribution(total: number, mode: FunnelMode): 
   else if (t <= 13) base = [3, 3, 2, 2, 1];
   else if (t <= 17) base = [3, 3, 3, 3, 2];
   else base = [3, 4, 4, 4, 2];
-  return { total: t, mode, phases: distribute(t, base, labels) };
+  // Protege conclusão ≥1 quando total ≥ 5 (CTA implícito é obrigatório)
+  return { total: t, mode, phases: distribute(t, base, labels, t >= 5 ? 1 : 0) };
 }
 
 /** Gera um bloco de texto pronto para injetar no prompt do usuário. */
