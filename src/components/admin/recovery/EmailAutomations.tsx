@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History, Mail, ChevronDown, ChevronLeft, ChevronRight, Activity, Send, TrendingUp, Eye, ArrowLeft, Users } from "lucide-react";
+import { Loader2, Play, RefreshCw, Clock, CheckCircle2, XCircle, Zap, BookOpen, Lightbulb, Trophy, BarChart3, Megaphone, History, Mail, ChevronDown, ChevronLeft, ChevronRight, Activity, Send, TrendingUp, Eye, ArrowLeft, Users, AlertCircle, RotateCw } from "lucide-react";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -60,6 +60,31 @@ const FREQUENCY_LABELS: Record<string, string> = {
   weekly: 'Semanal',
   monthly: 'Mensal',
   manual: 'Manual',
+  'on-event (trigger)': 'Trigger automático',
+  'on-event': 'Trigger automático',
+};
+
+/**
+ * Resolve frequência em label humano. Reconhece padrões dinâmicos:
+ * - "daily HH:mm UTC" → "Cron diário HH:mm UTC"
+ * - "on-event (trigger)" → "Trigger automático"
+ * - chaves fixas em FREQUENCY_LABELS
+ * REGRESSION SHIELD: cobre frequências dinâmicas que antes caíam no fallback "Manual".
+ */
+const resolveFrequencyLabel = (freq: string | null | undefined): string => {
+  if (!freq) return 'Manual';
+  if (FREQUENCY_LABELS[freq]) return FREQUENCY_LABELS[freq];
+  const cronMatch = freq.match(/^daily\s+(\d{1,2}:\d{2})\s*UTC$/i);
+  if (cronMatch) return `Cron diário ${cronMatch[1]} UTC`;
+  if (freq.toLowerCase().includes('on-event')) return 'Trigger automático';
+  return freq;
+};
+
+const frequencyBadgeClass = (freq: string | null | undefined): string => {
+  if (!freq) return '';
+  if (freq.toLowerCase().includes('on-event')) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (/^daily\s+\d{1,2}:\d{2}/i.test(freq)) return 'bg-green-100 text-green-700 border-green-200';
+  return '';
 };
 
 const EDGE_FUNCTION_MAP: Record<string, string> = {
@@ -75,7 +100,37 @@ const CRON_LABELS: Record<string, string> = {
   weekly_tip: 'Segunda, 10h UTC',
   success_story: 'Quinta, 10h UTC',
   monthly_summary: 'Dia 1, 9h UTC',
-  platform_news: 'Manual (sem cron)',
+  platform_news: 'Manual (curadoria humana)',
+};
+
+/**
+ * Apresentação visual dos status de log.
+ * - success → verde (envio efetivo)
+ * - skipped → amarelo (pulo intencional, ex: posts insuficientes)
+ * - error   → vermelho (falha real)
+ */
+const getStatusPresentation = (status: string) => {
+  if (status === 'success') return { label: 'Sucesso', className: 'bg-green-100 text-green-700', Icon: CheckCircle2 };
+  if (status === 'skipped') return { label: 'Pulado', className: 'bg-amber-100 text-amber-700', Icon: AlertCircle };
+  return { label: 'Erro', className: 'bg-red-100 text-red-700', Icon: XCircle };
+};
+
+/** Converte details JSON em texto legível. */
+const humanizeDetails = (log: { status: string; details: Record<string, unknown> | null; error_message: string | null }): string => {
+  if (log.error_message) return log.error_message;
+  if (!log.details) return '-';
+  const d = log.details as Record<string, unknown>;
+  if (typeof d.reason === 'string') {
+    return log.status === 'skipped' ? `Pulado: ${d.reason}` : String(d.reason);
+  }
+  if (typeof d.message === 'string') return String(d.message);
+  if (d.posts !== undefined && d.total_targets !== undefined) {
+    return `${d.posts} posts → ${d.total_targets} destinatários`;
+  }
+  if (d.segment !== undefined && d.total_targets !== undefined) {
+    return `Segmento ${d.segment} → ${d.total_targets} destinatários`;
+  }
+  return JSON.stringify(d).substring(0, 80);
 };
 
 const PERIOD_OPTIONS = [
