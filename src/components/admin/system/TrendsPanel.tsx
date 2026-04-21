@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { fetchHealthHistory } from '@/services/systemMonitorService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { QueryFallback } from './QueryFallback';
 
 const PERIOD_OPTIONS = [
   { label: '7 dias', value: 7 },
@@ -23,7 +24,7 @@ const MODULE_COLORS: Record<string, string> = {
 const TrendsPanel = () => {
   const [days, setDays] = useState(7);
 
-  const { data: raw, isLoading } = useQuery({
+  const { data: raw, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['system-monitor-trends', days],
     queryFn: () => fetchHealthHistory(days),
     staleTime: 15 * 60 * 1000,
@@ -59,8 +60,6 @@ const TrendsPanel = () => {
     }).sort((a, b) => String(a.date).localeCompare(String(b.date)));
   }, [raw]);
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
-
   return (
     <div className="space-y-4 p-4">
       <div className="flex gap-2">
@@ -76,9 +75,16 @@ const TrendsPanel = () => {
         ))}
       </div>
 
-      {chartData.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-12">Nenhum dado histórico para o período selecionado.</p>
-      ) : (
+      <QueryFallback
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFetching={isFetching}
+        onRetry={() => refetch()}
+        loadingFallback={<Skeleton className="h-64 w-full" />}
+        isEmpty={chartData.length === 0}
+        emptyMessage="Nenhum dado histórico para o período selecionado."
+      >
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -99,7 +105,7 @@ const TrendsPanel = () => {
             ))}
           </LineChart>
         </ResponsiveContainer>
-      )}
+      </QueryFallback>
     </div>
   );
 };
