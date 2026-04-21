@@ -122,7 +122,53 @@ export const AISettings = () => {
   }
 
   return (
-    <SettingsTab settings={settings} setSettings={setSettings} saveSettings={saveSettings} saving={saving} />
+    <Tabs defaultValue="settings" className="space-y-4">
+      <TabsList className="flex-wrap h-auto">
+        <TabsTrigger value="settings" className="flex items-center gap-1">
+          <Sparkles className="h-4 w-4" /> Configurações
+        </TabsTrigger>
+        <TabsTrigger value="versions" className="flex items-center gap-1">
+          <Brain className="h-4 w-4" /> Versionamento & A/B (Onda 3)
+        </TabsTrigger>
+        <TabsTrigger value="feedback" className="flex items-center gap-1">
+          <TrendingUp className="h-4 w-4" /> Feedback (Onda 2)
+        </TabsTrigger>
+        <TabsTrigger value="costs" className="flex items-center gap-1">
+          <Coins className="h-4 w-4" /> Custos & Uso
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="settings">
+        <SettingsTab settings={settings} setSettings={setSettings} saveSettings={saveSettings} saving={saving} />
+      </TabsContent>
+
+      <TabsContent value="versions">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                Versionamento de Prompts & A/B Test
+              </CardTitle>
+              <CardDescription>
+                Crie versões dos prompts de IA, ative-as sem precisar de deploy e rode testes A/B
+                para validar melhorias com dados reais (cruzados com o feedback da Onda 2).
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <AIPromptVersionsManager />
+          <AIPromptABTestsManager />
+        </div>
+      </TabsContent>
+
+      <TabsContent value="feedback">
+        <AIFeedbackDashboard />
+      </TabsContent>
+
+      <TabsContent value="costs">
+        <CostsTab />
+      </TabsContent>
+    </Tabs>
   );
 };
 
