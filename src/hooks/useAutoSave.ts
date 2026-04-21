@@ -89,6 +89,22 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     };
   }, []);
 
+  // 🛡️ Onda 6 — Etapa 2: flush automático ao voltar online.
+  // Se há dado pendente, dispara performSave em ~2s (delay para a rede estabilizar).
+  // Antes: pendente ficava parado até o próximo edit do usuário.
+  useEffect(() => {
+    if (!wentOnlineAt) return;
+    if (!pendingDataRef.current) return;
+    const t = setTimeout(() => {
+      if (pendingDataRef.current) {
+        logger.log('[AutoSave] 🔄 Voltou online — flushing pendência');
+        performSave(pendingDataRef.current);
+      }
+    }, 2000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wentOnlineAt]);
+
   // Função que efetivamente salva no Supabase — deps estáveis via refs
   const performSave = useCallback(async (data: AutoSaveData): Promise<boolean> => {
     if (!data.quizId || isSavingRef.current) return false;

@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { ReactNode, lazy, Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -289,6 +290,7 @@ const App = () => (
             <WebVitalsProvider>
               <Toaster />
               <Sonner />
+              <OfflineBanner />
               <SupportModeBanner />
             <BrowserRouter>
               <Routes>
