@@ -107,7 +107,7 @@ export const AIDistributionPreview = () => {
                   {sum === total ? '✅ bate com o total' : '⚠️ não bate'}
                 </span>
                 {m === 'commercial' && !hasConclusion && (
-                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                  <span className="flex items-center gap-1 text-destructive">
                     <AlertTriangle className="h-3 w-3" />
                     Sem fase de conclusão — quiz pode terminar sem CTA
                   </span>
