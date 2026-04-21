@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeResilient } from '@/lib/resilientFetch';
 import { useWebVitals } from './useWebVitals';
 import { useQueryPerformance } from './useQueryPerformance';
 import { useCSPMonitor } from './useCSPMonitor';
@@ -195,9 +196,11 @@ export const useSystemHealth = () => {
         // Web Vitals would be collected separately
       };
 
-      const { data, error } = await supabase.functions.invoke('system-health-check', {
-        body: { metrics: clientMetrics }
-      });
+      // 🛡️ P15: timeout 15s + 3 retries com backoff + circuit breaker
+      const { data, error } = await invokeResilient<HealthReport>(
+        'system-health-check',
+        { metrics: clientMetrics },
+      );
 
       if (error) {
         throw new Error(error.message || 'Health check failed');
