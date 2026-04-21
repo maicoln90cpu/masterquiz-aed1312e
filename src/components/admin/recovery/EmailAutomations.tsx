@@ -761,12 +761,16 @@ export function EmailAutomations() {
                       <TableHead>Emails</TableHead>
                       <TableHead>Data</TableHead>
                       <TableHead>Detalhes</TableHead>
+                      <TableHead className="w-[110px]">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paginatedLogs.map(log => {
                       const auto = automations.find(a => a.automation_key === log.automation_key);
                       const isExpanded = expandedLogId === log.id;
+                      const presentation = getStatusPresentation(log.status);
+                      const StatusIcon = presentation.Icon;
+                      const canResend = log.status === 'error' || log.status === 'skipped';
                       return (
                         <>
                           <TableRow key={log.id} className="cursor-pointer" onClick={() => setExpandedLogId(isExpanded ? null : log.id)}>
@@ -779,15 +783,9 @@ export function EmailAutomations() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {log.status === 'success' ? (
-                                <Badge className="bg-green-100 text-green-700 text-xs">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />Sucesso
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-red-100 text-red-700 text-xs">
-                                  <XCircle className="h-3 w-3 mr-1" />Erro
-                                </Badge>
-                              )}
+                              <Badge className={`${presentation.className} text-xs`}>
+                                <StatusIcon className="h-3 w-3 mr-1" />{presentation.label}
+                              </Badge>
                             </TableCell>
                             <TableCell className="font-medium">{log.emails_sent}</TableCell>
                             <TableCell className="text-xs text-muted-foreground">
@@ -796,15 +794,33 @@ export function EmailAutomations() {
                             <TableCell className="text-xs">
                               <div className="flex items-center gap-1">
                                 <span className="max-w-[200px] truncate text-muted-foreground">
-                                  {log.error_message || (log.details ? JSON.stringify(log.details).substring(0, 60) : '-')}
+                                  {humanizeDetails(log)}
                                 </span>
                                 <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                               </div>
                             </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              {canResend && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs"
+                                  disabled={resending === log.id}
+                                  onClick={() => handleResend(log)}
+                                >
+                                  {resending === log.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  ) : (
+                                    <RotateCw className="h-3 w-3 mr-1" />
+                                  )}
+                                  Reenviar
+                                </Button>
+                              )}
+                            </TableCell>
                           </TableRow>
                           {isExpanded && (
                             <TableRow key={`${log.id}-details`}>
-                              <TableCell colSpan={5}>
+                              <TableCell colSpan={6}>
                                 <div className="p-3 bg-muted rounded text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
                                   {log.error_message && (
                                     <div className="text-destructive mb-2">Erro: {log.error_message}</div>
