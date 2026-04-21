@@ -51,6 +51,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     onSaveStart,
     onSaveComplete,
     onSaveError,
+    onConflict,
     showToast = false
   } = options;
 
@@ -62,16 +63,20 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const pendingDataRef = useRef<AutoSaveData | null>(null);
   const isSavingRef = useRef(false);
   const lastSavedSnapshotRef = useRef<string>('');
+  // 🔒 Onda 6 — Etapa 3: versão conhecida do quiz (optimistic locking)
+  const knownVersionRef = useRef<number | null>(null);
 
   // ✅ Refs para callbacks — estabiliza performSave/scheduleAutoSave
   const onSaveStartRef = useRef(onSaveStart);
   const onSaveCompleteRef = useRef(onSaveComplete);
   const onSaveErrorRef = useRef(onSaveError);
+  const onConflictRef = useRef(onConflict);
   const showToastRef = useRef(showToast);
 
   useEffect(() => { onSaveStartRef.current = onSaveStart; }, [onSaveStart]);
   useEffect(() => { onSaveCompleteRef.current = onSaveComplete; }, [onSaveComplete]);
   useEffect(() => { onSaveErrorRef.current = onSaveError; }, [onSaveError]);
+  useEffect(() => { onConflictRef.current = onConflict; }, [onConflict]);
   useEffect(() => { showToastRef.current = showToast; }, [showToast]);
 
   // 🛡️ Onda 6 — Etapa 2: usa fonte única de verdade
