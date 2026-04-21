@@ -122,7 +122,53 @@ export const AISettings = () => {
   }
 
   return (
-    <SettingsTab settings={settings} setSettings={setSettings} saveSettings={saveSettings} saving={saving} />
+    <Tabs defaultValue="settings" className="space-y-4">
+      <TabsList className="flex-wrap h-auto">
+        <TabsTrigger value="settings" className="flex items-center gap-1">
+          <Sparkles className="h-4 w-4" /> Configurações
+        </TabsTrigger>
+        <TabsTrigger value="versions" className="flex items-center gap-1">
+          <Brain className="h-4 w-4" /> Versionamento & A/B (Onda 3)
+        </TabsTrigger>
+        <TabsTrigger value="feedback" className="flex items-center gap-1">
+          <TrendingUp className="h-4 w-4" /> Feedback (Onda 2)
+        </TabsTrigger>
+        <TabsTrigger value="costs" className="flex items-center gap-1">
+          <Coins className="h-4 w-4" /> Custos & Uso
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="settings">
+        <SettingsTab settings={settings} setSettings={setSettings} saveSettings={saveSettings} saving={saving} />
+      </TabsContent>
+
+      <TabsContent value="versions">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                Versionamento de Prompts & A/B Test
+              </CardTitle>
+              <CardDescription>
+                Crie versões dos prompts de IA, ative-as sem precisar de deploy e rode testes A/B
+                para validar melhorias com dados reais (cruzados com o feedback da Onda 2).
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <AIPromptVersionsManager />
+          <AIPromptABTestsManager />
+        </div>
+      </TabsContent>
+
+      <TabsContent value="feedback">
+        <AIFeedbackDashboard />
+      </TabsContent>
+
+      <TabsContent value="costs">
+        <CostsTab />
+      </TabsContent>
+    </Tabs>
   );
 };
 
@@ -954,25 +1000,6 @@ const CostsTab = () => {
           Os custos reais podem variar. Gerações anteriores a esta atualização mostrarão $0.00 pois não tinham tracking de tokens.
         </AlertDescription>
       </Alert>
-
-      {/* Onda 2 — Feedback dos usuários sobre a IA */}
-      <div className="pt-4 border-t">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          Feedback dos Usuários sobre a IA
-        </h2>
-        <AIFeedbackDashboard />
-      </div>
-
-      {/* Onda 3 — Editor de Prompts com Versionamento + A/B Test */}
-      <div className="pt-4 border-t space-y-6">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          Versionamento de Prompts (Onda 3)
-        </h2>
-        <AIPromptVersionsManager />
-        <AIPromptABTestsManager />
-      </div>
     </div>
   );
 };
