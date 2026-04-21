@@ -26,7 +26,7 @@ export interface ErrorOccurrence {
   error_message: string;
   url: string | null;
   user_id: string | null;
-  stack_trace: string | null;
+  user_agent: string | null;
 }
 
 export type KnownErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
