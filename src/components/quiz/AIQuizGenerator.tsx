@@ -92,6 +92,13 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [uploadMode, setUploadMode] = useState<"form" | "pdf" | "educational">(lockedMode || "form");
+  // Onda 2 — feedback após geração bem-sucedida
+  const [feedbackInfo, setFeedbackInfo] = useState<{
+    generationId: string;
+    modelUsed: string;
+    questionsCount: number;
+    quizId: string;
+  } | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfContent, setPdfContent] = useState<string>("");
   const [isParsingPdf, setIsParsingPdf] = useState(false);
