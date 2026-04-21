@@ -1000,25 +1000,6 @@ const CostsTab = () => {
           Os custos reais podem variar. Gerações anteriores a esta atualização mostrarão $0.00 pois não tinham tracking de tokens.
         </AlertDescription>
       </Alert>
-
-      {/* Onda 2 — Feedback dos usuários sobre a IA */}
-      <div className="pt-4 border-t">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          Feedback dos Usuários sobre a IA
-        </h2>
-        <AIFeedbackDashboard />
-      </div>
-
-      {/* Onda 3 — Editor de Prompts com Versionamento + A/B Test */}
-      <div className="pt-4 border-t space-y-6">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          Versionamento de Prompts (Onda 3)
-        </h2>
-        <AIPromptVersionsManager />
-        <AIPromptABTestsManager />
-      </div>
     </div>
   );
 };
