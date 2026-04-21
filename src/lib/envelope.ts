@@ -24,18 +24,24 @@ export const EnvelopeErrorCodeSchema = z.enum([
   'INTERNAL_ERROR',
 ]);
 
-export const EnvelopeSuccessSchema = z.object({
-  ok: z.literal(true),
-  // `data` é obrigatório; aceitamos qualquer valor, mas a chave precisa estar presente.
-  data: z.unknown().refine((_v, ctx) => {
-    // Zod só chama refine se a chave existe no objeto pai → presença garantida.
-    return true;
-  }),
-  traceId: z.string().min(1),
-}).refine((obj) => 'data' in obj, {
-  message: 'data é obrigatório no envelope de sucesso',
-  path: ['data'],
-});
+// Zod trata `z.unknown()` como opcional. Para exigir a chave `data` presente,
+// usamos `z.any()` + `superRefine` no objeto raiz. Mantém compatibilidade com
+// `discriminatedUnion('ok', [...])`.
+export const EnvelopeSuccessSchema = z
+  .object({
+    ok: z.literal(true),
+    data: z.any(),
+    traceId: z.string().min(1),
+  })
+  .superRefine((obj, ctx) => {
+    if (!('data' in obj)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['data'],
+        message: 'data é obrigatório no envelope de sucesso',
+      });
+    }
+  });
 
 export const EnvelopeErrorSchema = z.object({
   ok: z.literal(false),
