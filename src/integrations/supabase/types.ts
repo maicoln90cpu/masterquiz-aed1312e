@@ -2867,6 +2867,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_milestones: {
+        Row: {
+          fired_at: string
+          id: string
+          metadata: Json | null
+          milestone_name: string
+          user_id: string
+        }
+        Insert: {
+          fired_at?: string
+          id?: string
+          metadata?: Json | null
+          milestone_name: string
+          user_id: string
+        }
+        Update: {
+          fired_at?: string
+          id?: string
+          metadata?: Json | null
+          milestone_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_activity_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_onboarding: {
         Row: {
           analytics_tour_completed: boolean | null
