@@ -49,7 +49,7 @@ interface VersionPerformance {
 }
 
 const statusBadge = (status: string) => {
-  if (status === "active") return <Badge className="bg-green-500/10 text-green-700 border-green-500/30">Ativa</Badge>;
+  if (status === "active") return <Badge className="bg-success/10 text-success border-success/30">Ativa</Badge>;
   if (status === "draft") return <Badge variant="secondary">Rascunho</Badge>;
   return <Badge variant="outline" className="text-muted-foreground">Arquivada</Badge>;
 };
@@ -280,7 +280,7 @@ export const AIPromptVersionsManager = () => {
                           <Button variant="ghost" size="icon" onClick={() => handleDuplicate(v)} title="Duplicar"><Copy className="h-4 w-4" /></Button>
                           {v.status !== "active" && (
                             <Button variant="ghost" size="icon" onClick={() => activateMutation.mutate(v.id)} title="Ativar">
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              <CheckCircle2 className="h-4 w-4 text-success" />
                             </Button>
                           )}
                           {v.status === "draft" && (
