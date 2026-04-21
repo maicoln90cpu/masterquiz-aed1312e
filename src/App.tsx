@@ -26,7 +26,7 @@ import { usePlanUpgradeEvent } from "@/hooks/usePlanUpgradeEvent";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { supabase } from "@/integrations/supabase/client";
 import { shouldRetryQuery, queryRetryDelay } from "@/lib/queryRetry";
-import { logQueryRetishExhausted_PLACEHOLDER } from "@/lib/queryRetry"; // placeholder removed
+import { logQueryRetryExhausted } from "@/lib/logRetryExhaustion";
 
 // ✅ Lazy com retry automático + tratamento robusto para erros de cache/rede
 const lazyWithRetry = (
@@ -234,7 +234,23 @@ const LazyRoute = ({ Component }: { Component: React.ComponentType }) => (
 // - 5xx/network/timeout → até 3 tentativas com backoff (1s → 2s → 4s + jitter)
 // - 4xx (404/401/403/422) → falha imediata (não adianta retentar)
 // - mutations: 1 tentativa (escritas não devem duplicar silenciosamente)
+// QueryCache global onError → loga retries esgotados em client_error_logs (Onda 6 / Etapa 4 estendida)
+const queryCache = new QueryCache({
+  onError: (error, query) => {
+    const failureCount = query.state.fetchFailureCount;
+    if (failureCount >= 3) {
+      logQueryRetryExhausted({
+        queryKey: query.queryKey,
+        error,
+        failureCount,
+        maxAttempts: 3,
+      });
+    }
+  },
+});
+
 const queryClient = new QueryClient({
+  queryCache,
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
