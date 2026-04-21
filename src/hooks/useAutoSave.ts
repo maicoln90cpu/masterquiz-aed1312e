@@ -17,6 +17,8 @@ interface AutoSaveOptions {
   onSaveComplete?: () => void;
   /** Callback when save fails */
   onSaveError?: (error: Error) => void;
+  /** Callback when a version conflict is detected (other tab/device modified the quiz) */
+  onConflict?: (info: { quizId: string; localVersion: number | null; remoteVersion: number | null }) => void;
   /** Show toast notifications (default: false for autosave) */
   showToast?: boolean;
 }
