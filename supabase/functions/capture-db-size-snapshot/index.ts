@@ -59,11 +59,11 @@ Deno.serve(async (req) => {
     // 3) Buscar threshold configurável
     const { data: setting } = await supabase
       .from('system_settings')
-      .select('value')
-      .eq('key', 'db_size_alert_threshold_mb')
+      .select('setting_value')
+      .eq('setting_key', 'db_size_alert_threshold_mb')
       .maybeSingle();
 
-    const thresholdMb = Number(setting?.value ?? DEFAULT_THRESHOLD_MB);
+    const thresholdMb = Number(setting?.setting_value ?? DEFAULT_THRESHOLD_MB);
     const thresholdBytes = thresholdMb * 1024 * 1024;
     const totalMb = Math.round(totalBytes / 1024 / 1024);
 
