@@ -90,7 +90,10 @@ export function useTestLead() {
       });
 
       if (error) throw error;
-      const lead = fnData as { id?: string };
+      // 🔒 P11 envelope: save-quiz-response devolve { ok, data: { action, id }, traceId }
+      const lead = (fnData && typeof fnData === 'object' && 'data' in fnData
+        ? (fnData as { data?: { id?: string } }).data
+        : (fnData as { id?: string })) || {};
 
       // 🎯 GTM: test_lead_generated
       const { pushGTMEvent } = await import('@/lib/gtmLogger');
