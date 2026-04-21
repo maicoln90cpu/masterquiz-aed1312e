@@ -20,7 +20,6 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 describe('useAutoSave — Optimistic Locking (P16)', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
     vi.clearAllMocks();
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: { id: 'user-1' } },
@@ -29,7 +28,7 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   /** Helper: monta o builder encadeado do supabase mockado */
@@ -62,14 +61,10 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
     const mocks = buildQuizMock({ selectVersion: 3, updateCount: 1 });
     vi.mocked(supabase.from).mockReturnValue(mocks.from as any);
 
-    const { result } = renderHook(() => useAutoSave({ debounceMs: 100 }));
+    const { result } = renderHook(() => useAutoSave({ debounceMs: 10 }));
 
     act(() => {
       result.current.scheduleAutoSave({ quizId: 'q-1', title: 'Hello' });
-    });
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
     });
 
     await waitFor(() => {
@@ -83,7 +78,7 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
     vi.mocked(supabase.from).mockReturnValue(mocks.from as any);
 
     const { result } = renderHook(() =>
-      useAutoSave({ debounceMs: 100, onConflict })
+      useAutoSave({ debounceMs: 10, onConflict })
     );
 
     // Simula carga inicial: versão local = 3
@@ -93,10 +88,6 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
 
     act(() => {
       result.current.scheduleAutoSave({ quizId: 'q-1', title: 'Edit' });
-    });
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
     });
 
     await waitFor(() => {
@@ -118,15 +109,11 @@ describe('useAutoSave — Optimistic Locking (P16)', () => {
     vi.mocked(supabase.from).mockReturnValue(mocks.from as any);
 
     const { result } = renderHook(() =>
-      useAutoSave({ debounceMs: 100, onConflict })
+      useAutoSave({ debounceMs: 10, onConflict })
     );
 
     act(() => {
       result.current.scheduleAutoSave({ quizId: 'q-1', title: 'Hello' });
-    });
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
     });
 
     await waitFor(() => {
