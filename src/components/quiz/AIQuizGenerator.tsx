@@ -601,12 +601,21 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
       }
 
       toast.success(t('components.aiGenerator.quizCreated'));
-      
-      // Express mode: go back to editor; Normal: go to quiz list
-      if (existingQuizId) {
-        onBack();
+
+      // Onda 2 — se a edge function retornou generation_id, mostrar card de feedback
+      const meta = (rawData as any)?._meta;
+      if (meta?.generation_id) {
+        setFeedbackInfo({
+          generationId: meta.generation_id,
+          modelUsed: meta.model_used || 'unknown',
+          questionsCount: meta.questions_count || quizData.questions.length,
+          quizId,
+        });
+        // não redireciona ainda — espera feedback ou skip
       } else {
-        navigate('/meus-quizzes');
+        // Sem generation_id: redireciona como antes
+        if (existingQuizId) onBack();
+        else navigate('/meus-quizzes');
       }
 
     } catch (error) {
