@@ -22,55 +22,56 @@ async function callFunction(body: Record<string, unknown>) {
 
 // ─── Validation tests ───────────────────────────────────
 
-Deno.test("returns 400 when quiz_id is missing", async () => {
+// 🔒 P11 envelope: { ok:false, error:{code,message}, traceId }
+
+Deno.test("returns 400 + VALIDATION_FAILED when quiz_id is missing", async () => {
   const { status, data } = await callFunction({ session_id: "test-session" });
   assertEquals(status, 400);
-  assertExists(data.error);
+  assertEquals(data.ok, false);
+  assertEquals(data.error.code, "VALIDATION_FAILED");
+  assertExists(data.traceId);
 });
 
-Deno.test("returns 400 when session_id is missing", async () => {
+Deno.test("returns 400 + VALIDATION_FAILED when session_id is missing", async () => {
   const { status, data } = await callFunction({ quiz_id: "fake-quiz-id" });
   assertEquals(status, 400);
-  assertExists(data.error);
+  assertEquals(data.ok, false);
+  assertEquals(data.error.code, "VALIDATION_FAILED");
+  assertExists(data.traceId);
 });
 
-Deno.test("returns 404 for non-existent quiz", async () => {
+Deno.test("returns 404 + NOT_FOUND for non-existent quiz", async () => {
   const { status, data } = await callFunction({
     quiz_id: "00000000-0000-0000-0000-000000000000",
     session_id: "test-session-404",
   });
   assertEquals(status, 404);
-  assertExists(data.error);
+  assertEquals(data.ok, false);
+  assertEquals(data.error.code, "NOT_FOUND");
+  assertExists(data.traceId);
 });
 
 // ─── Milestone logic tests (integration) ────────────────
 
 Deno.test("test lead (_is_test_lead) should NOT trigger first_lead_received", async () => {
-  // This test validates that test leads are filtered out.
-  // We send a response with _is_test_lead=true and verify no milestone is created.
-  // Note: requires a real quiz in the DB. If quiz doesn't exist, we get 404 which is expected.
   const { status, data } = await callFunction({
     quiz_id: "00000000-0000-0000-0000-000000000000",
     session_id: `test-lead-filter-${Date.now()}`,
     respondent_email: "test@test.com",
     answers: { _is_test_lead: true },
   });
-  // Should return 404 since quiz doesn't exist — the milestone logic is never reached
-  // This confirms the guard order: quiz validation happens BEFORE milestone checks
   assertEquals(status, 404);
-  assertExists(data.error);
+  assertEquals(data.error.code, "NOT_FOUND");
 });
 
 Deno.test("response without contact info should NOT count as lead", async () => {
-  // Responses without email or whatsapp should not trigger first_lead_received
   const { status, data } = await callFunction({
     quiz_id: "00000000-0000-0000-0000-000000000000",
     session_id: `no-contact-${Date.now()}`,
     answers: { q1: "answer1" },
-    // No respondent_email or respondent_whatsapp
   });
-  assertEquals(status, 404); // Quiz doesn't exist, but validates the payload is accepted
-  assertExists(data.error);
+  assertEquals(status, 404);
+  assertEquals(data.error.code, "NOT_FOUND");
 });
 
 Deno.test("CORS headers are present in response", async () => {

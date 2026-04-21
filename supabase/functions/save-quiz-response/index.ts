@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,8 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const traceId = getTraceId(req);
 
   try {
     const supabase = createClient(
@@ -30,9 +33,11 @@ Deno.serve(async (req) => {
     } = body;
 
     if (!quiz_id || !session_id) {
-      return new Response(
-        JSON.stringify({ error: 'quiz_id and session_id are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      return errorResponse(
+        'VALIDATION_FAILED',
+        'quiz_id and session_id are required',
+        traceId,
+        corsHeaders
       );
     }
 
@@ -44,10 +49,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!quiz) {
-      return new Response(
-        JSON.stringify({ error: 'Quiz not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('NOT_FOUND', 'Quiz not found', traceId, corsHeaders);
     }
 
     // Check if response already exists for this session (service_role bypasses RLS)
@@ -297,15 +299,13 @@ Deno.serve(async (req) => {
       console.warn('[save-quiz-response] Milestone check failed:', milestoneErr);
     }
 
-    return new Response(
-      JSON.stringify({ success: true, action: existing ? 'updated' : 'inserted', id: responseId }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    return okResponse(
+      { action: existing ? 'updated' : 'inserted', id: responseId },
+      traceId,
+      corsHeaders
     );
   } catch (error) {
     console.error('[save-quiz-response] Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Unable to save response' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', 'Unable to save response', traceId, corsHeaders);
   }
 });

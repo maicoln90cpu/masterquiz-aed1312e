@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +20,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  const traceId = getTraceId(req);
 
   try {
     const supabase = createClient(
@@ -120,22 +123,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
+    return okResponse(
+      {
         snapshot_id: snap.id,
         total_mb: totalMb,
         threshold_mb: thresholdMb,
         alerts,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      },
+      traceId,
+      corsHeaders
     );
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     console.error('[capture-db-size-snapshot] error', message);
-    return new Response(JSON.stringify({ error: message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    });
+    return errorResponse('INTERNAL_ERROR', message, traceId, corsHeaders);
   }
 });
