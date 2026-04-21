@@ -559,6 +559,9 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
         questions_generated: returned,
         prompt_tokens: promptTokens, completion_tokens: completionTokens,
         total_tokens: totalTokens, estimated_cost_usd: estimatedCostUsd,
+        prompt_version_id: promptVersionId,
+        ab_test_id: abTestId,
+        ab_variant: abVariant,
       })
       .select('id')
       .single();
