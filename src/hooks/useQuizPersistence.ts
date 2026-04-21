@@ -110,6 +110,7 @@ export function useQuizPersistence({
     scheduleAutoSave,
     saveNow: saveAutoSaveNow,
     markAsSaved,
+    setKnownVersion,
     isSaving: isSavingDraft
   } = useAutoSave({
     debounceMs: 30000,
@@ -117,6 +118,18 @@ export function useQuizPersistence({
     showToast: false,
     onSaveComplete: onSaveCompleteStable,
     onSaveError: onSaveErrorStable,
+    onConflict: ({ quizId: cQuizId, localVersion, remoteVersion }) => {
+      logger.warn('[AutoSave] ⚠️ Conflito detectado — pedindo recarga', { cQuizId, localVersion, remoteVersion });
+      // Confirma com o usuário antes de recarregar — preserva edições não salvas se ele cancelar
+      const ok = window.confirm(
+        'Outra aba ou dispositivo modificou este quiz.\n\n' +
+        'Para evitar sobrescrever as alterações, é necessário recarregar a página.\n\n' +
+        'Deseja recarregar agora? (Cancelar mantém você nesta tela, mas o salvamento permanecerá bloqueado)'
+      );
+      if (ok) {
+        window.location.reload();
+      }
+    },
   });
 
   // ✅ Persistir estado em localStorage E agendar autosave no Supabase
@@ -221,6 +234,9 @@ export function useQuizPersistence({
         .single();
 
       if (quizError) throw quizError;
+
+      // 🔒 Onda 6 — Etapa 3: registra versão atual para optimistic locking
+      setKnownVersion(((quiz as any).version ?? 1) as number);
 
       const { data: questionsData } = await supabase
         .from('quiz_questions')
