@@ -10,10 +10,10 @@ import { KnownErrorDialog } from './KnownErrorDialog';
 import { fetchTopErrors, type TopErrorRow } from '@/services/topErrorsService';
 
 const severityVariant: Record<string, string> = {
-  low: 'bg-blue-500/15 text-blue-600 border-blue-500/30',
-  medium: 'bg-yellow-500/15 text-yellow-700 border-yellow-500/30',
-  high: 'bg-orange-500/15 text-orange-700 border-orange-500/30',
-  critical: 'bg-red-500/15 text-red-700 border-red-500/30',
+  low: 'border-muted-foreground/40 text-muted-foreground',
+  medium: 'border-yellow-500/60 text-yellow-700 dark:text-yellow-500',
+  high: 'border-orange-500/60 text-orange-700 dark:text-orange-500',
+  critical: 'border-destructive text-destructive',
 };
 
 function StatusBadge({ row }: { row: TopErrorRow }) {
@@ -21,9 +21,9 @@ function StatusBadge({ row }: { row: TopErrorRow }) {
     return <Badge variant="outline" className="text-muted-foreground">Ignorado</Badge>;
   }
   if (row.is_documented) {
-    return <Badge variant="outline" className="border-green-500 text-green-600">Documentado</Badge>;
+    return <Badge variant="outline" className="border-green-500/60 text-green-700 dark:text-green-500">Documentado</Badge>;
   }
-  return <Badge variant="outline" className="border-red-500 text-red-600">Novo</Badge>;
+  return <Badge variant="outline" className="border-destructive text-destructive">Novo</Badge>;
 }
 
 function SeverityBadge({ severity }: { severity: string | null }) {
