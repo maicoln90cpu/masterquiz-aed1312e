@@ -779,6 +779,30 @@ export type Database = {
           },
         ]
       }
+      db_size_snapshots: {
+        Row: {
+          captured_at: string
+          id: string
+          top_tables: Json
+          total_bytes: number
+          total_rows: number
+        }
+        Insert: {
+          captured_at?: string
+          id?: string
+          top_tables?: Json
+          total_bytes?: number
+          total_rows?: number
+        }
+        Update: {
+          captured_at?: string
+          id?: string
+          top_tables?: Json
+          total_bytes?: number
+          total_rows?: number
+        }
+        Relationships: []
+      }
       email_automation_config: {
         Row: {
           automation_key: string
