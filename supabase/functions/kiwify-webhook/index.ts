@@ -1,8 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { claimEvent, markEventProcessed, markEventFailed } from '../_shared/idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kiwify-token',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kiwify-token, x-trace-id',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Content-Type-Options': 'nosniff',
 };
@@ -53,8 +54,16 @@ function extractPayloadData(body: any) {
   // Subscription plan name (e.g. "Partner")
   const subscription = order.Subscription || order.subscription || {};
   const planName = subscription.plan?.name || subscription.plan_name || undefined;
-  
-  return { evento, buyerEmail, produto, planName, customer };
+
+  // Identificador único para idempotência (P19)
+  // Prioridade: webhook_event_id > order_id+status > order_ref+status
+  const orderId = order.order_id || order.id || order.order_ref || body.order_id || body.id;
+  const eventId =
+    order.webhook_event_id ||
+    body.webhook_event_id ||
+    (orderId ? `${orderId}:${evento}` : null);
+
+  return { evento, buyerEmail, produto, planName, customer, eventId };
 }
 
 Deno.serve(async (req) => {
