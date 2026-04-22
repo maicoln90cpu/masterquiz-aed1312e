@@ -284,7 +284,13 @@ export default function AdminDashboard() {
   }, [planFilter, userSearchQuery]);
 
   // ✅ Use TanStack Query for better caching and performance
-  const { data: allUsersData, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
+  const {
+    data: allUsersData,
+    isLoading: isLoadingUsers,
+    isError: isUsersError,
+    error: usersError,
+    refetch: refetchUsers,
+  } = useQuery({
     queryKey: ['admin-all-users'],
     queryFn: async () => {
       // Painel master é crítico: não mascarar falha transitória com circuit breaker aberto.
@@ -957,12 +963,18 @@ export default function AdminDashboard() {
         </div>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {isLoadingUsers ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
+        ) : isUsersError ? (
+          <ErrorState
+            title="Não foi possível carregar os usuários"
+            message={(usersError as Error)?.message || 'Falha ao buscar dados administrativos'}
+            onRetry={() => void refetchUsers()}
+          />
         ) : filteredAdministrators.length === 0 ? (
           <p className="text-muted-foreground">{userSearchQuery ? 'Nenhum usuário encontrado para esta pesquisa' : t('admin.noUsersFiltered')}</p>
         ) : (
@@ -1251,7 +1263,15 @@ export default function AdminDashboard() {
         </div>
       </CardHeader>
       <CardContent>
-        {allUsers.length === 0 ? (
+        {respondentsError ? (
+          <ErrorState
+            title="Não foi possível carregar os respondentes"
+            message={respondentsError}
+            onRetry={() => void loadData()}
+          />
+        ) : loading ? (
+          <PageLoading variant="skeleton" rows={4} />
+        ) : allUsers.length === 0 ? (
           <p className="text-muted-foreground">Nenhum usuário encontrado</p>
         ) : (
           <>
