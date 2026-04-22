@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,29 +9,30 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    const { data: settings } = await supabase.from('recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('recovery_settings').select('*').maybeSingle();
     if (!settings?.is_active || !settings?.is_connected) {
-      return new Response(JSON.stringify({ message: 'Sistema inativo', sent: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Sistema inativo', sent: 0 }, traceId, corsHeaders);
     }
 
     const apiUrl = (settings.evolution_api_url || Deno.env.get('EVOLUTION_API_URL') || '').trim();
     const apiKey = Deno.env.get('EVOLUTION_API_KEY');
-    if (!apiUrl || !apiKey) return new Response(JSON.stringify({ error: 'API não configurada' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!apiUrl || !apiKey) return errorResponse('VALIDATION_FAILED', 'API não configurada', traceId, corsHeaders);
 
     const normalizedUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
 
     const { data: contacts } = await supabase.from('recovery_contacts').select('*').eq('status', 'pending').order('priority', { ascending: false }).order('scheduled_at', { ascending: true }).limit(1);
-    if (!contacts?.length) return new Response(JSON.stringify({ message: 'Nenhuma pendente', sent: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!contacts?.length) return okResponse({ message: 'Nenhuma pendente', sent: 0 }, traceId, corsHeaders);
 
     const contact = contacts[0];
     const days = contact.days_inactive_at_contact || 0;
 
     let template = null;
     if (contact.template_id) {
-      const { data } = await supabase.from('recovery_templates').select('*').eq('id', contact.template_id).single();
+      const { data } = await supabase.from('recovery_templates').select('*').eq('id', contact.template_id).maybeSingle();
       template = data;
     }
     if (!template) {
@@ -40,12 +42,12 @@ Deno.serve(async (req) => {
     }
     if (!template) {
       await supabase.from('recovery_contacts').update({ status: 'failed', error_message: 'Sem template' }).eq('id', contact.id);
-      return new Response(JSON.stringify({ error: 'Sem template' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('VALIDATION_FAILED', 'Sem template', traceId, corsHeaders);
     }
 
     if (!contact.template_id) await supabase.from('recovery_contacts').update({ template_id: template.id }).eq('id', contact.id);
 
-    const { data: profile } = await supabase.from('profiles').select('full_name, company_slug').eq('id', contact.user_id).single();
+    const { data: profile } = await supabase.from('profiles').select('full_name, company_slug').eq('id', contact.user_id).maybeSingle();
     const firstName = profile?.full_name?.split(' ')[0] || 'Usuário';
 
     // Buscar quiz mais recente NÃO-express do usuário (para {{quiz_titulo}} e {{link}})
@@ -113,7 +115,7 @@ Deno.serve(async (req) => {
 
     // Increment sent_count on campaign if linked
     if (contact.campaign_id) {
-      const { data: camp } = await supabase.from('recovery_campaigns').select('sent_count').eq('id', contact.campaign_id).single();
+      const { data: camp } = await supabase.from('recovery_campaigns').select('sent_count').eq('id', contact.campaign_id).maybeSingle();
       if (camp) {
         await supabase.from('recovery_campaigns').update({ 
           sent_count: (camp.sent_count || 0) + 1,
@@ -122,8 +124,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ message: 'Enviada', sent: 1, phone: formattedPhone, template: template.name }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ message: 'Enviada', sent: 1, phone: formattedPhone, template: template.name }, traceId, corsHeaders);
   } catch (e) {
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', e instanceof Error ? e.message : 'Erro', traceId, corsHeaders);
   }
 });

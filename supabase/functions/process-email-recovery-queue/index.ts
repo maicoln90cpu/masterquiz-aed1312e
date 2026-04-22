@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,16 +32,17 @@ async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ s
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const egoisApiKey = Deno.env.get('EGOI_API_KEY');
     if (!egoisApiKey) {
-      return new Response(JSON.stringify({ error: 'EGOI_API_KEY não configurada' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('VALIDATION_FAILED', 'EGOI_API_KEY não configurada', traceId, corsHeaders);
     }
 
-    const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('email_recovery_settings').select('*').maybeSingle();
     if (!settings?.is_active) {
-      return new Response(JSON.stringify({ message: 'Inativo', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Inativo', processed: 0 }, traceId, corsHeaders);
     }
 
     // Time window check
@@ -50,7 +52,7 @@ Deno.serve(async (req) => {
     const [sH, sM] = (settings.allowed_hours_start || '09:00').split(':').map(Number);
     const [eH, eM] = (settings.allowed_hours_end || '22:00').split(':').map(Number);
     if (currentMinutes < sH * 60 + sM || currentMinutes > eH * 60 + eM) {
-      return new Response(JSON.stringify({ message: 'Fora do horário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Fora do horário', processed: 0 }, traceId, corsHeaders);
     }
 
     // Rate limits
@@ -58,14 +60,14 @@ Deno.serve(async (req) => {
     const { count: sentToday } = await supabase.from('email_recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', `${today}T00:00:00`);
     const dailyLimit = settings.daily_email_limit || 100;
     if ((sentToday || 0) >= dailyLimit) {
-      return new Response(JSON.stringify({ message: 'Limite diário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Limite diário', processed: 0 }, traceId, corsHeaders);
     }
 
     const hourAgo = new Date(now.getTime() - 3600000);
     const { count: sentHour } = await supabase.from('email_recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', hourAgo.toISOString());
     const hourlyLimit = settings.hourly_email_limit || 30;
     if ((sentHour || 0) >= hourlyLimit) {
-      return new Response(JSON.stringify({ message: 'Limite hora', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Limite hora', processed: 0 }, traceId, corsHeaders);
     }
 
     // Resolve sender
@@ -73,7 +75,7 @@ Deno.serve(async (req) => {
     const senderName = settings.sender_name || 'MasterQuiz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) {
-      return new Response(JSON.stringify({ error: 'Nenhum sender configurado na E-goi' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('VALIDATION_FAILED', 'Nenhum sender configurado na E-goi', traceId, corsHeaders);
     }
 
     // Load unsubscribed emails
@@ -94,7 +96,7 @@ Deno.serve(async (req) => {
       .limit(maxBatch);
 
     if (!contacts?.length) {
-      return new Response(JSON.stringify({ message: 'Nenhum pendente', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Nenhum pendente', processed: 0 }, traceId, corsHeaders);
     }
 
     let successCount = 0;
@@ -113,7 +115,7 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', contact.user_id).single();
+        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', contact.user_id).maybeSingle();
         const firstName = profile?.full_name?.split(' ')[0] || 'Usuário';
 
         // A/B test: pick subject
@@ -213,9 +215,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ processed: successCount, total: contacts.length }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ processed: successCount, total: contacts.length }, traceId, corsHeaders);
   } catch (error) {
     console.error('Process email queue error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro', traceId, corsHeaders);
   }
 });

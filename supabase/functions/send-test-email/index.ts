@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,29 +45,31 @@ async function resolveSenderId(apiKey: string, senderEmail: string): Promise<{ s
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const egoisApiKey = Deno.env.get('EGOI_API_KEY');
 
     if (!egoisApiKey) {
-      return new Response(JSON.stringify({ error: 'EGOI_API_KEY não configurada' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('VALIDATION_FAILED', 'EGOI_API_KEY não configurada', traceId, corsHeaders);
     }
 
-    const { to, template_id } = await req.json();
-
-    if (!to || !template_id) {
-      return new Response(JSON.stringify({ error: 'Email destinatário e template são obrigatórios' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const parsed = await parseBody(req, z.object({
+      to: z.string().email(),
+      template_id: z.string().uuid(),
+    }), traceId);
+    if (parsed instanceof Response) return parsed;
+    const { to, template_id } = parsed.data;
 
     // Load settings
-    const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('email_recovery_settings').select('*').maybeSingle();
     const senderEmail = settings?.sender_email || 'noreply@masterquiz.com';
     const senderName = settings?.sender_name || 'MasterQuiz';
 
     // Resolve senderId from E-goi
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
     if (!senderInfo) {
-      return new Response(JSON.stringify({ error: 'Nenhum sender configurado na E-goi. Configure um sender em slingshot.egoiapp.com' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('VALIDATION_FAILED', 'Nenhum sender configurado na E-goi. Configure um sender em slingshot.egoiapp.com', traceId, corsHeaders);
     }
     console.log(`Resolved sender: id=${senderInfo.senderId}, domain=${senderInfo.domain}`);
 
@@ -74,10 +78,10 @@ Deno.serve(async (req) => {
       .from('email_recovery_templates')
       .select('*')
       .eq('id', template_id)
-      .single();
+      .maybeSingle();
 
     if (tErr || !template) {
-      return new Response(JSON.stringify({ error: 'Template não encontrado' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('NOT_FOUND', 'Template não encontrado', traceId, corsHeaders);
     }
 
     // Replace variables with test data
@@ -133,14 +137,14 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const errorMsg = data?.detail || data?.message || data?.errors?.[0]?.message || responseText.substring(0, 300);
       console.error('E-goi error:', errorMsg);
-      return new Response(JSON.stringify({ error: `E-goi: ${errorMsg}` }), { status: res.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('INTERNAL_ERROR', `E-goi: ${errorMsg}`, traceId, corsHeaders, res.status);
     }
 
     console.log(`Test email sent to ${to} using template "${template.name}"`);
 
-    return new Response(JSON.stringify({ success: true, message: `Email de teste enviado para ${to}`, messageId: data.messageId || data.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ success: true, message: `Email de teste enviado para ${to}`, messageId: data.messageId || data.id }, traceId, corsHeaders);
   } catch (error) {
     console.error('Send test email error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro', traceId, corsHeaders);
   }
 });

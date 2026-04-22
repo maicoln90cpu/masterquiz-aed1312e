@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -116,7 +117,7 @@ Deno.serve(async (req) => {
     if (!genResponse.ok) throw new Error(`Generator failed: ${await genResponse.text()}`);
     const { subject: baseSubject, html: baseHtml } = await genResponse.json();
 
-    const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('email_recovery_settings').select('*').maybeSingle();
     const senderEmail = settings?.sender_email || 'noreply@masterquiz.com';
     const senderName = settings?.sender_name || 'MasterQuiz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
@@ -128,7 +129,7 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
         body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: testEmail, subject: `[TESTE] ${baseSubject}`, htmlBody: baseHtml.replace(/{first_name}/g, 'Admin'), openTracking: false, clickTracking: false }),
       });
-      return new Response(JSON.stringify({ sent: res.ok ? 1 : 0, test: true, topic: chosenTopic }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ sent: res.ok ? 1 : 0, test: true, topic: chosenTopic }, getTraceId(req), corsHeaders);
     }
 
     await supabase.from('email_tips').insert({ topic: chosenTopic, subject: baseSubject, html_content: baseHtml });
@@ -179,11 +180,11 @@ Deno.serve(async (req) => {
 
     await logAutomation(supabase, AUTOMATION_KEY, 'success', sentCount, { topic: chosenTopic, total_targets: emailBatch.length });
 
-    return new Response(JSON.stringify({ sent: sentCount, topic: chosenTopic, bulk: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ sent: sentCount, topic: chosenTopic, bulk: true }, getTraceId(req), corsHeaders);
   } catch (error) {
     console.error('send-weekly-tip error:', error);
     const errMsg = error instanceof Error ? error.message : 'Erro';
     await logAutomation(supabase, AUTOMATION_KEY, 'error', 0, null, errMsg);
-    return new Response(JSON.stringify({ error: errMsg }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', errMsg, getTraceId(req), corsHeaders);
   }
 });

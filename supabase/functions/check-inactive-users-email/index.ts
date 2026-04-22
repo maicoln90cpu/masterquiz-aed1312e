@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +9,7 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -21,9 +23,9 @@ Deno.serve(async (req) => {
     } catch { /* no body */ }
 
     // Load email recovery settings
-    const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('email_recovery_settings').select('*').maybeSingle();
     if (!settings || !settings.is_active) {
-      return new Response(JSON.stringify({ message: 'Email recovery inativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Email recovery inativo', queued: 0 }, traceId, corsHeaders);
     }
 
     // Check time window (Brazil)
@@ -33,7 +35,7 @@ Deno.serve(async (req) => {
     const [sH, sM] = (settings.allowed_hours_start || '09:00').split(':').map(Number);
     const [eH, eM] = (settings.allowed_hours_end || '18:00').split(':').map(Number);
     if (currentMinutes < sH * 60 + sM || currentMinutes > eH * 60 + eM) {
-      return new Response(JSON.stringify({ message: 'Fora do horário', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Fora do horário', queued: 0 }, traceId, corsHeaders);
     }
 
     // Daily limit check
@@ -46,7 +48,7 @@ Deno.serve(async (req) => {
 
     const remainingLimit = (settings.daily_email_limit || 100) - (sentToday || 0);
     if (remainingLimit <= 0) {
-      return new Response(JSON.stringify({ message: 'Limite diário atingido', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Limite diário atingido', queued: 0 }, traceId, corsHeaders);
     }
 
     // Get all active templates (excluding welcome — handled by DB trigger)
@@ -57,7 +59,7 @@ Deno.serve(async (req) => {
       .order('trigger_days', { ascending: true });
 
     if (!activeTemplates?.length) {
-      return new Response(JSON.stringify({ message: 'Nenhum template ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Nenhum template ativo', queued: 0 }, traceId, corsHeaders);
     }
 
     // Separate templates by type
@@ -81,7 +83,7 @@ Deno.serve(async (req) => {
       draftAbandonedTemplates.length || upgradeNudgeTemplates.length;
 
     if (!hasAnyTemplate) {
-      return new Response(JSON.stringify({ message: 'Nenhum template processável ativo', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Nenhum template processável ativo', queued: 0 }, traceId, corsHeaders);
     }
 
     // Get all users from auth
@@ -97,7 +99,7 @@ Deno.serve(async (req) => {
       .not('email', 'is', null);
 
     if (!profiles?.length) {
-      return new Response(JSON.stringify({ message: 'Nenhum perfil com email', queued: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Nenhum perfil com email', queued: 0 }, traceId, corsHeaders);
     }
 
     // Institutional domains — query DB (single source of truth, fallback hardcoded)
@@ -401,7 +403,7 @@ Deno.serve(async (req) => {
 
     console.log(`Email queue: ${toQueue.length} contacts added (eligible: ${contacts.length})`);
 
-    return new Response(JSON.stringify({
+    return okResponse({
       message: `${toQueue.length} emails enfileirados`,
       queued: toQueue.length,
       total_eligible: contacts.length,
@@ -417,9 +419,9 @@ Deno.serve(async (req) => {
         institutional_skipped: institutionalSkipped,
         institutional_domains_loaded: institutionalDomains.length,
       }
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }, traceId, corsHeaders);
   } catch (error) {
     console.error('Email check error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro', traceId, corsHeaders);
   }
 });
