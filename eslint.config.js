@@ -275,4 +275,26 @@ export default tseslint.config(
       ],
     },
   },
+  // 🚫 P26 (Onda 3): RichTextEditor (Quill) não pode reintroduzir os controles
+  // duplicados de tamanho (`size`) e alinhamento (`align`) no toolbar.
+  // Esses controles foram removidos na Onda 2 — tamanho fica em Header (H1/H2/H3)
+  // ou no campo "Tamanho da fonte" do painel de Propriedades; alinhamento fica
+  // exclusivamente no painel. Reintroduzi-los recria o conflito de "qual config vale".
+  {
+    files: ["src/components/quiz/blocks/RichTextEditor.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          // Detecta `{ size: [...] }` e `{ align: [...] }` em qualquer Property literal do toolbar.
+          "selector": "Property[key.name='size'][value.type='ArrayExpression']",
+          "message": "🚫 P26: Não reintroduza `{ size: [...] }` no toolbar do Quill. Tamanho deve vir do dropdown Header OU do painel de Propriedades (campo Tamanho da fonte). Veja Onda 2 do refactor do editor."
+        },
+        {
+          "selector": "Property[key.name='align'][value.type='ArrayExpression']",
+          "message": "🚫 P26: Não reintroduza `{ align: [...] }` no toolbar do Quill. Alinhamento é exclusivo do painel de Propriedades. Veja Onda 2 do refactor do editor."
+        }
+      ],
+    },
+  },
 );

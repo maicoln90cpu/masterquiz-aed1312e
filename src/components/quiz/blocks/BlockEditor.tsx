@@ -62,6 +62,7 @@ import { CalloutBlockPreview as CalloutBlockPreviewInline, IconListBlockPreview 
 import { AnswerSummaryBlockPreview as AnswerSummaryBlockPreviewInline, ProgressMessageBlockPreview as ProgressMessageBlockPreviewInline, AvatarGroupBlockPreview as AvatarGroupBlockPreviewInline, ConditionalTextBlockPreview as ConditionalTextBlockPreviewInline, ComparisonResultBlockPreview as ComparisonResultBlockPreviewInline, PersonalizedCTABlockPreview as PersonalizedCTABlockPreviewInline } from "../preview/DynamicBlockPreviews";
 import { RecommendationBlockPreview as RecommendationBlockPreviewInline } from "../preview/RecommendationBlockPreview";
 import { CalculatorBlockPreview as CalculatorBlockPreviewInline, RatingBlockPreview as RatingBlockPreviewInline } from "../preview/InteractiveBlockPreviews";
+import { BlockQuickEditFields } from "./BlockQuickEditFields";
 
 interface BlockEditorProps {
   blocks: QuizBlock[];
@@ -218,19 +219,19 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'banner':
         return <BannerBlockPreviewInline block={block as any} />;
       case 'answerSummary':
-        return <AnswerSummaryBlockPreviewInline block={block as any} />;
+        return <><BlockQuickEditFields block={block} onChange={onUpdate} /><AnswerSummaryBlockPreviewInline block={block as any} /></>;
       case 'progressMessage':
-        return <ProgressMessageBlockPreviewInline block={block as any} />;
+        return <><BlockQuickEditFields block={block} onChange={onUpdate} /><ProgressMessageBlockPreviewInline block={block as any} /></>;
       case 'avatarGroup':
-        return <AvatarGroupBlockPreviewInline block={block as any} />;
+        return <><BlockQuickEditFields block={block} onChange={onUpdate} /><AvatarGroupBlockPreviewInline block={block as any} /></>;
       case 'conditionalText':
-        return <ConditionalTextBlockPreviewInline block={block as any} />;
+        return <><BlockQuickEditFields block={block} onChange={onUpdate} /><ConditionalTextBlockPreviewInline block={block as any} /></>;
       case 'comparisonResult':
-        return <ComparisonResultBlockPreviewInline block={block as any} />;
+        return <><BlockQuickEditFields block={block} onChange={onUpdate} /><ComparisonResultBlockPreviewInline block={block as any} /></>;
       case 'personalizedCTA':
-        return <PersonalizedCTABlockPreviewInline block={block as any} />;
+        return <><BlockQuickEditFields block={block} onChange={onUpdate} /><PersonalizedCTABlockPreviewInline block={block as any} /></>;
       case 'recommendation':
-        return <RecommendationBlockPreviewInline block={block as any} />;
+        return <><BlockQuickEditFields block={block} onChange={onUpdate} /><RecommendationBlockPreviewInline block={block as any} /></>;
       case 'calculator':
         return <CalculatorBlockPreviewInline block={block as any} />;
       case 'rating':
