@@ -15,8 +15,6 @@
  *   - Edge listada não importa `okResponse` ou `errorResponse` de `../_shared/envelope.ts`.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 /** Edge functions já migradas para envelope (Onda 7 / Etapas 1-3). */
 const MIGRATED_EDGES = [
@@ -30,10 +28,17 @@ const MIGRATED_EDGES = [
   'evolution-webhook',
 ] as const;
 
+/** Carrega TODAS as edges de uma vez via Vite glob (sem depender de Node fs). */
+const edgeSources = import.meta.glob(
+  '/supabase/functions/*/index.ts',
+  { query: '?raw', import: 'default', eager: true },
+) as Record<string, string>;
+
 function readEdge(name: string): string {
-  const p = resolve(process.cwd(), 'supabase', 'functions', name, 'index.ts');
-  expect(existsSync(p), `Edge function ausente: ${name}`).toBe(true);
-  return readFileSync(p, 'utf-8');
+  const key = `/supabase/functions/${name}/index.ts`;
+  const src = edgeSources[key];
+  expect(src, `Edge function ausente em glob: ${name}`).toBeTruthy();
+  return src;
 }
 
 describe('P18 — Envelope coverage nas edges migradas', () => {

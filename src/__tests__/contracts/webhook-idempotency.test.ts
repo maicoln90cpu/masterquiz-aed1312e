@@ -12,15 +12,19 @@
  * Para adicionar um novo webhook externo, inclua-o em WEBHOOK_EDGES.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 const WEBHOOK_EDGES = ['kiwify-webhook', 'evolution-webhook'] as const;
 
+const edgeSources = import.meta.glob(
+  '/supabase/functions/*/index.ts',
+  { query: '?raw', import: 'default', eager: true },
+) as Record<string, string>;
+
 function readEdge(name: string): string {
-  const p = resolve(process.cwd(), 'supabase', 'functions', name, 'index.ts');
-  expect(existsSync(p), `Edge function ausente: ${name}`).toBe(true);
-  return readFileSync(p, 'utf-8');
+  const key = `/supabase/functions/${name}/index.ts`;
+  const src = edgeSources[key];
+  expect(src, `Edge function ausente em glob: ${name}`).toBeTruthy();
+  return src;
 }
 
 describe('P19 — Idempotência obrigatória em webhooks', () => {
