@@ -1,5 +1,46 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ Onda 7 — Etapa 4 (dateUtils + lint warns + reduced-motion)
+
+### O que mudou
+- **`src/lib/dateUtils.ts` (novo)**: facade único para datas. Helpers: `now()`, `nowISO()`, `parseISO()` (tolerante, devolve null), `toDate()`, `format()`, `formatDate()` (dd/MM/yyyy), `formatDateTime()`, `formatTime()`, `formatLong()`, `formatISODate()`, `diffInDays()`, `relativeFromNow()`, `isValidDate()`. Tudo com fallback `"—"` para entradas nulas/inválidas, locale pt-BR default.
+- **`src/lib/__tests__/dateUtils.test.ts`**: 11 testes cobrindo formatação, parsing tolerante, diff, validação e relativo. ✅ todos passando.
+- **`eslint.config.js` — P21 (warn)**: `new Date()` sem argumentos em código de produção → sugere `now()`/`nowISO()` de `@/lib/dateUtils`. Exceções: `dateUtils.ts`, `useWebVitals.ts`, `performanceCapture.ts`, testes.
+- **`eslint.config.js` — P22 (warn)**: `.single()` após `.insert/.update/.delete/.upsert` → sugere `.maybeSingle()` (single lança PGRST116 quando 0 linhas, maybeSingle devolve null).
+- **`src/index.css`**: bloco `@media (prefers-reduced-motion: reduce)` global no fim do arquivo zera animações/transições/scroll-behavior. Respeita WCAG 2.3.3 (AAA) e configuração de SO de usuários com sensibilidade vestibular.
+
+### Antes / Depois (leigo)
+- **Antes**: cada componente formatava datas do seu jeito (`new Date(x).toLocaleDateString('pt-BR')`, `format(parseISO(x), 'dd/MM/yyyy')` direto, ou `String(x).slice(0,10)`). Strings vazias/null quebravam exibição.
+- **Depois**: `formatDate(x)` em qualquer lugar devolve string previsível com fallback elegante. Animações desligam automaticamente para usuários sensíveis a movimento. Lint avisa quando alguém usa padrão antigo.
+
+### Vantagens
+- Centralização → trocar timezone/locale futuro vira 1 mudança.
+- Mock fácil em testes (basta mockar `now()` em vez de `Date`).
+- Acessibilidade WCAG AAA sem custo de runtime.
+- Lint preventivo sem quebrar build (warns, não erros).
+
+### Desvantagens / Riscos
+- 56 edges legadas continuam usando `new Date(string)` — apenas warning, migração incremental.
+- `.single()` warn pode ter falsos positivos em queries SELECT depois de mutation chain (raro). Verificar caso a caso.
+
+### Checklist manual
+1. Abrir DevTools → System Preferences → Reduce Motion ON: confirmar que animações framer-motion ficam estáticas no preview.
+2. `bun test src/lib/__tests__/dateUtils.test.ts` → 11 ✅.
+3. `bunx eslint src/components/admin/blog/BlogCostTracking.tsx` → 0 errors (warns esperadas de import-order pré-existentes).
+4. Importar `formatDate` em qualquer arquivo novo: TS valida assinatura.
+
+### Pendências (próximas etapas)
+- **Etapa 5**: Contract Tests P18 (envelope), P19 (idempotência), P20 (`x-trace-id`) + atualizar `CODE_STANDARDS.md` com seção dateUtils + reduced-motion.
+- **Migração incremental**: substituir `new Date()` por `now()` e `.single()` por `.maybeSingle()` em arquivos quentes (admin, recovery, billing). Meta: zerar warns P21/P22 em 4 PRs.
+- **i18n datas**: hoje hardcoded em pt-BR; quando ativar EN/ES por usuário, ler locale de i18next dentro de `format()`.
+
+### Prevenção de regressão
+- Lint warns P21+P22 ativos em todo `src/**` exceto exceções listadas.
+- Reduced-motion como **última regra** do `index.css` para vencer especificidade — se alguém adicionar CSS depois, adicionar dentro de `@media` ou no fim do arquivo.
+- `dateUtils.ts` listado nas exceções ESLint para evitar self-trigger.
+
+---
+
 ## ✅ Onda 7 — Etapa 2-bis + Etapa 3 (P18 fechado + P19 idempotência)
 
 ### Etapa 2-bis (concluída)
