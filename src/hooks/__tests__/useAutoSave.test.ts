@@ -135,17 +135,7 @@ describe('useAutoSave', () => {
     });
 
     it('deve executar save após 30 segundos', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      const mockUpdate = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: mockEq,
-        }),
-      });
-      
-      vi.mocked(supabase.from).mockReturnValue({
-        update: mockUpdate,
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       
