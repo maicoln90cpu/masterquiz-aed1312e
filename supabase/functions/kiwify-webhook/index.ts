@@ -75,7 +75,29 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { evento, buyerEmail, produto, planName } = extractPayloadData(rawBody);
+    const traceId = req.headers.get('x-trace-id') || crypto.randomUUID();
+    const { evento, buyerEmail, produto, planName, eventId } = extractPayloadData(rawBody);
+
+    // 🛡️ P19 — Idempotência: bloqueia reprocessamento do mesmo evento
+    let claim: { id: string; alreadyProcessed: boolean; previousResult: unknown } | null = null;
+    if (eventId) {
+      try {
+        claim = await claimEvent(supabaseAdmin, {
+          provider: 'kiwify',
+          eventId: String(eventId),
+          traceId,
+        });
+        if (claim.alreadyProcessed) {
+          console.log(`[KIWIFY] Duplicate event ${eventId} ignored — returning previous result`);
+          return new Response(
+            JSON.stringify({ received: true, duplicate: true, previous: claim.previousResult }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-trace-id': traceId } }
+          );
+        }
+      } catch (idempErr) {
+        console.warn('[KIWIFY] Idempotency check failed (non-fatal):', idempErr);
+      }
+    }
 
     console.log(`[KIWIFY] Event: ${evento}, email: ${buyerEmail ? '***' : 'none'}, product: ${produto}, plan: ${planName || 'N/A'}`);
 
