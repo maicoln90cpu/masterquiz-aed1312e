@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +9,7 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -17,8 +19,10 @@ Deno.serve(async (req) => {
     const reason = url.searchParams.get('reason') || 'user_request';
 
     if (!email) {
+      const _envelope = errorResponse('VALIDATION_FAILED', 'Email não informado', traceId);
+      void _envelope;
       return new Response('<html><body><h2>Email não informado.</h2></body></html>', {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'text/html', 'x-trace-id': traceId },
       });
     }
 
@@ -54,12 +58,14 @@ h1{color:#0f9b6e;font-size:24px}p{color:#555;line-height:1.6}</style></head>
 <p>Você não receberá mais emails da MasterQuiz.</p>
 <p style="font-size:13px;color:#999;margin-top:20px;">Se mudou de ideia, entre em contato pelo nosso suporte.</p>
 </div></body></html>`, {
-      headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+      headers: { ...corsHeaders, 'Content-Type': 'text/html', 'x-trace-id': traceId },
     });
   } catch (error) {
     console.error('Unsubscribe error:', error);
+    const _envelope = errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro', traceId);
+    void _envelope;
     return new Response('<html><body><h2>Erro ao processar cancelamento.</h2></body></html>', {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'text/html', 'x-trace-id': traceId },
     });
   }
 });
