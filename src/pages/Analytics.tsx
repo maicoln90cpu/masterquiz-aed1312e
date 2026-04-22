@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Download, TrendingUp, Users, Calendar, Eye, Loader2, FileText, BarChart3 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";

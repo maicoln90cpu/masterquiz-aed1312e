@@ -899,48 +899,62 @@ const CostsTab = () => {
           <CardDescription>Distribuição de custos entre os modelos de IA utilizados</CardDescription>
         </CardHeader>
         <CardContent>
-          {modelData && modelData.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead className="text-right">Gerações</TableHead>
-                  <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className="text-right">Custo (USD)</TableHead>
-                  <TableHead className="text-right">% do Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {modelData.map((model, index) => {
-                  const totalCost = modelData.reduce((sum, m) => sum + m.cost, 0);
-                  const percentage = totalCost > 0 ? (model.cost / totalCost) * 100 : 0;
-                  return (
-                    <TableRow key={model.fullName}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                          />
-                          <span className="font-medium">{model.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">{model.value}</TableCell>
-                      <TableCell className="text-right">{formatTokens(model.tokens)}</TableCell>
-                      <TableCell className="text-right font-medium text-green-600">${model.cost.toFixed(4)}</TableCell>
-                      <TableCell className="text-right">
-                        <Badge variant="secondary">{percentage.toFixed(1)}%</Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum dado disponível</p>
-            </div>
+          {modelData && modelData.length > 0 ? (() => {
+            const totalCost = modelData.reduce((sum, m) => sum + m.cost, 0);
+            const enriched = modelData.map((m, i) => ({
+              ...m,
+              colorIdx: i,
+              percentage: totalCost > 0 ? (m.cost / totalCost) * 100 : 0,
+            }));
+            const cols: DataTableColumn<typeof enriched[number]>[] = [
+              {
+                key: 'name',
+                label: 'Modelo',
+                sortable: true,
+                searchable: true,
+                render: (m) => (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[m.colorIdx % COLORS.length] }} />
+                    <span className="font-medium">{m.name}</span>
+                  </div>
+                ),
+              },
+              { key: 'value', label: 'Gerações', sortable: true, align: 'right' },
+              {
+                key: 'tokens',
+                label: 'Tokens',
+                sortable: true,
+                align: 'right',
+                render: (m) => formatTokens(m.tokens),
+              },
+              {
+                key: 'cost',
+                label: 'Custo (USD)',
+                sortable: true,
+                align: 'right',
+                render: (m) => <span className="font-medium text-green-600">${m.cost.toFixed(4)}</span>,
+              },
+              {
+                key: 'percentage',
+                label: '% do Total',
+                sortable: true,
+                align: 'right',
+                render: (m) => <Badge variant="secondary">{m.percentage.toFixed(1)}%</Badge>,
+              },
+            ];
+            return (
+              <DataTable
+                data={enriched}
+                columns={cols}
+                defaultSortKey="cost"
+                defaultSortDirection="desc"
+                pageSize={10}
+                exportCsv="ai-cost-by-model"
+                rowKey={(m) => m.fullName}
+              />
+            );
+          })() : (
+            <EmptyState icon={Brain} title="Nenhum dado disponível" />
           )}
         </CardContent>
       </Card>
@@ -953,43 +967,43 @@ const CostsTab = () => {
         </CardHeader>
         <CardContent>
           {usersLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+            <PageLoading variant="skeleton" rows={5} />
           ) : topUsers && topUsers.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead className="text-right">Gerações</TableHead>
-                  <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className="text-right">Custo (USD)</TableHead>
-                  <TableHead>Último uso</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topUsers.map((user, index) => (
-                  <TableRow key={user.userId}>
-                    <TableCell>
-                      <Badge variant={index === 0 ? "default" : index < 3 ? "secondary" : "outline"}>
-                        {index + 1}º
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium">{user.userIdShort}</TableCell>
-                    <TableCell className="text-right">{user.generations}</TableCell>
-                    <TableCell className="text-right">{formatTokens(user.tokens)}</TableCell>
-                    <TableCell className="text-right font-medium text-green-600">${user.cost.toFixed(4)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{user.lastUsed}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            (() => {
+              const ranked = topUsers.map((u, i) => ({ ...u, rank: i + 1 }));
+              const cols: DataTableColumn<typeof ranked[number]>[] = [
+                {
+                  key: 'rank',
+                  label: '#',
+                  sortable: true,
+                  className: 'w-16',
+                  render: (u) => (
+                    <Badge variant={u.rank === 1 ? 'default' : u.rank <= 3 ? 'secondary' : 'outline'}>
+                      {u.rank}º
+                    </Badge>
+                  ),
+                },
+                { key: 'userIdShort', label: 'Usuário', sortable: true, searchable: true, className: 'text-sm font-medium' },
+                { key: 'generations', label: 'Gerações', sortable: true, align: 'right' },
+                { key: 'tokens', label: 'Tokens', sortable: true, align: 'right', render: (u) => formatTokens(u.tokens) },
+                { key: 'cost', label: 'Custo (USD)', sortable: true, align: 'right', render: (u) => <span className="font-medium text-green-600">${u.cost.toFixed(4)}</span> },
+                { key: 'lastUsed', label: 'Último uso', sortable: true, className: 'text-sm text-muted-foreground' },
+              ];
+              return (
+                <DataTable
+                  data={ranked}
+                  columns={cols}
+                  defaultSortKey="cost"
+                  defaultSortDirection="desc"
+                  pageSize={10}
+                  searchPlaceholder="Buscar usuário…"
+                  exportCsv="ai-top-users"
+                  rowKey={(u) => u.userId}
+                />
+              );
+            })()
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum uso de IA registrado ainda</p>
-            </div>
+            <EmptyState icon={Brain} title="Nenhum uso de IA registrado ainda" />
           )}
         </CardContent>
       </Card>
