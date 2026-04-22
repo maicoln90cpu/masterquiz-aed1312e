@@ -224,7 +224,7 @@ export const UserTicketsList = () => {
                     onChange={(e) => setReply(e.target.value)}
                     rows={4}
                   />
-                  <Button onClick={handleReply} disabled={!reply.trim() || sending}>
+                  <Button onClick={() => replyMutation.mutate()} disabled={!reply.trim() || sending}>
                     {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
                     Enviar Resposta
                   </Button>
