@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -80,14 +81,15 @@ async function processBatch(
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    const { data: settings } = await supabase.from('recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('recovery_settings').select('*').maybeSingle();
     if (!settings || !settings.is_active || !settings.is_connected) {
-      return new Response(JSON.stringify({ message: 'Sistema inativo', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Sistema inativo', processed: 0 }, traceId, corsHeaders);
     }
 
     const now = new Date();
@@ -102,21 +104,21 @@ Deno.serve(async (req) => {
     const [endH, endM] = endRaw.split(':').map(Number);
 
     if (currentTimeMinutes < startH * 60 + startM || currentTimeMinutes > endH * 60 + endM) {
-      return new Response(JSON.stringify({ message: 'Fora do horário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Fora do horário', processed: 0 }, traceId, corsHeaders);
     }
 
     const todayBrasil = new Date(brasilTime); todayBrasil.setHours(0, 0, 0, 0);
     const { count: sentToday } = await supabase.from('recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', todayBrasil.toISOString());
     const dailyLimit = settings.daily_message_limit || 50;
-    if ((sentToday || 0) >= dailyLimit) return new Response(JSON.stringify({ message: 'Limite diário', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if ((sentToday || 0) >= dailyLimit) return okResponse({ message: 'Limite diário', processed: 0 }, traceId, corsHeaders);
 
     const hourAgo = new Date(now.getTime() - 3600000);
     const { count: sentLastHour } = await supabase.from('recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('sent_at', hourAgo.toISOString());
     const hourlyLimit = settings.hourly_message_limit || 15;
-    if ((sentLastHour || 0) >= hourlyLimit) return new Response(JSON.stringify({ message: 'Limite hora', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if ((sentLastHour || 0) >= hourlyLimit) return okResponse({ message: 'Limite hora', processed: 0 }, traceId, corsHeaders);
 
     const { count: pendingCount } = await supabase.from('recovery_contacts').select('*', { count: 'exact', head: true }).eq('status', 'pending');
-    if (!pendingCount) return new Response(JSON.stringify({ message: 'Nenhuma pendente', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!pendingCount) return okResponse({ message: 'Nenhuma pendente', processed: 0 }, traceId, corsHeaders);
 
     const batchSize = Math.min(settings.batch_size || 10, pendingCount, dailyLimit - (sentToday || 0), hourlyLimit - (sentLastHour || 0));
     const delayMin = settings.message_delay_seconds || 30;
@@ -129,12 +131,9 @@ Deno.serve(async (req) => {
         .catch(e => console.error('[process-recovery-queue] background error:', e))
     );
 
-    return new Response(
-      JSON.stringify({ message: 'Processamento iniciado em background', batchSize, queued: pendingCount }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({ message: 'Processamento iniciado em background', batchSize, queued: pendingCount }, traceId, corsHeaders);
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro', traceId, corsHeaders);
   }
 });
