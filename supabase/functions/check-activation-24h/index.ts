@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -26,13 +28,10 @@ Deno.serve(async (req) => {
     const { data: settings } = await supabase
       .from('recovery_settings')
       .select('is_connected, is_active')
-      .single();
+      .maybeSingle();
 
     if (!settings?.is_connected) {
-      return new Response(
-        JSON.stringify({ message: 'WhatsApp não conectado', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'WhatsApp não conectado', queued: 0 }, traceId, corsHeaders);
     }
 
     // 2. Buscar templates: activation_reminder (genérico) e activation_draft (para quem tem draft)
@@ -48,10 +47,7 @@ Deno.serve(async (req) => {
 
     // Precisa de pelo menos o template genérico
     if (!templateReminder) {
-      return new Response(
-        JSON.stringify({ message: 'Nenhum template activation_reminder ativo', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Nenhum template activation_reminder ativo', queued: 0 }, traceId, corsHeaders);
     }
 
     // 3. Buscar exploradores com conta > 24h, que têm WhatsApp
@@ -72,10 +68,7 @@ Deno.serve(async (req) => {
     }
 
     if (!explorers || explorers.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'Nenhum explorador elegível', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Nenhum explorador elegível', queued: 0 }, traceId, corsHeaders);
     }
 
     // 4. Verificar quais NÃO têm quiz publicado (status = 'active')
@@ -93,10 +86,7 @@ Deno.serve(async (req) => {
     const unpublished = explorers.filter(e => !usersWithPublished.has(e.id));
 
     if (unpublished.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'Todos exploradores já publicaram', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Todos exploradores já publicaram', queued: 0 }, traceId, corsHeaders);
     }
 
     // 5b. Verificar quem tem draft (criou mas não publicou) vs quem não criou nada
@@ -134,10 +124,7 @@ Deno.serve(async (req) => {
     );
 
     if (toQueue.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'Todos já foram contactados ou blacklisted', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Todos já foram contactados ou blacklisted', queued: 0 }, traceId, corsHeaders);
     }
 
     // 8. Inserir na fila — usar template_draft para quem tem draft, template_reminder para quem não criou nada
@@ -165,21 +152,15 @@ Deno.serve(async (req) => {
 
     console.log(`✅ [Activation 24h] Queued ${contacts.length} explorers (${draftCount} with draft, ${noQuizCount} no quiz)`);
 
-    return new Response(
-      JSON.stringify({
-        message: `${contacts.length} exploradores enfileirados para ativação`,
-        queued: contacts.length,
-        with_draft: draftCount,
-        no_quiz: noQuizCount,
-        total_eligible: unpublished.length,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({
+      message: `${contacts.length} exploradores enfileirados para ativação`,
+      queued: contacts.length,
+      with_draft: draftCount,
+      no_quiz: noQuizCount,
+      total_eligible: unpublished.length,
+    }, traceId, corsHeaders);
   } catch (error) {
     console.error('check-activation-24h error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Erro interno' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro interno', traceId, corsHeaders);
   }
 });
