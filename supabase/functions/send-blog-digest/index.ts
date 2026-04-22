@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -119,14 +120,12 @@ Deno.serve(async (req) => {
 
     if (!posts || (posts.length < 3 && !force && !testMode)) {
       await logAutomation(supabase, AUTOMATION_KEY, 'skipped', 0, { reason: `Apenas ${posts?.length || 0} posts (mínimo 3)` });
-      return new Response(JSON.stringify({ message: `Apenas ${posts?.length || 0} posts (mínimo 3)`, sent: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ message: `Apenas ${posts?.length || 0} posts (mínimo 3)`, sent: 0 }, getTraceId(req), corsHeaders);
     }
 
     if (!posts?.length) {
       await logAutomation(supabase, AUTOMATION_KEY, 'skipped', 0, { reason: 'Nenhum post' });
-      return new Response(JSON.stringify({ message: 'Nenhum post', sent: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ message: 'Nenhum post', sent: 0 }, getTraceId(req), corsHeaders);
     }
 
     const genResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-email-content`, {
@@ -137,7 +136,7 @@ Deno.serve(async (req) => {
     if (!genResponse.ok) throw new Error(`Generator failed: ${await genResponse.text()}`);
     const { subject: baseSubject, html: baseHtml } = await genResponse.json();
 
-    const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('email_recovery_settings').select('*').maybeSingle();
     const senderEmail = settings?.sender_email || 'noreply@masterquiz.com';
     const senderName = settings?.sender_name || 'MasterQuiz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
@@ -150,7 +149,7 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
         body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: testEmail, subject: `[TESTE] ${baseSubject}`, htmlBody: baseHtml.replace(/{first_name}/g, 'Admin'), openTracking: false, clickTracking: false }),
       });
-      return new Response(JSON.stringify({ sent: res.ok ? 1 : 0, test: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ sent: res.ok ? 1 : 0, test: true }, getTraceId(req), corsHeaders);
     }
 
     const { data: unsubscribed } = await supabase.from('email_unsubscribes').select('email');
@@ -202,11 +201,11 @@ Deno.serve(async (req) => {
 
     await logAutomation(supabase, AUTOMATION_KEY, 'success', sentCount, { posts: posts.length, total_targets: emailBatch.length });
 
-    return new Response(JSON.stringify({ sent: sentCount, posts: posts.length, bulk: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ sent: sentCount, posts: posts.length, bulk: true }, getTraceId(req), corsHeaders);
   } catch (error) {
     console.error('send-blog-digest error:', error);
     const errMsg = error instanceof Error ? error.message : 'Erro';
     await logAutomation(supabase, AUTOMATION_KEY, 'error', 0, null, errMsg);
-    return new Response(JSON.stringify({ error: errMsg }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', errMsg, getTraceId(req), corsHeaders);
   }
 });

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
     const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
     const monthName = MONTH_NAMES[prevMonthStart.getMonth()];
 
-    const { data: settings } = await supabase.from('email_recovery_settings').select('*').single();
+    const { data: settings } = await supabase.from('email_recovery_settings').select('*').maybeSingle();
     const senderEmail = settings?.sender_email || 'noreply@masterquiz.com';
     const senderName = settings?.sender_name || 'MasterQuiz';
     const senderInfo = await resolveSenderId(egoisApiKey, senderEmail);
@@ -89,7 +90,7 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'application/json', ApiKey: egoisApiKey },
         body: JSON.stringify({ senderId: senderInfo.senderId, senderName, to: testEmail, subject: `[TESTE] ${subject}`, htmlBody: html, openTracking: false, clickTracking: false }),
       });
-      return new Response(JSON.stringify({ sent: res.ok ? 1 : 0, test: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ sent: res.ok ? 1 : 0, test: true }, getTraceId(req), corsHeaders);
     }
 
     const { data: unsubscribed } = await supabase.from('email_unsubscribes').select('email');
@@ -156,11 +157,11 @@ Deno.serve(async (req) => {
 
     await logAutomation(supabase, AUTOMATION_KEY, 'success', sentCount, { month: monthName, total_targets: (profiles || []).length });
 
-    return new Response(JSON.stringify({ sent: sentCount, month: monthName }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ sent: sentCount, month: monthName }, getTraceId(req), corsHeaders);
   } catch (error) {
     console.error('send-monthly-summary error:', error);
     const errMsg = error instanceof Error ? error.message : 'Erro';
     await logAutomation(supabase, AUTOMATION_KEY, 'error', 0, null, errMsg);
-    return new Response(JSON.stringify({ error: errMsg }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', errMsg, getTraceId(req), corsHeaders);
   }
 });
