@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,6 +56,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -88,7 +90,7 @@ Deno.serve(async (req) => {
         .from('recovery_campaigns')
         .select('target_criteria')
         .eq('id', campaignId)
-        .single();
+        .maybeSingle();
       if (campaign?.target_criteria) {
         targetCriteria = campaign.target_criteria as TargetCriteria;
       }
@@ -98,22 +100,16 @@ Deno.serve(async (req) => {
     const { data: settings, error: settingsError } = await supabase
       .from('recovery_settings')
       .select('*')
-      .single();
+      .maybeSingle();
 
     if (settingsError || !settings) {
-      return new Response(
-        JSON.stringify({ message: 'Configurações não encontradas', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Configurações não encontradas', queued: 0 }, traceId, corsHeaders);
     }
 
     const typedSettings = settings as RecoverySettings;
 
     if (!dryRun && (!typedSettings.is_active || !typedSettings.is_connected)) {
-      return new Response(
-        JSON.stringify({ message: 'Sistema inativo ou desconectado', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Sistema inativo ou desconectado', queued: 0 }, traceId, corsHeaders);
     }
 
     // Verificar horário permitido (skip em dryRun)
@@ -127,10 +123,7 @@ Deno.serve(async (req) => {
       const [endHour, endMin] = typedSettings.allowed_hours_end.split(':').map(Number);
 
       if (currentTimeMinutes < startHour * 60 + startMin || currentTimeMinutes > endHour * 60 + endMin) {
-        return new Response(
-          JSON.stringify({ message: 'Fora do horário permitido', queued: 0 }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({ message: 'Fora do horário permitido', queued: 0 }, traceId, corsHeaders);
       }
 
       // Contar mensagens já enviadas hoje
@@ -143,10 +136,7 @@ Deno.serve(async (req) => {
 
       remainingLimit = typedSettings.daily_message_limit - (sentToday || 0);
       if (remainingLimit <= 0) {
-        return new Response(
-          JSON.stringify({ message: 'Limite diário atingido', queued: 0 }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({ message: 'Limite diário atingido', queued: 0 }, traceId, corsHeaders);
       }
     }
 
@@ -190,10 +180,7 @@ Deno.serve(async (req) => {
     }
 
     if (userPool.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'Nenhum usuário encontrado', queued: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Nenhum usuário encontrado', queued: 0 }, traceId, corsHeaders);
     }
 
     // Buscar perfis com WhatsApp + stage + objectives (chunked para evitar URL muito longa)
@@ -314,24 +301,21 @@ Deno.serve(async (req) => {
     // ===== DRY RUN: retornar lista sem enfileirar =====
     if (dryRun) {
       console.log(`Dry run: ${eligibleUsers.length} eligible users (criteria=${JSON.stringify(targetCriteria)})`);
-      return new Response(
-        JSON.stringify({
-          message: `${eligibleUsers.length} destinatário(s) elegível(is)`,
-          dryRun: true,
-          total_eligible: eligibleUsers.length,
-          recipients: eligibleUsers.slice(0, 500).map(u => ({
-            user_id: u.id,
-            full_name: u.full_name,
-            whatsapp: u.whatsapp,
-            days_inactive: u.days_inactive,
-            plan_type: u.plan_type,
-            quiz_count: u.quiz_count,
-            lead_count: u.lead_count,
-            user_stage: u.user_stage,
-          })),
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({
+        message: `${eligibleUsers.length} destinatário(s) elegível(is)`,
+        dryRun: true,
+        total_eligible: eligibleUsers.length,
+        recipients: eligibleUsers.slice(0, 500).map(u => ({
+          user_id: u.id,
+          full_name: u.full_name,
+          whatsapp: u.whatsapp,
+          days_inactive: u.days_inactive,
+          plan_type: u.plan_type,
+          quiz_count: u.quiz_count,
+          lead_count: u.lead_count,
+          user_stage: u.user_stage,
+        })),
+      }, traceId, corsHeaders);
     }
 
     const usersToQueue = eligibleUsers.slice(0, remainingLimit);
@@ -345,7 +329,7 @@ Deno.serve(async (req) => {
         .from('recovery_templates')
         .select('id, trigger_days')
         .eq('id', templateId)
-        .single();
+        .maybeSingle();
       if (template) selectedTemplate = template;
     } else {
       const { data: templatesData } = await supabase
@@ -356,10 +340,7 @@ Deno.serve(async (req) => {
       templates = templatesData || [];
 
       if (templates.length === 0) {
-        return new Response(
-          JSON.stringify({ message: 'Nenhum template ativo encontrado', queued: 0 }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({ message: 'Nenhum template ativo encontrado', queued: 0 }, traceId, corsHeaders);
       }
     }
 
@@ -429,7 +410,7 @@ Deno.serve(async (req) => {
             .from('recovery_campaigns')
             .select('total_targets, queued_count')
             .eq('id', campaignId)
-            .single();
+            .maybeSingle();
 
           const existingTotal = currentCampaign?.total_targets || 0;
           const existingQueued = currentCampaign?.queued_count || 0;
@@ -459,21 +440,15 @@ Deno.serve(async (req) => {
 
     console.log(`Queued ${queuedContacts.length} contacts (eligible: ${eligibleUsers.length}, inactivity_filter: ${shouldFilterByInactivity}, cooldown_ignored: ${ignoreCooldown}, direct: ${directCampaign})`);
 
-    return new Response(
-      JSON.stringify({
-        message: `${queuedContacts.length} usuários adicionados à fila`,
-        queued: queuedContacts.length,
-        total_eligible: eligibleUsers.length,
-        targetCount: queuedContacts.length
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({
+      message: `${queuedContacts.length} usuários adicionados à fila`,
+      queued: queuedContacts.length,
+      total_eligible: eligibleUsers.length,
+      targetCount: queuedContacts.length
+    }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('Check inactive users error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno', details: error instanceof Error ? error.message : 'Unknown' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro interno', traceId, corsHeaders);
   }
 });

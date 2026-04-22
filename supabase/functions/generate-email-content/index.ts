@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,6 +109,7 @@ async function logAICost(supabaseAdmin: any, templateType: string, aiData: any) 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const { templateType, context, recipientName, recipientEmail, recipientUserId } = await req.json() as GenerateRequest;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -445,14 +447,9 @@ ${makeButton('Explorar novidades', LOGIN_URL)}`;
 
     const html = wrapInEmailLayout(bodyHtml, preheader, email, userId);
 
-    return new Response(JSON.stringify({ subject, html, preheader }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return okResponse({ subject, html, preheader }, traceId, corsHeaders);
   } catch (error) {
     console.error('generate-email-content error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Erro', traceId, corsHeaders);
   }
 });
