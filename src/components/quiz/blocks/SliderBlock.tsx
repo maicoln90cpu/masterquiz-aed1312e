@@ -17,11 +17,11 @@ export const SliderBlock = ({ block, onChange }: SliderBlockProps) => {
           <span>📊 Bloco Slider/Range</span>
         </div>
 
-        {/* Content: Label */}
-        <div className="space-y-2">
-          <Label htmlFor="slider-label">Pergunta/Label</Label>
+        {/* ✅ Onda 3 — pergunta principal editável no cartão (texto que aparece no quiz) */}
+        <div className="space-y-1">
+          <Label htmlFor={`slider-label-${block.id}`} className="text-xs">Pergunta</Label>
           <Input
-            id="slider-label"
+            id={`slider-label-${block.id}`}
             value={block.label}
             onChange={(e) => onChange({ ...block, label: e.target.value })}
             placeholder="Ex: Qual sua renda mensal?"
@@ -35,7 +35,7 @@ export const SliderBlock = ({ block, onChange }: SliderBlockProps) => {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Configure min/max, incremento, unidade e opções no painel de propriedades →
+          Configure pergunta, min/max, incremento, unidade e opções no painel de propriedades →
         </p>
       </CardContent>
     </Card>

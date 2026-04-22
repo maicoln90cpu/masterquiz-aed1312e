@@ -80,7 +80,7 @@ export const ImageBlock = ({ block, onChange }: ImageBlockProps) => {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                ✅ Imagem carregada • Configure alt, legenda e tamanho no painel →
+                ✅ Imagem carregada • Configure legenda, alt e tamanho no painel →
               </p>
             </div>
           ) : (

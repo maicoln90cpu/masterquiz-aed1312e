@@ -17,11 +17,11 @@ export const NPSBlock = ({ block, onChange }: NPSBlockProps) => {
           <span>⭐ Bloco NPS (Net Promoter Score)</span>
         </div>
 
-        {/* Content: Question */}
-        <div className="space-y-2">
-          <Label htmlFor="nps-question">Pergunta</Label>
+        {/* ✅ Onda 3 — pergunta principal editável no cartão */}
+        <div className="space-y-1">
+          <Label htmlFor={`nps-question-${block.id}`} className="text-xs">Pergunta</Label>
           <Input
-            id="nps-question"
+            id={`nps-question-${block.id}`}
             value={block.question}
             onChange={(e) => onChange({ ...block, question: e.target.value })}
             placeholder="Ex: De 0 a 10, qual a probabilidade de você recomendar?"
@@ -35,7 +35,7 @@ export const NPSBlock = ({ block, onChange }: NPSBlockProps) => {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Configure labels, obrigatoriedade e opções no painel de propriedades →
+          Configure pergunta, labels, obrigatoriedade e opções no painel de propriedades →
         </p>
       </CardContent>
     </Card>
