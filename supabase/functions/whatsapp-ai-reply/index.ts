@@ -1,14 +1,23 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id',
 };
 
 interface ConversationMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }
+
+const BodySchema = z.object({
+  phone_number: z.string().min(5),
+  message_text: z.string().min(1),
+  user_id: z.string().uuid().nullable().optional(),
+  contact_id: z.string().uuid().nullable().optional(),
+});
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
