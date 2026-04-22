@@ -373,8 +373,11 @@ export default function AdminDashboard() {
 
       // Edge function already returns aggregated respondents
       setAllUsers(respondentsResult.data || []);
-      await loadFinancialData();
-      await loadSettings();
+      // 🚀 Fase 3: paralelizar carga financeira + settings (antes era em série).
+      await Promise.all([
+        loadFinancialData(),
+        loadSettings(),
+      ]);
       setLoading(false);
     } catch (error) {
       logger.error('Error loading admin data:', error);
