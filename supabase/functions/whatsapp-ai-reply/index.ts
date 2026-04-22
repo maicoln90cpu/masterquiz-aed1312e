@@ -134,10 +134,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      return new Response(
-        JSON.stringify({ success: false, reason: 'human_intervention', admin_alerted: !!adminPhone }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'human_intervention', admin_alerted: !!adminPhone }, traceId, corsHeaders);
     }
 
     // 3.5 CHECK MAX AGENT RETRIES — count consecutive assistant messages without user reply
@@ -220,10 +217,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        return new Response(
-          JSON.stringify({ success: true, reason: 'max_retries_escalated', max_retries: maxRetries }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({ success: true, reason: 'max_retries_escalated', max_retries: maxRetries }, traceId, corsHeaders);
       }
     }
 
