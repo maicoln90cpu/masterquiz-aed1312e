@@ -226,6 +226,23 @@ All colors MUST be HSL.
   }
 }
 
+/* ============================================================
+ * ♿ Acessibilidade — prefers-reduced-motion (Onda 8.1)
+ * Usuários que ativam "reduzir movimento" no SO recebem animações
+ * praticamente desabilitadas. Mantém transições funcionais (não some
+ * conteúdo) mas remove parallax, bounces, spins e fades longos.
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer utilities {
   /* Typography Hierarchy Classes */
   .heading-display {

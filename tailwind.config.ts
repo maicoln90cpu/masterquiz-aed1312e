@@ -129,6 +129,16 @@ export default {
   		backdropBlur: {
   			glass: 'var(--glass-blur)'
   		},
+  		zIndex: {
+  			base: '0',
+  			dropdown: '10',
+  			sticky: '20',
+  			fixed: '30',
+  			overlay: '40',
+  			modal: '50',
+  			popover: '60',
+  			toast: '70'
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
