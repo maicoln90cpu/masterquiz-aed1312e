@@ -297,4 +297,26 @@ export default tseslint.config(
       ],
     },
   },
+  // 🚫 P23 (Onda 7): `<button>` HTML nativo sem `type` defaulta para "submit"
+  // dentro de <form>, causando submissões acidentais e refresh da página.
+  // Sempre defina type="button" | "submit" | "reset" explicitamente.
+  // Componente <Button /> do shadcn já força `type="button"` por padrão e está liberado.
+  {
+    files: ["src/**/*.{tsx,jsx}"],
+    ignores: [
+      "src/components/ui/**", // shadcn primitives (já tipadas)
+      "src/__tests__/**",
+      "src/**/*.test.{tsx,jsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          // <button> JSX sem nenhum atributo `type`
+          "selector": "JSXOpeningElement[name.name='button']:not(:has(JSXAttribute[name.name='type']))",
+          "message": "🚫 P23: <button> sem `type` defaulta para 'submit' dentro de <form> e causa refresh acidental. Use type=\"button\" (ou 'submit'/'reset' explicitamente)."
+        }
+      ],
+    },
+  },
 );
