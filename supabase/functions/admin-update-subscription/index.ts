@@ -1,22 +1,36 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const BodySchema = z.object({
+  user_id: z.string().uuid(),
+  plan_type: z.string().min(1).optional(),
+  quiz_limit: z.number().int().nullable().optional(),
+  response_limit: z.number().int().nullable().optional(),
+  status: z.string().optional(),
+  payment_confirmed: z.boolean().optional(),
+  trial_days: z.number().int().positive().optional(),
+  trial_plan_type: z.string().optional(),
+  original_plan_type: z.string().optional(),
+  cancel_trial: z.boolean().optional(),
+});
+
 Deno.serve(async (req) => {
+  const traceId = getTraceId(req);
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: { ...corsHeaders, 'x-trace-id': traceId } });
   }
 
   try {
     // Validate caller is admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('UNAUTHORIZED', 'Token ausente', traceId, corsHeaders);
     }
 
     const anonClient = createClient(
@@ -29,9 +43,7 @@ Deno.serve(async (req) => {
       authHeader.replace('Bearer ', '')
     );
     if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     const callerId = claimsData.claims.sub;
@@ -52,21 +64,13 @@ Deno.serve(async (req) => {
     );
 
     if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Forbidden: admin role required' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('FORBIDDEN', 'Requer papel de admin', traceId, corsHeaders);
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
     const { user_id, plan_type, quiz_limit, response_limit, status, payment_confirmed,
-            // Trial fields
-            trial_days, trial_plan_type, original_plan_type, cancel_trial } = body;
-
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: 'user_id required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+            trial_days, trial_plan_type, original_plan_type, cancel_trial } = parsed.data;
 
     // === CANCEL TRIAL ===
     if (cancel_trial) {
@@ -77,12 +81,10 @@ Deno.serve(async (req) => {
         .from('user_subscriptions')
         .select('original_plan_type')
         .eq('user_id', user_id)
-        .single();
+        .maybeSingle();
 
       if (!currentSub?.original_plan_type) {
-        return new Response(JSON.stringify({ error: 'No active trial found' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return errorResponse('VALIDATION_FAILED', 'Nenhum trial ativo encontrado', traceId, corsHeaders);
       }
 
       // Get limits of the original plan
@@ -91,12 +93,10 @@ Deno.serve(async (req) => {
         .select('quiz_limit, response_limit')
         .eq('plan_type', currentSub.original_plan_type)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (!originalPlan) {
-        return new Response(JSON.stringify({ error: `Original plan "${currentSub.original_plan_type}" not configured` }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return errorResponse('INTERNAL_ERROR', `Plano original "${currentSub.original_plan_type}" não configurado`, traceId, corsHeaders);
       }
 
       const { data, error } = await supabase
@@ -113,16 +113,14 @@ Deno.serve(async (req) => {
         })
         .eq('user_id', user_id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return errorResponse('INTERNAL_ERROR', error.message, traceId, corsHeaders);
       }
 
       // Log trial cancellation
-      const { data: profile } = await supabase.from('profiles').select('email').eq('id', user_id).single();
+      const { data: profile } = await supabase.from('profiles').select('email').eq('id', user_id).maybeSingle();
       await supabase.from('trial_logs').update({
         status: 'cancelled',
         cancelled_at: new Date().toISOString(),
@@ -130,9 +128,7 @@ Deno.serve(async (req) => {
       }).eq('user_id', user_id).eq('status', 'active');
 
       console.log(`[ADMIN-UPDATE-SUB] Trial cancelled, reverted to ${currentSub.original_plan_type}`);
-      return new Response(JSON.stringify({ success: true, data, trial_cancelled: true }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ success: true, data, trial_cancelled: true }, traceId, corsHeaders);
     }
 
     // === ACTIVATE TRIAL ===
@@ -144,7 +140,7 @@ Deno.serve(async (req) => {
         .from('user_subscriptions')
         .select('plan_type, original_plan_type')
         .eq('user_id', user_id)
-        .single();
+        .maybeSingle();
 
       // Use the real original plan (if already in trial, keep the original original)
       const realOriginalPlan = original_plan_type || currentSub?.original_plan_type || currentSub?.plan_type || 'free';
@@ -155,15 +151,13 @@ Deno.serve(async (req) => {
         .select('quiz_limit, response_limit')
         .eq('plan_type', trial_plan_type)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + trial_days);
 
       if (!trialPlan) {
-        return new Response(JSON.stringify({ error: `Trial plan "${trial_plan_type}" not configured` }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return errorResponse('INTERNAL_ERROR', `Plano de trial "${trial_plan_type}" não configurado`, traceId, corsHeaders);
       }
 
       const { data, error } = await supabase
@@ -180,16 +174,14 @@ Deno.serve(async (req) => {
         })
         .eq('user_id', user_id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return errorResponse('INTERNAL_ERROR', error.message, traceId, corsHeaders);
       }
 
       // Log trial activation
-      const { data: profile } = await supabase.from('profiles').select('email').eq('id', user_id).single();
+      const { data: profile } = await supabase.from('profiles').select('email').eq('id', user_id).maybeSingle();
       await supabase.from('trial_logs').insert({
         user_id,
         user_email: profile?.email || null,
@@ -202,16 +194,12 @@ Deno.serve(async (req) => {
       });
 
       console.log(`[ADMIN-UPDATE-SUB] Trial activated until ${trialEndDate.toISOString()}`);
-      return new Response(JSON.stringify({ success: true, data, trial_activated: true, trial_end_date: trialEndDate.toISOString() }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ success: true, data, trial_activated: true, trial_end_date: trialEndDate.toISOString() }, traceId, corsHeaders);
     }
 
     // === REGULAR PLAN UPDATE ===
     if (!plan_type) {
-      return new Response(JSON.stringify({ error: 'plan_type required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('VALIDATION_FAILED', 'plan_type obrigatório', traceId, corsHeaders);
     }
 
     console.log(`[ADMIN-UPDATE-SUB] Admin ${callerId} updating user ${user_id} to plan ${plan_type}`);
@@ -236,25 +224,19 @@ Deno.serve(async (req) => {
       .update(updateData)
       .eq('user_id', user_id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('[ADMIN-UPDATE-SUB] Update error:', error);
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('INTERNAL_ERROR', error.message, traceId, corsHeaders);
     }
 
     console.log(`[ADMIN-UPDATE-SUB] Successfully updated subscription for ${user_id}`);
 
-    return new Response(JSON.stringify({ success: true, data }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return okResponse({ success: true, data }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('[ADMIN-UPDATE-SUB] Error:', error);
-    return new Response(JSON.stringify({ error: String(error) }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', (error as Error)?.message || String(error), traceId, corsHeaders);
   }
 });
