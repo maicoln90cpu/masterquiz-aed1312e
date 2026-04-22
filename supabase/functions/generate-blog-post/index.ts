@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -274,6 +275,7 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -772,20 +774,13 @@ Deno.serve(async (req: Request) => {
 
     console.log(`${PREFIX} ✅ Post created: "${newPost.title}" (${newPost.slug}) - $${totalCost.toFixed(4)}`);
 
-    return new Response(JSON.stringify({
-      success: true,
+    return okResponse({
       title: newPost.title,
       slug: newPost.slug,
       status: newPost.status,
       postId: newPost.id,
-      cost: {
-        text: textCostUsd,
-        image: imageCostUsd,
-        total: totalCost,
-      },
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      cost: { text: textCostUsd, image: imageCostUsd, total: totalCost },
+    }, traceId, corsHeaders);
 
   } catch (error) {
     console.error(`${PREFIX} ❌ Error:`, error);
@@ -796,12 +791,6 @@ Deno.serve(async (req: Request) => {
       post_id: postId,
     }).eq('id', logId);
 
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Unknown error', traceId, corsHeaders);
   }
 });

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,16 +52,17 @@ async function syncToWebhook(webhookUrl: string, lead: LeadData): Promise<SyncRe
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { integration_id, response_id, quiz_id } = await req.json();
 
-    const { data: integration } = await supabase.from('user_integrations').select('*').eq('id', integration_id).single();
-    if (!integration) return new Response(JSON.stringify({ error: 'Integration not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    if (!integration.is_active) return new Response(JSON.stringify({ message: 'Integration inactive' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { data: integration } = await supabase.from('user_integrations').select('*').eq('id', integration_id).maybeSingle();
+    if (!integration) return errorResponse('NOT_FOUND', 'Integration not found', traceId, corsHeaders);
+    if (!integration.is_active) return okResponse({ message: 'Integration inactive', skipped: true }, traceId, corsHeaders);
 
-    const { data: response } = await supabase.from('quiz_responses').select('*, quiz:quizzes(title), result:quiz_results(result_text)').eq('id', response_id).single();
-    if (!response) return new Response(JSON.stringify({ error: 'Response not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { data: response } = await supabase.from('quiz_responses').select('*, quiz:quizzes(title), result:quiz_results(result_text)').eq('id', response_id).maybeSingle();
+    if (!response) return errorResponse('NOT_FOUND', 'Response not found', traceId, corsHeaders);
 
     const leadData: LeadData = {
       name: response.respondent_name, email: response.respondent_email, whatsapp: response.respondent_whatsapp,
@@ -84,9 +86,10 @@ Deno.serve(async (req) => {
 
     if (result.success) await supabase.from('user_integrations').update({ last_sync_at: new Date().toISOString() }).eq('id', integration_id);
 
-    return new Response(JSON.stringify(result), { status: result.success ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!result.success) return errorResponse('INTERNAL_ERROR', result.error ?? 'Sync failed', traceId, corsHeaders);
+    return okResponse(result, traceId, corsHeaders);
   } catch (error) {
     console.error('[SYNC] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Unknown error', traceId, corsHeaders);
   }
 });

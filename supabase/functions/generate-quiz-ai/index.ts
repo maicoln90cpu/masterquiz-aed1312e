@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { calculateQuestionDistribution, formatDistributionForPrompt, type FunnelMode } from './distribution.ts';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -90,6 +91,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -100,9 +102,7 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return errorResponse('UNAUTHORIZED', 'Unauthorized', traceId, corsHeaders);
     }
 
     // Check master_admin
@@ -114,9 +114,7 @@ Deno.serve(async (req) => {
     const { data: subscription } = await supabaseClient
       .from('user_subscriptions').select('plan_type').eq('user_id', user.id).single();
     if (!subscription) {
-      return new Response(JSON.stringify({ error: 'Subscription not found' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return errorResponse('NOT_FOUND', 'Subscription not found', traceId, corsHeaders);
     }
 
     const planQuery = supabaseClient
@@ -129,9 +127,7 @@ Deno.serve(async (req) => {
     const { data: plan } = await planQuery.single();
 
     if (!isMasterAdmin && (!plan || !plan.allow_ai_generation)) {
-      return new Response(JSON.stringify({ error: 'AI generation not available in your plan' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return errorResponse('FORBIDDEN', 'AI generation not available in your plan', traceId, corsHeaders);
     }
 
     const maxQuestionsAllowed = plan?.questions_per_quiz_limit || 10;
@@ -342,9 +338,12 @@ REGRAS:
       const { data: usageData } = await supabaseClient
         .from('ai_quiz_generations').select('id').eq('user_id', user.id).gte('generation_month', currentMonth);
       if (usageData && usageData.length >= plan.ai_generations_per_month) {
-        return new Response(JSON.stringify({ error: 'Monthly AI generation limit reached', limit: plan.ai_generations_per_month, used: usageData.length }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return errorResponse(
+          'RATE_LIMITED',
+          `Monthly AI generation limit reached (${usageData.length}/${plan.ai_generations_per_month})`,
+          traceId,
+          corsHeaders,
+        );
       }
     }
 
@@ -470,9 +469,7 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
       });
     } else {
       if (!LOVABLE_API_KEY) {
-        return new Response(JSON.stringify({ error: 'AI service not configured' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return errorResponse('INTERNAL_ERROR', 'AI service not configured', traceId, corsHeaders);
       }
       aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
@@ -484,8 +481,8 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error(`${PREFIX} API error:`, aiResponse.status, errorText);
-      if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'Payment required' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (aiResponse.status === 429) return errorResponse('RATE_LIMITED', 'Rate limit exceeded', traceId, corsHeaders);
+      if (aiResponse.status === 402) return errorResponse('FORBIDDEN', 'Payment required', traceId, corsHeaders, 402);
       throw new Error(`AI generation failed: ${errorText}`);
     }
 
@@ -505,9 +502,12 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
       else { const m = content.match(/\{[\s\S]*\}/); if (m) jsonStr = m[0]; }
       quizData = JSON.parse(jsonStr.trim());
     } catch {
-      return new Response(JSON.stringify({ error: 'Failed to parse AI response', rawPreview: content.substring(0, 500) }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return errorResponse(
+        'INTERNAL_ERROR',
+        `Failed to parse AI response. Preview: ${content.substring(0, 200)}`,
+        traceId,
+        corsHeaders,
+      );
     }
 
     // === FASE 2: validação pós-IA — quantidade de perguntas retornadas ===
@@ -566,7 +566,7 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
       .select('id')
       .single();
 
-    return new Response(JSON.stringify({
+    return okResponse({
       ...quizData,
       _meta: {
         requested_questions: requested,
@@ -577,14 +577,10 @@ Foco 100% pedagógico. NÃO usar funil de vendas.`;
         model_used: modelUsed,
         questions_count: returned,
       },
-    }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    }, traceId, corsHeaders);
 
   } catch (error) {
     console.error(`${PREFIX} Error:`, error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Unknown error', traceId, corsHeaders);
   }
 });

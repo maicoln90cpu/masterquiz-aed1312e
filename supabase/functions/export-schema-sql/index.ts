@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -18,20 +20,14 @@ Deno.serve(async (req) => {
     // Verificar autenticação e role master_admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authorization required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Authorization required', traceId, corsHeaders);
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Invalid token', traceId, corsHeaders);
     }
 
     const { data: roleData } = await supabase
@@ -39,13 +35,10 @@ Deno.serve(async (req) => {
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'master_admin')
-      .single();
+      .maybeSingle();
 
     if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: 'Acesso negado. Requer master_admin.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('FORBIDDEN', 'Acesso negado. Requer master_admin.', traceId, corsHeaders);
     }
 
     // Listar todas as tabelas públicas
@@ -96,21 +89,14 @@ Deno.serve(async (req) => {
       metadata: { tables_count: Object.keys(schemaInfo).length }
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        schema: schemaInfo,
-        tables_count: Object.keys(schemaInfo).length,
-        exported_at: new Date().toISOString()
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({
+      schema: schemaInfo,
+      tables_count: Object.keys(schemaInfo).length,
+      exported_at: new Date().toISOString(),
+    }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('Export schema error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Internal server error', traceId, corsHeaders);
   }
 });

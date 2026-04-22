@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +29,7 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -42,9 +44,7 @@ Deno.serve(async (req: Request) => {
 
     if (!settings?.is_active) {
       console.log(`${PREFIX} Blog generation is disabled. Skipping.`);
-      return new Response(JSON.stringify({ success: true, skipped: true, reason: 'inactive' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ skipped: true, reason: 'inactive' }, traceId, corsHeaders);
     }
 
     // 2. Check interval: compare last AI post timestamp with cron_schedule
@@ -66,9 +66,7 @@ Deno.serve(async (req: Request) => {
 
         if (elapsedHours < intervalHours) {
           console.log(`${PREFIX} Interval not reached. Elapsed: ${elapsedHours.toFixed(1)}h / Required: ${intervalHours}h. Skipping.`);
-          return new Response(JSON.stringify({ success: true, skipped: true, reason: 'interval_not_reached', elapsed_hours: +elapsedHours.toFixed(1), required_hours: intervalHours }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return okResponse({ skipped: true, reason: 'interval_not_reached', elapsed_hours: +elapsedHours.toFixed(1), required_hours: intervalHours }, traceId, corsHeaders);
         }
       }
     }
@@ -85,9 +83,7 @@ Deno.serve(async (req: Request) => {
 
     if ((todayCount ?? 0) >= 5) {
       console.log(`${PREFIX} Daily limit reached (${todayCount} posts today). Skipping.`);
-      return new Response(JSON.stringify({ success: true, skipped: true, reason: 'daily_limit' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ skipped: true, reason: 'daily_limit' }, traceId, corsHeaders);
     }
 
     // 4. Call generate-blog-post function
@@ -111,26 +107,15 @@ Deno.serve(async (req: Request) => {
 
     if (!generateResponse.ok) {
       console.error(`${PREFIX} Generation failed:`, result);
-      return new Response(JSON.stringify({ success: false, error: result.error }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('INTERNAL_ERROR', result?.error ?? result?.error?.message ?? 'Generation failed', traceId, corsHeaders);
     }
 
     console.log(`${PREFIX} ✅ Post generated: "${result.title}" (cost: $${result.cost?.total?.toFixed(4)})`);
 
-    return new Response(JSON.stringify({ success: true, ...result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return okResponse(result, traceId, corsHeaders);
 
   } catch (error) {
     console.error(`${PREFIX} ❌ Error:`, error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', error instanceof Error ? error.message : 'Unknown error', traceId, corsHeaders);
   }
 });
