@@ -293,39 +293,29 @@ Deno.serve(async (req) => {
         const { data: health } = await supabase
           .from('v_evolution_webhook_health')
           .select('*')
-          .single();
+          .maybeSingle();
 
-        return new Response(
-          JSON.stringify({
-            expected_url: expectedWebhookUrl,
-            configured_url: configuredUrl,
-            url_matches: urlMatches,
-            webhook_enabled: webhookEnabled,
-            required_events: requiredEvents,
-            configured_events: configuredEvents,
-            missing_events: missingEvents,
-            all_events_present: allEventsPresent,
-            health: health || null,
-            recommendation: !configuredUrl
-              ? 'Webhook não configurado na Evolution API. Use action=fix_webhook para configurar.'
-              : !urlMatches
-              ? 'URL do webhook está apontando para outro lugar. Use action=fix_webhook para corrigir.'
-              : !allEventsPresent
-              ? `Faltam eventos: ${missingEvents.join(', ')}. Use action=fix_webhook para adicionar.`
-              : 'Webhook está corretamente configurado. Se ainda não chegam confirmações, verifique a instância na Evolution API.',
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({
+          expected_url: expectedWebhookUrl,
+          configured_url: configuredUrl,
+          url_matches: urlMatches,
+          webhook_enabled: webhookEnabled,
+          required_events: requiredEvents,
+          configured_events: configuredEvents,
+          missing_events: missingEvents,
+          all_events_present: allEventsPresent,
+          health: health || null,
+          recommendation: !configuredUrl
+            ? 'Webhook não configurado na Evolution API. Use action=fix_webhook para configurar.'
+            : !urlMatches
+            ? 'URL do webhook está apontando para outro lugar. Use action=fix_webhook para corrigir.'
+            : !allEventsPresent
+            ? `Faltam eventos: ${missingEvents.join(', ')}. Use action=fix_webhook para adicionar.`
+            : 'Webhook está corretamente configurado.',
+        }, traceId, corsHeaders);
       } catch (error) {
         console.error('Webhook diagnostics error:', error);
-        return new Response(
-          JSON.stringify({
-            error: 'Falha ao consultar webhook',
-            details: error instanceof Error ? error.message : 'Unknown',
-            expected_url: expectedWebhookUrl,
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('INTERNAL_ERROR', `Falha ao consultar webhook: ${error instanceof Error ? error.message : 'Unknown'}`, traceId, corsHeaders);
       }
     }
 
@@ -352,39 +342,24 @@ Deno.serve(async (req) => {
 
         const result = await setRes.text();
         if (!setRes.ok) {
-          return new Response(
-            JSON.stringify({ error: 'Falha ao configurar webhook', status: setRes.status, details: result }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return errorResponse('INTERNAL_ERROR', `Falha ao configurar webhook (${setRes.status}): ${result.slice(0, 200)}`, traceId, corsHeaders);
         }
 
-        return new Response(
-          JSON.stringify({
-            success: true,
-            url: expectedWebhookUrl,
-            events: requiredEvents,
-            message: 'Webhook configurado. Próximas mensagens devem receber confirmações de entrega.',
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({
+          success: true,
+          url: expectedWebhookUrl,
+          events: requiredEvents,
+          message: 'Webhook configurado.',
+        }, traceId, corsHeaders);
       } catch (error) {
-        return new Response(
-          JSON.stringify({ error: 'Erro ao corrigir webhook', details: error instanceof Error ? error.message : 'Unknown' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('INTERNAL_ERROR', `Erro ao corrigir webhook: ${error instanceof Error ? error.message : 'Unknown'}`, traceId, corsHeaders);
       }
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Ação inválida. Use: connect, status, disconnect, webhook_diagnostics, fix_webhook' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('VALIDATION_FAILED', 'Ação inválida. Use: connect, status, disconnect, webhook_diagnostics, fix_webhook', traceId, corsHeaders);
 
   } catch (error) {
     console.error('Evolution connect error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno', details: error instanceof Error ? error.message : 'Unknown' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', `Erro interno: ${error instanceof Error ? error.message : 'Unknown'}`, traceId, corsHeaders);
   }
 });
