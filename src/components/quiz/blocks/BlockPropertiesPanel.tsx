@@ -1800,6 +1800,21 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </Select>
         </div>
       )}
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores customizadas (opcional)</Label>
+      <ColorPalette
+        label="Cor de fundo"
+        value={(block as any).bgColor}
+        onChange={(c) => onChange(update(block, { bgColor: c }))}
+        defaultValue="#3b82f6"
+        hint="Sobrescreve a cor padrão da variante"
+      />
+      <ColorPalette
+        label="Cor do texto"
+        value={(block as any).textColor}
+        onChange={(c) => onChange(update(block, { textColor: c }))}
+        defaultValue="#ffffff"
+      />
     </div>
   );
 };
