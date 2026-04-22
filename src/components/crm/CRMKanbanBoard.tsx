@@ -165,8 +165,8 @@ export const CRMKanbanBoard = ({
               <DroppableColumn key={column.id} id={column.id}>
                 <Card className={`border-t-4 ${column.borderColor} w-full h-full`} style={{ borderTopColor: column.color }}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium flex items-center justify-between">
-                      <span className="truncate">{column.title}</span>
+                    <CardTitle className="text-sm font-medium flex items-center justify-between gap-2 min-w-0">
+                      <span className="truncate min-w-0 flex-1">{column.title}</span>
                       <Badge variant="secondary" style={{ backgroundColor: column.color, color: 'white' }}>
                         {columnLeads.length}
                       </Badge>

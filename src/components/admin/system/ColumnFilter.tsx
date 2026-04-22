@@ -83,12 +83,12 @@ export function ColumnFilter({ allValues, selected, onChange, label }: ColumnFil
           {filtered.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-3">Sem valores</p>
           ) : filtered.map(v => (
-            <label key={v} className="flex items-center gap-2 cursor-pointer text-xs hover:bg-muted/50 rounded px-1 py-0.5">
+            <label key={v} className="flex items-center gap-2 cursor-pointer text-xs hover:bg-muted/50 rounded px-1 py-0.5 min-w-0">
               <Checkbox
                 checked={selected.has(v)}
                 onCheckedChange={() => toggle(v)}
               />
-              <span className="truncate">{v || '(vazio)'}</span>
+              <span className="truncate min-w-0 flex-1">{v || '(vazio)'}</span>
             </label>
           ))}
         </div>
