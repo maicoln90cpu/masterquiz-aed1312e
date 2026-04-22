@@ -1,5 +1,32 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ Onda 7 — Etapa 2-bis + Etapa 3 (P18 fechado + P19 idempotência)
+
+### Etapa 2-bis (concluída)
+- **`growth-metrics`** migrada para envelope: `okResponse`/`errorResponse` no entry, role check, sucesso e catch. Header `x-trace-id` propagado.
+- **`admin-view-user-data`**: 5 retornos internos do switch (`quiz_detail`, `fix_duplicates`, `republish`, `send_message`, `save_quiz`) trocados de `JSON.stringify({error})` para `errorResponse('VALIDATION_FAILED', ...)`.
+- **Cobertura envelope**: 7/64 → **8/64 edges** (~12,5%) com 100% dos retornos da função em formato envelope.
+
+### Etapa 3 (concluída) — Idempotência de Webhooks (P19)
+- **Migração `webhook_events`**: tabela nova com `UNIQUE(provider, event_id)`, RLS (master_admin SELECT, service_role INSERT/UPDATE), índices em `(provider, received_at DESC)` e em `status` parcial. Função `cleanup_old_webhook_events()` (retenção 90 dias).
+- **Helper `supabase/functions/_shared/idempotency.ts`**: `claimEvent`, `markEventProcessed`, `markEventFailed`. `claimEvent` usa INSERT + fallback SELECT em conflito → devolve `{ id, alreadyProcessed, previousResult }`.
+- **`kiwify-webhook` migrada**:
+  - Extrai `eventId = webhook_event_id || order_id:evento` do payload (real ou teste).
+  - Antes de processar chama `claimEvent('kiwify', eventId)`. Se duplicado → retorna 200 com `previous` sem reprocessar (zero cobrança duplicada).
+  - No sucesso chama `markEventProcessed(claim.id, finalResult)`.
+  - Header `x-trace-id` agora aceito e ecoado.
+- **`evolution-webhook` migrada**:
+  - `eventId = event:messages.upsert.key.id` (mensagens) ou `event:instance:state:bucket1min` (connection.update).
+  - Reentregas da mesma mensagem WhatsApp são bloqueadas → não duplica resposta da IA, não duplica `recovery_contacts.responded`, não duplica forward para admin.
+- **Resiliência**: erro em `claimEvent` é não-fatal (apenas warn) — webhook segue processando para evitar perda de eventos críticos durante manutenção da tabela.
+
+### Pendências para próximas etapas
+- **Etapa 4**: `dateUtils.ts` central + ESLint warn `new Date()` e `.single()` em mutations + `prefers-reduced-motion` global.
+- **Etapa 5**: contract tests P18 (envelope-coverage), P19 (claimEvent obrigatório nos webhooks), P20 (useEdgeFunction propaga `x-trace-id`); atualizar `CODE_STANDARDS.md`.
+- **Sub-ondas 7-B…7-E**: migrar 56 edges restantes (notificações → alto input → crons → chatbot).
+- **Cron**: agendar `SELECT cleanup_old_webhook_events()` semanal via `pg_cron`.
+- **Painel admin**: card mostrando contagem de duplicados bloqueados/24h em `Sistema → Saúde`.
+
 ## ✅ Onda 7 — Etapa 2 (P18 — Validação + envelope nas edges admin)
 
 ### Feature: helpers `_shared/validation.ts` + envelope nas edges admin

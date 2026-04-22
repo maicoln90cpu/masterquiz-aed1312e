@@ -1,8 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { claimEvent, markEventProcessed, markEventFailed } from '../_shared/idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kiwify-token',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kiwify-token, x-trace-id',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Content-Type-Options': 'nosniff',
 };
@@ -53,8 +54,16 @@ function extractPayloadData(body: any) {
   // Subscription plan name (e.g. "Partner")
   const subscription = order.Subscription || order.subscription || {};
   const planName = subscription.plan?.name || subscription.plan_name || undefined;
-  
-  return { evento, buyerEmail, produto, planName, customer };
+
+  // Identificador único para idempotência (P19)
+  // Prioridade: webhook_event_id > order_id+status > order_ref+status
+  const orderId = order.order_id || order.id || order.order_ref || body.order_id || body.id;
+  const eventId =
+    order.webhook_event_id ||
+    body.webhook_event_id ||
+    (orderId ? `${orderId}:${evento}` : null);
+
+  return { evento, buyerEmail, produto, planName, customer, eventId };
 }
 
 Deno.serve(async (req) => {
@@ -66,7 +75,29 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { evento, buyerEmail, produto, planName } = extractPayloadData(rawBody);
+    const traceId = req.headers.get('x-trace-id') || crypto.randomUUID();
+    const { evento, buyerEmail, produto, planName, eventId } = extractPayloadData(rawBody);
+
+    // 🛡️ P19 — Idempotência: bloqueia reprocessamento do mesmo evento
+    let claim: { id: string; alreadyProcessed: boolean; previousResult: unknown } | null = null;
+    if (eventId) {
+      try {
+        claim = await claimEvent(supabaseAdmin, {
+          provider: 'kiwify',
+          eventId: String(eventId),
+          traceId,
+        });
+        if (claim.alreadyProcessed) {
+          console.log(`[KIWIFY] Duplicate event ${eventId} ignored — returning previous result`);
+          return new Response(
+            JSON.stringify({ received: true, duplicate: true, previous: claim.previousResult }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-trace-id': traceId } }
+          );
+        }
+      } catch (idempErr) {
+        console.warn('[KIWIFY] Idempotency check failed (non-fatal):', idempErr);
+      }
+    }
 
     console.log(`[KIWIFY] Event: ${evento}, email: ${buyerEmail ? '***' : 'none'}, product: ${produto}, plan: ${planName || 'N/A'}`);
 
@@ -146,8 +177,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ received: true, action: actionTaken, plan: newPlanType, status: newStatus }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    const finalResult = { received: true, action: actionTaken, plan: newPlanType, status: newStatus };
+    if (claim?.id) await markEventProcessed(supabaseAdmin, claim.id, finalResult).catch(() => {});
+    return new Response(JSON.stringify(finalResult), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-trace-id': traceId }
     });
   } catch (error) {
     console.error('[KIWIFY] Error:', error);

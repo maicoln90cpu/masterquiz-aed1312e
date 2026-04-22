@@ -3520,6 +3520,42 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          event_id: string
+          id: string
+          payload_hash: string | null
+          processed_at: string | null
+          provider: string
+          received_at: string
+          result: Json | null
+          status: string
+          trace_id: string | null
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          payload_hash?: string | null
+          processed_at?: string | null
+          provider: string
+          received_at?: string
+          result?: Json | null
+          status?: string
+          trace_id?: string | null
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          payload_hash?: string | null
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          result?: Json | null
+          status?: string
+          trace_id?: string | null
+        }
+        Relationships: []
+      }
       webhook_logs: {
         Row: {
           attempt_count: number | null
@@ -3798,6 +3834,7 @@ export type Database = {
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
       cleanup_old_gtm_events: { Args: never; Returns: undefined }
       cleanup_old_health_metrics: { Args: never; Returns: number }
+      cleanup_old_webhook_events: { Args: never; Returns: number }
       compute_error_fingerprint: {
         Args: { p_component: string; p_message: string }
         Returns: string

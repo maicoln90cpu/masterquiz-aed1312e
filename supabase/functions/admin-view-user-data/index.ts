@@ -154,9 +154,7 @@ Deno.serve(async (req) => {
     // ── QUIZ DETAIL ──
     } else if (data_type === "quiz_detail") {
       if (!quiz_id) {
-        return new Response(JSON.stringify({ error: "quiz_id required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return errorResponse("VALIDATION_FAILED", "quiz_id obrigatório", traceId, corsHeaders);
       }
       const [quizRes, questionsRes, resultsRes, formConfigRes] = await Promise.all([
         supabaseAdmin.from("quizzes").select("*").eq("id", quiz_id).maybeSingle(),
@@ -174,9 +172,7 @@ Deno.serve(async (req) => {
     // ── FIX DUPLICATE ORDER NUMBERS ──
     } else if (data_type === "fix_duplicates") {
       if (!quiz_id) {
-        return new Response(JSON.stringify({ error: "quiz_id required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return errorResponse("VALIDATION_FAILED", "quiz_id obrigatório", traceId, corsHeaders);
       }
       const { data: questions } = await supabaseAdmin
         .from("quiz_questions").select("id, order_number").eq("quiz_id", quiz_id).order("order_number");
@@ -204,9 +200,7 @@ Deno.serve(async (req) => {
     // ── REPUBLISH QUIZ ──
     } else if (data_type === "republish") {
       if (!quiz_id) {
-        return new Response(JSON.stringify({ error: "quiz_id required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return errorResponse("VALIDATION_FAILED", "quiz_id obrigatório", traceId, corsHeaders);
       }
       const { error: updateError } = await supabaseAdmin
         .from("quizzes").update({ status: "active", is_public: true }).eq("id", quiz_id);
@@ -241,9 +235,7 @@ Deno.serve(async (req) => {
     // ── SEND TICKET MESSAGE ──
     } else if (data_type === "send_message") {
       if (!ticket_id || !message) {
-        return new Response(JSON.stringify({ error: "ticket_id and message required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return errorResponse("VALIDATION_FAILED", "ticket_id e message obrigatórios", traceId, corsHeaders);
       }
 
       const { data: msg, error: msgError } = await supabaseAdmin
@@ -320,9 +312,7 @@ Deno.serve(async (req) => {
     // ── SAVE QUIZ (admin edit) ──
     } else if (data_type === "save_quiz") {
       if (!quiz_id) {
-        return new Response(JSON.stringify({ error: "quiz_id required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return errorResponse("VALIDATION_FAILED", "quiz_id obrigatório", traceId, corsHeaders);
       }
 
       const { quiz_updates, questions_updates, results_updates, questions_to_add, questions_to_delete } = body;
