@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { okResponse, errorResponse, getTraceId } from "../_shared/envelope.ts";
+import { parseBody, z } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,18 +8,29 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const BodySchema = z.object({
+  target_user_id: z.string().uuid(),
+  data_type: z.string().optional(),
+  quiz_id: z.string().uuid().optional(),
+  message: z.string().optional(),
+  ticket_id: z.string().uuid().optional(),
+  quiz_updates: z.record(z.string(), z.any()).optional(),
+  questions_updates: z.array(z.any()).optional(),
+  results_updates: z.array(z.any()).optional(),
+  questions_to_add: z.array(z.any()).optional(),
+  questions_to_delete: z.array(z.string()).optional(),
+}).passthrough();
+
 Deno.serve(async (req) => {
+  const traceId = getTraceId(req);
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: { ...corsHeaders, 'x-trace-id': traceId } });
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("UNAUTHORIZED", "Token ausente", traceId, corsHeaders);
     }
 
     const supabaseAdmin = createClient(
