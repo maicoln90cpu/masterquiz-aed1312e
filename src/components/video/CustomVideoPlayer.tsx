@@ -576,7 +576,8 @@ export const CustomVideoPlayer = ({
       {/* Center Play Button */}
       {!hidePlayButton && !isPlaying && !isLoading && (
         <button
-type="button" onClick={togglePlay}
+          type="button"
+          onClick={togglePlay}
           className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors group/play"
         >
           <div className="h-20 w-20 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-transform group-hover/play:scale-110">

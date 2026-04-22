@@ -314,7 +314,8 @@ export default function Compare() {
               <p className="text-sm text-muted-foreground">
                 {t("landing.compare.cta.loginHint")}{" "}
                 <button
-type="button" onClick={() => navigate("/login")}
+                  type="button"
+                  onClick={() => navigate("/login")}
                   className="text-primary hover:underline font-medium"
                 >
                   {t("landing.compare.cta.loginLink")}

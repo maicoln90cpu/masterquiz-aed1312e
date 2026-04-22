@@ -398,7 +398,8 @@ export const PersonalizedCTABlockPreview = ({ block, answers, onCtaClick }: Pers
 
   return (
     <button
-type="button" onClick={handleClick}
+      type="button"
+      onClick={handleClick}
       className={`w-full rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${sizeClass} ${variantClass}`}
     >
       {buttonText}

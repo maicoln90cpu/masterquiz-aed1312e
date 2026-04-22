@@ -34,13 +34,14 @@ export const StepNavigation = ({ currentStep, steps, onStepClick }: StepNavigati
         <div className="p-4 space-y-3">
           {steps.map((step) => (
             <button
-type="button" key={step.number}
+              type="button"
+              key={step.number}
               onClick={() => onStepClick(step.number)}
               className={cn(
-                "w-full text-left p-4 rounded-lg border-2 transition-all",
-                currentStep === step.number
-                  ? "border-primary bg-primary/10 shadow-md"
-                  : "border-border hover:border-primary/50 hover:bg-accent/30"
+              "w-full text-left p-4 rounded-lg border-2 transition-all",
+              currentStep === step.number
+              ? "border-primary bg-primary/10 shadow-md"
+              : "border-border hover:border-primary/50 hover:bg-accent/30"
               )}
             >
               <div className="flex items-center gap-3">

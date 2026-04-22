@@ -221,7 +221,8 @@ const RecommendationCard = ({ item, style, isPreview, showScore, score, rank, on
       )}
       {item.buttonText && (
         <button
-type="button" onClick={handleClick}
+          type="button"
+          onClick={handleClick}
           className="mt-3 w-full rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
         >
           {item.buttonText}

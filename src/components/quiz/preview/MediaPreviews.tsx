@@ -113,7 +113,8 @@ export const AudioPlayerWhatsApp = ({ url }: { url: string }) => {
     <div className="flex items-center gap-3 bg-muted/50 rounded-full px-4 py-3 max-w-md">
       <audio ref={audioRef} src={url} preload="metadata" />
       <button
-type="button" onClick={togglePlay}
+        type="button"
+        onClick={togglePlay}
         className="flex-shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center"
       >
         {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}

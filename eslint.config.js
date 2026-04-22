@@ -301,6 +301,7 @@ export default tseslint.config(
   // dentro de <form>, causando submissões acidentais e refresh da página.
   // Sempre defina type="button" | "submit" | "reset" explicitamente.
   // Componente <Button /> do shadcn já força `type="button"` por padrão e está liberado.
+  // 🔒 v2.43.x — promovido de "warn" → "error" após codemod cobrir 100% dos legados.
   {
     files: ["src/**/*.{tsx,jsx}"],
     ignores: [
@@ -310,7 +311,7 @@ export default tseslint.config(
     ],
     rules: {
       "no-restricted-syntax": [
-        "warn",
+        "error",
         {
           // <button> JSX sem nenhum atributo `type`
           "selector": "JSXOpeningElement[name.name='button']:not(:has(JSXAttribute[name.name='type']))",

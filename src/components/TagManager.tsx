@@ -206,15 +206,17 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
                 <div className="flex gap-2 mt-1">
                   {colors.slice(0, 4).map((color) => (
                     <button
-type="button" key={color.value}
+                      type="button"
+                      key={color.value}
                       className={`w-8 h-8 rounded-full border-2 ${
-                        newTagColor === color.value ? 'border-foreground' : 'border-transparent'
+                      newTagColor === color.value ? 'border-foreground' : 'border-transparent'
                       }`}
                       style={{ backgroundColor: color.value }}
                       onClick={() => setNewTagColor(color.value)}
                       title={color.name}
                       aria-label={`Selecionar cor ${color.name}`}
-                    />
+                      /
+                    >
                   ))}
                 </div>
               </div>
@@ -228,15 +230,17 @@ type="button" key={color.value}
             <div className="flex gap-2">
               {colors.slice(4).map((color) => (
                 <button
-type="button" key={color.value}
+                  type="button"
+                  key={color.value}
                   className={`w-8 h-8 rounded-full border-2 ${
-                    newTagColor === color.value ? 'border-foreground' : 'border-transparent'
+                  newTagColor === color.value ? 'border-foreground' : 'border-transparent'
                   }`}
                   style={{ backgroundColor: color.value }}
                   onClick={() => setNewTagColor(color.value)}
                   title={color.name}
                   aria-label={`Selecionar cor ${color.name}`}
-                />
+                  /
+                >
               ))}
             </div>
           </div>
@@ -271,13 +275,15 @@ type="button" key={color.value}
                         <div className="flex gap-1">
                           {colors.map((color) => (
                             <button
-type="button" key={color.value}
+                              type="button"
+                              key={color.value}
                               className={`w-6 h-6 rounded-full border ${
-                                editColor === color.value ? 'border-foreground border-2' : 'border-transparent'
+                              editColor === color.value ? 'border-foreground border-2' : 'border-transparent'
                               }`}
                               style={{ backgroundColor: color.value }}
                               onClick={() => setEditColor(color.value)}
-                            />
+                              /
+                            >
                           ))}
                         </div>
                         <div className="flex gap-1">

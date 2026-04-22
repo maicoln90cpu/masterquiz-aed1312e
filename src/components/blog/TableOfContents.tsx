@@ -51,7 +51,8 @@ export const TableOfContents = ({ contentHtml }: TableOfContentsProps) => {
         {items.map((item) => (
           <li key={item.id} style={{ paddingLeft: `${(item.level - 2) * 16}px` }}>
             <button
-type="button" onClick={() => scrollTo(item.id)}
+              type="button"
+              onClick={() => scrollTo(item.id)}
               className="text-sm text-muted-foreground hover:text-primary transition-colors text-left"
             >
               {item.text}
