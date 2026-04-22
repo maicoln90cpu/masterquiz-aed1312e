@@ -50,13 +50,25 @@ export default function ICPInsightsTab() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['icp-insights'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_activity_summary' as any)
-        .select('*')
-        .order('icp_score', { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return (data || []) as unknown as ICPRow[];
+      // 🛡️ Paginação manual em batches de 1000 (limite default do PostgREST)
+      // para suportar bases >1000 usuários sem perder dados.
+      const BATCH = 1000;
+      const all: ICPRow[] = [];
+      let from = 0;
+      // Hard ceiling de segurança: 50k usuários (50 batches)
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await supabase
+          .from('user_activity_summary' as any)
+          .select('*')
+          .order('icp_score', { ascending: false })
+          .range(from, from + BATCH - 1);
+        if (error) throw error;
+        const chunk = (data || []) as unknown as ICPRow[];
+        all.push(...chunk);
+        if (chunk.length < BATCH) break;
+        from += BATCH;
+      }
+      return all;
     },
     staleTime: 60_000,
   });
