@@ -226,17 +226,14 @@ Deno.serve(async (req) => {
           last_connection_check: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+        .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-      return new Response(
-        JSON.stringify({
-          state: connected ? 'connected' : (exists ? 'disconnected' : 'not_found'),
-          instance: instanceName,
-          exists,
-          connected
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({
+        state: connected ? 'connected' : (exists ? 'disconnected' : 'not_found'),
+        instance: instanceName,
+        exists,
+        connected,
+      }, traceId, corsHeaders);
     }
 
     // ========== ACTION: DISCONNECT ==========
@@ -259,12 +256,9 @@ Deno.serve(async (req) => {
           last_connection_check: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+        .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-      return new Response(
-        JSON.stringify({ success: true, state: 'disconnected' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: true, state: 'disconnected' }, traceId, corsHeaders);
     }
 
     // ========== ACTION: WEBHOOK DIAGNOSTICS ==========
