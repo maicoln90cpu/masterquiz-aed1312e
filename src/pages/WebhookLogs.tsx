@@ -1,11 +1,11 @@
 import { logger } from '@/lib/logger';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, Webhook } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight, Webhook } from "lucide-react";
 import { PageLoading } from "@/components/ui/page-loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,6 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
 
 interface WebhookLog {
   id: string;
@@ -26,12 +25,15 @@ interface WebhookLog {
   quiz_title?: string;
 }
 
+const LOGS_PER_PAGE = 20;
+
 const WebhookLogs = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadWebhookLogs();
