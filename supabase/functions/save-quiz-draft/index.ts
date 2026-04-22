@@ -1,20 +1,31 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const BodySchema = z.object({
+  quizId: z.string().uuid(),
+  title: z.string().optional(),
+  description: z.string().nullable().optional(),
+  template: z.string().optional(),
+  questions: z.array(z.any()).optional(),
+  timestamp: z.string().optional(),
+}).passthrough();
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  const traceId = getTraceId(req);
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: { ...corsHeaders, 'x-trace-id': traceId } });
+  }
 
   try {
-    const payload = await req.json();
-    const { quizId, title, description, template, questions, timestamp } = payload;
-
-    if (!quizId) {
-      return new Response(JSON.stringify({ error: 'quizId is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { quizId, title, description, template, questions, timestamp } = parsed.data;
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -23,7 +34,7 @@ Deno.serve(async (req) => {
     }).eq('id', quizId);
 
     if (quizError) {
-      return new Response(JSON.stringify({ error: quizError.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('INTERNAL_ERROR', quizError.message, traceId, corsHeaders);
     }
 
     if (questions && Array.isArray(questions) && questions.length > 0) {
@@ -38,9 +49,9 @@ Deno.serve(async (req) => {
       if (qError) console.error('Error inserting questions:', qError);
     }
 
-    return new Response(JSON.stringify({ success: true, quizId }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ success: true, quizId }, traceId, corsHeaders);
   } catch (error) {
     console.error('save-quiz-draft error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', (error as Error)?.message || 'Erro interno', traceId, corsHeaders);
   }
 });
