@@ -740,35 +740,60 @@ export const ComparisonBlockPreview = ({ block }: { block: QuizBlock & { type: '
   const itemIcons = (block as any).itemIcons || {};
   const leftIcon = itemIcons.left || '✗';
   const rightIcon = itemIcons.right || '✓';
+  // Onda 7 — cor customizada por coluna (override do leftStyle/rightStyle)
+  const leftColor = (block as any).leftColor as string | undefined;
+  const rightColor = (block as any).rightColor as string | undefined;
+  const leftBorderStyle = leftColor ? { borderLeft: `4px solid ${leftColor}` } : undefined;
+  const rightBorderStyle = rightColor ? { borderLeft: `4px solid ${rightColor}` } : undefined;
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className={`p-4 rounded-lg transition-all ${block.leftStyle === 'negative' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-muted'} ${highlightWinner === 'left' ? 'ring-2 ring-primary shadow-md' : ''}`}>
+      <div
+        className={`p-4 rounded-lg transition-all ${block.leftStyle === 'negative' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-muted'} ${highlightWinner === 'left' ? 'ring-2 ring-primary shadow-md' : ''}`}
+        style={leftBorderStyle}
+      >
         {(block as any).leftImage && (
           <div className="mb-3 rounded-lg overflow-hidden">
             <img src={(block as any).leftImage} alt={block.leftTitle || 'Antes'} className="w-full h-auto object-cover rounded-lg" />
           </div>
         )}
-        <h4 className={`font-semibold mb-3 ${block.leftStyle === 'negative' ? 'text-red-600' : ''}`}>{block.leftTitle || ''}</h4>
+        <h4
+          className={`font-semibold mb-3 ${!leftColor && block.leftStyle === 'negative' ? 'text-red-600' : ''}`}
+          style={leftColor ? { color: leftColor } : undefined}
+        >{block.leftTitle || ''}</h4>
         <ul className="space-y-2">
           {leftItems.map((item, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
-              {block.showIcons && <span className="text-red-500 shrink-0">{leftIcon}</span>}<span>{item}</span>
+              {block.showIcons && (
+                <span className="shrink-0" style={{ color: leftColor || undefined }}>
+                  <span className={leftColor ? '' : 'text-red-500'}>{leftIcon}</span>
+                </span>
+              )}<span>{item}</span>
             </li>
           ))}
         </ul>
       </div>
-      <div className={`p-4 rounded-lg transition-all ${block.rightStyle === 'positive' ? 'bg-green-50 dark:bg-green-950/30' : 'bg-muted'} ${highlightWinner === 'right' ? 'ring-2 ring-primary shadow-md' : ''}`}>
+      <div
+        className={`p-4 rounded-lg transition-all ${block.rightStyle === 'positive' ? 'bg-green-50 dark:bg-green-950/30' : 'bg-muted'} ${highlightWinner === 'right' ? 'ring-2 ring-primary shadow-md' : ''}`}
+        style={rightBorderStyle}
+      >
         {(block as any).rightImage && (
           <div className="mb-3 rounded-lg overflow-hidden">
             <img src={(block as any).rightImage} alt={block.rightTitle || 'Depois'} className="w-full h-auto object-cover rounded-lg" />
           </div>
         )}
-        <h4 className={`font-semibold mb-3 ${block.rightStyle === 'positive' ? 'text-green-600' : ''}`}>{block.rightTitle || ''}</h4>
+        <h4
+          className={`font-semibold mb-3 ${!rightColor && block.rightStyle === 'positive' ? 'text-green-600' : ''}`}
+          style={rightColor ? { color: rightColor } : undefined}
+        >{block.rightTitle || ''}</h4>
         <ul className="space-y-2">
           {rightItems.map((item, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
-              {block.showIcons && <span className="text-green-500 shrink-0">{rightIcon}</span>}<span>{item}</span>
+              {block.showIcons && (
+                <span className="shrink-0" style={{ color: rightColor || undefined }}>
+                  <span className={rightColor ? '' : 'text-green-500'}>{rightIcon}</span>
+                </span>
+              )}<span>{item}</span>
             </li>
           ))}
         </ul>
