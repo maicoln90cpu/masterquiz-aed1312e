@@ -250,15 +250,109 @@ window.dataLayer?.push({ event: 'QuizShared' }); // ❌
 | P5 | ❌ error | `navigator.sendBeacon(...)` | `fetch(url, { method:'POST', keepalive:true, headers:{ apikey } })` |
 | P4 | ⚠️ warn | `supabase.auth.getUser()` em componentes | `useCurrentUser()` |
 | P7 | ⚠️ warn | `bg-white`, `text-black`, `bg-[#hex]`, `style={{color:'red'}}` | Tokens semânticos HSL (`bg-background`, `text-foreground`) |
+| P21 | ⚠️ warn | `new Date()` sem argumentos em código de produção | `now()` / `nowISO()` de `@/lib/dateUtils` |
+| P22 | ⚠️ warn | `.single()` após `.insert/.update/.delete/.upsert` | `.maybeSingle()` (devolve null em vez de PGRST116) |
 | — | ⚠️ warn | `console.log` | Logger de `@/lib/logger` |
 
 ### Baselines incrementais
 - **P4:** ~30 ocorrências legadas — não bloqueia, deve diminuir a cada PR.
 - **P7:** ~120 ocorrências legadas — mesma estratégia de redução incremental.
+- **P21+P22:** introduzidos na Onda 7 / Etapa 4. Baseline aberta — meta zerar em 4 PRs nos arquivos quentes (admin, recovery, billing).
 
 ### Como adicionar exceção (caso raro)
 1. Adicionar comentário `// eslint-disable-next-line <regra> -- razão concreta`.
 2. Abrir entrada em `docs/PENDENCIAS.md` explicando por quê.
+
+---
+
+## 📅 Manipulação de Datas (`@/lib/dateUtils`)
+
+**Regra (P21):** NUNCA use `new Date()` ou `new Date(string)` direto em código de produção. Use o facade único `@/lib/dateUtils`:
+
+| Caso | Helper |
+|------|--------|
+| "Agora" como Date | `now()` |
+| "Agora" como ISO string (UTC) | `nowISO()` |
+| Parse seguro (devolve null se inválido) | `parseISO(value)` |
+| Aceita Date / string / number | `toDate(value)` |
+| `dd/MM/yyyy` (pt-BR) | `formatDate(value)` |
+| `dd/MM/yyyy HH:mm` | `formatDateTime(value)` |
+| `HH:mm` | `formatTime(value)` |
+| `12 de abril de 2026` | `formatLong(value)` |
+| `YYYY-MM-DD` (input date) | `formatISODate(value)` |
+| Diferença em dias | `diffInDays(a, b)` |
+| "há 3 dias" / "em 2 horas" | `relativeFromNow(value)` |
+| Validação de Date real | `isValidDate(value)` |
+
+### Por quê
+- **Safari quebra** com `new Date("2026-04-22 10:00")` (formato sem T). `parseISO` é tolerante e devolve `null`.
+- **Mock em testes:** trocar `now()` por mock é trivial; `Date` global não é.
+- **Fallback elegante:** todos retornam `"—"` para null/undefined/inválido (nunca `Invalid Date` na UI).
+- **Centralização:** trocar timezone/locale futuro vira 1 mudança.
+
+### ✅ Do
+```typescript
+import { formatDate, nowISO, parseISO } from '@/lib/dateUtils';
+
+const created = formatDate(quiz.created_at);          // "22/04/2026"
+const expires = parseISO(subscription.expires_at);    // Date | null
+await supabase.from('logs').insert({ created_at: nowISO() });
+```
+
+### ❌ Don't
+```typescript
+const created = new Date(quiz.created_at).toLocaleDateString('pt-BR'); // ❌ quebra no Safari
+const now = new Date();                                                 // ❌ não mocka em teste
+const expires = new Date(subscription.expires_at);                      // ❌ Invalid Date silencioso
+```
+
+### Exceções permitidas
+- `src/lib/dateUtils.ts` (a fonte).
+- `src/hooks/useWebVitals.ts` e `src/lib/performanceCapture.ts` (medição de tempo real do clock).
+- Arquivos `*.test.ts` (testes podem usar Date diretamente).
+
+---
+
+## ♿ Acessibilidade — Reduced Motion
+
+`src/index.css` aplica globalmente, no FIM do arquivo:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+```
+
+- Respeita WCAG 2.3.3 (AAA — Animation from Interactions).
+- Honra a configuração de "Reduzir movimento" do SO do usuário.
+- DEVE ser a **última regra** do CSS — quem adicionar CSS depois deve colocar antes ou dentro de outra `@media`.
+- **Framer Motion**: ainda recomendado usar `useReducedMotion()` em componentes específicos para casos onde a animação é semanticamente importante (ex: indicador de carregamento que vira spinner estático em vez de fade).
+
+---
+
+## 🔒 Contract Tests (proteção de regressão)
+
+Em `src/__tests__/contracts/` — falham o build se a invariante for quebrada:
+
+| Test | Protege |
+|------|---------|
+| `envelope-schema.test.ts` (P11) | Shape `{ ok, data?, error?, traceId }` exato |
+| `envelope-coverage.test.ts` (P18) | Edges migradas continuam usando `okResponse`/`errorResponse` |
+| `webhook-idempotency.test.ts` (P19) | Webhooks externos chamam `claimEvent` + `markEventProcessed/Failed` |
+| `trace-id-propagation.test.ts` (P20) | `invokeEdgeFunction` gera/propaga traceId em sucesso e erro |
+| `no-direct-auth-getuser.test.ts` (P4) | Baseline incremental de `auth.getUser()` direto |
+| `no-hardcoded-colors.test.ts` (P7) | Baseline incremental de cores absolutas |
+| `user-roles-security.test.ts` | Roles em `user_roles` (nunca em `profiles`) |
+| `rpc-schema.test.ts` | Assinatura de RPCs SECURITY DEFINER |
+| `blocks-catalog.test.ts` | Catálogo de blocos do editor (34 tipos) |
+
+**Adicionar nova edge ao P18:** edite `MIGRATED_EDGES` em `envelope-coverage.test.ts`.
+**Adicionar novo webhook ao P19:** edite `WEBHOOK_EDGES` em `webhook-idempotency.test.ts`.
 
 ---
 

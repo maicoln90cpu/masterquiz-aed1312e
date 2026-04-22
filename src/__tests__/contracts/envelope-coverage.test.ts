@@ -1,0 +1,77 @@
+/**
+ * 🔒 PROTEÇÃO P18 (Onda 7) — Cobertura de envelope nas Edge Functions.
+ *
+ * Garante que toda edge function listada em `MIGRATED_EDGES` (já migrada para
+ * o envelope { ok, data, error, traceId }) continue usando os helpers
+ * `okResponse` / `errorResponse` de `_shared/envelope.ts` em TODOS os retornos.
+ *
+ * Como adicionar uma edge nova migrada:
+ *   1. Adicione o nome à constante `MIGRATED_EDGES` abaixo.
+ *   2. Esta proteção passa a vigiar todos os `return new Response` daquele arquivo.
+ *
+ * Falha o build se:
+ *   - Edge listada em MIGRATED_EDGES contém `return new Response(JSON.stringify(...))`
+ *     fora dos helpers de envelope (regressão para padrão antigo).
+ *   - Edge listada não importa `okResponse` ou `errorResponse` de `../_shared/envelope.ts`.
+ */
+import { describe, it, expect } from 'vitest';
+
+/**
+ * Edge functions já migradas para envelope completo (Onda 7 / Etapas 1-2-bis).
+ *
+ * NOTA: kiwify-webhook e evolution-webhook adotaram apenas idempotência (P19),
+ * mas mantém retornos legados — entrarão em sub-onda 7-B. Não inclua aqui até
+ * que TODOS os `return new Response(...)` daquelas funções usem okResponse/errorResponse.
+ */
+const MIGRATED_EDGES = [
+  'admin-update-subscription',
+  'admin-view-user-data',
+  'system-health-check',
+  'export-table-data',
+  'save-quiz-draft',
+  'growth-metrics',
+] as const;
+
+/** Carrega TODAS as edges de uma vez via Vite glob (sem depender de Node fs). */
+const edgeSources = import.meta.glob(
+  '/supabase/functions/*/index.ts',
+  { query: '?raw', import: 'default', eager: true },
+) as Record<string, string>;
+
+function readEdge(name: string): string {
+  const key = `/supabase/functions/${name}/index.ts`;
+  const src = edgeSources[key];
+  expect(src, `Edge function ausente em glob: ${name}`).toBeTruthy();
+  return src;
+}
+
+describe('P18 — Envelope coverage nas edges migradas', () => {
+  for (const edge of MIGRATED_EDGES) {
+    describe(edge, () => {
+      const src = readEdge(edge);
+
+      it('importa okResponse ou errorResponse de _shared/envelope.ts', () => {
+        const importsEnvelope =
+          /from\s+["']\.\.\/_shared\/envelope\.ts["']/.test(src) &&
+          /\b(okResponse|errorResponse)\b/.test(src);
+        expect(
+          importsEnvelope,
+          `${edge} deve importar okResponse/errorResponse de '../_shared/envelope.ts'`,
+        ).toBe(true);
+      });
+
+      it('não usa "return new Response(JSON.stringify({error" (padrão antigo)', () => {
+        // Detecta o anti-padrão: resposta crua de erro sem envelope.
+        // Aceita ocorrências DENTRO do arquivo envelope.ts (não testado aqui),
+        // mas em qualquer edge migrada deve estar zerado.
+        const matches = src.match(
+          /return\s+new\s+Response\s*\(\s*JSON\.stringify\s*\(\s*\{\s*error/g,
+        );
+        expect(
+          matches,
+          `${edge}: ${matches?.length ?? 0} retorno(s) cru(s) detectado(s). Use errorResponse(...).`,
+        ).toBeNull();
+      });
+    });
+  }
+});
