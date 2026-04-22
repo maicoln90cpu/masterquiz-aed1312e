@@ -148,7 +148,7 @@ describe('useAutoSave', () => {
 
       // Avançar 30 segundos
       await act(async () => {
-        vi.advanceTimersByTime(30000);
+        await vi.advanceTimersByTimeAsync(30000);
       });
       
       // Deve ter chamado supabase
