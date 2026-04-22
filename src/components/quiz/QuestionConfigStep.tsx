@@ -12,6 +12,7 @@ import { BlockEditor } from "./blocks/BlockEditor";
 import { QuizBlockPreview } from "./QuizBlockPreview";
 import { AISuggestionsSidebar } from "./AISuggestionsSidebar";
 import { ConditionBuilder, type QuestionConditions } from "./ConditionBuilder";
+import { Callout } from "@/components/ui/callout";
 import type { QuizBlock } from "@/types/blocks";
 import { createBlock, migrateQuestionToBlocks, normalizeOption } from "@/types/blocks";
 import { cn } from "@/lib/utils";
@@ -323,14 +324,14 @@ export const QuestionConfigStep = ({
 
           {/* Express motivational banners */}
           {isExpressMode && currentQuestionIndex === 3 && allQuestions.length >= 7 && (
-            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center text-sm text-green-800 dark:text-green-200">
+            <Callout variant="success" icon={null} className="text-center justify-center">
               🚀 {t('express.bannerHalfway', 'Você já está na metade. Do jeito que está, já funciona.')}
-            </div>
+            </Callout>
           )}
           {isExpressMode && currentQuestionIndex === allQuestions.length - 1 && (
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center text-sm text-blue-800 dark:text-blue-200">
+            <Callout variant="info" icon={null} className="text-center justify-center">
               {t('express.bannerFinal', 'Ao avançar, seu quiz será publicado automaticamente.')}
-            </div>
+            </Callout>
           )}
 
           {/* Question Navigation */}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Callout } from "@/components/ui/callout";
 
 interface PreviewLinkDialogProps {
   open: boolean;
@@ -61,7 +62,7 @@ export const PreviewLinkDialog = ({ open, onOpenChange, quizId }: PreviewLinkDia
                 onClick={handleCopy}
               >
                 {copied ? (
-                  <Check className="h-4 w-4 text-green-500" />
+                  <Check className="h-4 w-4 text-success" />
                 ) : (
                   <Copy className="h-4 w-4" />
                 )}
@@ -69,12 +70,10 @@ export const PreviewLinkDialog = ({ open, onOpenChange, quizId }: PreviewLinkDia
             </div>
           </div>
           
-          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-4 rounded-lg">
-            <p className="text-sm text-amber-900 dark:text-amber-100">
-              <strong>⚠️ Importante:</strong> Este link permite visualizar o quiz mesmo em rascunho. 
-              Compartilhe apenas com pessoas autorizadas.
-            </p>
-          </div>
+          <Callout variant="warning">
+            <strong>Importante:</strong> Este link permite visualizar o quiz mesmo em rascunho.
+            Compartilhe apenas com pessoas autorizadas.
+          </Callout>
           
           <Button 
             className="w-full" 
