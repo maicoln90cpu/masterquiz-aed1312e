@@ -195,6 +195,7 @@ export const AvatarGroupBlockPreview = ({ block }: { block: QuizBlock & { type: 
   const count = block.count || 1234;
   const isCircle = block.avatarStyle !== 'square';
   const profileUrl = (block as any).profileUrl; // ✅ Etapa 2D: Link para perfil
+  const images: string[] = (block as any).images || []; // ✅ Onda 5: fotos reais
   
   const colors = [
     'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 
@@ -209,14 +210,28 @@ export const AvatarGroupBlockPreview = ({ block }: { block: QuizBlock & { type: 
   return (
     <Wrapper {...wrapperProps}>
       <div className="flex -space-x-2">
-        {Array.from({ length: Math.min(maxVisible, 8) }).map((_, i) => (
-          <div
-            key={i}
-            className={`w-9 h-9 ${colors[i % colors.length]} ${isCircle ? 'rounded-full' : 'rounded-md'} border-2 border-background flex items-center justify-center text-white text-xs font-bold shadow-sm`}
-          >
-            {initials[i % initials.length]}
-          </div>
-        ))}
+        {Array.from({ length: Math.min(maxVisible, 8) }).map((_, i) => {
+          const img = images[i];
+          const shapeClass = isCircle ? 'rounded-full' : 'rounded-md';
+          if (img) {
+            return (
+              <img
+                key={i}
+                src={img}
+                alt={`Avatar ${i + 1}`}
+                className={`w-9 h-9 ${shapeClass} border-2 border-background object-cover shadow-sm`}
+              />
+            );
+          }
+          return (
+            <div
+              key={i}
+              className={`w-9 h-9 ${colors[i % colors.length]} ${shapeClass} border-2 border-background flex items-center justify-center text-white text-xs font-bold shadow-sm`}
+            >
+              {initials[i % initials.length]}
+            </div>
+          );
+        })}
       </div>
       {block.showCount !== false && (
         <div className="text-sm">

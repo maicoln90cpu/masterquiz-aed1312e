@@ -444,6 +444,7 @@ export interface AvatarGroupBlock extends BaseBlock {
   showCount?: boolean;
   avatarStyle?: 'circle' | 'square';
   profileUrl?: string; // ✅ Etapa 2D: Link para perfil ao clicar
+  images?: string[]; // ✅ Onda 5: Fotos reais dos avatares (até 5)
 }
 
 export interface ConditionalTextBlock extends BaseBlock {

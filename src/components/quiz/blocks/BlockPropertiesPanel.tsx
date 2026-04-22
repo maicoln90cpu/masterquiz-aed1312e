@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
+import { ColorPalette } from "./ColorPalette";
 
 interface QuestionInfo {
   id: string;
@@ -636,25 +637,12 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
         </Select>
       </PropertySection>
       <PropertySection title="Cor de Fundo" tooltip="Cor de fundo personalizada do botão (sobrescreve a variante)">
-        <div className="flex gap-2 items-center">
-          <Input
-            type="color"
-            value={(block as any).backgroundColor || '#3b82f6'}
-            onChange={(e) => onChange(update(block, { backgroundColor: e.target.value }))}
-            className="w-12 h-8 p-1 cursor-pointer"
-          />
-          <Input
-            value={(block as any).backgroundColor || ''}
-            placeholder="Padrão da variante"
-            onChange={(e) => onChange(update(block, { backgroundColor: e.target.value }))}
-            className="flex-1"
-          />
-          {(block as any).backgroundColor && (
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onChange(update(block, { backgroundColor: undefined }))}>
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
+        <ColorPalette
+          value={(block as any).backgroundColor}
+          onChange={(c) => onChange(update(block, { backgroundColor: c }))}
+          defaultValue="#3b82f6"
+          hint="Sobrescreve a cor da variante selecionada"
+        />
       </PropertySection>
       <SwitchRow label="Abrir em nova aba" tooltip="Abre o link de destino em uma nova aba do navegador" checked={block.openInNewTab || false} onChange={(v) => onChange(update(block, { openInNewTab: v }))} />
       
@@ -1585,18 +1573,24 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <SwitchRow label="Dispensável (botão X)" tooltip="Permite que o usuário feche/dispense o alerta clicando no X" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
       <SwitchRow label="Ocultar bloco" tooltip="Mantém o bloco configurado mas não o exibe no quiz publicado" checked={(block as any).hidden || false} onChange={(v) => onChange(update(block, { hidden: v }))} />
       <Separator />
-      <div className="space-y-2">
-        <Label>Cor de fundo</Label>
-        <Input type="color" value={block.backgroundColor || '#fef3c7'} onChange={(e) => onChange(update(block, { backgroundColor: e.target.value }))} />
-      </div>
-      <div className="space-y-2">
-        <Label>Cor da borda</Label>
-        <Input type="color" value={block.borderColor || '#f59e0b'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
-      </div>
-      <div className="space-y-2">
-        <Label>Cor do texto</Label>
-        <Input type="color" value={block.textColor || '#92400e'} onChange={(e) => onChange(update(block, { textColor: e.target.value }))} />
-      </div>
+      <ColorPalette
+        label="Cor de fundo"
+        value={block.backgroundColor}
+        onChange={(c) => onChange(update(block, { backgroundColor: c }))}
+        defaultValue="#fef3c7"
+      />
+      <ColorPalette
+        label="Cor da borda"
+        value={block.borderColor}
+        onChange={(c) => onChange(update(block, { borderColor: c }))}
+        defaultValue="#f59e0b"
+      />
+      <ColorPalette
+        label="Cor do texto"
+        value={block.textColor}
+        onChange={(c) => onChange(update(block, { textColor: c }))}
+        defaultValue="#92400e"
+      />
     </div>
   );
 };
@@ -1924,6 +1918,43 @@ const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProp
 };
 
 // ---- AVATAR GROUP ----
+const AvatarImagesEditor = ({ images, onChange }: { images: string[]; onChange: (imgs: string[]) => void }) => {
+  const max = 5;
+  const list = images.slice(0, max);
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {list.map((src, idx) => (
+          <div key={idx} className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border">
+            <img src={src} alt={`Avatar ${idx + 1}`} className="h-full w-full object-cover" />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full"
+              onClick={() => onChange(list.filter((_, i) => i !== idx))}
+              aria-label={`Remover avatar ${idx + 1}`}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      {list.length < max && (
+        <ImageUploader
+          value=""
+          onChange={(url) => {
+            if (url) onChange([...list, url]);
+          }}
+        />
+      )}
+      {list.length >= max && (
+        <p className="text-[10px] text-muted-foreground">Limite de {max} fotos atingido.</p>
+      )}
+    </div>
+  );
+};
+
 const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'avatarGroup') return null;
   return (
@@ -1956,6 +1987,20 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
         </Select>
       </div>
       <SwitchRow label="Mostrar contador" tooltip="Exibe o número total de pessoas junto ao grupo de avatares" checked={(block as any).showCount !== false} onChange={(v) => onChange(update(block, { showCount: v }))} />
+
+      {/* ✅ Onda 5 — Upload de fotos reais para os avatares */}
+      <Separator />
+      <div className="space-y-2">
+        <Label className="text-xs">Fotos dos avatares (opcional)</Label>
+        <p className="text-[10px] text-muted-foreground">
+          Até 5 imagens. Sem upload, são exibidas iniciais aleatórias.
+        </p>
+        <AvatarImagesEditor
+          images={(block as any).images || []}
+          onChange={(imgs) => onChange(update(block, { images: imgs }))}
+        />
+      </div>
+
       {/* ✅ Etapa 2D: Link para perfil ao clicar */}
       <Separator />
       <div className="space-y-2">
