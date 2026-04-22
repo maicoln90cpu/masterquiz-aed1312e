@@ -17,20 +17,39 @@
 import { describe, it, expect } from 'vitest';
 
 /**
- * Edge functions já migradas para envelope completo (Onda 7 / Etapas 1-2-bis).
+ * Edge functions já migradas para envelope completo (Onda 7 — Etapas 1-2-bis + Sub-onda 7-B).
  *
- * NOTA: kiwify-webhook e evolution-webhook adotaram apenas idempotência (P19),
- * mas mantém retornos legados — entrarão em sub-onda 7-B. Não inclua aqui até
- * que TODOS os `return new Response(...)` daquelas funções usem okResponse/errorResponse.
+ * NOTA: kiwify-webhook e evolution-webhook adotaram apenas idempotência (P19);
+ * track-cta-redirect tem ramo GET 302 que não é envelopado (gateway de redirect)
+ * mas o ramo POST usa envelope.
  */
 const MIGRATED_EDGES = [
+  // Etapa 1-2-bis (6)
   'admin-update-subscription',
   'admin-view-user-data',
   'system-health-check',
   'export-table-data',
   'save-quiz-draft',
   'growth-metrics',
+  // Sub-onda 7-B — tracking & utilitários (8)
+  'save-quiz-response',
+  'track-quiz-analytics',
+  'track-quiz-step',
+  'track-blog-view',
+  'track-video-analytics',
+  'track-cta-redirect',
+  'rate-limiter',
+  'anonymize-ips',
 ] as const;
+
+/**
+ * Exceções documentadas: edges com retornos crus EXCLUSIVAMENTE no
+ * ramo GET (gateway HTTP que retorna 302/4xx fora de envelope).
+ * O ramo POST DEVE continuar usando envelope.
+ */
+const ALLOW_RAW_RESPONSE = new Set<string>([
+  'track-cta-redirect', // GET → 302 redirect; POST → envelope
+]);
 
 /** Carrega TODAS as edges de uma vez via Vite glob (sem depender de Node fs). */
 const edgeSources = import.meta.glob(
@@ -61,6 +80,15 @@ describe('P18 — Envelope coverage nas edges migradas', () => {
       });
 
       it('não usa "return new Response(JSON.stringify({error" (padrão antigo)', () => {
+        if (ALLOW_RAW_RESPONSE.has(edge)) {
+          // Edges com gateway HTTP têm exceção documentada; valida apenas
+          // que ainda há pelo menos uma chamada a errorResponse no arquivo.
+          expect(
+            /\berrorResponse\s*\(/.test(src),
+            `${edge}: exceção autorizada de raw response, mas precisa usar errorResponse no ramo POST`,
+          ).toBe(true);
+          return;
+        }
         // Detecta o anti-padrão: resposta crua de erro sem envelope.
         // Aceita ocorrências DENTRO do arquivo envelope.ts (não testado aqui),
         // mas em qualquer edge migrada deve estar zerado.

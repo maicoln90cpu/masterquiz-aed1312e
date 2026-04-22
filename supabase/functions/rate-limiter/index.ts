@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,15 +19,22 @@ const RATE_LIMITS: Record<string, RateLimit> = {
   'api:general': { action: 'api:general', maxAttempts: 100, windowMinutes: 60 },
 };
 
+const BodySchema = z.object({
+  identifier: z.string().min(1).max(255),
+  action: z.string().min(1).max(64),
+  userId: z.string().uuid().optional().nullable(),
+});
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
+
   try {
     const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    const { identifier, action, userId } = await req.json();
-    if (!identifier || !action) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { identifier, action, userId } = parsed.data;
 
     const actualIdentifier = userId || identifier;
     const limit = RATE_LIMITS[action] || RATE_LIMITS['api:general'];
@@ -39,7 +48,7 @@ Deno.serve(async (req) => {
 
     if (!record || new Date(record.window_start) < windowStart) {
       await supabaseAdmin.from('rate_limit_tracker').insert({ identifier: actualIdentifier, action, attempt_count: 1, window_start: new Date().toISOString() });
-      return new Response(JSON.stringify({ allowed: true, remainingAttempts: limit.maxAttempts - 1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return okResponse({ allowed: true, remainingAttempts: limit.maxAttempts - 1 }, traceId, corsHeaders);
     }
 
     const newCount = record.attempt_count + 1;
@@ -51,12 +60,12 @@ Deno.serve(async (req) => {
     }
 
     if (!allowed) {
-      return new Response(JSON.stringify({ error: 'Rate limit exceeded', resetAt: resetAt.toISOString() }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('RATE_LIMITED', `Rate limit exceeded; reset at ${resetAt.toISOString()}`, traceId, corsHeaders);
     }
 
-    return new Response(JSON.stringify({ allowed: true, remainingAttempts: limit.maxAttempts - newCount }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ allowed: true, remainingAttempts: limit.maxAttempts - newCount }, traceId, corsHeaders);
   } catch (error) {
     console.error('[RATE-LIMITER] Error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', 'Internal server error', traceId, corsHeaders);
   }
 });
