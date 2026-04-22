@@ -75,6 +75,26 @@ const MIGRATED_EDGES = [
   'evolution-webhook',
   'whatsapp-ai-reply',
   'kiwify-webhook',
+  // Sub-onda 7-E — Bunny CDN (9) + IA/PDF (3) + Diversos (6) = 18
+  'bunny-chunked-complete',
+  'bunny-chunked-init',
+  'bunny-confirm-upload',
+  'bunny-delete-video',
+  'bunny-generate-thumbnail',
+  'bunny-tus-confirm',
+  'bunny-tus-create',
+  'bunny-upload-video',
+  'bunny-upload-video-multipart',
+  'parse-pdf-document',
+  'generate-pdf-report',
+  'regenerate-blog-asset',
+  'generate-quiz-ai',
+  'generate-blog-post',
+  'sync-integration',
+  'blog-cron-trigger',
+  'blog-sitemap',
+  'export-schema-sql',
+  'capture-db-size-snapshot',
 ] as const;
 
 /**
@@ -91,6 +111,8 @@ const ALLOW_RAW_RESPONSE = new Set<string>([
   'egoi-email-webhook',
   // Gateway HTML de unsubscribe (link no e-mail) — devolve HTML; ramos de erro envelope.
   'handle-email-unsubscribe',
+  // blog-sitemap devolve XML/RSS (sitemap, RSS feed) — apenas ramo de erro envelope.
+  'blog-sitemap',
 ]);
 
 /** Carrega TODAS as edges de uma vez via Vite glob (sem depender de Node fs). */
