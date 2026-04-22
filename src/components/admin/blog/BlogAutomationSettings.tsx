@@ -224,7 +224,7 @@ export function BlogAutomationSettings() {
             {form.categories_list.map((cat, i) => (
               <Badge key={i} variant="secondary" className="gap-1 pr-1">
                 {cat}
-                <button onClick={() => removeItem("categories_list", i)} className="ml-1 hover:text-destructive">
+                <button type="button" onClick={() => removeItem("categories_list", i)} className="ml-1 hover:text-destructive">
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
@@ -255,7 +255,7 @@ export function BlogAutomationSettings() {
             {form.topics_pool.map((topic, i) => (
               <Badge key={i} variant="outline" className="gap-1 pr-1">
                 {topic}
-                <button onClick={() => removeItem("topics_pool", i)} className="ml-1 hover:text-destructive">
+                <button type="button" onClick={() => removeItem("topics_pool", i)} className="ml-1 hover:text-destructive">
                   <X className="h-3 w-3" />
                 </button>
               </Badge>

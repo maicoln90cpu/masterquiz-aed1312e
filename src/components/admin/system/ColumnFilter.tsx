@@ -60,7 +60,7 @@ export function ColumnFilter({ allValues, selected, onChange, label }: ColumnFil
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground">Filtrar {label}</span>
           {isActive && (
-            <button onClick={clear} className="text-xs text-primary hover:underline flex items-center gap-1">
+            <button type="button" onClick={clear} className="text-xs text-primary hover:underline flex items-center gap-1">
               <X className="h-3 w-3" /> Limpar
             </button>
           )}

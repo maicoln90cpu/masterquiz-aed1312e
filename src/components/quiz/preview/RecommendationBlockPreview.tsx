@@ -192,7 +192,7 @@ const RecommendationCard = ({ item, style, isPreview, showScore, score, rank, on
           {showScore && score > 0 && <p className="text-[10px] text-primary font-medium mt-0.5">Compatibilidade: {score} pts</p>}
         </div>
         {item.buttonText && (
-          <button onClick={handleClick} className="text-xs text-primary font-medium hover:underline flex-shrink-0 flex items-center gap-1">
+          <button type="button" onClick={handleClick} className="text-xs text-primary font-medium hover:underline flex-shrink-0 flex items-center gap-1">
             {item.buttonText} <ArrowRight className="h-3 w-3" />
           </button>
         )}
@@ -221,7 +221,7 @@ const RecommendationCard = ({ item, style, isPreview, showScore, score, rank, on
       )}
       {item.buttonText && (
         <button
-          onClick={handleClick}
+type="button" onClick={handleClick}
           className="mt-3 w-full rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
         >
           {item.buttonText}

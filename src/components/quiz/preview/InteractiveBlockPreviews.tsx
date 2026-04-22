@@ -375,7 +375,7 @@ export const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 
         <div className="flex justify-center gap-2 pt-2">
           {allTestimonials.map((_, idx) => (
             <button
-              key={idx}
+type="button" key={idx}
               onClick={() => setCurrentIdx(idx)}
               className={`w-2.5 h-2.5 rounded-full transition-all ${
                 idx === currentIdx ? 'bg-primary scale-110' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
@@ -636,7 +636,7 @@ export const NPSBlockPreview = ({ block }: { block: QuizBlock & { type: 'nps' } 
       )}
       <div className="flex justify-center gap-1 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => (
-          <button key={i} onClick={() => handleSelect(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
+          <button type="button" key={i} onClick={() => handleSelect(i)} className={`w-9 h-9 rounded-full font-semibold text-sm transition-all ${
             value === i ? 'text-white scale-110 shadow-lg' : 'bg-muted hover:bg-muted/80 text-foreground'
           }`} style={value === i ? { backgroundColor: getNPSColor(i) } : undefined}>{i}</button>
         ))}
@@ -707,7 +707,7 @@ export const AccordionBlockPreview = ({ block }: { block: QuizBlock & { type: 'a
               : 'w-full p-3 font-medium bg-muted/50 flex items-center justify-between text-left hover:bg-muted/70 transition-colors';
           return (
             <div key={index} className={`overflow-hidden ${styleClasses}`}>
-              <button onClick={() => toggleItem(index)} className={triggerClasses}>
+              <button type="button" onClick={() => toggleItem(index)} className={triggerClasses}>
                 {item.question}
                 {renderIcon(isOpen)}
               </button>
@@ -1050,7 +1050,7 @@ export const RatingBlockPreview = ({ block }: { block: QuizBlock & { type: 'rati
 
           return (
             <button
-              key={i}
+type="button" key={i}
               onClick={(event) => setValue(getPointerValue(event))}
               onMouseMove={(event) => setHover(getPointerValue(event))}
               onMouseLeave={() => setHover(0)}

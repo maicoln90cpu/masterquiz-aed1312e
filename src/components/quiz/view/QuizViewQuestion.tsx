@@ -253,8 +253,7 @@ export function QuizViewQuestion({
     <div className="space-y-6">
       {/* Back arrow at top-left */}
       {currentStep > 0 && (
-        <button 
-          onClick={onPrev}
+        <button type="button" onClick={onPrev}
           className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors -mt-2 mb-2"
           aria-label={t('quizView.previous')}
         >

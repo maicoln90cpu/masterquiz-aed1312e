@@ -31,7 +31,7 @@ export const CalloutBlockPreview = ({ block }: { block: QuizBlock & { type: 'cal
         <span className={`flex-1 ${(block as any).titleBold !== false ? 'font-bold' : 'font-normal'}`}>{block.title}</span>
         {/* ✅ Etapa 2D: Botão X para callout dismissível */}
         {block.dismissible && (
-          <button onClick={() => setDismissed(true)} className="opacity-60 hover:opacity-100 transition-opacity">
+          <button type="button" onClick={() => setDismissed(true)} className="opacity-60 hover:opacity-100 transition-opacity">
             <X className="h-4 w-4" />
           </button>
         )}
@@ -205,7 +205,7 @@ export const BannerBlockPreview = ({ block, onCtaClick }: { block: QuizBlock & {
       {hasLink && <span className="ml-1 text-xs opacity-75">→</span>}
       {block.dismissible && (
         <button
-          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
+type="button" className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
           onClick={(e) => { e.stopPropagation(); setDismissed(true); }}
         >
           <X className="h-4 w-4" />
