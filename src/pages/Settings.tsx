@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { NotificationPreferencesDialog } from "@/components/NotificationPreferencesDialog";
@@ -244,13 +245,13 @@ const Settings = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error(t("settings.notAuthenticated"));
 
-      const response = await supabase.functions.invoke('export-user-data', {
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      });
-
-      if (response.error) throw new Error(response.error.message);
-
-      const { data, filename } = response.data;
+      // 🛡️ P18 — facade única
+      const { data: payload } = await invokeEdgeFunction<{ data: unknown; filename: string }>(
+        'export-user-data',
+        undefined,
+        { traceId: undefined },
+      );
+      const { data, filename } = payload;
       
       // Download do arquivo JSON
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -273,22 +274,17 @@ const Settings = () => {
   // LGPD: Agendar exclusão de conta (30 dias de carência)
   const handleScheduleDeletion = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Não autenticado');
-
-      const response = await supabase.functions.invoke('delete-user-complete', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { action: 'schedule', reason: 'Solicitado pelo usuário' }
+      // 🛡️ P18 — facade única
+      const { data: payload } = await invokeEdgeFunction<any>('delete-user-complete', {
+        action: 'schedule',
+        reason: 'Solicitado pelo usuário',
       });
-
-      if (response.error) throw new Error(response.error.message);
-
       setScheduledDeletion({
-        scheduled_for: response.data.scheduled_for,
-        cancellation_token: response.data.cancellation_token
+        scheduled_for: payload.scheduled_for,
+        cancellation_token: payload.cancellation_token,
       });
       setDeleteDialogOpen(false);
-      toast.success(t("settings.deletionScheduled", `Exclusão agendada para ${response.data.days_remaining} dias`));
+      toast.success(t("settings.deletionScheduled", `Exclusão agendada para ${payload.days_remaining} dias`));
     } catch (error: any) {
       logger.error('Erro ao agendar exclusão:', error);
       toast.error(error.message || t("settings.deletionError", "Erro ao agendar exclusão"));
@@ -301,16 +297,11 @@ const Settings = () => {
     
     setCancellingDeletion(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Não autenticado');
-
-      const response = await supabase.functions.invoke('delete-user-complete', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { action: 'cancel', cancellation_token: scheduledDeletion.cancellation_token }
+      // 🛡️ P18 — facade única
+      await invokeEdgeFunction('delete-user-complete', {
+        action: 'cancel',
+        cancellation_token: scheduledDeletion.cancellation_token,
       });
-
-      if (response.error) throw new Error(response.error.message);
-
       setScheduledDeletion(null);
       toast.success(t("settings.deletionCancelled", "Exclusão cancelada! Sua conta foi reativada."));
     } catch (error: any) {

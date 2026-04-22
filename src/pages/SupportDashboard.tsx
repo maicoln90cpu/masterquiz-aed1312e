@@ -2,6 +2,7 @@ import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFunction } from '@/lib/invokeEdgeFunction';
 import { useSupportMode, type SupportAction } from '@/contexts/SupportModeContext';
 import { logAudit } from '@/lib/auditLogger';
 import { generateSupportPdfReport } from '@/lib/supportPdfReport';
@@ -185,8 +186,8 @@ const SupportDashboard = () => {
   }, [activeTab]);
 
   const callEdgeFunction = useCallback(async (body: any) => {
-    const { data, error } = await supabase.functions.invoke('admin-view-user-data', { body });
-    if (error) throw error;
+    // 🛡️ P18 — facade única (traceId, retry, circuit breaker, toast embutidos)
+    const { data } = await invokeEdgeFunction<any>('admin-view-user-data', body);
     return data;
   }, []);
 

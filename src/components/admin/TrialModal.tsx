@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Timer, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { toast } from "sonner";
 
 interface TrialModalProps {
@@ -35,15 +36,13 @@ export const TrialModal = ({ open, onOpenChange, user, onSuccess }: TrialModalPr
     if (!user) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-update-subscription', {
-        body: {
-          user_id: user.id,
-          trial_days: trialDays,
-          trial_plan_type: trialPlan,
-          original_plan_type: returnPlan,
-        },
+      // 🛡️ P18 — facade única (traceId, retry, toast PT-BR embutidos)
+      const { data } = await invokeEdgeFunction<any>('admin-update-subscription', {
+        user_id: user.id,
+        trial_days: trialDays,
+        trial_plan_type: trialPlan,
+        original_plan_type: returnPlan,
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       const endDate = new Date(data.trial_end_date);
@@ -63,10 +62,11 @@ export const TrialModal = ({ open, onOpenChange, user, onSuccess }: TrialModalPr
     if (!confirm(`Cancelar trial de ${user.email}? Voltará para o plano ${user.originalPlan}.`)) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-update-subscription', {
-        body: { user_id: user.id, cancel_trial: true },
+      // 🛡️ P18 — facade única
+      const { data } = await invokeEdgeFunction<any>('admin-update-subscription', {
+        user_id: user.id,
+        cancel_trial: true,
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       toast.success(`Trial cancelado. ${user.email} voltou para o plano ${user.originalPlan}`);
