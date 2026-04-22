@@ -360,6 +360,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
+      setRespondentsError(null);
       // Métricas técnicas globais ficam na aba Sistema; o Início carrega apenas dados de negócio/admin.
       const [requestsResult, respondentsResult] = await Promise.all([
         (async () => {
@@ -378,7 +379,9 @@ export default function AdminDashboard() {
         (async () => {
           // 🛡️ P18: facade desempacota envelope { ok, data: { respondents }, traceId }
           try {
-            const { data } = await invokeEdgeFunction<{ respondents: any[] }>('list-all-respondents');
+            const { data } = await invokeEdgeFunction<{ respondents: any[] }>('list-all-respondents', undefined, {
+              disableCircuitBreaker: true,
+            });
             return { data: data?.respondents || [], error: null };
           } catch (e) {
             return { data: [], error: e };
@@ -390,6 +393,12 @@ export default function AdminDashboard() {
 
       // Edge function already returns aggregated respondents
       setAllUsers(respondentsResult.data || []);
+      if (respondentsResult.error) {
+        const message = respondentsResult.error instanceof Error
+          ? respondentsResult.error.message
+          : 'Falha ao carregar respondentes';
+        setRespondentsError(message);
+      }
       // 🚀 Fase 3: paralelizar carga financeira + settings (antes era em série).
       await Promise.all([
         loadFinancialData(),
@@ -691,10 +700,10 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || rolesLoading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <main className="min-h-screen">
+        <PageLoading label="Carregando painel administrativo…" />
       </main>
     );
   }
