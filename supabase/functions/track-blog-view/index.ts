@@ -1,10 +1,16 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
   'X-Content-Type-Options': 'nosniff',
 };
+
+const BodySchema = z.object({
+  slug: z.string().min(1).max(255),
+});
 
 // Simple in-memory dedup (slug+ip within 30min window)
 const recentViews = new Map<string, number>();
@@ -22,26 +28,22 @@ function cleanupOldEntries() {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const traceId = getTraceId(req);
+
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('VALIDATION_FAILED', 'Method not allowed', traceId, corsHeaders, 405);
   }
 
   try {
-    const { slug } = await req.json();
-    if (!slug || typeof slug !== 'string') {
-      return new Response(JSON.stringify({ error: 'slug required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { slug } = parsed.data;
 
     // Bot detection
     const ua = req.headers.get('user-agent') || '';
     if (BOT_PATTERNS.test(ua)) {
-      return new Response(JSON.stringify({ tracked: false, reason: 'bot' }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ tracked: false, reason: 'bot' }, traceId, corsHeaders);
     }
 
     // IP-based dedup
@@ -52,9 +54,7 @@ Deno.serve(async (req) => {
     cleanupOldEntries();
 
     if (recentViews.has(dedupKey)) {
-      return new Response(JSON.stringify({ tracked: false, reason: 'duplicate' }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ tracked: false, reason: 'duplicate' }, traceId, corsHeaders);
     }
 
     const supabase = createClient(
@@ -74,21 +74,15 @@ Deno.serve(async (req) => {
       
       if (updateError) {
         console.error('[TRACK-BLOG-VIEW] Error:', updateError);
-        return new Response(JSON.stringify({ error: 'Failed to track' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return errorResponse('INTERNAL_ERROR', 'Failed to track', traceId, corsHeaders);
       }
     }
 
     recentViews.set(dedupKey, Date.now());
 
-    return new Response(JSON.stringify({ tracked: true }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return okResponse({ tracked: true }, traceId, corsHeaders);
   } catch (err) {
     console.error('[TRACK-BLOG-VIEW] Error:', err);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', 'Internal error', traceId, corsHeaders);
   }
 });

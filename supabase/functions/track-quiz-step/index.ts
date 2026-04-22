@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,19 +9,26 @@ const corsHeaders = {
   'X-Content-Type-Options': 'nosniff',
 };
 
+const BodySchema = z.object({
+  quizId: z.string().uuid(),
+  sessionId: z.string().min(1),
+  stepNumber: z.number().int().min(0),
+  questionId: z.string().uuid().optional().nullable(),
+});
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
+
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    const { quizId, sessionId, stepNumber, questionId } = await req.json();
-
-    if (!quizId || !sessionId || typeof stepNumber !== 'number' || stepNumber < 0) {
-      return new Response(JSON.stringify({ error: 'Invalid parameters' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { quizId, sessionId, stepNumber, questionId } = parsed.data;
 
     const { data: quiz } = await supabase.from('quizzes').select('id').eq('id', quizId).maybeSingle();
-    if (!quiz) return new Response(JSON.stringify({ error: 'Quiz not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!quiz) return errorResponse('NOT_FOUND', 'Quiz not found', traceId, corsHeaders);
 
     const today = new Date().toISOString().split('T')[0];
     const { data: result, error } = await supabase.from('quiz_step_analytics').upsert(
@@ -29,9 +38,9 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ success: true, data: result }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return okResponse({ result }, traceId, corsHeaders);
   } catch (error) {
     console.error('[track-quiz-step] Error:', error);
-    return new Response(JSON.stringify({ error: 'Unable to track step' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', 'Unable to track step', traceId, corsHeaders);
   }
 });
