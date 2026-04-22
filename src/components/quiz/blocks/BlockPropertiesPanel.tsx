@@ -1918,6 +1918,43 @@ const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProp
 };
 
 // ---- AVATAR GROUP ----
+const AvatarImagesEditor = ({ images, onChange }: { images: string[]; onChange: (imgs: string[]) => void }) => {
+  const max = 5;
+  const list = images.slice(0, max);
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {list.map((src, idx) => (
+          <div key={idx} className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border">
+            <img src={src} alt={`Avatar ${idx + 1}`} className="h-full w-full object-cover" />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full"
+              onClick={() => onChange(list.filter((_, i) => i !== idx))}
+              aria-label={`Remover avatar ${idx + 1}`}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      {list.length < max && (
+        <ImageUploader
+          value=""
+          onChange={(url) => {
+            if (url) onChange([...list, url]);
+          }}
+        />
+      )}
+      {list.length >= max && (
+        <p className="text-[10px] text-muted-foreground">Limite de {max} fotos atingido.</p>
+      )}
+    </div>
+  );
+};
+
 const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
   if (block.type !== 'avatarGroup') return null;
   return (
