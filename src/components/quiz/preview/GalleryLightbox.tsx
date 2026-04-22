@@ -59,8 +59,8 @@ export const GalleryLightbox = ({ images, initialIndex, isOpen, onClose }: Galle
         >
           {/* Close button */}
           <button
-type="button"
-onClick={onClose}
+            type="button"
+            onClick={onClose}
             className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
           >
             <X className="h-6 w-6" />
