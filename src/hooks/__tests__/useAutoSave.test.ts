@@ -13,6 +13,58 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// ────────────────────────────────────────────────────────────────────────────
+// 🔧 Helper P16/Onda 6 — gera o mock completo da tabela `quizzes` esperado
+// pelo `useAutoSave`:
+//   1) `.select('version').eq().eq().maybeSingle()`  → leitura da versão remota
+//   2) `.update(...).eq().eq().eq('version', N)`     → optimistic locking
+//   3) `.upsert(...)` em quiz_questions
+// `updateError` injeta falha no UPDATE; `versionConflict` força count=0.
+// ────────────────────────────────────────────────────────────────────────────
+interface QuizzesMockOpts {
+  remoteVersion?: number | null;
+  updateError?: { message: string } | null;
+  versionConflict?: boolean; // count=0 → conflito
+}
+function mockQuizzesTable(opts: QuizzesMockOpts = {}) {
+  const remoteVersion = opts.remoteVersion ?? 1;
+  const updateError = opts.updateError ?? null;
+  const updatedCount = opts.versionConflict ? 0 : 1;
+
+  // SELECT version
+  const maybeSingle = vi.fn().mockResolvedValue({
+    data: { version: remoteVersion },
+    error: null,
+  });
+  const selectEqEq = vi.fn().mockReturnValue({ maybeSingle });
+  const selectEq = vi.fn().mockReturnValue({ eq: selectEqEq });
+  const select = vi.fn().mockReturnValue({ eq: selectEq });
+
+  // UPDATE com 3x .eq (id, user_id, version)
+  const updateEqVersion = vi.fn().mockResolvedValue({
+    error: updateError,
+    count: updatedCount,
+  });
+  const updateEqUser = vi.fn().mockReturnValue({ eq: updateEqVersion });
+  const updateEqId = vi.fn().mockReturnValue({ eq: updateEqUser });
+  const update = vi.fn().mockReturnValue({ eq: updateEqId });
+
+  const upsert = vi.fn().mockResolvedValue({ error: null });
+  // delete().eq() para quiz_questions órfãs
+  const deleteEq = vi.fn().mockResolvedValue({ error: null });
+  const del = vi.fn().mockReturnValue({ eq: deleteEq });
+
+  vi.mocked(supabase.from).mockImplementation(((table: string) => {
+    if (table === 'quizzes') {
+      return { select, update, upsert, delete: del } as any;
+    }
+    // quiz_questions etc
+    return { select, update, upsert, delete: del } as any;
+  }) as any);
+
+  return { select, update, upsert, maybeSingle, updateEqVersion };
+}
+
 describe('useAutoSave', () => {
   beforeEach(() => {
     vi.useFakeTimers();
