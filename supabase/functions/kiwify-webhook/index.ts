@@ -177,8 +177,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ received: true, action: actionTaken, plan: newPlanType, status: newStatus }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    const finalResult = { received: true, action: actionTaken, plan: newPlanType, status: newStatus };
+    if (claim?.id) await markEventProcessed(supabaseAdmin, claim.id, finalResult).catch(() => {});
+    return new Response(JSON.stringify(finalResult), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-trace-id': traceId }
     });
   } catch (error) {
     console.error('[KIWIFY] Error:', error);
