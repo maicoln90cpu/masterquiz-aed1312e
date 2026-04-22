@@ -22,11 +22,15 @@ const buttonVariants = cva(
         warning: "bg-warning text-warning-foreground hover:bg-warning/90",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
+        // Tamanhos com touch target ≥44×44 em mobile (WCAG 2.5.5) — Onda 8.3
+        default: "min-h-11 sm:min-h-10 h-10 px-4 py-2",
+        sm: "min-h-11 sm:min-h-9 h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         xl: "h-12 rounded-md px-10 text-base",
-        icon: "h-10 w-10",
+        // icon: 44×44 em mobile, 40×40 em sm+ — preserva aparência desktop
+        icon: "min-h-11 min-w-11 sm:min-h-10 sm:min-w-10 h-10 w-10",
+        // icon-sm: ainda confortável no mobile via min-h, compacto no desktop
+        "icon-sm": "min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 h-8 w-8",
       },
     },
     defaultVariants: {
