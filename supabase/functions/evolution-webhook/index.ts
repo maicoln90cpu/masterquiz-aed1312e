@@ -1,8 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { claimEvent, markEventProcessed } from '../_shared/idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id',
 };
 
 Deno.serve(async (req) => {
@@ -30,6 +31,38 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'No event provided' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // 🛡️ P19 — Idempotência: identifica evento único do Evolution
+    const traceId = req.headers.get('x-trace-id') || crypto.randomUUID();
+    const messageKeyId =
+      data?.key?.id ||
+      data?.message?.key?.id ||
+      (Array.isArray(data) ? data[0]?.key?.id : undefined);
+    const eventId = messageKeyId
+      ? `${event}:${messageKeyId}`
+      : event === 'connection.update'
+        ? `${event}:${instance}:${data?.state || data?.status || 'unknown'}:${Date.now() - (Date.now() % 60000)}`
+        : null;
+
+    let claim: { id: string; alreadyProcessed: boolean; previousResult: unknown } | null = null;
+    if (eventId) {
+      try {
+        claim = await claimEvent(supabase, {
+          provider: 'evolution',
+          eventId,
+          traceId,
+        });
+        if (claim.alreadyProcessed) {
+          console.log(`[EVOLUTION-WEBHOOK] Duplicate event ${eventId} ignored`);
+          return new Response(
+            JSON.stringify({ success: true, duplicate: true, event }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-trace-id': traceId } }
+          );
+        }
+      } catch (idempErr) {
+        console.warn('[EVOLUTION-WEBHOOK] Idempotency check failed (non-fatal):', idempErr);
+      }
     }
 
     // CONNECTION UPDATE
