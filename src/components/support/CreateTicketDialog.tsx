@@ -107,7 +107,7 @@ export const CreateTicketDialog = ({ open, onOpenChange, onSuccess }: CreateTick
                   <SelectItem value="question">❓ Dúvida</SelectItem>
                   <SelectItem value="feature_request">✨ Solicitar Funcionalidade</SelectItem>
                   <SelectItem value="other">📝 Outro</SelectItem>
-                </Select>
+                </SelectContent>
               </Select>
             )}
           </FormFieldA11y>
