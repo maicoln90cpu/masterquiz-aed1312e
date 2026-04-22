@@ -30,6 +30,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMode";
 import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hooks/useEditorLayout";
 import { useSupportMode } from "@/contexts/SupportModeContext";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -283,9 +284,9 @@ export default function AdminDashboard() {
   const { data: allUsersData, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
     queryKey: ['admin-all-users'],
     queryFn: async () => {
-      const result = await supabase.functions.invoke('list-all-users');
-      if (result.error) throw result.error;
-      return result.data?.users || [];
+      // 🛡️ P18: facade desempacota envelope { ok, data: { users }, traceId }
+      const { data } = await invokeEdgeFunction<{ users: any[] }>('list-all-users');
+      return data?.users || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000,
@@ -358,9 +359,13 @@ export default function AdminDashboard() {
           }
         })(),
         (async () => {
-          const result = await supabase.functions.invoke('list-all-respondents');
-          if (result.error) return { data: [], error: result.error };
-          return { data: result.data?.respondents || [], error: null };
+          // 🛡️ P18: facade desempacota envelope { ok, data: { respondents }, traceId }
+          try {
+            const { data } = await invokeEdgeFunction<{ respondents: any[] }>('list-all-respondents');
+            return { data: data?.respondents || [], error: null };
+          } catch (e) {
+            return { data: [], error: e };
+          }
         })()
       ]);
 
@@ -379,18 +384,16 @@ export default function AdminDashboard() {
 
   const loadFinancialData = async () => {
     try {
-      // Use growth-metrics edge function (service_role) to bypass RLS
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data: growthData, error: gError } = await supabase.functions.invoke('growth-metrics', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (gError || !growthData) {
+      // 🛡️ P18: facade faz unwrap automático do envelope P11
+      let growthData: any;
+      try {
+        const { data } = await invokeEdgeFunction<any>('growth-metrics');
+        growthData = data;
+      } catch (gError) {
         logger.error('Error loading growth metrics for reports:', gError);
         return;
       }
+      if (!growthData) return;
 
       const mrr = growthData.sectionC?.mrr || 0;
       const paidCount: number = Object.values(growthData.sectionC?.paidByPlan || {}).reduce((a: number, b: unknown) => a + Number(b), 0) as number;

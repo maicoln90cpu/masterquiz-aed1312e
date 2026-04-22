@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/admin/system/DataTable";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 // Intenções possíveis
 const INTENT_LABELS: Record<string, string> = {
@@ -74,9 +75,9 @@ export function PQLAnalytics() {
   const { data: users, isLoading } = useQuery<UserRow[]>({
     queryKey: ["admin-all-users"],
     queryFn: async () => {
-      const result = await supabase.functions.invoke("list-all-users");
-      if (result.error) throw result.error;
-      return result.data?.users || [];
+      // 🛡️ P18: facade faz unwrap automático do envelope { ok, data: { users }, traceId }
+      const { data } = await invokeEdgeFunction<{ users: UserRow[] }>("list-all-users");
+      return data?.users || [];
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
