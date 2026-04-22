@@ -121,13 +121,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { action, apiUrl } = await req.json();
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { action, apiUrl } = parsed.data;
 
     const rawApiUrl = apiUrl || Deno.env.get('EVOLUTION_API_URL');
     const evolutionApiUrl = rawApiUrl ? normalizeApiUrl(rawApiUrl) : null;
@@ -138,10 +141,7 @@ Deno.serve(async (req) => {
 
     if (!evolutionApiUrl || !evolutionApiKey) {
       console.error('Missing config - URL:', !!evolutionApiUrl, 'Key:', !!evolutionApiKey);
-      return new Response(
-        JSON.stringify({ error: 'Evolution API não configurada. Configure EVOLUTION_API_URL e EVOLUTION_API_KEY nos secrets.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('VALIDATION_FAILED', 'Evolution API não configurada (EVOLUTION_API_URL/EVOLUTION_API_KEY).', traceId, corsHeaders);
     }
 
     const instanceName = 'masterquizz';
