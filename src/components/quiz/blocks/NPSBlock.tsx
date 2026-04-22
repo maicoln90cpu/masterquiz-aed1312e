@@ -1,6 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { NPSBlock as NPSBlockType, QuizBlock } from "@/types/blocks";
 import { NPSBlockPreview } from "../preview/InteractiveBlockPreviews";
 
@@ -17,17 +15,6 @@ export const NPSBlock = ({ block, onChange }: NPSBlockProps) => {
           <span>⭐ Bloco NPS (Net Promoter Score)</span>
         </div>
 
-        {/* Content: Question */}
-        <div className="space-y-2">
-          <Label htmlFor="nps-question">Pergunta</Label>
-          <Input
-            id="nps-question"
-            value={block.question}
-            onChange={(e) => onChange({ ...block, question: e.target.value })}
-            placeholder="Ex: De 0 a 10, qual a probabilidade de você recomendar?"
-          />
-        </div>
-
         {/* Preview WYSIWYG real */}
         <div className="p-4 border rounded-lg bg-muted/10">
           <p className="text-xs text-muted-foreground mb-2">Preview</p>
@@ -35,7 +22,7 @@ export const NPSBlock = ({ block, onChange }: NPSBlockProps) => {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Configure labels, obrigatoriedade e opções no painel de propriedades →
+          Configure pergunta, labels, obrigatoriedade e opções no painel de propriedades →
         </p>
       </CardContent>
     </Card>

@@ -1,6 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { SliderBlock as SliderBlockType, QuizBlock } from "@/types/blocks";
 import { SliderBlockPreview } from "../preview/InteractiveBlockPreviews";
 
@@ -17,17 +15,6 @@ export const SliderBlock = ({ block, onChange }: SliderBlockProps) => {
           <span>📊 Bloco Slider/Range</span>
         </div>
 
-        {/* Content: Label */}
-        <div className="space-y-2">
-          <Label htmlFor="slider-label">Pergunta/Label</Label>
-          <Input
-            id="slider-label"
-            value={block.label}
-            onChange={(e) => onChange({ ...block, label: e.target.value })}
-            placeholder="Ex: Qual sua renda mensal?"
-          />
-        </div>
-
         {/* Preview WYSIWYG real */}
         <div className="p-4 border rounded-lg bg-muted/10">
           <p className="text-xs text-muted-foreground mb-2">Preview</p>
@@ -35,7 +22,7 @@ export const SliderBlock = ({ block, onChange }: SliderBlockProps) => {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Configure min/max, incremento, unidade e opções no painel de propriedades →
+          Configure pergunta, min/max, incremento, unidade e opções no painel de propriedades →
         </p>
       </CardContent>
     </Card>
