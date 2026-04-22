@@ -31,6 +31,8 @@ import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMo
 import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hooks/useEditorLayout";
 import { useSupportMode } from "@/contexts/SupportModeContext";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { ErrorState } from "@/components/ui/error-state";
+import { PageLoading } from "@/components/ui/page-loading";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -74,7 +76,7 @@ const ComponentLoader = () => (
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, loading: rolesLoading } = useUserRole();
   const { enterSupportMode } = useSupportMode();
   const { siteMode, isModeB } = useSiteMode();
   const { updateSiteMode } = useUpdateSiteMode();
@@ -125,6 +127,7 @@ export default function AdminDashboard() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [trialModalOpen, setTrialModalOpen] = useState(false);
   const [trialUser, setTrialUser] = useState<{id: string, email: string, currentPlan: string, originalPlan?: string | null, trialEndDate?: string | null} | null>(null);
+  const [respondentsError, setRespondentsError] = useState<string | null>(null);
   
   // Sorting state for tables
   const [usersSortColumn, setUsersSortColumn] = useState<string>('');
@@ -281,16 +284,26 @@ export default function AdminDashboard() {
   }, [planFilter, userSearchQuery]);
 
   // ✅ Use TanStack Query for better caching and performance
-  const { data: allUsersData, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
+  const {
+    data: allUsersData,
+    isLoading: isLoadingUsers,
+    isError: isUsersError,
+    error: usersError,
+    refetch: refetchUsers,
+  } = useQuery({
     queryKey: ['admin-all-users'],
     queryFn: async () => {
-      // 🛡️ P18: facade desempacota envelope { ok, data: { users }, traceId }
-      const { data } = await invokeEdgeFunction<{ users: any[] }>('list-all-users');
+      // Painel master é crítico: não mascarar falha transitória com circuit breaker aberto.
+      const { data } = await invokeEdgeFunction<{ users: any[] }>('list-all-users', undefined, {
+        disableCircuitBreaker: true,
+      });
       return data?.users || [];
     },
+    enabled: isAdmin && !rolesLoading,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   // Update administrators and derive accurate stats from allUsersData (service_role)
@@ -353,6 +366,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
+      setRespondentsError(null);
       // Métricas técnicas globais ficam na aba Sistema; o Início carrega apenas dados de negócio/admin.
       const [requestsResult, respondentsResult] = await Promise.all([
         (async () => {
@@ -371,7 +385,9 @@ export default function AdminDashboard() {
         (async () => {
           // 🛡️ P18: facade desempacota envelope { ok, data: { respondents }, traceId }
           try {
-            const { data } = await invokeEdgeFunction<{ respondents: any[] }>('list-all-respondents');
+            const { data } = await invokeEdgeFunction<{ respondents: any[] }>('list-all-respondents', undefined, {
+              disableCircuitBreaker: true,
+            });
             return { data: data?.respondents || [], error: null };
           } catch (e) {
             return { data: [], error: e };
@@ -383,6 +399,12 @@ export default function AdminDashboard() {
 
       // Edge function already returns aggregated respondents
       setAllUsers(respondentsResult.data || []);
+      if (respondentsResult.error) {
+        const message = respondentsResult.error instanceof Error
+          ? respondentsResult.error.message
+          : 'Falha ao carregar respondentes';
+        setRespondentsError(message);
+      }
       // 🚀 Fase 3: paralelizar carga financeira + settings (antes era em série).
       await Promise.all([
         loadFinancialData(),
@@ -684,10 +706,10 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || rolesLoading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <main className="min-h-screen">
+        <PageLoading label="Carregando painel administrativo…" />
       </main>
     );
   }
@@ -941,12 +963,18 @@ export default function AdminDashboard() {
         </div>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {isLoadingUsers ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
               <UserCardSkeleton key={i} />
             ))}
           </div>
+        ) : isUsersError ? (
+          <ErrorState
+            title="Não foi possível carregar os usuários"
+            message={(usersError as Error)?.message || 'Falha ao buscar dados administrativos'}
+            onRetry={() => void refetchUsers()}
+          />
         ) : filteredAdministrators.length === 0 ? (
           <p className="text-muted-foreground">{userSearchQuery ? 'Nenhum usuário encontrado para esta pesquisa' : t('admin.noUsersFiltered')}</p>
         ) : (
@@ -1235,7 +1263,15 @@ export default function AdminDashboard() {
         </div>
       </CardHeader>
       <CardContent>
-        {allUsers.length === 0 ? (
+        {respondentsError ? (
+          <ErrorState
+            title="Não foi possível carregar os respondentes"
+            message={respondentsError}
+            onRetry={() => void loadData()}
+          />
+        ) : loading ? (
+          <PageLoading variant="skeleton" rows={4} />
+        ) : allUsers.length === 0 ? (
           <p className="text-muted-foreground">Nenhum usuário encontrado</p>
         ) : (
           <>
