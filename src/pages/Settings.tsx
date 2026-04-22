@@ -244,13 +244,13 @@ const Settings = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error(t("settings.notAuthenticated"));
 
-      const response = await supabase.functions.invoke('export-user-data', {
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      });
-
-      if (response.error) throw new Error(response.error.message);
-
-      const { data, filename } = response.data;
+      // 🛡️ P18 — facade única
+      const { data: payload } = await invokeEdgeFunction<{ data: unknown; filename: string }>(
+        'export-user-data',
+        undefined,
+        { traceId: undefined },
+      );
+      const { data, filename } = payload;
       
       // Download do arquivo JSON
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
