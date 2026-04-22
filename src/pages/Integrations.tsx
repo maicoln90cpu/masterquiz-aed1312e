@@ -6,7 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { Plus, Plug, Loader2 } from "lucide-react";
+import { Plus, Plug } from "lucide-react";
+import { PageLoading } from "@/components/ui/page-loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IntegrationCard } from "@/components/integrations/IntegrationCard";
 import { AddIntegrationDialog } from "@/components/integrations/AddIntegrationDialog";
 import { IntegrationLogs } from "@/components/integrations/IntegrationLogs";
@@ -191,22 +193,19 @@ export default function Integrations() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <PageLoading variant="skeleton" rows={4} />
         ) : integrations.length === 0 ? (
-          <div id="integrations-list" className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <Plug className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">{t('integrations.noIntegrations', 'Nenhuma integração configurada')}</h3>
-            <p className="text-muted-foreground max-w-sm mb-4">
-              {t('integrations.noIntegrationsDesc', 'Conecte seus quizzes com HubSpot, RD Station, Mailchimp e outras ferramentas')}
-            </p>
-            <Button onClick={() => setShowAddDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('integrations.addFirst', 'Adicionar Primeira Integração')}
-            </Button>
+          <div id="integrations-list">
+            <EmptyState
+              icon={Plug}
+              title={t('integrations.noIntegrations', 'Nenhuma integração configurada')}
+              description={t('integrations.noIntegrationsDesc', 'Conecte seus quizzes com HubSpot, RD Station, Mailchimp e outras ferramentas')}
+              action={{
+                label: t('integrations.addFirst', 'Adicionar Primeira Integração'),
+                onClick: () => setShowAddDialog(true),
+              }}
+              size="lg"
+            />
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-3">
