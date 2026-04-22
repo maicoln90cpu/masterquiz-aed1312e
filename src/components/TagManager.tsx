@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +24,8 @@ interface TagManagerProps {
 }
 
 export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => {
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(false);
   const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#3b82f6");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -43,124 +43,85 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
     { name: "Cinza", value: "#6b7280" },
   ];
 
-  useEffect(() => {
-    if (open) {
-      loadTags();
-    }
-  }, [open]);
-
-  const loadTags = async () => {
-    setLoading(true);
-    try {
-      if (!user) return;
-
+  const tagsQuery = useQuery({
+    queryKey: ['quiz-tags', user?.id],
+    enabled: !!user?.id && open,
+    queryFn: async (): Promise<Tag[]> => {
       const { data, error } = await supabase
         .from('quiz_tags')
-        .select('*')
-        .eq('user_id', user.id)
+        .select('id, name, color')
+        .eq('user_id', user!.id)
         .order('name', { ascending: true });
-
       if (error) throw error;
-      setTags(data || []);
-    } catch (error) {
-      logger.error('Error loading tags:', error);
-      toast.error('Erro ao carregar tags');
-    } finally {
-      setLoading(false);
-    }
+      return (data || []) as Tag[];
+    },
+    staleTime: 30_000,
+  });
+  const tags: Tag[] = tagsQuery.data ?? [];
+  const loading = tagsQuery.isLoading;
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['quiz-tags', user?.id] });
+    onTagsUpdate();
   };
 
-  const createTag = async () => {
-    if (!newTagName.trim()) {
-      toast.error('Digite um nome para a tag');
-      return;
-    }
-
-    try {
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('quiz_tags')
-        .insert({
-          user_id: user.id,
-          name: newTagName.trim(),
-          color: newTagColor,
-        });
-
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('Já existe uma tag com este nome');
-        } else {
-          throw error;
-        }
-        return;
-      }
-
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Sem usuário');
+      const { error } = await supabase.from('quiz_tags').insert({
+        user_id: user.id,
+        name: newTagName.trim(),
+        color: newTagColor,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
       toast.success('Tag criada com sucesso');
       setNewTagName('');
       setNewTagColor('#3b82f6');
-      loadTags();
-      onTagsUpdate();
-    } catch (error) {
-      logger.error('Error creating tag:', error);
-      toast.error('Erro ao criar tag');
-    }
-  };
+      invalidate();
+    },
+    onError: (err: any) => {
+      if (err?.code === '23505') toast.error('Já existe uma tag com este nome');
+      else { logger.error('Error creating tag:', err); toast.error('Erro ao criar tag'); }
+    },
+  });
 
-  const updateTag = async (id: string) => {
-    if (!editName.trim()) {
-      toast.error('Digite um nome para a tag');
-      return;
-    }
-
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('quiz_tags')
-        .update({
-          name: editName.trim(),
-          color: editColor,
-        })
+        .update({ name: editName.trim(), color: editColor })
         .eq('id', id);
-
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('Já existe uma tag com este nome');
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      toast.success('Tag atualizada');
-      setEditingId(null);
-      loadTags();
-      onTagsUpdate();
-    } catch (error) {
-      logger.error('Error updating tag:', error);
-      toast.error('Erro ao atualizar tag');
-    }
-  };
-
-  const deleteTag = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta tag? Ela será removida de todos os quizzes.')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('quiz_tags')
-        .delete()
-        .eq('id', id);
-
       if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Tag atualizada'); setEditingId(null); invalidate(); },
+    onError: (err: any) => {
+      if (err?.code === '23505') toast.error('Já existe uma tag com este nome');
+      else { logger.error('Error updating tag:', err); toast.error('Erro ao atualizar tag'); }
+    },
+  });
 
-      toast.success('Tag excluída');
-      loadTags();
-      onTagsUpdate();
-    } catch (error) {
-      logger.error('Error deleting tag:', error);
-      toast.error('Erro ao excluir tag');
-    }
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('quiz_tags').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Tag excluída'); invalidate(); },
+    onError: (err) => { logger.error('Error deleting tag:', err); toast.error('Erro ao excluir tag'); },
+  });
+
+  const createTag = () => {
+    if (!newTagName.trim()) { toast.error('Digite um nome para a tag'); return; }
+    createMutation.mutate();
+  };
+  const updateTag = (id: string) => {
+    if (!editName.trim()) { toast.error('Digite um nome para a tag'); return; }
+    updateMutation.mutate(id);
+  };
+  const deleteTag = (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta tag? Ela será removida de todos os quizzes.')) return;
+    deleteMutation.mutate(id);
   };
 
   const startEditing = (tag: Tag) => {
