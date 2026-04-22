@@ -359,9 +359,13 @@ export default function AdminDashboard() {
           }
         })(),
         (async () => {
-          const result = await supabase.functions.invoke('list-all-respondents');
-          if (result.error) return { data: [], error: result.error };
-          return { data: result.data?.respondents || [], error: null };
+          // 🛡️ P18: facade desempacota envelope { ok, data: { respondents }, traceId }
+          try {
+            const { data } = await invokeEdgeFunction<{ respondents: any[] }>('list-all-respondents');
+            return { data: data?.respondents || [], error: null };
+          } catch (e) {
+            return { data: [], error: e };
+          }
         })()
       ]);
 
@@ -380,18 +384,16 @@ export default function AdminDashboard() {
 
   const loadFinancialData = async () => {
     try {
-      // Use growth-metrics edge function (service_role) to bypass RLS
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data: growthData, error: gError } = await supabase.functions.invoke('growth-metrics', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (gError || !growthData) {
+      // 🛡️ P18: facade faz unwrap automático do envelope P11
+      let growthData: any;
+      try {
+        const { data } = await invokeEdgeFunction<any>('growth-metrics');
+        growthData = data;
+      } catch (gError) {
         logger.error('Error loading growth metrics for reports:', gError);
         return;
       }
+      if (!growthData) return;
 
       const mrr = growthData.sectionC?.mrr || 0;
       const paidCount: number = Object.values(growthData.sectionC?.paidByPlan || {}).reduce((a: number, b: unknown) => a + Number(b), 0) as number;
