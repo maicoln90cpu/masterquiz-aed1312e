@@ -793,11 +793,11 @@ const CreateQuizClassic = () => {
                       )}
                     </Button>
                     <button
-type="button"
-onClick={() => {
-                        const newParams = new URLSearchParams(searchParams);
-                        newParams.delete('mode');
-                        navigate(`/create-quiz?${newParams.toString()}`, { replace: true });
+                      type="button"
+                      onClick={() => {
+                      const newParams = new URLSearchParams(searchParams);
+                      newParams.delete('mode');
+                      navigate(`/create-quiz?${newParams.toString()}`, { replace: true });
                       }}
                       className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
                     >
@@ -923,14 +923,14 @@ onClick={() => {
                     { number: 5, title: t('createQuiz.step5.title', 'Configuração de Resultados'), icon: '🏆' },
                   ].map((s) => (
                     <button
-type="button"
-key={s.number}
+                      type="button"
+                      key={s.number}
                       onClick={() => updateEditor({ step: s.number })}
                       className={cn(
-                        "w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
-                        step === s.number
-                          ? "bg-primary/10 border-primary shadow-sm"
-                          : "bg-card border-border hover:border-primary/30 hover:bg-muted/50"
+                      "w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
+                      step === s.number
+                      ? "bg-primary/10 border-primary shadow-sm"
+                      : "bg-card border-border hover:border-primary/30 hover:bg-muted/50"
                       )}
                     >
                       <span className="text-xl">{s.icon}</span>

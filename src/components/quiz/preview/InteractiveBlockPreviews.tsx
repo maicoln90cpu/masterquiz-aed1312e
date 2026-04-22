@@ -375,13 +375,14 @@ export const TestimonialBlockPreview = ({ block }: { block: QuizBlock & { type: 
         <div className="flex justify-center gap-2 pt-2">
           {allTestimonials.map((_, idx) => (
             <button
-type="button"
-key={idx}
+              type="button"
+              key={idx}
               onClick={() => setCurrentIdx(idx)}
               className={`w-2.5 h-2.5 rounded-full transition-all ${
-                idx === currentIdx ? 'bg-primary scale-110' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              idx === currentIdx ? 'bg-primary scale-110' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
               }`}
-            />
+              /
+            >
           ))}
         </div>
       )}
@@ -1051,8 +1052,8 @@ export const RatingBlockPreview = ({ block }: { block: QuizBlock & { type: 'rati
 
           return (
             <button
-type="button"
-key={i}
+              type="button"
+              key={i}
               onClick={(event) => setValue(getPointerValue(event))}
               onMouseMove={(event) => setHover(getPointerValue(event))}
               onMouseLeave={() => setHover(0)}

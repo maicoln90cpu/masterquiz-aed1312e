@@ -137,8 +137,8 @@ export const LandingHeader = () => {
           <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <button
-type="button"
-key={item.href}
+                type="button"
+                key={item.href}
                 onClick={() => handleNavClick(item)}
                 className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
@@ -171,8 +171,8 @@ key={item.href}
                 <div className="flex flex-col gap-6 mt-8">
                   {!isHome && (
                     <button
-type="button"
-onClick={() => { handleBackHome(); setIsMobileMenuOpen(false); }}
+                      type="button"
+                      onClick={() => { handleBackHome(); setIsMobileMenuOpen(false); }}
                       className="flex items-center gap-2 text-left text-lg font-medium text-primary hover:text-primary/80 transition-colors"
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -181,8 +181,8 @@ onClick={() => { handleBackHome(); setIsMobileMenuOpen(false); }}
                   )}
                   {navItems.map((item) => (
                     <button
-type="button"
-key={item.href}
+                      type="button"
+                      key={item.href}
                       onClick={() => handleNavClick(item)}
                       className="text-left text-lg font-medium text-foreground hover:text-primary transition-colors"
                     >

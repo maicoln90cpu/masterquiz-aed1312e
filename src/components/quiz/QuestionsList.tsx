@@ -141,8 +141,8 @@ export const QuestionsList = memo(({
                   <div className="flex items-start gap-1.5">
                     {/* Badge numérico */}
                     <button
-type="button"
-onClick={() => onQuestionClick(index)}
+                      type="button"
+                      onClick={() => onQuestionClick(index)}
                       className="flex-shrink-0 relative mt-0.5"
                       type="button"
                     >
