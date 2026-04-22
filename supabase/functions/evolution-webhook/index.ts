@@ -434,6 +434,7 @@ Deno.serve(async (req) => {
     // Evento não tratado
     console.log(`[EVOLUTION-WEBHOOK] Unhandled event: ${event}`);
 
+    if (claim?.id) await markEventProcessed(supabase, claim.id, { event, handled: false }).catch(() => {});
     return new Response(
       JSON.stringify({ success: true, event, handled: false }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
