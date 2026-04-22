@@ -1,5 +1,24 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ Onda 7 — Sub-onda 7-B (8 edges de tracking & utilitários migradas)
+
+### O que mudou
+- **Migradas para envelope + Zod**: `track-quiz-analytics`, `track-quiz-step`, `track-blog-view`, `track-video-analytics`, `track-cta-redirect` (apenas POST; GET 302 mantido como gateway com exceção documentada), `rate-limiter`, `anonymize-ips`. `save-quiz-response` já estava migrada e foi adicionada à lista vigiada.
+- **Cobertura de envelope**: 6 → **14 / 64 edges (21,9%)**.
+- **Contract test P18**: `MIGRATED_EDGES` cresceu para 14; nova lista `ALLOW_RAW_RESPONSE` documenta exceção do `track-cta-redirect` (gateway HTTP). 28 testes verdes.
+- **Validação P18**: schemas Zod garantem `quizId UUID`, `event ∈ {view,start,complete}`, `event_type` válido em vídeo, etc. Erros viram 400 envelopados padronizados.
+- **Higiene `.single()` → `.maybeSingle()`** aplicada em mutations dessas edges (P22).
+- **Deploy OK** das 7 edges alteradas (save-quiz-response não precisou redeployar).
+
+### Antes / Depois (leigo)
+- **Antes**: tracking respondia `{success:true,data:...}` ou `{error:"..."}` sem traceId; payload inválido podia gravar lixo.
+- **Depois**: respostas seguem `{ ok, data, error, traceId }` e payloads inválidos são rejeitados antes de tocar o banco. Todo evento agora pode ser rastreado pelo `x-trace-id` no header.
+
+### Próximas sub-ondas
+- **7-C** (Admin/User Management — 12 edges): list-all-users/respondents, delete-user(-complete), export-user-data, update-user-profile, merge-user-data, migrate-imported-user, check-imported-user, check-expired-trials, sync-plan-limits.
+- **7-D** (Mensageria — ~22 edges): send-*, process-*, check-inactive-*, evolution-*, whatsapp-ai-reply, egoi-email-webhook, generate-email-content, handle-email-unsubscribe, generate-blog-post.
+- **7-E** (Bunny CDN + Diversos — ~14 edges): bunny-* (8), sync-integration, parse-pdf-document, generate-pdf-report, generate-quiz-ai, regenerate-blog-asset, blog-cron-trigger, blog-sitemap, export-schema-sql.
+
 ## ✅ Onda 7 — Etapa 5 (Contract Tests P18/P19/P20 + CODE_STANDARDS atualizado)
 
 ### O que mudou
