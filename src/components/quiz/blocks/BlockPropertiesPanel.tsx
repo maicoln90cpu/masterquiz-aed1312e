@@ -118,7 +118,7 @@ const QuestionMultiSelector = ({ selectedIds, onChange, questions, label = 'Filt
       <div className="flex items-center justify-between">
         <Label>{label}</Label>
         {selectedIds.length > 0 && (
-          <button className="text-[10px] text-primary underline" onClick={() => onChange([])}>Limpar</button>
+          <button type="button" className="text-[10px] text-primary underline" onClick={() => onChange([])}>Limpar</button>
         )}
       </div>
       <p className="text-[10px] text-muted-foreground">
