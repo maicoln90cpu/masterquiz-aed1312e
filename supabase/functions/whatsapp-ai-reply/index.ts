@@ -316,10 +316,7 @@ Contexto do usuário:
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiKey) {
       console.error('[WHATSAPP-AI] OPENAI_API_KEY not configured');
-      return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('INTERNAL_ERROR', 'OpenAI API key not configured', traceId, corsHeaders);
     }
 
     const messages = [
@@ -429,15 +426,12 @@ Contexto do usuário:
       });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        reply_sent: true,
-        tokens_used: tokensUsed,
-        escalated: shouldEscalate,
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({
+      success: true,
+      reply_sent: true,
+      tokens_used: tokensUsed,
+      escalated: shouldEscalate,
+    }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('[WHATSAPP-AI] Error:', error);
@@ -447,9 +441,6 @@ Contexto do usuário:
       console.error('[WHATSAPP-AI] Error details:', body);
     } catch (_) {}
 
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', `Internal server error: ${String(error).slice(0, 200)}`, traceId, corsHeaders);
   }
 });
