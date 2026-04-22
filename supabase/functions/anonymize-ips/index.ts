@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const traceId = getTraceId(req);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -23,10 +26,7 @@ Deno.serve(async (req) => {
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user) {
-        return new Response(
-          JSON.stringify({ error: 'Não autorizado' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('UNAUTHORIZED', 'Não autorizado', traceId, corsHeaders);
       }
 
       const { data: roleData } = await supabase
@@ -34,13 +34,10 @@ Deno.serve(async (req) => {
         .select('role')
         .eq('user_id', user.id)
         .eq('role', 'master_admin')
-        .single();
+        .maybeSingle();
 
       if (!roleData) {
-        return new Response(
-          JSON.stringify({ error: 'Acesso negado. Requer permissão de master_admin.' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('FORBIDDEN', 'Acesso negado. Requer permissão de master_admin.', traceId, corsHeaders);
       }
     }
 
@@ -65,20 +62,14 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Anonimização concluída: ${affectedCount} registros afetados`);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Anonimização de IPs concluída',
-        records_affected: affectedCount
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    return okResponse(
+      { message: 'Anonimização de IPs concluída', records_affected: affectedCount },
+      traceId,
+      corsHeaders,
     );
 
   } catch (error) {
     console.error('❌ Erro na anonimização:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno ao anonimizar IPs' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', 'Erro interno ao anonimizar IPs', traceId, corsHeaders);
   }
 });
