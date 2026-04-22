@@ -4,11 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, RefreshCw, ChevronLeft, ChevronRight, Info, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { RefreshCw, Info, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
+import { PageLoading } from "@/components/ui/page-loading";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Mail } from "lucide-react";
 
 interface WebhookLog {
   id: string;
@@ -22,29 +25,25 @@ interface WebhookLog {
   status_code: number | null;
 }
 
-const LOGS_PER_PAGE = 15;
-
 export default function PaymentWebhookLogs() {
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [providerFilter, setProviderFilter] = useState<string>("all");
-  const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
   useEffect(() => {
     loadLogs();
-  }, [currentPage, statusFilter, providerFilter]);
+  }, [statusFilter, providerFilter]);
 
   const loadLogs = async () => {
     setLoading(true);
     try {
       let query = supabase
         .from('webhook_logs')
-        .select('id, created_at, email, evento, produto, status, provider, error_message, status_code', { count: 'exact' })
+        .select('id, created_at, email, evento, produto, status, provider, error_message, status_code')
         .eq('provider', 'kiwify')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(500);
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
@@ -54,15 +53,11 @@ export default function PaymentWebhookLogs() {
         query = query.eq('provider', providerFilter);
       }
 
-      const offset = (currentPage - 1) * LOGS_PER_PAGE;
-      query = query.range(offset, offset + LOGS_PER_PAGE - 1);
-
-      const { data, error, count } = await query;
+      const { data, error } = await query;
 
       if (error) throw error;
 
       setLogs(data || []);
-      setTotalCount(count || 0);
     } catch (error) {
       logger.error('Error loading webhook logs:', error);
     } finally {
@@ -104,7 +99,65 @@ export default function PaymentWebhookLogs() {
     return <Badge variant="outline">{provider || 'N/A'}</Badge>;
   };
 
-  const totalPages = Math.ceil(totalCount / LOGS_PER_PAGE);
+  const columns: DataTableColumn<WebhookLog>[] = [
+    {
+      key: 'created_at',
+      label: 'Data/Hora',
+      sortable: true,
+      className: 'w-44',
+      render: (log) => (
+        <span className="text-xs">
+          {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+        </span>
+      ),
+    },
+    {
+      key: 'provider',
+      label: 'Provider',
+      filterable: true,
+      render: (log) => getProviderBadge(log.provider),
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      sortable: true,
+      searchable: true,
+      render: (log) => <span className="text-sm">{log.email || '-'}</span>,
+    },
+    {
+      key: 'evento',
+      label: 'Evento',
+      filterable: true,
+      searchable: true,
+      render: (log) => getEventBadge(log.evento),
+    },
+    {
+      key: 'produto',
+      label: 'Produto',
+      searchable: true,
+      className: 'max-w-[200px]',
+      render: (log) => (
+        <span className="text-sm truncate block">{log.produto || '-'}</span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      filterable: true,
+      align: 'center',
+      className: 'w-28',
+      render: (log) => (
+        <div className="space-y-1">
+          {getStatusBadge(log.status)}
+          {log.error_message && (
+            <p className="text-[10px] text-destructive max-w-[180px] truncate" title={log.error_message}>
+              {log.error_message}
+            </p>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -152,92 +205,24 @@ export default function PaymentWebhookLogs() {
         </Button>
       </div>
 
-      {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
+        <PageLoading variant="skeleton" rows={6} />
       ) : logs.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          Nenhum log de webhook de pagamento encontrado.
-        </div>
+        <EmptyState
+          icon={Mail}
+          title="Nenhum log de webhook de pagamento encontrado"
+          description="Logs de Kiwify aparecerão aqui assim que forem recebidos."
+        />
       ) : (
-        <>
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-40">Data/Hora</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Evento</TableHead>
-                  <TableHead>Produto</TableHead>
-                  <TableHead className="w-24">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => (
-                  <>
-                    <TableRow 
-                      key={log.id} 
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-                    >
-                      <TableCell className="text-xs">
-                        {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>{getProviderBadge(log.provider)}</TableCell>
-                      <TableCell className="text-sm">{log.email || '-'}</TableCell>
-                      <TableCell>{getEventBadge(log.evento)}</TableCell>
-                      <TableCell className="text-sm max-w-32 truncate">{log.produto || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(log.status)}</TableCell>
-                    </TableRow>
-                    {expandedLog === log.id && log.error_message && (
-                      <TableRow key={`${log.id}-details`}>
-                        <TableCell colSpan={6} className="bg-red-50 dark:bg-red-950/20">
-                          <div className="text-xs">
-                            <strong className="text-red-600">Erro:</strong>
-                            <pre className="mt-1 p-2 bg-red-100 dark:bg-red-900/30 rounded text-red-800 dark:text-red-200 whitespace-pre-wrap">
-                              {log.error_message}
-                            </pre>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Mostrando {((currentPage - 1) * LOGS_PER_PAGE) + 1} - {Math.min(currentPage * LOGS_PER_PAGE, totalCount)} de {totalCount} logs
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm">
-                Página {currentPage} de {totalPages || 1}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </>
+        <DataTable
+          data={logs}
+          columns={columns}
+          defaultSortKey="created_at"
+          defaultSortDirection="desc"
+          searchPlaceholder="Buscar email, evento ou produto…"
+          exportCsv="payment-webhook-logs"
+          rowKey={(log) => log.id}
+        />
       )}
     </div>
   );
