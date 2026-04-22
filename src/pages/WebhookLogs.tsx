@@ -1,16 +1,17 @@
 import { logger } from '@/lib/logger';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight, Webhook } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight, Webhook } from "lucide-react";
 import { PageLoading } from "@/components/ui/page-loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { shouldRetryQuery, queryRetryDelay } from "@/lib/queryRetry";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
-import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -31,25 +32,26 @@ const WebhookLogs = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  const [logs, setLogs] = useState<WebhookLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    loadWebhookLogs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const loadWebhookLogs = async () => {
-    try {
-      setLoading(true);
+  const {
+    data: logs = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery<WebhookLog[]>({
+    queryKey: ["webhook-logs", user?.id],
+    enabled: !!user?.id,
+    retry: shouldRetryQuery,
+    retryDelay: queryRetryDelay,
+    queryFn: async () => {
       if (!user) {
         navigate('/login');
-        return;
+        return [];
       }
-
-      // Buscar logs reais de webhook_logs
-      const { data: logs, error } = await supabase
+      const { data: rawLogs, error: logsErr } = await supabase
         .from('webhook_logs')
         .select(`
           id,
@@ -66,39 +68,29 @@ const WebhookLogs = () => {
         .order('created_at', { ascending: false })
         .limit(500);
 
-      if (error) throw error;
+      if (logsErr) {
+        logger.error('Error loading webhook logs:', logsErr);
+        throw logsErr;
+      }
 
-      // Buscar títulos dos quizzes
-      const quizIds = [...new Set((logs || []).map(log => log.quiz_id).filter(Boolean))];
-      const { data: quizzes } = await supabase
-        .from('quizzes')
-        .select('id, title')
-        .in('id', quizIds);
+      const quizIds = [...new Set((rawLogs || []).map((l) => l.quiz_id).filter(Boolean))];
+      const { data: quizzes } = quizIds.length
+        ? await supabase.from('quizzes').select('id, title').in('id', quizIds)
+        : { data: [] as { id: string; title: string }[] };
+      const quizMap = new Map(quizzes?.map((q) => [q.id, q.title]));
 
-      const quizMap = new Map(quizzes?.map(q => [q.id, q.title]));
-
-      const webhookLogs: WebhookLog[] = (logs || []).map(log => ({
+      return (rawLogs || []).map((log) => ({
         id: log.id,
         created_at: log.created_at,
         event_type: 'quiz.response.completed',
-        payload: {
-          quiz_id: log.quiz_id,
-          response_id: log.response_id,
-        },
-        status: log.status_code < 400 ? 'success' : 'failed',
+        payload: { quiz_id: log.quiz_id, response_id: log.response_id },
+        status: (log.status_code ?? 0) < 400 ? 'success' : 'failed',
         response: { statusCode: log.status_code, body: log.response_body },
         quiz_id: log.quiz_id,
         quiz_title: log.quiz_id ? quizMap.get(log.quiz_id) : undefined,
-      }));
-
-      setLogs(webhookLogs);
-    } catch (error) {
-      logger.error('Error loading webhook logs:', error);
-      toast.error(t('webhookLogs.errorLoading'));
-    } finally {
-      setLoading(false);
-    }
-  };
+      })) as WebhookLog[];
+    },
+  });
 
   // Pagination
   const paginatedLogs = useMemo(() => {
@@ -146,8 +138,15 @@ const WebhookLogs = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {isLoading ? (
               <PageLoading variant="skeleton" rows={5} />
+            ) : isError ? (
+              <ErrorState
+                title={t('webhookLogs.errorLoading', 'Erro ao carregar logs')}
+                message={(error as Error)?.message}
+                onRetry={() => refetch()}
+                isRetrying={isFetching}
+              />
             ) : logs.length === 0 ? (
               <EmptyState
                 icon={Webhook}
