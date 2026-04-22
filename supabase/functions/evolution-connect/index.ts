@@ -166,27 +166,16 @@ Deno.serve(async (req) => {
             evolution_api_url: evolutionApiUrl,
             updated_at: new Date().toISOString()
           })
-          .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+          .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-        return new Response(
-          JSON.stringify({
-            qrCode: null,
-            state: 'connected',
-            instance: instanceName,
-            exists: true
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({ qrCode: null, state: 'connected', instance: instanceName, exists: true }, traceId, corsHeaders);
       }
 
       // Se não existe, criar instância
       if (!exists) {
         const created = await createInstance(evolutionApiUrl, evolutionApiKey, instanceName);
         if (!created) {
-          return new Response(
-            JSON.stringify({ error: 'Falha ao criar instância na Evolution API' }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return errorResponse('INTERNAL_ERROR', 'Falha ao criar instância na Evolution API', traceId, corsHeaders);
         }
       }
 
@@ -200,10 +189,7 @@ Deno.serve(async (req) => {
       if (!connectRes.ok) {
         const errorText = await connectRes.text();
         console.error('Connect failed:', connectRes.status, errorText);
-        return new Response(
-          JSON.stringify({ error: 'Falha ao conectar instância', details: errorText }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('INTERNAL_ERROR', `Falha ao conectar instância: ${errorText.slice(0, 200)}`, traceId, corsHeaders);
       }
 
       const connectData = await connectRes.json();
@@ -222,17 +208,9 @@ Deno.serve(async (req) => {
           last_connection_check: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+        .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-      return new Response(
-        JSON.stringify({
-          qrCode,
-          state: 'awaiting_scan',
-          instance: instanceName,
-          exists: true
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ qrCode, state: 'awaiting_scan', instance: instanceName, exists: true }, traceId, corsHeaders);
     }
 
     // ========== ACTION: STATUS ==========
