@@ -1,115 +1,61 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
+import { requireAuth } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id',
 };
 
+const BodySchema = z.object({
+  quiz_id: z.string().uuid(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+});
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  const traceId = getTraceId(req);
+
+  const auth = await requireAuth(req, traceId, corsHeaders);
+  if (auth instanceof Response) return auth;
+
+  const parsed = await parseBody(req, BodySchema, traceId);
+  if (parsed instanceof Response) return parsed;
+  const { quiz_id, start_date, end_date } = parsed.data;
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { supabase, user } = auth;
+    const { data: quiz } = await supabase
+      .from('quizzes').select('*')
+      .eq('id', quiz_id).eq('user_id', user.id).maybeSingle();
+    if (!quiz) return errorResponse('NOT_FOUND', 'Quiz not found', traceId, corsHeaders);
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authorization required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { quiz_id, start_date, end_date } = await req.json();
-
-    if (!quiz_id) {
-      return new Response(
-        JSON.stringify({ error: 'quiz_id is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Verificar que o quiz pertence ao usuário
-    const { data: quiz, error: quizError } = await supabase
-      .from('quizzes')
-      .select('*')
-      .eq('id', quiz_id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (quizError || !quiz) {
-      return new Response(
-        JSON.stringify({ error: 'Quiz not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Buscar dados do relatório
     let analyticsQuery = supabase
-      .from('quiz_analytics')
-      .select('*')
-      .eq('quiz_id', quiz_id)
-      .order('date', { ascending: true });
-
-    if (start_date) {
-      analyticsQuery = analyticsQuery.gte('date', start_date);
-    }
-    if (end_date) {
-      analyticsQuery = analyticsQuery.lte('date', end_date);
-    }
-
+      .from('quiz_analytics').select('*')
+      .eq('quiz_id', quiz_id).order('date', { ascending: true });
+    if (start_date) analyticsQuery = analyticsQuery.gte('date', start_date);
+    if (end_date) analyticsQuery = analyticsQuery.lte('date', end_date);
     const { data: analytics } = await analyticsQuery;
 
-    // Buscar respostas
     let responsesQuery = supabase
-      .from('quiz_responses')
-      .select('*')
-      .eq('quiz_id', quiz_id)
-      .order('completed_at', { ascending: false });
-
-    if (start_date) {
-      responsesQuery = responsesQuery.gte('completed_at', `${start_date}T00:00:00`);
-    }
-    if (end_date) {
-      responsesQuery = responsesQuery.lte('completed_at', `${end_date}T23:59:59`);
-    }
-
+      .from('quiz_responses').select('*')
+      .eq('quiz_id', quiz_id).order('completed_at', { ascending: false });
+    if (start_date) responsesQuery = responsesQuery.gte('completed_at', `${start_date}T00:00:00`);
+    if (end_date) responsesQuery = responsesQuery.lte('completed_at', `${end_date}T23:59:59`);
     const { data: responses } = await responsesQuery;
 
-    // Buscar resultados
     const { data: results } = await supabase
-      .from('quiz_results')
-      .select('*')
-      .eq('quiz_id', quiz_id);
-
-    // Buscar perguntas
+      .from('quiz_results').select('*').eq('quiz_id', quiz_id);
     const { data: questions } = await supabase
-      .from('quiz_questions')
-      .select('*')
-      .eq('quiz_id', quiz_id)
-      .order('order_number');
+      .from('quiz_questions').select('*').eq('quiz_id', quiz_id).order('order_number');
 
-    // Calcular estatísticas
-    const totalViews = (analytics || []).reduce((sum, a) => sum + (a.views || 0), 0);
-    const totalStarts = (analytics || []).reduce((sum, a) => sum + (a.starts || 0), 0);
-    const totalCompletions = (analytics || []).reduce((sum, a) => sum + (a.completions || 0), 0);
-    const avgCompletionTime = (analytics || []).reduce((sum, a) => sum + (a.avg_completion_time || 0), 0) / Math.max((analytics || []).length, 1);
+    const totalViews = (analytics || []).reduce((s, a) => s + (a.views || 0), 0);
+    const totalStarts = (analytics || []).reduce((s, a) => s + (a.starts || 0), 0);
+    const totalCompletions = (analytics || []).reduce((s, a) => s + (a.completions || 0), 0);
+    const avgCompletionTime = (analytics || []).reduce((s, a) => s + (a.avg_completion_time || 0), 0) / Math.max((analytics || []).length, 1);
     const conversionRate = totalViews > 0 ? ((totalCompletions / totalViews) * 100).toFixed(1) : '0';
 
-    // Contar resultados por tipo
     const resultDistribution: Record<string, number> = {};
     for (const response of responses || []) {
       const resultId = response.result_id || 'unknown';
@@ -117,24 +63,13 @@ Deno.serve(async (req) => {
     }
 
     const reportData = {
-      quiz: {
-        id: quiz.id,
-        title: quiz.title,
-        description: quiz.description,
-        status: quiz.status,
-        created_at: quiz.created_at,
-      },
-      period: {
-        start: start_date || 'all',
-        end: end_date || 'all',
-      },
+      quiz: { id: quiz.id, title: quiz.title, description: quiz.description, status: quiz.status, created_at: quiz.created_at },
+      period: { start: start_date || 'all', end: end_date || 'all' },
       summary: {
-        total_views: totalViews,
-        total_starts: totalStarts,
-        total_completions: totalCompletions,
+        total_views: totalViews, total_starts: totalStarts, total_completions: totalCompletions,
         conversion_rate: `${conversionRate}%`,
         avg_completion_time_seconds: Math.round(avgCompletionTime),
-        total_leads: (responses || []).filter(r => r.respondent_email || r.respondent_whatsapp).length,
+        total_leads: (responses || []).filter((r) => r.respondent_email || r.respondent_whatsapp).length,
       },
       daily_analytics: analytics || [],
       questions_count: (questions || []).length,
@@ -144,25 +79,18 @@ Deno.serve(async (req) => {
       generated_at: new Date().toISOString(),
     };
 
-    // Log de auditoria
     await supabase.from('audit_logs').insert({
       user_id: user.id,
       action: 'quiz:generate_report',
       resource_type: 'quiz',
       resource_id: quiz_id,
-      metadata: { period: { start_date, end_date }, total_responses: reportData.responses_count }
+      metadata: { period: { start_date, end_date }, total_responses: reportData.responses_count, trace_id: traceId },
     });
 
-    return new Response(
-      JSON.stringify(reportData),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('Generate PDF report error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse(reportData, traceId, corsHeaders);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    console.error('[generate-pdf-report]', message);
+    return errorResponse('INTERNAL_ERROR', message, traceId, corsHeaders);
   }
 });
