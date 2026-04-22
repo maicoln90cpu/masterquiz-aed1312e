@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,13 +11,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     // Validate caller is admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('UNAUTHORIZED', 'Authorization header ausente', traceId, corsHeaders);
     }
 
     const anonClient = createClient(
@@ -29,9 +29,7 @@ Deno.serve(async (req) => {
       authHeader.replace('Bearer ', '')
     );
     if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     const callerId = claimsData.claims.sub;
@@ -52,9 +50,7 @@ Deno.serve(async (req) => {
     );
 
     if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Forbidden: admin role required' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('FORBIDDEN', 'Requer permissão de admin', traceId, corsHeaders);
     }
 
     console.log(`[SYNC-PLAN-LIMITS] Admin ${callerId} triggered plan sync`);
@@ -67,9 +63,7 @@ Deno.serve(async (req) => {
 
     if (plansError) {
       console.error('[SYNC-PLAN-LIMITS] Error fetching plans:', plansError);
-      return new Response(JSON.stringify({ error: plansError.message }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('INTERNAL_ERROR', plansError.message, traceId, corsHeaders);
     }
 
     const results: Record<string, { updated: number; quiz_limit: number; response_limit: number }> = {};
@@ -101,18 +95,10 @@ Deno.serve(async (req) => {
     const totalUpdated = Object.values(results).reduce((sum, r) => sum + r.updated, 0);
     console.log(`[SYNC-PLAN-LIMITS] Total updated: ${totalUpdated}`);
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      total_updated: totalUpdated,
-      details: results 
-    }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return okResponse({ total_updated: totalUpdated, details: results }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('[SYNC-PLAN-LIMITS] Error:', error);
-    return new Response(JSON.stringify({ error: String(error) }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', String(error), traceId, corsHeaders);
   }
 });
