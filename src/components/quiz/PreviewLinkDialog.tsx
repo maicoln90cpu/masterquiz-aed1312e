@@ -69,8 +69,8 @@ export const PreviewLinkDialog = ({ open, onOpenChange, quizId }: PreviewLinkDia
             </div>
           </div>
           
-          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-4 rounded-lg">
-            <p className="text-sm text-amber-900 dark:text-amber-100">
+          <div className="bg-warning/10 border border-warning/30 p-4 rounded-lg">
+            <p className="text-sm text-warning-foreground">
               <strong>⚠️ Importante:</strong> Este link permite visualizar o quiz mesmo em rascunho. 
               Compartilhe apenas com pessoas autorizadas.
             </p>

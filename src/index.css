@@ -189,6 +189,22 @@ All colors MUST be HSL.
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
+  /* 🔒 Onda 8.6 — Scroll lock estável para modais (Radix Dialog/Sheet/Drawer)
+   * Reserva espaço da scrollbar permanentemente para evitar layout shift
+   * quando Radix aplica overflow:hidden no body ao abrir um modal.
+   * Sem isso, o conteúdo "pula" lateralmente ao abrir/fechar dialogs em desktop.
+   */
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  /* Reforço: quando Radix marca o body como scroll-locked, garantimos que
+   * nenhum elemento filho cause overflow horizontal/vertical inesperado. */
+  body[data-scroll-locked] {
+    overflow: hidden !important;
+    overscroll-behavior: contain;
+  }
+
   /* Ensure root container respects viewport width */
   #root {
     max-width: 100vw;
