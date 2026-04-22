@@ -198,7 +198,9 @@ export default function ICPInsightsTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Ranking ICP ({rows.length})</CardTitle>
+          <CardTitle className="text-base">
+            Ranking ICP — {rows.length.toLocaleString('pt-BR')} usuários totais
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable<ICPRow>
