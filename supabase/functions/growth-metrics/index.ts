@@ -1,19 +1,21 @@
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id',
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts'
 
 Deno.serve(async (req) => {
+  const traceId = getTraceId(req)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: { ...corsHeaders, 'x-trace-id': traceId } })
   }
 
   try {
     // Verify admin
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return errorResponse('UNAUTHORIZED', 'Token ausente', traceId, corsHeaders)
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -25,14 +27,14 @@ Deno.serve(async (req) => {
     const token = authHeader.replace('Bearer ', '')
     const { data: { user } } = await anonClient.auth.getUser(token)
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders)
     }
 
     const { data: roleCheck } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' })
     if (!roleCheck) {
       const { data: masterCheck } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'master_admin' })
       if (!masterCheck) {
-        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        return errorResponse('FORBIDDEN', 'Requer admin ou master_admin', traceId, corsHeaders)
       }
     }
 
@@ -731,15 +733,9 @@ Deno.serve(async (req) => {
       },
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    return okResponse(result, traceId, corsHeaders)
   } catch (error) {
     console.error('[growth-metrics] Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    })
+    return errorResponse('INTERNAL_ERROR', (error as Error)?.message || 'Erro interno', traceId, corsHeaders)
   }
 })
