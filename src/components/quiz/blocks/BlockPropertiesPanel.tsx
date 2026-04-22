@@ -1573,18 +1573,24 @@ const CalloutProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
       <SwitchRow label="Dispensável (botão X)" tooltip="Permite que o usuário feche/dispense o alerta clicando no X" checked={(block as any).dismissible || false} onChange={(v) => onChange(update(block, { dismissible: v }))} />
       <SwitchRow label="Ocultar bloco" tooltip="Mantém o bloco configurado mas não o exibe no quiz publicado" checked={(block as any).hidden || false} onChange={(v) => onChange(update(block, { hidden: v }))} />
       <Separator />
-      <div className="space-y-2">
-        <Label>Cor de fundo</Label>
-        <Input type="color" value={block.backgroundColor || '#fef3c7'} onChange={(e) => onChange(update(block, { backgroundColor: e.target.value }))} />
-      </div>
-      <div className="space-y-2">
-        <Label>Cor da borda</Label>
-        <Input type="color" value={block.borderColor || '#f59e0b'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
-      </div>
-      <div className="space-y-2">
-        <Label>Cor do texto</Label>
-        <Input type="color" value={block.textColor || '#92400e'} onChange={(e) => onChange(update(block, { textColor: e.target.value }))} />
-      </div>
+      <ColorPalette
+        label="Cor de fundo"
+        value={block.backgroundColor}
+        onChange={(c) => onChange(update(block, { backgroundColor: c }))}
+        defaultValue="#fef3c7"
+      />
+      <ColorPalette
+        label="Cor da borda"
+        value={block.borderColor}
+        onChange={(c) => onChange(update(block, { borderColor: c }))}
+        defaultValue="#f59e0b"
+      />
+      <ColorPalette
+        label="Cor do texto"
+        value={block.textColor}
+        onChange={(c) => onChange(update(block, { textColor: c }))}
+        defaultValue="#92400e"
+      />
     </div>
   );
 };
@@ -1944,6 +1950,20 @@ const AvatarGroupProperties = ({ block, onChange }: BlockPropertiesPanelProps) =
         </Select>
       </div>
       <SwitchRow label="Mostrar contador" tooltip="Exibe o número total de pessoas junto ao grupo de avatares" checked={(block as any).showCount !== false} onChange={(v) => onChange(update(block, { showCount: v }))} />
+
+      {/* ✅ Onda 5 — Upload de fotos reais para os avatares */}
+      <Separator />
+      <div className="space-y-2">
+        <Label className="text-xs">Fotos dos avatares (opcional)</Label>
+        <p className="text-[10px] text-muted-foreground">
+          Até 5 imagens. Sem upload, são exibidas iniciais aleatórias.
+        </p>
+        <AvatarImagesEditor
+          images={(block as any).images || []}
+          onChange={(imgs) => onChange(update(block, { images: imgs }))}
+        />
+      </div>
+
       {/* ✅ Etapa 2D: Link para perfil ao clicar */}
       <Separator />
       <div className="space-y-2">
