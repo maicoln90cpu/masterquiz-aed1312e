@@ -173,7 +173,14 @@ export const BannerBlockPreview = ({ block, onCtaClick }: { block: QuizBlock & {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
 
-  const style = BANNER_STYLES[block.variant || 'promo'];
+  const customBg = (block as any).bgColor as string | undefined;
+  const customText = (block as any).textColor as string | undefined;
+  // Onda 7 — quando há override de cor, descarta a classe de variante para evitar conflito
+  const style = customBg ? '' : BANNER_STYLES[block.variant || 'promo'];
+  const inlineStyle: React.CSSProperties = {
+    ...(customBg ? { backgroundColor: customBg, backgroundImage: 'none' } : {}),
+    ...(customText ? { color: customText } : {}),
+  };
 
   // ✅ Etapa 2D: Banner clicável com link
   const handleClick = () => {
@@ -191,6 +198,7 @@ export const BannerBlockPreview = ({ block, onCtaClick }: { block: QuizBlock & {
   return (
     <div
       className={`rounded-lg px-4 py-3 text-center font-semibold text-sm relative ${style} ${hasLink ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+      style={inlineStyle}
       onClick={hasLink ? handleClick : undefined}
     >
       <span>{block.text}</span>
