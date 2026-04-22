@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Callout } from "@/components/ui/callout";
 
 interface PreviewLinkDialogProps {
   open: boolean;
@@ -69,12 +70,10 @@ export const PreviewLinkDialog = ({ open, onOpenChange, quizId }: PreviewLinkDia
             </div>
           </div>
           
-          <div className="bg-warning/10 border border-warning/30 p-4 rounded-lg">
-            <p className="text-sm text-warning-foreground">
-              <strong>⚠️ Importante:</strong> Este link permite visualizar o quiz mesmo em rascunho. 
-              Compartilhe apenas com pessoas autorizadas.
-            </p>
-          </div>
+          <Callout variant="warning">
+            <strong>Importante:</strong> Este link permite visualizar o quiz mesmo em rascunho.
+            Compartilhe apenas com pessoas autorizadas.
+          </Callout>
           
           <Button 
             className="w-full" 
