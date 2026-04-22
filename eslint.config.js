@@ -320,4 +320,56 @@ export default tseslint.config(
       ],
     },
   },
+  // ⚠️ P27 (Onda 8.8): z-index "mágico" via Tailwind arbitrary value (ex.: `z-[9999]`).
+  // Quebra a hierarquia documentada em mem://design/responsive-system.
+  // Use SEMPRE tokens semânticos: `z-modal`, `z-popover`, `z-toast` etc. (ver src/lib/zIndex.ts).
+  // WARN para não bloquear legado; promover a ERROR após codemod cobrir os ~20 casos restantes.
+  {
+    files: ["src/**/*.{ts,tsx,jsx}"],
+    ignores: [
+      "src/lib/zIndex.ts",
+      "tailwind.config.ts",
+      "src/__tests__/**",
+      "src/**/*.test.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          // Detecta literais string contendo `z-[...]` em className / class / cn(...).
+          "selector": "Literal[value=/\\bz-\\[/]",
+          "message": "⚠️ P27: Não use z-index mágico (ex.: `z-[9999]`). Use tokens semânticos: `z-modal`, `z-popover`, `z-toast` etc. (ver mem://design/responsive-system + src/lib/zIndex.ts)."
+        },
+        {
+          // Template literals (`... z-[50] ...`)
+          "selector": "TemplateElement[value.raw=/\\bz-\\[/]",
+          "message": "⚠️ P27: Não use z-index mágico em template literal. Substitua `z-[N]` por token semântico (`z-modal`, `z-popover`, `z-toast`)."
+        }
+      ],
+    },
+  },
+  // ⚠️ P28 (Onda 8.8): Botões `size="icon"` (40×40 desktop) precisam manter touch target
+  // de 44×44 em mobile. A variante `icon` do shadcn já garante isso, mas helpers/wrappers
+  // que recriam ícones clicáveis (ex.: <button className="h-8 w-8">) violam a meta WCAG 2.5.5.
+  // Força a presença de `min-h-11` ou `min-w-11` quando há h-/w- pequeno em <button>/<a>.
+  // WARN: aviso de revisão manual — corrigir caso a caso.
+  {
+    files: ["src/**/*.{tsx,jsx}"],
+    ignores: [
+      "src/components/ui/**", // shadcn primitives já cobertas pela variante size="icon-sm"/icon
+      "src/__tests__/**",
+      "src/**/*.test.{tsx,jsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          // <button> com h-8/w-8/h-9/w-9/h-10/w-10 SEM min-h-11/min-w-11 nem sm: prefix.
+          // Heurística: literal contendo `h-8`|`h-9`|`h-10` e SEM `min-h-11`.
+          "selector": "JSXAttribute[name.name='className'] > Literal[value=/(^|\\s)(h|w)-(8|9|10)(\\s|$)/]:not([value=/min-(h|w)-11/])",
+          "message": "⚠️ P28: Touch target < 44×44 detectado. Adicione `min-h-11 min-w-11 sm:min-h-0 sm:min-w-0` OU use <Button size=\"icon\" /> de @/components/ui/button (já garante 44px em mobile). Ref: WCAG 2.5.5 + mem://design/responsive-system Onda 8.3."
+        }
+      ],
+    },
+  },
 );
