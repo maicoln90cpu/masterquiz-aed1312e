@@ -215,13 +215,8 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(30000);
-      });
-
-      await waitFor(() => {
-        expect(result.current.status).toBe('saved');
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(result.current.status).toBe('saved');
     });
 
     it('deve transicionar para error em falha', async () => {
@@ -236,13 +231,8 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(30000);
-      });
-
-      await waitFor(() => {
-        expect(result.current.status).toBe('error');
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(result.current.status).toBe('error');
     });
   });
 
@@ -360,13 +350,8 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(30000);
-      });
-
-      await waitFor(() => {
-        expect(onSaveStart).toHaveBeenCalled();
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(onSaveStart).toHaveBeenCalled();
     });
 
     it('deve chamar onSaveComplete após sucesso', async () => {
@@ -382,13 +367,8 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(30000);
-      });
-
-      await waitFor(() => {
-        expect(onSaveComplete).toHaveBeenCalled();
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(onSaveComplete).toHaveBeenCalled();
     });
 
     it('deve chamar onSaveError em caso de falha', async () => {
@@ -404,13 +384,8 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(30000);
-      });
-
-      await waitFor(() => {
-        expect(onSaveError).toHaveBeenCalled();
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(onSaveError).toHaveBeenCalled();
     });
   });
 
