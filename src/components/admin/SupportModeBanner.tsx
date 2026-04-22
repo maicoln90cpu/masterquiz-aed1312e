@@ -21,7 +21,7 @@ export const SupportModeBanner = () => {
   if (!isSupportMode || !target) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[9999] bg-amber-500 text-amber-950 py-2 px-4 flex items-center justify-between shadow-lg">
+    <div className="fixed top-0 left-0 right-0 z-toast bg-amber-500 text-amber-950 py-2 px-4 flex items-center justify-between shadow-lg">
       <div className="flex items-center gap-3">
         <Shield className="h-5 w-5" />
         <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
