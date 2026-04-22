@@ -185,8 +185,8 @@ const SupportDashboard = () => {
   }, [activeTab]);
 
   const callEdgeFunction = useCallback(async (body: any) => {
-    const { data, error } = await supabase.functions.invoke('admin-view-user-data', { body });
-    if (error) throw error;
+    // 🛡️ P18 — facade única (traceId, retry, circuit breaker, toast embutidos)
+    const { data } = await invokeEdgeFunction<any>('admin-view-user-data', body);
     return data;
   }, []);
 
