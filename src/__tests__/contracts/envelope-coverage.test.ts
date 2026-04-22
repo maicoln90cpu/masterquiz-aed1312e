@@ -42,6 +42,15 @@ const MIGRATED_EDGES = [
   'anonymize-ips',
 ] as const;
 
+/**
+ * Exceções documentadas: edges com retornos crus EXCLUSIVAMENTE no
+ * ramo GET (gateway HTTP que retorna 302/4xx fora de envelope).
+ * O ramo POST DEVE continuar usando envelope.
+ */
+const ALLOW_RAW_RESPONSE = new Set<string>([
+  'track-cta-redirect', // GET → 302 redirect; POST → envelope
+]);
+
 /** Carrega TODAS as edges de uma vez via Vite glob (sem depender de Node fs). */
 const edgeSources = import.meta.glob(
   '/supabase/functions/*/index.ts',
@@ -71,6 +80,15 @@ describe('P18 — Envelope coverage nas edges migradas', () => {
       });
 
       it('não usa "return new Response(JSON.stringify({error" (padrão antigo)', () => {
+        if (ALLOW_RAW_RESPONSE.has(edge)) {
+          // Edges com gateway HTTP têm exceção documentada; valida apenas
+          // que ainda há pelo menos uma chamada a errorResponse no arquivo.
+          expect(
+            /\berrorResponse\s*\(/.test(src),
+            `${edge}: exceção autorizada de raw response, mas precisa usar errorResponse no ramo POST`,
+          ).toBe(true);
+          return;
+        }
         // Detecta o anti-padrão: resposta crua de erro sem envelope.
         // Aceita ocorrências DENTRO do arquivo envelope.ts (não testado aqui),
         // mas em qualquer edge migrada deve estar zerado.
