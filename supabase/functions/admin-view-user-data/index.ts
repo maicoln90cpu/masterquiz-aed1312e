@@ -422,22 +422,12 @@ Deno.serve(async (req) => {
       result = { success: true, changes };
 
     } else {
-      return new Response(JSON.stringify({ error: `Unknown data_type: ${data_type}` }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("VALIDATION_FAILED", `data_type desconhecido: ${data_type}`, traceId, corsHeaders);
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return okResponse(result, traceId, corsHeaders);
   } catch (error) {
     console.error("admin-view-user-data error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return errorResponse("INTERNAL_ERROR", (error as Error)?.message || "Erro interno", traceId, corsHeaders);
   }
 });
