@@ -207,15 +207,7 @@ describe('useAutoSave', () => {
     });
 
     it('deve transicionar para saved após salvar com sucesso', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       
@@ -237,15 +229,7 @@ describe('useAutoSave', () => {
     });
 
     it('deve transicionar para error em falha', async () => {
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ 
-              error: { message: 'Database error' } 
-            }),
-          }),
-        }),
-      } as any);
+      mockQuizzesTable({ updateError: { message: 'Database error' } });
 
       const { result } = renderHook(() => useAutoSave());
       
@@ -370,16 +354,7 @@ describe('useAutoSave', () => {
   describe('Callbacks', () => {
     it('deve chamar onSaveStart quando iniciar salvamento', async () => {
       const onSaveStart = vi.fn();
-      
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave({ onSaveStart }));
       
@@ -402,16 +377,7 @@ describe('useAutoSave', () => {
 
     it('deve chamar onSaveComplete após sucesso', async () => {
       const onSaveComplete = vi.fn();
-      
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave({ onSaveComplete }));
       
@@ -434,16 +400,7 @@ describe('useAutoSave', () => {
 
     it('deve chamar onSaveError em caso de falha', async () => {
       const onSaveError = vi.fn();
-      
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ 
-              error: { message: 'Database error' } 
-            }),
-          }),
-        }),
-      } as any);
+      mockQuizzesTable({ updateError: { message: 'Database error' } });
 
       const { result } = renderHook(() => useAutoSave({ onSaveError }));
       
@@ -467,15 +424,7 @@ describe('useAutoSave', () => {
 
   describe('saveNow() - salvamento imediato', () => {
     it('deve executar salvamento imediatamente', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       
@@ -506,15 +455,7 @@ describe('useAutoSave', () => {
     });
 
     it('deve cancelar timer pendente ao chamar saveNow', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       
