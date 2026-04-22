@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNetworkStatus } from './useNetworkStatus';
+import { stableStringify } from '@/lib/stableHash';
 
 export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline' | 'conflict';
 
@@ -43,6 +44,18 @@ interface AutoSaveData {
     collectWhatsapp: boolean;
   };
 }
+
+// 🧠 Onda 6 — Normalização para deep-compare determinístico.
+// Remove `quizId` (não muda durante a sessão e infla o hash) antes
+// de gerar o snapshot. Tudo o mais é serializado com chaves ordenadas
+// pelo `stableStringify`, evitando falsos diffs por:
+//   - chaves do objeto em ordens diferentes entre renders
+//   - propriedades opcionais (undefined) aparecendo/sumindo
+//   - timestamps/funções penduradas em algum lugar do estado
+const computeSnapshot = (data: AutoSaveData): string => {
+  const { quizId: _qid, ...rest } = data;
+  return stableStringify(rest);
+};
 
 export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const {
@@ -116,8 +129,8 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const performSave = useCallback(async (data: AutoSaveData): Promise<boolean> => {
     if (!data.quizId || isSavingRef.current) return false;
 
-    // ✅ Dedup: skip save if payload hasn't changed
-    const snapshot = JSON.stringify(data);
+    // ✅ Onda 6 — dedup determinístico (chaves ordenadas, sem volatilidade)
+    const snapshot = computeSnapshot(data);
     if (snapshot === lastSavedSnapshotRef.current) {
       logger.log('[AutoSave] ⏭️ Payload não mudou, pulando save');
       return true;
@@ -265,8 +278,11 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
   const scheduleAutoSave = useCallback((data: AutoSaveData) => {
     if (!enabled || !data.quizId) return;
 
-    // ✅ Dedup: se o payload não mudou desde o último save, manter status atual
-    const snapshot = JSON.stringify(data);
+    // ✅ Onda 6 — Comparação determinística:
+    // se o payload é logicamente igual ao último salvo, não agenda nada.
+    // Antes: chaves em ordem diferente reabriam o "unsaved" e disparavam
+    // saves desnecessários a cada keystroke em campos não modificados.
+    const snapshot = computeSnapshot(data);
     if (snapshot === lastSavedSnapshotRef.current) {
       return; // nada mudou, manter status 'saved'
     }
@@ -325,7 +341,7 @@ export const useAutoSave = (options: AutoSaveOptions = {}) => {
     setLastSavedAt(new Date());
     // Atualizar snapshot para evitar que scheduleAutoSave marque como unsaved
     if (currentData) {
-      lastSavedSnapshotRef.current = JSON.stringify(currentData);
+      lastSavedSnapshotRef.current = computeSnapshot(currentData);
     }
   }, []);
 
