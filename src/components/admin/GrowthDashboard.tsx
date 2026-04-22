@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSubTabs } from "./AdminSubTabs";
 import { PostExpressConversionCard } from "./PostExpressConversionCard";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 interface GrowthData {
   sectionA: {
@@ -92,13 +93,9 @@ function useGrowthMetrics() {
   return useQuery<GrowthData>({
     queryKey: ['growth-metrics'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-      const { data, error } = await supabase.functions.invoke('growth-metrics', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (error) throw error;
-      return data as GrowthData;
+      // 🛡️ P18: usa facade invokeEdgeFunction que faz unwrap automático do envelope P11
+      const { data } = await invokeEdgeFunction<GrowthData>('growth-metrics');
+      return data;
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,

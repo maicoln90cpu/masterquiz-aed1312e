@@ -30,6 +30,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMode";
 import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hooks/useEditorLayout";
 import { useSupportMode } from "@/contexts/SupportModeContext";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -283,9 +284,9 @@ export default function AdminDashboard() {
   const { data: allUsersData, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
     queryKey: ['admin-all-users'],
     queryFn: async () => {
-      const result = await supabase.functions.invoke('list-all-users');
-      if (result.error) throw result.error;
-      return result.data?.users || [];
+      // 🛡️ P18: facade desempacota envelope { ok, data: { users }, traceId }
+      const { data } = await invokeEdgeFunction<{ users: any[] }>('list-all-users');
+      return data?.users || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000,
