@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, RefreshCw, Play, Trash2, Mail, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageLoading } from "@/components/ui/page-loading";
 
 interface QueueItem {
   id: string;
@@ -94,7 +96,56 @@ export function EmailRecoveryQueue() {
   const sentCount = items.filter(i => i.status === 'sent').length;
   const failedCount = items.filter(i => i.status === 'failed').length;
 
-  if (loading) return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  if (loading) return <PageLoading variant="skeleton" rows={5} />;
+
+  const columns: DataTableColumn<QueueItem>[] = [
+    {
+      key: 'profiles',
+      label: 'Usuário',
+      sortable: true,
+      searchable: true,
+      accessor: (item) => item.profiles?.full_name || '',
+      render: (item) => <span className="font-medium">{item.profiles?.full_name || '-'}</span>,
+    },
+    { key: 'email', label: 'Email', sortable: true, searchable: true, className: 'text-sm' },
+    {
+      key: 'email_recovery_templates',
+      label: 'Template',
+      filterable: true,
+      accessor: (item) => item.email_recovery_templates?.name || '-',
+      render: (item) => <Badge variant="outline">{item.email_recovery_templates?.name || '-'}</Badge>,
+    },
+    {
+      key: 'days_inactive_at_contact',
+      label: 'Dias Inativo',
+      sortable: true,
+      align: 'center',
+      render: (item) => `${item.days_inactive_at_contact}d`,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      filterable: true,
+      render: (item) => (
+        <div>
+          <Badge className={STATUS_COLORS[item.status] || 'bg-gray-500'}>{item.status}</Badge>
+          {item.error_message && (
+            <span className="text-xs text-destructive block mt-1 max-w-[200px] truncate">{item.error_message}</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'created_at',
+      label: 'Data',
+      sortable: true,
+      render: (item) => (
+        <span className="text-xs text-muted-foreground">
+          {item.sent_at ? new Date(item.sent_at).toLocaleString('pt-BR') : new Date(item.created_at).toLocaleString('pt-BR')}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -134,46 +185,17 @@ export function EmailRecoveryQueue() {
 
       {/* Table */}
       {items.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">
-          <Mail className="h-12 w-12 mx-auto mb-2 opacity-30" />
-          <p>Nenhum email na fila</p>
-        </CardContent></Card>
+        <EmptyState icon={Mail} title="Nenhum email na fila" description="Use 'Buscar Inativos' para enfileirar novos contatos." />
       ) : (
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuário</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Template</TableHead>
-                <TableHead>Dias Inativo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map(item => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.profiles?.full_name || '-'}</TableCell>
-                  <TableCell className="text-sm">{item.email}</TableCell>
-                  <TableCell><Badge variant="outline">{item.email_recovery_templates?.name || '-'}</Badge></TableCell>
-                  <TableCell>{item.days_inactive_at_contact}d</TableCell>
-                  <TableCell>
-                    <Badge className={STATUS_COLORS[item.status] || 'bg-gray-500'}>
-                      {item.status}
-                    </Badge>
-                    {item.error_message && (
-                      <span className="text-xs text-destructive block mt-1 max-w-[200px] truncate">{item.error_message}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {item.sent_at ? new Date(item.sent_at).toLocaleString('pt-BR') : new Date(item.created_at).toLocaleString('pt-BR')}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
+        <DataTable
+          data={items}
+          columns={columns}
+          defaultSortKey="created_at"
+          defaultSortDirection="desc"
+          searchPlaceholder="Buscar usuário ou email…"
+          exportCsv="email-recovery-queue"
+          rowKey={(item) => item.id}
+        />
       )}
     </div>
   );

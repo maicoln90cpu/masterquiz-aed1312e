@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sparkles, LayoutDashboard, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
 
 interface DailyData {
   date: string;
@@ -94,6 +94,34 @@ export function PostExpressConversionCard() {
     );
   }
 
+  const columns: DataTableColumn<DailyData>[] = [
+    {
+      key: 'date',
+      label: 'Data',
+      sortable: true,
+      render: (row) => (
+        <span className="text-xs">
+          {new Date(row.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+        </span>
+      ),
+    },
+    {
+      key: 'create_ai',
+      label: 'IA',
+      sortable: true,
+      align: 'center',
+      render: (row) => <Badge variant="secondary" className="text-xs">{row.create_ai}</Badge>,
+    },
+    { key: 'dashboard', label: 'Dashboard', sortable: true, align: 'center' },
+    {
+      key: 'ai_pct',
+      label: '% IA',
+      sortable: true,
+      align: 'center',
+      render: (row) => <span className="font-medium text-xs">{row.ai_pct}%</span>,
+    },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -125,34 +153,15 @@ export function PostExpressConversionCard() {
           </div>
         </div>
 
-        {/* Daily table */}
         {data.daily.length > 0 && (
-          <div className="max-h-[200px] overflow-y-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Data</TableHead>
-                  <TableHead className="text-xs text-center">IA</TableHead>
-                  <TableHead className="text-xs text-center">Dashboard</TableHead>
-                  <TableHead className="text-xs text-center">% IA</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.daily.map((row) => (
-                  <TableRow key={row.date}>
-                    <TableCell className="text-xs">{new Date(row.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</TableCell>
-                    <TableCell className="text-xs text-center">
-                      <Badge variant="secondary" className="text-xs">{row.create_ai}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-center">{row.dashboard}</TableCell>
-                    <TableCell className="text-xs text-center font-medium">
-                      {row.ai_pct}%
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={data.daily}
+            columns={columns}
+            defaultSortKey="date"
+            defaultSortDirection="desc"
+            pageSize={10}
+            rowKey={(row) => row.date}
+          />
         )}
       </CardContent>
     </Card>
