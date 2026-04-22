@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -19,20 +21,14 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authorization required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Authorization header ausente', traceId, corsHeaders);
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     console.log(`[EXPORT-USER-DATA] Exporting data for user: ${user.id}`);
@@ -49,7 +45,7 @@ Deno.serve(async (req) => {
       videosResult,
       analyticsResult,
     ] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
       supabase.from('quizzes').select('*').eq('user_id', user.id),
       supabase.from('quiz_questions').select('*, quiz_id').in('quiz_id',
         (await supabase.from('quizzes').select('id').eq('user_id', user.id)).data?.map(q => q.id) || []
@@ -57,7 +53,7 @@ Deno.serve(async (req) => {
       supabase.from('quiz_responses').select('*').in('quiz_id',
         (await supabase.from('quizzes').select('id').eq('user_id', user.id)).data?.map(q => q.id) || []
       ),
-      supabase.from('user_subscriptions').select('*').eq('user_id', user.id).single(),
+      supabase.from('user_subscriptions').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('user_roles').select('*').eq('user_id', user.id),
       supabase.from('user_integrations').select('*').eq('user_id', user.id),
       supabase.from('bunny_videos').select('*').eq('user_id', user.id),
@@ -95,16 +91,10 @@ Deno.serve(async (req) => {
 
     console.log(`[EXPORT-USER-DATA] Export complete: ${exportData.quizzes.length} quizzes, ${exportData.responses.length} responses`);
 
-    return new Response(
-      JSON.stringify(exportData),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse(exportData, traceId, corsHeaders);
 
   } catch (error) {
     console.error('[EXPORT-USER-DATA] Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', 'Erro interno ao exportar dados', traceId, corsHeaders);
   }
 });

@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,6 +18,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -25,10 +27,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.warn('[DELETE-USER] Missing authorization header');
-      return new Response(
-        JSON.stringify({ error: 'Não autorizado' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Não autorizado', traceId, corsHeaders);
     }
 
     const token = authHeader.replace('Bearer ', '');
@@ -36,36 +35,12 @@ Deno.serve(async (req) => {
 
     if (authError || !user) {
       console.warn('[DELETE-USER] Invalid token');
-      return new Response(
-        JSON.stringify({ error: 'Token inválido' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
-    let rawBody;
-    try {
-      rawBody = await req.json();
-    } catch {
-      console.warn('[DELETE-USER] Invalid JSON body');
-      return new Response(
-        JSON.stringify({ error: 'JSON inválido' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const validationResult = deleteRequestSchema.safeParse(rawBody);
-    if (!validationResult.success) {
-      console.warn('[DELETE-USER] Validation failed', validationResult.error.errors);
-      return new Response(
-        JSON.stringify({
-          error: 'Parâmetros inválidos',
-          details: validationResult.error.errors.map(e => e.message)
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { action, cancellation_token, reason } = validationResult.data;
+    const parsed = await parseBody(req, deleteRequestSchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { action, cancellation_token, reason } = parsed.data;
 
     console.log(`[DELETE-USER] Action: ${action} for user: ${user.id}`);
 
@@ -79,13 +54,11 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existingDeletion) {
-        return new Response(
-          JSON.stringify({
-            error: 'Exclusão já agendada',
-            scheduled_for: existingDeletion.scheduled_for,
-            cancellation_token: existingDeletion.cancellation_token
-          }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        return errorResponse(
+          'VALIDATION_FAILED',
+          `Exclusão já agendada para ${existingDeletion.scheduled_for}`,
+          traceId,
+          corsHeaders,
         );
       }
 
@@ -100,9 +73,11 @@ Deno.serve(async (req) => {
           reason: reason || 'Solicitado pelo usuário',
         })
         .select()
-        .single();
+        .maybeSingle();
 
-      if (insertError) throw insertError;
+      if (insertError || !newDeletion) {
+        return errorResponse('INTERNAL_ERROR', insertError?.message || 'Falha ao agendar exclusão', traceId, corsHeaders);
+      }
 
       // Soft delete no perfil
       await supabase
@@ -133,25 +108,18 @@ Deno.serve(async (req) => {
 
       console.log(`[DELETE-USER] Scheduled for: ${scheduledFor.toISOString()}`);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'Exclusão agendada com sucesso',
-          scheduled_for: scheduledFor.toISOString(),
-          cancellation_token: newDeletion.cancellation_token,
-          days_remaining: 30
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({
+        message: 'Exclusão agendada com sucesso',
+        scheduled_for: scheduledFor.toISOString(),
+        cancellation_token: newDeletion.cancellation_token,
+        days_remaining: 30,
+      }, traceId, corsHeaders);
     }
 
     // CANCELAR EXCLUSÃO
     if (action === 'cancel') {
       if (!cancellation_token) {
-        return new Response(
-          JSON.stringify({ error: 'Token de cancelamento necessário' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('VALIDATION_FAILED', 'Token de cancelamento necessário', traceId, corsHeaders);
       }
 
       const { data: deletion, error: findError } = await supabase
@@ -164,10 +132,7 @@ Deno.serve(async (req) => {
 
       if (findError || !deletion) {
         console.warn('[DELETE-USER] Deletion not found or already cancelled');
-        return new Response(
-          JSON.stringify({ error: 'Exclusão não encontrada ou já cancelada' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('NOT_FOUND', 'Exclusão não encontrada ou já cancelada', traceId, corsHeaders);
       }
 
       await supabase
@@ -198,13 +163,9 @@ Deno.serve(async (req) => {
 
       console.log(`[DELETE-USER] Deletion cancelled for user: ${user.id}`);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'Exclusão cancelada com sucesso. Sua conta foi reativada.'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({
+        message: 'Exclusão cancelada com sucesso. Sua conta foi reativada.',
+      }, traceId, corsHeaders);
     }
 
     // EXECUTAR EXCLUSÃO IMEDIATA
@@ -225,30 +186,18 @@ Deno.serve(async (req) => {
 
       if (deleteError) {
         console.error('[DELETE-USER] Error deleting user:', deleteError);
-        throw deleteError;
+        return errorResponse('INTERNAL_ERROR', deleteError.message, traceId, corsHeaders);
       }
 
       console.log(`[DELETE-USER] User permanently deleted: ${user.id}`);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'Conta excluída permanentemente'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ message: 'Conta excluída permanentemente' }, traceId, corsHeaders);
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Ação inválida' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('VALIDATION_FAILED', 'Ação inválida', traceId, corsHeaders);
 
   } catch (error) {
     console.error('[DELETE-USER] Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno ao processar exclusão' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', 'Erro interno ao processar exclusão', traceId, corsHeaders);
   }
 });

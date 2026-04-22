@@ -40,6 +40,18 @@ const MIGRATED_EDGES = [
   'track-cta-redirect',
   'rate-limiter',
   'anonymize-ips',
+  // Sub-onda 7-C — Admin/User (10)
+  'list-all-users',
+  'list-all-respondents',
+  'delete-user',
+  'delete-user-complete',
+  'export-user-data',
+  'update-user-profile',
+  'merge-user-data',
+  'migrate-imported-user',
+  'check-imported-user',
+  'check-expired-trials',
+  'sync-plan-limits',
 ] as const;
 
 /**

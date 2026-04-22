@@ -1,31 +1,27 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const BodySchema = z.object({
+  email: z.string().email().max(255),
+  password: z.string().min(6).max(72),
+});
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
-    const { email, password } = await req.json();
-
-    if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
-      return new Response(JSON.stringify({ error: 'Email and password required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (password.length < 6) {
-      return new Response(JSON.stringify({ error: 'Password must be at least 6 characters' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { email, password } = parsed.data;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -41,10 +37,7 @@ Deno.serve(async (req) => {
       .limit(1);
 
     if (!profiles || profiles.length === 0) {
-      return new Response(JSON.stringify({ error: 'No imported account found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('NOT_FOUND', 'Conta importada não encontrada', traceId, corsHeaders);
     }
 
     const oldProfileId = profiles[0].id;
@@ -52,10 +45,7 @@ Deno.serve(async (req) => {
     // 2. Check no auth user exists for this profile
     const { data: existingAuth } = await supabase.auth.admin.getUserById(oldProfileId);
     if (existingAuth?.user) {
-      return new Response(JSON.stringify({ error: 'Account already exists, use normal login' }), {
-        status: 409,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('VALIDATION_FAILED', 'Conta já existe, use login normal', traceId, corsHeaders);
     }
 
     // 3. Also check if email is already registered in auth
@@ -69,13 +59,10 @@ Deno.serve(async (req) => {
           email_confirm: true,
         });
       }
-      return new Response(JSON.stringify({ 
-        success: true, 
-        message: 'Account already exists and confirmed. Please login.',
+      return okResponse({
+        message: 'Conta já existe e foi confirmada. Faça login.',
         already_exists: true,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      }, traceId, corsHeaders);
     }
 
     // 4. Create auth user with admin API (auto-confirmed)
@@ -87,10 +74,7 @@ Deno.serve(async (req) => {
 
     if (createError) {
       console.error('[MIGRATE] Error creating user:', createError.message);
-      return new Response(JSON.stringify({ error: createError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('INTERNAL_ERROR', createError.message, traceId, corsHeaders);
     }
 
     const newUserId = newUser.user.id;
@@ -140,13 +124,13 @@ Deno.serve(async (req) => {
       .from('profiles')
       .select('*')
       .eq('id', newUserId)
-      .single();
+      .maybeSingle();
 
     const { data: oldProfile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', oldProfileId)
-      .single();
+      .maybeSingle();
 
     if (oldProfile) {
       if (newProfile) {
@@ -177,19 +161,13 @@ Deno.serve(async (req) => {
 
     console.log(`[MIGRATE] Complete. Tables: ${tablesUpdated.join(', ')}`);
 
-    return new Response(JSON.stringify({
-      success: true,
+    return okResponse({
       user_id: newUserId,
       tables_updated: tablesUpdated,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    }, traceId, corsHeaders);
 
   } catch (err) {
     console.error('[MIGRATE] Unexpected error:', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', 'Erro interno na migração', traceId, corsHeaders);
   }
 });

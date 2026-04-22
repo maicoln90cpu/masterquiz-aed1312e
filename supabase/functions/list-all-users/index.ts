@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,13 +37,11 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('UNAUTHORIZED', 'Authorization header ausente', traceId, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -54,10 +53,7 @@ Deno.serve(async (req) => {
     });
     const { data: { user }, error: userError } = await anonClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     const userId = user.id;
@@ -70,10 +66,7 @@ Deno.serve(async (req) => {
       .in("role", ["admin", "master_admin"]);
 
     if (!roleData || roleData.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('FORBIDDEN', 'Requer permissão de admin', traceId, corsHeaders);
     }
 
     // List all auth users
@@ -82,7 +75,7 @@ Deno.serve(async (req) => {
     });
 
     if (authError) {
-      throw authError;
+      return errorResponse('INTERNAL_ERROR', authError.message, traceId, corsHeaders);
     }
 
     const authUsers = authData?.users || [];
@@ -197,17 +190,9 @@ Deno.serve(async (req) => {
       },
     }));
 
-    return new Response(JSON.stringify({ users }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return okResponse({ users }, traceId, corsHeaders);
   } catch (error) {
     console.error("[list-all-users] Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return errorResponse('INTERNAL_ERROR', (error as Error).message || 'Erro interno', traceId, corsHeaders);
   }
 });

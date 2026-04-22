@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -18,10 +20,7 @@ Deno.serve(async (req) => {
     // Validate JWT
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('UNAUTHORIZED', 'Authorization header ausente', traceId, corsHeaders);
     }
 
     const token = authHeader.replace('Bearer ', '');
@@ -31,19 +30,14 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     const newUserId = user.id;
     const userEmail = user.email;
 
     if (!userEmail) {
-      return new Response(JSON.stringify({ merged: false, reason: 'no_email' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ merged: false, reason: 'no_email' }, traceId, corsHeaders);
     }
 
     // Service role client for admin operations
@@ -58,16 +52,11 @@ Deno.serve(async (req) => {
 
     if (searchError) {
       console.error('Error searching old profiles:', searchError);
-      return new Response(JSON.stringify({ merged: false, error: searchError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('INTERNAL_ERROR', searchError.message, traceId, corsHeaders);
     }
 
     if (!oldProfiles || oldProfiles.length === 0) {
-      return new Response(JSON.stringify({ merged: false, reason: 'no_old_profile' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ merged: false, reason: 'no_old_profile' }, traceId, corsHeaders);
     }
 
     const oldProfile = oldProfiles[0];
@@ -134,7 +123,7 @@ Deno.serve(async (req) => {
       .from('profiles')
       .select('*')
       .eq('id', newUserId)
-      .single();
+      .maybeSingle();
 
     if (!newProfile) {
       // No new profile exists — rename old profile to new user ID
@@ -176,20 +165,15 @@ Deno.serve(async (req) => {
 
     console.log(`[MERGE] Complete. Tables updated: ${tablesUpdated.join(', ')}`);
 
-    return new Response(JSON.stringify({
+    return okResponse({
       merged: true,
       old_user_id: oldUserId,
       new_user_id: newUserId,
       tables_updated: tablesUpdated,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    }, traceId, corsHeaders);
 
   } catch (err) {
     console.error('[MERGE] Unexpected error:', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', 'Erro interno ao consolidar dados', traceId, corsHeaders);
   }
 });

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -26,16 +28,12 @@ Deno.serve(async (req) => {
 
     if (fetchError) {
       console.error('[CHECK-EXPIRED-TRIALS] Fetch error:', fetchError);
-      return new Response(JSON.stringify({ error: fetchError.message }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse('INTERNAL_ERROR', fetchError.message, traceId, corsHeaders);
     }
 
     if (!expiredTrials || expiredTrials.length === 0) {
       console.log('[CHECK-EXPIRED-TRIALS] No expired trials found');
-      return new Response(JSON.stringify({ success: true, reverted: 0 }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ reverted: 0, total: 0, results: [] }, traceId, corsHeaders);
     }
 
     console.log(`[CHECK-EXPIRED-TRIALS] Found ${expiredTrials.length} expired trials`);
@@ -51,7 +49,7 @@ Deno.serve(async (req) => {
           .select('quiz_limit, response_limit')
           .eq('plan_type', trial.original_plan_type)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (!plan) {
           console.error(`[CHECK-EXPIRED-TRIALS] Plan "${trial.original_plan_type}" not found in subscription_plans (is_active=true). Skipping ${trial.user_id}.`);
@@ -96,14 +94,10 @@ Deno.serve(async (req) => {
 
     console.log(`[CHECK-EXPIRED-TRIALS] Done. Reverted ${revertedCount}/${expiredTrials.length}`);
 
-    return new Response(JSON.stringify({ success: true, reverted: revertedCount, total: expiredTrials.length, results }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return okResponse({ reverted: revertedCount, total: expiredTrials.length, results }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('[CHECK-EXPIRED-TRIALS] Error:', error);
-    return new Response(JSON.stringify({ error: String(error) }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', String(error), traceId, corsHeaders);
   }
 });

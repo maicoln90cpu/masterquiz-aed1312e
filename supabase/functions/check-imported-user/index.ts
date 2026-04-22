@@ -1,29 +1,31 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const BodySchema = z.object({
+  email: z.string().email().max(255),
+});
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
-    const { email } = await req.json();
-
-    if (!email || typeof email !== 'string') {
-      return new Response(JSON.stringify({ exists: false }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { email } = parsed.data;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Simple rate limiting: check if too many requests from this email recently
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if profile exists with this email
@@ -35,15 +37,11 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error('[CHECK-IMPORTED] Error:', error.message);
-      return new Response(JSON.stringify({ exists: false }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ exists: false }, traceId, corsHeaders);
     }
 
     if (!profiles || profiles.length === 0) {
-      return new Response(JSON.stringify({ exists: false }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ exists: false }, traceId, corsHeaders);
     }
 
     // Check if this profile has a corresponding auth.users entry
@@ -52,21 +50,14 @@ Deno.serve(async (req) => {
 
     // If auth user exists, it's not an orphan — normal login should work
     if (authUser?.user) {
-      return new Response(JSON.stringify({ exists: false }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return okResponse({ exists: false }, traceId, corsHeaders);
     }
 
     // Orphan profile found — user needs to migrate
-    return new Response(JSON.stringify({ exists: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return okResponse({ exists: true }, traceId, corsHeaders);
 
   } catch (err) {
     console.error('[CHECK-IMPORTED] Unexpected error:', err);
-    return new Response(JSON.stringify({ exists: false }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse('INTERNAL_ERROR', 'Erro interno', traceId, corsHeaders);
   }
 });
