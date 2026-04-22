@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,18 +8,22 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const BodySchema = z.object({
+  user_id: z.string().uuid(),
+  email: z.string().email().max(255).optional(),
+  whatsapp: z.string().max(32).optional(),
+});
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('UNAUTHORIZED', 'Authorization header ausente', traceId, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -30,10 +36,7 @@ Deno.serve(async (req) => {
     });
     const { data: { user }, error: userError } = await anonClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     // Check admin role
@@ -45,20 +48,12 @@ Deno.serve(async (req) => {
       .in("role", ["admin", "master_admin"]);
 
     if (!roleData || roleData.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('FORBIDDEN', 'Requer permissão de admin', traceId, corsHeaders);
     }
 
-    const { user_id, email, whatsapp } = await req.json();
-
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: "user_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { user_id, email, whatsapp } = parsed.data;
 
     // Update profile
     const profileUpdates: Record<string, string> = {};
@@ -73,7 +68,7 @@ Deno.serve(async (req) => {
 
       if (profileError) {
         console.error("[update-user-profile] Profile error:", profileError);
-        throw profileError;
+        return errorResponse('INTERNAL_ERROR', profileError.message, traceId, corsHeaders);
       }
     }
 
@@ -88,17 +83,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return okResponse({ updated: true }, traceId, corsHeaders);
   } catch (error) {
     console.error("[update-user-profile] Error:", error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message || "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return errorResponse('INTERNAL_ERROR', (error as Error).message || 'Erro interno', traceId, corsHeaders);
   }
 });

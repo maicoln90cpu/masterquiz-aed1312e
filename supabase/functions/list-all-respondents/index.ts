@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,13 +12,11 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('UNAUTHORIZED', 'Authorization header ausente', traceId, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -30,10 +29,7 @@ Deno.serve(async (req) => {
     });
     const { data: { user }, error: userError } = await anonClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     // Check admin role
@@ -45,10 +41,7 @@ Deno.serve(async (req) => {
       .in("role", ["admin", "master_admin"]);
 
     if (!roleData || roleData.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse('FORBIDDEN', 'Requer permissão de admin', traceId, corsHeaders);
     }
 
     // Fetch all responses with quiz title (paginate to avoid 1000 limit)
@@ -63,7 +56,9 @@ Deno.serve(async (req) => {
         .range(offset, offset + pageSize - 1)
         .order("completed_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        return errorResponse('INTERNAL_ERROR', error.message, traceId, corsHeaders);
+      }
       if (!data || data.length === 0) break;
       
       allResponses = allResponses.concat(data);
@@ -108,17 +103,9 @@ Deno.serve(async (req) => {
 
     const respondents = Array.from(userMap.values());
 
-    return new Response(JSON.stringify({ respondents }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return okResponse({ respondents }, traceId, corsHeaders);
   } catch (error) {
     console.error("[list-all-respondents] Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return errorResponse('INTERNAL_ERROR', (error as Error).message || 'Erro interno', traceId, corsHeaders);
   }
 });
