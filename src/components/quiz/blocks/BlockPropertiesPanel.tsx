@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { QuizBlock, BlockType } from "@/types/blocks";
 import { normalizeBlock } from "@/types/blocks";
+import { ColorPalette } from "./ColorPalette";
 
 interface QuestionInfo {
   id: string;
