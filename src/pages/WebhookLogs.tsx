@@ -1,7 +1,9 @@
 import { logger } from '@/lib/logger';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight, Webhook } from "lucide-react";
+import { PageLoading } from "@/components/ui/page-loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,14 +147,14 @@ const WebhookLogs = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
+              <PageLoading variant="skeleton" rows={5} />
             ) : logs.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <p className="text-lg font-medium">{t('webhookLogs.noLogs')}</p>
-                <p className="text-sm mt-2">{t('webhookLogs.noLogsDesc')}</p>
-              </div>
+              <EmptyState
+                icon={Webhook}
+                title={t('webhookLogs.noLogs')}
+                description={t('webhookLogs.noLogsDesc')}
+                size="lg"
+              />
             ) : (
               <>
                 <div className="space-y-4">

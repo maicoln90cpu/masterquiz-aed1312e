@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Loader2, Filter, X, FileSpreadsheet, Search, Plus, Calendar as CalendarIcon, List, LayoutGrid, ArrowUp } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -379,27 +380,24 @@ const Responses = () => {
                 {loading ? (
                   <ResponsesSkeleton />
                 ) : filteredResponses.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-                        <Search className="w-10 h-10 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium">{t('responses.noResponses')}</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {searchTerm || selectedQuiz !== "all"
-                            ? t('responses.adjustFilters')
-                            : t('responses.createQuizToStart')}
-                        </p>
-                      </div>
-                      {responses.length === 0 && (
-                        <Button onClick={() => navigate("/create-quiz")} className="mt-4">
-                          <Plus className="h-4 w-4 mr-2" />
-                          {t('quiz.createNew')}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                  <EmptyState
+                    icon={Search}
+                    title={t('responses.noResponses')}
+                    description={
+                      searchTerm || selectedQuiz !== "all"
+                        ? t('responses.adjustFilters')
+                        : t('responses.createQuizToStart')
+                    }
+                    action={
+                      responses.length === 0
+                        ? {
+                            label: t('quiz.createNew'),
+                            onClick: () => navigate("/create-quiz"),
+                          }
+                        : undefined
+                    }
+                    size="lg"
+                  />
                 ) : (
                   <>
                     {/* Versão Desktop: Tabela com scroll horizontal */}

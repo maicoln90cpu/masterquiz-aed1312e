@@ -2,7 +2,8 @@ import { logger } from '@/lib/logger';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, TrendingUp, Users, Calendar, Eye, Loader2, FileText } from "lucide-react";
+import { ArrowLeft, Download, TrendingUp, Users, Calendar, Eye, Loader2, FileText, BarChart3 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -736,9 +737,11 @@ const Analytics = () => {
                 </CardHeader>
                 <CardContent>
                   {pieData.length === 0 ? (
-                    <div className="text-center py-16 text-muted-foreground">
-                      <p>{t('analytics.noData')}</p>
-                    </div>
+                    <EmptyState
+                      icon={BarChart3}
+                      title={t('analytics.noData')}
+                      size="sm"
+                    />
                   ) : (
                     /* ✅ CORREÇÃO: Usar lazy loaded PieChart */
                     <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>

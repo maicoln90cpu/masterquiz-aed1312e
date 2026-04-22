@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Search, Upload, Image as ImageIcon, Video, Music, Cloud, HardDrive, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Upload, Image as ImageIcon, Video, Music, Cloud, HardDrive, ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
+import { PageLoading } from "@/components/ui/page-loading";
+import { EmptyState } from "@/components/ui/empty-state";
 import { MediaLibraryCard } from "@/components/MediaLibraryCard";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useVideoStorage } from "@/hooks/useVideoStorage";
@@ -301,15 +303,13 @@ export default function MediaLibrary() {
 
             <TabsContent value={activeTab} className="mt-6">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+                <PageLoading variant="skeleton" rows={4} />
               ) : paginatedFiles.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    {searchQuery ? t('mediaLibrary.noFilesFound') : t('mediaLibrary.noFilesYet')}
-                  </p>
-                </div>
+                <EmptyState
+                  icon={FolderOpen}
+                  title={searchQuery ? t('mediaLibrary.noFilesFound') : t('mediaLibrary.noFilesYet')}
+                  description={searchQuery ? undefined : t('mediaLibrary.uploadFirstHint', 'Faça upload da sua primeira mídia para começar.')}
+                />
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
