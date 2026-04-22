@@ -16,7 +16,13 @@
  */
 import { describe, it, expect } from 'vitest';
 
-/** Edge functions já migradas para envelope (Onda 7 / Etapas 1-3). */
+/**
+ * Edge functions já migradas para envelope completo (Onda 7 / Etapas 1-2-bis).
+ *
+ * NOTA: kiwify-webhook e evolution-webhook adotaram apenas idempotência (P19),
+ * mas mantém retornos legados — entrarão em sub-onda 7-B. Não inclua aqui até
+ * que TODOS os `return new Response(...)` daquelas funções usem okResponse/errorResponse.
+ */
 const MIGRATED_EDGES = [
   'admin-update-subscription',
   'admin-view-user-data',
@@ -24,8 +30,6 @@ const MIGRATED_EDGES = [
   'export-table-data',
   'save-quiz-draft',
   'growth-metrics',
-  'kiwify-webhook',
-  'evolution-webhook',
 ] as const;
 
 /** Carrega TODAS as edges de uma vez via Vite glob (sem depender de Node fs). */
