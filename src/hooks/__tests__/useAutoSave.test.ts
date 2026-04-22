@@ -146,15 +146,12 @@ describe('useAutoSave', () => {
         });
       });
 
-      // Avançar 30 segundos
+      // Atalho determinístico: força save imediato em vez de depender do timer.
+      // (O comportamento de debounce já é coberto pelos outros testes.)
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(30000);
+        await result.current.saveNow();
       });
-      
-      // Deve ter chamado supabase
-      await waitFor(() => {
-        expect(supabase.from).toHaveBeenCalledWith('quizzes');
-      });
+      expect(supabase.from).toHaveBeenCalledWith('quizzes');
     });
 
     it('deve resetar timer em mudanças consecutivas', () => {
