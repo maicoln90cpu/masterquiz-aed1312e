@@ -15,6 +15,8 @@ const RATE_LIMITS: Record<string, RateLimit> = {
   'auth:login': { action: 'auth:login', maxAttempts: 5, windowMinutes: 5 },
   'auth:register': { action: 'auth:register', maxAttempts: 3, windowMinutes: 60 },
   'quiz:create': { action: 'quiz:create', maxAttempts: 10, windowMinutes: 60 },
+  'quiz:update': { action: 'quiz:update', maxAttempts: 60, windowMinutes: 60 },
+  'quiz:autosave': { action: 'quiz:autosave', maxAttempts: 300, windowMinutes: 60 },
   'quiz:submit': { action: 'quiz:submit', maxAttempts: 20, windowMinutes: 60 },
   'api:general': { action: 'api:general', maxAttempts: 100, windowMinutes: 60 },
 };

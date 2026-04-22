@@ -350,7 +350,9 @@ export function useQuizPersistence({
         return { success: false, slug: '' };
       }
 
-      const rateLimitCheck = await checkRateLimit('quiz:create', user.id);
+      // ✅ Onda 1: usa 'quiz:update' (60/h) para republicações; 'quiz:create' (10/h) só na primeira publicação
+      const rateLimitAction = quizId ? 'quiz:update' : 'quiz:create';
+      const rateLimitCheck = await checkRateLimit(rateLimitAction, user.id);
       if (!rateLimitCheck.allowed) {
         updateUI({ isSaving: false });
         return { success: false, slug: '' };
