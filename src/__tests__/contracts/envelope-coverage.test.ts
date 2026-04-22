@@ -52,6 +52,29 @@ const MIGRATED_EDGES = [
   'check-imported-user',
   'check-expired-trials',
   'sync-plan-limits',
+  // Sub-onda 7-D — Mensageria (17)
+  'send-welcome-message',
+  'send-test-message',
+  'send-test-email',
+  'send-weekly-tip',
+  'send-blog-digest',
+  'send-monthly-summary',
+  'send-success-story',
+  'send-platform-news',
+  'process-recovery-queue',
+  'process-email-recovery-queue',
+  'send-whatsapp-recovery',
+  'check-inactive-users',
+  'check-inactive-users-email',
+  'check-activation-24h',
+  'egoi-email-webhook',
+  'handle-email-unsubscribe',
+  'generate-email-content',
+  // Sub-onda 7-D (final) — WhatsApp/Pagamento (4)
+  'evolution-connect',
+  'evolution-webhook',
+  'whatsapp-ai-reply',
+  'kiwify-webhook',
 ] as const;
 
 /**
@@ -61,6 +84,13 @@ const MIGRATED_EDGES = [
  */
 const ALLOW_RAW_RESPONSE = new Set<string>([
   'track-cta-redirect', // GET → 302 redirect; POST → envelope
+  // Webhooks de provedores externos exigem shape específico de handshake
+  // ({ success: true } / { received: true }). Apenas ramos de erro usam envelope.
+  'evolution-webhook',
+  'kiwify-webhook',
+  'egoi-email-webhook',
+  // Gateway HTML de unsubscribe (link no e-mail) — devolve HTML; ramos de erro envelope.
+  'handle-email-unsubscribe',
 ]);
 
 /** Carrega TODAS as edges de uma vez via Vite glob (sem depender de Node fs). */

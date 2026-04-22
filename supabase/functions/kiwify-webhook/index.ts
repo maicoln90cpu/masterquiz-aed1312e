@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { claimEvent, markEventProcessed, markEventFailed } from '../_shared/idempotency.ts';
+import { errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,13 +70,13 @@ function extractPayloadData(body: any) {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const traceId = getTraceId(req);
   try {
     let rawBody;
     try { rawBody = await req.json(); } catch { 
-      return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('VALIDATION_FAILED', 'Invalid JSON', traceId, corsHeaders);
     }
 
-    const traceId = req.headers.get('x-trace-id') || crypto.randomUUID();
     const { evento, buyerEmail, produto, planName, eventId } = extractPayloadData(rawBody);
 
     // 🛡️ P19 — Idempotência: bloqueia reprocessamento do mesmo evento
@@ -136,7 +137,7 @@ Deno.serve(async (req) => {
     // Se plano não existir, aborta para evitar atribuir limites incorretos.
     if (!planData) {
       console.error(`[kiwify-webhook] Plano "${newPlanType}" não encontrado em subscription_plans (is_active=true). Abortando.`);
-      return new Response(JSON.stringify({ error: `Plan "${newPlanType}" not configured` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('INTERNAL_ERROR', `Plan "${newPlanType}" not configured`, traceId, corsHeaders);
     }
     const quizLimit = planData.quiz_limit;
     const responseLimit = planData.response_limit;
@@ -152,7 +153,7 @@ Deno.serve(async (req) => {
 
     if (updateError) {
       await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'error', error_message: updateError.message, provider: 'kiwify' });
-      return new Response(JSON.stringify({ error: 'Failed to update subscription' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return errorResponse('INTERNAL_ERROR', 'Failed to update subscription', traceId, corsHeaders);
     }
 
     await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'success', error_message: null, provider: 'kiwify', paid_plan_type: isActivationEvent(evento) ? newPlanType : null });
@@ -185,6 +186,6 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[KIWIFY] Error:', error);
     try { await supabaseAdmin.from('webhook_logs').insert({ email: 'error', evento: 'exception', produto: 'unknown', status: 'error', error_message: error instanceof Error ? error.message : String(error), provider: 'kiwify' }); } catch {}
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse('INTERNAL_ERROR', 'Internal server error', traceId, corsHeaders);
   }
 });

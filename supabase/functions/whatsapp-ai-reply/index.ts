@@ -1,8 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id',
 };
 
 interface ConversationMessage {
@@ -10,25 +12,28 @@ interface ConversationMessage {
   content: string;
 }
 
+const BodySchema = z.object({
+  phone_number: z.string().min(5),
+  message_text: z.string().min(1),
+  user_id: z.string().uuid().nullable().optional(),
+  contact_id: z.string().uuid().nullable().optional(),
+});
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { phone_number, message_text, user_id, contact_id } = await req.json();
-
-    if (!phone_number || !message_text) {
-      return new Response(
-        JSON.stringify({ error: 'phone_number and message_text required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { phone_number, message_text, user_id, contact_id } = parsed.data;
 
     console.log(`[WHATSAPP-AI] Processing message from ${phone_number}: "${message_text.substring(0, 50)}"`);
 
@@ -41,10 +46,7 @@ Deno.serve(async (req) => {
 
     if (blacklisted && blacklisted.length > 0) {
       console.log(`[WHATSAPP-AI] Phone ${phone_number} is blacklisted, skipping`);
-      return new Response(
-        JSON.stringify({ success: false, reason: 'blacklisted' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'blacklisted' }, traceId, corsHeaders);
     }
 
     // 1. Check if AI is enabled
@@ -56,10 +58,7 @@ Deno.serve(async (req) => {
 
     if (!aiSettings?.is_enabled) {
       console.log('[WHATSAPP-AI] AI is disabled, skipping');
-      return new Response(
-        JSON.stringify({ success: false, reason: 'ai_disabled' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'ai_disabled' }, traceId, corsHeaders);
     }
 
     // 2. Rate limiting
@@ -73,10 +72,7 @@ Deno.serve(async (req) => {
 
     if ((recentCount || 0) >= (aiSettings.rate_limit_per_hour || 30)) {
       console.log(`[WHATSAPP-AI] Rate limit reached for ${phone_number}`);
-      return new Response(
-        JSON.stringify({ success: false, reason: 'rate_limited' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'rate_limited' }, traceId, corsHeaders);
     }
 
     // 3. Check for human intervention — if last non-user message is 'human' within pause window, skip AI
@@ -138,10 +134,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      return new Response(
-        JSON.stringify({ success: false, reason: 'human_intervention', admin_alerted: !!adminPhone }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'human_intervention', admin_alerted: !!adminPhone }, traceId, corsHeaders);
     }
 
     // 3.5 CHECK MAX AGENT RETRIES — count consecutive assistant messages without user reply
@@ -224,10 +217,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        return new Response(
-          JSON.stringify({ success: true, reason: 'max_retries_escalated', max_retries: maxRetries }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({ success: true, reason: 'max_retries_escalated', max_retries: maxRetries }, traceId, corsHeaders);
       }
     }
 
@@ -326,10 +316,7 @@ Contexto do usuário:
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiKey) {
       console.error('[WHATSAPP-AI] OPENAI_API_KEY not configured');
-      return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('INTERNAL_ERROR', 'OpenAI API key not configured', traceId, corsHeaders);
     }
 
     const messages = [
@@ -439,15 +426,12 @@ Contexto do usuário:
       });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        reply_sent: true,
-        tokens_used: tokensUsed,
-        escalated: shouldEscalate,
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({
+      success: true,
+      reply_sent: true,
+      tokens_used: tokensUsed,
+      escalated: shouldEscalate,
+    }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('[WHATSAPP-AI] Error:', error);
@@ -457,9 +441,6 @@ Contexto do usuário:
       console.error('[WHATSAPP-AI] Error details:', body);
     } catch (_) {}
 
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', `Internal server error: ${String(error).slice(0, 200)}`, traceId, corsHeaders);
   }
 });

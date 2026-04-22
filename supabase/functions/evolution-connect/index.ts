@@ -1,9 +1,16 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id',
 };
+
+const BodySchema = z.object({
+  action: z.enum(['connect', 'status', 'disconnect', 'webhook_diagnostics', 'fix_webhook']),
+  apiUrl: z.string().optional(),
+});
 
 function normalizeApiUrl(url: string): string {
   let normalized = url.trim();
@@ -114,13 +121,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { action, apiUrl } = await req.json();
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { action, apiUrl } = parsed.data;
 
     const rawApiUrl = apiUrl || Deno.env.get('EVOLUTION_API_URL');
     const evolutionApiUrl = rawApiUrl ? normalizeApiUrl(rawApiUrl) : null;
@@ -131,10 +141,7 @@ Deno.serve(async (req) => {
 
     if (!evolutionApiUrl || !evolutionApiKey) {
       console.error('Missing config - URL:', !!evolutionApiUrl, 'Key:', !!evolutionApiKey);
-      return new Response(
-        JSON.stringify({ error: 'Evolution API não configurada. Configure EVOLUTION_API_URL e EVOLUTION_API_KEY nos secrets.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('VALIDATION_FAILED', 'Evolution API não configurada (EVOLUTION_API_URL/EVOLUTION_API_KEY).', traceId, corsHeaders);
     }
 
     const instanceName = 'masterquizz';
@@ -159,27 +166,16 @@ Deno.serve(async (req) => {
             evolution_api_url: evolutionApiUrl,
             updated_at: new Date().toISOString()
           })
-          .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+          .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-        return new Response(
-          JSON.stringify({
-            qrCode: null,
-            state: 'connected',
-            instance: instanceName,
-            exists: true
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({ qrCode: null, state: 'connected', instance: instanceName, exists: true }, traceId, corsHeaders);
       }
 
       // Se não existe, criar instância
       if (!exists) {
         const created = await createInstance(evolutionApiUrl, evolutionApiKey, instanceName);
         if (!created) {
-          return new Response(
-            JSON.stringify({ error: 'Falha ao criar instância na Evolution API' }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return errorResponse('INTERNAL_ERROR', 'Falha ao criar instância na Evolution API', traceId, corsHeaders);
         }
       }
 
@@ -193,10 +189,7 @@ Deno.serve(async (req) => {
       if (!connectRes.ok) {
         const errorText = await connectRes.text();
         console.error('Connect failed:', connectRes.status, errorText);
-        return new Response(
-          JSON.stringify({ error: 'Falha ao conectar instância', details: errorText }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('INTERNAL_ERROR', `Falha ao conectar instância: ${errorText.slice(0, 200)}`, traceId, corsHeaders);
       }
 
       const connectData = await connectRes.json();
@@ -215,17 +208,9 @@ Deno.serve(async (req) => {
           last_connection_check: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+        .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-      return new Response(
-        JSON.stringify({
-          qrCode,
-          state: 'awaiting_scan',
-          instance: instanceName,
-          exists: true
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ qrCode, state: 'awaiting_scan', instance: instanceName, exists: true }, traceId, corsHeaders);
     }
 
     // ========== ACTION: STATUS ==========
@@ -241,17 +226,14 @@ Deno.serve(async (req) => {
           last_connection_check: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+        .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-      return new Response(
-        JSON.stringify({
-          state: connected ? 'connected' : (exists ? 'disconnected' : 'not_found'),
-          instance: instanceName,
-          exists,
-          connected
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({
+        state: connected ? 'connected' : (exists ? 'disconnected' : 'not_found'),
+        instance: instanceName,
+        exists,
+        connected,
+      }, traceId, corsHeaders);
     }
 
     // ========== ACTION: DISCONNECT ==========
@@ -274,12 +256,9 @@ Deno.serve(async (req) => {
           last_connection_check: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.from('recovery_settings').select('id').single()).data?.id);
+        .eq('id', (await supabase.from('recovery_settings').select('id').maybeSingle()).data?.id);
 
-      return new Response(
-        JSON.stringify({ success: true, state: 'disconnected' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: true, state: 'disconnected' }, traceId, corsHeaders);
     }
 
     // ========== ACTION: WEBHOOK DIAGNOSTICS ==========
@@ -314,39 +293,29 @@ Deno.serve(async (req) => {
         const { data: health } = await supabase
           .from('v_evolution_webhook_health')
           .select('*')
-          .single();
+          .maybeSingle();
 
-        return new Response(
-          JSON.stringify({
-            expected_url: expectedWebhookUrl,
-            configured_url: configuredUrl,
-            url_matches: urlMatches,
-            webhook_enabled: webhookEnabled,
-            required_events: requiredEvents,
-            configured_events: configuredEvents,
-            missing_events: missingEvents,
-            all_events_present: allEventsPresent,
-            health: health || null,
-            recommendation: !configuredUrl
-              ? 'Webhook não configurado na Evolution API. Use action=fix_webhook para configurar.'
-              : !urlMatches
-              ? 'URL do webhook está apontando para outro lugar. Use action=fix_webhook para corrigir.'
-              : !allEventsPresent
-              ? `Faltam eventos: ${missingEvents.join(', ')}. Use action=fix_webhook para adicionar.`
-              : 'Webhook está corretamente configurado. Se ainda não chegam confirmações, verifique a instância na Evolution API.',
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({
+          expected_url: expectedWebhookUrl,
+          configured_url: configuredUrl,
+          url_matches: urlMatches,
+          webhook_enabled: webhookEnabled,
+          required_events: requiredEvents,
+          configured_events: configuredEvents,
+          missing_events: missingEvents,
+          all_events_present: allEventsPresent,
+          health: health || null,
+          recommendation: !configuredUrl
+            ? 'Webhook não configurado na Evolution API. Use action=fix_webhook para configurar.'
+            : !urlMatches
+            ? 'URL do webhook está apontando para outro lugar. Use action=fix_webhook para corrigir.'
+            : !allEventsPresent
+            ? `Faltam eventos: ${missingEvents.join(', ')}. Use action=fix_webhook para adicionar.`
+            : 'Webhook está corretamente configurado.',
+        }, traceId, corsHeaders);
       } catch (error) {
         console.error('Webhook diagnostics error:', error);
-        return new Response(
-          JSON.stringify({
-            error: 'Falha ao consultar webhook',
-            details: error instanceof Error ? error.message : 'Unknown',
-            expected_url: expectedWebhookUrl,
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('INTERNAL_ERROR', `Falha ao consultar webhook: ${error instanceof Error ? error.message : 'Unknown'}`, traceId, corsHeaders);
       }
     }
 
@@ -373,39 +342,24 @@ Deno.serve(async (req) => {
 
         const result = await setRes.text();
         if (!setRes.ok) {
-          return new Response(
-            JSON.stringify({ error: 'Falha ao configurar webhook', status: setRes.status, details: result }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return errorResponse('INTERNAL_ERROR', `Falha ao configurar webhook (${setRes.status}): ${result.slice(0, 200)}`, traceId, corsHeaders);
         }
 
-        return new Response(
-          JSON.stringify({
-            success: true,
-            url: expectedWebhookUrl,
-            events: requiredEvents,
-            message: 'Webhook configurado. Próximas mensagens devem receber confirmações de entrega.',
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return okResponse({
+          success: true,
+          url: expectedWebhookUrl,
+          events: requiredEvents,
+          message: 'Webhook configurado.',
+        }, traceId, corsHeaders);
       } catch (error) {
-        return new Response(
-          JSON.stringify({ error: 'Erro ao corrigir webhook', details: error instanceof Error ? error.message : 'Unknown' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('INTERNAL_ERROR', `Erro ao corrigir webhook: ${error instanceof Error ? error.message : 'Unknown'}`, traceId, corsHeaders);
       }
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Ação inválida. Use: connect, status, disconnect, webhook_diagnostics, fix_webhook' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('VALIDATION_FAILED', 'Ação inválida. Use: connect, status, disconnect, webhook_diagnostics, fix_webhook', traceId, corsHeaders);
 
   } catch (error) {
     console.error('Evolution connect error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno', details: error instanceof Error ? error.message : 'Unknown' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', `Erro interno: ${error instanceof Error ? error.message : 'Unknown'}`, traceId, corsHeaders);
   }
 });
