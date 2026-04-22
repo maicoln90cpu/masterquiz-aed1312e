@@ -1262,6 +1262,24 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
       )}
 
       <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores customizadas (opcional)</Label>
+      <div className="grid grid-cols-1 gap-3">
+        <ColorPalette
+          label="Cor da coluna esquerda"
+          value={(block as any).leftColor}
+          onChange={(c) => onChange(update(block, { leftColor: c }))}
+          defaultValue="#ef4444"
+          hint="Sobrescreve a cor padrão do estilo escolhido"
+        />
+        <ColorPalette
+          label="Cor da coluna direita"
+          value={(block as any).rightColor}
+          onChange={(c) => onChange(update(block, { rightColor: c }))}
+          defaultValue="#22c55e"
+        />
+      </div>
+
+      <Separator />
       <Label className="text-xs font-medium text-muted-foreground">Imagens (Antes/Depois)</Label>
       <div className="space-y-3">
         <div className="space-y-2">
