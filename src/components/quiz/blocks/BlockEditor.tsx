@@ -181,7 +181,7 @@ const SortableBlock = ({ block, blockIndex, onUpdate, onDelete, totalQuestions =
       case 'embed':
         return <EmbedBlock block={block} onChange={onUpdate} />;
       case 'button':
-        return <ButtonBlock block={block} onChange={onUpdate} totalQuestions={totalQuestions} currentQuestionIndex={currentQuestionIndex} />;
+        return <ButtonBlock block={block} onChange={onUpdate} />;
       case 'price':
         return <PriceBlock block={block} onChange={onUpdate} />;
       case 'metrics':
