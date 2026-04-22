@@ -1,5 +1,46 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ Onda 7 — Etapa 5 (Contract Tests P18/P19/P20 + CODE_STANDARDS atualizado)
+
+### O que mudou
+- **`src/__tests__/contracts/envelope-coverage.test.ts` (P18)**: 12 testes (6 edges × 2 invariantes). Garante que `admin-update-subscription`, `admin-view-user-data`, `system-health-check`, `export-table-data`, `save-quiz-draft`, `growth-metrics` continuem importando `okResponse/errorResponse` e NÃO regridam para `return new Response(JSON.stringify({error}))` cru. Lista `MIGRATED_EDGES` cresce a cada nova edge migrada.
+- **`src/__tests__/contracts/webhook-idempotency.test.ts` (P19)**: 6 testes (2 webhooks × 3 invariantes). Garante que `kiwify-webhook` e `evolution-webhook` importem `claimEvent`, chamem `claimEvent(` e fechem com `markEventProcessed/Failed`.
+- **`src/__tests__/contracts/trace-id-propagation.test.ts` (P20)**: 4 testes mockando `invokeResilient`. Garante que `invokeEdgeFunction` (a) gere traceId automaticamente, (b) respeite traceId fornecido pelo caller, (c) propague traceId em `EdgeCallError` mesmo quando edge falha, (d) sempre devolva `{ data, traceId }` (nunca apenas `data`).
+- **`docs/CODE_STANDARDS.md`**: 3 seções novas — tabela de regras de Lint atualizada com **P21** (`new Date()`) e **P22** (`.single()` em mutations); seção **Manipulação de Datas** com tabela de helpers do `dateUtils` + do/don't; seção **Reduced Motion** explicando o bloco CSS global; seção **Contract Tests** mapeando todas as 9 invariantes ativas com seus arquivos.
+
+### Antes / Depois (leigo)
+- **Antes**: alguém podia "desfazer" uma migração P18/P19/P20 sem nenhum alarme — o build seguia verde. Padrões novos (`dateUtils`, reduced-motion) não estavam documentados em CODE_STANDARDS, então onboarding precisava ler PENDENCIAS para descobrir.
+- **Depois**: 22 novos testes vigiam invariantes em CI. Documentação de Code Standards lista P21/P22 e mostra os helpers do dateUtils com exemplos do/don't. Reduced-motion documentado para quem editar CSS futuro.
+
+### Vantagens
+- **Regressão impossível**: tentar reintroduzir `return new Response(JSON.stringify({error}))` em edge migrada → build vermelho.
+- **Onboarding mais rápido**: dev novo lê CODE_STANDARDS e já sabe usar `formatDate()` em vez de `new Date(x).toLocaleDateString()`.
+- **Facilidade de extensão**: adicionar nova edge ao radar = 1 linha em `MIGRATED_EDGES`.
+
+### Desvantagens / Riscos
+- Contract test P18 só vigia presença de `okResponse/errorResponse` no arquivo — não garante que TODOS os retornos usem (basta uma chamada). Mitigação: regex `JSON.stringify({error` complementa.
+- P20 usa mock — não testa a propagação real do header `x-trace-id` end-to-end (isso seria teste de integração, fora de scope).
+
+### Checklist manual
+1. `bun test src/__tests__/contracts/envelope-coverage.test.ts` → 12 ✅.
+2. `bun test src/__tests__/contracts/webhook-idempotency.test.ts` → 6 ✅.
+3. `bun test src/__tests__/contracts/trace-id-propagation.test.ts` → 4 ✅.
+4. Abrir `CODE_STANDARDS.md` em editor markdown: confirmar 3 seções novas (Datas, Reduced Motion, Contract Tests).
+5. Testar quebra proposital: editar `growth-metrics/index.ts` substituindo um `okResponse(...)` por `new Response(JSON.stringify({error: 'x'}))` → P18 deve falhar.
+
+### Pendências (continuação)
+- **Sub-ondas 7-B…7-E**: migrar 56 edges restantes (incluindo finalizar envelope completo em `kiwify-webhook` e `evolution-webhook` para entrarem em `MIGRATED_EDGES`).
+- **Migração P21/P22**: substituir `new Date()` por `now()` e `.single()` por `.maybeSingle()` em arquivos quentes (admin, recovery, billing).
+- **Cron**: agendar `cleanup_old_webhook_events()` semanal via `pg_cron`.
+- **Painel admin**: card de "duplicados bloqueados/24h" em Sistema → Saúde.
+
+### Prevenção de regressão
+- 22 novos testes de contrato rodam em todo CI.
+- `MIGRATED_EDGES` e `WEBHOOK_EDGES` são fonte única de verdade — não se atualizam sozinhos, dev precisa adicionar ao migrar.
+- Tabela em `CODE_STANDARDS.md` lista todas as 9 invariantes ativas com link para cada teste.
+
+---
+
 ## ✅ Onda 7 — Etapa 4 (dateUtils + lint warns + reduced-motion)
 
 ### O que mudou
