@@ -333,6 +333,10 @@ export interface ComparisonBlock extends BaseBlock {
   itemIcons?: { left?: string; right?: string };
   leftImage?: string;
   rightImage?: string;
+  /** Onda 7 — cor de borda customizada da coluna esquerda (override do leftStyle) */
+  leftColor?: string;
+  /** Onda 7 — cor de borda customizada da coluna direita (override do rightStyle) */
+  rightColor?: string;
 }
 
 export interface SocialProofBlock extends BaseBlock {
@@ -413,6 +417,10 @@ export interface BannerBlock extends BaseBlock {
   dismissible?: boolean;
   linkUrl?: string; // ✅ Etapa 2D: Link clicável
   linkTarget?: '_blank' | '_self'; // ✅ Etapa 2D: Abrir em nova aba
+  /** Onda 7 — cor de fundo customizada (override da variant) */
+  bgColor?: string;
+  /** Onda 7 — cor do texto customizada (override da variant) */
+  textColor?: string;
 }
 
 export interface AnswerSummaryBlock extends BaseBlock {

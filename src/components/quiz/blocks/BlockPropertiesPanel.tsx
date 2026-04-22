@@ -1262,6 +1262,24 @@ const ComparisonProperties = ({ block, onChange }: BlockPropertiesPanelProps) =>
       )}
 
       <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores customizadas (opcional)</Label>
+      <div className="grid grid-cols-1 gap-3">
+        <ColorPalette
+          label="Cor da coluna esquerda"
+          value={(block as any).leftColor}
+          onChange={(c) => onChange(update(block, { leftColor: c }))}
+          defaultValue="#ef4444"
+          hint="Sobrescreve a cor padrão do estilo escolhido"
+        />
+        <ColorPalette
+          label="Cor da coluna direita"
+          value={(block as any).rightColor}
+          onChange={(c) => onChange(update(block, { rightColor: c }))}
+          defaultValue="#22c55e"
+        />
+      </div>
+
+      <Separator />
       <Label className="text-xs font-medium text-muted-foreground">Imagens (Antes/Depois)</Label>
       <div className="space-y-3">
         <div className="space-y-2">
@@ -1680,10 +1698,13 @@ const QuoteProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label>Cor da borda</Label>
-        <Input type="color" value={block.borderColor || '#3b82f6'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
-      </div>
+      <ColorPalette
+        label="Cor da borda"
+        value={block.borderColor}
+        onChange={(c) => onChange(update(block, { borderColor: c }))}
+        defaultValue="#3b82f6"
+        hint="Aplicada à barra lateral esquerda da citação"
+      />
       {/* ✅ Etapa 2D: Imagem de fundo opcional */}
       <div className="space-y-2">
         <Label>Imagem de fundo (URL)</Label>
@@ -1797,6 +1818,21 @@ const BannerProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </Select>
         </div>
       )}
+      <Separator />
+      <Label className="text-xs font-medium text-muted-foreground">Cores customizadas (opcional)</Label>
+      <ColorPalette
+        label="Cor de fundo"
+        value={(block as any).bgColor}
+        onChange={(c) => onChange(update(block, { bgColor: c }))}
+        defaultValue="#3b82f6"
+        hint="Sobrescreve a cor padrão da variante"
+      />
+      <ColorPalette
+        label="Cor do texto"
+        value={(block as any).textColor}
+        onChange={(c) => onChange(update(block, { textColor: c }))}
+        defaultValue="#ffffff"
+      />
     </div>
   );
 };
