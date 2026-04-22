@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { shouldRetryQuery, queryRetryDelay } from "@/lib/queryRetry";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +10,7 @@ import { toast } from "sonner";
 import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageLoading } from "@/components/ui/page-loading";
+import { ErrorState } from "@/components/ui/error-state";
 
 interface QueueItem {
   id: string;
@@ -35,26 +38,34 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function EmailRecoveryQueue() {
-  const [items, setItems] = useState<QueueItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [processing, setProcessing] = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => { load(); }, []);
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
+  const QUEUE_KEY = ["email-recovery-queue"];
+  const {
+    data: items = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery<QueueItem[]>({
+    queryKey: QUEUE_KEY,
+    retry: shouldRetryQuery,
+    retryDelay: queryRetryDelay,
+    queryFn: async () => {
+      const { data, error: qErr } = await supabase
         .from('email_recovery_contacts')
         .select('*, profiles(full_name), email_recovery_templates(name, subject)')
         .order('created_at', { ascending: false })
         .limit(100);
-      if (error) throw error;
-      setItems(data || []);
-    } catch { toast.error('Erro ao carregar fila'); }
-    finally { setLoading(false); }
-  };
+      if (qErr) throw qErr;
+      return (data || []) as QueueItem[];
+    },
+  });
+
+  const reload = () => qc.invalidateQueries({ queryKey: QUEUE_KEY });
 
   const generateTargets = async () => {
     setGenerating(true);
@@ -62,7 +73,7 @@ export function EmailRecoveryQueue() {
       const { data, error } = await supabase.functions.invoke('check-inactive-users-email');
       if (error) throw error;
       toast.success(`${data.queued || 0} emails enfileirados`);
-      load();
+      reload();
     } catch (err) {
       toast.error('Erro ao gerar alvos');
     } finally {
@@ -76,7 +87,7 @@ export function EmailRecoveryQueue() {
       const { data, error } = await supabase.functions.invoke('process-email-recovery-queue');
       if (error) throw error;
       toast.success(`${data.processed || 0} emails enviados`);
-      load();
+      reload();
     } catch {
       toast.error('Erro ao processar fila');
     } finally {
@@ -86,17 +97,40 @@ export function EmailRecoveryQueue() {
 
   const cancelPending = async () => {
     if (!confirm('Cancelar todos os emails pendentes?')) return;
-    const { error } = await supabase.from('email_recovery_contacts').update({ status: 'cancelled' }).eq('status', 'pending');
-    if (error) { toast.error('Erro'); return; }
+    // Optimistic update — marca pendentes como cancelados localmente
+    const previous = qc.getQueryData<QueueItem[]>(QUEUE_KEY);
+    qc.setQueryData<QueueItem[]>(QUEUE_KEY, (old) =>
+      (old || []).map((it) => (it.status === 'pending' ? { ...it, status: 'cancelled' } : it)),
+    );
+    const { error: updErr } = await supabase
+      .from('email_recovery_contacts')
+      .update({ status: 'cancelled' })
+      .eq('status', 'pending');
+    if (updErr) {
+      // Rollback
+      if (previous) qc.setQueryData(QUEUE_KEY, previous);
+      toast.error('Erro ao cancelar pendentes');
+      return;
+    }
     toast.success('Pendentes cancelados');
-    load();
+    reload();
   };
 
   const pendingCount = items.filter(i => i.status === 'pending').length;
   const sentCount = items.filter(i => i.status === 'sent').length;
   const failedCount = items.filter(i => i.status === 'failed').length;
 
-  if (loading) return <PageLoading variant="skeleton" rows={5} />;
+  if (isLoading) return <PageLoading variant="skeleton" rows={5} />;
+  if (isError) {
+    return (
+      <ErrorState
+        title="Erro ao carregar fila de emails"
+        message={(error as Error)?.message}
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const columns: DataTableColumn<QueueItem>[] = [
     {
@@ -175,7 +209,9 @@ export function EmailRecoveryQueue() {
           {processing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Play className="h-4 w-4 mr-1" />}
           Processar Fila ({pendingCount})
         </Button>
-        <Button onClick={load} variant="ghost" size="icon"><RefreshCw className="h-4 w-4" /></Button>
+        <Button onClick={() => refetch()} variant="ghost" size="icon" disabled={isFetching}>
+          <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+        </Button>
         {pendingCount > 0 && (
           <Button onClick={cancelPending} variant="destructive" size="sm">
             <Trash2 className="h-4 w-4 mr-1" /> Cancelar Pendentes

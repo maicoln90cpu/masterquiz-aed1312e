@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, ShieldAlert, Loader2 } from "lucide-react";
@@ -12,6 +11,7 @@ import { toast } from "sonner";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { FormFieldA11y } from "@/components/ui/form-field-a11y";
 
 interface InstitutionalDomain {
   id: string;
@@ -67,8 +67,20 @@ export const InstitutionalDomainsPanel = () => {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["institutional-email-domains"] }),
-    onError: (e: any) => toast.error(e?.message || "Falha ao atualizar"),
+    // Optimistic update — UI responde instantaneamente
+    onMutate: async ({ id, is_active }) => {
+      await qc.cancelQueries({ queryKey: ["institutional-email-domains"] });
+      const previous = qc.getQueryData<InstitutionalDomain[]>(["institutional-email-domains"]);
+      qc.setQueryData<InstitutionalDomain[]>(["institutional-email-domains"], (old) =>
+        (old || []).map((d) => (d.id === id ? { ...d, is_active } : d)),
+      );
+      return { previous };
+    },
+    onError: (e: any, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(["institutional-email-domains"], ctx.previous);
+      toast.error(e?.message || "Falha ao atualizar");
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["institutional-email-domains"] }),
   });
 
   const removeMutation = useMutation({
@@ -76,11 +88,21 @@ export const InstitutionalDomainsPanel = () => {
       const { error } = await supabase.from("institutional_email_domains").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      toast.success("Domínio removido");
-      qc.invalidateQueries({ queryKey: ["institutional-email-domains"] });
+    // Optimistic remove
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ["institutional-email-domains"] });
+      const previous = qc.getQueryData<InstitutionalDomain[]>(["institutional-email-domains"]);
+      qc.setQueryData<InstitutionalDomain[]>(["institutional-email-domains"], (old) =>
+        (old || []).filter((d) => d.id !== id),
+      );
+      return { previous };
     },
-    onError: (e: any) => toast.error(e?.message || "Falha ao remover"),
+    onSuccess: () => toast.success("Domínio removido"),
+    onError: (e: any, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(["institutional-email-domains"], ctx.previous);
+      toast.error(e?.message || "Falha ao remover");
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["institutional-email-domains"] }),
   });
 
   const activeCount = domains?.filter((d) => d.is_active).length ?? 0;
@@ -103,33 +125,36 @@ export const InstitutionalDomainsPanel = () => {
       <CardContent className="space-y-4">
         {/* Form de novo domínio */}
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_2fr_auto] items-end p-3 rounded-md border bg-muted/30">
-          <div className="space-y-1">
-            <Label htmlFor="new-domain" className="text-xs">Domínio</Label>
-            <Input
-              id="new-domain"
-              placeholder="ex: gov.br"
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="new-reason" className="text-xs">Motivo</Label>
-            <Input
-              id="new-reason"
-              placeholder="institutional"
-              value={newReason}
-              onChange={(e) => setNewReason(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="new-notes" className="text-xs">Notas (opcional)</Label>
-            <Input
-              id="new-notes"
-              placeholder="Descrição"
-              value={newNotes}
-              onChange={(e) => setNewNotes(e.target.value)}
-            />
-          </div>
+          <FormFieldA11y label="Domínio" required hint="Sem o '@' inicial">
+            {(p) => (
+              <Input
+                {...p}
+                placeholder="ex: gov.br"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+              />
+            )}
+          </FormFieldA11y>
+          <FormFieldA11y label="Motivo">
+            {(p) => (
+              <Input
+                {...p}
+                placeholder="institutional"
+                value={newReason}
+                onChange={(e) => setNewReason(e.target.value)}
+              />
+            )}
+          </FormFieldA11y>
+          <FormFieldA11y label="Notas (opcional)">
+            {(p) => (
+              <Input
+                {...p}
+                placeholder="Descrição"
+                value={newNotes}
+                onChange={(e) => setNewNotes(e.target.value)}
+              />
+            )}
+          </FormFieldA11y>
           <Button
             onClick={() => addMutation.mutate()}
             disabled={addMutation.isPending || !newDomain.trim()}

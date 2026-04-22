@@ -119,15 +119,26 @@ export default function Integrations() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-integrations"] });
+    // Optimistic toggle — switch responde imediatamente
+    onMutate: async ({ id, isActive }) => {
+      const key = ["user-integrations", user?.id];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<Integration[]>(key);
+      queryClient.setQueryData<Integration[]>(key, (old) =>
+        (old || []).map((i) => (i.id === id ? { ...i, is_active: isActive } : i)),
+      );
+      return { previous, key };
     },
-    onError: (error) => {
+    onError: (error, _vars, ctx) => {
+      if (ctx?.previous && ctx?.key) queryClient.setQueryData(ctx.key, ctx.previous);
       toast({
         title: t('integrations.errorUpdating'),
         description: error.message,
         variant: "destructive",
       });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-integrations"] });
     },
   });
 

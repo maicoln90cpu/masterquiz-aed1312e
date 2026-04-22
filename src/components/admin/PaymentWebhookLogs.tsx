@@ -1,5 +1,7 @@
 import { logger } from '@/lib/logger';
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { shouldRetryQuery, queryRetryDelay } from "@/lib/queryRetry";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
 import { PageLoading } from "@/components/ui/page-loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { Mail } from "lucide-react";
 
 interface WebhookLog {
@@ -26,44 +29,37 @@ interface WebhookLog {
 }
 
 export default function PaymentWebhookLogs() {
-  const [logs, setLogs] = useState<WebhookLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [providerFilter, setProviderFilter] = useState<string>("all");
 
-  useEffect(() => {
-    loadLogs();
-  }, [statusFilter, providerFilter]);
-
-  const loadLogs = async () => {
-    setLoading(true);
-    try {
+  const {
+    data: logs = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery<WebhookLog[]>({
+    queryKey: ["payment-webhook-logs", statusFilter, providerFilter],
+    retry: shouldRetryQuery,
+    retryDelay: queryRetryDelay,
+    queryFn: async () => {
       let query = supabase
         .from('webhook_logs')
         .select('id, created_at, email, evento, produto, status, provider, error_message, status_code')
         .eq('provider', 'kiwify')
         .order('created_at', { ascending: false })
         .limit(500);
-
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+      if (statusFilter !== 'all') query = query.eq('status', statusFilter);
+      if (providerFilter !== 'all') query = query.eq('provider', providerFilter);
+      const { data, error: qErr } = await query;
+      if (qErr) {
+        logger.error('Error loading webhook logs:', qErr);
+        throw qErr;
       }
-
-      if (providerFilter !== 'all') {
-        query = query.eq('provider', providerFilter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      setLogs(data || []);
-    } catch (error) {
-      logger.error('Error loading webhook logs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []) as WebhookLog[];
+    },
+  });
 
   const getStatusBadge = (status: string | null) => {
     switch (status) {
@@ -199,14 +195,21 @@ export default function PaymentWebhookLogs() {
           </Select>
         </div>
 
-        <Button variant="outline" size="sm" onClick={loadLogs} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <PageLoading variant="skeleton" rows={6} />
+      ) : isError ? (
+        <ErrorState
+          title="Erro ao carregar logs de webhook"
+          message={(error as Error)?.message}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       ) : logs.length === 0 ? (
         <EmptyState
           icon={Mail}
