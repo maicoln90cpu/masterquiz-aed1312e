@@ -31,6 +31,8 @@ import { useSiteMode, useUpdateSiteMode, type SiteMode } from "@/hooks/useSiteMo
 import { useEditorLayout, useUpdateEditorLayout, type EditorLayout } from "@/hooks/useEditorLayout";
 import { useSupportMode } from "@/contexts/SupportModeContext";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { ErrorState } from "@/components/ui/error-state";
+import { PageLoading } from "@/components/ui/page-loading";
 
 // Lazy load heavy admin components
 const PlanManagement = lazy(() => import("@/components/admin/PlanManagement"));
@@ -74,7 +76,7 @@ const ComponentLoader = () => (
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, loading: rolesLoading } = useUserRole();
   const { enterSupportMode } = useSupportMode();
   const { siteMode, isModeB } = useSiteMode();
   const { updateSiteMode } = useUpdateSiteMode();
@@ -125,6 +127,7 @@ export default function AdminDashboard() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [trialModalOpen, setTrialModalOpen] = useState(false);
   const [trialUser, setTrialUser] = useState<{id: string, email: string, currentPlan: string, originalPlan?: string | null, trialEndDate?: string | null} | null>(null);
+  const [respondentsError, setRespondentsError] = useState<string | null>(null);
   
   // Sorting state for tables
   const [usersSortColumn, setUsersSortColumn] = useState<string>('');
@@ -284,13 +287,17 @@ export default function AdminDashboard() {
   const { data: allUsersData, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
     queryKey: ['admin-all-users'],
     queryFn: async () => {
-      // 🛡️ P18: facade desempacota envelope { ok, data: { users }, traceId }
-      const { data } = await invokeEdgeFunction<{ users: any[] }>('list-all-users');
+      // Painel master é crítico: não mascarar falha transitória com circuit breaker aberto.
+      const { data } = await invokeEdgeFunction<{ users: any[] }>('list-all-users', undefined, {
+        disableCircuitBreaker: true,
+      });
       return data?.users || [];
     },
+    enabled: isAdmin && !rolesLoading,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   // Update administrators and derive accurate stats from allUsersData (service_role)
