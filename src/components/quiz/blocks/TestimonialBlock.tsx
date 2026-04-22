@@ -1,6 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TestimonialBlock as TestimonialBlockType } from "@/types/blocks";
 import { ImageUploader } from "@/components/ImageUploader";
 import { TestimonialBlockPreview } from "../preview/InteractiveBlockPreviews";
@@ -23,6 +24,26 @@ export default function TestimonialBlock({ block, onChange }: TestimonialBlockPr
           placeholder="Este produto mudou minha vida!"
           rows={3}
         />
+      </div>
+
+      {/* ✅ Onda 3: Nome + Cargo/Empresa visíveis no cartão (antes só no painel) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label>Nome do autor</Label>
+          <Input
+            value={block.authorName || ''}
+            onChange={(e) => onChange({ ...block, authorName: e.target.value })}
+            placeholder="Maria Silva"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Cargo / Empresa</Label>
+          <Input
+            value={block.authorRole || ''}
+            onChange={(e) => onChange({ ...block, authorRole: e.target.value })}
+            placeholder="CEO • Acme Inc."
+          />
+        </div>
       </div>
 
       {/* Content: Author photo — preview único */}
@@ -60,7 +81,7 @@ export default function TestimonialBlock({ block, onChange }: TestimonialBlockPr
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Configure nome, cargo, empresa, avaliação, estilo e cores no painel de propriedades →
+        Avaliação, estilo, cores e carrossel de depoimentos no painel de propriedades →
       </p>
     </div>
   );

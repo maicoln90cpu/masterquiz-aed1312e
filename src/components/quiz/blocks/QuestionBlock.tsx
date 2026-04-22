@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Trash2, GripVertical, HelpCircle } from "lucide-react";
 import type { QuestionBlock as QuestionBlockType } from "@/types/blocks";
@@ -96,6 +97,28 @@ export const QuestionBlock = ({ block, onChange }: QuestionBlockProps) => {
             />
           </div>
 
+          {/* ✅ Onda 3: campos visíveis no cartão (antes só apareciam no painel direito) */}
+          <div className="space-y-2">
+            <Label htmlFor={`subtitle-${block.id}`}>Subtítulo (opcional)</Label>
+            <Input
+              id={`subtitle-${block.id}`}
+              value={block.subtitle || ''}
+              onChange={(e) => updateBlock({ subtitle: e.target.value })}
+              placeholder="Texto auxiliar exibido abaixo da pergunta"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`hint-${block.id}`}>Dica / Tooltip (opcional)</Label>
+            <Textarea
+              id={`hint-${block.id}`}
+              value={block.hint || ''}
+              onChange={(e) => updateBlock({ hint: e.target.value })}
+              placeholder="Aparece como ícone de ajuda ao lado da pergunta"
+              rows={2}
+            />
+          </div>
+
           {/* Opções de Resposta - só para choice/yes_no */}
           {(block.answerFormat === 'single_choice' || block.answerFormat === 'multiple_choice') && (
             <div className="space-y-2">
@@ -182,8 +205,19 @@ export const QuestionBlock = ({ block, onChange }: QuestionBlockProps) => {
             </div>
           )}
 
+          {/* ✅ Onda 3: Texto do botão "Próxima Pergunta" agora editável no cartão */}
+          <div className="space-y-2">
+            <Label htmlFor={`next-btn-${block.id}`}>Texto do botão "Próxima Pergunta"</Label>
+            <Input
+              id={`next-btn-${block.id}`}
+              value={block.nextButtonText || ''}
+              onChange={(e) => updateBlock({ nextButtonText: e.target.value })}
+              placeholder="Próxima Pergunta"
+            />
+          </div>
+
           <p className="text-xs text-muted-foreground">
-            Configure formato, subtítulo, obrigatoriedade e auto-avanço no painel de propriedades →
+            Formato, obrigatoriedade, auto-avanço e estilo no painel de propriedades →
           </p>
         </CardContent>
       </Card>
