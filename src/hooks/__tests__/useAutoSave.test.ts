@@ -219,8 +219,7 @@ describe('useAutoSave', () => {
       });
 
       await act(async () => {
-        vi.advanceTimersByTime(30000);
-        await vi.runAllTimersAsync();
+        await vi.advanceTimersByTimeAsync(30000);
       });
 
       await waitFor(() => {
@@ -241,8 +240,7 @@ describe('useAutoSave', () => {
       });
 
       await act(async () => {
-        vi.advanceTimersByTime(30000);
-        await vi.runAllTimersAsync();
+        await vi.advanceTimersByTimeAsync(30000);
       });
 
       await waitFor(() => {
