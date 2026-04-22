@@ -253,17 +253,19 @@ const Login = () => {
     setIsMigrating(true);
     
     try {
-      // Use server-side migration (creates auth user with auto-confirm + merges data)
-      const { data, error: fnError } = await supabase.functions.invoke('migrate-imported-user', {
-        body: { email: migrateEmail, password: migratePassword },
-      });
-      
-      if (fnError || data?.error) {
-        const msg = data?.error || fnError?.message || 'Erro ao migrar conta';
-        if (data?.already_exists) {
-          // Account exists and was confirmed, just sign in
-        } else {
-          toast.error(msg);
+      // 🛡️ P18 — facade única (traceId + retry + toast embutidos)
+      let data: any = null;
+      try {
+        const result = await invokeEdgeFunction<any>('migrate-imported-user', {
+          email: migrateEmail,
+          password: migratePassword,
+        });
+        data = result.data;
+      } catch (e) {
+        const err = e as EdgeCallError;
+        // Caso especial: conta já existe e foi confirmada → segue p/ signIn abaixo
+        if (!(err as any)?.message?.toLowerCase?.().includes('already')) {
+          toast.error(defaultErrorMessage(err));
           setIsMigrating(false);
           return;
         }

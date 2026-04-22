@@ -2,6 +2,7 @@ import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFunction } from '@/lib/invokeEdgeFunction';
 import { useSupportMode, type SupportAction } from '@/contexts/SupportModeContext';
 import { logAudit } from '@/lib/auditLogger';
 import { generateSupportPdfReport } from '@/lib/supportPdfReport';
