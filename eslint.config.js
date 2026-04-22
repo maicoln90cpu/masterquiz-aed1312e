@@ -229,4 +229,50 @@ export default tseslint.config(
       ],
     },
   },
+  // ⚠️ P21 (Onda 7 / Etapa 4): `new Date()` sem argumentos em código de produção.
+  // Prefira `now()` / `nowISO()` de @/lib/dateUtils — facilita mock em testes
+  // determinísticos e padroniza o ponto de leitura do clock. Apenas WARN
+  // (não bloqueia) para não quebrar build legado; deve diminuir a cada PR.
+  // Exceções: dateUtils, hooks que precisam medir tempo real (useWebVitals).
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/lib/dateUtils.ts",
+      "src/hooks/useWebVitals.ts",
+      "src/lib/performanceCapture.ts",
+      "src/__tests__/**",
+      "src/**/*.test.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          "selector": "NewExpression[callee.name='Date'][arguments.length=0]",
+          "message": "⚠️ Prefira now()/nowISO() de @/lib/dateUtils em vez de `new Date()` — facilita mock em testes e padroniza o clock."
+        }
+      ],
+    },
+  },
+  // ⚠️ P22 (Onda 7 / Etapa 4): `.single()` em mutations Supabase (.insert/.update/.delete/.upsert)
+  // lança PGRST116 quando 0 linhas retornam, quebrando o fluxo. Use `.maybeSingle()`
+  // que devolve `null` em vez de erro. Apenas WARN — migrar incrementalmente.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/__tests__/**", "src/**/*.test.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          // .insert(...).select(...).single() — chain comum em mutations
+          "selector": "CallExpression[callee.property.name='single'] > MemberExpression.callee > CallExpression[callee.property.name='select'] > MemberExpression.callee > CallExpression[callee.property.name=/^(insert|update|delete|upsert)$/]",
+          "message": "⚠️ Use .maybeSingle() em vez de .single() após insert/update/delete/upsert — single() lança PGRST116 quando 0 linhas, maybeSingle() devolve null."
+        },
+        {
+          // .insert(...).single() direto (sem .select)
+          "selector": "CallExpression[callee.property.name='single'] > MemberExpression.callee > CallExpression[callee.property.name=/^(insert|update|delete|upsert)$/]",
+          "message": "⚠️ Use .maybeSingle() em vez de .single() após insert/update/delete/upsert — single() lança PGRST116 quando 0 linhas, maybeSingle() devolve null."
+        }
+      ],
+    },
+  },
 );
