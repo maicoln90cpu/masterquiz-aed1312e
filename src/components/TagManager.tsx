@@ -206,7 +206,8 @@ export const TagManager = ({ open, onClose, onTagsUpdate }: TagManagerProps) => 
                 <div className="flex gap-2 mt-1">
                   {colors.slice(0, 4).map((color) => (
                     <button
-type="button" key={color.value}
+type="button"
+key={color.value}
                       className={`w-8 h-8 rounded-full border-2 ${
                         newTagColor === color.value ? 'border-foreground' : 'border-transparent'
                       }`}
@@ -228,7 +229,8 @@ type="button" key={color.value}
             <div className="flex gap-2">
               {colors.slice(4).map((color) => (
                 <button
-type="button" key={color.value}
+type="button"
+key={color.value}
                   className={`w-8 h-8 rounded-full border-2 ${
                     newTagColor === color.value ? 'border-foreground' : 'border-transparent'
                   }`}
@@ -271,7 +273,8 @@ type="button" key={color.value}
                         <div className="flex gap-1">
                           {colors.map((color) => (
                             <button
-type="button" key={color.value}
+type="button"
+key={color.value}
                               className={`w-6 h-6 rounded-full border ${
                                 editColor === color.value ? 'border-foreground border-2' : 'border-transparent'
                               }`}

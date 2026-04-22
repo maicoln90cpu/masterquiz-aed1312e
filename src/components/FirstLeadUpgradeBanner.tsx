@@ -63,7 +63,8 @@ export function FirstLeadUpgradeBanner() {
         className="relative mb-4 rounded-lg border border-primary/20 bg-primary/5 p-4"
       >
         <button
-type="button" onClick={dismiss}
+type="button"
+onClick={dismiss}
           className="absolute top-2 right-2 p-1 rounded-md hover:bg-muted transition-colors"
           aria-label="Fechar"
         >

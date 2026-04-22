@@ -131,7 +131,8 @@ const SortableRuleCard = ({
       )}>
         {/* Drag handle */}
         <button
-type="button" className="mt-1 p-1 rounded text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing shrink-0"
+type="button"
+className="mt-1 p-1 rounded text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing shrink-0"
           {...attributes}
           {...listeners}
         >

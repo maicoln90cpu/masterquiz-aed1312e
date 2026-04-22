@@ -34,7 +34,8 @@ export const StepNavigation = ({ currentStep, steps, onStepClick }: StepNavigati
         <div className="p-4 space-y-3">
           {steps.map((step) => (
             <button
-type="button" key={step.number}
+type="button"
+key={step.number}
               onClick={() => onStepClick(step.number)}
               className={cn(
                 "w-full text-left p-4 rounded-lg border-2 transition-all",

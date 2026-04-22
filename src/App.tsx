@@ -86,7 +86,8 @@ const lazyWithRetry = (
                 Isso pode acontecer após uma atualização do sistema.
               </p>
               <button
-type="button" onClick={handleReload}
+type="button"
+onClick={handleReload}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
               >
                 Recarregar Página
