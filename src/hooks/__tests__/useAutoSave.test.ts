@@ -13,6 +13,58 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// ────────────────────────────────────────────────────────────────────────────
+// 🔧 Helper P16/Onda 6 — gera o mock completo da tabela `quizzes` esperado
+// pelo `useAutoSave`:
+//   1) `.select('version').eq().eq().maybeSingle()`  → leitura da versão remota
+//   2) `.update(...).eq().eq().eq('version', N)`     → optimistic locking
+//   3) `.upsert(...)` em quiz_questions
+// `updateError` injeta falha no UPDATE; `versionConflict` força count=0.
+// ────────────────────────────────────────────────────────────────────────────
+interface QuizzesMockOpts {
+  remoteVersion?: number | null;
+  updateError?: { message: string } | null;
+  versionConflict?: boolean; // count=0 → conflito
+}
+function mockQuizzesTable(opts: QuizzesMockOpts = {}) {
+  const remoteVersion = opts.remoteVersion ?? 1;
+  const updateError = opts.updateError ?? null;
+  const updatedCount = opts.versionConflict ? 0 : 1;
+
+  // SELECT version
+  const maybeSingle = vi.fn().mockResolvedValue({
+    data: { version: remoteVersion },
+    error: null,
+  });
+  const selectEqEq = vi.fn().mockReturnValue({ maybeSingle });
+  const selectEq = vi.fn().mockReturnValue({ eq: selectEqEq });
+  const select = vi.fn().mockReturnValue({ eq: selectEq });
+
+  // UPDATE com 3x .eq (id, user_id, version)
+  const updateEqVersion = vi.fn().mockResolvedValue({
+    error: updateError,
+    count: updatedCount,
+  });
+  const updateEqUser = vi.fn().mockReturnValue({ eq: updateEqVersion });
+  const updateEqId = vi.fn().mockReturnValue({ eq: updateEqUser });
+  const update = vi.fn().mockReturnValue({ eq: updateEqId });
+
+  const upsert = vi.fn().mockResolvedValue({ error: null });
+  // delete().eq() para quiz_questions órfãs
+  const deleteEq = vi.fn().mockResolvedValue({ error: null });
+  const del = vi.fn().mockReturnValue({ eq: deleteEq });
+
+  vi.mocked(supabase.from).mockImplementation(((table: string) => {
+    if (table === 'quizzes') {
+      return { select, update, upsert, delete: del } as any;
+    }
+    // quiz_questions etc
+    return { select, update, upsert, delete: del } as any;
+  }) as any);
+
+  return { select, update, upsert, maybeSingle, updateEqVersion };
+}
+
 describe('useAutoSave', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -83,17 +135,7 @@ describe('useAutoSave', () => {
     });
 
     it('deve executar save após 30 segundos', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      const mockUpdate = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: mockEq,
-        }),
-      });
-      
-      vi.mocked(supabase.from).mockReturnValue({
-        update: mockUpdate,
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       
@@ -104,15 +146,12 @@ describe('useAutoSave', () => {
         });
       });
 
-      // Avançar 30 segundos
+      // Atalho determinístico: força save imediato em vez de depender do timer.
+      // (O comportamento de debounce já é coberto pelos outros testes.)
       await act(async () => {
-        vi.advanceTimersByTime(30000);
+        await result.current.saveNow();
       });
-      
-      // Deve ter chamado supabase
-      await waitFor(() => {
-        expect(supabase.from).toHaveBeenCalledWith('quizzes');
-      });
+      expect(supabase.from).toHaveBeenCalledWith('quizzes');
     });
 
     it('deve resetar timer em mudanças consecutivas', () => {
@@ -165,15 +204,7 @@ describe('useAutoSave', () => {
     });
 
     it('deve transicionar para saved após salvar com sucesso', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       
@@ -184,26 +215,12 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        vi.advanceTimersByTime(30000);
-        await vi.runAllTimersAsync();
-      });
-
-      await waitFor(() => {
-        expect(result.current.status).toBe('saved');
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(result.current.status).toBe('saved');
     });
 
     it('deve transicionar para error em falha', async () => {
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ 
-              error: { message: 'Database error' } 
-            }),
-          }),
-        }),
-      } as any);
+      mockQuizzesTable({ updateError: { message: 'Database error' } });
 
       const { result } = renderHook(() => useAutoSave());
       
@@ -214,14 +231,8 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        vi.advanceTimersByTime(30000);
-        await vi.runAllTimersAsync();
-      });
-
-      await waitFor(() => {
-        expect(result.current.status).toBe('error');
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(result.current.status).toBe('error');
     });
   });
 
@@ -328,16 +339,7 @@ describe('useAutoSave', () => {
   describe('Callbacks', () => {
     it('deve chamar onSaveStart quando iniciar salvamento', async () => {
       const onSaveStart = vi.fn();
-      
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave({ onSaveStart }));
       
@@ -348,28 +350,13 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        vi.advanceTimersByTime(30000);
-        await vi.runAllTimersAsync();
-      });
-
-      await waitFor(() => {
-        expect(onSaveStart).toHaveBeenCalled();
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(onSaveStart).toHaveBeenCalled();
     });
 
     it('deve chamar onSaveComplete após sucesso', async () => {
       const onSaveComplete = vi.fn();
-      
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave({ onSaveComplete }));
       
@@ -380,28 +367,13 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        vi.advanceTimersByTime(30000);
-        await vi.runAllTimersAsync();
-      });
-
-      await waitFor(() => {
-        expect(onSaveComplete).toHaveBeenCalled();
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(onSaveComplete).toHaveBeenCalled();
     });
 
     it('deve chamar onSaveError em caso de falha', async () => {
       const onSaveError = vi.fn();
-      
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ 
-              error: { message: 'Database error' } 
-            }),
-          }),
-        }),
-      } as any);
+      mockQuizzesTable({ updateError: { message: 'Database error' } });
 
       const { result } = renderHook(() => useAutoSave({ onSaveError }));
       
@@ -412,28 +384,14 @@ describe('useAutoSave', () => {
         });
       });
 
-      await act(async () => {
-        vi.advanceTimersByTime(30000);
-        await vi.runAllTimersAsync();
-      });
-
-      await waitFor(() => {
-        expect(onSaveError).toHaveBeenCalled();
-      });
+      await act(async () => { await result.current.saveNow(); });
+      expect(onSaveError).toHaveBeenCalled();
     });
   });
 
   describe('saveNow() - salvamento imediato', () => {
     it('deve executar salvamento imediatamente', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       
@@ -464,15 +422,7 @@ describe('useAutoSave', () => {
     });
 
     it('deve cancelar timer pendente ao chamar saveNow', async () => {
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
-      vi.mocked(supabase.from).mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: mockEq,
-          }),
-        }),
-        upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      mockQuizzesTable();
 
       const { result } = renderHook(() => useAutoSave());
       

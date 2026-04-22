@@ -91,13 +91,13 @@ export const PlatformGallery = () => {
             <div className="relative w-full h-full flex items-center justify-center">
               {selectedImage !== null && (
                 <>
-                  <button onClick={() => setSelectedImage(null)} className="absolute top-4 right-4 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors">
+                  <button type="button" onClick={() => setSelectedImage(null)} className="absolute top-4 right-4 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors">
                     <X className="w-6 h-6" />
                   </button>
-                  <button onClick={handlePrevious} className="absolute left-4 z-50 p-3 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors">
+                  <button type="button" onClick={handlePrevious} className="absolute left-4 z-50 p-3 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors">
                     <ChevronLeft className="w-8 h-8" />
                   </button>
-                  <button onClick={handleNext} className="absolute right-4 z-50 p-3 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors">
+                  <button type="button" onClick={handleNext} className="absolute right-4 z-50 p-3 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors">
                     <ChevronRight className="w-8 h-8" />
                   </button>
                   <div className="w-full h-full flex flex-col items-center justify-center p-8">

@@ -793,7 +793,7 @@ const CreateQuizClassic = () => {
                       )}
                     </Button>
                     <button
-                      onClick={() => {
+type="button" onClick={() => {
                         const newParams = new URLSearchParams(searchParams);
                         newParams.delete('mode');
                         navigate(`/create-quiz?${newParams.toString()}`, { replace: true });
@@ -922,7 +922,7 @@ const CreateQuizClassic = () => {
                     { number: 5, title: t('createQuiz.step5.title', 'Configuração de Resultados'), icon: '🏆' },
                   ].map((s) => (
                     <button
-                      key={s.number}
+type="button" key={s.number}
                       onClick={() => updateEditor({ step: s.number })}
                       className={cn(
                         "w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left",

@@ -59,7 +59,7 @@ export const GalleryLightbox = ({ images, initialIndex, isOpen, onClose }: Galle
         >
           {/* Close button */}
           <button
-            onClick={onClose}
+type="button" onClick={onClose}
             className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
           >
             <X className="h-6 w-6" />
@@ -74,13 +74,13 @@ export const GalleryLightbox = ({ images, initialIndex, isOpen, onClose }: Galle
           {images.length > 1 && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+type="button" onClick={(e) => { e.stopPropagation(); goPrev(); }}
                 className="absolute left-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
               >
                 <ChevronLeft className="h-8 w-8" />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); goNext(); }}
+type="button" onClick={(e) => { e.stopPropagation(); goNext(); }}
                 className="absolute right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
               >
                 <ChevronRight className="h-8 w-8" />
@@ -115,7 +115,7 @@ export const GalleryLightbox = ({ images, initialIndex, isOpen, onClose }: Galle
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
               {images.map((_, idx) => (
                 <button
-                  key={idx}
+type="button" key={idx}
                   onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
                   className={`w-2 h-2 rounded-full transition-all ${
                     idx === currentIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'

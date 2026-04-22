@@ -498,7 +498,7 @@ const CreateQuizModern = () => {
             {/* Steps */}
             {steps.map((s) => (
               <button
-                key={s.number}
+type="button" key={s.number}
                 onClick={() => handleStepClick(s.number)}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center",
@@ -529,7 +529,7 @@ const CreateQuizModern = () => {
             
             {/* Preview Completo button — always purple */}
             <button
-              onClick={() => setShowPreviewDialog(true)}
+type="button" onClick={() => setShowPreviewDialog(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all shrink-0 bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
               title={t('createQuiz.preview', 'Preview Completo')}
             >
