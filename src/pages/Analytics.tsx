@@ -851,32 +851,25 @@ const Analytics = () => {
                   ))}
                 </div>
 
-                {/* Desktop Version - Table */}
-                <div className="hidden md:block overflow-x-auto scrollbar-thin">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('analytics.date')}</TableHead>
-                        <TableHead>{t('analytics.page')}</TableHead>
-                        <TableHead>{t('analytics.source')}</TableHead>
-                        <TableHead>{t('analytics.medium')}</TableHead>
-                        <TableHead>{t('analytics.campaign')}</TableHead>
-                        <TableHead>{t('analytics.referrer')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {detailedVisits.map((visit) => (
-                        <TableRow key={visit.id}>
-                          <TableCell>{visit.date}</TableCell>
-                          <TableCell>{visit.page}</TableCell>
-                          <TableCell>{visit.source}</TableCell>
-                          <TableCell>{visit.medium}</TableCell>
-                          <TableCell>{visit.campaign}</TableCell>
-                          <TableCell className="text-xs">{visit.referrer}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                {/* Desktop Version - DataTable (sort + filter + CSV) */}
+                <div className="hidden md:block">
+                  <DataTable
+                    data={detailedVisits}
+                    columns={[
+                      { key: 'date', label: t('analytics.date'), sortable: true },
+                      { key: 'page', label: t('analytics.page'), sortable: true, searchable: true, filterable: true },
+                      { key: 'source', label: t('analytics.source'), sortable: true, filterable: true },
+                      { key: 'medium', label: t('analytics.medium'), sortable: true, filterable: true },
+                      { key: 'campaign', label: t('analytics.campaign'), sortable: true, searchable: true },
+                      { key: 'referrer', label: t('analytics.referrer'), searchable: true, className: 'text-xs' },
+                    ] as DataTableColumn<typeof detailedVisits[number]>[]}
+                    defaultSortKey="date"
+                    defaultSortDirection="desc"
+                    pageSize={15}
+                    searchPlaceholder="Buscar página, campanha ou referrer…"
+                    exportCsv="visitas-detalhadas"
+                    rowKey={(v) => v.id}
+                  />
                 </div>
               </CardContent>
             </Card>
