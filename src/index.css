@@ -1027,3 +1027,22 @@ html, body {
   font-style: italic;
   color: hsl(var(--muted-foreground));
 }
+
+/* ============================================================
+ * Acessibilidade: Reduced Motion (Onda 7 / Etapa 4)
+ * Respeita usuários com sensibilidade vestibular ou que
+ * configuraram "Reduzir movimento" no SO. Aplica-se a TODO o
+ * site — anula animações/transições/scroll suave globalmente.
+ * Deve ser a ÚLTIMA regra do CSS para vencer especificidade.
+ * Ref: WCAG 2.3.3 (Animation from Interactions, AAA).
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
