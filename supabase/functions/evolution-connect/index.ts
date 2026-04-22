@@ -1,9 +1,16 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id',
 };
+
+const BodySchema = z.object({
+  action: z.enum(['connect', 'status', 'disconnect', 'webhook_diagnostics', 'fix_webhook']),
+  apiUrl: z.string().optional(),
+});
 
 function normalizeApiUrl(url: string): string {
   let normalized = url.trim();
