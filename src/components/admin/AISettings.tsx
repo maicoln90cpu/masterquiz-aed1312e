@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Loader2, Save, Sparkles, FileText, Upload, Info, DollarSign, Users, BarChart3, RefreshCw, TrendingUp, Brain, Coins } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,6 +20,9 @@ import { AIDistributionPreview } from "./AIDistributionPreview";
 import { AIFeedbackDashboard } from "./ai/AIFeedbackDashboard";
 import { AIPromptVersionsManager } from "./ai/prompts/AIPromptVersionsManager";
 import { AIPromptABTestsManager } from "./ai/prompts/AIPromptABTestsManager";
+import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
+import { PageLoading } from "@/components/ui/page-loading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const AISettings = () => {
   const [loading, setLoading] = useState(true);
