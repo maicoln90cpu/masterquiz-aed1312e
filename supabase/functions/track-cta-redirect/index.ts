@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,8 +8,16 @@ const corsHeaders = {
   'X-Content-Type-Options': 'nosniff',
 };
 
+/**
+ * NOTA P11: GET retorna 302 (gateway de redirect) — não envelopável.
+ * Apenas o ramo POST usa envelope { ok, data, error, traceId }.
+ */
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const traceId = getTraceId(req);
+  const isGet = req.method === 'GET';
 
   try {
     const supabase = createClient(
@@ -16,10 +25,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Support both GET (redirect gateway) and POST (fire-and-forget)
     let params: Record<string, string>;
 
-    if (req.method === 'GET') {
+    if (isGet) {
       const url = new URL(req.url);
       params = Object.fromEntries(url.searchParams.entries());
     } else {
@@ -28,15 +36,15 @@ Deno.serve(async (req) => {
 
     const { quizId, sessionId, questionId, blockId, ctaText, targetUrl, stepNumber } = params;
 
-    // Validate required fields
     if (!quizId || !sessionId || !targetUrl) {
-      return new Response(
-        JSON.stringify({ error: 'quizId, sessionId, and targetUrl are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (isGet) {
+        return new Response(JSON.stringify({ error: 'quizId, sessionId, and targetUrl are required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      return errorResponse('VALIDATION_FAILED', 'quizId, sessionId, and targetUrl are required', traceId, corsHeaders);
     }
 
-    // Validate targetUrl is a real URL (prevent open redirect attacks)
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(targetUrl);
@@ -44,13 +52,14 @@ Deno.serve(async (req) => {
         throw new Error('Invalid protocol');
       }
     } catch {
-      return new Response(
-        JSON.stringify({ error: 'Invalid targetUrl' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (isGet) {
+        return new Response(JSON.stringify({ error: 'Invalid targetUrl' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      return errorResponse('VALIDATION_FAILED', 'Invalid targetUrl', traceId, corsHeaders);
     }
 
-    // Validate quiz exists
     const { data: quiz } = await supabase
       .from('quizzes')
       .select('id')
@@ -58,19 +67,15 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!quiz) {
-      if (req.method === 'GET') {
+      if (isGet) {
         return new Response(null, { status: 302, headers: { ...corsHeaders, 'Location': parsedUrl.toString() } });
       }
-      return new Response(
-        JSON.stringify({ error: 'Quiz not found', redirected: true }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('NOT_FOUND', 'Quiz not found', traceId, corsHeaders);
     }
 
     const today = new Date().toISOString().split('T')[0];
     const stepNum = stepNumber ? parseInt(stepNumber, 10) : null;
 
-    // 1) Record CTA click
     await supabase.from('quiz_cta_click_analytics').insert({
       quiz_id: quizId,
       session_id: sessionId,
@@ -82,7 +87,6 @@ Deno.serve(async (req) => {
       date: today,
     });
 
-    // 2) Record step analytics for the last step
     if (stepNum !== null) {
       await supabase.from('quiz_step_analytics').upsert(
         {
@@ -96,7 +100,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3) Increment completions atomically (single select → update/insert)
     const { data: existingAnalytics } = await supabase
       .from('quiz_analytics')
       .select('id, completions')
@@ -115,7 +118,6 @@ Deno.serve(async (req) => {
         .insert({ quiz_id: quizId, date: today, completions: 1, views: 0, starts: 0 });
     }
 
-    // 4) Mark quiz response as completed
     await supabase
       .from('quiz_responses')
       .update({ completed_at: new Date().toISOString() })
@@ -124,23 +126,18 @@ Deno.serve(async (req) => {
 
     console.log(`[track-cta-redirect] OK: quiz=${quizId}, session=${sessionId}, cta="${ctaText}", url=${parsedUrl.toString()}`);
 
-    // GET → 302 redirect
-    if (req.method === 'GET') {
+    if (isGet) {
       return new Response(null, {
         status: 302,
-        headers: { ...corsHeaders, 'Location': parsedUrl.toString() },
+        headers: { ...corsHeaders, 'Location': parsedUrl.toString(), 'x-trace-id': traceId },
       });
     }
 
-    // POST → JSON success
-    return new Response(
-      JSON.stringify({ success: true, redirectUrl: parsedUrl.toString() }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({ redirectUrl: parsedUrl.toString() }, traceId, corsHeaders);
   } catch (error) {
     console.error('[track-cta-redirect] Error:', error);
 
-    if (req.method === 'GET') {
+    if (isGet) {
       try {
         const url = new URL(req.url);
         const targetUrl = url.searchParams.get('targetUrl');
@@ -150,9 +147,6 @@ Deno.serve(async (req) => {
       } catch { /* ignore */ }
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Unable to track CTA click' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', 'Unable to track CTA click', traceId, corsHeaders);
   }
 });
