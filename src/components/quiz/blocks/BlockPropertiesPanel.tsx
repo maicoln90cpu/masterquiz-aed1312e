@@ -701,7 +701,7 @@ const ButtonProperties = ({ block, onChange, questions }: BlockPropertiesPanelPr
           }} />
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...dynConditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...dynConditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
     </div>
   );
 };
@@ -1657,7 +1657,7 @@ const IconListProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </div>
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { items: [...items, { icon: '✅', text: '' }] }))}>+ Adicionar item</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { items: [...items, { icon: '✅', text: '' }] }))}>+ Adicionar item</button>
     </div>
   );
 };
@@ -1758,7 +1758,7 @@ const BadgeRowProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </div>
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { badges: [...badges, { icon: '✅', text: '' }] }))}>+ Adicionar badge</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { badges: [...badges, { icon: '✅', text: '' }] }))}>+ Adicionar badge</button>
     </div>
   );
 };
@@ -1918,7 +1918,7 @@ const ProgressMessageProperties = ({ block, onChange }: BlockPropertiesPanelProp
           }} />
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '', icon: '' }] }))}>+ Adicionar mensagem</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { messages: [...messages, { threshold: 50, text: '', icon: '' }] }))}>+ Adicionar mensagem</button>
     </div>
   );
 };
@@ -2010,7 +2010,7 @@ const ConditionalTextProperties = ({ block, onChange, questions }: BlockProperti
           </div>
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...conditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...conditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
       <Separator />
       <div className="space-y-2">
         <Label>Texto padrão (fallback)</Label>
@@ -2053,7 +2053,7 @@ const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropert
           onChange(update(block, { beforeItems: newItems }));
         }} placeholder={`Problema ${idx + 1}`} />
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { beforeItems: [...beforeItems, ''] }))}>+ Adicionar item</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { beforeItems: [...beforeItems, ''] }))}>+ Adicionar item</button>
       <Separator />
       <Label>Itens "Depois" (✅)</Label>
       {afterItems.map((item: string, idx: number) => (
@@ -2063,7 +2063,7 @@ const ComparisonResultProperties = ({ block, onChange, questions }: BlockPropert
           onChange(update(block, { afterItems: newItems }));
         }} placeholder={`Solução ${idx + 1}`} />
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { afterItems: [...afterItems, ''] }))}>+ Adicionar item</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { afterItems: [...afterItems, ''] }))}>+ Adicionar item</button>
       <Separator />
       <QuestionMultiSelector
         selectedIds={(block as any).sourceQuestionIds || []}
@@ -2170,7 +2170,7 @@ const PersonalizedCTAProperties = ({ block, onChange, questions }: BlockProperti
           </div>
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...conditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
+      <button type="button" className="text-xs text-primary underline" onClick={() => onChange(update(block, { conditions: [...conditions, { answer: '', text: '' }] }))}>+ Adicionar condição</button>
     </div>
   );
 };
@@ -2234,7 +2234,7 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
         <div key={rec.id || idx} className="p-3 border rounded-lg space-y-2 bg-muted/30">
           <div className="flex items-center justify-between">
             <Badge variant="secondary" className="text-[10px]">#{idx + 1}</Badge>
-            <button className="text-xs text-destructive hover:underline" onClick={() => {
+            <button type="button" className="text-xs text-destructive hover:underline" onClick={() => {
               const newRecs = recommendations.filter((_: any, i: number) => i !== idx);
               onChange(update(block, { recommendations: newRecs }));
             }}>Remover</button>
@@ -2322,7 +2322,7 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
               </div>
             </div>
           ))}
-          <button className="text-[10px] text-primary underline" onClick={() => {
+          <button type="button" className="text-[10px] text-primary underline" onClick={() => {
             const newRecs = [...recommendations];
             const newRules = [...(rec.rules || []), { questionId: '', answers: [], weight: 1 }];
             newRecs[idx] = { ...rec, rules: newRules };
@@ -2330,7 +2330,7 @@ const RecommendationProperties = ({ block, onChange, questions }: BlockPropertie
           }}>+ Regra</button>
         </div>
       ))}
-      <button className="text-xs text-primary underline" onClick={() => {
+      <button type="button" className="text-xs text-primary underline" onClick={() => {
         const newRec = { id: `rec-${Date.now()}`, name: '', description: '', buttonText: '', buttonUrl: '', badge: '', rules: [] };
         onChange(update(block, { recommendations: [...recommendations, newRec] }));
       }}>+ Adicionar recomendação</button>
