@@ -24,20 +24,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { phone_number, message_text, user_id, contact_id } = await req.json();
-
-    if (!phone_number || !message_text) {
-      return new Response(
-        JSON.stringify({ error: 'phone_number and message_text required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { phone_number, message_text, user_id, contact_id } = parsed.data;
 
     console.log(`[WHATSAPP-AI] Processing message from ${phone_number}: "${message_text.substring(0, 50)}"`);
 
@@ -50,10 +46,7 @@ Deno.serve(async (req) => {
 
     if (blacklisted && blacklisted.length > 0) {
       console.log(`[WHATSAPP-AI] Phone ${phone_number} is blacklisted, skipping`);
-      return new Response(
-        JSON.stringify({ success: false, reason: 'blacklisted' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'blacklisted' }, traceId, corsHeaders);
     }
 
     // 1. Check if AI is enabled
@@ -65,10 +58,7 @@ Deno.serve(async (req) => {
 
     if (!aiSettings?.is_enabled) {
       console.log('[WHATSAPP-AI] AI is disabled, skipping');
-      return new Response(
-        JSON.stringify({ success: false, reason: 'ai_disabled' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'ai_disabled' }, traceId, corsHeaders);
     }
 
     // 2. Rate limiting
@@ -82,10 +72,7 @@ Deno.serve(async (req) => {
 
     if ((recentCount || 0) >= (aiSettings.rate_limit_per_hour || 30)) {
       console.log(`[WHATSAPP-AI] Rate limit reached for ${phone_number}`);
-      return new Response(
-        JSON.stringify({ success: false, reason: 'rate_limited' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return okResponse({ success: false, reason: 'rate_limited' }, traceId, corsHeaders);
     }
 
     // 3. Check for human intervention — if last non-user message is 'human' within pause window, skip AI
