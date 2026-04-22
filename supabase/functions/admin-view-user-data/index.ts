@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { okResponse, errorResponse, getTraceId } from "../_shared/envelope.ts";
+import { parseBody, z } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,18 +8,29 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const BodySchema = z.object({
+  target_user_id: z.string().uuid(),
+  data_type: z.string().optional(),
+  quiz_id: z.string().uuid().optional(),
+  message: z.string().optional(),
+  ticket_id: z.string().uuid().optional(),
+  quiz_updates: z.record(z.string(), z.any()).optional(),
+  questions_updates: z.array(z.any()).optional(),
+  results_updates: z.array(z.any()).optional(),
+  questions_to_add: z.array(z.any()).optional(),
+  questions_to_delete: z.array(z.string()).optional(),
+}).passthrough();
+
 Deno.serve(async (req) => {
+  const traceId = getTraceId(req);
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: { ...corsHeaders, 'x-trace-id': traceId } });
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("UNAUTHORIZED", "Token ausente", traceId, corsHeaders);
     }
 
     const supabaseAdmin = createClient(
@@ -35,10 +48,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseUser.auth.getUser(token);
     if (userError || !userData?.user?.id) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("UNAUTHORIZED", "Token inválido", traceId, corsHeaders);
     }
 
     const callerId = userData.user.id;
@@ -52,27 +62,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: "Forbidden: master_admin required" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("FORBIDDEN", "Requer master_admin", traceId, corsHeaders);
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const body = parsed.data as Record<string, any>;
     const { target_user_id, data_type, quiz_id, message, ticket_id } = body;
-
-    if (!target_user_id) {
-      return new Response(
-        JSON.stringify({ error: "target_user_id required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
 
     let result: any = {};
 
@@ -426,22 +422,12 @@ Deno.serve(async (req) => {
       result = { success: true, changes };
 
     } else {
-      return new Response(JSON.stringify({ error: `Unknown data_type: ${data_type}` }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("VALIDATION_FAILED", `data_type desconhecido: ${data_type}`, traceId, corsHeaders);
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return okResponse(result, traceId, corsHeaders);
   } catch (error) {
     console.error("admin-view-user-data error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return errorResponse("INTERNAL_ERROR", (error as Error)?.message || "Erro interno", traceId, corsHeaders);
   }
 });

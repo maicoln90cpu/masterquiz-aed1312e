@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { okResponse, errorResponse, getTraceId } from "../_shared/envelope.ts";
+import { parseBodyOptional, z } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,18 +8,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const BodySchema = z.object({
+  metrics: z.record(z.string(), z.unknown()).optional(),
+}).passthrough();
+
 Deno.serve(async (req) => {
+  const traceId = getTraceId(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: { ...corsHeaders, 'x-trace-id': traceId } });
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("UNAUTHORIZED", "Token ausente", traceId, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -30,10 +34,7 @@ Deno.serve(async (req) => {
     });
     const { data: { user }, error: userError } = await anonClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("UNAUTHORIZED", "Token inválido", traceId, corsHeaders);
     }
 
     const userId = user.id;
@@ -47,15 +48,13 @@ Deno.serve(async (req) => {
       .in("role", ["admin", "master_admin"]);
 
     if (!roleData || roleData.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("FORBIDDEN", "Requer papel de admin", traceId, corsHeaders);
     }
 
-    // Parse client metrics
-    const body = await req.json().catch(() => ({}));
-    const clientMetrics = body.metrics || {};
+    // Parse client metrics (body opcional)
+    const parsed = await parseBodyOptional(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const clientMetrics = (parsed.data?.metrics || {}) as Record<string, any>;
 
     // Collect server-side metrics in parallel
     const [
@@ -198,17 +197,9 @@ Deno.serve(async (req) => {
       timestamp: new Date().toISOString(),
     };
 
-    return new Response(JSON.stringify(report), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return okResponse(report, traceId, corsHeaders);
   } catch (error) {
     console.error("[system-health-check] Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return errorResponse("INTERNAL_ERROR", (error as Error)?.message || "Erro interno", traceId, corsHeaders);
   }
 });

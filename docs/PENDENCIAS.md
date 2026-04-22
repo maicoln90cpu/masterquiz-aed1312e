@@ -1,5 +1,28 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ Onda 7 — Etapa 2 (P18 — Validação + envelope nas edges admin)
+
+### Feature: helpers `_shared/validation.ts` + envelope nas edges admin
+- **Novo `supabase/functions/_shared/validation.ts`**: `parseBody`, `parseBodyOptional`, `parseQuery` com Zod.
+  - Em falha retorna `Response 400` já no formato envelope `{ ok:false, error:{code,message}, traceId }`.
+  - Re-exporta `z` para consistência de versão entre edges.
+- **Auto-detect de envelope** em `invokeEdgeFunction`: novo default `legacyMode: 'auto'` detecta `ok:boolean + traceId` e faz `unwrapEnvelope` automaticamente. Edges legadas continuam funcionando sem mudança no client.
+- **5 edges migradas para envelope + parseBody**:
+  - `admin-update-subscription` (trial activate/cancel + plan update; `.single()` → `.maybeSingle()`)
+  - `admin-view-user-data` (entry, role check, body parse, saída final, catch)
+  - `system-health-check` (body opcional via `parseBodyOptional`)
+  - `export-table-data` (whitelist preservada)
+  - `save-quiz-draft`
+- **Testes**: `invokeEdgeFunction.test.ts` ampliado (9 testes verdes — auto-detect, legacy override, envelope erro com code/traceId).
+- **Cobertura de envelope**: 2/64 → 7/64 edges (~11%).
+
+### Pendências para próximas etapas da Onda 7
+- Etapa 2-bis: migrar `growth-metrics` (745 linhas, hunks longos) e demais retornos internos do switch em `admin-view-user-data`.
+- Etapa 3: tabela `webhook_events` + `claimEvent` (idempotência Kiwify/Evolution).
+- Etapa 4: `dateUtils.ts` + lint warn `new Date()`/`.single()` + `prefers-reduced-motion` global.
+- Etapa 5: contract tests P18/P19/P20 + `CODE_STANDARDS.md`.
+- Sub-ondas 7-B…7-E: migrar 56 edges restantes (notificações → alto input → crons → chatbot).
+
 ## ✅ Onda 7 — Etapa 1 (P18 — Camada universal de chamadas)
 
 ### Feature: facade única `invokeEdgeFunction` + hook `useEdgeFunction`
@@ -17,13 +40,6 @@
   - `src/pages/Settings.tsx` — `export-user-data`, `delete-user-complete` (schedule + cancel)
   - `src/pages/Login.tsx` — `migrate-imported-user`
 - **Teste unitário**: `src/lib/__tests__/invokeEdgeFunction.test.ts` (6 testes verdes).
-
-### Pendências para próximas etapas da Onda 7
-- Etapa 2: `_shared/validation.ts` + envelope nas 6 edges admin (Onda 7-A).
-- Etapa 3: tabela `webhook_events` + `claimEvent` (idempotência Kiwify/Evolution).
-- Etapa 4: `dateUtils.ts` + lint warn `new Date()`/`.single()` + `prefers-reduced-motion` global.
-- Etapa 5: contract tests P18/P19/P20 + `CODE_STANDARDS.md`.
-- Migrar ~60 chamadas restantes de `supabase.functions.invoke` (sub-ondas 7-B…7-E).
 
 ## ✅ v2.43.0 — Camada de proteções automáticas (Fases 1–3 — 18/04/2026)
 

@@ -1,13 +1,22 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { okResponse, errorResponse, getTraceId } from '../_shared/envelope.ts';
+import { parseBody, z } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const BodySchema = z.object({
+  table_name: z.string().min(1),
+  limit: z.number().int().positive().max(1000).optional(),
+  offset: z.number().int().min(0).optional(),
+});
+
 Deno.serve(async (req) => {
+  const traceId = getTraceId(req);
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: { ...corsHeaders, 'x-trace-id': traceId } });
   }
 
   try {
@@ -17,20 +26,14 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authorization required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Token ausente', traceId, corsHeaders);
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('UNAUTHORIZED', 'Token inválido', traceId, corsHeaders);
     }
 
     // Verificar master_admin
@@ -39,23 +42,15 @@ Deno.serve(async (req) => {
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'master_admin')
-      .single();
+      .maybeSingle();
 
     if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: 'Acesso negado. Requer master_admin.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('FORBIDDEN', 'Acesso negado: requer master_admin', traceId, corsHeaders);
     }
 
-    const { table_name, limit: queryLimit, offset: queryOffset } = await req.json();
-
-    if (!table_name) {
-      return new Response(
-        JSON.stringify({ error: 'table_name is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const { table_name, limit: queryLimit, offset: queryOffset } = parsed.data;
 
     // Whitelist de tabelas permitidas
     const allowedTables = [
@@ -75,10 +70,7 @@ Deno.serve(async (req) => {
     ];
 
     if (!allowedTables.includes(table_name)) {
-      return new Response(
-        JSON.stringify({ error: 'Table not allowed for export' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('VALIDATION_FAILED', `Tabela "${table_name}" não permitida para exportação`, traceId, corsHeaders);
     }
 
     const limit = Math.min(queryLimit || 1000, 1000);
@@ -90,10 +82,7 @@ Deno.serve(async (req) => {
       .range(offset, offset + limit - 1);
 
     if (queryError) {
-      return new Response(
-        JSON.stringify({ error: 'Query failed', details: queryError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('INTERNAL_ERROR', `Falha na query: ${queryError.message}`, traceId, corsHeaders);
     }
 
     // Log de auditoria
@@ -105,24 +94,18 @@ Deno.serve(async (req) => {
       metadata: { table: table_name, rows: data?.length || 0, total: count }
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        table: table_name,
-        data: data || [],
-        total: count,
-        limit,
-        offset,
-        exported_at: new Date().toISOString()
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({
+      success: true,
+      table: table_name,
+      data: data || [],
+      total: count,
+      limit,
+      offset,
+      exported_at: new Date().toISOString(),
+    }, traceId, corsHeaders);
 
   } catch (error) {
     console.error('Export table data error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('INTERNAL_ERROR', (error as Error)?.message || 'Erro interno', traceId, corsHeaders);
   }
 });

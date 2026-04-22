@@ -22,11 +22,14 @@ export interface InvokeEdgeOptions extends Omit<ResilientOptions, 'traceId'> {
   /** Trace ID custom (se omitido, geramos um novo). */
   traceId?: string;
   /**
-   * Quando `true` (padrão durante a migração), pula o `unwrapEnvelope` e devolve
-   * o `data` cru retornado pela edge. Útil para edges que ainda NÃO seguem
-   * `{ ok, data, error, traceId }`.
+   * Modo legado: força bypass do envelope mesmo quando ele existe.
+   * Default: `'auto'` — detecta automaticamente pela presença de `ok` + `traceId`.
+   *   - `'auto'` (padrão recomendado): se a resposta parecer envelope, faz unwrap;
+   *      caso contrário devolve cru. Migração indolor.
+   *   - `true`: sempre devolve cru (compat absoluta).
+   *   - `false`: sempre exige envelope (estrito).
    */
-  legacyMode?: boolean;
+  legacyMode?: boolean | 'auto';
 }
 
 export class EdgeCallError extends Error {
@@ -64,7 +67,7 @@ export async function invokeEdgeFunction<T = unknown>(
   body?: Record<string, unknown>,
   opts: InvokeEdgeOptions = {},
 ): Promise<{ data: T; traceId: string }> {
-  const { legacyMode = true, traceId: providedTraceId, ...resilientOpts } = opts;
+  const { legacyMode = 'auto', traceId: providedTraceId, ...resilientOpts } = opts;
   const traceId = providedTraceId || newTraceId();
 
   const { data: raw, error } = await invokeResilient<unknown>(fnName, body, {
@@ -78,7 +81,15 @@ export async function invokeEdgeFunction<T = unknown>(
     throw new EdgeCallError(code, error.message, traceId, error.status);
   }
 
-  if (legacyMode) {
+  // Auto-detect: envelope tem `ok: boolean` + `traceId: string`
+  const looksLikeEnvelope =
+    raw !== null &&
+    typeof raw === 'object' &&
+    'ok' in (raw as Record<string, unknown>) &&
+    typeof (raw as Record<string, unknown>).ok === 'boolean' &&
+    'traceId' in (raw as Record<string, unknown>);
+
+  if (legacyMode === true || (legacyMode === 'auto' && !looksLikeEnvelope)) {
     return { data: raw as T, traceId };
   }
 
