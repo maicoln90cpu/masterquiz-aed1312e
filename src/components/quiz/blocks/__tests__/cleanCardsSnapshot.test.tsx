@@ -78,7 +78,7 @@ describe('🛡️ Onda 5 — Snapshots de cartões limpos (anti-regressão)', ()
       expect(countInputs(container)).toBe(1);
       expect(fingerprint(container)).toMatchInlineSnapshot(`
         [
-          "text|Clique aqui|",
+          "input|Clique aqui|",
         ]
       `);
     });
