@@ -43,7 +43,7 @@ const DEFAULT_ICONS = {
 } as const;
 
 export interface CalloutProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "title">,
     VariantProps<typeof calloutVariants> {
   /** Ícone customizado. Passe `null` para esconder. */
   icon?: React.ReactNode | null;
