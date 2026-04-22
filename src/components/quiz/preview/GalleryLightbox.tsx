@@ -122,10 +122,9 @@ export const GalleryLightbox = ({ images, initialIndex, isOpen, onClose }: Galle
                   key={idx}
                   onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
                   className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'
+                    idx === currentIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'
                   }`}
-                  /
-                >
+                />
               ))}
             </div>
           )}
