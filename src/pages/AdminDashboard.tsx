@@ -325,14 +325,24 @@ export default function AdminDashboard() {
     };
     loadOpenTickets();
 
+    // 🚀 Fase 3: debounce do realtime para evitar fetches duplicados em rajada.
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleReload = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(loadOpenTickets, 1500);
+    };
+
     const channel = supabase
       .channel('open-tickets-count')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
-        loadOpenTickets();
+        scheduleReload();
       })
       .subscribe();
 
-    return () => { channel.unsubscribe(); };
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      channel.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
