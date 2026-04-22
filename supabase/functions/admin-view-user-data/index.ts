@@ -48,10 +48,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseUser.auth.getUser(token);
     if (userError || !userData?.user?.id) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("UNAUTHORIZED", "Token inválido", traceId, corsHeaders);
     }
 
     const callerId = userData.user.id;
@@ -65,27 +62,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: "Forbidden: master_admin required" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("FORBIDDEN", "Requer master_admin", traceId, corsHeaders);
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, BodySchema, traceId);
+    if (parsed instanceof Response) return parsed;
+    const body = parsed.data as Record<string, any>;
     const { target_user_id, data_type, quiz_id, message, ticket_id } = body;
-
-    if (!target_user_id) {
-      return new Response(
-        JSON.stringify({ error: "target_user_id required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
 
     let result: any = {};
 
