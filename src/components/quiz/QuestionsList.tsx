@@ -144,7 +144,6 @@ export const QuestionsList = memo(({
                       type="button"
                       onClick={() => onQuestionClick(index)}
                       className="flex-shrink-0 relative mt-0.5"
-                      type="button"
                     >
                       <div className={cn(
                         "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold",
