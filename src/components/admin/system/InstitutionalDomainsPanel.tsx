@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, ShieldAlert, Loader2 } from "lucide-react";
@@ -12,6 +11,7 @@ import { toast } from "sonner";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { FormFieldA11y } from "@/components/ui/form-field-a11y";
 
 interface InstitutionalDomain {
   id: string;
@@ -125,33 +125,36 @@ export const InstitutionalDomainsPanel = () => {
       <CardContent className="space-y-4">
         {/* Form de novo domínio */}
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_2fr_auto] items-end p-3 rounded-md border bg-muted/30">
-          <div className="space-y-1">
-            <Label htmlFor="new-domain" className="text-xs">Domínio</Label>
-            <Input
-              id="new-domain"
-              placeholder="ex: gov.br"
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="new-reason" className="text-xs">Motivo</Label>
-            <Input
-              id="new-reason"
-              placeholder="institutional"
-              value={newReason}
-              onChange={(e) => setNewReason(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="new-notes" className="text-xs">Notas (opcional)</Label>
-            <Input
-              id="new-notes"
-              placeholder="Descrição"
-              value={newNotes}
-              onChange={(e) => setNewNotes(e.target.value)}
-            />
-          </div>
+          <FormFieldA11y label="Domínio" required hint="Sem o '@' inicial">
+            {(p) => (
+              <Input
+                {...p}
+                placeholder="ex: gov.br"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+              />
+            )}
+          </FormFieldA11y>
+          <FormFieldA11y label="Motivo">
+            {(p) => (
+              <Input
+                {...p}
+                placeholder="institutional"
+                value={newReason}
+                onChange={(e) => setNewReason(e.target.value)}
+              />
+            )}
+          </FormFieldA11y>
+          <FormFieldA11y label="Notas (opcional)">
+            {(p) => (
+              <Input
+                {...p}
+                placeholder="Descrição"
+                value={newNotes}
+                onChange={(e) => setNewNotes(e.target.value)}
+              />
+            )}
+          </FormFieldA11y>
           <Button
             onClick={() => addMutation.mutate()}
             disabled={addMutation.isPending || !newDomain.trim()}
