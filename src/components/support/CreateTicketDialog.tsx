@@ -2,9 +2,9 @@ import { logger } from '@/lib/logger';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormFieldA11y } from "@/components/ui/form-field-a11y";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,64 +95,71 @@ export const CreateTicketDialog = ({ open, onOpenChange, onSuccess }: CreateTick
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Categoria */}
-          <div>
-            <Label htmlFor="category">Categoria *</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v as any)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="suggestion">💡 Sugestão</SelectItem>
-                <SelectItem value="bug">🐛 Reportar Bug</SelectItem>
-                <SelectItem value="question">❓ Dúvida</SelectItem>
-                <SelectItem value="feature_request">✨ Solicitar Funcionalidade</SelectItem>
-                <SelectItem value="other">📝 Outro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormFieldA11y label="Categoria" required>
+            {(p) => (
+              <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+                <SelectTrigger id={p.id} aria-describedby={p["aria-describedby"]} aria-required={p["aria-required"]}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="suggestion">💡 Sugestão</SelectItem>
+                  <SelectItem value="bug">🐛 Reportar Bug</SelectItem>
+                  <SelectItem value="question">❓ Dúvida</SelectItem>
+                  <SelectItem value="feature_request">✨ Solicitar Funcionalidade</SelectItem>
+                  <SelectItem value="other">📝 Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </FormFieldA11y>
 
-          {/* Prioridade */}
-          <div>
-            <Label htmlFor="priority">Prioridade</Label>
-            <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">🟢 Baixa</SelectItem>
-                <SelectItem value="medium">🟡 Média</SelectItem>
-                <SelectItem value="high">🔴 Alta</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormFieldA11y label="Prioridade">
+            {(p) => (
+              <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
+                <SelectTrigger id={p.id} aria-describedby={p["aria-describedby"]}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">🟢 Baixa</SelectItem>
+                  <SelectItem value="medium">🟡 Média</SelectItem>
+                  <SelectItem value="high">🔴 Alta</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </FormFieldA11y>
 
-          {/* Título */}
-          <div>
-            <Label htmlFor="title">Título *</Label>
-            <Input
-              id="title"
-              placeholder="Ex: Sugestão de melhoria no dashboard"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={200}
-            />
-            <p className="text-xs text-muted-foreground mt-1">{title.length}/200 caracteres</p>
-          </div>
+          <FormFieldA11y
+            label="Título"
+            required
+            hint={`${title.length}/200 caracteres`}
+            error={title.length > 0 && title.trim().length < 3 ? "Mínimo 3 caracteres" : undefined}
+          >
+            {(p) => (
+              <Input
+                {...p}
+                placeholder="Ex: Sugestão de melhoria no dashboard"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={200}
+              />
+            )}
+          </FormFieldA11y>
 
-          {/* Mensagem */}
-          <div>
-            <Label htmlFor="message">Mensagem *</Label>
-            <Textarea
-              id="message"
-              placeholder="Descreva sua sugestão, dúvida ou problema em detalhes..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={8}
-              maxLength={2000}
-            />
-            <p className="text-xs text-muted-foreground mt-1">{message.length}/2000 caracteres</p>
-          </div>
+          <FormFieldA11y
+            label="Mensagem"
+            required
+            hint={`${message.length}/2000 caracteres`}
+          >
+            {(p) => (
+              <Textarea
+                {...p}
+                placeholder="Descreva sua sugestão, dúvida ou problema em detalhes..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={8}
+                maxLength={2000}
+              />
+            )}
+          </FormFieldA11y>
         </div>
 
         <DialogFooter>

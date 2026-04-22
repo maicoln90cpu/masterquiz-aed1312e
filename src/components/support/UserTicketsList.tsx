@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -11,6 +12,7 @@ import { MessageSquare, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { ErrorState } from "@/components/ui/error-state";
 
 interface Ticket {
   id: string;
@@ -34,75 +36,68 @@ interface Message {
 export const UserTicketsList = () => {
   const { t } = useTranslation();
   const { user } = useCurrentUser();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
   const userId = user?.id ?? '';
 
-  useEffect(() => {
-    loadTickets();
-  }, []);
+  const ticketsQuery = useQuery({
+    queryKey: ['user-tickets', userId],
+    enabled: !!userId,
+    queryFn: async (): Promise<Ticket[]> => {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('id, title, category, priority, status, created_at')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as Ticket[];
+    },
+    staleTime: 30_000,
+  });
+  const tickets: Ticket[] = ticketsQuery.data ?? [];
+  const loading = ticketsQuery.isLoading;
 
-  const loadTickets = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .select('*')
-      .order('created_at', { ascending: false });
+  const messagesQuery = useQuery({
+    queryKey: ['ticket-messages', selectedTicket?.id],
+    enabled: !!selectedTicket?.id,
+    queryFn: async (): Promise<Message[]> => {
+      const { data, error } = await supabase
+        .from('ticket_messages')
+        .select('id, message, sender_id, created_at')
+        .eq('ticket_id', selectedTicket!.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data || []) as Message[];
+    },
+    staleTime: 10_000,
+  });
+  const messages: Message[] = messagesQuery.data ?? [];
 
-    if (!error && data) {
-      setTickets(data);
-    }
-    setLoading(false);
-  };
-
-  const loadMessages = async (ticketId: string) => {
-    const { data } = await supabase
-      .from('ticket_messages')
-      .select('*')
-      .eq('ticket_id', ticketId)
-      .order('created_at', { ascending: true });
-
-    setMessages((data || []) as any);
-  };
-
-  const handleReply = async () => {
-    if (!reply.trim() || !selectedTicket) return;
-
-    setSending(true);
-    try {
-      if (!user) {
-        toast.error(t('components.ticket.authRequired'));
-        return;
-      }
-
+  const replyMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !selectedTicket) throw new Error('Sem ticket selecionado');
       const { error } = await supabase.from('ticket_messages').insert({
         ticket_id: selectedTicket.id,
         sender_id: user.id,
-        message: reply
+        message: reply,
       });
-
       if (error) throw error;
-
-      // Mark ticket as having unread message for admin
       await supabase
         .from('support_tickets')
         .update({ has_unread_admin: true } as any)
         .eq('id', selectedTicket.id);
-
+    },
+    onSuccess: () => {
       toast.success(t('components.ticket.replySuccess'));
       setReply('');
-      loadMessages(selectedTicket.id);
-    } catch (error: any) {
-      logger.error('Error sending reply:', error);
-      toast.error(t('components.ticket.replyError') + ': ' + error.message);
-    } finally {
-      setSending(false);
-    }
-  };
+      queryClient.invalidateQueries({ queryKey: ['ticket-messages', selectedTicket?.id] });
+    },
+    onError: (err: Error) => {
+      logger.error('Error sending reply:', err);
+      toast.error(t('components.ticket.replyError') + ': ' + err.message);
+    },
+  });
+  const sending = replyMutation.isPending;
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -132,6 +127,17 @@ export const UserTicketsList = () => {
     );
   }
 
+  if (ticketsQuery.isError) {
+    return (
+      <ErrorState
+        title="Não foi possível carregar seus tickets"
+        message={(ticketsQuery.error as Error)?.message}
+        onRetry={() => void ticketsQuery.refetch()}
+        isRetrying={ticketsQuery.isFetching}
+      />
+    );
+  }
+
   if (tickets.length === 0) {
     return (
       <Card>
@@ -153,10 +159,7 @@ export const UserTicketsList = () => {
             className={`cursor-pointer hover:bg-accent transition-colors ${
               selectedTicket?.id === ticket.id ? 'border-primary' : ''
             }`}
-            onClick={() => {
-              setSelectedTicket(ticket);
-              loadMessages(ticket.id);
-            }}
+            onClick={() => setSelectedTicket(ticket)}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-2">
@@ -221,7 +224,7 @@ export const UserTicketsList = () => {
                     onChange={(e) => setReply(e.target.value)}
                     rows={4}
                   />
-                  <Button onClick={handleReply} disabled={!reply.trim() || sending}>
+                  <Button onClick={() => replyMutation.mutate()} disabled={!reply.trim() || sending}>
                     {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
                     Enviar Resposta
                   </Button>
