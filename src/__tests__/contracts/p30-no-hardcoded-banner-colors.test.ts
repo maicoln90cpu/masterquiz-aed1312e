@@ -42,10 +42,12 @@ function countViolations(): { total: number; files: string[] } {
 }
 
 /**
- * Baseline conservador. REDUZA quando migrar banners para <Callout>.
+ * Baseline real medido em 2026-04-22: 44 ocorrências.
+ * Folga de +6 (=50) para permitir refactors pequenos sem quebrar PR.
+ * REDUZA este número quando migrar banners para <Callout>.
  * NUNCA aumente — se subir, o teste falha e força code review consciente.
  */
-const BASELINE_MAX = 200;
+const BASELINE_MAX = 50;
 
 describe("P30 — Contract: banners coloridos hardcoded não devem crescer", () => {
   it(`mantém ≤ ${BASELINE_MAX} ocorrências de banner sem <Callout>`, () => {
