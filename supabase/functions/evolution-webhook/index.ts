@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { claimEvent, markEventProcessed } from '../_shared/idempotency.ts';
+import { errorResponse, getTraceId } from '../_shared/envelope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const traceId = getTraceId(req);
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -27,14 +29,10 @@ Deno.serve(async (req) => {
     const data = body.data;
 
     if (!event) {
-      return new Response(
-        JSON.stringify({ error: 'No event provided' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('VALIDATION_FAILED', 'No event provided', traceId, corsHeaders);
     }
 
     // 🛡️ P19 — Idempotência: identifica evento único do Evolution
-    const traceId = req.headers.get('x-trace-id') || crypto.randomUUID();
     const messageKeyId =
       data?.key?.id ||
       data?.message?.key?.id ||
