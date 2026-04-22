@@ -7,10 +7,8 @@ const Font = Quill.import('formats/font') as any;
 Font.whitelist = ['inter', 'roboto', 'open-sans', 'poppins', 'montserrat', 'lato'];
 Quill.register(Font, true);
 
-// Register size whitelist
-const Size = Quill.import('formats/size') as any;
-Size.whitelist = ['small', false, 'large', 'huge'];
-Quill.register(Size, true);
+// ✅ Onda 2: dropdown "size" removido do toolbar — tamanho é controlado por Header (H1/H2/H3)
+// no Quill OU pelo campo "Tamanho da fonte" no painel de Propriedades. Evita 3 controles para o mesmo.
 
 interface RichTextEditorProps {
   value: string;
@@ -48,12 +46,10 @@ export const RichTextEditor = ({
   const modules = useMemo(() => ({
     toolbar: [
       [{ font: ['', 'inter', 'roboto', 'open-sans', 'poppins', 'montserrat', 'lato'] }],
-      [{ size: ['small', false, 'large', 'huge'] }],
       [{ header: [1, 2, 3, false] }],
       ["bold", "italic", "underline", "strike"],
       [{ color: TEXT_COLORS }, { background: HIGHLIGHT_COLORS }],
       [{ list: "ordered" }, { list: "bullet" }],
-      [{ align: [] }],
       ["link"],
       ["clean"],
     ],
@@ -61,7 +57,6 @@ export const RichTextEditor = ({
 
   const formats = [
     "font",
-    "size",
     "header",
     "bold",
     "italic",
@@ -71,7 +66,6 @@ export const RichTextEditor = ({
     "background",
     "list",
     "bullet",
-    "align",
     "link",
   ];
 
@@ -169,9 +163,6 @@ export const RichTextEditor = ({
           }
           .${scopeClass} .ql-picker.ql-font {
             width: 90px !important;
-          }
-          .${scopeClass} .ql-picker.ql-size {
-            width: 70px !important;
           }
         }
       `}</style>
