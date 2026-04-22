@@ -5,17 +5,6 @@ import { toast } from 'sonner';
 import { useNetworkStatus } from './useNetworkStatus';
 import { stableStringify } from '@/lib/stableHash';
 
-// 🧠 Onda 6 — Normalização do payload para deep-compare confiável.
-// Remove campos voláteis (timestamps internos, callbacks) e ordena
-// arrays de blocks por `order` quando presente — assim mudanças de
-// ordem detectadas pelo drag-and-drop continuam contando como diff,
-// mas reorderings transientes durante render não criam falsos saves.
-const normalizeForCompare = (data: AutoSaveData): unknown => {
-  // Strip do quiz_id (já está na URL/scope) só para reduzir bytes do hash
-  const { quizId: _qid, ...rest } = data;
-  return rest;
-};
-
 export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved' | 'error' | 'offline' | 'conflict';
 
 interface AutoSaveOptions {
