@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Info, CheckCircle, XCircle, X } from "lucide-react";
 import type { QuizBlock } from "@/types/blocks";
@@ -177,7 +177,7 @@ export const BannerBlockPreview = ({ block, onCtaClick }: { block: QuizBlock & {
   const customText = (block as any).textColor as string | undefined;
   // Onda 7 — quando há override de cor, descarta a classe de variante para evitar conflito
   const style = customBg ? '' : BANNER_STYLES[block.variant || 'promo'];
-  const inlineStyle: React.CSSProperties = {
+  const inlineStyle: CSSProperties = {
     ...(customBg ? { backgroundColor: customBg, backgroundImage: 'none' } : {}),
     ...(customText ? { color: customText } : {}),
   };
