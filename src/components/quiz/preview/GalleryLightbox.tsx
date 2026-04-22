@@ -54,7 +54,7 @@ export const GalleryLightbox = ({ images, initialIndex, isOpen, onClose }: Galle
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
+          className="fixed inset-0 z-modal bg-black/90 flex items-center justify-center"
           onClick={onClose}
         >
           {/* Close button */}

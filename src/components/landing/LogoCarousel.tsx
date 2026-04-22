@@ -65,11 +65,11 @@ export const LogoCarousel = () => {
       {/* Fade edges */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[clamp(24px,8%,120px)] bg-gradient-to-r from-background to-transparent"
+        className="pointer-events-none absolute inset-y-0 left-0 z-dropdown w-[clamp(24px,8%,120px)] bg-gradient-to-r from-background to-transparent"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 z-[1] w-[clamp(24px,8%,120px)] bg-gradient-to-l from-background to-transparent"
+        className="pointer-events-none absolute inset-y-0 right-0 z-dropdown w-[clamp(24px,8%,120px)] bg-gradient-to-l from-background to-transparent"
       />
 
       <div
