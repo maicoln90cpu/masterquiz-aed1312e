@@ -1680,10 +1680,13 @@ const QuoteProperties = ({ block, onChange }: BlockPropertiesPanelProps) => {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label>Cor da borda</Label>
-        <Input type="color" value={block.borderColor || '#3b82f6'} onChange={(e) => onChange(update(block, { borderColor: e.target.value }))} />
-      </div>
+      <ColorPalette
+        label="Cor da borda"
+        value={block.borderColor}
+        onChange={(c) => onChange(update(block, { borderColor: c }))}
+        defaultValue="#3b82f6"
+        hint="Aplicada à barra lateral esquerda da citação"
+      />
       {/* ✅ Etapa 2D: Imagem de fundo opcional */}
       <div className="space-y-2">
         <Label>Imagem de fundo (URL)</Label>
