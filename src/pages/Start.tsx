@@ -110,10 +110,20 @@ const Start = () => {
         });
       }
 
-      // 1. Salvar objetivo no perfil
+      // 1. Salvar objetivo no perfil.
+      // Se for a PRIMEIRA seleção (alreadyFired === false), gravamos também
+      // `objective_selected_at` com o timestamp atual.
+      // Em seleções subsequentes, NÃO incluímos o campo no UPDATE → preserva o
+      // timestamp original (carimbo imutável da primeira escolha).
+      const profileUpdate: Record<string, unknown> = {
+        user_objectives: [objective],
+      };
+      if (!alreadyFired) {
+        profileUpdate.objective_selected_at = new Date().toISOString();
+      }
       await supabase
         .from("profiles")
-        .update({ user_objectives: [objective] } as any)
+        .update(profileUpdate as any)
         .eq("id", user.id);
 
       // 2. Buscar template correspondente
