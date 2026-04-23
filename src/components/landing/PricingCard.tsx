@@ -76,7 +76,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
 
       if (!user) {
         logger.log('[PricingCard] No user, redirecting to login');
-        navigate('/login');
+        navigate(appendUTMsToPath('/login'));
         return;
       }
 

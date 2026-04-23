@@ -96,7 +96,7 @@ export const HeroSection = () => {
       cta_location: 'hero',
       cta_text: 'start_free',
     });
-    navigate(isModeB ? '/precos' : '/login');
+    navigate(appendUTMsToPath(isModeB ? '/precos' : '/login'));
   };
 
   const handleDemo = () => {

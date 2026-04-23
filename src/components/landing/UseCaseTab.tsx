@@ -58,7 +58,7 @@ export const UseCaseTab = () => {
       template_type: useCaseId,
       cta_location: 'use_cases',
     });
-    navigate('/login');
+    navigate(appendUTMsToPath('/login'));
   };
 
   return (

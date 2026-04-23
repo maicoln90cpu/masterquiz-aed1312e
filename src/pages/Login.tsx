@@ -19,6 +19,7 @@ import { Eye, EyeOff, ArrowLeft, Loader2, XCircle } from "lucide-react";
 import { PhoneInput, isValidPhoneForCountry } from "@/components/ui/phone-input";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useSiteMode } from "@/hooks/useSiteMode";
+import { resolveUTMs } from "@/lib/utmPropagate";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -44,14 +45,17 @@ const Login = () => {
     whatsapp: ''
   });
 
-  // Capture UTM params from URL (M08: utm_term added)
+  // Capture UTM params: URL atual tem prioridade; cai para sessionStorage
+  // (gravado pela landing) quando o usuário entra no /login sem query string.
+  // Inclui utm_content (5 campos no total).
   const utmParams = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
+    const utms = resolveUTMs();
     return {
-      utm_source: params.get('utm_source') || undefined,
-      utm_medium: params.get('utm_medium') || undefined,
-      utm_campaign: params.get('utm_campaign') || undefined,
-      utm_term: params.get('utm_term') || undefined,
+      utm_source: utms.utm_source,
+      utm_medium: utms.utm_medium,
+      utm_campaign: utms.utm_campaign,
+      utm_term: utms.utm_term,
+      utm_content: utms.utm_content,
     };
   }, []);
 
@@ -182,6 +186,7 @@ const Login = () => {
           utm_medium: utmParams.utm_medium,
           utm_campaign: utmParams.utm_campaign,
           utm_term: utmParams.utm_term,
+          utm_content: utmParams.utm_content,
         }
       }
     });

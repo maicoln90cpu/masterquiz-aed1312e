@@ -57,7 +57,7 @@ export const MobileStickyCTA = () => {
       cta_location: "mobile_sticky",
       cta_text: ctaText,
     });
-    navigate(isModeB ? "/precos" : "/login");
+    navigate(appendUTMsToPath(isModeB ? "/precos" : "/login"));
   };
 
   return (

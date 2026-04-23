@@ -99,7 +99,7 @@ export const LandingHeader = () => {
 
   const handleLoginClick = () => {
     pushGTMEvent('header_login_click', { location: 'header' });
-    navigate(isModeB ? '/precos' : '/login');
+    navigate(appendUTMsToPath(isModeB ? '/precos' : '/login'));
   };
 
   return (

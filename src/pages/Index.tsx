@@ -7,6 +7,7 @@ import { LogoCarousel } from "@/components/landing/LogoCarousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLandingPlans } from "@/hooks/useLandingPlans";
 import { useSiteMode } from "@/hooks/useSiteMode";
+import { captureUTMsToSession } from "@/lib/utmPropagate";
 import { GuaranteeBanner } from "@/components/landing/GuaranteeBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { MobileStickyCTA } from "@/components/landing/MobileStickyCTA";
@@ -73,6 +74,14 @@ const Index = () => {
 
   useEffect(() => {
     document.title = "MasterQuiz - Quizzes que qualificam leads antes do checkout";
+  }, []);
+
+  // Captura UTMs da URL para sessionStorage no primeiro render.
+  // Regra: só grava se utm_source existir (não sobrescreve com vazio).
+  // Garante atribuição mesmo quando o usuário navega para /login ou /precos
+  // sem query string (clica em CTA interno).
+  useEffect(() => {
+    captureUTMsToSession();
   }, []);
 
   const personas = [
