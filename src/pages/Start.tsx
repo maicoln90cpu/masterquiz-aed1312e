@@ -83,13 +83,32 @@ const Start = () => {
     setLoading(true);
 
     try {
-      // 0. Disparar evento GTM segmentado: objective_selectedON (comercial) ou objective_selectedOFF (educacional)
-      const isCommercial = COMMERCIAL_OBJECTIVES.includes(objective);
-      pushGTMEvent('objective_selected', {
-        value: isCommercial ? 'ON' : 'OFF',
-        objective_type: objective,
-        user_id: user.id,
-      });
+      // 0. Deduplicação do evento objective_selected — só dispara na PRIMEIRA seleção.
+      // Se o usuário voltar a /start e trocar de objetivo, profile.user_objectives já
+      // estará preenchido e o evento NÃO é re-disparado (evita inflar conversões no Ads).
+      // O UPDATE em user_objectives continua acontecendo normalmente abaixo.
+      let alreadyFired = false;
+      try {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('user_objectives')
+          .eq('id', user.id)
+          .maybeSingle();
+        const existing = (existingProfile?.user_objectives ?? []) as unknown;
+        alreadyFired = Array.isArray(existing) && existing.length > 0;
+      } catch (dedupErr) {
+        // Falha transitória → fallback seguro: dispara o evento (comportamento legado)
+        logger.warn('[Start] dedup check failed, firing event as fallback:', dedupErr);
+      }
+
+      if (!alreadyFired) {
+        const isCommercial = COMMERCIAL_OBJECTIVES.includes(objective);
+        pushGTMEvent('objective_selected', {
+          value: isCommercial ? 'ON' : 'OFF',
+          objective_type: objective,
+          user_id: user.id,
+        });
+      }
 
       // 1. Salvar objetivo no perfil
       await supabase
