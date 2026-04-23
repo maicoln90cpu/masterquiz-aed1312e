@@ -12,6 +12,7 @@ import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { useLandingCopy } from "@/hooks/useLandingCopy";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { appendUTMsToPath } from "@/lib/utmPropagate";
 
 interface PricingCardProps {
   plan: {

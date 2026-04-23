@@ -11,6 +11,7 @@ import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { useLandingCopy } from "@/hooks/useLandingCopy";
 import { useSiteMode } from "@/hooks/useSiteMode";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { appendUTMsToPath } from "@/lib/utmPropagate";
 
 // Fallback content for instant render (no loading state) - PARADIGMA AUTO-CONVENCIMENTO
 const FALLBACK_CONTENT = {

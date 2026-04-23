@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteMode } from '@/hooks/useSiteMode';
 import { pushGTMEvent } from '@/lib/gtmLogger';
+import { appendUTMsToPath } from '@/lib/utmPropagate';
 
 export const LandingHeader = () => {
   const navigate = useNavigate();

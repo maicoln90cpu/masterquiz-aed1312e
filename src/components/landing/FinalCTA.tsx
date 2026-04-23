@@ -6,6 +6,7 @@ import { useSiteMode } from "@/hooks/useSiteMode";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { useLandingCopy } from "@/hooks/useLandingCopy";
+import { appendUTMsToPath } from "@/lib/utmPropagate";
 
 export const FinalCTA = () => {
   const { t } = useTranslation();

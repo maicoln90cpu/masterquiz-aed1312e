@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { appendUTMsToPath } from "@/lib/utmPropagate";
 
 export const UseCaseTab = () => {
   const { t } = useTranslation();
