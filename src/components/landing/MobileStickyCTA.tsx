@@ -7,6 +7,7 @@ import { useSiteMode } from "@/hooks/useSiteMode";
 import { useLandingCopy } from "@/hooks/useLandingCopy";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { pushGTMEvent } from "@/lib/gtmLogger";
+import { appendUTMsToPath } from "@/lib/utmPropagate";
 
 /**
  * CTA fixo no rodapé do mobile. Aparece após o usuário rolar 30% da página
@@ -57,7 +58,7 @@ export const MobileStickyCTA = () => {
       cta_location: "mobile_sticky",
       cta_text: ctaText,
     });
-    navigate(isModeB ? "/precos" : "/login");
+    navigate(appendUTMsToPath(isModeB ? "/precos" : "/login"));
   };
 
   return (

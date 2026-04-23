@@ -6,6 +6,7 @@ import { useSiteMode } from "@/hooks/useSiteMode";
 import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { useLandingCopy } from "@/hooks/useLandingCopy";
+import { appendUTMsToPath } from "@/lib/utmPropagate";
 
 export const FinalCTA = () => {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export const FinalCTA = () => {
       cta_location: 'final_cta',
       cta_text: isModeB ? 'choose_plan_final' : 'start_free_final',
     });
-    navigate(isModeB ? '/precos' : '/login');
+    navigate(appendUTMsToPath(isModeB ? '/precos' : '/login'));
   };
 
   return (

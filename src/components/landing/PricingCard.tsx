@@ -12,6 +12,7 @@ import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 import { useLandingCopy } from "@/hooks/useLandingCopy";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { appendUTMsToPath } from "@/lib/utmPropagate";
 
 interface PricingCardProps {
   plan: {
@@ -76,7 +77,7 @@ export const PricingCard = ({ plan, index }: PricingCardProps) => {
 
       if (!user) {
         logger.log('[PricingCard] No user, redirecting to login');
-        navigate('/login');
+        navigate(appendUTMsToPath('/login'));
         return;
       }
 

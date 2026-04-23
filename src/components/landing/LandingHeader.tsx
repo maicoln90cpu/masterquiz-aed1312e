@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteMode } from '@/hooks/useSiteMode';
 import { pushGTMEvent } from '@/lib/gtmLogger';
+import { appendUTMsToPath } from '@/lib/utmPropagate';
 
 export const LandingHeader = () => {
   const navigate = useNavigate();
@@ -99,7 +100,7 @@ export const LandingHeader = () => {
 
   const handleLoginClick = () => {
     pushGTMEvent('header_login_click', { location: 'header' });
-    navigate(isModeB ? '/precos' : '/login');
+    navigate(appendUTMsToPath(isModeB ? '/precos' : '/login'));
   };
 
   return (
