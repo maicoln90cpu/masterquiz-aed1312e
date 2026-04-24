@@ -41,29 +41,19 @@ export const useDashboardStats = () => {
       if (!user) throw new Error('User not authenticated');
 
       return await trackOperation('dashboard_stats', 'query', async () => {
-        const { data: quizzes, error: quizzesError } = await supabase
-          .from('quizzes')
-          .select('id, status')
-          .eq('user_id', user.id)
-          .neq('creation_source', 'express_auto');
+        // 4.2: RPC consolidada — 1 round-trip ao invés de 2 (~2,3s → <500ms)
+        // ⚠️ NÃO REVERTER para queries separadas: get_dashboard_stats agrega
+        // quizzes + responses em uma única chamada SECURITY DEFINER.
+        const { data, error } = await supabase
+          .rpc('get_dashboard_stats', { _user_id: user.id });
 
-        if (quizzesError) throw quizzesError;
+        if (error) throw error;
 
-        const quizIds = quizzes?.map(q => q.id) || [];
-
-        const { count: totalResponses, error: responsesError } = await supabase
-          .from('quiz_responses')
-          .select('*', { count: 'exact', head: true })
-          .in('quiz_id', quizIds);
-
-        if (responsesError) throw responsesError;
-
-        const activeQuizzes = quizzes?.filter(q => q.status === 'active').length || 0;
-
+        const row = Array.isArray(data) ? data[0] : data;
         return {
-          totalQuizzes: quizzes?.length || 0,
-          totalResponses: totalResponses || 0,
-          activeQuizzes
+          totalQuizzes: Number(row?.total_quizzes ?? 0),
+          totalResponses: Number(row?.total_responses ?? 0),
+          activeQuizzes: Number(row?.active_quizzes ?? 0),
         };
       });
     },
