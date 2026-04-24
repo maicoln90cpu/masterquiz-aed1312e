@@ -84,10 +84,14 @@ const mockProfilesUpsert = (data: any, error: any = null) => {
 };
 
 describe('useProfile', () => {
+  // QueryClient/wrapper recriados a cada teste para isolar cache.
+  let wrapper: ({ children }: { children: ReactNode }) => JSX.Element;
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuthUser = null;
     mockAuthLoading = false;
+    wrapper = makeWrapper();
   });
 
   describe('When user is not authenticated', () => {
