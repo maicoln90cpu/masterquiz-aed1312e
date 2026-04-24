@@ -44,13 +44,16 @@ const createMockProfile = (overrides = {}) => ({
   ...overrides,
 });
 
-// useProfile agora usa TanStack Query (4.1) — provider obrigatório no wrapper.
-// QueryClient novo a cada render p/ isolar cache entre testes.
-const wrapper = ({ children }: { children: ReactNode }) => {
+// useProfile agora usa TanStack Query (4.1) — provider obrigatório.
+// Factory garante UM QueryClient estável por renderHook (não recria a cada
+// re-render do wrapper interno do React Testing Library).
+const makeWrapper = () => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
   });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
 };
 
 const mockProfilesSelect = (profile: any | null, error: any = null) => {
