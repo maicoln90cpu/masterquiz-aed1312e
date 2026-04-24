@@ -57,7 +57,10 @@ export const useSubscriptionLimits = () => {
       const { data, error } = await trackOperation('user_subscription_fetch', 'query', async () =>
         await supabase
           .from('user_subscriptions')
-          .select('*')
+          // 4.5: Colunas específicas (era select('*')) — payload menor + uso de índices.
+          // ⚠️ Ao adicionar leitura de novo campo de user_subscriptions em qualquer
+          // consumidor de useSubscriptionLimits, INCLUIR a coluna aqui.
+          .select('id, user_id, plan_type, status, quiz_limit, response_limit, payment_confirmed, trial_end_date, created_at, updated_at')
           .eq('user_id', user.id)
           .single()
       );
@@ -75,7 +78,11 @@ export const useSubscriptionLimits = () => {
       
       return data as UserSubscription;
     },
-    enabled: !roleLoading && !!user
+    enabled: !roleLoading && !!user,
+    // 4.5: Cache 10min — subscription muda raramente; invalidação realtime
+    // já cobre updates via canal `sub-realtime-${user.id}` acima.
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   // Master admin sempre retorna true para todas as verificações de limite
