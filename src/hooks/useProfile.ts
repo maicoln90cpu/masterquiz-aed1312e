@@ -23,19 +23,26 @@ export const useProfile = () => {
     queryFn: async () => {
       if (!user) return null;
 
-      const { data, error } = await trackOperation('profile_fetch', 'query', async () =>
-        await supabase
-          .from('profiles')
-          .select(PROFILE_COLUMNS)
-          .eq('id', user.id)
-          .single()
-      );
+      try {
+        const { data, error } = await trackOperation('profile_fetch', 'query', async () =>
+          await supabase
+            .from('profiles')
+            .select(PROFILE_COLUMNS)
+            .eq('id', user.id)
+            .single()
+        );
 
-      if (error && error.code !== 'PGRST116') {
-        logger.error('Error fetching profile:', error);
+        if (error && error.code !== 'PGRST116') {
+          logger.error('Error fetching profile:', error);
+          return null;
+        }
+        return (data as unknown as Profile) ?? null;
+      } catch (err) {
+        // Defensive: nunca propagar erro pro TanStack (mantém isLoading=false
+        // após primeira tentativa, mesma semântica do useEffect anterior)
+        logger.error('Error fetching profile:', err);
         return null;
       }
-      return (data as unknown as Profile) ?? null;
     },
     enabled: !authLoading && !!user,
     staleTime: 5 * 60 * 1000,
