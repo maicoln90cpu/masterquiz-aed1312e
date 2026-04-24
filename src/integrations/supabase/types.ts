@@ -3874,6 +3874,14 @@ export type Database = {
           total_runs_24h: number
         }[]
       }
+      get_dashboard_stats: {
+        Args: { _user_id: string }
+        Returns: {
+          active_quizzes: number
+          total_quizzes: number
+          total_responses: number
+        }[]
+      }
       get_error_occurrences: {
         Args: { p_fingerprint: string; p_limit?: number }
         Returns: {
