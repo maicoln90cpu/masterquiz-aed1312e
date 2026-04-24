@@ -1,4 +1,5 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+// deno-lint-ignore-file no-explicit-any
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getTraceId, okResponse, errorResponse } from '../_shared/envelope.ts';
 
 const corsHeaders = {
@@ -12,7 +13,7 @@ function getRandomDelay(minSeconds: number, maxSeconds: number): number {
 
 // Background worker — não bloqueia a resposta HTTP
 async function processBatch(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   supabaseUrl: string,
   anonKey: string,
   batchSize: number,
@@ -37,13 +38,13 @@ async function processBatch(
 
   // Auto-regenerate targets para campanhas em execução
   try {
-    const { data: runningCampaigns } = await supabase
+    const { data: runningCampaigns } = await (supabase as any)
       .from('recovery_campaigns')
       .select('id, target_criteria, template_id')
       .eq('status', 'running');
 
     if (runningCampaigns && runningCampaigns.length > 0) {
-      for (const camp of runningCampaigns) {
+      for (const camp of runningCampaigns as any[]) {
         const tc = (camp.target_criteria || {}) as Record<string, unknown>;
         if (tc.direct_campaign) continue;
 

@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
       // Fallback: direct update
       const { error: updateError } = await supabase
         .from('blog_posts')
-        .update({ views_count: supabase.rpc ? undefined : 1 })
+        .update({ views_count: 1 })
         .eq('slug', slug);
       
       if (updateError) {
