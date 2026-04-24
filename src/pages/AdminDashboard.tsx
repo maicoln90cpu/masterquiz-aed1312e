@@ -1757,6 +1757,7 @@ export default function AdminDashboard() {
                 { id: 'landing', label: 'Landing Page', icon: <Globe className="h-4 w-4" />, color: 'blue' },
                 { id: 'ab-testing', label: 'Testes A/B', icon: <FlaskConical className="h-4 w-4" />, color: 'orange' },
                 { id: 'tracking', label: 'Rastreamento', icon: <BarChart3 className="h-4 w-4" />, color: 'cyan' },
+                { id: 'gtm-events', label: 'Eventos GTM', icon: <Activity className="h-4 w-4" />, color: 'green' },
               ]}
               defaultTab="templates"
             >
@@ -1768,6 +1769,11 @@ export default function AdminDashboard() {
                   {activeTab === 'landing' && <LandingContentEditor />}
                   {activeTab === 'ab-testing' && <LandingABTestDashboard />}
                   {activeTab === 'tracking' && <TrackingConfiguration />}
+                  {activeTab === 'gtm-events' && (
+                    <Suspense fallback={<ComponentLoader />}>
+                      <GTMEventsDashboard />
+                    </Suspense>
+                  )}
                 </>
               )}
             </AdminSubTabs>
