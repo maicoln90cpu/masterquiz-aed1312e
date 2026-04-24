@@ -103,6 +103,28 @@ Deno.serve(async (req) => {
       if (data) auditDeletedFiltered.push(...data);
     }
 
+    // 🔧 CORREÇÃO: "Último Login" baseado em login_events (cada login real é
+    // gravado via RPC record_login_event no AuthContext). O campo
+    // auth.users.last_sign_in_at só atualiza no primeiro signInWithPassword da
+    // sessão — enquanto o refresh_token estiver válido, retornos do usuário NÃO
+    // contam como novo sign-in, fazendo todo "último login" parecer próximo do
+    // cadastro. login_events é a fonte correta para essa coluna.
+    const lastLoginMap = new Map<string, string>();
+    for (let i = 0; i < userIds.length; i += 100) {
+      const batch = userIds.slice(i, i + 100);
+      const { data: loginRows } = await adminClient
+        .from("login_events")
+        .select("user_id, logged_in_at")
+        .in("user_id", batch)
+        .order("logged_in_at", { ascending: false });
+      for (const row of loginRows || []) {
+        // Como vem ordenado desc, a primeira ocorrência por user_id já é o último
+        if (!lastLoginMap.has(row.user_id)) {
+          lastLoginMap.set(row.user_id, row.logged_in_at);
+        }
+      }
+    }
+
     const profilesMap = new Map(profiles.map((p: any) => [p.id, p]));
     const subsMap = new Map(subs.map((s: any) => [s.user_id, s]));
     const rolesMap = new Map<string, string[]>();
@@ -176,7 +198,9 @@ Deno.serve(async (req) => {
       id: u.id,
       email: u.email,
       created_at: u.created_at,
-      last_sign_in_at: u.last_sign_in_at,
+      // Fallback para auth.last_sign_in_at quando não há registro em login_events
+      // (usuários antigos que nunca passaram pelo record_login_event).
+      last_sign_in_at: lastLoginMap.get(u.id) || u.last_sign_in_at,
       profile: profilesMap.get(u.id) || null,
       subscription: subsMap.get(u.id) || null,
       roles: rolesMap.get(u.id) || [],
