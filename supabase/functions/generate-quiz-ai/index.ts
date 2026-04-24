@@ -292,7 +292,7 @@ DIFICULDADE: {difficultyLevel}
 QUANTIDADE DE PERGUNTAS: {numberOfQuestions}
 INCLUIR EXPLICAÇÕES: {includeExplanations}
 
-Retorne JSON com: title, description, questions (com question_text, answer_format, options como array de strings${'{includeExplanations}' === 'Não' ? '' : ', explanation (string com explicação detalhada da resposta correta), correct_answer (string com o texto exato da alternativa correta)'}).
+Retorne JSON com: title, description, questions (com question_text, answer_format, options como array de strings, explanation (string com explicação detalhada da resposta correta APENAS se INCLUIR EXPLICAÇÕES = "Sim"), correct_answer (string com o texto exato da alternativa correta)).
 As perguntas devem testar conhecimento real sobre o tema, com alternativas plausíveis e bem formuladas.`;
 
     const defaultSystemPromptPdfTraffic = `Você é um especialista em criar quizzes de segmentação e qualificação de audiência para gestores de tráfego pago.
