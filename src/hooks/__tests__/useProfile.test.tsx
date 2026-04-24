@@ -88,9 +88,7 @@ describe('useProfile', () => {
   let wrapper: ({ children }: { children: ReactNode }) => JSX.Element;
 
   beforeEach(() => {
-    // resetAllMocks limpa mockReturnValue (clearAllMocks só limpa calls).
-    // Necessário porque a chain do supabase é remontada por teste.
-    vi.resetAllMocks();
+    vi.clearAllMocks();
     mockAuthUser = null;
     mockAuthLoading = false;
     wrapper = makeWrapper();
