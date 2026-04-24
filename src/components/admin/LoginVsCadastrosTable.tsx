@@ -1,11 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, LogIn, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+
+// Períodos suportados pelo seletor (mesmo padrão do PerformancePanel).
+type PeriodDays = 7 | 15 | 30;
+const PERIOD_OPTIONS: { label: string; value: PeriodDays }[] = [
+  { label: '7 dias', value: 7 },
+  { label: '15 dias', value: 15 },
+  { label: '30 dias', value: 30 },
+];
 
 interface DayRow {
   date: string;
@@ -15,16 +24,16 @@ interface DayRow {
   taxa: string;     // formatada
 }
 
-function useLoginsVsCadastros() {
+function useLoginsVsCadastros(period: PeriodDays) {
   return useQuery({
-    queryKey: ['logins-vs-cadastros'],
+    queryKey: ['logins-vs-cadastros', period],
     queryFn: async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const since = thirtyDaysAgo.toISOString();
+      const sinceDate = new Date();
+      sinceDate.setDate(sinceDate.getDate() - period);
+      const since = sinceDate.toISOString();
 
       const [dailyRes, loginsRes, totalRealRes] = await Promise.all([
-        supabase.rpc('real_users_daily', { _days: 30 }),
+        supabase.rpc('real_users_daily', { _days: period }),
         supabase.from('login_events').select('logged_in_at').gte('logged_in_at', since),
         supabase.rpc('count_real_users_since', { _since: since }),
       ]);
@@ -44,7 +53,7 @@ function useLoginsVsCadastros() {
       let totalLogins = 0;
       const totalCadastros = Number(totalRealRes.data || 0);
 
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < period; i++) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         const dateStr = d.toISOString().split('T')[0];
@@ -76,7 +85,9 @@ function useLoginsVsCadastros() {
 }
 
 export function LoginVsCadastrosTable() {
-  const { data, isLoading } = useLoginsVsCadastros();
+  // Período selecionado (default 30 dias — mantém comportamento original).
+  const [period, setPeriod] = useState<PeriodDays>(30);
+  const { data, isLoading } = useLoginsVsCadastros(period);
 
   const columns: DataTableColumn<DayRow>[] = useMemo(() => [
     {
@@ -122,8 +133,22 @@ export function LoginVsCadastrosTable() {
             <Users className="h-5 w-5 text-primary" />
             <CardTitle className="text-sm">Logins vs Cadastros</CardTitle>
           </div>
-          <CardDescription>Ainda sem dados nos últimos 30 dias.</CardDescription>
+          <CardDescription>Ainda sem dados nos últimos {period} dias.</CardDescription>
         </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            {PERIOD_OPTIONS.map(opt => (
+              <Button
+                key={opt.value}
+                variant={period === opt.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPeriod(opt.value)}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
       </Card>
     );
   }
@@ -131,9 +156,23 @@ export function LoginVsCadastrosTable() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          <CardTitle className="text-sm">Logins vs Cadastros — Últimos 30 dias</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <CardTitle className="text-sm">Logins vs Cadastros — Últimos {period} dias</CardTitle>
+          </div>
+          <div className="flex gap-2">
+            {PERIOD_OPTIONS.map(opt => (
+              <Button
+                key={opt.value}
+                variant={period === opt.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPeriod(opt.value)}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
         </div>
         <CardDescription>
           Cadastros = usuários reais (auth + perfil ativo). Compara quantos voltaram a logar por dia.
