@@ -3,6 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { useProfile } from '../useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Override global AuthContext mock for this test file
 let mockAuthUser: any = null;
@@ -43,7 +44,14 @@ const createMockProfile = (overrides = {}) => ({
   ...overrides,
 });
 
-const wrapper = ({ children }: { children: ReactNode }) => <>{children}</>;
+// useProfile agora usa TanStack Query (4.1) — provider obrigatório no wrapper.
+// QueryClient novo a cada render p/ isolar cache entre testes.
+const wrapper = ({ children }: { children: ReactNode }) => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
+  });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+};
 
 const mockProfilesSelect = (profile: any | null, error: any = null) => {
   const chain = {
