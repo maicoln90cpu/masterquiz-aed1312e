@@ -200,11 +200,18 @@ export function WhatsAppConnection() {
     try {
       const apiUrl = normalizeUrl(status?.evolution_api_url || DEFAULT_EVOLUTION_API_URL);
       
-      const { data, error } = await supabase.functions.invoke<EvolutionResponse>('evolution-connect', {
+      const { data: envelope, error } = await supabase.functions.invoke('evolution-connect', {
         body: { action: 'status', apiUrl }
       });
 
       if (error) throw error;
+
+      const { payload: data, errorMessage } = unwrapEnvelope<EvolutionPayload>(envelope);
+      if (errorMessage) {
+        logger.warn('Status envelope error:', errorMessage);
+        if (!silent) toast.error(errorMessage);
+        return;
+      }
 
       logger.log('Status check result:', data);
 
