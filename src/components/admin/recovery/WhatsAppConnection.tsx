@@ -10,6 +10,7 @@ import { Loader2, Smartphone, RefreshCw, CheckCircle, XCircle, QrCode, Wifi, Wif
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { EvolutionWebhookDiagnostics } from "./EvolutionWebhookDiagnostics";
+import { invokeEdgeFunction, EdgeCallError, defaultErrorMessage } from "@/lib/invokeEdgeFunction";
 
 interface ConnectionStatus {
   id?: string;
@@ -32,18 +33,7 @@ interface EvolutionPayload {
   regenerated?: boolean;
 }
 
-// 🔒 P11: edge function evolution-connect retorna envelope { ok, data, traceId }.
-// Sempre desempacotar antes de ler campos de domínio.
-type EnvelopeResp<T> =
-  | { ok: true; data: T; traceId: string }
-  | { ok: false; error: { code: string; message: string }; traceId: string };
-
-function unwrapEnvelope<T>(resp: unknown): { payload: T | null; errorMessage: string | null } {
-  const r = resp as EnvelopeResp<T> | null | undefined;
-  if (!r) return { payload: null, errorMessage: null };
-  if (r.ok === true) return { payload: r.data, errorMessage: null };
-  return { payload: null, errorMessage: r.error?.message ?? 'Erro desconhecido' };
-}
+// 🔒 P18: usamos invokeEdgeFunction (facade única) — unwrap do envelope é automático.
 
 interface RecoveryTemplate {
   id: string;
@@ -200,16 +190,14 @@ export function WhatsAppConnection() {
     try {
       const apiUrl = normalizeUrl(status?.evolution_api_url || DEFAULT_EVOLUTION_API_URL);
       
-      const { data: envelope, error } = await supabase.functions.invoke('evolution-connect', {
-        body: { action: 'status', apiUrl }
-      });
-
-      if (error) throw error;
-
-      const { payload: data, errorMessage } = unwrapEnvelope<EvolutionPayload>(envelope);
-      if (errorMessage) {
-        logger.warn('Status envelope error:', errorMessage);
-        if (!silent) toast.error(errorMessage);
+      let data: EvolutionPayload | null = null;
+      try {
+        const res = await invokeEdgeFunction<EvolutionPayload>('evolution-connect', { action: 'status', apiUrl });
+        data = res.data;
+      } catch (e) {
+        const err = e as EdgeCallError;
+        logger.warn('Status envelope error:', err.message);
+        if (!silent) toast.error(defaultErrorMessage(err));
         return;
       }
 
@@ -312,16 +300,14 @@ export function WhatsAppConnection() {
       
       logger.log('Connecting with URL:', apiUrl);
       
-      const { data: envelope, error } = await supabase.functions.invoke('evolution-connect', {
-        body: { action: 'connect', apiUrl }
-      });
-
-      if (error) throw error;
-
-      const { payload: data, errorMessage } = unwrapEnvelope<EvolutionPayload>(envelope);
-      if (errorMessage) {
-        logger.warn('Connect envelope error:', errorMessage);
-        toast.error(errorMessage);
+      let data: EvolutionPayload | null = null;
+      try {
+        const res = await invokeEdgeFunction<EvolutionPayload>('evolution-connect', { action: 'connect', apiUrl });
+        data = res.data;
+      } catch (e) {
+        const err = e as EdgeCallError;
+        logger.warn('Connect envelope error:', err.message);
+        toast.error(defaultErrorMessage(err));
         return;
       }
 
@@ -383,12 +369,8 @@ export function WhatsAppConnection() {
   const handleDisconnect = async () => {
     try {
       const apiUrl = normalizeUrl(status?.evolution_api_url || DEFAULT_EVOLUTION_API_URL);
-      
-      const { error } = await supabase.functions.invoke('evolution-connect', {
-        body: { action: 'disconnect', apiUrl }
-      });
 
-      if (error) throw error;
+      await invokeEdgeFunction('evolution-connect', { action: 'disconnect', apiUrl });
 
       // Atualiza no banco
       if (settingsId) {

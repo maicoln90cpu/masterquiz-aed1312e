@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Stethoscope, Wrench, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { invokeEdgeFunction, EdgeCallError, defaultErrorMessage } from "@/lib/invokeEdgeFunction";
 
 interface DiagnosticsResult {
   expected_url: string;
@@ -30,17 +30,7 @@ interface DiagnosticsResult {
   error?: string;
 }
 
-// 🔒 P11: edge function evolution-connect retorna envelope { ok, data, traceId }.
-type EnvelopeResp<T> =
-  | { ok: true; data: T; traceId: string }
-  | { ok: false; error: { code: string; message: string }; traceId: string };
-
-function unwrap<T>(resp: unknown): { payload: T | null; errorMessage: string | null } {
-  const r = resp as EnvelopeResp<T> | null | undefined;
-  if (!r) return { payload: null, errorMessage: null };
-  if (r.ok === true) return { payload: r.data, errorMessage: null };
-  return { payload: null, errorMessage: r.error?.message ?? 'Erro desconhecido' };
-}
+// 🔒 P18: invokeEdgeFunction faz unwrap do envelope automaticamente.
 
 export function EvolutionWebhookDiagnostics() {
   const [loading, setLoading] = useState(false);
@@ -50,18 +40,11 @@ export function EvolutionWebhookDiagnostics() {
   const runDiagnostics = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('evolution-connect', {
-        body: { action: 'webhook_diagnostics' },
-      });
-      if (error) throw error;
-      const { payload, errorMessage } = unwrap<DiagnosticsResult>(data);
-      if (errorMessage) {
-        toast.error(errorMessage);
-        return;
-      }
-      setResult(payload);
-    } catch (err: any) {
-      toast.error('Falha ao executar diagnóstico: ' + (err.message || 'erro desconhecido'));
+      const { data } = await invokeEdgeFunction<DiagnosticsResult>('evolution-connect', { action: 'webhook_diagnostics' });
+      setResult(data);
+    } catch (err) {
+      const e = err as EdgeCallError;
+      toast.error('Falha ao executar diagnóstico: ' + defaultErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -70,23 +53,19 @@ export function EvolutionWebhookDiagnostics() {
   const fixWebhook = async () => {
     setFixing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('evolution-connect', {
-        body: { action: 'fix_webhook' },
-      });
-      if (error) throw error;
-      const { payload, errorMessage } = unwrap<{ success?: boolean; message?: string }>(data);
-      if (errorMessage) {
-        toast.error(errorMessage);
-        return;
-      }
+      const { data: payload } = await invokeEdgeFunction<{ success?: boolean; message?: string }>(
+        'evolution-connect',
+        { action: 'fix_webhook' },
+      );
       if (payload?.success) {
         toast.success('Webhook reconfigurado com sucesso!');
         await runDiagnostics();
       } else {
         toast.error(payload?.message || 'Falha ao corrigir webhook');
       }
-    } catch (err: any) {
-      toast.error('Erro ao corrigir: ' + (err.message || 'desconhecido'));
+    } catch (err) {
+      const e = err as EdgeCallError;
+      toast.error('Erro ao corrigir: ' + defaultErrorMessage(e));
     } finally {
       setFixing(false);
     }
