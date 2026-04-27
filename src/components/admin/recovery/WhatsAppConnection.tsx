@@ -22,7 +22,7 @@ interface ConnectionStatus {
   forward_to_phone: string | null;
 }
 
-interface EvolutionResponse {
+interface EvolutionPayload {
   qrCode?: string | null;
   state?: string;
   instance?: string;
@@ -30,6 +30,19 @@ interface EvolutionResponse {
   connected?: boolean;
   success?: boolean;
   regenerated?: boolean;
+}
+
+// 🔒 P11: edge function evolution-connect retorna envelope { ok, data, traceId }.
+// Sempre desempacotar antes de ler campos de domínio.
+type EnvelopeResp<T> =
+  | { ok: true; data: T; traceId: string }
+  | { ok: false; error: { code: string; message: string }; traceId: string };
+
+function unwrapEnvelope<T>(resp: unknown): { payload: T | null; errorMessage: string | null } {
+  const r = resp as EnvelopeResp<T> | null | undefined;
+  if (!r) return { payload: null, errorMessage: null };
+  if (r.ok === true) return { payload: r.data, errorMessage: null };
+  return { payload: null, errorMessage: r.error?.message ?? 'Erro desconhecido' };
 }
 
 interface RecoveryTemplate {
