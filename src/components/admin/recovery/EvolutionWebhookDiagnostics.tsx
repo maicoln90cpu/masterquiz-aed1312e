@@ -30,6 +30,18 @@ interface DiagnosticsResult {
   error?: string;
 }
 
+// 🔒 P11: edge function evolution-connect retorna envelope { ok, data, traceId }.
+type EnvelopeResp<T> =
+  | { ok: true; data: T; traceId: string }
+  | { ok: false; error: { code: string; message: string }; traceId: string };
+
+function unwrap<T>(resp: unknown): { payload: T | null; errorMessage: string | null } {
+  const r = resp as EnvelopeResp<T> | null | undefined;
+  if (!r) return { payload: null, errorMessage: null };
+  if (r.ok === true) return { payload: r.data, errorMessage: null };
+  return { payload: null, errorMessage: r.error?.message ?? 'Erro desconhecido' };
+}
+
 export function EvolutionWebhookDiagnostics() {
   const [loading, setLoading] = useState(false);
   const [fixing, setFixing] = useState(false);
@@ -42,7 +54,12 @@ export function EvolutionWebhookDiagnostics() {
         body: { action: 'webhook_diagnostics' },
       });
       if (error) throw error;
-      setResult(data);
+      const { payload, errorMessage } = unwrap<DiagnosticsResult>(data);
+      if (errorMessage) {
+        toast.error(errorMessage);
+        return;
+      }
+      setResult(payload);
     } catch (err: any) {
       toast.error('Falha ao executar diagnóstico: ' + (err.message || 'erro desconhecido'));
     } finally {
@@ -57,11 +74,16 @@ export function EvolutionWebhookDiagnostics() {
         body: { action: 'fix_webhook' },
       });
       if (error) throw error;
-      if (data?.success) {
+      const { payload, errorMessage } = unwrap<{ success?: boolean; message?: string }>(data);
+      if (errorMessage) {
+        toast.error(errorMessage);
+        return;
+      }
+      if (payload?.success) {
         toast.success('Webhook reconfigurado com sucesso!');
         await runDiagnostics();
       } else {
-        toast.error(data?.error || 'Falha ao corrigir webhook');
+        toast.error(payload?.message || 'Falha ao corrigir webhook');
       }
     } catch (err: any) {
       toast.error('Erro ao corrigir: ' + (err.message || 'desconhecido'));
