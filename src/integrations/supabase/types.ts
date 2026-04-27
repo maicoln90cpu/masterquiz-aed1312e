@@ -1647,6 +1647,7 @@ export type Database = {
           id: string
           landing_variant_seen: string | null
           login_count: number | null
+          objective_selected_at: string | null
           paywall_hit_count: number
           plan_limit_hit_type: string | null
           plan_limit_warning_sent_at: string | null
@@ -1682,6 +1683,7 @@ export type Database = {
           id: string
           landing_variant_seen?: string | null
           login_count?: number | null
+          objective_selected_at?: string | null
           paywall_hit_count?: number
           plan_limit_hit_type?: string | null
           plan_limit_warning_sent_at?: string | null
@@ -1717,6 +1719,7 @@ export type Database = {
           id?: string
           landing_variant_seen?: string | null
           login_count?: number | null
+          objective_selected_at?: string | null
           paywall_hit_count?: number
           plan_limit_hit_type?: string | null
           plan_limit_warning_sent_at?: string | null
