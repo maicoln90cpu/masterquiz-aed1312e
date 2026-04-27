@@ -121,10 +121,19 @@ const Start = () => {
       if (!alreadyFired) {
         profileUpdate.objective_selected_at = new Date().toISOString();
       }
-      await supabase
+      const { error: updErr } = await supabase
         .from("profiles")
         .update(profileUpdate as any)
         .eq("id", user.id);
+      if (updErr) {
+        // Hardening: qualquer falha (coluna inexistente, RLS, etc.) é logada
+        // e mostrada ao usuário em vez de seguir silenciosamente — evita o
+        // bug de 24/04 onde user_objectives ficava NULL sem qualquer sinal.
+        logger.error('[Start] failed to save user_objectives:', updErr);
+        toast.error(t('common.errorSaving'));
+        setLoading(false);
+        return;
+      }
 
       // 2. Buscar template correspondente
       const templateId = OBJECTIVE_TEMPLATE_MAP[objective] || "funil-captacao-leads";
