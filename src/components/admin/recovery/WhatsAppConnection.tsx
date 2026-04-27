@@ -312,11 +312,18 @@ export function WhatsAppConnection() {
       
       logger.log('Connecting with URL:', apiUrl);
       
-      const { data, error } = await supabase.functions.invoke<EvolutionResponse>('evolution-connect', {
+      const { data: envelope, error } = await supabase.functions.invoke('evolution-connect', {
         body: { action: 'connect', apiUrl }
       });
 
       if (error) throw error;
+
+      const { payload: data, errorMessage } = unwrapEnvelope<EvolutionPayload>(envelope);
+      if (errorMessage) {
+        logger.warn('Connect envelope error:', errorMessage);
+        toast.error(errorMessage);
+        return;
+      }
 
       logger.log('Connect response:', data);
 
