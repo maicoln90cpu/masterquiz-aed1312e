@@ -1,86 +1,89 @@
-# Correção: WhatsApp QR Code + Diagnóstico Webhook quebrados
+## Objetivo
+Redirecionar automaticamente para `/start` qualquer usuário autenticado cujo `profiles.user_objectives` esteja `NULL` ou vazio, sem quebrar quem já preencheu e sem entrar em loop.
 
-## Antes vs Depois
+## Antes (situação atual)
+- `RequireAuth` (em `src/App.tsx`) só verifica sessão e, no Modo B, pagamento.
+- O check de `user_objectives` existe **apenas** dentro de `Dashboard.tsx` — e ainda assim só abre um modal (`UserObjectiveModal`), não redireciona para `/start`.
+- Usuários afetados pelo bug de 24/04 (12 contas com `user_objectives = NULL`) nunca veem `/start` novamente ao logar — caem direto no Dashboard com modal opcional.
 
-**Antes (bug):**
-- A Edge Function `evolution-connect` foi padronizada com o envelope P11: retorna `{ ok: true, data: {...}, traceId }`.
-- Os dois componentes do painel admin ainda leem o **shape antigo**, acessando `data.qrCode`, `data.state`, `data.url_matches` diretamente.
-- Como esses campos agora estão dentro de `data.data`, tudo vira `undefined`:
-  - `WhatsAppConnection.tsx` cai no `else` → toast **"QR Code não recebido. Verifique a configuração da API."** (mesmo a Evolution tendo retornado o base64 — confirmado nos logs: `Connect response keys: [pairingCode, code, base64, count]`).
-  - `EvolutionWebhookDiagnostics.tsx` faz `setResult(data)` com o envelope inteiro; ao tentar renderizar `result.url_matches`, `result.health.webhook_health` etc. dispara erro de runtime → **ErrorBoundary "Algo deu errado"** (print 1).
+## Depois (comportamento desejado)
+- Em **qualquer rota autenticada**, logo após o login confirmar a sessão, o sistema busca `user_objectives` do perfil **uma única vez por sessão**.
+- Se `NULL` ou array vazio E rota atual ≠ `/start` → `navigate('/start', { replace: true })`.
+- Se já preenchido → nada muda, fluxo segue normal.
+- Verificação **assíncrona, não bloqueia render** do dashboard (sem novo spinner global).
+- Flag `sessionStorage['mq_onboarding_checked'] = '1'` evita re-checagem e loop.
 
-**Depois (fix):**
-- Os dois componentes desempacotam o envelope: `const payload = data?.ok ? data.data : null;` e propagam erro amigável quando `data?.ok === false` usando `data.error.message`.
-- QR Code volta a aparecer; diagnóstico renderiza o card de saúde corretamente.
+## Onde mexer
+**1 único arquivo: `src/App.tsx`** — dentro do componente `RequireAuth`.
 
-## Causa raiz
+Adicionar um `useEffect` novo (independente dos existentes) que:
+1. Aguarda `user` autenticado e `loading=false`.
+2. Lê `sessionStorage.getItem('mq_onboarding_checked')` — se existir, sai.
+3. Faz `supabase.from('profiles').select('user_objectives').eq('id', user.id).maybeSingle()`.
+4. Marca a flag `mq_onboarding_checked = '1'` (independente do resultado, para não repetir query).
+5. Se `user_objectives` é `null` ou `[]` E `window.location.pathname !== '/start'` → `navigate('/start', { replace: true })`.
+6. Erros silenciosos (apenas `logger.warn`) — nunca bloquear o app.
 
-Edge function migrou para o envelope padronizado (proteção P11) mas estes 2 consumidores não foram atualizados na mesma leva. Bug é **só de frontend** — a Evolution API e a função estão funcionando (logs confirmam).
+Importante:
+- O effect **não** entra na condição de `if (loading || !user ...)` que retorna o spinner — roda em paralelo ao render normal.
+- A flag é `sessionStorage` (não `localStorage`) → reseta a cada nova sessão de navegador, conforme pedido.
+- Logout deve limpar a flag. Já existe `useInvalidateOnLogout`; vamos adicionar `sessionStorage.removeItem('mq_onboarding_checked')` no listener de SIGNED_OUT do `AuthContext` (verificar — se já limpa storage, basta confiar; senão, limpar dentro do próprio effect quando `user` vira `null`).
 
-## Arquivos a alterar
+## Trecho-chave (resumido)
+```tsx
+// dentro de RequireAuth, em src/App.tsx
+useEffect(() => {
+  if (loading || !user) return;
+  if (sessionStorage.getItem('mq_onboarding_checked') === '1') return;
 
-1. **`src/components/admin/recovery/WhatsAppConnection.tsx`**
-   - `handleConnect` (linha ~295): após `invoke`, validar `data?.ok` e usar `data.data.qrCode` / `data.data.state`. Se `data.ok === false`, mostrar `data.error.message` no toast.
-   - `checkStatus` (linha ~190) e `handleDisconnect` (linha ~360): mesmo tratamento (estavam consumindo `data?.state`, `data?.connected`).
-   - Atualizar a interface `EvolutionResponse` (ou criar um helper `unwrapEnvelope<T>(data)`) para refletir `{ ok, data: {...}, traceId }`.
+  (async () => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_objectives')
+        .eq('id', user.id)
+        .maybeSingle();
 
-2. **`src/components/admin/recovery/EvolutionWebhookDiagnostics.tsx`**
-   - `runDiagnostics` (linha 45): trocar `setResult(data)` por `setResult(data.ok ? data.data : null)` + tratar `data.ok === false` com `toast.error(data.error.message)`.
-   - `fixWebhook` (linha ~62): mesmo tratamento — checar `data.ok` antes de ler `data.success`.
+      sessionStorage.setItem('mq_onboarding_checked', '1');
 
-## Detalhes técnicos
-
-Helper sugerido (inline nos dois arquivos, sem criar lib nova para limitar blast radius):
-
-```ts
-function unwrap<T>(resp: any): T | null {
-  if (!resp) return null;
-  if (resp.ok === true) return resp.data as T;
-  return null;
-}
+      const obj = data?.user_objectives;
+      const empty = !obj || (Array.isArray(obj) && obj.length === 0);
+      if (empty && window.location.pathname !== '/start') {
+        navigate('/start', { replace: true });
+      }
+    } catch (e) {
+      logger.warn('[RequireAuth] objective check failed', e);
+    }
+  })();
+}, [user, loading, navigate]);
 ```
 
-Padrão de consumo:
-```ts
-const { data, error } = await supabase.functions.invoke('evolution-connect', { body: {...} });
-if (error) throw error;
-if (data?.ok === false) {
-  toast.error(data.error?.message ?? 'Erro desconhecido');
-  return;
-}
-const payload = unwrap<ConnectPayload>(data);
-// usa payload.qrCode, payload.state, etc.
+E no logout (dentro de `RequireAuth` ou `useInvalidateOnLogout`):
+```tsx
+useEffect(() => {
+  if (!user && !loading) sessionStorage.removeItem('mq_onboarding_checked');
+}, [user, loading]);
 ```
 
-## Vantagens / Desvantagens
+## Vantagens
+- Cobertura **global** (todas rotas autenticadas, não só Dashboard).
+- 1 query extra por sessão, não por navegação → custo desprezível.
+- Não toca em `/start`, `Dashboard.tsx`, modal de objetivo nem na lógica de dedup do Prompt #2.
+- Não interfere no fluxo de pagamento Modo B (effect independente).
 
-**Vantagens**
-- Conserta os 2 erros visíveis sem tocar em backend (zero risco de regressão na Evolution API).
-- Alinha frontend com proteção P11 já adotada por outras telas.
-- Mensagens de erro do backend (`data.error.message`) passam a aparecer no toast — facilita debug futuro.
+## Fora do escopo (não vou mexer)
+- Lógica de modal `UserObjectiveModal` no Dashboard (continua como segunda barreira).
+- Backfill dos 12 usuários afetados (já discutido em prompt anterior).
+- Captura de UTM (`appendUTMsToPath`) e dedup de `objective_selected` permanecem intocados.
 
-**Desvantagens / risco**
-- Risco baixo: muda só 2 arquivos da área admin de WhatsApp.
-- Precisa testar manualmente os 3 fluxos (status, connect, disconnect) + diagnóstico + fix_webhook.
-
-## Checklist manual (pós-deploy)
-
-1. Acessar `/masteradm` → aba WhatsApp Recovery.
-2. Clicar **"Gerar QR Code"** → deve aparecer o QR (não mais "QR Code não recebido").
-3. Clicar **"Executar diagnóstico"** → card de saúde renderiza, sem ErrorBoundary.
-4. Se diagnóstico apontar URL errada, clicar **"Corrigir webhook automaticamente"** → toast de sucesso e recarrega diagnóstico.
-5. Após escanear QR, status muda para "Conectado".
-6. Botão **"Desconectar"** funciona e limpa QR.
-
-## Pendências (fora deste escopo)
-
-- Auditar outros consumidores de Edge Functions que ainda não desempacotam envelope P11 (rodar grep por `supabase.functions.invoke` + uso direto de campos de domínio). Sugerido como tarefa separada.
+## Checklist pós-implementação
+- [ ] Build OK (sem erros TS).
+- [ ] Login com usuário com `user_objectives = NULL` → redireciona para `/start` em qualquer rota acessada.
+- [ ] Login com usuário com objetivo preenchido → nenhum redirect, fluxo normal.
+- [ ] Em `/start`, não há loop (rota atual === `/start` → não redireciona).
+- [ ] Após logout + novo login, flag é limpa e check roda de novo.
+- [ ] Dashboard segue carregando normalmente (sem spinner adicional).
 
 ## Prevenção de regressão
-
-- Adicionar comentário-trava `// 🔒 P11: edge function retorna envelope { ok, data, traceId }` nos 2 arquivos.
-- (Opcional, futuro) Criar helper compartilhado `src/lib/invokeEdgeFunction.ts` (já existe!) e migrar estes 2 chamadores para usá-lo — ele já faz unwrap. Posso fazer no mesmo PR se quiser, é trivial.
-
-## Sugestão de melhoria futura (apenas do que está sendo implementado)
-
-Migrar os 2 componentes para o helper `invokeEdgeFunction` já existente em `src/lib/invokeEdgeFunction.ts` em vez de chamar `supabase.functions.invoke` direto — assim o unwrap fica centralizado e qualquer mudança no envelope não exige tocar nos consumidores.
+- Comentário-trava no `useEffect` explicando que é o guardião pós-bug 24/04.
+- Sugestão (opcional, não vou implementar agora): criar contract test garantindo que `RequireAuth` consulta `user_objectives` ao montar.
