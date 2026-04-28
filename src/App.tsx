@@ -160,6 +160,43 @@ const RequireAuth = ({ children }: { children: ReactNode }) => {
     }
   }, [loading, user, navigate, t]);
 
+  // 🛡️ GUARDIÃO PÓS-BUG 24/04: Redireciona usuários sem objetivo para /start.
+  // - Roda 1x por sessão (flag sessionStorage 'mq_onboarding_checked')
+  // - Não bloqueia render (assíncrono)
+  // - Não toca em quem já tem user_objectives preenchido
+  // NÃO REMOVER sem alinhar — previne regressão do onboarding silencioso.
+  useEffect(() => {
+    if (loading || !user) return;
+    if (sessionStorage.getItem('mq_onboarding_checked') === '1') return;
+
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('user_objectives')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        sessionStorage.setItem('mq_onboarding_checked', '1');
+
+        const obj = (data as any)?.user_objectives;
+        const empty = !obj || (Array.isArray(obj) && obj.length === 0);
+        if (empty && window.location.pathname !== '/start') {
+          navigate('/start', { replace: true });
+        }
+      } catch (e) {
+        logger.warn('[RequireAuth] objective check failed', e);
+      }
+    })();
+  }, [user, loading, navigate]);
+
+  // Limpa flag ao deslogar para que próximo login refaça a checagem
+  useEffect(() => {
+    if (!user && !loading) {
+      sessionStorage.removeItem('mq_onboarding_checked');
+    }
+  }, [user, loading]);
+
   // ✅ ETAPA 3: No Modo B, verificar payment_confirmed
   useEffect(() => {
     if (!user || loading || modeLoading) return;
