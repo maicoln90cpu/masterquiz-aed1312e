@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import fs from 'node:fs';
-import path from 'node:path';
 
 /**
  * Contrato P11: policies RLS devem usar `(SELECT auth.uid())` ao invés de `auth.uid()` direto.
@@ -28,7 +26,11 @@ import path from 'node:path';
 // Atualize PARA BAIXO conforme limpa, NUNCA pra cima.
 const MAX_BARE_AUTH_UID_ALLOWED = 235;
 
-const MIGRATIONS_DIR = path.resolve(__dirname, '../../../supabase/migrations');
+const migrationFiles = import.meta.glob('/supabase/migrations/*.sql', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 
 /**
  * Para cada cláusula USING(...) ou WITH CHECK(...), conta ocorrências de
@@ -69,25 +71,15 @@ function countBareAuthUid(sql: string): number {
   return total;
 }
 
-function listSqlMigrations(): string[] {
-  if (!fs.existsSync(MIGRATIONS_DIR)) return [];
-  return fs
-    .readdirSync(MIGRATIONS_DIR)
-    .filter((f) => f.endsWith('.sql'))
-    .map((f) => path.join(MIGRATIONS_DIR, f));
-}
-
 describe('RLS Contract: auth.uid() must be wrapped in (SELECT ...)', () => {
   it('número de auth.uid() bare em USING/WITH CHECK não aumenta', () => {
-    const files = listSqlMigrations();
     const offenders: Array<{ file: string; count: number }> = [];
     let total = 0;
 
-    for (const file of files) {
-      const sql = fs.readFileSync(file, 'utf8');
+    for (const [filePath, sql] of Object.entries(migrationFiles)) {
       const count = countBareAuthUid(sql);
       if (count > 0) {
-        offenders.push({ file: path.basename(file), count });
+        offenders.push({ file: filePath.split('/').pop() ?? filePath, count });
         total += count;
       }
     }
