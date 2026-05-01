@@ -1,0 +1,1 @@
+ALTER VIEW public.v_lifecycle_health SET (security_invoker = true);
