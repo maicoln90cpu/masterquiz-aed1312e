@@ -77,10 +77,21 @@ Deno.serve(async (req) => {
     const draftAbandonedTemplates = activeTemplates.filter(t => t.category === 'draft_abandoned');
     const upgradeNudgeTemplates = activeTemplates.filter(t => t.category === 'upgrade_nudge');
 
+    // ETAPA 6 — Blocos E (nurture pós-cadastro) e F (pós-tutorial)
+    const nurtureD3Templates = activeTemplates.filter(t => t.category === 'nurture_d3');
+    const nurtureD7Templates = activeTemplates.filter(t => t.category === 'nurture_d7');
+    const nurtureD14Templates = activeTemplates.filter(t => t.category === 'nurture_d14');
+    const nurtureD21Templates = activeTemplates.filter(t => t.category === 'nurture_d21');
+    const postTutorialD7Templates = activeTemplates.filter(t => t.category === 'post_tutorial_d7');
+    const postTutorialD14Templates = activeTemplates.filter(t => t.category === 'post_tutorial_d14');
+
     const hasAnyTemplate = inactivityTemplates.length || surveyTemplates.length ||
       planCompareTemplates.length || integrationGuideTemplates.length ||
       zombieTemplates.length || noResponseTemplates.length ||
-      draftAbandonedTemplates.length || upgradeNudgeTemplates.length;
+      draftAbandonedTemplates.length || upgradeNudgeTemplates.length ||
+      nurtureD3Templates.length || nurtureD7Templates.length ||
+      nurtureD14Templates.length || nurtureD21Templates.length ||
+      postTutorialD7Templates.length || postTutorialD14Templates.length;
 
     if (!hasAnyTemplate) {
       return okResponse({ message: 'Nenhum template processável ativo', queued: 0 }, traceId, corsHeaders);
@@ -161,7 +172,10 @@ Deno.serve(async (req) => {
     const usersWithIntegrations = new Set((integrations || []).map(i => i.user_id));
 
     // Quizzes (para Blocos B e C — Etapa 5)
-    const needsQuizzes = noResponseTemplates.length > 0 || draftAbandonedTemplates.length > 0;
+    const needsQuizzes = noResponseTemplates.length > 0 || draftAbandonedTemplates.length > 0 ||
+      nurtureD3Templates.length > 0 || nurtureD7Templates.length > 0 ||
+      nurtureD14Templates.length > 0 || nurtureD21Templates.length > 0 ||
+      postTutorialD7Templates.length > 0 || postTutorialD14Templates.length > 0;
     const quizzesByUser = new Map<string, Array<{ id: string; status: string; updated_at: string; creation_source: string | null; created_at: string }>>();
     if (needsQuizzes) {
       const { data: quizzes } = await supabase
@@ -388,6 +402,72 @@ Deno.serve(async (req) => {
           }
         }
       }
+
+      // --- BLOCO E — NURTURE pós-cadastro (free, sem quiz real, login_count >= 1) em D3/D7/D14/D21 ---
+      // Janela [X-1, X+1] para evitar colisão entre os 4 nurtures
+      if (!skipNewBlocksInstitutional && plan === 'free' && (profile.login_count ?? 0) >= 1) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const hasRealQuizE = userQuizzes.some(q => (q.creation_source || 'manual') !== 'express_auto');
+        if (!hasRealQuizE) {
+          const nurtureBlocks: Array<{ day: number; templates: typeof nurtureD3Templates; priority: number }> = [
+            { day: 3, templates: nurtureD3Templates, priority: 30 },
+            { day: 7, templates: nurtureD7Templates, priority: 28 },
+            { day: 14, templates: nurtureD14Templates, priority: 26 },
+            { day: 21, templates: nurtureD21Templates, priority: 24 },
+          ];
+          for (const block of nurtureBlocks) {
+            if (block.templates.length === 0) continue;
+            if (daysSinceSignup < block.day - 1 || daysSinceSignup > block.day + 1) continue;
+            for (const tmpl of block.templates) {
+              const key = `${profile.id}|${tmpl.id}`;
+              if (!sentSet.has(key)) {
+                contacts.push({
+                  user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                  status: 'pending', priority: block.priority,
+                  days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                  user_quiz_count: quizCount, user_lead_count: leadCount,
+                  scheduled_at: new Date().toISOString(),
+                });
+                sentSet.add(key);
+              }
+            }
+          }
+        }
+      }
+
+      // --- BLOCO F — POST-TUTORIAL (free, criou 1º quiz REAL há 7 ou 14 dias, janela ±1) ---
+      if (!skipNewBlocksInstitutional && plan === 'free' &&
+          (postTutorialD7Templates.length > 0 || postTutorialD14Templates.length > 0)) {
+        const userQuizzes = quizzesByUser.get(profile.id) || [];
+        const realQuizzes = userQuizzes
+          .filter(q => (q.creation_source || 'manual') !== 'express_auto')
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        if (realQuizzes.length > 0) {
+          const firstRealCreatedAt = new Date(realQuizzes[0].created_at).getTime();
+          const daysSinceFirstRealQuiz = Math.floor((Date.now() - firstRealCreatedAt) / 86400000);
+          const postTutorialBlocks: Array<{ day: number; templates: typeof postTutorialD7Templates; priority: number }> = [
+            { day: 7, templates: postTutorialD7Templates, priority: 22 },
+            { day: 14, templates: postTutorialD14Templates, priority: 20 },
+          ];
+          for (const block of postTutorialBlocks) {
+            if (block.templates.length === 0) continue;
+            if (daysSinceFirstRealQuiz < block.day - 1 || daysSinceFirstRealQuiz > block.day + 1) continue;
+            for (const tmpl of block.templates) {
+              const key = `${profile.id}|${tmpl.id}`;
+              if (!sentSet.has(key)) {
+                contacts.push({
+                  user_id: profile.id, email: profile.email, template_id: tmpl.id,
+                  status: 'pending', priority: block.priority,
+                  days_inactive_at_contact: daysInactive, user_plan_at_contact: plan,
+                  user_quiz_count: quizCount, user_lead_count: leadCount,
+                  scheduled_at: new Date().toISOString(),
+                });
+                sentSet.add(key);
+              }
+            }
+          }
+        }
+      }
     }
 
     // Respect daily limit
@@ -416,6 +496,12 @@ Deno.serve(async (req) => {
         no_response: noResponseTemplates.length,
         draft_abandoned: draftAbandonedTemplates.length,
         upgrade_nudge: upgradeNudgeTemplates.length,
+        nurture_d3: nurtureD3Templates.length,
+        nurture_d7: nurtureD7Templates.length,
+        nurture_d14: nurtureD14Templates.length,
+        nurture_d21: nurtureD21Templates.length,
+        post_tutorial_d7: postTutorialD7Templates.length,
+        post_tutorial_d14: postTutorialD14Templates.length,
         institutional_skipped: institutionalSkipped,
         institutional_domains_loaded: institutionalDomains.length,
       }
