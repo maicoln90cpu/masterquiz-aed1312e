@@ -103,11 +103,31 @@ Deno.serve(async (req) => {
 
     // Get all profiles with email
     const allUserIds = authUsers.users.map(u => u.id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, user_stage, user_objectives, created_at, facebook_pixel_id, gtm_container_id, whatsapp, login_count, plan_limit_hit_type')
-      .in('id', allUserIds)
-      .not('email', 'is', null);
+
+    // FIX: PostgREST .in() limita ~150 IDs por URL. Batch em chunks de 100.
+    const CHUNK_SIZE = 100;
+    const chunkIds = <T,>(arr: T[]): T[][] => {
+      const out: T[][] = [];
+      for (let i = 0; i < arr.length; i += CHUNK_SIZE) out.push(arr.slice(i, i + CHUNK_SIZE));
+      return out;
+    };
+    const userIdChunks = chunkIds(allUserIds);
+
+    // Profiles em batch
+    const profiles: any[] = [];
+    for (const chunk of userIdChunks) {
+      const { data: chunkProfiles, error: chunkErr } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, user_stage, user_objectives, created_at, facebook_pixel_id, gtm_container_id, whatsapp, login_count, plan_limit_hit_type')
+        .in('id', chunk)
+        .not('email', 'is', null);
+      if (chunkErr) {
+        console.error('Erro ao buscar profiles chunk:', chunkErr);
+        continue;
+      }
+      if (chunkProfiles) profiles.push(...chunkProfiles);
+    }
+    console.log(`profiles_found: ${profiles.length} de ${allUserIds.length} auth users`);
 
     if (!profiles?.length) {
       return okResponse({ message: 'Nenhum perfil com email', queued: 0 }, traceId, corsHeaders);
@@ -147,13 +167,17 @@ Deno.serve(async (req) => {
     }
 
     // Subscriptions
-    const { data: subs } = await supabase
-      .from('user_subscriptions')
-      .select('user_id, plan_type')
-      .in('user_id', allUserIds);
-    const userPlans = new Map((subs || []).map(s => [s.user_id, s.plan_type]));
+    const subsAll: any[] = [];
+    for (const chunk of userIdChunks) {
+      const { data: chunkSubs } = await supabase
+        .from('user_subscriptions')
+        .select('user_id, plan_type')
+        .in('user_id', chunk);
+      if (chunkSubs) subsAll.push(...chunkSubs);
+    }
+    const userPlans = new Map(subsAll.map(s => [s.user_id, s.plan_type]));
 
-    // Quiz stats
+    // Quiz stats (RPC aceita array grande sem limite de URL)
     const { data: statsData } = await supabase.rpc('get_user_quiz_stats', { user_ids: allUserIds });
     const statsMap = new Map((statsData || []).map((s: any) => [s.user_id, s]));
 
@@ -165,11 +189,15 @@ Deno.serve(async (req) => {
     const sentSet = new Set((existingContacts || []).map(c => `${c.user_id}|${c.template_id}`));
 
     // Integrations check (for integration_guide)
-    const { data: integrations } = await supabase
-      .from('user_integrations')
-      .select('user_id')
-      .in('user_id', allUserIds);
-    const usersWithIntegrations = new Set((integrations || []).map(i => i.user_id));
+    const integrationsAll: any[] = [];
+    for (const chunk of userIdChunks) {
+      const { data: chunkInt } = await supabase
+        .from('user_integrations')
+        .select('user_id')
+        .in('user_id', chunk);
+      if (chunkInt) integrationsAll.push(...chunkInt);
+    }
+    const usersWithIntegrations = new Set(integrationsAll.map(i => i.user_id));
 
     // Quizzes (para Blocos B e C — Etapa 5)
     const needsQuizzes = noResponseTemplates.length > 0 || draftAbandonedTemplates.length > 0 ||
@@ -178,14 +206,16 @@ Deno.serve(async (req) => {
       postTutorialD7Templates.length > 0 || postTutorialD14Templates.length > 0;
     const quizzesByUser = new Map<string, Array<{ id: string; status: string; updated_at: string; creation_source: string | null; created_at: string }>>();
     if (needsQuizzes) {
-      const { data: quizzes } = await supabase
-        .from('quizzes')
-        .select('id, user_id, status, updated_at, creation_source, created_at')
-        .in('user_id', allUserIds);
-      for (const q of quizzes || []) {
-        const list = quizzesByUser.get(q.user_id) || [];
-        list.push(q);
-        quizzesByUser.set(q.user_id, list);
+      for (const chunk of userIdChunks) {
+        const { data: quizzes } = await supabase
+          .from('quizzes')
+          .select('id, user_id, status, updated_at, creation_source, created_at')
+          .in('user_id', chunk);
+        for (const q of quizzes || []) {
+          const list = quizzesByUser.get(q.user_id) || [];
+          list.push(q);
+          quizzesByUser.set(q.user_id, list);
+        }
       }
     }
 
