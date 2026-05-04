@@ -79,6 +79,7 @@ const CreateQuizModern = () => {
   const isExpressMode = searchParams.get('mode') === 'express';
   const isAIAutoOpen = searchParams.get('ai') === 'true';
   const [showCelebration, setShowCelebration] = useState(false);
+  const [expressUsedAI, setExpressUsedAI] = useState(false);
   
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
@@ -191,6 +192,24 @@ const CreateQuizModern = () => {
     getQuizId: () => editorState.quizId,
   });
 
+  // Wrapper: dispara express_ai_closed se Express, antes de delegar ao hook
+  const handleBackFromAIWithTracking = useCallback(
+    (method?: 'skip_template' | 'x_button', aiWasUsed?: boolean) => {
+      if (isExpressMode) {
+        if (aiWasUsed) setExpressUsedAI(true);
+        pushGTMEvent('express_ai_closed', {
+          source: 'express',
+          mode: 'form',
+          quiz_id: editorState.quizId,
+          close_method: method ?? 'x_button',
+          ai_was_used: !!aiWasUsed,
+        });
+      }
+      handleBackFromAI();
+    },
+    [isExpressMode, editorState.quizId, handleBackFromAI]
+  );
+
   // ✅ Load limits
   useEffect(() => {
     const loadLimit = async () => {
@@ -211,6 +230,11 @@ const CreateQuizModern = () => {
           updateEditor({ step: 3 });
           updateUI({ showTemplateSelector: false, showAIGenerator: true });
           fireOnce('express_started', { quiz_id: editQuizId });
+          fireOnce('express_ai_opened', {
+            source: 'express',
+            mode: 'form',
+            quiz_id: editQuizId,
+          });
         } else if (isAIAutoOpen) {
           updateUI({ showAIGenerator: true });
         }
@@ -268,6 +292,14 @@ const CreateQuizModern = () => {
 
   // ✅ Handler para publicar
   const handlePublish = useCallback(async () => {
+    if (isExpressMode) {
+      pushGTMEvent('express_pre_publish', {
+        source: 'express',
+        quiz_id: editorState.quizId,
+        used_ai: expressUsedAI,
+        questions_count: questions.length,
+      });
+    }
     const result = await saveQuiz();
     logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
     if (result?.success && isExpressMode) {
@@ -278,7 +310,7 @@ const CreateQuizModern = () => {
       setPublishedQuizUrl(url);
       setShowCelebration(true);
     }
-  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug]);
+  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length]);
 
   const expressQuizUrl = useMemo(() => {
     if (!editorState.quizSlug) return '';
@@ -365,7 +397,7 @@ const CreateQuizModern = () => {
           </div>
         </header>
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <AIQuizGenerator onBack={handleBackFromAI} lockedMode={isExpressMode ? "form" : undefined} existingQuizId={isExpressMode ? editorState.quizId : undefined} />
+          <AIQuizGenerator onBack={handleBackFromAIWithTracking} lockedMode={isExpressMode ? "form" : undefined} existingQuizId={isExpressMode ? editorState.quizId : undefined} />
         </div>
       </main>
     );
