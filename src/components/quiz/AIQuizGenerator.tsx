@@ -22,7 +22,7 @@ import { pushGTMEvent } from "@/lib/gtmLogger";
 import { AIQuizFeedbackCard } from "./feedback/AIQuizFeedbackCard";
 
 interface AIQuizGeneratorProps {
-  onBack: () => void;
+  onBack: (method?: 'skip_template' | 'x_button', aiWasUsed?: boolean) => void;
   /** When true, locks the mode to "form" and hides the tab switcher */
   lockedMode?: "form" | "pdf" | "educational";
   /** When provided, updates existing quiz instead of creating a new one (Express mode) */
@@ -91,6 +91,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
   const maxQuestions = resourceLimits?.questionsPerQuizLimit || 10;
   
   const [isGenerating, setIsGenerating] = useState(false);
+  const aiUsedRef = useRef(false);
   const [uploadMode, setUploadMode] = useState<"form" | "pdf" | "educational">(lockedMode || "form");
   // Onda 2 — feedback após geração bem-sucedida
   const [feedbackInfo, setFeedbackInfo] = useState<{
