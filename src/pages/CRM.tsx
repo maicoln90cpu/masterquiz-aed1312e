@@ -560,6 +560,7 @@ const CRM = () => {
         <PlanLimitBlockedBanner
           blockedCount={blockedLeadsCount}
           labelKey="leads"
+          area="crm"
           className="mb-4"
         />
 
