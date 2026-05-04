@@ -3966,6 +3966,7 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      process_scheduled_deletions: { Args: never; Returns: Json }
       real_users_daily: {
         Args: { _days?: number }
         Returns: {
