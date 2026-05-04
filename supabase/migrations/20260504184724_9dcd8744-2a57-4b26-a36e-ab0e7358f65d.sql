@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.process_scheduled_deletions() FROM PUBLIC, anon, authenticated;
