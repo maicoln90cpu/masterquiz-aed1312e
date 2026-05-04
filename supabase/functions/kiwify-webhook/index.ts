@@ -158,6 +158,76 @@ Deno.serve(async (req) => {
 
     await supabaseAdmin.from('webhook_logs').insert({ email: buyerEmail, evento, produto, status: 'success', error_message: null, provider: 'kiwify', paid_plan_type: isActivationEvent(evento) ? newPlanType : null });
 
+    // 🔔 M1 — Notificação WhatsApp ao admin em pagamentos confirmados (fire-and-forget)
+    if (isActivationEvent(evento)) {
+      try {
+        const { data: aiSettings } = await supabaseAdmin
+          .from('whatsapp_ai_settings')
+          .select('admin_alert_phone')
+          .limit(1)
+          .maybeSingle();
+        const { data: recoverySettings } = await supabaseAdmin
+          .from('recovery_settings')
+          .select('evolution_api_url, instance_name, is_connected')
+          .limit(1)
+          .maybeSingle();
+
+        const adminPhone = aiSettings?.admin_alert_phone;
+        const evolutionApiUrl = (recoverySettings?.evolution_api_url || Deno.env.get('EVOLUTION_API_URL') || '').replace(/\/$/, '');
+        const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY');
+        const instanceName = recoverySettings?.instance_name || 'masterquizz';
+
+        if (!adminPhone) {
+          throw new Error('admin_alert_phone não configurado em whatsapp_ai_settings');
+        }
+        if (!evolutionApiUrl || !evolutionApiKey) {
+          throw new Error('Evolution API não configurada (URL ou KEY ausente)');
+        }
+
+        const when = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const text =
+          `💰 *Novo pagamento confirmado*\n\n` +
+          `👤 Cliente: ${buyerEmail}\n` +
+          `📦 Plano: ${newPlanType}${planName ? ` (${planName})` : ''}\n` +
+          `🛍️ Produto: ${produto}\n` +
+          `🕒 ${when}\n\n` +
+          `_MasterQuizz · Kiwify webhook_`;
+
+        const sendRes = await fetch(`${evolutionApiUrl}/message/sendText/${instanceName}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': evolutionApiKey },
+          body: JSON.stringify({ number: adminPhone, text }),
+        });
+
+        if (!sendRes.ok) {
+          const body = await sendRes.text().catch(() => '');
+          throw new Error(`Evolution HTTP ${sendRes.status}: ${body.substring(0, 200)}`);
+        }
+        console.log('[KIWIFY] Admin WhatsApp notification sent');
+      } catch (notifyErr) {
+        const msg = notifyErr instanceof Error ? notifyErr.message : String(notifyErr);
+        console.error('[KIWIFY] Admin notification failed (non-fatal):', msg);
+        try {
+          await supabaseAdmin.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'admin_payment_notification_failed',
+            resource_type: 'subscription',
+            resource_id: user.id,
+            metadata: {
+              email: buyerEmail,
+              plan_type: newPlanType,
+              plan_name: planName || null,
+              produto,
+              evento,
+              error: msg,
+            },
+          });
+        } catch (auditErr) {
+          console.error('[KIWIFY] audit_logs insert failed:', auditErr);
+        }
+      }
+    }
+
     // Mark A/B test conversion if applicable
     if (isActivationEvent(evento)) {
       try {
