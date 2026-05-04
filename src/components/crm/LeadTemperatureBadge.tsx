@@ -8,6 +8,8 @@ interface LeadTemperatureBadgeProps {
   temperature: LeadTemperature;
   compact?: boolean;
   className?: string;
+  /** Score 0–100 (opcional). Quando fornecido, aparece no tooltip. */
+  score?: number | null;
 }
 
 const config: Record<LeadTemperature, { i18nKey: string; icon: typeof Flame; classes: string }> = {
@@ -28,19 +30,22 @@ const config: Record<LeadTemperature, { i18nKey: string; icon: typeof Flame; cla
   },
 };
 
-export const LeadTemperatureBadge = ({ temperature, compact, className }: LeadTemperatureBadgeProps) => {
+export const LeadTemperatureBadge = ({ temperature, compact, className, score }: LeadTemperatureBadgeProps) => {
   const { t } = useTranslation();
   const { i18nKey, icon: Icon, classes } = config[temperature];
+  const label = t(i18nKey);
+  const tooltip =
+    typeof score === 'number' && Number.isFinite(score) ? `${label} — score ${score}/100` : label;
 
   return (
     <Badge
       variant="outline"
       className={cn('gap-1 text-xs font-medium', classes, className)}
-      aria-label={t(i18nKey)}
-      title={t(i18nKey)}
+      aria-label={tooltip}
+      title={tooltip}
     >
       <Icon className="h-3 w-3" />
-      {!compact && <span>{t(i18nKey)}</span>}
+      {!compact && <span>{label}</span>}
     </Badge>
   );
 };
