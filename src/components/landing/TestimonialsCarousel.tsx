@@ -4,60 +4,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { useLandingABTest } from "@/hooks/useLandingABTest";
 
-const TESTIMONIALS = [
-  {
-    name: "Mariana Silva",
-    handle: "@marianasilva",
-    avatar: "",
-    text: "Depois que comecei a usar o MasterQuiz, minha taxa de conversão subiu 40%. Os leads já chegam qualificados e prontos para comprar. Melhor investimento que fiz!",
-    date: "12 Fev 2026",
-    rating: 5,
-  },
-  {
-    name: "Lucas Oliveira",
-    handle: "@lucasoliv",
-    avatar: "",
-    text: "Eu testei várias plataformas de quiz e nenhuma tinha CRM integrado. O MasterQuiz resolve tudo em um só lugar. Recomendo demais para infoprodutores!",
-    date: "28 Jan 2026",
-    rating: 5,
-  },
-  {
-    name: "Fernanda Costa",
-    handle: "@fecosta.mkt",
-    avatar: "",
-    text: "A integração com Kiwify foi o diferencial. Meus quizzes agora direcionam direto pro checkout e os resultados são absurdos. Triplicou meu faturamento em 2 meses.",
-    date: "05 Mar 2026",
-    rating: 5,
-  },
-  {
-    name: "Rafael Mendes",
-    handle: "@rafaelmendes",
-    avatar: "",
-    text: "Sou gestor de tráfego e uso o MasterQuiz para qualificar leads antes de enviar pro cliente. A taxa de rejeição caiu pela metade. Ferramenta essencial!",
-    date: "18 Fev 2026",
-    rating: 5,
-  },
-  {
-    name: "Camila Ramos",
-    handle: "@camilaramos",
-    avatar: "",
-    text: "Criei meu primeiro quiz em menos de 10 minutos. A interface é intuitiva e os templates prontos facilitam demais. Já capturei mais de 500 leads qualificados!",
-    date: "01 Mar 2026",
-    rating: 5,
-  },
-  {
-    name: "Thiago Barbosa",
-    handle: "@thiagobarbosa",
-    avatar: "",
-    text: "O analytics em tempo real me dá visibilidade total do funil. Sei exatamente onde os leads abandonam e otimizo na hora. Game changer pro meu negócio!",
-    date: "22 Fev 2026",
-    rating: 5,
-  },
-];
+/**
+ * Depoimentos reais de clientes do MasterQuiz.
+ *
+ * ⚠️ Lista intencionalmente VAZIA — depoimentos fictícios anteriores foram
+ * removidos para evitar prova social falsa. Adicione apenas depoimentos
+ * reais e autorizados (com nome, handle, data e texto verídicos).
+ * Enquanto a lista estiver vazia o componente não renderiza nada.
+ */
+type Testimonial = {
+  name: string;
+  handle: string;
+  avatar: string;
+  text: string;
+  date: string;
+  rating: number;
+};
+
+const TESTIMONIALS: Testimonial[] = [];
 
 export const TestimonialsCarousel = () => {
   const { getContentForElement } = useLandingABTest('testimonials_title');
   const titleAB = getContentForElement('testimonials_title');
+
+  // Guarda: não renderiza nada se não houver depoimentos reais cadastrados.
+  if (TESTIMONIALS.length === 0) {
+    return null;
+  }
 
   return (
     <div className="w-full">
