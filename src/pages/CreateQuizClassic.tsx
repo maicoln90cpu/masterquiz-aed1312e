@@ -69,6 +69,7 @@ const CreateQuizClassic = () => {
   const isExpressMode = searchParams.get('mode') === 'express';
   const isAIAutoOpen = searchParams.get('ai') === 'true';
   const [showCelebration, setShowCelebration] = useState(false);
+  const [expressUsedAI, setExpressUsedAI] = useState(false);
   
   const [publishedQuizUrl, setPublishedQuizUrl] = useState('');
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
@@ -176,6 +177,7 @@ const CreateQuizClassic = () => {
   const handleBackFromAIWithTracking = useCallback(
     (method?: 'skip_template' | 'x_button', aiWasUsed?: boolean) => {
       if (isExpressMode) {
+        if (aiWasUsed) setExpressUsedAI(true);
         pushGTMEvent('express_ai_closed', {
           source: 'express',
           mode: 'form',
@@ -267,7 +269,7 @@ const CreateQuizClassic = () => {
       pushGTMEvent('express_pre_publish', {
         source: 'express',
         quiz_id: editorState.quizId,
-        used_ai: editorState.creationSource === 'ai',
+        used_ai: expressUsedAI,
         questions_count: questions.length,
       });
     }
@@ -281,7 +283,7 @@ const CreateQuizClassic = () => {
       setPublishedQuizUrl(url);
       setShowCelebration(true);
     }
-  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, editorState.creationSource, questions.length]);
+  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length]);
 
   const expressQuizUrl = useMemo(() => {
     if (!editorState.quizSlug) return '';
