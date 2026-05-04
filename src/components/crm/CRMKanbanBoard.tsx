@@ -143,6 +143,8 @@ export const CRMKanbanBoard = ({
                               bgColor={column.bgColor}
                               onClick={() => onLeadClick(lead)}
                               isTestLead={lead.answers?._is_test_lead === true}
+                              answers={lead.answers}
+                              questions={lead.quiz_questions}
                             />
                           </div>
                         ))
@@ -195,6 +197,8 @@ export const CRMKanbanBoard = ({
                             bgColor={column.bgColor}
                             onClick={() => onLeadClick(lead)}
                             isTestLead={lead.answers?._is_test_lead === true}
+                            answers={lead.answers}
+                            questions={lead.quiz_questions}
                           />
                         </div>
                       ))
