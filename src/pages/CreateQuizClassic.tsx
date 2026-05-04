@@ -172,6 +172,23 @@ const CreateQuizClassic = () => {
     getQuizId: () => editorState.quizId,
   });
 
+  // Wrapper: dispara express_ai_closed se Express, antes de delegar ao hook
+  const handleBackFromAIWithTracking = useCallback(
+    (method?: 'skip_template' | 'x_button', aiWasUsed?: boolean) => {
+      if (isExpressMode) {
+        pushGTMEvent('express_ai_closed', {
+          source: 'express',
+          mode: 'form',
+          quiz_id: editorState.quizId,
+          close_method: method ?? 'x_button',
+          ai_was_used: !!aiWasUsed,
+        });
+      }
+      handleBackFromAI();
+    },
+    [isExpressMode, editorState.quizId, handleBackFromAI]
+  );
+
   useEffect(() => {
     const loadLimit = async () => {
       const limit = await getQuestionsPerQuizLimit();
