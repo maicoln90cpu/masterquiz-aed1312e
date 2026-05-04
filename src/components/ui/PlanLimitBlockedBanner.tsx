@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useEffect, useRef } from "react";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 export type PlanLimitLabelKey =
   | "leads"
@@ -10,6 +12,13 @@ export type PlanLimitLabelKey =
   | "sessions"
   | "completions"
   | "starts";
+
+export type PlanLimitArea =
+  | "crm"
+  | "analytics_funnel"
+  | "analytics_responses"
+  | "dashboard"
+  | "responses";
 
 interface PlanLimitBlockedBannerProps {
   blockedCount: number;
@@ -19,6 +28,8 @@ interface PlanLimitBlockedBannerProps {
   label?: string;
   /** Texto adicional traduzido (ex: "(funil baseado em 15 de 23)") */
   context?: string;
+  /** Área da app onde o banner é exibido — usado p/ tracking GTM. */
+  area?: PlanLimitArea;
   className?: string;
 }
 
@@ -32,17 +43,31 @@ export const PlanLimitBlockedBanner = ({
   labelKey,
   label,
   context,
+  area,
   className,
 }: PlanLimitBlockedBannerProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-
-  if (!blockedCount || blockedCount <= 0) return null;
+  const firedRef = useRef(false);
 
   const resolvedLabel = labelKey
     ? t(`planLimitBanner.labels.${labelKey}`)
     : (label ?? "");
   const contextSuffix = context ? ` ${context}` : "";
+
+  // Dispara evento GTM mount-once quando o banner é efetivamente exibido.
+  useEffect(() => {
+    if (firedRef.current) return;
+    if (!blockedCount || blockedCount <= 0) return;
+    firedRef.current = true;
+    pushGTMEvent("plan_limit_blocked_viewed", {
+      blocked_count: blockedCount,
+      label: resolvedLabel,
+      area: area ?? "unknown",
+    });
+  }, [blockedCount, resolvedLabel, area]);
+
+  if (!blockedCount || blockedCount <= 0) return null;
 
   return (
     <Alert variant="warning" className={className}>
