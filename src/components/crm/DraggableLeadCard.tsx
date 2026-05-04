@@ -3,6 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Phone, FlaskConical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useMemo } from 'react';
+import { getLeadScore } from '@/lib/leadTemperature';
+import { LeadTemperatureBadge } from '@/components/crm/LeadTemperatureBadge';
 
 interface DraggableLeadCardProps {
   id: string;
@@ -13,6 +16,10 @@ interface DraggableLeadCardProps {
   bgColor: string;
   onClick: () => void;
   isTestLead?: boolean;
+  /** Respostas do lead — usadas para calcular score combinado. */
+  answers?: Record<string, unknown> | null;
+  /** Perguntas do quiz (com blocks/options/points) para cálculo de score. */
+  questions?: Array<{ id?: string; blocks?: any[] }> | null;
 }
 
 export const DraggableLeadCard = ({
@@ -24,6 +31,8 @@ export const DraggableLeadCard = ({
   bgColor,
   onClick,
   isTestLead,
+  answers,
+  questions,
 }: DraggableLeadCardProps) => {
   const { t } = useTranslation();
   const {
@@ -33,6 +42,18 @@ export const DraggableLeadCard = ({
     transform,
     isDragging,
   } = useDraggable({ id });
+
+  const { temperature, score0to100, hasPoints } = useMemo(
+    () =>
+      getLeadScore({
+        respondent_name: name,
+        respondent_email: email,
+        respondent_whatsapp: whatsapp,
+        answers: answers ?? null,
+        questions: questions ?? null,
+      }),
+    [name, email, whatsapp, answers, questions]
+  );
 
   const style = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -60,7 +81,12 @@ export const DraggableLeadCard = ({
         )}
       </div>
       <p className="text-xs text-muted-foreground truncate mb-2">{quizTitle}</p>
-      <div className="flex gap-1">
+      <div className="flex gap-1 items-center flex-wrap">
+        <LeadTemperatureBadge
+          temperature={temperature}
+          compact
+          score={hasPoints ? score0to100 : null}
+        />
         {email && (
           <Badge variant="outline" className="text-xs">
             <Mail className="h-3 w-3" />
