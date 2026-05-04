@@ -156,8 +156,29 @@ function FunnelBar({ label, count, total, pctLabel }: {
 // ═══════════════════════════════════════════
 function SectionA({ data }: { data: GrowthData['sectionA'] }) {
   const [showZombies, setShowZombies] = useState(false);
+
+  // 🛡️ Guard pós-bug 22/04 (TypeError: can't access property "funnel", data is undefined).
+  // Em alguns retornos de growth-metrics o objeto `funnel` pode vir ausente/nulo
+  // (erro parcial, conta sem dados etc.) — renderizamos empty state em vez de quebrar.
+  if (!data || !data.funnel) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Funil de Ativação</CardTitle>
+          <CardDescription>Dados do funil indisponíveis para este período</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center text-center gap-2 py-10 text-muted-foreground">
+            <BarChart3 className="h-10 w-10 opacity-40" aria-hidden="true" />
+            <p className="text-sm">Dados do funil indisponíveis para este período</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const f = data.funnel;
-  const total = data.totalUsers;
+  const total = data.totalUsers ?? 0;
 
   return (
     <div className="space-y-6">
