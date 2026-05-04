@@ -92,6 +92,10 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
   
   const [isGenerating, setIsGenerating] = useState(false);
   const aiUsedRef = useRef(false);
+  const handleClose = useCallback(
+    (method: 'skip_template' | 'x_button') => onBack(method, aiUsedRef.current),
+    [onBack]
+  );
   const [uploadMode, setUploadMode] = useState<"form" | "pdf" | "educational">(lockedMode || "form");
   // Onda 2 — feedback após geração bem-sucedida
   const [feedbackInfo, setFeedbackInfo] = useState<{
