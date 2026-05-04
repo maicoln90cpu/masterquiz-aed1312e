@@ -217,6 +217,11 @@ const CreateQuizClassic = () => {
           updateEditor({ step: 3 });
           updateUI({ showTemplateSelector: false, showAIGenerator: true });
           fireOnce('express_started', { quiz_id: editQuizId });
+          fireOnce('express_ai_opened', {
+            source: 'express',
+            mode: 'form',
+            quiz_id: editQuizId,
+          });
         } else if (isAIAutoOpen) {
           updateUI({ showAIGenerator: true });
         }
@@ -258,6 +263,14 @@ const CreateQuizClassic = () => {
   }, [clearLocalStorage, clearAndStartFresh, updateUI]);
 
   const handlePublish = useCallback(async () => {
+    if (isExpressMode) {
+      pushGTMEvent('express_pre_publish', {
+        source: 'express',
+        quiz_id: editorState.quizId,
+        used_ai: editorState.creationSource === 'ai',
+        questions_count: questions.length,
+      });
+    }
     const result = await saveQuiz();
     logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
     if (result?.success && isExpressMode) {
@@ -268,7 +281,7 @@ const CreateQuizClassic = () => {
       setPublishedQuizUrl(url);
       setShowCelebration(true);
     }
-  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug]);
+  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, editorState.creationSource, questions.length]);
 
   const expressQuizUrl = useMemo(() => {
     if (!editorState.quizSlug) return '';
@@ -300,7 +313,7 @@ const CreateQuizClassic = () => {
           </div>
         </header>
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <AIQuizGenerator onBack={handleBackFromAI} lockedMode={isExpressMode ? "form" : undefined} existingQuizId={isExpressMode ? editorState.quizId : undefined} />
+          <AIQuizGenerator onBack={handleBackFromAIWithTracking} lockedMode={isExpressMode ? "form" : undefined} existingQuizId={isExpressMode ? editorState.quizId : undefined} />
         </div>
       </main>
     );
