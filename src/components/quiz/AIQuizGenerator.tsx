@@ -316,6 +316,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
     }
 
     setIsGenerating(true);
+    aiUsedRef.current = true;
 
     try {
       // Preparar payload baseado no modo com novas variáveis
@@ -619,7 +620,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
         // não redireciona ainda — espera feedback ou skip
       } else {
         // Sem generation_id: redireciona como antes
-        if (existingQuizId) onBack();
+        if (existingQuizId) onBack(undefined, aiUsedRef.current);
         else navigate('/meus-quizzes');
       }
 
@@ -658,7 +659,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
             </AlertDescription>
           </Alert>
           <div className="flex gap-2">
-            <Button onClick={onBack} variant="outline">
+            <Button onClick={() => handleClose('x_button')} variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
               {t('common.back')}
             </Button>
@@ -683,7 +684,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
             onDone={() => {
               const info = feedbackInfo;
               setFeedbackInfo(null);
-              if (existingQuizId) onBack();
+              if (existingQuizId) onBack(undefined, aiUsedRef.current);
               else navigate('/meus-quizzes');
             }}
           />
@@ -696,11 +697,11 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
             <CardTitle className="text-2xl">Criar Quiz com IA</CardTitle>
           </div>
           {lockedMode ? (
-            <Button variant="outline" size="icon" onClick={onBack} className="h-10 w-10 rounded-full border-2 hover:bg-destructive/10">
+            <Button variant="outline" size="icon" onClick={() => handleClose('x_button')} className="h-10 w-10 rounded-full border-2 hover:bg-destructive/10">
               <X className="h-5 w-5" />
             </Button>
           ) : (
-            <Button variant="ghost" size="sm" onClick={onBack}>
+            <Button variant="ghost" size="sm" onClick={() => handleClose('x_button')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar
             </Button>
@@ -712,7 +713,7 @@ export const AIQuizGenerator = ({ onBack, lockedMode, existingQuizId }: AIQuizGe
         {lockedMode && (
           <p className="text-sm text-muted-foreground mt-2">
             Prefere editar um template manualmente?{' '}
-            <button type="button" onClick={onBack} className="text-destructive font-semibold text-base hover:underline inline-flex items-center gap-1">
+            <button type="button" onClick={() => handleClose('skip_template')} className="text-destructive font-semibold text-base hover:underline inline-flex items-center gap-1">
               Pular e usar template →
             </button>
           </p>
