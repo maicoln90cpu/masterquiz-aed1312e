@@ -22,6 +22,7 @@ import { FeatureTooltip } from "@/components/onboarding/FeatureTooltip";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { PlanLimitWarning } from "@/components/PlanLimitWarning";
 import { FirstLeadUpgradeBanner } from "@/components/FirstLeadUpgradeBanner";
+import { PlanLimitBlockedBanner } from "@/components/ui/PlanLimitBlockedBanner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useResourceLimits } from "@/hooks/useResourceLimits";
@@ -180,6 +181,14 @@ const Dashboard = () => {
       
       <div className="container mx-auto px-4 py-8">
         <FirstLeadUpgradeBanner />
+
+        {/* Banner de bloqueio por limite de plano (respostas além do limite ficam ocultas, mas continuam salvas) */}
+        <PlanLimitBlockedBanner
+          blockedCount={blockedResponses}
+          labelKey="responses"
+          area="dashboard"
+          className="mb-4"
+        />
 
         {/*
           Onboarding Progress Card — visível para TODOS os usuários com onboarding incompleto.
