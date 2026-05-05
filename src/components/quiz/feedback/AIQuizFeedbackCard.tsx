@@ -9,8 +9,16 @@
  * para perguntar nada que induza coleta de dados pessoais (email, telefone,
  * CPF). O placeholder é genérico de propósito — não alterar para perguntas
  * que peçam contato.
+ *
+ * REGRESSION SHIELD (GTM funnel — M4.2): este card dispara 3 eventos GTM
+ * que alimentam o funil de adoção do feedback de IA. Não remover sem
+ * substituir:
+ *   - `ai_feedback_shown`     → mount do card
+ *   - `ai_feedback_skipped`   → fechar/pular sem submeter
+ *   - `ai_feedback_submitted` → INSERT bem-sucedido
+ * `submittedRef` evita duplo disparo (submitted + skipped no mesmo ciclo).
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Star, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { pushGTMEvent } from "@/lib/gtmLogger";
 
 const QUICK_TAGS = [
   { id: "questions_made_sense", label: "Perguntas faziam sentido" },
@@ -50,6 +59,29 @@ export const AIQuizFeedbackCard = ({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const mountTimeRef = useRef<number>(Date.now());
+  const submittedRef = useRef<boolean>(false);
+
+  // M4.2 — dispara `ai_feedback_shown` quando o card aparece (sem dedup)
+  useEffect(() => {
+    pushGTMEvent("ai_feedback_shown", {
+      generation_id: generationId,
+      quiz_mode: quizMode,
+      questions_count: questionsCount,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSkip = () => {
+    if (!submittedRef.current) {
+      pushGTMEvent("ai_feedback_skipped", {
+        generation_id: generationId,
+        quiz_mode: quizMode,
+        time_visible_ms: Date.now() - mountTimeRef.current,
+      });
+    }
+    onDone();
+  };
 
   const toggleTag = (tagId: string) => {
     setSelectedTags(prev =>
@@ -82,11 +114,21 @@ export const AIQuizFeedbackCard = ({
       });
       if (error) throw error;
       toast.success("Obrigado pelo feedback!");
+      submittedRef.current = true;
+      pushGTMEvent("ai_feedback_submitted", {
+        generation_id: generationId,
+        quiz_mode: quizMode,
+        rating,
+        tags_count: selectedTags.length,
+        has_comment: comment.trim().length > 0,
+      });
       onDone();
     } catch (err: any) {
       // Conflict (já existe feedback p/ esse generation_id) — comporta-se como sucesso silencioso
       if (err?.code === "23505") {
         toast.info("Você já avaliou esse quiz");
+        // Não conta como submit novo, mas suprime o `skipped` no onDone
+        submittedRef.current = true;
         onDone();
         return;
       }
@@ -109,7 +151,7 @@ export const AIQuizFeedbackCard = ({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            onClick={onDone}
+            onClick={handleSkip}
             disabled={submitting}
             aria-label="Pular feedback"
           >
@@ -182,7 +224,7 @@ export const AIQuizFeedbackCard = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onDone}
+              onClick={handleSkip}
               disabled={submitting}
             >
               Pular
