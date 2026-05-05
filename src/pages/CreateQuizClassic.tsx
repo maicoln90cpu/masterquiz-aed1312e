@@ -39,6 +39,8 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ShareQuizDialog } from "@/components/quiz/ShareQuizDialog";
+import { CollectConfigWarningDialog } from "@/components/quiz/CollectConfigWarningDialog";
+import { useCollectConfigGate } from "@/hooks/useCollectConfigGate";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { ExpressIntroModal } from "@/components/quiz/express/ExpressIntroModal";
 import { EditorDataCollectionStep, EditorResultsStep } from "@/components/quiz/EditorFunnelSteps";
@@ -265,6 +267,14 @@ const CreateQuizClassic = () => {
     updateUI({ resetDialogOpen: false });
   }, [clearLocalStorage, clearAndStartFresh, updateUI]);
 
+  // B2 — Gate de configuração de coleta antes de publicar (quiz real apenas)
+  const collectGate = useCollectConfigGate({
+    formConfigState,
+    updateFormConfig,
+    saveQuiz,
+    isExpressMode,
+  });
+
   const handlePublish = useCallback(async () => {
     if (isExpressMode) {
       pushGTMEvent('express_pre_publish', {
@@ -273,18 +283,23 @@ const CreateQuizClassic = () => {
         used_ai: expressUsedAI,
         questions_count: questions.length,
       });
+      const result = await saveQuiz();
+      logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
+      if (result?.success) {
+        const slug = result.slug || editorState.quizSlug;
+        const url = profile?.company_slug
+          ? `${window.location.origin}/${profile.company_slug}/${slug}`
+          : `${window.location.origin}/quiz/${slug}`;
+        setPublishedQuizUrl(url);
+        setShowCelebration(true);
+      }
+      return;
     }
-    const result = await saveQuiz();
-    logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
-    if (result?.success && isExpressMode) {
-      const slug = result.slug || editorState.quizSlug;
-      const url = profile?.company_slug
-        ? `${window.location.origin}/${profile.company_slug}/${slug}`
-        : `${window.location.origin}/quiz/${slug}`;
-      setPublishedQuizUrl(url);
-      setShowCelebration(true);
-    }
-  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length]);
+    // B2: gating de coleta para quiz REAL
+    const blocked = await collectGate.gatedPublish();
+    if (blocked) return;
+    await saveQuiz();
+  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length, collectGate]);
 
   const expressQuizUrl = useMemo(() => {
     if (!editorState.quizSlug) return '';
@@ -1070,6 +1085,13 @@ const CreateQuizClassic = () => {
           queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
           navigate('/meus-quizzes');
         }}
+      />
+      <CollectConfigWarningDialog
+        open={collectGate.showWarning}
+        onOpenChange={collectGate.handleOpenChange}
+        quizId={quizId}
+        onConfirmAndPublish={collectGate.confirmAndPublish}
+        onPublishAnyway={collectGate.publishAnyway}
       />
     </main>
   );
