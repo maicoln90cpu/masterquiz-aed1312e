@@ -267,6 +267,14 @@ const CreateQuizClassic = () => {
     updateUI({ resetDialogOpen: false });
   }, [clearLocalStorage, clearAndStartFresh, updateUI]);
 
+  // B2 — Gate de configuração de coleta antes de publicar (quiz real apenas)
+  const collectGate = useCollectConfigGate({
+    formConfigState,
+    updateFormConfig,
+    saveQuiz,
+    isExpressMode,
+  });
+
   const handlePublish = useCallback(async () => {
     if (isExpressMode) {
       pushGTMEvent('express_pre_publish', {
@@ -291,7 +299,7 @@ const CreateQuizClassic = () => {
     const blocked = await collectGate.gatedPublish();
     if (blocked) return;
     await saveQuiz();
-  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length]);
+  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length, collectGate]);
 
   const expressQuizUrl = useMemo(() => {
     if (!editorState.quizSlug) return '';
