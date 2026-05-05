@@ -10,7 +10,7 @@ import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useAuth } from "@/contexts/AuthContext";
 import { quizTemplates } from "@/data/quizTemplates";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
-import { COMMERCIAL_OBJECTIVES, isCommercialObjective } from "@/lib/icpObjectives";
+import { isCommercialObjective } from "@/lib/icpObjectives";
 
 // Mapeamento objetivo → template ID
 const OBJECTIVE_TEMPLATE_MAP: Record<string, string> = {
