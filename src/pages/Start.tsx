@@ -10,6 +10,7 @@ import { pushGTMEvent } from "@/lib/gtmLogger";
 import { useAuth } from "@/contexts/AuthContext";
 import { quizTemplates } from "@/data/quizTemplates";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { COMMERCIAL_OBJECTIVES, isCommercialObjective } from "@/lib/icpObjectives";
 
 // Mapeamento objetivo → template ID
 const OBJECTIVE_TEMPLATE_MAP: Record<string, string> = {
@@ -19,9 +20,6 @@ const OBJECTIVE_TEMPLATE_MAP: Record<string, string> = {
   offer_validation: "funil-validacao-oferta",
   educational: "funil-educacional",
 };
-
-// Segmentação ON/OFF para GTM — ON = comercial (público comprador), OFF = educacional
-const COMMERCIAL_OBJECTIVES = ['lead_capture_launch', 'vsl_conversion', 'paid_traffic', 'offer_validation'];
 
 interface ObjectiveCard {
   value: string;
@@ -102,7 +100,7 @@ const Start = () => {
       }
 
       if (!alreadyFired) {
-        const isCommercial = COMMERCIAL_OBJECTIVES.includes(objective);
+        const isCommercial = isCommercialObjective(objective);
         pushGTMEvent('objective_selected', {
           value: isCommercial ? 'ON' : 'OFF',
           objective_type: objective,
@@ -117,6 +115,8 @@ const Start = () => {
       // timestamp original (carimbo imutável da primeira escolha).
       const profileUpdate: Record<string, unknown> = {
         user_objectives: [objective],
+        // C1+C2: persistir persona ICP (ON/OFF) para alimentar `user_activity_summary.icp_score`.
+        is_icp_profile: isCommercialObjective(objective),
       };
       if (!alreadyFired) {
         profileUpdate.objective_selected_at = new Date().toISOString();
