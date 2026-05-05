@@ -11,7 +11,7 @@ MasterQuiz — plataforma full-stack para criar **quizzes interativos de auto-co
 
 ## 2) Stack
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind + shadcn/ui + Framer Motion + React Router + TanStack Query + i18next (PT/EN/ES).
-- **Backend:** Supabase externo (PostgreSQL + RLS + 64 Edge Functions Deno + Auth + Storage).
+- **Backend:** Supabase externo (PostgreSQL + RLS + 65 Edge Functions Deno + Auth + Storage).
 - **Integrações:** Kiwify (pagamento), GTM (`pushGTMEvent` centralizado), Facebook Pixel (por quiz), Gemini/OpenAI (IA), Evolution API (WhatsApp), E-goi Bulk API (email), Bunny CDN (vídeo).
 
 ## 3) Personas e Roles
@@ -92,7 +92,7 @@ Quando reportado problema: além de corrigir, sempre avaliar proteção permanen
 | `CHANGELOG.md` | Histórico oficial por versão |
 | `docs/SYSTEM_DESIGN.md` | Arquitetura + 🛡️ camada de proteções |
 | `docs/DATABASE_SCHEMA.md` | 68 tabelas + RLS |
-| `docs/EDGE_FUNCTIONS.md` | 64 funções catalogadas |
+| `docs/EDGE_FUNCTIONS.md` | 65 funções catalogadas |
 | `docs/SECURITY.md` | RLS + testes de contrato P1 |
 | `docs/CODE_STANDARDS.md` | Padrões + lint rules ativas |
 | `docs/ADR.md` | Decisões arquiteturais (ADR-001 a ADR-013) |

@@ -130,7 +130,7 @@ Decisão registrada em **ADR-013** (`docs/ADR.md`).
 | [KNOWLEDGE.md](./KNOWLEDGE.md) | Resumo executivo (≤9500 chars) |
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica + camada de proteções |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema do banco (68 tabelas) |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo (64 funções) |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo (65 funções) |
 | [ADR.md](./ADR.md) | Decisões arquiteturais (ADR-001 a ADR-013) |
 | [SECURITY.md](./SECURITY.md) | Práticas de segurança + testes contrato P1 |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões + lint rules ativas |

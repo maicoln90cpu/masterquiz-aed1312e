@@ -1,4 +1,4 @@
-# 🔌 API Docs - Edge Functions (64 funções)
+# 🔌 API Docs - Edge Functions (65 funções)
 
 > MasterQuiz — Documentação das Edge Functions (Supabase/Deno)
 > Versão 2.42.0 | 17 de Abril de 2026
@@ -357,7 +357,7 @@ const corsHeaders = {
 | [PENDENCIAS.md](./PENDENCIAS.md) | Changelog |
 | [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
 | [TESTING.md](./TESTING.md) | Guia de testes |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |
 

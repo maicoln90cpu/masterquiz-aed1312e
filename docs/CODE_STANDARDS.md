@@ -363,5 +363,5 @@ Em `src/__tests__/contracts/` — falham o build se a invariante for quebrada:
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Formatação e linting |
 | [SECURITY.md](./SECURITY.md) | Padrões de segurança |
 | [TESTING.md](./TESTING.md) | Padrões de testes |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [ADR.md](./ADR.md) | ADR-010: Centralização GTM |

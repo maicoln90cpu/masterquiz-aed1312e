@@ -368,5 +368,5 @@ gtm_event_logs ──── gtm_event_integrations (referência por event_name)
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
 | [API_DOCS.md](./API_DOCS.md) | Edge Functions |
 | [ADR.md](./ADR.md) | Decisões arquiteturais |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |

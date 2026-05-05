@@ -153,7 +153,7 @@
 **Data:** Abril 2026  
 **Status:** Aceito  
 **Contexto:** O cliente Supabase (PostgREST) não permite acesso a `information_schema` ou `pg_catalog` para listar tabelas, triggers e cron jobs. Criar RPCs para cada catálogo seria over-engineering.  
-**Decisão:** Manter catálogos de tabelas (68), triggers (13), cron jobs (15) e Edge Functions (64) como arrays hardcoded no componente. Tamanhos reais obtidos via RPC `get_table_sizes()` (SECURITY DEFINER).  
+**Decisão:** Manter catálogos de tabelas (68), triggers (13), cron jobs (15) e Edge Functions (65) como arrays hardcoded no componente. Tamanhos reais obtidos via RPC `get_table_sizes()` (SECURITY DEFINER).  
 **Alternativas rejeitadas:** (1) RPCs para cada catálogo — manutenção alta para dados raramente alterados; (2) Edge Function de introspection — overhead para dados estáticos; (3) Dump do schema — complexo e frágil.  
 **Consequências:** Zero overhead de queries, dados sempre consistentes com o schema real, mas exige atualização manual do catálogo quando tabelas/triggers mudam.
 
@@ -213,5 +213,5 @@
 | [SECURITY.md](./SECURITY.md) | ADR-006 detalhado |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões derivados das ADRs |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema referenciado (68 tabelas) |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |
