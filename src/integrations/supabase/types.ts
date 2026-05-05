@@ -2355,6 +2355,7 @@ export type Database = {
           creation_source: string | null
           description: string | null
           facebook_pixel_id: string | null
+          first_published_at: string | null
           global_font_family: string | null
           global_font_size: string | null
           global_text_align: string | null
@@ -2383,6 +2384,7 @@ export type Database = {
           creation_source?: string | null
           description?: string | null
           facebook_pixel_id?: string | null
+          first_published_at?: string | null
           global_font_family?: string | null
           global_font_size?: string | null
           global_text_align?: string | null
@@ -2411,6 +2413,7 @@ export type Database = {
           creation_source?: string | null
           description?: string | null
           facebook_pixel_id?: string | null
+          first_published_at?: string | null
           global_font_family?: string | null
           global_font_size?: string | null
           global_text_align?: string | null
