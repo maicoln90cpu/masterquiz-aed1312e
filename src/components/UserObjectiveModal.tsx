@@ -47,15 +47,23 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
     setSaving(true);
     try {
       const objectives = selected;
-      // C1+C2: gravar persona ICP junto (ON se ALGUM objetivo selecionado é comercial).
+      // C1+C2: persona ICP gravada SEPARADAMENTE com guard de imutabilidade (.is null).
       const isIcp = objectives.some((o) => isCommercialObjective(o));
 
       const { error } = await (supabase as any)
         .from("profiles")
-        .update({ user_objectives: objectives, is_icp_profile: isIcp })
+        .update({ user_objectives: objectives })
         .eq("id", userId);
 
       if (error) throw error;
+
+      // Grava is_icp_profile SOMENTE na primeira vez — imutável após.
+      await (supabase as any)
+        .from("profiles")
+        .update({ is_icp_profile: isIcp })
+        .eq("id", userId)
+        .is("is_icp_profile", null);
+
       onComplete();
     } catch (err) {
       logger.error("Error saving objectives:", err);
