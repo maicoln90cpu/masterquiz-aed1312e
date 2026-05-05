@@ -204,8 +204,52 @@
 
 ---
 
-
 ## 📚 Documentação Relacionada
+
+## ADR-014: Imutabilidade de `is_icp_profile` via guard `.is(null)`
+
+**Data:** Maio 2026 (v2.44.0)  
+**Status:** ✅ Aceito
+
+### Contexto
+`profiles.is_icp_profile` classifica o usuário como ICP comercial (ON) ou educacional (OFF) e alimenta o `icp_score` em `user_activity_summary`. A regra exige gravação **única** — na primeira escolha do objetivo.
+
+### Decisão
+No client (`Start.tsx`, `UserObjectiveModal.tsx`), separar a gravação em **dois UPDATEs**:
+1. `user_objectives` (sempre).
+2. `is_icp_profile` com filtro `.is('is_icp_profile', null)` — só grava se NULL.
+
+### Alternativa descartada
+RPC `set_profile_first_value` SECURITY DEFINER. Optamos por solução client-only por simplicidade.
+
+### Consequências
+- ✅ Imutabilidade garantida sem nova RPC.
+- ✅ Backfill SQL (migration 20260505012427) preenche legados.
+- ⚠️ Depende do client — proteção: memória `mem://features/icp-tracking`.
+
+---
+
+## ADR-015: Email de ativação 24h independente do status WhatsApp
+
+**Data:** Maio 2026 (v2.44.0)  
+**Status:** ✅ Aceito
+
+### Contexto
+`check-activation-24h` abortava cedo quando `recovery_settings.is_connected = false`. Análise mostrou 29 de 33 usuários publicando sem divulgar — perdíamos a janela 24h pós-publicação.
+
+### Decisão
+- Mover o early-return de `is_connected` para dentro do bloco WhatsApp.
+- Adicionar bloco **email** independente: janela `first_published_at ∈ [now()-28h, now()-20h]`, dedup `(user_id, template_id)`, filtros: unsubscribes, já enviados, **domínios institucionais** (`institutional_email_domains`).
+- Cron `0 */4 * * *` para cobrir toda a janela.
+
+### Consequências
+- ✅ Email roda mesmo sem WhatsApp conectado.
+- ✅ Reaproveita query de candidatos.
+- ⚠️ Maior payload por execução — mitigado por chunking `.in()` ≤150.
+
+---
+
+## 📚 Documentação Relacionada (cont.)
 
 | Documento | Descrição |
 |-----------|-----------|
