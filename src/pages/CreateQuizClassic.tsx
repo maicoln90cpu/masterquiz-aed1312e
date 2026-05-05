@@ -38,6 +38,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
+import { ShareQuizDialog } from "@/components/quiz/ShareQuizDialog";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { ExpressIntroModal } from "@/components/quiz/express/ExpressIntroModal";
 import { EditorDataCollectionStep, EditorResultsStep } from "@/components/quiz/EditorFunnelSteps";
@@ -1054,73 +1055,22 @@ const CreateQuizClassic = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={shareDialogOpen && !isExpressMode} onOpenChange={(open) => updateUI({ shareDialogOpen: open })}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl">🎉 {t('createQuiz.quizPublished')}</DialogTitle>
-            <DialogDescription className="text-center">
-              {t('createQuiz.shareYourQuiz')}
-            </DialogDescription>
-          </DialogHeader>
-          {(() => {
-            const quizPublicUrl = profile?.company_slug 
-              ? `${window.location.origin}/${profile.company_slug}/${quizSlug}`
-              : `${window.location.origin}/quiz/${quizSlug}`;
-            
-            return (
-              <div className="space-y-4">
-                <div className="flex justify-center">
-                  <QRCodeSVG 
-                    value={quizPublicUrl}
-                    size={150}
-                    level="H"
-                    includeMargin
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    readOnly
-                    value={quizPublicUrl}
-                    className="flex-1"
-                  />
-                  <Button
-                    size="icon"
-                    onClick={() => {
-                      navigator.clipboard.writeText(quizPublicUrl);
-                      toast.success(t('createQuiz.linkCopied'));
-                      pushGTMEvent('QuizShared', { method: 'link', quiz_id: quizId });
-                      import('@/lib/icpTracking').then(m => m.incrementProfileCounter('quiz_shared_count')); // M02
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(quizPublicUrl, '_blank')}
-                    className="w-full"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    {t('createQuiz.openQuiz')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      updateUI({ shareDialogOpen: false });
-                      queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
-                      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-                      navigate('/meus-quizzes');
-                    }}
-                    className="w-full"
-                  >
-                    {t('createQuiz.goToDashboard')}
-                  </Button>
-                </div>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+      <ShareQuizDialog
+        open={shareDialogOpen && !isExpressMode}
+        onOpenChange={(open) => updateUI({ shareDialogOpen: open })}
+        quizUrl={
+          profile?.company_slug
+            ? `${window.location.origin}/${profile.company_slug}/${quizSlug}`
+            : `${window.location.origin}/quiz/${quizSlug}`
+        }
+        quizId={quizId}
+        onGoToDashboard={() => {
+          updateUI({ shareDialogOpen: false });
+          queryClient.invalidateQueries({ queryKey: ['recent-quizzes'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+          navigate('/meus-quizzes');
+        }}
+      />
     </main>
   );
 };
