@@ -289,6 +289,8 @@
 
 ### Componentes Admin — Sistema (v2.42.0)
 
+> Documentação detalhada do `DataTable` admin: ver [`src/components/admin/system/DataTable.md`](../src/components/admin/system/DataTable.md) (mantido junto do componente para facilitar manutenção).
+
 | Componente | Propósito |
 |------------|-----------|
 | `SystemHealthTab` | Sub-aba de saúde do sistema (health check EF) |
