@@ -1,7 +1,7 @@
 # 🔒 SECURITY — Práticas de Segurança
 
 > MasterQuiz — Guia de segurança, RLS, rate limiting e audit
-> Versão 2.43.0 | 18 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 
@@ -242,7 +242,7 @@ connect-src 'self' *.supabase.co;
 
 ---
 
-## 🧪 Testes de contrato de segurança (v2.43.0)
+## 🧪 Testes de contrato de segurança (v2.44.0)
 
 > Proteções automáticas que falham o build se um shortcut perigoso entrar no código.
 

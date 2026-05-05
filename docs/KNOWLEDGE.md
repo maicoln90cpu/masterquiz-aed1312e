@@ -1,6 +1,6 @@
 # 📘 KNOWLEDGE — MasterQuiz (Resumo Executivo para Knowledge Base)
 
-> Versão 2.43.0 | 18 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 > Documento compacto (≤9500 chars) destinado ao campo "Knowledge" do projeto Lovable.
 > Fonte de verdade canônica para qualquer agente IA atuando no codebase.
 
@@ -11,7 +11,7 @@ MasterQuiz — plataforma full-stack para criar **quizzes interativos de auto-co
 
 ## 2) Stack
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind + shadcn/ui + Framer Motion + React Router + TanStack Query + i18next (PT/EN/ES).
-- **Backend:** Supabase externo (PostgreSQL + RLS + 64 Edge Functions Deno + Auth + Storage).
+- **Backend:** Supabase externo (PostgreSQL + RLS + 65 Edge Functions Deno + Auth + Storage).
 - **Integrações:** Kiwify (pagamento), GTM (`pushGTMEvent` centralizado), Facebook Pixel (por quiz), Gemini/OpenAI (IA), Evolution API (WhatsApp), E-goi Bulk API (email), Bunny CDN (vídeo).
 
 ## 3) Personas e Roles
@@ -37,6 +37,8 @@ Core(4), Pagamento/Usuários(10), Analytics(5), Integrações(2), Bunny CDN(8), 
 8. **Tokens:** apenas tokens HSL semânticos do design system (`bg-background`, `text-foreground`) — NUNCA cores hardcoded (`bg-white`, `bg-[#xyz]`).
 9. **Roles:** verificação via `has_role()` server-side ou `useUserRole` hook — NUNCA via localStorage.
 10. **Persistência de quiz:** ao adicionar evento de publicação em `useQuizPersistence.ts`, OBRIGATÓRIO incluir `creation_source`/`publish_source`/`editor_mode`, validar dedup via RPC `has_user_fired_event` e persistir com `{ persist: true }`.
+11. **`is_icp_profile` imutável:** gravar com filtro `.is('is_icp_profile', null)` (ADR-014).
+12. **Email ativação 24h:** `check-activation-24h` envia email + WhatsApp em blocos independentes (cron 4h), filtrando `institutional_email_domains` (ADR-015).
 
 ## 8) 🛡️ 10 Proteções automáticas ativas (P1–P10) — falham build/test
 - **P1** Contract `user-roles-security.test.ts` — bloqueia INSERT direto em `user_roles` + admin via localStorage.
@@ -92,7 +94,7 @@ Quando reportado problema: além de corrigir, sempre avaliar proteção permanen
 | `CHANGELOG.md` | Histórico oficial por versão |
 | `docs/SYSTEM_DESIGN.md` | Arquitetura + 🛡️ camada de proteções |
 | `docs/DATABASE_SCHEMA.md` | 68 tabelas + RLS |
-| `docs/EDGE_FUNCTIONS.md` | 64 funções catalogadas |
+| `docs/EDGE_FUNCTIONS.md` | 65 funções catalogadas |
 | `docs/SECURITY.md` | RLS + testes de contrato P1 |
 | `docs/CODE_STANDARDS.md` | Padrões + lint rules ativas |
 | `docs/ADR.md` | Decisões arquiteturais (ADR-001 a ADR-013) |

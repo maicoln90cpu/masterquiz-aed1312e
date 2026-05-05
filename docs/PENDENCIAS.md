@@ -1,5 +1,25 @@
 # 📋 PENDÊNCIAS - MasterQuiz
 
+## ✅ v2.44.0 — Email 24h + ICP imutável + Doc Sweep (05/05/2026)
+
+### O que mudou
+- **`check-activation-24h`**: bloco de email separado do bloco WhatsApp (early-return de `recovery_settings.is_connected` agora é local ao bloco WhatsApp). Janela `first_published_at` ∈ [now()-28h, now()-20h], dedup `(user_id, template_id)`, filtros: unsubscribes, já enviados, **domínios institucionais** via `institutional_email_domains`.
+- **Cron 4h** (`0 */4 * * *`) para `check-activation-24h`.
+- **`is_icp_profile` imutável**: gravação no `/start` e `UserObjectiveModal` usa UPDATE separado com `.is('is_icp_profile', null)`.
+- **Edge Function nova** `capture-db-size-snapshot` catalogada.
+- **Doc sweep**: 65 edges, bump v2.44.0, ADR-014/015, KNOWLEDGE.md regenerado.
+
+### Arquivos
+- `supabase/functions/check-activation-24h/index.ts`
+- `src/pages/Start.tsx`, `src/components/UserObjectiveModal.tsx`
+- `docs/EDGE_FUNCTIONS.md`, `docs/CHANGELOG.md`, `docs/ADR.md`, `docs/KNOWLEDGE.md`, `docs/MEMOCOPY.md` + bumps de versão em demais docs
+
+### Prevenção de regressão
+- Validador `scripts/validate-docs.cjs` agora reconhece 65 EFs (CI verde).
+- ADRs 014/015 documentam decisões para evitar reversão.
+
+---
+
 ## ✅ Onda 7 — Sub-onda 7-B (8 edges de tracking & utilitários migradas)
 
 ### O que mudou
@@ -169,7 +189,7 @@
   - `src/pages/Login.tsx` — `migrate-imported-user`
 - **Teste unitário**: `src/lib/__tests__/invokeEdgeFunction.test.ts` (6 testes verdes).
 
-## ✅ v2.43.0 — Camada de proteções automáticas (Fases 1–3 — 18/04/2026)
+## ✅ v2.44.0 — Camada de proteções automáticas (Fases 1–3 — 18/04/2026)
 
 ### Feature: 10 escudos de regressão (P1–P10)
 - **Contract tests** (Vitest com `import.meta.glob`):
@@ -185,7 +205,7 @@
   - P7 — warning para cores hardcoded fora de tokens HSL
 - **Comentários-trava** (P9) em `src/hooks/useQuizPersistence.ts` para qualquer novo evento de publicação.
 
-### Feature: Documentação v2.43.0
+### Feature: Documentação v2.44.0
 - Novo `docs/KNOWLEDGE.md` (≤9500 chars) — resumo executivo para Knowledge Base
 - Novo **ADR-013** em `docs/ADR.md` — "Proteções de regressão como código"
 - Snapshot completo regenerado em `docs/MEMOCOPY.md`
@@ -204,7 +224,7 @@
 | `docs/SECURITY.md` | + seção testes de contrato |
 | `docs/CODE_STANDARDS.md` | + seção lint rules ativas |
 | `docs/SYSTEM_DESIGN.md` | + seção proteções automáticas |
-| `docs/MEMOCOPY.md` | Snapshot v2.43.0 |
+| `docs/MEMOCOPY.md` | Snapshot v2.44.0 |
 | `CHANGELOG.md`, `README.md`, `ROADMAP.md`, `ONBOARDING.md` | Bump versão |
 
 ### Próximos passos sugeridos (não críticos)

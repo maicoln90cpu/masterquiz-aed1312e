@@ -1,7 +1,7 @@
-# 🔌 API Docs - Edge Functions (64 funções)
+# 🔌 API Docs - Edge Functions (65 funções)
 
 > MasterQuiz — Documentação das Edge Functions (Supabase/Deno)
-> Versão 2.42.0 | 17 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 > **Novidades v2.42.0:** A função `blog-sitemap` agora inclui `/compare` no XML retornado (priority 0.9, weekly). Nenhuma EF nova foi criada — a página `/compare` é totalmente client-side e usa apenas o hook `useDocumentMeta` + helper `buildCompareJsonLd()` para injetar JSON-LD Schema.org. O A/B test do CTA final consome as tabelas `landing_ab_tests` / `landing_ab_sessions` via cliente Supabase direto (sem Edge Function).
 
@@ -357,7 +357,7 @@ const corsHeaders = {
 | [PENDENCIAS.md](./PENDENCIAS.md) | Changelog |
 | [BLOCKS.md](./BLOCKS.md) | Catálogo dos 34 tipos de blocos |
 | [TESTING.md](./TESTING.md) | Guia de testes |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |
 

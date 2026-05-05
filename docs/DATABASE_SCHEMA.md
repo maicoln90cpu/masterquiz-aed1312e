@@ -1,7 +1,7 @@
 # 🗄️ DATABASE SCHEMA — MasterQuiz
 
 > Schema completo do banco de dados PostgreSQL (Supabase)
-> Versão 2.42.0 | 17 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 
@@ -368,5 +368,5 @@ gtm_event_logs ──── gtm_event_integrations (referência por event_name)
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica |
 | [API_DOCS.md](./API_DOCS.md) | Edge Functions |
 | [ADR.md](./ADR.md) | Decisões arquiteturais |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |

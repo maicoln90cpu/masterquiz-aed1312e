@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 18 de Abril de 2026 | Versão 2.43.0
+> Última atualização: 5 de Maio de 2026 | Versão 2.44.0
 
 ---
 
@@ -119,7 +119,7 @@ graph TB
 ├─────────────────────────────────────────────────────────────────────┤
 │  Auth            │  PostgreSQL       │  Edge Functions  │  Storage   │
 │  ────            │  ──────────       │  ──────────────  │  ───────   │
-│  JWT Sessions    │  RLS em tudo      │  64 funções      │  quiz-media│
+│  JWT Sessions    │  RLS em tudo      │  65 funções      │  quiz-media│
 │  Email/Password  │  Triggers         │  Deno runtime    │  (público) │
 │  Auto-refresh    │  DB Functions     │  _shared/        │            │
 └──────────────────┴───────────────────┴──────────────────┴────────────┘
@@ -307,7 +307,7 @@ Cada pergunta pode ter múltiplos blocos organizados por `order`. O bloco `quest
 
 ---
 
-## 🔌 APIs e Edge Functions (64 funções)
+## 🔌 APIs e Edge Functions (65 funções)
 
 ### Autenticação dos Endpoints
 
@@ -700,7 +700,7 @@ site_mode (system_settings) ──▶ Landing dinâmica
 
 ## 🛡️ Camada de proteções automáticas (Lint + Contract Tests)
 
-> Introduzida em v2.43.0 (Fases 1–3). 10 escudos (P1–P10) que falham build/test antes que regressões críticas cheguem em produção.
+> Introduzida em v2.44.0 (Fases 1–3). 10 escudos (P1–P10) que falham build/test antes que regressões críticas cheguem em produção.
 
 | ID | Tipo | Onde vive | Bloqueia |
 |----|------|-----------|----------|
@@ -740,7 +740,7 @@ site_mode (system_settings) ──▶ Landing dinâmica
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
 | [SECURITY.md](./SECURITY.md) | Práticas de segurança e RLS |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões obrigatórios de código |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
 | [ADR.md](./ADR.md) | Architecture Decision Records |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |

@@ -1,8 +1,8 @@
 # 🗺 ROADMAP - MasterQuiz
 
-> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026 — v2.43.0
+> Plataforma de Funis de Auto-Convencimento — Planejamento estratégico 2025-2026 — v2.44.0
 >
-> ✅ **Abr/2026 (v2.43.0):** Camada de proteções automáticas P1–P10 entregue (lint + contract tests + comentários-trava).
+> ✅ **Abr/2026 (v2.44.0):** Camada de proteções automáticas P1–P10 entregue (lint + contract tests + comentários-trava).
 
 ---
 
@@ -138,7 +138,7 @@ Q4 2025: Expansão Internacional
   - Tabela `gtm_event_integrations` com controle por evento
   - Dashboard GTM com filtros por categoria/status/integração
   - 3 novas Edge Functions (growth-metrics, check-expired-trials, sync-plan-limits)
-  - Documentação atualizada: 68 tabelas, 64 Edge Functions
+  - Documentação atualizada: 68 tabelas, 65 Edge Functions
 - **Painel Admin Reorganizado + Monitoramento** (v2.42.0) ✅
   - Admin reorganizado em 6 domínios funcionais (Início, Usuários, Conteúdo, Vendas, Sistema, Dev Tools)
   - Aba Sistema com 5 sub-abas (Saúde, Observabilidade, Banco de Dados, Configurações, GTM/Diag)
@@ -186,7 +186,7 @@ Q4 2025: Expansão Internacional
 |------|-----------|
 | 2026-04-17 | **v2.42.0 — `/compare` SEO + A/B + JSDoc + TypeDoc + HOOKS.md + CHANGELOG.md** |
 | 2026-04-16 | **v2.42.0 — Painel Admin Reorganizado + Sistema de Monitoramento + Docs Overhaul** |
-| 2026-04-15 | **v2.41.0 — GTM Centralizado + Growth Dashboard + 3 novas EFs + Docs Overhaul (68 tabelas, 64 EFs)** |
+| 2026-04-15 | **v2.41.0 — GTM Centralizado + Growth Dashboard + 3 novas EFs + Docs Overhaul (68 tabelas, 65 EFs)** |
 | 2026-04-14 | **v2.40.0 — Suporte Avançado + Visual Diff + Block Editor + Notificações + PDF Report + 6 novos docs** |
 | 2026-04-08 | **v2.39.0 — Custos Email + Preview Email + Comparação A×B + Preços Modo B + GTM Lifecycle + Batching Users + Doc Overhaul** |
 | 2026-04-07 | **v2.38.0–v2.38.4 — Vault secrets, logging automações, webhookUrl, fix usuarios, fix GTM** |
@@ -230,7 +230,7 @@ Q4 2025: Expansão Internacional
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo do banco |
 | [SECURITY.md](./SECURITY.md) | Práticas de segurança e RLS |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões obrigatórios de código |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
 | [ADR.md](./ADR.md) | Architecture Decision Records |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |

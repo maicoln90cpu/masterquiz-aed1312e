@@ -1,7 +1,7 @@
 # 🧩 Componentes - MasterQuiz
 
 > Documentação dos componentes principais do frontend
-> Versão 2.42.0 | 16 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 
@@ -282,12 +282,14 @@
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema completo (68 tabelas) |
 | [SECURITY.md](./SECURITY.md) | Práticas de segurança |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões de código |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [ONBOARDING.md](./ONBOARDING.md) | Guia para novos desenvolvedores |
 | [ADR.md](./ADR.md) | Architecture Decision Records |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |
 
 ### Componentes Admin — Sistema (v2.42.0)
+
+> Documentação detalhada do `DataTable` admin: ver [`src/components/admin/system/DataTable.md`](../src/components/admin/system/DataTable.md) (mantido junto do componente para facilitar manutenção).
 
 | Componente | Propósito |
 |------------|-----------|

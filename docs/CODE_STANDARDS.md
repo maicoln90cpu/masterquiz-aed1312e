@@ -1,7 +1,7 @@
 # 📐 CODE STANDARDS — Padrões Obrigatórios de Código
 
 > MasterQuiz — Regras, convenções e exemplos do/don't
-> Versão 2.43.0 | 18 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 
@@ -239,7 +239,7 @@ window.dataLayer?.push({ event: 'QuizShared' }); // ❌
 
 ---
 
-## 🚨 Lint rules ativas (regressão zero — v2.43.0)
+## 🚨 Lint rules ativas (regressão zero — v2.44.0)
 
 > Todas configuradas em `eslint.config.js`. As que **bloqueiam** falham o build; as que **avisam** ficam como TODO incremental.
 
@@ -363,5 +363,5 @@ Em `src/__tests__/contracts/` — falham o build se a invariante for quebrada:
 | [STYLE_GUIDE.md](./STYLE_GUIDE.md) | Formatação e linting |
 | [SECURITY.md](./SECURITY.md) | Padrões de segurança |
 | [TESTING.md](./TESTING.md) | Padrões de testes |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [ADR.md](./ADR.md) | ADR-010: Centralização GTM |

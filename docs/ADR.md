@@ -1,7 +1,7 @@
 # 📋 ADR — Architecture Decision Records
 
 > Registro de decisões arquiteturais do MasterQuiz
-> Versão 2.43.0 | 18 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 
@@ -153,7 +153,7 @@
 **Data:** Abril 2026  
 **Status:** Aceito  
 **Contexto:** O cliente Supabase (PostgREST) não permite acesso a `information_schema` ou `pg_catalog` para listar tabelas, triggers e cron jobs. Criar RPCs para cada catálogo seria over-engineering.  
-**Decisão:** Manter catálogos de tabelas (68), triggers (13), cron jobs (15) e Edge Functions (64) como arrays hardcoded no componente. Tamanhos reais obtidos via RPC `get_table_sizes()` (SECURITY DEFINER).  
+**Decisão:** Manter catálogos de tabelas (68), triggers (13), cron jobs (15) e Edge Functions (65) como arrays hardcoded no componente. Tamanhos reais obtidos via RPC `get_table_sizes()` (SECURITY DEFINER).  
 **Alternativas rejeitadas:** (1) RPCs para cada catálogo — manutenção alta para dados raramente alterados; (2) Edge Function de introspection — overhead para dados estáticos; (3) Dump do schema — complexo e frágil.  
 **Consequências:** Zero overhead de queries, dados sempre consistentes com o schema real, mas exige atualização manual do catálogo quando tabelas/triggers mudam.
 
@@ -183,7 +183,7 @@
 
 ## ADR-013: Proteções de regressão como código (Lint + Contract Tests + Comentários-trava)
 
-**Data:** Abril 2026 (v2.43.0)
+**Data:** Abril 2026 (v2.44.0)
 **Status:** Aceito
 **Contexto:** Após sucessivas regressões em áreas críticas (privilege escalation por INSERT direto em `user_roles`, eventos GTM duplicados por `dataLayer.push` direto, UPDATEs incorretos em colunas ICP, perda de eventos por `sendBeacon` cancelado, blocos novos sem renderer, eventos de publicação sem dedup), revisão manual mostrou-se insuficiente. Toda regressão tinha um padrão sintático identificável que poderia ser detectado automaticamente.
 **Decisão:** Criar 10 proteções (P1–P10) divididas em três mecanismos:
@@ -204,8 +204,52 @@
 
 ---
 
-
 ## 📚 Documentação Relacionada
+
+## ADR-014: Imutabilidade de `is_icp_profile` via guard `.is(null)`
+
+**Data:** Maio 2026 (v2.44.0)  
+**Status:** ✅ Aceito
+
+### Contexto
+`profiles.is_icp_profile` classifica o usuário como ICP comercial (ON) ou educacional (OFF) e alimenta o `icp_score` em `user_activity_summary`. A regra exige gravação **única** — na primeira escolha do objetivo.
+
+### Decisão
+No client (`Start.tsx`, `UserObjectiveModal.tsx`), separar a gravação em **dois UPDATEs**:
+1. `user_objectives` (sempre).
+2. `is_icp_profile` com filtro `.is('is_icp_profile', null)` — só grava se NULL.
+
+### Alternativa descartada
+RPC `set_profile_first_value` SECURITY DEFINER. Optamos por solução client-only por simplicidade.
+
+### Consequências
+- ✅ Imutabilidade garantida sem nova RPC.
+- ✅ Backfill SQL (migration 20260505012427) preenche legados.
+- ⚠️ Depende do client — proteção: memória `mem://features/icp-tracking`.
+
+---
+
+## ADR-015: Email de ativação 24h independente do status WhatsApp
+
+**Data:** Maio 2026 (v2.44.0)  
+**Status:** ✅ Aceito
+
+### Contexto
+`check-activation-24h` abortava cedo quando `recovery_settings.is_connected = false`. Análise mostrou 29 de 33 usuários publicando sem divulgar — perdíamos a janela 24h pós-publicação.
+
+### Decisão
+- Mover o early-return de `is_connected` para dentro do bloco WhatsApp.
+- Adicionar bloco **email** independente: janela `first_published_at ∈ [now()-28h, now()-20h]`, dedup `(user_id, template_id)`, filtros: unsubscribes, já enviados, **domínios institucionais** (`institutional_email_domains`).
+- Cron `0 */4 * * *` para cobrir toda a janela.
+
+### Consequências
+- ✅ Email roda mesmo sem WhatsApp conectado.
+- ✅ Reaproveita query de candidatos.
+- ⚠️ Maior payload por execução — mitigado por chunking `.in()` ≤150.
+
+---
+
+## 📚 Documentação Relacionada (cont.)
 
 | Documento | Descrição |
 |-----------|-----------|
@@ -213,5 +257,5 @@
 | [SECURITY.md](./SECURITY.md) | ADR-006 detalhado |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões derivados das ADRs |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema referenciado (68 tabelas) |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 64 Edge Functions |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo das 65 Edge Functions |
 | [SERVICES.md](./SERVICES.md) | Catálogo de services |

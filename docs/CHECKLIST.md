@@ -2,7 +2,7 @@
 
 > Guia completo para validação manual do aplicativo antes do lançamento.
 
-**Versão:** 2.42.0  
+**Versão:** 2.44.0  
 **Data:** 15/04/2026
 
 ---

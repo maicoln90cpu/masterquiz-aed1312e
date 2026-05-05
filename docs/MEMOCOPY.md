@@ -1,7 +1,7 @@
 # 📝 MEMOCOPY — Backup de Memórias do Projeto
 
 > Cópia completa de todas as memórias persistidas na sessão de desenvolvimento.
-> **Versão 2.43.0 | 18 de Abril de 2026**
+> **Versão 2.44.0 | 5 de Maio de 2026**
 >
 > Este arquivo é regenerado a cada release importante para servir como backup
 > caso a memória do projeto seja perdida ou precise ser auditada.
@@ -27,6 +27,7 @@
 7. **Network:** Use `fetch` with `keepalive: true` and `apikey` header instead of `navigator.sendBeacon`.
 8. **PostgREST:** Batch `.in()` queries up to 150 IDs to avoid URL length limits.
 9. **ICP counters:** em `profiles` devem usar `src/lib/icpTracking.ts` (RPCs SECURITY DEFINER atômicas), nunca UPDATE direto.
+10. **`is_icp_profile` imutável** após 1ª escrita — gravar com filtro `.is('is_icp_profile', null)` no client (ADR-014).
 10. **Roles:** verificação via `has_role()` server-side ou `useUserRole` — nunca localStorage. INSERT direto em `user_roles` proibido (allowlist auditada em `SECURITY.md`).
 11. **Editor CSS:** Scope `RichTextEditor` CSS with `useId()` (e.g., `.rte-r1`) to prevent style bleeding.
 12. **Errors:** Persist detailed DB errors in toasts (not generic messages) to aid debugging.
@@ -35,7 +36,7 @@
 
 ---
 
-## 🛡️ Proteções automáticas (Fases 1–3 — abr/2026, v2.43.0)
+## 🛡️ Proteções automáticas (Fases 1–3 — abr/2026, v2.44.0)
 
 10 escudos contra regressão. Falham `npm run test` ou `npm run lint`.
 
@@ -130,7 +131,7 @@ Decisão registrada em **ADR-013** (`docs/ADR.md`).
 | [KNOWLEDGE.md](./KNOWLEDGE.md) | Resumo executivo (≤9500 chars) |
 | [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md) | Arquitetura técnica + camada de proteções |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schema do banco (68 tabelas) |
-| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo (64 funções) |
+| [EDGE_FUNCTIONS.md](./EDGE_FUNCTIONS.md) | Catálogo (65 funções) |
 | [ADR.md](./ADR.md) | Decisões arquiteturais (ADR-001 a ADR-013) |
 | [SECURITY.md](./SECURITY.md) | Práticas de segurança + testes contrato P1 |
 | [CODE_STANDARDS.md](./CODE_STANDARDS.md) | Padrões + lint rules ativas |

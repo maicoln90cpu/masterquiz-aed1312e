@@ -7,6 +7,31 @@
 
 ---
 
+## [2.44.0] — 2026-05-05
+
+### ✨ Adicionado
+- **Email de ativação 24h** dentro de `check-activation-24h` (bloco de email independente do bloco WhatsApp). Janela `first_published_at` entre 28h e 20h, dedup por `(user_id, template_id)`, filtros: unsubscribes, já enviados e **domínios institucionais** (via tabela `institutional_email_domains`).
+- Cron job a cada **4 horas** (`0 */4 * * *`) para `check-activation-24h`, garantindo cobertura de toda a janela 20h–28h.
+- Edge Function `capture-db-size-snapshot` (catalogada — snapshot diário de tamanho do banco em `system_health_metrics`).
+- ADR-014: Imutabilidade de `is_icp_profile` via guard `.is(null)` no client.
+- ADR-015: Email 24h independente de status de conexão WhatsApp.
+
+### 🛠️ Alterado
+- `is_icp_profile`: gravação no `/start` e `UserObjectiveModal` agora é imutável após a primeira escolha (UPDATE separado com filtro `.is('is_icp_profile', null)`), preservando integridade do `user_activity_summary.icp_score`.
+- `check-activation-24h`: early-return de `recovery_settings.is_connected` movido para **dentro** do bloco WhatsApp; bloco de email roda independente.
+- Documentação: contagem oficial de Edge Functions atualizada para **65** (validador `scripts/validate-docs.cjs` verde).
+
+### 🧹 Removido
+- `src/components/quiz/QuizActions.tsx` (substituído por `AIQuizFeedbackCard` no fluxo M4.2).
+
+### 📚 Documentação
+- Bump global para v2.44.0 nos docs principais.
+- ADR.md +2 entradas (014, 015).
+- `docs/MEMOCOPY.md` regenerado a partir de `mem://index.md`.
+- `docs/KNOWLEDGE.md` revisado (≤9500 chars) com referência ao novo fluxo de email 24h e regra de imutabilidade ICP.
+
+---
+
 ## [2.43.0] — 2026-04-18
 
 ### ✨ Adicionado
@@ -25,14 +50,14 @@
 - **ADR-013** em `docs/ADR.md` — "Proteções de regressão como código" (decisão, alternativas, consequências).
 
 ### 🔄 Alterado
-- **`docs/MEMOCOPY.md`** regenerado como snapshot v2.43.0 com bloco "Proteções automáticas P1–P10".
+- **`docs/MEMOCOPY.md`** regenerado como snapshot v2.44.0 com bloco "Proteções automáticas P1–P10".
 - **`docs/SECURITY.md`** ganhou seção "🧪 Testes de contrato de segurança" referenciando P1.
 - **`docs/CODE_STANDARDS.md`** ganhou seção "🚨 Lint rules ativas (regressão zero)" listando P2/P3/P4/P5/P7.
 - **`docs/SYSTEM_DESIGN.md`** ganhou seção "🛡️ Camada de proteções automáticas".
 - **Memória do projeto** reordenada: regra de formato de resposta agora é Core Rule #1 absoluta.
 
 ### 📝 Documentação
-- README/PRD/ROADMAP/PENDENCIAS/EDGE_FUNCTIONS/DATABASE_SCHEMA/ONBOARDING — bump para v2.43.0.
+- README/PRD/ROADMAP/PENDENCIAS/EDGE_FUNCTIONS/DATABASE_SCHEMA/ONBOARDING — bump para v2.44.0.
 
 ---
 

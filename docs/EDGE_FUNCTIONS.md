@@ -1,7 +1,7 @@
-# ⚡ EDGE FUNCTIONS — Catálogo Completo (64 funções)
+# ⚡ EDGE FUNCTIONS — Catálogo Completo (65 funções)
 
 > MasterQuiz — Todas as Edge Functions organizadas por domínio
-> Versão 2.42.0 | 17 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 > ℹ️ A função `blog-sitemap` agora inclui automaticamente a página `/compare` (priority 0.9, weekly) — v2.42.0.
 
@@ -72,7 +72,7 @@
 | `send-test-message` | POST | JWT+Admin | — | Teste de conexão |
 | `process-recovery-queue` | POST | Service | — | Processamento da fila |
 | `check-inactive-users` | POST | Service | — | Detecção de inativos |
-| `check-activation-24h` | POST | Service | — | Check de ativação 24h |
+| `check-activation-24h` | POST | Service | a cada 4h | Ativação 24h: WhatsApp + Email (independentes) com filtro de domínios institucionais |
 | `whatsapp-ai-reply` | POST | Anon | — | Resposta IA via WhatsApp |
 
 ## 📧 Email Recovery & Automações (11)
@@ -118,6 +118,7 @@
 | `growth-metrics` | POST | JWT+Admin | — | Métricas avançadas do Growth Dashboard |
 | `check-expired-trials` | POST | Service | — | Verifica e expira trials vencidos |
 | `sync-plan-limits` | POST | JWT+Admin | — | Sincroniza limites de plano |
+| `capture-db-size-snapshot` | POST | Service | diário | Snapshot do tamanho do banco (system_health_metrics) |
 
 ## 🔧 Utilitários (2)
 
@@ -134,9 +135,9 @@
 |------|-----------|
 | JWT (autenticado) | 22 |
 | JWT + Admin | 16 |
-| Service (cron/interno) | 14 |
+| Service (cron/interno) | 15 |
 | Anon (público) | 12 |
-| **Total** | **64** |
+| **Total** | **65** |
 
 ---
 
