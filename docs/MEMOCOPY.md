@@ -27,6 +27,7 @@
 7. **Network:** Use `fetch` with `keepalive: true` and `apikey` header instead of `navigator.sendBeacon`.
 8. **PostgREST:** Batch `.in()` queries up to 150 IDs to avoid URL length limits.
 9. **ICP counters:** em `profiles` devem usar `src/lib/icpTracking.ts` (RPCs SECURITY DEFINER atômicas), nunca UPDATE direto.
+10. **`is_icp_profile` imutável** após 1ª escrita — gravar com filtro `.is('is_icp_profile', null)` no client (ADR-014).
 10. **Roles:** verificação via `has_role()` server-side ou `useUserRole` — nunca localStorage. INSERT direto em `user_roles` proibido (allowlist auditada em `SECURITY.md`).
 11. **Editor CSS:** Scope `RichTextEditor` CSS with `useId()` (e.g., `.rte-r1`) to prevent style bleeding.
 12. **Errors:** Persist detailed DB errors in toasts (not generic messages) to aid debugging.
