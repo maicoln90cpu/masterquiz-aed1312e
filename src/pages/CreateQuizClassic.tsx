@@ -39,6 +39,8 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { createBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ShareQuizDialog } from "@/components/quiz/ShareQuizDialog";
+import { CollectConfigWarningDialog } from "@/components/quiz/CollectConfigWarningDialog";
+import { useCollectConfigGate } from "@/hooks/useCollectConfigGate";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { ExpressIntroModal } from "@/components/quiz/express/ExpressIntroModal";
 import { EditorDataCollectionStep, EditorResultsStep } from "@/components/quiz/EditorFunnelSteps";
@@ -273,17 +275,22 @@ const CreateQuizClassic = () => {
         used_ai: expressUsedAI,
         questions_count: questions.length,
       });
+      const result = await saveQuiz();
+      logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
+      if (result?.success) {
+        const slug = result.slug || editorState.quizSlug;
+        const url = profile?.company_slug
+          ? `${window.location.origin}/${profile.company_slug}/${slug}`
+          : `${window.location.origin}/quiz/${slug}`;
+        setPublishedQuizUrl(url);
+        setShowCelebration(true);
+      }
+      return;
     }
-    const result = await saveQuiz();
-    logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
-    if (result?.success && isExpressMode) {
-      const slug = result.slug || editorState.quizSlug;
-      const url = profile?.company_slug
-        ? `${window.location.origin}/${profile.company_slug}/${slug}`
-        : `${window.location.origin}/quiz/${slug}`;
-      setPublishedQuizUrl(url);
-      setShowCelebration(true);
-    }
+    // B2: gating de coleta para quiz REAL
+    const blocked = await collectGate.gatedPublish();
+    if (blocked) return;
+    await saveQuiz();
   }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length]);
 
   const expressQuizUrl = useMemo(() => {
