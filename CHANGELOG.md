@@ -7,6 +7,31 @@
 
 ---
 
+## [2.44.0] — 2026-05-05
+
+### ✨ Adicionado
+- **Email de ativação 24h** dentro de `check-activation-24h` (bloco de email independente do bloco WhatsApp). Janela `first_published_at` entre 28h e 20h, dedup por `(user_id, template_id)`, filtros: unsubscribes, já enviados e **domínios institucionais** (via tabela `institutional_email_domains`).
+- Cron job a cada **4 horas** (`0 */4 * * *`) para `check-activation-24h`, garantindo cobertura de toda a janela 20h–28h.
+- Edge Function `capture-db-size-snapshot` (catalogada — snapshot diário de tamanho do banco em `system_health_metrics`).
+- ADR-014: Imutabilidade de `is_icp_profile` via guard `.is(null)` no client.
+- ADR-015: Email 24h independente de status de conexão WhatsApp.
+
+### 🛠️ Alterado
+- `is_icp_profile`: gravação no `/start` e `UserObjectiveModal` agora é imutável após a primeira escolha (UPDATE separado com filtro `.is('is_icp_profile', null)`), preservando integridade do `user_activity_summary.icp_score`.
+- `check-activation-24h`: early-return de `recovery_settings.is_connected` movido para **dentro** do bloco WhatsApp; bloco de email roda independente.
+- Documentação: contagem oficial de Edge Functions atualizada para **65** (validador `scripts/validate-docs.cjs` verde).
+
+### 🧹 Removido
+- `src/components/quiz/QuizActions.tsx` (substituído por `AIQuizFeedbackCard` no fluxo M4.2).
+
+### 📚 Documentação
+- Bump global para v2.44.0 nos docs principais.
+- ADR.md +2 entradas (014, 015).
+- `docs/MEMOCOPY.md` regenerado a partir de `mem://index.md`.
+- `docs/KNOWLEDGE.md` revisado (≤9500 chars) com referência ao novo fluxo de email 24h e regra de imutabilidade ICP.
+
+---
+
 ## [2.43.0] — 2026-04-18
 
 ### ✨ Adicionado
