@@ -37,6 +37,8 @@ Core(4), Pagamento/Usuários(10), Analytics(5), Integrações(2), Bunny CDN(8), 
 8. **Tokens:** apenas tokens HSL semânticos do design system (`bg-background`, `text-foreground`) — NUNCA cores hardcoded (`bg-white`, `bg-[#xyz]`).
 9. **Roles:** verificação via `has_role()` server-side ou `useUserRole` hook — NUNCA via localStorage.
 10. **Persistência de quiz:** ao adicionar evento de publicação em `useQuizPersistence.ts`, OBRIGATÓRIO incluir `creation_source`/`publish_source`/`editor_mode`, validar dedup via RPC `has_user_fired_event` e persistir com `{ persist: true }`.
+11. **`is_icp_profile` imutável:** gravar com filtro `.is('is_icp_profile', null)` (ADR-014).
+12. **Email ativação 24h:** `check-activation-24h` envia email + WhatsApp em blocos independentes (cron 4h), filtrando `institutional_email_domains` (ADR-015).
 
 ## 8) 🛡️ 10 Proteções automáticas ativas (P1–P10) — falham build/test
 - **P1** Contract `user-roles-security.test.ts` — bloqueia INSERT direto em `user_roles` + admin via localStorage.
