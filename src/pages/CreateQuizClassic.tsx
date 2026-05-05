@@ -1086,6 +1086,13 @@ const CreateQuizClassic = () => {
           navigate('/meus-quizzes');
         }}
       />
+      <CollectConfigWarningDialog
+        open={collectGate.showWarning}
+        onOpenChange={collectGate.handleOpenChange}
+        quizId={quizId}
+        onConfirmAndPublish={collectGate.confirmAndPublish}
+        onPublishAnyway={collectGate.publishAnyway}
+      />
     </main>
   );
 };
