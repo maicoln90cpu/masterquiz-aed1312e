@@ -1,7 +1,7 @@
 # 🧩 Componentes - MasterQuiz
 
 > Documentação dos componentes principais do frontend
-> Versão 2.42.0 | 16 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 

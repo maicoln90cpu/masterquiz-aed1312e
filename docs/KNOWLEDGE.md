@@ -1,6 +1,6 @@
 # 📘 KNOWLEDGE — MasterQuiz (Resumo Executivo para Knowledge Base)
 
-> Versão 2.43.0 | 18 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 > Documento compacto (≤9500 chars) destinado ao campo "Knowledge" do projeto Lovable.
 > Fonte de verdade canônica para qualquer agente IA atuando no codebase.
 

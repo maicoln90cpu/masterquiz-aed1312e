@@ -1,7 +1,7 @@
 # 🏗️ System Design Document - MasterQuiz
 
 > Plataforma de Funis de Auto-Convencimento — Documentação técnica de arquitetura
-> Última atualização: 18 de Abril de 2026 | Versão 2.43.0
+> Última atualização: 5 de Maio de 2026 | Versão 2.44.0
 
 ---
 
@@ -700,7 +700,7 @@ site_mode (system_settings) ──▶ Landing dinâmica
 
 ## 🛡️ Camada de proteções automáticas (Lint + Contract Tests)
 
-> Introduzida em v2.43.0 (Fases 1–3). 10 escudos (P1–P10) que falham build/test antes que regressões críticas cheguem em produção.
+> Introduzida em v2.44.0 (Fases 1–3). 10 escudos (P1–P10) que falham build/test antes que regressões críticas cheguem em produção.
 
 | ID | Tipo | Onde vive | Bloqueia |
 |----|------|-----------|----------|

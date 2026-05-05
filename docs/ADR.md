@@ -1,7 +1,7 @@
 # 📋 ADR — Architecture Decision Records
 
 > Registro de decisões arquiteturais do MasterQuiz
-> Versão 2.43.0 | 18 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 
@@ -183,7 +183,7 @@
 
 ## ADR-013: Proteções de regressão como código (Lint + Contract Tests + Comentários-trava)
 
-**Data:** Abril 2026 (v2.43.0)
+**Data:** Abril 2026 (v2.44.0)
 **Status:** Aceito
 **Contexto:** Após sucessivas regressões em áreas críticas (privilege escalation por INSERT direto em `user_roles`, eventos GTM duplicados por `dataLayer.push` direto, UPDATEs incorretos em colunas ICP, perda de eventos por `sendBeacon` cancelado, blocos novos sem renderer, eventos de publicação sem dedup), revisão manual mostrou-se insuficiente. Toda regressão tinha um padrão sintático identificável que poderia ser detectado automaticamente.
 **Decisão:** Criar 10 proteções (P1–P10) divididas em três mecanismos:

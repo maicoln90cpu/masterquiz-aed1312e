@@ -1,7 +1,7 @@
 # 🗄️ DATABASE SCHEMA — MasterQuiz
 
 > Schema completo do banco de dados PostgreSQL (Supabase)
-> Versão 2.42.0 | 17 de Abril de 2026
+> Versão 2.44.0 | 5 de Maio de 2026
 
 ---
 

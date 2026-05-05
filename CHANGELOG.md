@@ -25,14 +25,14 @@
 - **ADR-013** em `docs/ADR.md` — "Proteções de regressão como código" (decisão, alternativas, consequências).
 
 ### 🔄 Alterado
-- **`docs/MEMOCOPY.md`** regenerado como snapshot v2.43.0 com bloco "Proteções automáticas P1–P10".
+- **`docs/MEMOCOPY.md`** regenerado como snapshot v2.44.0 com bloco "Proteções automáticas P1–P10".
 - **`docs/SECURITY.md`** ganhou seção "🧪 Testes de contrato de segurança" referenciando P1.
 - **`docs/CODE_STANDARDS.md`** ganhou seção "🚨 Lint rules ativas (regressão zero)" listando P2/P3/P4/P5/P7.
 - **`docs/SYSTEM_DESIGN.md`** ganhou seção "🛡️ Camada de proteções automáticas".
 - **Memória do projeto** reordenada: regra de formato de resposta agora é Core Rule #1 absoluta.
 
 ### 📝 Documentação
-- README/PRD/ROADMAP/PENDENCIAS/EDGE_FUNCTIONS/DATABASE_SCHEMA/ONBOARDING — bump para v2.43.0.
+- README/PRD/ROADMAP/PENDENCIAS/EDGE_FUNCTIONS/DATABASE_SCHEMA/ONBOARDING — bump para v2.44.0.
 
 ---
 

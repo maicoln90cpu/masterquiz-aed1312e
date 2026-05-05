@@ -3,7 +3,7 @@
 ## MasterQuiz - Plataforma de Funis de Auto-Convencimento
 
 **Versão:** 2.42.0  
-**Última atualização:** 17 de Abril de 2026  
+**Última atualização:** 5 de Maio de 2026  
 **Owner:** Product Team
 
 ---

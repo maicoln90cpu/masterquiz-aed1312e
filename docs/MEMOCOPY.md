@@ -1,7 +1,7 @@
 # 📝 MEMOCOPY — Backup de Memórias do Projeto
 
 > Cópia completa de todas as memórias persistidas na sessão de desenvolvimento.
-> **Versão 2.43.0 | 18 de Abril de 2026**
+> **Versão 2.44.0 | 5 de Maio de 2026**
 >
 > Este arquivo é regenerado a cada release importante para servir como backup
 > caso a memória do projeto seja perdida ou precise ser auditada.
@@ -35,7 +35,7 @@
 
 ---
 
-## 🛡️ Proteções automáticas (Fases 1–3 — abr/2026, v2.43.0)
+## 🛡️ Proteções automáticas (Fases 1–3 — abr/2026, v2.44.0)
 
 10 escudos contra regressão. Falham `npm run test` ou `npm run lint`.
 
