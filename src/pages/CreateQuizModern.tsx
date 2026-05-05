@@ -39,6 +39,8 @@ import type { BlockType, QuizBlock } from "@/types/blocks";
 import { ExpressProgressBar } from "@/components/quiz/ExpressProgressBar";
 import { ExpressCelebration } from "@/components/quiz/ExpressCelebration";
 import { ShareQuizDialog } from "@/components/quiz/ShareQuizDialog";
+import { CollectConfigWarningDialog } from "@/components/quiz/CollectConfigWarningDialog";
+import { useCollectConfigGate } from "@/hooks/useCollectConfigGate";
 import { MobileEditorToolbar } from "@/components/quiz/MobileEditorToolbar";
 
 
@@ -291,6 +293,14 @@ const CreateQuizModern = () => {
   }, [questions, editorState.currentQuestionIndex, updateCurrentQuestionBlocks]);
 
 
+  // B2 — Gate de configuração de coleta antes de publicar (quiz real apenas)
+  const collectGate = useCollectConfigGate({
+    formConfigState,
+    updateFormConfig,
+    saveQuiz,
+    isExpressMode,
+  });
+
   // ✅ Handler para publicar
   const handlePublish = useCallback(async () => {
     if (isExpressMode) {
@@ -300,18 +310,23 @@ const CreateQuizModern = () => {
         used_ai: expressUsedAI,
         questions_count: questions.length,
       });
+      const result = await saveQuiz();
+      logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
+      if (result?.success) {
+        const slug = result.slug || editorState.quizSlug;
+        const url = profile?.company_slug
+          ? `${window.location.origin}/${profile.company_slug}/${slug}`
+          : `${window.location.origin}/quiz/${slug}`;
+        setPublishedQuizUrl(url);
+        setShowCelebration(true);
+      }
+      return;
     }
-    const result = await saveQuiz();
-    logger.log('[Express] Publish result:', { success: result?.success, isExpressMode, slug: result?.slug });
-    if (result?.success && isExpressMode) {
-      const slug = result.slug || editorState.quizSlug;
-      const url = profile?.company_slug
-        ? `${window.location.origin}/${profile.company_slug}/${slug}`
-        : `${window.location.origin}/quiz/${slug}`;
-      setPublishedQuizUrl(url);
-      setShowCelebration(true);
-    }
-  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length]);
+    // B2: gating de coleta para quiz REAL
+    const blocked = await collectGate.gatedPublish();
+    if (blocked) return;
+    await saveQuiz();
+  }, [saveQuiz, isExpressMode, profile?.company_slug, editorState.quizSlug, editorState.quizId, expressUsedAI, questions.length, collectGate]);
 
   const expressQuizUrl = useMemo(() => {
     if (!editorState.quizSlug) return '';
@@ -1097,6 +1112,13 @@ const CreateQuizModern = () => {
           queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
           navigate('/meus-quizzes');
         }}
+      />
+      <CollectConfigWarningDialog
+        open={collectGate.showWarning}
+        onOpenChange={collectGate.handleOpenChange}
+        quizId={quizId}
+        onConfirmAndPublish={collectGate.confirmAndPublish}
+        onPublishAnyway={collectGate.publishAnyway}
       />
     </main>
   );
