@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
+import { isCommercialObjective } from "@/lib/icpObjectives";
 
 interface ObjectiveOption {
   value: string;
@@ -46,10 +47,12 @@ export const UserObjectiveModal = ({ open, userId, onComplete }: UserObjectiveMo
     setSaving(true);
     try {
       const objectives = selected;
+      // C1+C2: gravar persona ICP junto (ON se ALGUM objetivo selecionado é comercial).
+      const isIcp = objectives.some((o) => isCommercialObjective(o));
 
       const { error } = await (supabase as any)
         .from("profiles")
-        .update({ user_objectives: objectives })
+        .update({ user_objectives: objectives, is_icp_profile: isIcp })
         .eq("id", userId);
 
       if (error) throw error;

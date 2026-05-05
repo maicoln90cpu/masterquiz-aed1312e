@@ -1645,6 +1645,7 @@ export type Database = {
           full_name: string | null
           gtm_container_id: string | null
           id: string
+          is_icp_profile: boolean | null
           landing_variant_seen: string | null
           login_count: number | null
           objective_selected_at: string | null
@@ -1681,6 +1682,7 @@ export type Database = {
           full_name?: string | null
           gtm_container_id?: string | null
           id: string
+          is_icp_profile?: boolean | null
           landing_variant_seen?: string | null
           login_count?: number | null
           objective_selected_at?: string | null
@@ -1717,6 +1719,7 @@ export type Database = {
           full_name?: string | null
           gtm_container_id?: string | null
           id?: string
+          is_icp_profile?: boolean | null
           landing_variant_seen?: string | null
           login_count?: number | null
           objective_selected_at?: string | null
@@ -3787,6 +3790,7 @@ export type Database = {
           form_collection_configured_at: string | null
           full_name: string | null
           icp_score: number | null
+          is_icp_profile: boolean | null
           landing_variant_seen: string | null
           lead_count: number | null
           login_count: number | null
