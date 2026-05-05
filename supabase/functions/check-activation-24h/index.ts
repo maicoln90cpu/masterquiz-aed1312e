@@ -91,6 +91,15 @@ Deno.serve(async (req) => {
               }
               const unsubSet = new Set(unsubsAll);
 
+              // Filtro de domínios institucionais
+              const { data: institutionalData } = await supabase
+                .from('institutional_email_domains')
+                .select('domain')
+                .eq('is_active', true);
+              const institutionalDomains = new Set(
+                (institutionalData || []).map((d: { domain: string }) => d.domain.toLowerCase())
+              );
+
               // Verifica quem já recebeu este template
               const candidateIds = candidates.map(c => c.id);
               const alreadySent = new Set<string>();
@@ -103,9 +112,16 @@ Deno.serve(async (req) => {
                 if (sent) sent.forEach(s => alreadySent.add(s.user_id));
               }
 
-              const toEnqueue = candidates.filter(
-                c => !unsubSet.has(c.email!) && !alreadySent.has(c.id)
-              );
+              const toEnqueue = candidates.filter(c => {
+                if (!c.email) return false;
+                if (unsubSet.has(c.email)) return false;
+                if (alreadySent.has(c.id)) return false;
+                const domain = c.email.split('@')[1]?.toLowerCase() || '';
+                const isInstitutional = [...institutionalDomains].some(
+                  d => domain === d || domain.endsWith('.' + d)
+                );
+                return !isInstitutional;
+              });
 
               if (toEnqueue.length > 0) {
                 const rows = toEnqueue.map(c => ({
