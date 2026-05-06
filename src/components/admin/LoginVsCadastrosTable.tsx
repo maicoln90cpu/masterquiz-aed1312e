@@ -198,7 +198,7 @@ export function LoginVsCadastrosTable() {
           </div>
         </div>
         <CardDescription>
-          Cadastros = usuários reais (auth + perfil ativo). Compara quantos voltaram a logar por dia.
+          Cadastros = usuários reais (auth + perfil ativo). PerfilON = cadastros classificados como ICP comercial (objetivo ≠ educacional).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
