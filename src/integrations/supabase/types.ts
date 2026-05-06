@@ -3953,6 +3953,14 @@ export type Database = {
         Args: { _event_name: string; _user_id: string }
         Returns: boolean
       }
+      icp_daily_breakdown: {
+        Args: { _days?: number }
+        Returns: {
+          day: string
+          perfil_off: number
+          perfil_on: number
+        }[]
+      }
       increment_blog_views: { Args: { p_slug: string }; Returns: undefined }
       increment_login_count: { Args: { p_user_id: string }; Returns: undefined }
       increment_profile_counter: {
@@ -3979,6 +3987,7 @@ export type Database = {
         Returns: {
           cadastros: number
           day: string
+          perfil_on: number
         }[]
       }
       recalc_recovery_campaign_counts: {
