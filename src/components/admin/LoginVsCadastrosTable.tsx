@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, LogIn, TrendingUp } from "lucide-react";
+import { Users, LogIn, TrendingUp, Target } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DataTable, type DataTableColumn } from "@/components/admin/system/DataTable";
@@ -19,6 +19,8 @@ const PERIOD_OPTIONS: { label: string; value: PeriodDays }[] = [
 interface DayRow {
   date: string;
   cadastros: number;
+  perfilOn: number;
+  pctIcp: string;
   logins: number;
   taxa_num: number; // numérica para sort
   taxa: string;     // formatada
@@ -39,8 +41,10 @@ function useLoginsVsCadastros(period: PeriodDays) {
       ]);
 
       const cadastrosByDay: Record<string, number> = {};
-      for (const row of (dailyRes.data as Array<{ day: string; cadastros: number }> | null) || []) {
+      const perfilOnByDay: Record<string, number> = {};
+      for (const row of (dailyRes.data as Array<{ day: string; cadastros: number; perfil_on: number }> | null) || []) {
         cadastrosByDay[row.day] = row.cadastros;
+        perfilOnByDay[row.day] = row.perfil_on || 0;
       }
 
       const loginsByDay: Record<string, number> = {};
@@ -51,6 +55,7 @@ function useLoginsVsCadastros(period: PeriodDays) {
 
       const rows: DayRow[] = [];
       let totalLogins = 0;
+      let totalPerfilOn = 0;
       const totalCadastros = Number(totalRealRes.data || 0);
 
       for (let i = 0; i < period; i++) {
@@ -58,14 +63,18 @@ function useLoginsVsCadastros(period: PeriodDays) {
         d.setDate(d.getDate() - i);
         const dateStr = d.toISOString().split('T')[0];
         const cadastros = cadastrosByDay[dateStr] || 0;
+        const perfilOn = perfilOnByDay[dateStr] || 0;
         const logins = loginsByDay[dateStr] || 0;
         totalLogins += logins;
+        totalPerfilOn += perfilOn;
 
         if (cadastros > 0 || logins > 0) {
           const taxa_num = cadastros > 0 ? Math.round((logins / cadastros) * 100) : (logins > 0 ? 9999 : 0);
           rows.push({
             date: dateStr,
             cadastros,
+            perfilOn,
+            pctIcp: cadastros > 0 ? `${Math.round((perfilOn / cadastros) * 100)}%` : '—',
             logins,
             taxa_num,
             taxa: cadastros > 0 ? `${Math.round((logins / cadastros) * 100)}%` : logins > 0 ? '∞' : '—',
@@ -77,6 +86,8 @@ function useLoginsVsCadastros(period: PeriodDays) {
         rows,
         totalCadastros,
         totalLogins,
+        totalPerfilOn,
+        pctIcpTotal: totalCadastros > 0 ? Math.round((totalPerfilOn / totalCadastros) * 100) : 0,
         avgReturnRate: totalCadastros > 0 ? Math.round((totalLogins / totalCadastros) * 100) : 0,
       };
     },
@@ -106,6 +117,18 @@ export function LoginVsCadastrosTable() {
       sortable: true,
       align: 'center',
       render: (r) => <Badge variant="secondary">{r.cadastros}</Badge>,
+    },
+    {
+      key: 'perfilOn',
+      label: 'PerfilON',
+      sortable: true,
+      align: 'center',
+      render: (r) => (
+        <div className="flex flex-col items-center gap-0.5">
+          <Badge variant="default" className="bg-primary/15 text-primary hover:bg-primary/20">{r.perfilOn}</Badge>
+          <span className="text-[10px] text-muted-foreground">{r.pctIcp}</span>
+        </div>
+      ),
     },
     {
       key: 'logins',
@@ -179,11 +202,16 @@ export function LoginVsCadastrosTable() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="text-center p-3 rounded-lg bg-primary/10">
             <Users className="h-4 w-4 mx-auto mb-1 text-primary" />
             <div className="text-2xl font-bold text-primary">{data.totalCadastros}</div>
             <div className="text-xs text-muted-foreground">Cadastros</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-emerald-500/10">
+            <Target className="h-4 w-4 mx-auto mb-1 text-emerald-600" />
+            <div className="text-2xl font-bold text-emerald-600">{data.totalPerfilOn}</div>
+            <div className="text-xs text-muted-foreground">PerfilON ({data.pctIcpTotal}%)</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted">
             <LogIn className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
