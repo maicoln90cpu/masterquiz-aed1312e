@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/admin/system/DataTable";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { IcpDailyChart } from "@/components/admin/IcpDailyChart";
 
 // Intenções possíveis
 const INTENT_LABELS: Record<string, string> = {
@@ -306,6 +307,9 @@ export function PQLAnalytics() {
 
       {/* Tabela 3 — Classic vs Modern (A/B) */}
       <ClassicVsModernComparison />
+
+      {/* Gráfico 4 — Evolução PerfilON × PerfilOFF */}
+      <IcpDailyChart />
     </div>
   );
 }
